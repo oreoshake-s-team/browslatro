@@ -22,6 +22,12 @@ function App() {
     }
   }
 
+  function handleReset() {
+    setBlind(1);
+    setRound(1);
+    setAnte(1);
+  }
+
   return (
     <div className="App">
       <div className="sidebar">
@@ -40,6 +46,7 @@ function App() {
           <RoundProgress />
           <RunProgress ante={ante} round={round} />
         </div>
+        <button onClick={handleReset}>Reset</button>
       </div>
       <Game onWin={handleWin} />
     </div>
