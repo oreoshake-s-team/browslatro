@@ -54,10 +54,9 @@ function App() {
 }
 
 function Round({ blind, round, ante, blindValues }) {
-  // the required score scales depending on the current blind and there are three options
-  const scale = [10, 20, 40][blind - 1];
-
-  const requiredScore = scale * round * ante;
+  const baseChips = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000];
+  const blindMultiplier = [1, 1.5, 2][blind - 1];
+  const requiredScore = baseChips[ante - 1] * blindMultiplier;
   const award = "💲".repeat(2 + blind);
 
   return (
