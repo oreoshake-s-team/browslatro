@@ -126,6 +126,35 @@
   letter-spacing: 0.05em;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modal {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 200px;
+}
+
+.modal h3 {
+  margin: 0;
+}
+
+.modal-close {
+  padding: 10px 20px;
+  font-size: 1.1rem;
+}
+
 html {
   font-size: 62.5%;
   font-family:

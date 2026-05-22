@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 function App() {
   const blindValues = {
@@ -42,7 +43,7 @@ function App() {
         <div className="sub-info-progress">
           <div className="sub-info">
             <RunInfo />
-            <Options />
+            <Options onReset={handleReset} />
           </div>
           <div className="progress">
             <RoundProgress />
@@ -50,7 +51,7 @@ function App() {
           </div>
         </div>
       </div>
-      <Game onWin={handleWin} onReset={handleReset} />
+      <Game onWin={handleWin} />
     </div>
   );
 }
@@ -87,8 +88,34 @@ function RunInfo() {
   return <button>Run info</button>;
 }
 
-function Options() {
-  return <button>Options</button>;
+function Options({ onReset }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button onClick={() => setOpen(true)}>Options</button>
+      {open &&
+        createPortal(
+          <div className="modal-overlay" onClick={() => setOpen(false)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <h3>Options</h3>
+              <button
+                className="win-button reset-button"
+                onClick={() => {
+                  onReset();
+                  setOpen(false);
+                }}
+              >
+                Reset
+              </button>
+              <button className="modal-close" onClick={() => setOpen(false)}>
+                Close
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
+  );
 }
 
 function RoundProgress() {
@@ -116,14 +143,11 @@ function RunProgress({ ante, round, money }) {
   );
 }
 
-function Game({ onWin, onReset }) {
+function Game({ onWin }) {
   return (
     <div className="game">
       <button className="win-button" onClick={onWin}>
         Win
-      </button>
-      <button className="win-button reset-button" onClick={onReset}>
-        Reset
       </button>
     </div>
   );
