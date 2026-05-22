@@ -1,22 +1,60 @@
 .App {
   display: flex;
-  gap: 0;
-  min-height: 100vh;
+  flex-direction: row;
+  height: 100vh;
   margin: 0;
+}
+
+.game {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.win-button {
+  padding: 10px 20px;
+  font-size: 1.1rem;
 }
 
 .sidebar {
   width: 300px;
   flex-shrink: 0;
   padding: 2rem;
+  padding-bottom: 3rem;
   background-color: #f8f9fa;
   border-right: 1px solid #dee2e6;
   overflow-y: auto;
   margin: 0;
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
 }
 
-.sidebar > div {
-  margin-bottom: 2rem;
+.sidebar > * {
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar > * + * {
+  padding-top: 2rem;
+}
+
+.sidebar > *:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sub-info-progress {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.sub-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 html {
@@ -32,4 +70,8 @@ body {
   display: flex;
   margin: 0;
   padding: 0;
+}
+
+#root {
+  flex: 1;
 }
