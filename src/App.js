@@ -1,10 +1,36 @@
 import "./App.css";
+import { useState } from "react";
 
 function App() {
+  const blindValues = {
+    1: "Small Blind",
+    2: "Big Blind",
+    3: "Boss Blind",
+  };
+
+  const [blind, setBlind] = useState(1);
+  const [round, setRound] = useState(1);
+  const [ante, setAnte] = useState(1);
+
+  function handleWin() {
+    setRound((prev) => prev + 1);
+    if (blind < 3) {
+      setBlind((prev) => prev + 1);
+    } else {
+      setAnte((prev) => prev + 1);
+      setBlind(1);
+    }
+  }
+
   return (
     <div className="App">
       <div className="sidebar">
-        <Round />
+        <Round
+          blind={blind}
+          round={round}
+          ante={ante}
+          blindValues={blindValues}
+        />
         <HandScore />
         <div className="sub-info">
           <RunInfo />
@@ -12,16 +38,28 @@ function App() {
         </div>
         <div className="progress">
           <RoundProgress />
-          <RunProgress />
+          <RunProgress ante={ante} round={round} />
         </div>
       </div>
-      <Game />
+      <Game onWin={handleWin} />
     </div>
   );
 }
 
-function Round() {
-  return <div>Big Blind</div>;
+function Round({ blind, round, ante, blindValues }) {
+  // the required score scales depending on the current blind and there are three options
+  const scale = [10, 20, 40][blind - 1];
+
+  const requiredScore = scale * round * ante;
+  const award = "💲".repeat(2 + blind);
+
+  return (
+    <>
+      <h3>{blindValues[blind]}</h3>
+      <h4>Score at least: {requiredScore}</h4>
+      <p>to earn {award}</p>
+    </>
+  );
 }
 
 function HandScore() {
@@ -40,12 +78,17 @@ function RoundProgress() {
   return <div>Round Progress</div>;
 }
 
-function RunProgress() {
-  return <div>Run Progress</div>;
+function RunProgress({ ante, round }) {
+  return (
+    <>
+      <p>Ante: {ante}</p>
+      <p>Round: {round}</p>
+    </>
+  );
 }
 
-function Game() {
-  return <div>Game</div>;
+function Game({ onWin }) {
+  return <button onClick={onWin}>Win</button>;
 }
 
 export default App;
