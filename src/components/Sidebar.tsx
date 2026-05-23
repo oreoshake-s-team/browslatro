@@ -6,7 +6,7 @@ import Options from "./Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import HandScore from "./HandScore";
-import { Hand } from "./Game";
+import type { Hand } from "../types";
 
 interface SidebarProps {
   blind: Blind;

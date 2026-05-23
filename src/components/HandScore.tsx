@@ -1,4 +1,4 @@
-import { Hand } from "./Game";
+import type { Hand } from "../types";
 
 interface HandScoreProps {
   chips: number;

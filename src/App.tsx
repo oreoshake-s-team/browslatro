@@ -1,7 +1,7 @@
 import { useState } from "react";
-import type { Blind } from "./types";
-import Game, { HANDS } from "./components/Game";
-import type { Hand } from "./components/Game";
+import type { Blind, Hand } from "./types";
+import { HANDS } from "./constants";
+import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 
 function App() {
