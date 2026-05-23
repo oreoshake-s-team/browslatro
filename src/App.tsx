@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Blind, Hand } from "./types";
-import { HANDS } from "./constants";
+import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 
@@ -13,6 +13,10 @@ function App() {
   const [multiplier, setMultiplier] = useState(2);
   const [roundScore, setRoundScore] = useState(0);
   const [selectedHand, setSelectedHand] = useState<Hand>(HANDS[0]);
+  const [remainingHands, setRemainingHands] = useState(4);
+  const [remainingDiscards, setRemainingDiscards] = useState(3);
+
+  const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -23,6 +27,9 @@ function App() {
       setAnte((prev) => prev + 1);
       setBlind(1);
     }
+    setRoundScore(0);
+    setRemainingHands(4);
+    setRemainingDiscards(3);
   }
 
   function handleReset() {
@@ -44,10 +51,30 @@ function App() {
     setMultiplier((prev) => prev * factor);
   }
 
+  function loseGame() {
+    alert("Game Over! Try again.");
+    handleReset();
+  }
+
   function submitHand() {
-    setRoundScore((prev) => prev + chips * multiplier);
+    const newRoundScore = roundScore + chips * multiplier;
+    setRoundScore(newRoundScore);
     setChips(20);
     setMultiplier(2);
+
+    console.log("New round score:", newRoundScore);
+    console.log("Required score:", requiredScore);
+    if (newRoundScore >= requiredScore) {
+      console.log("You win this round!");
+      handleWin();
+      return;
+    }
+
+    if (remainingHands > 1) {
+      setRemainingHands((prev) => prev - 1);
+    } else {
+      loseGame();
+    }
   }
 
   return (
@@ -60,7 +87,10 @@ function App() {
         chips={chips}
         multiplier={multiplier}
         roundScore={roundScore}
+        requiredScore={requiredScore}
         selectedHand={selectedHand}
+        remainingHands={remainingHands}
+        remainingDiscards={remainingDiscards}
         handleReset={handleReset}
       />
       <Game

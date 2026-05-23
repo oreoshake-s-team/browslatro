@@ -2,16 +2,12 @@ import type { Blind, BlindValuesMap } from "../types";
 
 interface RoundProps {
   blind: Blind;
-  ante: number;
   roundScore: number;
+  requiredScore: number;
   BlindValues: BlindValuesMap;
 }
 
-const BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] as const;
-const BLIND_MULTIPLIERS = [1, 1.5, 2] as const;
-
-function Round({ blind, ante, BlindValues, roundScore }: RoundProps) {
-  const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
+function Round({ blind, BlindValues, roundScore, requiredScore }: RoundProps) {
   const award = "💲".repeat(2 + blind);
 
   return (

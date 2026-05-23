@@ -26,6 +26,12 @@
   font-size: 1.1rem;
 }
 
+.round-progress {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
 .submit-hand {
   width: 100%;
   display: flex;

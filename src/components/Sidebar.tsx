@@ -16,7 +16,10 @@ interface SidebarProps {
   chips: number;
   multiplier: number;
   roundScore: number;
+  requiredScore: number;
   selectedHand: Hand;
+  remainingHands: number;
+  remainingDiscards: number;
   handleReset: () => void;
 }
 
@@ -28,16 +31,19 @@ export default function Sidebar({
   chips,
   multiplier,
   roundScore,
+  requiredScore,
   selectedHand,
+  remainingHands,
+  remainingDiscards,
   handleReset,
 }: SidebarProps) {
   return (
     <div className="sidebar">
       <Round
         blind={blind}
-        ante={ante}
         BlindValues={BlindValues}
         roundScore={roundScore}
+        requiredScore={requiredScore}
       />
       <HandScore
         chips={chips}
@@ -50,7 +56,7 @@ export default function Sidebar({
           <Options onReset={handleReset} />
         </div>
         <div className="progress">
-          <RoundProgress />
+          <RoundProgress remainingHands={remainingHands} remainingDiscards={remainingDiscards} />
           <RunProgress ante={ante} round={round} money={money} />
         </div>
       </div>

@@ -17,13 +17,13 @@ describe("Round", () => {
     [1, 8, "Small Blind", 50000, "💲💲💲", 100000],
   ] as const)(
     "blind=%i ante=%i shows %s, score %i, award %s",
-    (blind, ante, label, score, award, roundScore) => {
+    (blind, _ante, label, score, award, roundScore) => {
       render(
         <Round
           blind={blind}
-          ante={ante}
           BlindValues={BlindValues}
           roundScore={roundScore}
+          requiredScore={score}
         />,
       );
       expect(screen.getByText(label)).toBeInTheDocument();
