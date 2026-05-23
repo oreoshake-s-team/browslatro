@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 
-function Options({ onReset }) {
+interface OptionsProps {
+  onReset: () => void;
+}
+
+function Options({ onReset }: OptionsProps) {
   const [open, setOpen] = useState(false);
   return (
     <>

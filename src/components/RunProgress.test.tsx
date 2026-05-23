@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import RunProgress from "./RunProgress";
 
-function getStatValue(label) {
-  return screen.getByText(label).parentElement;
+function getStatValue(label: string): HTMLElement {
+  return screen.getByText(label).parentElement as HTMLElement;
 }
 
 describe("RunProgress", () => {

@@ -1,4 +1,8 @@
-function Game({ onWin }) {
+interface GameProps {
+  onWin: () => void;
+}
+
+function Game({ onWin }: GameProps) {
   return (
     <div className="game">
       <button className="win-button" onClick={onWin}>

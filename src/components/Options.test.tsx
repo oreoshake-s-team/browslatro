@@ -20,7 +20,7 @@ describe("Options", () => {
   test("clicking overlay dismisses modal", () => {
     render(<Options onReset={() => {}} />);
     userEvent.click(screen.getByText("Options"));
-    userEvent.click(document.querySelector(".modal-overlay"));
+    userEvent.click(document.querySelector(".modal-overlay") as HTMLElement);
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
 

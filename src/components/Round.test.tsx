@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import Round from "./Round";
+import type { BlindValuesMap } from "../types";
 
-const BlindValues = { 1: "Small Blind", 2: "Big Blind", 3: "Boss Blind" };
+const BlindValues: BlindValuesMap = { 1: "Small Blind", 2: "Big Blind", 3: "Boss Blind" };
 
 describe("Round", () => {
   test.each([
@@ -10,13 +11,13 @@ describe("Round", () => {
     [3, 1, "Boss Blind", 600, "💲💲💲💲💲"],
     [1, 2, "Small Blind", 800, "💲💲💲"],
     [1, 8, "Small Blind", 50000, "💲💲💲"],
-  ])(
+  ] as const)(
     "blind=%i ante=%i shows %s, score %i, award %s",
     (blind, ante, label, score, award) => {
       render(<Round blind={blind} ante={ante} BlindValues={BlindValues} />);
       expect(screen.getByText(label)).toBeInTheDocument();
       expect(screen.getByText(`Score at least: ${score}`)).toBeInTheDocument();
       expect(screen.getByText(`to earn ${award}`)).toBeInTheDocument();
-    },
+    }
   );
 });

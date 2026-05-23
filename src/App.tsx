@@ -1,15 +1,10 @@
 import { useState } from "react";
+import type { Blind } from "./types";
 import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 
-export const BlindValues = {
-  1: "Small Blind",
-  2: "Big Blind",
-  3: "Boss Blind",
-};
-
 function App() {
-  const [blind, setBlind] = useState(1);
+  const [blind, setBlind] = useState<Blind>(1);
   const [round, setRound] = useState(1);
   const [ante, setAnte] = useState(1);
   const [money, setMoney] = useState(0);
@@ -18,7 +13,7 @@ function App() {
     setRound((prev) => prev + 1);
     setMoney((prev) => prev + (blind + 2));
     if (blind < 3) {
-      setBlind((prev) => prev + 1);
+      setBlind((prev) => (prev + 1) as Blind);
     } else {
       setAnte((prev) => prev + 1);
       setBlind(1);
@@ -41,7 +36,6 @@ function App() {
         money={money}
         handleReset={handleReset}
       />
-
       <Game onWin={handleWin} />
     </div>
   );

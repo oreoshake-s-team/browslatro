@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 
-function getStatValue(label) {
-  return screen.getByText(label).parentElement;
+function getStatValue(label: string): HTMLElement {
+  return screen.getByText(label).parentElement as HTMLElement;
 }
 
 describe("Win button integration", () => {

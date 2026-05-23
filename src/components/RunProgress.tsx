@@ -1,4 +1,10 @@
-function RunProgress({ ante, round, money }) {
+interface RunProgressProps {
+  ante: number;
+  round: number;
+  money: number;
+}
+
+function RunProgress({ ante, round, money }: RunProgressProps) {
   return (
     <div className="run-progress">
       <div className="stat">
