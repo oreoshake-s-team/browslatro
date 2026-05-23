@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import Round from "./Round";
 
-const blindValues = { 1: "Small Blind", 2: "Big Blind", 3: "Boss Blind" };
+const BlindValues = { 1: "Small Blind", 2: "Big Blind", 3: "Boss Blind" };
 
 describe("Round", () => {
   test.each([
@@ -13,10 +13,10 @@ describe("Round", () => {
   ])(
     "blind=%i ante=%i shows %s, score %i, award %s",
     (blind, ante, label, score, award) => {
-      render(<Round blind={blind} ante={ante} blindValues={blindValues} />);
+      render(<Round blind={blind} ante={ante} BlindValues={BlindValues} />);
       expect(screen.getByText(label)).toBeInTheDocument();
       expect(screen.getByText(`Score at least: ${score}`)).toBeInTheDocument();
       expect(screen.getByText(`to earn ${award}`)).toBeInTheDocument();
-    }
+    },
   );
 });

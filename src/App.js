@@ -1,13 +1,8 @@
 import { useState } from "react";
-import Round from "./components/Round";
-import HandScore from "./components/HandScore";
-import RunInfo from "./components/RunInfo";
-import Options from "./components/Options";
-import RoundProgress from "./components/RoundProgress";
-import RunProgress from "./components/RunProgress";
 import Game from "./components/Game";
+import Sidebar from "./components/Sidebar";
 
-const blindValues = {
+export const BlindValues = {
   1: "Small Blind",
   2: "Big Blind",
   3: "Boss Blind",
@@ -39,20 +34,14 @@ function App() {
 
   return (
     <div className="App">
-      <div className="sidebar">
-        <Round blind={blind} ante={ante} blindValues={blindValues} />
-        <HandScore />
-        <div className="sub-info-progress">
-          <div className="sub-info">
-            <RunInfo />
-            <Options onReset={handleReset} />
-          </div>
-          <div className="progress">
-            <RoundProgress />
-            <RunProgress ante={ante} round={round} money={money} />
-          </div>
-        </div>
-      </div>
+      <Sidebar
+        blind={blind}
+        ante={ante}
+        round={round}
+        money={money}
+        handleReset={handleReset}
+      />
+
       <Game onWin={handleWin} />
     </div>
   );
