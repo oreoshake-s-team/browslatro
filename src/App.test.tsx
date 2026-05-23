@@ -13,17 +13,17 @@ describe("Win button integration", () => {
     expect(screen.getByText("Score at least: 300")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$0");
 
-    userEvent.click(screen.getByText("Win")); // small → big, +$3
+    userEvent.click(screen.getByText(/Win/)); // small → big, +$3
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 450")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$3");
     expect(getStatValue("Round")).toHaveTextContent("2");
 
-    userEvent.click(screen.getByText("Win")); // big → boss, +$4
+    userEvent.click(screen.getByText(/Win/)); // big → boss, +$4
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$7");
 
-    userEvent.click(screen.getByText("Win")); // boss → ante 2 small, +$5
+    userEvent.click(screen.getByText(/Win/)); // boss → ante 2 small, +$5
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 800")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
@@ -36,7 +36,7 @@ describe("Add Chips button integration", () => {
     render(<App />);
     const chipsEl = document.querySelector(".chips") as HTMLElement;
     expect(chipsEl).toHaveTextContent("20");
-    userEvent.click(screen.getByText("Add Chips"));
+    userEvent.click(screen.getByText(/Add Chips/));
     expect(chipsEl).toHaveTextContent("30");
   });
 });
@@ -45,8 +45,8 @@ describe("Options modal reset integration", () => {
   test("opening options and clicking reset restores initial state", () => {
     render(<App />);
 
-    userEvent.click(screen.getByText("Win"));
-    userEvent.click(screen.getByText("Win"));
+    userEvent.click(screen.getByText(/Win/));
+    userEvent.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$7"); // was $7 before reset
 

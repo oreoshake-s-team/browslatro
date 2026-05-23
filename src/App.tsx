@@ -42,6 +42,12 @@ function App() {
     setMultiplier((prev) => prev * factor);
   }
 
+  function submitHand() {
+    setRoundScore((prev) => prev + chips * multiplier);
+    setChips(20);
+    setMultiplier(2);
+  }
+
   return (
     <div className="App">
       <Sidebar
@@ -59,6 +65,8 @@ function App() {
         onAddChips={addChips}
         onAddMultiplier={addMultiplier}
         onMultiplyMultiplier={multiplyMultiplier}
+        onSetMoney={setMoney}
+        onSubmitHand={submitHand}
       />
     </div>
   );

@@ -10,6 +10,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding: 2rem;
+}
+
+.game button {
+  min-width: 18rem;
+  padding: 10px 20px;
+  font-size: 1.1rem;
 }
 
 .win-button {
@@ -193,4 +202,23 @@ body {
 
 #root {
   flex: 1;
+}
+
+.add-money-button {
+  background-color: #2f9e44;
+  color: white;
+  border-color: #2b8a3e;
+}
+
+.subtract-money-button {
+  background-color: #e03131;
+  color: white;
+  border-color: #c92a2a;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  /* TODO: style */
 }
