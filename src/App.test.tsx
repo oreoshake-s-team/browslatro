@@ -41,6 +41,56 @@ describe("Add Chips button integration", () => {
   });
 });
 
+describe("Add Multiplier button integration", () => {
+  test("clicking Add Multiplier updates multiplier shown in the sidebar", () => {
+    render(<App />);
+    const multiplierEl = document.querySelector(".multiplier") as HTMLElement;
+    userEvent.click(screen.getByText(/Add Multiplier/));
+    expect(multiplierEl).toHaveTextContent("3");
+  });
+});
+
+describe("Multiply Multiplier button integration", () => {
+  test("clicking Multiply Multiplier updates multiplier shown in the sidebar", () => {
+    render(<App />);
+    const multiplierEl = document.querySelector(".multiplier") as HTMLElement;
+    userEvent.click(screen.getByText(/Multiply Multiplier/));
+    expect(multiplierEl).toHaveTextContent("4");
+  });
+});
+
+describe("Submit Hand button integration", () => {
+  test("updates round score by chips × multiplier then resets chips and multiplier", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Add Chips/));
+    userEvent.click(screen.getByText(/Add Multiplier/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    const roundScoreEl = document.querySelector(".round-score-value") as HTMLElement;
+    const chipsEl = document.querySelector(".chips") as HTMLElement;
+    const multiplierEl = document.querySelector(".multiplier") as HTMLElement;
+    expect(roundScoreEl).toHaveTextContent("90");
+    expect(chipsEl).toHaveTextContent("20");
+    expect(multiplierEl).toHaveTextContent("2");
+  });
+});
+
+describe("Add Money button integration", () => {
+  test("clicking Add $10 updates money shown in the sidebar", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Add \$10/));
+    expect(getStatValue("Money")).toHaveTextContent("$10");
+  });
+});
+
+describe("Subtract Money button integration", () => {
+  test("clicking Subtract $10 updates money shown in the sidebar", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Add \$10/));
+    userEvent.click(screen.getByText(/Subtract \$10/));
+    expect(getStatValue("Money")).toHaveTextContent("$0");
+  });
+});
+
 describe("Options modal reset integration", () => {
   test("opening options and clicking reset restores initial state", () => {
     render(<App />);
