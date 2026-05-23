@@ -8,6 +8,9 @@ function App() {
   const [round, setRound] = useState(1);
   const [ante, setAnte] = useState(1);
   const [money, setMoney] = useState(0);
+  const [chips, setChips] = useState(20);
+  const [multiplier, setMultiplier] = useState(2);
+  const [roundScore, setRoundScore] = useState(0);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -27,6 +30,18 @@ function App() {
     setMoney(0);
   }
 
+  function addChips(amount: number) {
+    setChips((prev) => prev + amount);
+  }
+
+  function addMultiplier(amount: number) {
+    setMultiplier((prev) => prev + amount);
+  }
+
+  function multiplyMultiplier(factor: number) {
+    setMultiplier((prev) => prev * factor);
+  }
+
   return (
     <div className="App">
       <Sidebar
@@ -34,9 +49,17 @@ function App() {
         ante={ante}
         round={round}
         money={money}
+        chips={chips}
+        multiplier={multiplier}
+        roundScore={roundScore}
         handleReset={handleReset}
       />
-      <Game onWin={handleWin} />
+      <Game
+        onWin={handleWin}
+        onAddChips={addChips}
+        onAddMultiplier={addMultiplier}
+        onMultiplyMultiplier={multiplyMultiplier}
+      />
     </div>
   );
 }

@@ -31,6 +31,16 @@ describe("Win button integration", () => {
   });
 });
 
+describe("Add Chips button integration", () => {
+  test("clicking Add Chips updates chips shown in the sidebar", () => {
+    render(<App />);
+    const chipsEl = document.querySelector(".chips") as HTMLElement;
+    expect(chipsEl).toHaveTextContent("20");
+    userEvent.click(screen.getByText("Add Chips"));
+    expect(chipsEl).toHaveTextContent("30");
+  });
+});
+
 describe("Options modal reset integration", () => {
   test("opening options and clicking reset restores initial state", () => {
     render(<App />);

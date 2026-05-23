@@ -1,11 +1,16 @@
-function HandScore() {
+interface HandScoreProps {
+  chips: number;
+  multiplier: number;
+}
+
+function HandScore({ chips, multiplier }: HandScoreProps) {
   return (
     <div className="hand-score">
       <h3>Two pair</h3>
       <p>
-        <span className="chips">40</span>
+        <span className="chips">{chips}</span>
         <span>X</span>
-        <span className="multiplier">2</span>
+        <span className="multiplier">{multiplier}</span>
       </p>
     </div>
   );

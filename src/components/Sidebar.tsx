@@ -1,25 +1,42 @@
 import type { Blind } from "../types";
 import { BlindValues } from "../constants";
 import Round from "./Round";
-import HandScore from "./HandScore";
 import RunInfo from "./RunInfo";
 import Options from "./Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
+import HandScore from "./HandScore";
 
 interface SidebarProps {
   blind: Blind;
   ante: number;
   round: number;
   money: number;
+  chips: number;
+  multiplier: number;
+  roundScore: number;
   handleReset: () => void;
 }
 
-export default function Sidebar({ blind, ante, round, money, handleReset }: SidebarProps) {
+export default function Sidebar({
+  blind,
+  ante,
+  round,
+  money,
+  chips,
+  multiplier,
+  roundScore,
+  handleReset,
+}: SidebarProps) {
   return (
     <div className="sidebar">
-      <Round blind={blind} ante={ante} BlindValues={BlindValues} />
-      <HandScore />
+      <Round
+        blind={blind}
+        ante={ante}
+        BlindValues={BlindValues}
+        roundScore={roundScore}
+      />
+      <HandScore chips={chips} multiplier={multiplier} />
       <div className="sub-info-progress">
         <div className="sub-info">
           <RunInfo />
