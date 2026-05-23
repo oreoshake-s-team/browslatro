@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Blind } from "./types";
-import Game from "./components/Game";
+import Game, { HANDS } from "./components/Game";
+import type { Hand } from "./components/Game";
 import Sidebar from "./components/Sidebar";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const [chips, setChips] = useState(20);
   const [multiplier, setMultiplier] = useState(2);
   const [roundScore, setRoundScore] = useState(0);
+  const [selectedHand, setSelectedHand] = useState<Hand>(HANDS[0]);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -58,6 +60,7 @@ function App() {
         chips={chips}
         multiplier={multiplier}
         roundScore={roundScore}
+        selectedHand={selectedHand}
         handleReset={handleReset}
       />
       <Game
@@ -67,6 +70,8 @@ function App() {
         onMultiplyMultiplier={multiplyMultiplier}
         onSetMoney={setMoney}
         onSubmitHand={submitHand}
+        selectedHand={selectedHand}
+        onSelectHand={setSelectedHand}
       />
     </div>
   );

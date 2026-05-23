@@ -26,6 +26,17 @@
   font-size: 1.1rem;
 }
 
+.submit-hand {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.submit-hand-button {
+  padding: 1.6rem 4rem;
+  font-size: 2rem;
+}
+
 .reset-button {
   background-color: #e03131;
   color: white;

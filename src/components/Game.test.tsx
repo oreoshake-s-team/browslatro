@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
-import Game from "./Game";
+import Game, { HANDS } from "./Game";
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
@@ -12,6 +12,8 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onMultiplyMultiplier={jest.fn()}
       onSubmitHand={jest.fn()}
       onSetMoney={jest.fn()}
+      selectedHand={HANDS[0]}
+      onSelectHand={jest.fn()}
       {...overrides}
     />,
   );

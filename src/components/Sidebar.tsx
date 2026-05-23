@@ -6,6 +6,7 @@ import Options from "./Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import HandScore from "./HandScore";
+import { Hand } from "./Game";
 
 interface SidebarProps {
   blind: Blind;
@@ -15,6 +16,7 @@ interface SidebarProps {
   chips: number;
   multiplier: number;
   roundScore: number;
+  selectedHand: Hand;
   handleReset: () => void;
 }
 
@@ -26,6 +28,7 @@ export default function Sidebar({
   chips,
   multiplier,
   roundScore,
+  selectedHand,
   handleReset,
 }: SidebarProps) {
   return (
@@ -36,7 +39,11 @@ export default function Sidebar({
         BlindValues={BlindValues}
         roundScore={roundScore}
       />
-      <HandScore chips={chips} multiplier={multiplier} />
+      <HandScore
+        chips={chips}
+        multiplier={multiplier}
+        selectedHand={selectedHand}
+      />
       <div className="sub-info-progress">
         <div className="sub-info">
           <RunInfo />
