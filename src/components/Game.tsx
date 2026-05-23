@@ -31,6 +31,8 @@ interface GameProps {
   onSetMoney: Dispatch<SetStateAction<number>>;
   selectedHand: Hand;
   onSelectHand: (hand: Hand) => void;
+  onSetChips: Dispatch<SetStateAction<number>>;
+  onSetMultiplier: Dispatch<SetStateAction<number>>;
 }
 
 export default function Game({
@@ -42,6 +44,8 @@ export default function Game({
   onSetMoney,
   selectedHand,
   onSelectHand,
+  onSetChips,
+  onSetMultiplier,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -52,7 +56,14 @@ export default function Game({
   }
 
   function handleHandChange(hand: Hand) {
+    onSetChips(hand.chips);
+    onSetMultiplier(hand.multiplier);
     onSelectHand(hand);
+  }
+
+  function handleSubmitHand() {
+    onSubmitHand();
+    onSelectHand(HANDS[0]);
   }
 
   return (
@@ -85,6 +96,8 @@ export default function Game({
         >
           💸 Subtract $10
         </button>
+      </div>
+      <div className="submit-hand">
         <select
           value={HANDS.indexOf(selectedHand)}
           onChange={(e) => handleHandChange(HANDS[Number(e.target.value)])}
@@ -95,9 +108,7 @@ export default function Game({
             </option>
           ))}
         </select>
-      </div>
-      <div className="submit-hand">
-        <button className="submit-hand-button" onClick={onSubmitHand}>
+        <button className="submit-hand-button" onClick={handleSubmitHand}>
           🃏 Submit Hand
         </button>
       </div>

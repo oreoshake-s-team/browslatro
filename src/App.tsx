@@ -72,6 +72,8 @@ function App() {
         onSubmitHand={submitHand}
         selectedHand={selectedHand}
         onSelectHand={setSelectedHand}
+        onSetChips={setChips}
+        onSetMultiplier={setMultiplier}
       />
     </div>
   );
