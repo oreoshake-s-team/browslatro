@@ -12,6 +12,7 @@ import { evaluateHand } from "./handEvaluator";
 import { getRankChips, getScoringCards } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
+import { calculateInterest } from "./payout";
 
 // Per-card delay in the scoring sequence. Each scoring card animates and adds
 // its chip contribution after this many milliseconds.
@@ -105,7 +106,7 @@ function App() {
   function handleWin() {
     play("win");
     setRound((prev) => prev + 1);
-    setMoney((prev) => prev + (blind + 2));
+    setMoney((prev) => prev + (blind + 2) + calculateInterest(prev));
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
@@ -236,12 +237,12 @@ function App() {
     }
 
     if (newRoundScore >= requiredScore) {
-      // Show the round-won modal instead of immediately advancing. The modal's
-      // Continue button calls handleWin(), which moves to the next blind/ante.
       setPendingWin({
         roundScore: newRoundScore,
         requiredScore,
         baseReward: blind + 2,
+        walletAtPayout: money,
+        interest: calculateInterest(money),
       });
       return;
     }
