@@ -57,23 +57,120 @@ describe("Multiply Multiplier button integration", () => {
   });
 });
 
+function getHandCardButtons(): HTMLElement[] {
+  return Array.from(
+    screen.getByLabelText("Your hand").querySelectorAll("button")
+  );
+}
+
 describe("Card selection drives hand detection", () => {
   test("selecting a single card sets chips to High Card chip value", () => {
     render(<App />);
-    const handCards = screen
-      .getByLabelText("Your hand")
-      .querySelectorAll("button");
-    userEvent.click(handCards[0] as HTMLElement);
+    userEvent.click(getHandCardButtons()[0]);
     expect(document.querySelector(".chips")).toHaveTextContent("5");
   });
 
   test("selecting a single card sets multiplier to High Card multiplier value", () => {
     render(<App />);
-    const handCards = screen
-      .getByLabelText("Your hand")
-      .querySelectorAll("button");
-    userEvent.click(handCards[0] as HTMLElement);
+    userEvent.click(getHandCardButtons()[0]);
     expect(document.querySelector(".multiplier")).toHaveTextContent("1");
+  });
+
+  test("clicking a selected card deselects it", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[0]);
+    expect(cards[0]).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("selection cap of 5 blocks a 6th selection", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 6; i++) {
+      userEvent.click(cards[i]);
+    }
+    const selectedCount = getHandCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(5);
+  });
+
+  test("deselecting frees a slot so a previously blocked card can be selected", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i++) {
+      userEvent.click(cards[i]);
+    }
+    userEvent.click(cards[0]);
+    userEvent.click(cards[5]);
+    expect(getHandCardButtons()[5]).toHaveAttribute("aria-pressed", "true");
+  });
+});
+
+describe("Submitting a hand discards the selected cards", () => {
+  test("clears all selection highlights after submit", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    const selectedCount = getHandCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(0);
+  });
+
+  test("keeps the hand at 8 cards by drawing replacements from the deck", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(cards[2]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("decrements the remaining deck count by the number of discarded cards", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(cards[2]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(
+      screen.getByRole("button", { name: /Deck \(41 cards remaining\)/ })
+    ).toBeInTheDocument();
+  });
+
+  test("replaces the originally-selected cards with different cards", () => {
+    render(<App />);
+    const beforeLabels = getHandCardButtons()
+      .slice(0, 2)
+      .map((btn) => btn.getAttribute("aria-label"));
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    const afterLabels = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    const stillPresent = beforeLabels.filter((label) =>
+      afterLabels.includes(label)
+    );
+    expect(stillPresent).toEqual([]);
+  });
+
+  test("submitting with no cards selected leaves the hand unchanged", () => {
+    render(<App />);
+    const before = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    userEvent.click(screen.getByText(/Submit Hand/));
+    const after = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    expect(after).toEqual(before);
   });
 });
 

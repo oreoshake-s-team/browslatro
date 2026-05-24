@@ -11,7 +11,10 @@ interface GameProps {
   onSubmitHand: () => void;
   onSetMoney: Dispatch<SetStateAction<number>>;
   selectedHand: Hand;
-  onSelectionChange: (selectedCards: ReadonlyArray<Card>) => void;
+  hand: ReadonlyArray<Card>;
+  remaining: ReadonlyArray<Card>;
+  selectedIds: ReadonlySet<number>;
+  onToggleCard: (card: Card) => void;
 }
 
 export default function Game({
@@ -22,7 +25,10 @@ export default function Game({
   onSubmitHand,
   onSetMoney,
   selectedHand,
-  onSelectionChange,
+  hand,
+  remaining,
+  selectedIds,
+  onToggleCard,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -34,7 +40,12 @@ export default function Game({
 
   return (
     <div className="game">
-      <HandComponent onSelectionChange={onSelectionChange} />
+      <HandComponent
+        hand={hand}
+        remaining={remaining}
+        selectedIds={selectedIds}
+        onToggleCard={onToggleCard}
+      />
       <div className="hand-selection">
         <span className="step-label">1. Current hand</span>
         <div className="hand-display" aria-live="polite">

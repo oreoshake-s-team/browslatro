@@ -6,6 +6,18 @@ import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
 import { evaluateHand } from "./handEvaluator";
+import {
+  createDeck,
+  deal,
+  shuffle,
+  HAND_SIZE,
+  type DealResult,
+} from "./deck";
+import { MAX_SELECTED } from "./components/Hand";
+
+function initialDeal(): DealResult {
+  return deal(shuffle(createDeck()), HAND_SIZE);
+}
 
 function App() {
   const [blind, setBlind] = useState<Blind>(1);
@@ -18,6 +30,10 @@ function App() {
   const [selectedHand, setSelectedHand] = useState<Hand>(HANDS[0]);
   const [remainingHands, setRemainingHands] = useState(4);
   const [remainingDiscards, setRemainingDiscards] = useState(3);
+  const [dealt, setDealt] = useState<DealResult>(initialDeal);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
+    () => new Set()
+  );
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -64,11 +80,32 @@ function App() {
     handleReset();
   }
 
-  function handleSelectionChange(cards: ReadonlyArray<Card>) {
-    const hand = evaluateHand(cards);
+  function toggleCard(card: Card) {
+    let nextIds: Set<number>;
+    if (selectedIds.has(card.id)) {
+      nextIds = new Set(selectedIds);
+      nextIds.delete(card.id);
+    } else {
+      if (selectedIds.size >= MAX_SELECTED) return;
+      nextIds = new Set(selectedIds);
+      nextIds.add(card.id);
+    }
+    setSelectedIds(nextIds);
+    const nextSelected = dealt.hand.filter((c) => nextIds.has(c.id));
+    const hand = evaluateHand(nextSelected);
     setSelectedHand(hand);
     setChips(hand.chips);
     setMultiplier(hand.multiplier);
+  }
+
+  function discardSelectedAndReplenish() {
+    const kept = dealt.hand.filter((c) => !selectedIds.has(c.id));
+    const drawCount = dealt.hand.length - kept.length;
+    const drawn = dealt.remaining.slice(0, drawCount);
+    const newRemaining = dealt.remaining.slice(drawCount);
+    setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    setSelectedIds(new Set());
+    setSelectedHand(HANDS[0]);
   }
 
   function submitHand() {
@@ -76,6 +113,7 @@ function App() {
     setRoundScore(newRoundScore);
     setChips(20);
     setMultiplier(2);
+    discardSelectedAndReplenish();
 
     if (newRoundScore >= requiredScore) {
       handleWin();
@@ -113,7 +151,10 @@ function App() {
         onSetMoney={setMoney}
         onSubmitHand={submitHand}
         selectedHand={selectedHand}
-        onSelectionChange={handleSelectionChange}
+        hand={dealt.hand}
+        remaining={dealt.remaining}
+        selectedIds={selectedIds}
+        onToggleCard={toggleCard}
       />
     </div>
   );
