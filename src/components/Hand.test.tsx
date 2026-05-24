@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
 import type { Card as CardType } from "../types";
@@ -322,5 +322,93 @@ describe("Hand manual reordering", () => {
     );
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual(["A of Diamonds", "10 of Clubs", "K of Hearts"]);
+  });
+});
+
+describe("Hand drag-and-drop reordering", () => {
+  const fourCards: CardType[] = [
+    { id: 1, rank: "K", suit: "hearts" },
+    { id: 2, rank: "2", suit: "spades" },
+    { id: 3, rank: "10", suit: "clubs" },
+    { id: 4, rank: "A", suit: "diamonds" },
+  ];
+
+  // Default rank-sort displays as: A♦(id 4), K♥(id 1), 10♣(id 3), 2♠(id 2)
+
+  function getSlot(cardId: number): HTMLElement {
+    return screen.getByTestId(`hand-slot-${cardId}`);
+  }
+
+  function dragAndDrop(sourceId: number, targetId: number) {
+    const source = getSlot(sourceId);
+    const target = getSlot(targetId);
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(target);
+    fireEvent.drop(target);
+    fireEvent.dragEnd(source);
+  }
+
+  test("every card slot is draggable", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    const slots = fourCards.map((c) => getSlot(c.id));
+    expect(slots.every((s) => s.getAttribute("draggable") === "true")).toBe(true);
+  });
+
+  test("dragging A of Diamonds onto 10 of Clubs swaps their positions", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(4, 3); // A♦ → 10♣
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "10 of Clubs",
+      "K of Hearts",
+      "A of Diamonds",
+      "2 of Spades",
+    ]);
+  });
+
+  test("dragging activates the Manual sort indicator", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(4, 3);
+    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("dropping a card on itself is a no-op", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(4, 4);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("the dragging slot is marked while a drag is in flight", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    const source = getSlot(4);
+    fireEvent.dragStart(source);
+    expect(source).toHaveClass("hand-card-slot-dragging");
+    fireEvent.dragEnd(source);
+  });
+
+  test("the hovered drop target is marked while dragging over it", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    const source = getSlot(4);
+    const target = getSlot(3);
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(target);
+    expect(target).toHaveClass("hand-card-slot-drop-target");
+    fireEvent.dragEnd(source);
+  });
+
+  test("drop-target highlight is removed after the drop completes", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(4, 3);
+    // After drop, the (now-swapped) target should not retain the highlight.
+    expect(getSlot(3)).not.toHaveClass("hand-card-slot-drop-target");
   });
 });

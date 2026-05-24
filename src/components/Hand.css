@@ -92,6 +92,24 @@
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
+  cursor: grab;
+  border-radius: 6px;
+  transition: outline-color 80ms linear, opacity 80ms linear;
+  outline: 2px dashed transparent;
+  outline-offset: 4px;
+}
+
+.hand-card-slot:active {
+  cursor: grabbing;
+}
+
+.hand-card-slot-dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.hand-card-slot-drop-target {
+  outline-color: #339af0;
 }
 
 .hand-card-reorder {
