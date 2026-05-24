@@ -1,11 +1,6 @@
 .App {
   display: flex;
   flex-direction: row;
-  /*
-   * Use the dynamic viewport unit so the App height tracks the actual visible
-   * area when mobile browser chrome (address bar, toolbar) collapses or
-   * expands. Falls back to 100vh on browsers that don't support dvh. See #50.
-   */
   height: 100vh;
   height: 100dvh;
   margin: 0;

@@ -1,29 +1,12 @@
 .game {
   flex: 1;
-  /*
-   * `min-height: 0` is required so this flex item can shrink below its
-   * intrinsic content size — without it, when the row container (`.App`) is
-   * shorter than the game content (e.g. landscape mobile), the overflow:auto
-   * below is ignored and the column overflows its parent silently.
-   */
   min-height: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  /*
-   * `safe center` falls back to `flex-start` when content overflows the
-   * cross/main axis. Plain `center` would clip the top of the column
-   * (cards row) in landscape mobile, see issue #50.
-   */
   justify-content: safe center;
   gap: 2rem;
   padding: 2rem;
-  /*
-   * The play area is the only scrollable region inside the App (the sidebar
-   * has its own overflow:auto). When vertical space is tight — landscape
-   * mobile, small windows — let the column scroll its own content instead of
-   * overflowing the viewport.
-   */
   overflow-y: auto;
   box-sizing: border-box;
 }
