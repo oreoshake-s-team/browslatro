@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 
@@ -63,6 +63,12 @@ function getHandCardButtons(): HTMLElement[] {
   );
 }
 
+function flushDiscardAnimation(): void {
+  getHandCardButtons()
+    .filter((btn) => btn.classList.contains("card-discarding"))
+    .forEach((btn) => fireEvent.animationEnd(btn));
+}
+
 describe("Card selection drives hand detection", () => {
   test("selecting a single card sets chips to High Card chip value", () => {
     render(<App />);
@@ -109,12 +115,13 @@ describe("Card selection drives hand detection", () => {
 });
 
 describe("Submitting a hand discards the selected cards", () => {
-  test("clears all selection highlights after submit", () => {
+  test("clears all selection highlights after submit and animation", () => {
     render(<App />);
     const cards = getHandCardButtons();
     userEvent.click(cards[0]);
     userEvent.click(cards[1]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
     const selectedCount = getHandCardButtons().filter(
       (btn) => btn.getAttribute("aria-pressed") === "true"
     ).length;
@@ -128,6 +135,7 @@ describe("Submitting a hand discards the selected cards", () => {
     userEvent.click(cards[1]);
     userEvent.click(cards[2]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
     expect(getHandCardButtons()).toHaveLength(8);
   });
 
@@ -138,6 +146,7 @@ describe("Submitting a hand discards the selected cards", () => {
     userEvent.click(cards[1]);
     userEvent.click(cards[2]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
     expect(
       screen.getByRole("button", { name: /Deck \(41 cards remaining\)/ })
     ).toBeInTheDocument();
@@ -152,6 +161,7 @@ describe("Submitting a hand discards the selected cards", () => {
     userEvent.click(cards[0]);
     userEvent.click(cards[1]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
     const afterLabels = getHandCardButtons().map((btn) =>
       btn.getAttribute("aria-label")
     );
@@ -171,6 +181,54 @@ describe("Submitting a hand discards the selected cards", () => {
       btn.getAttribute("aria-label")
     );
     expect(after).toEqual(before);
+  });
+});
+
+describe("Discard animation", () => {
+  test("marks selected cards with the discarding class on submit", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    const discardingCount = getHandCardButtons().filter((btn) =>
+      btn.classList.contains("card-discarding")
+    ).length;
+    expect(discardingCount).toBe(2);
+  });
+
+  test("does not finalize the discard until the animation ends", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    // Discard pile should still be empty before animation ends
+    expect(
+      screen.getByRole("button", { name: /Discard pile \(0 cards\)/ })
+    ).toBeInTheDocument();
+  });
+
+  test("moves discarded cards to the discard pile after animation completes", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(
+      screen.getByRole("button", { name: /Discard pile \(2 cards\)/ })
+    ).toBeInTheDocument();
+  });
+
+  test("blocks card toggles while a discard animation is in flight", () => {
+    render(<App />);
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    // Try to click a different card mid-animation
+    userEvent.click(cards[3]);
+    expect(cards[3]).toHaveAttribute("aria-pressed", "false");
   });
 });
 

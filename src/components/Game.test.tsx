@@ -16,8 +16,11 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       selectedHand={HANDS[0]}
       hand={[]}
       remaining={[]}
+      discarded={[]}
       selectedIds={new Set()}
+      discardingIds={new Set()}
       onToggleCard={jest.fn()}
+      onCardDiscardEnd={jest.fn()}
       {...overrides}
     />,
   );

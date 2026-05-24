@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
@@ -6,13 +6,7 @@ import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
 import { evaluateHand } from "./handEvaluator";
-import {
-  createDeck,
-  deal,
-  shuffle,
-  HAND_SIZE,
-  type DealResult,
-} from "./deck";
+import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/Hand";
 
 function initialDeal(): DealResult {
@@ -32,8 +26,13 @@ function App() {
   const [remainingDiscards, setRemainingDiscards] = useState(3);
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
-    () => new Set()
+    () => new Set(),
   );
+  const [discardPile, setDiscardPile] = useState<ReadonlyArray<Card>>([]);
+  const [discardingIds, setDiscardingIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const pendingDiscardCountRef = useRef(0);
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -52,11 +51,19 @@ function App() {
     setRemainingDiscards(3);
   }
 
-  function handleReset() {
+  function handleReset(): void {
     setBlind(1);
     setRound(1);
     setAnte(1);
     setMoney(0);
+    setRoundScore(0);
+    setSelectedHand(HANDS[0]);
+    setRemainingHands(4);
+    setRemainingDiscards(3);
+    setDealt(initialDeal());
+    setSelectedIds(new Set());
+    setDiscardPile([]);
+    setDiscardingIds(new Set());
   }
 
   function addChips(amount: number) {
@@ -81,6 +88,7 @@ function App() {
   }
 
   function toggleCard(card: Card) {
+    if (discardingIds.size > 0) return;
     let nextIds: Set<number>;
     if (selectedIds.has(card.id)) {
       nextIds = new Set(selectedIds);
@@ -98,22 +106,39 @@ function App() {
     setMultiplier(hand.multiplier);
   }
 
-  function discardSelectedAndReplenish() {
-    const kept = dealt.hand.filter((c) => !selectedIds.has(c.id));
-    const drawCount = dealt.hand.length - kept.length;
-    const drawn = dealt.remaining.slice(0, drawCount);
-    const newRemaining = dealt.remaining.slice(drawCount);
+  function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
+    const discardedCards = dealt.hand.filter((c) => idsToDiscard.has(c.id));
+    const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
+    const drawn = dealt.remaining.slice(0, discardedCards.length);
+    const newRemaining = dealt.remaining.slice(discardedCards.length);
     setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    setDiscardPile((prev) => [...prev, ...discardedCards]);
     setSelectedIds(new Set());
+    setDiscardingIds(new Set());
     setSelectedHand(HANDS[0]);
   }
 
+  function handleCardDiscardEnd(card: Card) {
+    if (!discardingIds.has(card.id)) return;
+    pendingDiscardCountRef.current -= 1;
+    if (pendingDiscardCountRef.current <= 0) {
+      pendingDiscardCountRef.current = 0;
+      finalizeDiscard(discardingIds);
+    }
+  }
+
   function submitHand() {
+    if (discardingIds.size > 0) return;
+
     const newRoundScore = roundScore + chips * multiplier;
     setRoundScore(newRoundScore);
     setChips(20);
     setMultiplier(2);
-    discardSelectedAndReplenish();
+
+    if (selectedIds.size > 0) {
+      pendingDiscardCountRef.current = selectedIds.size;
+      setDiscardingIds(selectedIds);
+    }
 
     if (newRoundScore >= requiredScore) {
       handleWin();
@@ -153,8 +178,11 @@ function App() {
         selectedHand={selectedHand}
         hand={dealt.hand}
         remaining={dealt.remaining}
+        discarded={discardPile}
         selectedIds={selectedIds}
+        discardingIds={discardingIds}
         onToggleCard={toggleCard}
+        onCardDiscardEnd={handleCardDiscardEnd}
       />
     </div>
   );

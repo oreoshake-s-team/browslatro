@@ -13,8 +13,11 @@ interface GameProps {
   selectedHand: Hand;
   hand: ReadonlyArray<Card>;
   remaining: ReadonlyArray<Card>;
+  discarded: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
+  discardingIds: ReadonlySet<number>;
   onToggleCard: (card: Card) => void;
+  onCardDiscardEnd: (card: Card) => void;
 }
 
 export default function Game({
@@ -27,8 +30,11 @@ export default function Game({
   selectedHand,
   hand,
   remaining,
+  discarded,
   selectedIds,
+  discardingIds,
   onToggleCard,
+  onCardDiscardEnd,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -43,8 +49,11 @@ export default function Game({
       <HandComponent
         hand={hand}
         remaining={remaining}
+        discarded={discarded}
         selectedIds={selectedIds}
+        discardingIds={discardingIds}
         onToggleCard={onToggleCard}
+        onCardDiscardEnd={onCardDiscardEnd}
       />
       <div className="hand-selection">
         <span className="step-label">1. Current hand</span>
