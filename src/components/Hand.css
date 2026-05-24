@@ -1,0 +1,25 @@
+.hand {
+  width: 100%;
+  max-width: 60rem;
+  padding: 1.6rem;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  box-sizing: border-box;
+}
+
+.hand-cards {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 0.6rem;
+  align-items: end;
+  justify-items: center;
+  min-height: 9.5rem;
+}
+
+@media (max-width: 720px) {
+  .hand-cards {
+    grid-template-columns: repeat(4, 1fr);
+    row-gap: 1.6rem;
+  }
+}
