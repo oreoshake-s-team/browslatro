@@ -111,11 +111,11 @@ describe("Win button integration", () => {
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$7");
 
-    await user.click(screen.getByText(/Win/)); // boss → ante 2 small, +$5
+    await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 800")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
-    expect(getStatValue("Money")).toHaveTextContent("$12");
+    expect(getStatValue("Money")).toHaveTextContent("$13");
   });
 });
 

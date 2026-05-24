@@ -1,10 +1,13 @@
 import "./RoundWonModal.css";
 import { createPortal } from "react-dom";
+import { INTEREST_CAP, INTEREST_RATE_PER } from "../../payout";
 
 export interface RoundWonInfo {
   readonly roundScore: number;
   readonly requiredScore: number;
   readonly baseReward: number;
+  readonly walletAtPayout: number;
+  readonly interest: number;
 }
 
 interface RoundWonModalProps {
@@ -13,8 +16,11 @@ interface RoundWonModalProps {
 }
 
 export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) {
-  const { roundScore, requiredScore, baseReward } = info;
+  const { roundScore, requiredScore, baseReward, walletAtPayout, interest } =
+    info;
   const beatBy = roundScore - requiredScore;
+  const total = baseReward + interest;
+  const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${walletAtPayout}`;
 
   return createPortal(
     <div
@@ -25,9 +31,6 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     >
       <div
         className="round-won-modal"
-        // Clicks inside the modal must not propagate to a future overlay-close
-        // handler. The overlay itself does not close on click in this modal;
-        // the player must click Continue.
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="round-won-title" className="round-won-title">
@@ -49,16 +52,20 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         </dl>
         <div className="round-won-payout">
           <h3 className="round-won-payout-title">Money won</h3>
-          <ul className="round-won-payout-list">
-            <li className="round-won-payout-row">
-              <span>Base reward</span>
-              <span data-testid="round-won-base-reward">${baseReward}</span>
-            </li>
-            <li className="round-won-payout-row round-won-payout-total">
-              <span>Total</span>
-              <span data-testid="round-won-total">${baseReward}</span>
-            </li>
-          </ul>
+          <dl className="round-won-payout-list">
+            <div className="round-won-payout-row">
+              <dt>Base reward</dt>
+              <dd data-testid="round-won-base-reward">${baseReward}</dd>
+            </div>
+            <div className="round-won-payout-row">
+              <dt data-testid="round-won-interest-label">{interestLabel}</dt>
+              <dd data-testid="round-won-interest">+${interest}</dd>
+            </div>
+            <div className="round-won-payout-row round-won-payout-total">
+              <dt>Total</dt>
+              <dd data-testid="round-won-total">${total}</dd>
+            </div>
+          </dl>
         </div>
         <button
           type="button"

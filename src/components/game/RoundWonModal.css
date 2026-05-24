@@ -81,7 +81,6 @@
 .round-won-payout-list {
   margin: 0;
   padding: 0;
-  list-style: none;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
@@ -90,8 +89,18 @@
 .round-won-payout-row {
   display: flex;
   justify-content: space-between;
+  gap: 0.6rem;
   font-size: 1rem;
   color: #495057;
+}
+
+.round-won-payout-row dt {
+  margin: 0;
+  font-weight: normal;
+}
+
+.round-won-payout-row dd {
+  margin: 0;
 }
 
 .round-won-payout-total {
