@@ -28,47 +28,53 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
 }
 
 describe("Game", () => {
-  test("Win button calls onWin", () => {
+  test("Win button calls onWin", async () => {
+    const user = userEvent.setup();
     const onWin = jest.fn();
     renderGame({ onWin });
-    userEvent.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/Win/));
     expect(onWin).toHaveBeenCalledTimes(1);
   });
 
-  test("Win button calls onWin each time it is clicked", () => {
+  test("Win button calls onWin each time it is clicked", async () => {
+    const user = userEvent.setup();
     const onWin = jest.fn();
     renderGame({ onWin });
-    userEvent.click(screen.getByText(/Win/));
-    userEvent.click(screen.getByText(/Win/));
-    userEvent.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/Win/));
     expect(onWin).toHaveBeenCalledTimes(3);
   });
 
-  test("Add Chips button calls onAddChips with 10", () => {
+  test("Add Chips button calls onAddChips with 10", async () => {
+    const user = userEvent.setup();
     const onAddChips = jest.fn();
     renderGame({ onAddChips });
-    userEvent.click(screen.getByText(/Add Chips/));
+    await user.click(screen.getByText(/Add Chips/));
     expect(onAddChips).toHaveBeenCalledWith(10);
   });
 
-  test("Add Multiplier button calls onAddMultiplier with 1", () => {
+  test("Add Multiplier button calls onAddMultiplier with 1", async () => {
+    const user = userEvent.setup();
     const onAddMultiplier = jest.fn();
     renderGame({ onAddMultiplier });
-    userEvent.click(screen.getByText(/Add Multiplier/));
+    await user.click(screen.getByText(/Add Multiplier/));
     expect(onAddMultiplier).toHaveBeenCalledWith(1);
   });
 
-  test("Multiply Multiplier button calls onMultiplyMultiplier with 2", () => {
+  test("Multiply Multiplier button calls onMultiplyMultiplier with 2", async () => {
+    const user = userEvent.setup();
     const onMultiplyMultiplier = jest.fn();
     renderGame({ onMultiplyMultiplier });
-    userEvent.click(screen.getByText(/Multiply Multiplier/));
+    await user.click(screen.getByText(/Multiply Multiplier/));
     expect(onMultiplyMultiplier).toHaveBeenCalledWith(2);
   });
 
-  test("Submit Hand button calls onSubmitHand", () => {
+  test("Submit Hand button calls onSubmitHand", async () => {
+    const user = userEvent.setup();
     const onSubmitHand = jest.fn();
     renderGame({ onSubmitHand });
-    userEvent.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
     expect(onSubmitHand).toHaveBeenCalledTimes(1);
   });
 
@@ -82,10 +88,11 @@ describe("Game", () => {
     expect(screen.getByText(HANDS[3].label)).toBeInTheDocument();
   });
 
-  test("Discard button calls onDiscard when enabled", () => {
+  test("Discard button calls onDiscard when enabled", async () => {
+    const user = userEvent.setup();
     const onDiscard = jest.fn();
     renderGame({ onDiscard, canDiscard: true });
-    userEvent.click(screen.getByText(/Discard/));
+    await user.click(screen.getByText(/Discard/));
     expect(onDiscard).toHaveBeenCalledTimes(1);
   });
 

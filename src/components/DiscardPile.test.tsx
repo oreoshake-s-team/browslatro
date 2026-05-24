@@ -46,27 +46,30 @@ describe("DiscardPile", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("clicking the pile opens the modal", () => {
+  test("clicking the pile opens the modal", async () => {
+    const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    userEvent.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByLabelText(/Discard pile/));
     expect(
       screen.getByRole("heading", { name: "Discarded Cards" })
     ).toBeInTheDocument();
   });
 
-  test("modal shows per-suit counts", () => {
+  test("modal shows per-suit counts", async () => {
+    const user = userEvent.setup();
     const fullDeckDiscarded = createDeck();
     render(<DiscardPile discarded={fullDeckDiscarded} />);
-    userEvent.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByLabelText(/Discard pile/));
     expect(
       screen.getByRole("heading", { name: "Hearts (13)" })
     ).toBeInTheDocument();
   });
 
-  test("Close button dismisses the modal", () => {
+  test("Close button dismisses the modal", async () => {
+    const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    userEvent.click(screen.getByLabelText(/Discard pile/));
-    userEvent.click(screen.getByText("Close"));
+    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByText("Close"));
     expect(
       screen.queryByRole("heading", { name: "Discarded Cards" })
     ).not.toBeInTheDocument();
