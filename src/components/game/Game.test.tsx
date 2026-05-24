@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import Game from "./Game";
-import { HANDS } from "../constants";
+import { HANDS } from "../../constants";
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(

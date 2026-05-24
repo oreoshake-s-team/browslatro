@@ -1,13 +1,13 @@
-import type { Blind } from "../types";
+import type { Blind } from "../../types";
 import "./Sidebar.css";
-import { BlindValues } from "../constants";
+import { BlindValues } from "../../constants";
 import Round from "./Round";
 import RunInfo from "./RunInfo";
-import Options from "./Options";
+import Options from "../options/Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
-import HandScore from "./HandScore";
-import type { Hand } from "../types";
+import HandScore from "../game/HandScore";
+import type { Hand } from "../../types";
 
 interface SidebarProps {
   blind: Blind;

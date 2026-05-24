@@ -1,5 +1,5 @@
 import "./Card.css";
-import type { Card as CardType, Rank, Suit } from "../types";
+import type { Card as CardType, Rank, Suit } from "../../types";
 
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
