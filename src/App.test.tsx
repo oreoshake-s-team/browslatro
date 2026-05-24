@@ -129,8 +129,9 @@ describe("Multiply Multiplier button integration", () => {
 });
 
 function getHandCardButtons(): HTMLElement[] {
+  // Card buttons expose aria-pressed; reorder controls in each slot do not.
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button")
+    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]")
   );
 }
 

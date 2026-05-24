@@ -9,7 +9,10 @@ function getHandRegion(): HTMLElement {
 }
 
 function getCardButtons(): HTMLElement[] {
-  return within(getHandRegion()).getAllByRole("button");
+  // Card buttons expose aria-pressed; reorder controls in the slot do not.
+  return within(getHandRegion())
+    .getAllByRole("button")
+    .filter((btn) => btn.hasAttribute("aria-pressed"));
 }
 
 function renderHand(overrides: Partial<React.ComponentProps<typeof Hand>> = {}) {
@@ -179,5 +182,145 @@ describe("Hand sorting", () => {
     );
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual(["Q of Diamonds", "5 of Hearts"]);
+  });
+});
+
+describe("Hand manual reordering", () => {
+  const fourCards: CardType[] = [
+    { id: 1, rank: "K", suit: "hearts" },
+    { id: 2, rank: "2", suit: "spades" },
+    { id: 3, rank: "10", suit: "clubs" },
+    { id: 4, rank: "A", suit: "diamonds" },
+  ];
+
+  test("renders a Move left button for every card", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    expect(screen.getAllByRole("button", { name: /^Move .* left$/ })).toHaveLength(
+      4,
+    );
+  });
+
+  test("renders a Move right button for every card", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    expect(
+      screen.getAllByRole("button", { name: /^Move .* right$/ }),
+    ).toHaveLength(4);
+  });
+
+  test("disables Move left on the leftmost card", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // Default rank-sort puts A of Diamonds first
+    expect(
+      screen.getByRole("button", { name: "Move A of Diamonds left" }),
+    ).toBeDisabled();
+  });
+
+  test("disables Move right on the rightmost card", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // Default rank-sort puts 2 of Spades last
+    expect(
+      screen.getByRole("button", { name: "Move 2 of Spades right" }),
+    ).toBeDisabled();
+  });
+
+  test("clicking Move right moves the card one position to the right", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // Default order: A♦, K♥, 10♣, 2♠ → move K♥ right → A♦, 10♣, K♥, 2♠
+    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
+      "2 of Spades",
+    ]);
+  });
+
+  test("clicking Move left moves the card one position to the left", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Move 10 of Clubs left" }));
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
+      "2 of Spades",
+    ]);
+  });
+
+  test("moving a card activates the Manual sort indicator", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("moving a card unsets the Rank sort indicator", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  test("clicking Rank after a manual move restores rank-sorted order", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    userEvent.click(screen.getByRole("button", { name: "Rank" }));
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("a newly drawn card is appended to the manual order", () => {
+    const { rerender } = renderHand({ hand: fourCards, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    const withNewCard: CardType[] = [
+      ...fourCards,
+      { id: 5, rank: "7", suit: "hearts" },
+    ];
+    rerender(
+      <Hand
+        hand={withNewCard}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        onToggleCard={jest.fn()}
+        onCardDiscardEnd={jest.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
+      "2 of Spades",
+      "7 of Hearts",
+    ]);
+  });
+
+  test("a removed card is dropped from the manual order without disturbing siblings", () => {
+    const { rerender } = renderHand({ hand: fourCards, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    const withoutTwo = fourCards.filter((c) => c.id !== 2);
+    rerender(
+      <Hand
+        hand={withoutTwo}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        onToggleCard={jest.fn()}
+        onCardDiscardEnd={jest.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual(["A of Diamonds", "10 of Clubs", "K of Hearts"]);
   });
 });
