@@ -112,9 +112,9 @@ describe("sortCards", () => {
     { id: 4, rank: "10", suit: "diamonds" },
   ];
 
-  test("rank mode orders cards from 2 up through A", () => {
+  test("rank mode orders cards from A down through 2", () => {
     const sorted = sortCards(sample, "rank");
-    expect(sorted.map((c) => c.rank)).toEqual(["2", "10", "K", "A"]);
+    expect(sorted.map((c) => c.rank)).toEqual(["A", "K", "10", "2"]);
   });
 
   test("rank mode breaks ties by suit (clubs → diamonds → hearts → spades)", () => {
@@ -143,14 +143,14 @@ describe("sortCards", () => {
     ]);
   });
 
-  test("suit mode orders cards within a suit ascending by rank", () => {
+  test("suit mode orders cards within a suit descending by rank", () => {
     const allSpades: Card[] = [
       { id: 1, rank: "A", suit: "spades" },
       { id: 2, rank: "2", suit: "spades" },
       { id: 3, rank: "K", suit: "spades" },
     ];
     const sorted = sortCards(allSpades, "suit");
-    expect(sorted.map((c) => c.rank)).toEqual(["2", "K", "A"]);
+    expect(sorted.map((c) => c.rank)).toEqual(["A", "K", "2"]);
   });
 
   test("does not mutate the input array", () => {

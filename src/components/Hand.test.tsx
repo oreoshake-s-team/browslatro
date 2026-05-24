@@ -58,10 +58,15 @@ describe("Hand", () => {
 
   test("calls onToggleCard with the card when a card is clicked", () => {
     const deck = createDeck();
+    const handCards = deck.slice(0, 8);
     const onToggleCard = jest.fn();
-    renderHand({ hand: deck.slice(0, 8), onToggleCard });
-    userEvent.click(getCardButtons()[0]);
-    expect(onToggleCard).toHaveBeenCalledWith(deck[0]);
+    renderHand({ hand: handCards, onToggleCard });
+    const target = handCards[0];
+    const targetLabel = `${target.rank} of ${
+      target.suit.charAt(0).toUpperCase() + target.suit.slice(1)
+    }`;
+    userEvent.click(screen.getByRole("button", { name: targetLabel }));
+    expect(onToggleCard).toHaveBeenCalledWith(target);
   });
 
   test("renders a deck pile reflecting the remaining card count", () => {
@@ -90,14 +95,14 @@ describe("Hand sorting", () => {
     { id: 4, rank: "A", suit: "diamonds" },
   ];
 
-  test("defaults to rank-ascending order", () => {
+  test("defaults to rank-descending order (A → 2)", () => {
     renderHand({ hand: shuffledHand, remaining: [] });
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
-      "2 of Spades",
-      "10 of Clubs",
-      "K of Hearts",
       "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
     ]);
   });
 
@@ -139,16 +144,40 @@ describe("Hand sorting", () => {
     );
   });
 
-  test("clicking Rank after Suit restores rank ordering", () => {
+  test("clicking Rank after Suit restores rank-descending ordering", () => {
     renderHand({ hand: shuffledHand, remaining: [] });
     userEvent.click(screen.getByRole("button", { name: "Suit" }));
     userEvent.click(screen.getByRole("button", { name: "Rank" }));
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
-      "2 of Spades",
-      "10 of Clubs",
-      "K of Hearts",
       "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
     ]);
+  });
+
+  test("re-sorts the displayed hand when the hand prop changes", () => {
+    const initial: CardType[] = [
+      { id: 1, rank: "5", suit: "hearts" },
+      { id: 2, rank: "J", suit: "clubs" },
+    ];
+    const updated: CardType[] = [
+      { id: 1, rank: "5", suit: "hearts" },
+      { id: 3, rank: "Q", suit: "diamonds" },
+    ];
+    const { rerender } = renderHand({ hand: initial, remaining: [] });
+    rerender(
+      <Hand
+        hand={updated}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        onToggleCard={jest.fn()}
+        onCardDiscardEnd={jest.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual(["Q of Diamonds", "5 of Hearts"]);
   });
 });

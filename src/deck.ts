@@ -96,14 +96,14 @@ export function sortCards(
   if (mode === "rank") {
     arr.sort(
       (a, b) =>
-        RANK_DISPLAY_ORDER[a.rank] - RANK_DISPLAY_ORDER[b.rank] ||
+        RANK_DISPLAY_ORDER[b.rank] - RANK_DISPLAY_ORDER[a.rank] ||
         SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit],
     );
   } else {
     arr.sort(
       (a, b) =>
         SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit] ||
-        RANK_DISPLAY_ORDER[a.rank] - RANK_DISPLAY_ORDER[b.rank],
+        RANK_DISPLAY_ORDER[b.rank] - RANK_DISPLAY_ORDER[a.rank],
     );
   }
   return arr;
