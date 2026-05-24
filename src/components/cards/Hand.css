@@ -72,19 +72,34 @@
 }
 
 .hand-cards {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: end;
-  justify-items: center;
   min-height: 11rem;
+  /* No `gap` here: spacing is provided by interleaved .hand-card-gap drop
+   * zones so the row can visibly open when a card is dragged over a gap. */
+  gap: 0;
+  row-gap: 1.6rem;
 }
 
-@media (max-width: 720px) {
-  .hand-cards {
-    grid-template-columns: repeat(4, 1fr);
-    row-gap: 1.6rem;
-  }
+/* Drop-zone spacers interleaved between (and around) every card slot.
+ * Resting width is a small column that supplies the visual gap between
+ * cards; on drag-over the spacer expands to a card-sized slot to show
+ * exactly where the dragged card will land. */
+.hand-card-gap {
+  flex: 0 0 0.3rem;
+  align-self: stretch;
+  min-height: 9.5rem;
+  border-radius: 4px;
+  transition: flex-basis 120ms ease, background-color 120ms ease;
+}
+
+.hand-card-gap-active {
+  flex-basis: 4.5rem;
+  background-color: rgba(51, 154, 240, 0.18);
+  outline: 2px dashed #339af0;
+  outline-offset: -2px;
 }
 
 .hand-card-slot {
@@ -106,10 +121,6 @@
 .hand-card-slot-dragging {
   opacity: 0.4;
   cursor: grabbing;
-}
-
-.hand-card-slot-drop-target {
-  outline-color: #339af0;
 }
 
 .hand-card-reorder {
