@@ -8,8 +8,8 @@
   padding: 2rem;
 }
 
-.game button {
-  min-width: 18rem;
+.modifier-grid button,
+.submit-hand-button {
   padding: 10px 20px;
   font-size: 1.1rem;
 }
