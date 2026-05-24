@@ -44,6 +44,30 @@
   }
 }
 
+.card-scoring {
+  animation: card-scoring-pulse 200ms ease-out;
+  box-shadow: 0 0 18px rgba(51, 154, 240, 0.7);
+}
+
+@keyframes card-scoring-pulse {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-0.6rem) scale(1.08);
+  }
+  100% {
+    transform: translateY(-1.4rem) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-scoring {
+    animation: none;
+    /* Keep the highlight so the player can still see which card is scoring. */
+  }
+}
+
 .card-red {
   color: #c92a2a;
 }

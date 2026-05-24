@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { isHighVisibility, toggleHighVisibility } from "./components/preferences";
@@ -29,6 +29,16 @@ jest.mock("./deck", () => {
 
 beforeEach(() => {
   mockShuffleConfig.useIdentity = false;
+  jest.useFakeTimers();
+});
+
+afterEach(() => {
+  // Drain anything still scheduled before switching back, so React doesn't try
+  // to update unmounted state.
+  act(() => {
+    jest.runOnlyPendingTimers();
+  });
+  jest.useRealTimers();
 });
 
 function getStatValue(label: string): HTMLElement {
@@ -135,7 +145,23 @@ function getHandCardButtons(): HTMLElement[] {
   );
 }
 
+function flushScoringSequence(): void {
+  // Each scoring step's setTimeout fires inside an act(), which only commits
+  // its state update on exit. The useEffect that schedules the *next* timeout
+  // runs after that commit, so a single runAllTimers can only fire one step.
+  // Loop until the queue truly drains (with a safety cap).
+  for (let i = 0; i < 20; i++) {
+    if (jest.getTimerCount() === 0) return;
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+  }
+}
+
 function flushDiscardAnimation(): void {
+  // Cards only enter the discard animation after the scoring sequence
+  // finalizes, so we drain that first.
+  flushScoringSequence();
   getHandCardButtons()
     .filter((btn) => btn.classList.contains("card-discarding"))
     .forEach((btn) => fireEvent.animationEnd(btn));
@@ -367,12 +393,13 @@ describe("Hand stays sorted after a play", () => {
 });
 
 describe("Discard animation", () => {
-  test("marks selected cards with the discarding class on submit", () => {
+  test("marks selected cards with the discarding class after the scoring sequence completes", () => {
     render(<App />);
     const cards = getHandCardButtons();
     userEvent.click(cards[0]);
     userEvent.click(cards[1]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
     const discardingCount = getHandCardButtons().filter((btn) =>
       btn.classList.contains("card-discarding")
     ).length;
@@ -410,6 +437,7 @@ describe("Discard animation", () => {
     const cards = getHandCardButtons();
     userEvent.click(cards[0]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
     // Try to click a different card mid-animation
     userEvent.click(cards[3]);
     expect(cards[3]).toHaveAttribute("aria-pressed", "false");
@@ -444,6 +472,7 @@ describe("Submit Hand button integration", () => {
     render(<App />);
     userEvent.click(getHandCardButtons()[0]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
     expect(document.querySelector(".round-score-value")).toHaveTextContent(
       "14",
     );
@@ -463,6 +492,7 @@ describe("Submit Hand win integration", () => {
     userEvent.click(cards[3]);
     userEvent.click(cards[4]);
     userEvent.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 });
@@ -565,5 +595,58 @@ describe("Options modal reset integration", () => {
     expect(getStatValue("Money")).toHaveTextContent("$0"); // was $7 before reset
     expect(getStatValue("Ante")).toHaveTextContent("1");
     expect(getStatValue("Round")).toHaveTextContent("1");
+  });
+});
+
+describe("Sequential card scoring", () => {
+  function submitFirstFiveSpades(): void {
+    // Identity shuffle deals Spades 2..9, displayed rank-descending as 9♠..2♠.
+    // Selecting the top 5 → 9,8,7,6,5 of Spades, a Straight Flush.
+    mockShuffleConfig.useIdentity = true;
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) userEvent.click(cards[i]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+  }
+
+  test("the Submit Hand button is disabled while a scoring sequence is in flight", () => {
+    submitFirstFiveSpades();
+    // Sequence is running but has not been drained.
+    expect(screen.getByText(/Submit Hand/)).toBeDisabled();
+  });
+
+  test("the Submit Hand button is re-enabled after the scoring sequence completes", () => {
+    submitFirstFiveSpades();
+    flushDiscardAnimation();
+    expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
+  });
+
+  test("chips counter ticks up by each scored card's rank value during the sequence", () => {
+    // Straight Flush base chips = 100. After ticking 5♠ only, chips should be 105.
+    submitFirstFiveSpades();
+    // Advance exactly one scoring step.
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(document.querySelector(".chips")).toHaveTextContent("105");
+  });
+
+  test("round score is unchanged mid-sequence", () => {
+    submitFirstFiveSpades();
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    // After one step the sequence is in flight; round score should still be 0.
+    expect(document.querySelector(".round-score-value")).toHaveTextContent("0");
+  });
+
+  test("final round score equals (hand base chips + per-card rank chips) * multiplier", () => {
+    // Straight Flush: (100 + 5+6+7+8+9) * 8 = 1080.
+    // Required score in Ante 1 / Small Blind = 300, so this win-advances the
+    // blind. We assert the Big Blind label appears (which only happens after
+    // the scoring sequence finalizes and the round-won check fires).
+    submitFirstFiveSpades();
+    flushDiscardAnimation();
+    expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 });
