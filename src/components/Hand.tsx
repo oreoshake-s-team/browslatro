@@ -59,6 +59,8 @@ export default function Hand({
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
     null,
   );
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
 
   const displayedHand = useMemo(
     () =>
@@ -71,15 +73,59 @@ export default function Hand({
     setManualOrder(null);
   }
 
+  function swapByIds(aId: number, bId: number) {
+    if (aId === bId) return;
+    const currentOrder = displayedHand.map((c) => c.id);
+    const fromIdx = currentOrder.indexOf(aId);
+    const toIdx = currentOrder.indexOf(bId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = currentOrder.slice();
+    [next[fromIdx], next[toIdx]] = [next[toIdx], next[fromIdx]];
+    setManualOrder(next);
+  }
+
   function moveCard(cardId: number, direction: -1 | 1) {
     const currentOrder = displayedHand.map((c) => c.id);
     const idx = currentOrder.indexOf(cardId);
     if (idx < 0) return;
     const target = idx + direction;
     if (target < 0 || target >= currentOrder.length) return;
-    const next = currentOrder.slice();
-    [next[idx], next[target]] = [next[target], next[idx]];
-    setManualOrder(next);
+    swapByIds(cardId, currentOrder[target]);
+  }
+
+  function endDrag() {
+    setDraggingId(null);
+    setDragOverId(null);
+  }
+
+  function handleDragStart(cardId: number, e: React.DragEvent<HTMLDivElement>) {
+    setDraggingId(cardId);
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", String(cardId));
+    }
+  }
+
+  function handleDragOver(cardId: number, e: React.DragEvent<HTMLDivElement>) {
+    if (draggingId === null || draggingId === cardId) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    if (dragOverId !== cardId) setDragOverId(cardId);
+  }
+
+  function handleDragLeave(cardId: number) {
+    if (dragOverId === cardId) setDragOverId(null);
+  }
+
+  function handleDrop(targetId: number, e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+    const draggedId =
+      raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
+    if (draggedId !== null) {
+      swapByIds(draggedId, targetId);
+    }
+    endDrag();
   }
 
   return (
@@ -119,7 +165,7 @@ export default function Hand({
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
             aria-label="Manual order"
-            title="Manual order (use the arrows on each card to rearrange)"
+            title="Manual order (drag a card or use the arrows on each card to rearrange)"
           >
             Manual
           </button>
@@ -127,41 +173,64 @@ export default function Hand({
       </div>
       <div className="hand-row">
         <div className="hand-cards" aria-label="Your hand">
-          {displayedHand.map((card, idx) => (
-            <div key={card.id} className="hand-card-slot">
-              <Card
-                card={card}
-                selected={selectedIds.has(card.id)}
-                discarding={discardingIds.has(card.id)}
-                onToggle={onToggleCard}
-                onDiscardEnd={onCardDiscardEnd}
-              />
+          {displayedHand.map((card, idx) => {
+            const isDragging = draggingId === card.id;
+            const isDragOver =
+              dragOverId === card.id && draggingId !== null && draggingId !== card.id;
+            const slotClass = [
+              "hand-card-slot",
+              isDragging ? "hand-card-slot-dragging" : "",
+              isDragOver ? "hand-card-slot-drop-target" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
               <div
-                className="hand-card-reorder"
-                role="group"
-                aria-label={`Reorder ${cardLabel(card)}`}
+                key={card.id}
+                className={slotClass}
+                draggable
+                aria-grabbed={isDragging || undefined}
+                data-testid={`hand-slot-${card.id}`}
+                onDragStart={(e) => handleDragStart(card.id, e)}
+                onDragOver={(e) => handleDragOver(card.id, e)}
+                onDragLeave={() => handleDragLeave(card.id)}
+                onDrop={(e) => handleDrop(card.id, e)}
+                onDragEnd={endDrag}
               >
-                <button
-                  type="button"
-                  className="hand-card-reorder-button"
-                  aria-label={`Move ${cardLabel(card)} left`}
-                  disabled={idx === 0}
-                  onClick={() => moveCard(card.id, -1)}
+                <Card
+                  card={card}
+                  selected={selectedIds.has(card.id)}
+                  discarding={discardingIds.has(card.id)}
+                  onToggle={onToggleCard}
+                  onDiscardEnd={onCardDiscardEnd}
+                />
+                <div
+                  className="hand-card-reorder"
+                  role="group"
+                  aria-label={`Reorder ${cardLabel(card)}`}
                 >
-                  ◀
-                </button>
-                <button
-                  type="button"
-                  className="hand-card-reorder-button"
-                  aria-label={`Move ${cardLabel(card)} right`}
-                  disabled={idx === displayedHand.length - 1}
-                  onClick={() => moveCard(card.id, 1)}
-                >
-                  ▶
-                </button>
+                  <button
+                    type="button"
+                    className="hand-card-reorder-button"
+                    aria-label={`Move ${cardLabel(card)} left`}
+                    disabled={idx === 0}
+                    onClick={() => moveCard(card.id, -1)}
+                  >
+                    ◀
+                  </button>
+                  <button
+                    type="button"
+                    className="hand-card-reorder-button"
+                    aria-label={`Move ${cardLabel(card)} right`}
+                    disabled={idx === displayedHand.length - 1}
+                    onClick={() => moveCard(card.id, 1)}
+                  >
+                    ▶
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
         <div className="hand-deck">
           <DeckPile remaining={remaining} />
