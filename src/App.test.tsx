@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 
+jest.mock("./components/sounds", () => ({ play: jest.fn() }));
+
 function getStatValue(label: string): HTMLElement {
   return screen.getByText(label).parentElement as HTMLElement;
 }

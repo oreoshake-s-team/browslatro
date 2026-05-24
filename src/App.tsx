@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Blind, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
+import { play } from "./components/sounds";
 
 function App() {
   const [blind, setBlind] = useState<Blind>(1);
@@ -19,6 +20,7 @@ function App() {
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
   function handleWin() {
+    play("win");
     setRound((prev) => prev + 1);
     setMoney((prev) => prev + (blind + 2));
     if (blind < 3) {
@@ -43,6 +45,10 @@ function App() {
     setChips((prev) => prev + amount);
   }
 
+  useEffect(() => {
+    play("pop");
+  }, [chips, multiplier]);
+
   function addMultiplier(amount: number) {
     setMultiplier((prev) => prev + amount);
   }
@@ -52,6 +58,7 @@ function App() {
   }
 
   function loseGame() {
+    play("lose");
     alert("Game Over! Try again.");
     handleReset();
   }
@@ -62,10 +69,7 @@ function App() {
     setChips(20);
     setMultiplier(2);
 
-    console.log("New round score:", newRoundScore);
-    console.log("Required score:", requiredScore);
     if (newRoundScore >= requiredScore) {
-      console.log("You win this round!");
       handleWin();
       return;
     }
