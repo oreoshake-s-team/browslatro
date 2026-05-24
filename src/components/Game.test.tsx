@@ -66,4 +66,9 @@ describe("Game", () => {
     userEvent.click(screen.getByText(/Submit Hand/));
     expect(onSubmitHand).toHaveBeenCalledTimes(1);
   });
+
+  test("renders the player's hand of cards", () => {
+    renderGame();
+    expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
+  });
 });
