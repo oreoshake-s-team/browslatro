@@ -24,7 +24,7 @@ Browslatro is an educational journey meant to help the author brush up on their 
 
 # Semantic commits
 
-Use semantic (or Conventional) Commits provide a standardized framework for naming git commits
+Use semantic (or Conventional) Commits to provide a standardized framework for naming git commits
 
 # Work with feature branches
 
