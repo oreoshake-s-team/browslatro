@@ -74,16 +74,20 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-selected");
   });
 
-  test("invokes onToggle with the card when clicked", () => {
+  test("invokes onToggle with the card when clicked", async () => {
+    const user = userEvent.setup();
     const onToggle = jest.fn();
     render(<Card card={aceOfSpades} onToggle={onToggle} />);
-    userEvent.click(screen.getByRole("button"));
+    await user.click(screen.getByRole("button"));
     expect(onToggle).toHaveBeenCalledWith(aceOfSpades);
   });
 
-  test("does not throw when clicked without an onToggle handler", () => {
+  test("does not throw when clicked without an onToggle handler", async () => {
+    const user = userEvent.setup();
     render(<Card card={aceOfSpades} />);
-    expect(() => userEvent.click(screen.getByRole("button"))).not.toThrow();
+    await expect(
+      user.click(screen.getByRole("button"))
+    ).resolves.toBeUndefined();
   });
 
   test("applies the discarding class when the discarding prop is set", () => {
