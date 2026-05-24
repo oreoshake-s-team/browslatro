@@ -33,7 +33,7 @@ describe("Options", () => {
 
   test("button opens modal", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
     await user.click(screen.getByText("Options"));
     expect(screen.getByRole("heading", { name: "Options" })).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe("Options", () => {
 
   test("Close button dismisses modal", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("Close"));
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
@@ -49,7 +49,7 @@ describe("Options", () => {
 
   test("clicking overlay dismisses modal", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.click(document.querySelector(".modal-overlay") as HTMLElement);
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
@@ -57,20 +57,20 @@ describe("Options", () => {
 
   test("sound toggle changes label from mute to unmute", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     expect(screen.getByText(/Mute sounds/)).toBeInTheDocument();
     await user.click(screen.getByText(/Mute sounds/));
     expect(screen.getByText(/Unmute sounds/)).toBeInTheDocument();
   });
 
-  test("Reset button calls onReset and closes modal", async () => {
+  test("New game button calls onNewGame and closes modal", async () => {
     const user = userEvent.setup();
-    const onReset = jest.fn();
-    render(<Options onReset={onReset} />);
+    const onNewGame = jest.fn();
+    render(<Options onNewGame={onNewGame} />);
     await user.click(screen.getByText("Options"));
-    await user.click(screen.getByText("Reset"));
-    expect(onReset).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByText("New game"));
+    expect(onNewGame).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
 });
@@ -80,7 +80,7 @@ describe("Options — high visibility toggle", () => {
 
   test("renders the high visibility toggle inside the modal", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     expect(
       screen.getByRole("button", { name: /Enable high visibility suits/ })
@@ -88,7 +88,7 @@ describe("Options — high visibility toggle", () => {
   });
 
   test("does not show the toggle before the modal opens", () => {
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     expect(
       screen.queryByRole("button", { name: /high visibility suits/ })
     ).not.toBeInTheDocument();
@@ -96,7 +96,7 @@ describe("Options — high visibility toggle", () => {
 
   test("toggle label flips to 'Disable' when enabled", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
     expect(screen.getByText(/Disable high visibility suits/)).toBeInTheDocument();
@@ -104,7 +104,7 @@ describe("Options — high visibility toggle", () => {
 
   test("toggle starts with aria-pressed=false", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     expect(
       screen.getByRole("button", { name: /high visibility suits/ })
@@ -113,7 +113,7 @@ describe("Options — high visibility toggle", () => {
 
   test("toggle reflects enabled state via aria-pressed=true", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
     expect(
@@ -123,7 +123,7 @@ describe("Options — high visibility toggle", () => {
 
   test("toggling persists the new value to localStorage", async () => {
     const user = userEvent.setup();
-    render(<Options onReset={() => {}} />);
+    render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("true");
@@ -132,7 +132,7 @@ describe("Options — high visibility toggle", () => {
   test("invokes onHighVisibilityChange with the new value when toggled on", async () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
-    render(<Options onReset={() => {}} onHighVisibilityChange={onChange} />);
+    render(<Options onNewGame={() => {}} onHighVisibilityChange={onChange} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
     expect(onChange).toHaveBeenCalledWith(true);
@@ -141,7 +141,7 @@ describe("Options — high visibility toggle", () => {
   test("invokes onHighVisibilityChange with false when toggled back off", async () => {
     const user = userEvent.setup();
     const onChange = jest.fn();
-    render(<Options onReset={() => {}} onHighVisibilityChange={onChange} />);
+    render(<Options onNewGame={() => {}} onHighVisibilityChange={onChange} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
     await user.click(screen.getByText(/Disable high visibility suits/));

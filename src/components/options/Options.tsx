@@ -9,11 +9,11 @@ import {
 } from "../system/preferences";
 
 interface OptionsProps {
-  onReset: () => void;
+  onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
 }
 
-function Options({ onReset, onHighVisibilityChange }: OptionsProps) {
+function Options({ onNewGame, onHighVisibilityChange }: OptionsProps) {
   const [open, setOpen] = useState(false);
   const [muted, setMuted] = useState(isMuted);
   const [highVisibility, setHighVisibility] = useState(isHighVisibility);
@@ -38,11 +38,15 @@ function Options({ onReset, onHighVisibilityChange }: OptionsProps) {
           <div className="modal-overlay" onClick={() => setOpen(false)}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <h3>Options</h3>
-              <button onClick={handleToggleMute}>
+              <button
+                className="options-button options-button--toggle"
+                aria-pressed={muted}
+                onClick={handleToggleMute}
+              >
                 {muted ? "🔇 Unmute sounds" : "🔊 Mute sounds"}
               </button>
               <button
-                className="high-visibility-toggle"
+                className="options-button options-button--toggle"
                 aria-pressed={highVisibility}
                 onClick={handleToggleHighVisibility}
               >
@@ -51,15 +55,18 @@ function Options({ onReset, onHighVisibilityChange }: OptionsProps) {
                   : "🎨 Enable high visibility suits"}
               </button>
               <button
-                className="win-button reset-button"
+                className="options-button options-button--destructive"
                 onClick={() => {
-                  onReset();
+                  onNewGame();
                   setOpen(false);
                 }}
               >
-                Reset
+                New game
               </button>
-              <button className="modal-close" onClick={() => setOpen(false)}>
+              <button
+                className="options-button"
+                onClick={() => setOpen(false)}
+              >
                 Close
               </button>
             </div>

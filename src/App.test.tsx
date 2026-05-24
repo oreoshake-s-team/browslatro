@@ -618,25 +618,25 @@ describe("High visibility preference integration", () => {
   });
 });
 
-describe("Options modal reset integration", () => {
-  test("opening options and clicking reset restores initial state", async () => {
+describe("Options modal new game integration", () => {
+  test("opening options and clicking new game restores initial state", async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<App />);
 
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$7"); // was $7 before reset
+    expect(getStatValue("Money")).toHaveTextContent("$7"); // was $7 before new game
 
     await user.click(screen.getByText("Options"));
     expect(screen.getByRole("heading", { name: "Options" })).toBeInTheDocument();
 
-    await user.click(screen.getByText("Reset"));
+    await user.click(screen.getByText("New game"));
 
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 300")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$0"); // was $7 before reset
+    expect(getStatValue("Money")).toHaveTextContent("$0"); // was $7 before new game
     expect(getStatValue("Ante")).toHaveTextContent("1");
     expect(getStatValue("Round")).toHaveTextContent("1");
   });

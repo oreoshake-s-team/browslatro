@@ -21,7 +21,7 @@ interface SidebarProps {
   selectedHand: Hand;
   remainingHands: number;
   remainingDiscards: number;
-  handleReset: () => void;
+  onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
 }
 
@@ -37,7 +37,7 @@ export default function Sidebar({
   selectedHand,
   remainingHands,
   remainingDiscards,
-  handleReset,
+  onNewGame,
   onHighVisibilityChange,
 }: SidebarProps) {
   return (
@@ -57,7 +57,7 @@ export default function Sidebar({
         <div className="sub-info">
           <RunInfo />
           <Options
-            onReset={handleReset}
+            onNewGame={onNewGame}
             onHighVisibilityChange={onHighVisibilityChange}
           />
         </div>
