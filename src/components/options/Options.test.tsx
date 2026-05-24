@@ -6,7 +6,7 @@ import {
   isMuted,
   toggleHighVisibility,
   toggleMute,
-} from "./preferences";
+} from "../system/preferences";
 
 const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";

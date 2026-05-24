@@ -2,15 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
-import Game from "./components/Game";
-import Sidebar from "./components/Sidebar";
-import { play } from "./components/sounds";
-import { isHighVisibility } from "./components/preferences";
+import Game from "./components/game/Game";
+import Sidebar from "./components/hud/Sidebar";
+import { play } from "./components/system/sounds";
+import { isHighVisibility } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
 import { getRankChips, getScoringCards } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
-import { MAX_SELECTED } from "./components/Hand";
+import { MAX_SELECTED } from "./components/cards/Hand";
 
 // Per-card delay in the scoring sequence. Each scoring card animates and adds
 // its chip contribution after this many milliseconds.
