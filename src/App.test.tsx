@@ -529,6 +529,8 @@ describe("Submit Hand win integration", () => {
     await user.click(cards[4]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
+    // Round-won modal now blocks until dismissed.
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 });
@@ -688,10 +690,72 @@ describe("Sequential card scoring", () => {
   test("final round score equals (hand base chips + per-card rank chips) * multiplier", async () => {
     // Straight Flush: (100 + 5+6+7+8+9) * 8 = 1080.
     // Required score in Ante 1 / Small Blind = 300, so this win-advances the
-    // blind. We assert the Big Blind label appears (which only happens after
-    // the scoring sequence finalizes and the round-won check fires).
+    // blind once the round-won modal is dismissed.
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await submitFirstFiveSpades();
     flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+});
+
+describe("Round won modal", () => {
+  async function triggerWin(): Promise<void> {
+    // Identity shuffle deals Spades 2..9; selecting top 5 → Straight Flush
+    // = 1080 score, above Ante 1 Small Blind required 300.
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+  }
+
+  test("does not render the modal before a round is won", () => {
+    render(<App />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("renders the modal when the round score meets the required score", async () => {
+    await triggerWin();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  test("displays the final round score in the modal", async () => {
+    await triggerWin();
+    expect(screen.getByTestId("round-won-score")).toHaveTextContent("1080");
+  });
+
+  test("displays the required score in the modal", async () => {
+    await triggerWin();
+    expect(screen.getByTestId("round-won-required")).toHaveTextContent("300");
+  });
+
+  test("displays the base reward (blind + 2) in the modal", async () => {
+    // Small Blind = 1 → reward $3.
+    await triggerWin();
+    expect(screen.getByTestId("round-won-base-reward")).toHaveTextContent("$3");
+  });
+
+  test("clicking Continue dismisses the modal", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await triggerWin();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("clicking Continue advances to the next blind", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await triggerWin();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+
+  test("clicking Continue adds the base reward to the wallet", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await triggerWin();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(getStatValue("Money")).toHaveTextContent("$3");
   });
 });
