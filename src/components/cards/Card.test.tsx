@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Card from "./Card";
-import type { Card as CardType } from "../types";
+import type { Card as CardType } from "../../types";
 
 const aceOfSpades: CardType = { id: 1, rank: "A", suit: "spades" };
 const queenOfHearts: CardType = { id: 2, rank: "Q", suit: "hearts" };

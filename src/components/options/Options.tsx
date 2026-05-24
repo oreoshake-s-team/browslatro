@@ -6,7 +6,7 @@ import {
   isMuted,
   toggleHighVisibility,
   toggleMute,
-} from "./preferences";
+} from "../system/preferences";
 
 interface OptionsProps {
   onReset: () => void;
