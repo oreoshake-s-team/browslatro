@@ -10,6 +10,8 @@ Browslatro is an educational journey meant to help the author brush up on their 
 - Could should be written in strict typescript, no use of any types
 - All tests should be run after major changes
 - Only use strict typescript. No use of JS or "any" types
+- Prioritize accessibility and i18n.
+- When developing new branches, work in worktrees.
 
 # Semantic commits
 
