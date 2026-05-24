@@ -22,18 +22,10 @@
   margin: 0;
 }
 
-.modal-close {
-  padding: 10px 20px;
-  font-size: 1.1rem;
-}
-
-.reset-button {
-  background-color: #e03131;
-  color: white;
-  border-color: #c92a2a;
-}
-
-.high-visibility-toggle {
+/* Shared base used by every button inside the Options modal so padding,
+ * font sizing, radius, and focus rings stay coherent. Variants below
+ * adjust the visual treatment without re-defining geometry. */
+.options-button {
   padding: 0.5rem 1rem;
   font-size: 1rem;
   background-color: #f8f9fa;
@@ -43,8 +35,23 @@
   cursor: pointer;
 }
 
-.high-visibility-toggle[aria-pressed="true"] {
+.options-button:focus-visible {
+  outline: 2px solid #1c7ed6;
+  outline-offset: 2px;
+}
+
+/* Toggle variant: neutral when off, green-tinted "on" state driven by
+ * aria-pressed=true so the active affordance is clearly distinguishable. */
+.options-button--toggle[aria-pressed="true"] {
   background-color: #d3f9d8;
   border-color: #2f9e44;
   color: #2b8a3e;
+}
+
+/* Destructive variant: red treatment for actions that wipe state
+ * (currently just "New game"). */
+.options-button--destructive {
+  background-color: #e03131;
+  color: white;
+  border-color: #c92a2a;
 }

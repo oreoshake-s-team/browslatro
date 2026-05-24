@@ -109,7 +109,7 @@ function App() {
     startNewRound();
   }
 
-  function handleReset(): void {
+  function startNewGame(): void {
     setBlind(1);
     setRound(1);
     setAnte(1);
@@ -135,7 +135,7 @@ function App() {
   function loseGame() {
     play("lose");
     alert("Game Over! Try again.");
-    handleReset();
+    startNewGame();
   }
 
   function toggleCard(card: Card) {
@@ -265,7 +265,7 @@ function App() {
         selectedHand={selectedHand}
         remainingHands={remainingHands}
         remainingDiscards={remainingDiscards}
-        handleReset={handleReset}
+        onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
       />
       <Game
