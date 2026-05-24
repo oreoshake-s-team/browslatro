@@ -16,15 +16,21 @@ Given a file path (or the full hook JSON), do the following:
    - `className={\`foo \${condition ? 'bar' : 'baz'}\`}` → extract all string literals
    - Ignore dynamic expressions you can't resolve statically
 
-2. **Read `src/index.css`** and collect all CSS selectors already defined (e.g. `.foo`, `.foo h3`, `.foo p` all count as covering class `foo`).
+2. **Determine the component's CSS file** using this mapping:
+   - `src/App.tsx` → `src/App.css`
+   - `src/components/Foo.tsx` → `src/components/Foo.css`
+   - If the CSS file doesn't exist yet, create it and add `import './Foo.css'` to the component.
 
-3. **For each extracted class name** that does NOT already have a rule in `src/index.css`, append a skeleton CSS block at the end of `src/index.css`. Use sensible defaults based on context clues (element type, adjacent classes, component name), but keep it minimal — don't invent layout you can't infer.
+3. **Read the component's CSS file** and collect all CSS selectors already defined (e.g. `.foo`, `.foo h3`, `.foo p` all count as covering class `foo`). Also check `src/index.css` for shared classes (`.win-button`, `.stat`, `.stat-value`, `.stat-label`).
 
-4. **Only touch `src/index.css`** — never modify the component file itself.
+4. **For each extracted class name** that does NOT already have a rule, append a skeleton CSS block at the end of the component's CSS file. Use sensible defaults based on context, but keep it minimal — don't invent layout you can't infer.
+
+5. **Only touch CSS files and import lines** — never modify component logic.
 
 ## Project conventions
 
-- All CSS lives in `src/index.css` (no CSS modules, no separate per-component files)
+- CSS is split per-component: each `Foo.tsx` has a matching `Foo.css` imported at the top
+- Shared classes (`.win-button`, `.stat`, `.stat-value`, `.stat-label`) live in `src/index.css` — do not duplicate them
 - Plain CSS only — no SCSS, no Tailwind
 - Existing classes use: flexbox for layout, rem units for spacing, `#495057` for text, `#dee2e6` for borders, `#f8f9fa` for backgrounds
 - Keep new rules minimal and correct — a placeholder `/* TODO: style */` comment is fine if you genuinely can't infer intent
