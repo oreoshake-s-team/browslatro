@@ -1,4 +1,5 @@
 import type { Hand } from "../types";
+import "./HandScore.css";
 
 interface HandScoreProps {
   chips: number;

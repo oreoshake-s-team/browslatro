@@ -1,3 +1,5 @@
+import "./RoundProgress.css";
+
 interface RoundProgressProps {
   remainingHands: number;
   remainingDiscards: number;

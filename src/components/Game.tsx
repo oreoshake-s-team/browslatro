@@ -1,4 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
+import "./Game.css";
 import type { Hand } from "../types";
 import { HANDS } from "../constants";
 

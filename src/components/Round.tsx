@@ -1,4 +1,5 @@
 import type { Blind, BlindValuesMap } from "../types";
+import "./Round.css";
 
 interface RoundProps {
   blind: Blind;

@@ -1,4 +1,5 @@
 import type { Blind } from "../types";
+import "./Sidebar.css";
 import { BlindValues } from "../constants";
 import Round from "./Round";
 import RunInfo from "./RunInfo";

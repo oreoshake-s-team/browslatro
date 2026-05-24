@@ -1,3 +1,5 @@
+import "./RunProgress.css";
+
 interface RunProgressProps {
   ante: number;
   round: number;
