@@ -6,7 +6,18 @@ function preload(name: string, url: string): void {
   cache.set(name, audio);
 }
 
+let muted = false;
+
+export function isMuted(): boolean {
+  return muted;
+}
+
+export function toggleMute(): void {
+  muted = !muted;
+}
+
 export function play(name: string): void {
+  if (muted) return;
   const audio = cache.get(name);
   if (!audio) return;
   audio

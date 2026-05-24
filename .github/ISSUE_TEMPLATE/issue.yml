@@ -1,0 +1,27 @@
+name: Issue
+description: Report a bug, request a feature, or propose a refactor
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - bug
+        - feature
+        - refactor
+    validations:
+      required: true
+  - type: input
+    id: short-description
+    attributes:
+      label: Short description
+      placeholder: One sentence summary
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: Provide details, context, or steps to reproduce
+    validations:
+      required: true

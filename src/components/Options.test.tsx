@@ -24,6 +24,14 @@ describe("Options", () => {
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
 
+  test("sound toggle changes label from mute to unmute", () => {
+    render(<Options onReset={() => {}} />);
+    userEvent.click(screen.getByText("Options"));
+    expect(screen.getByText(/Mute sounds/)).toBeInTheDocument();
+    userEvent.click(screen.getByText(/Mute sounds/));
+    expect(screen.getByText(/Unmute sounds/)).toBeInTheDocument();
+  });
+
   test("Reset button calls onReset and closes modal", () => {
     const onReset = jest.fn();
     render(<Options onReset={onReset} />);
