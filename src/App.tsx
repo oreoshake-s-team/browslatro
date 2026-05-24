@@ -3,6 +3,7 @@ import "./App.css";
 import type { Blind, Card, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
+import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
 import { isHighVisibility } from "./components/system/preferences";
@@ -53,6 +54,10 @@ function App() {
   const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
   const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
 
+  // Round-won modal: when non-null, the player has met the required score and
+  // the modal is showing. Dismissal triggers handleWin().
+  const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
+
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
   function startNewRound() {
@@ -69,6 +74,7 @@ function App() {
     setScoringCards([]);
     setScoringIndex(0);
     scoringFinalizeRef.current = null;
+    setPendingWin(null);
   }
 
   // Drive the scoring sequence: tick one card per SCORING_STEP_MS, then call
@@ -230,7 +236,13 @@ function App() {
     }
 
     if (newRoundScore >= requiredScore) {
-      handleWin();
+      // Show the round-won modal instead of immediately advancing. The modal's
+      // Continue button calls handleWin(), which moves to the next blind/ante.
+      setPendingWin({
+        roundScore: newRoundScore,
+        requiredScore,
+        baseReward: blind + 2,
+      });
       return;
     }
 
@@ -239,6 +251,11 @@ function App() {
     } else {
       loseGame();
     }
+  }
+
+  function dismissRoundWonModal() {
+    setPendingWin(null);
+    handleWin();
   }
 
   function discardSelected() {
@@ -292,6 +309,9 @@ function App() {
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
       />
+      {pendingWin && (
+        <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+      )}
     </div>
   );
 }

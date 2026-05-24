@@ -1,0 +1,123 @@
+.round-won-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.round-won-modal {
+  background-color: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 2rem 2.4rem;
+  min-width: 22rem;
+  max-width: 32rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.round-won-title {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #495057;
+  text-align: center;
+}
+
+.round-won-stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.round-won-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.4rem 0.6rem;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+}
+
+.round-won-stat dt {
+  font-size: 0.9rem;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.round-won-stat dd {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.round-won-stat-beat dd {
+  color: #2b8a3e;
+}
+
+.round-won-payout {
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+}
+
+.round-won-payout-title {
+  margin: 0 0 0.6rem 0;
+  font-size: 0.9rem;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.round-won-payout-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.round-won-payout-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  color: #495057;
+}
+
+.round-won-payout-total {
+  font-weight: 600;
+  color: #212529;
+  border-top: 1px solid #dee2e6;
+  padding-top: 0.4rem;
+  margin-top: 0.2rem;
+}
+
+.round-won-continue {
+  padding: 0.7rem 1.2rem;
+  border: 1px solid #1c7ed6;
+  background-color: #339af0;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.round-won-continue:hover {
+  background-color: #1c7ed6;
+}
+
+.round-won-continue:focus-visible {
+  outline: 2px solid #1c7ed6;
+  outline-offset: 2px;
+}
