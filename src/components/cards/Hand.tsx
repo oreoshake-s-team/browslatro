@@ -95,6 +95,18 @@ export default function Hand({
     swapByIds(cardId, currentOrder[target]);
   }
 
+  function insertRelativeToTarget(sourceId: number, targetId: number) {
+    if (sourceId === targetId) return;
+    const currentOrder = displayedHand.map((c) => c.id);
+    const fromIdx = currentOrder.indexOf(sourceId);
+    const toIdx = currentOrder.indexOf(targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = currentOrder.slice();
+    next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, sourceId);
+    setManualOrder(next);
+  }
+
   function endDrag() {
     setDraggingId(null);
     setDragOverId(null);
@@ -125,7 +137,7 @@ export default function Hand({
     const draggedId =
       raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
     if (draggedId !== null) {
-      swapByIds(draggedId, targetId);
+      insertRelativeToTarget(draggedId, targetId);
     }
     endDrag();
   }

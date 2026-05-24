@@ -345,8 +345,6 @@ describe("Hand drag-and-drop reordering", () => {
     { id: 4, rank: "A", suit: "diamonds" },
   ];
 
-  // Default rank-sort displays as: A♦(id 4), K♥(id 1), 10♣(id 3), 2♠(id 2)
-
   function getSlot(cardId: number): HTMLElement {
     return screen.getByTestId(`hand-slot-${cardId}`);
   }
@@ -366,14 +364,50 @@ describe("Hand drag-and-drop reordering", () => {
     expect(slots.every((s) => s.getAttribute("draggable") === "true")).toBe(true);
   });
 
-  test("dragging A of Diamonds onto 10 of Clubs swaps their positions", () => {
+  test("dragging a left card past a right card inserts it immediately to the right of the target", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 3); // A♦ → 10♣
+    dragAndDrop(4, 2);
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
+      "K of Hearts",
       "10 of Clubs",
+      "2 of Spades",
+      "A of Diamonds",
+    ]);
+  });
+
+  test("dragging a right card past a left card inserts it immediately to the left of the target", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(2, 4);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "2 of Spades",
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+    ]);
+  });
+
+  test("dragging onto an adjacent right neighbour swaps the two cards", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(4, 1);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
       "K of Hearts",
       "A of Diamonds",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("dragging onto an adjacent left neighbour swaps the two cards", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(1, 4);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "K of Hearts",
+      "A of Diamonds",
+      "10 of Clubs",
       "2 of Spades",
     ]);
   });
@@ -384,6 +418,15 @@ describe("Hand drag-and-drop reordering", () => {
     expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
       "aria-pressed",
       "true",
+    );
+  });
+
+  test("dragging unsets the Rank sort indicator", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragAndDrop(4, 3);
+    expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
     );
   });
 
@@ -420,7 +463,6 @@ describe("Hand drag-and-drop reordering", () => {
   test("drop-target highlight is removed after the drop completes", () => {
     renderHand({ hand: fourCards, remaining: [] });
     dragAndDrop(4, 3);
-    // After drop, the (now-swapped) target should not retain the highlight.
     expect(getSlot(3)).not.toHaveClass("hand-card-slot-drop-target");
   });
 });
