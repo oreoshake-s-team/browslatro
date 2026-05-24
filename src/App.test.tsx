@@ -299,6 +299,45 @@ describe("Discard button", () => {
   });
 });
 
+describe("Hand stays sorted after a play", () => {
+  function rankIndex(label: string | null): number {
+    if (!label) return -1;
+    const rank = label.split(" ")[0];
+    const order = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    return order.indexOf(rank);
+  }
+
+  test("hand is in rank-descending order after submitting (replacement cards land sorted)", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(getHandCardButtons()[1]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const ranks = getHandCardButtons().map((btn) =>
+      rankIndex(btn.getAttribute("aria-label")),
+    );
+    const isDescending = ranks.every(
+      (r, i) => i === 0 || ranks[i - 1] >= r,
+    );
+    expect(isDescending).toBe(true);
+  });
+
+  test("hand is in rank-descending order after discarding (replacement cards land sorted)", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(getHandCardButtons()[1]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    const ranks = getHandCardButtons().map((btn) =>
+      rankIndex(btn.getAttribute("aria-label")),
+    );
+    const isDescending = ranks.every(
+      (r, i) => i === 0 || ranks[i - 1] >= r,
+    );
+    expect(isDescending).toBe(true);
+  });
+});
+
 describe("Discard animation", () => {
   test("marks selected cards with the discarding class on submit", () => {
     render(<App />);

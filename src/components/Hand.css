@@ -6,6 +6,60 @@
   border-radius: 8px;
   background-color: #f8f9fa;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hand-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.hand-sort-label {
+  font-size: 0.9rem;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.hand-sort-group {
+  display: flex;
+  border: 1px solid #adb5bd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.hand-sort-button {
+  padding: 0.4rem 1rem;
+  background-color: white;
+  border: none;
+  border-right: 1px solid #adb5bd;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.hand-sort-button:last-child {
+  border-right: none;
+}
+
+.hand-sort-button:hover {
+  background-color: #e9ecef;
+}
+
+.hand-sort-button-active {
+  background-color: #339af0;
+  color: white;
+}
+
+.hand-sort-button-active:hover {
+  background-color: #1c7ed6;
+}
+
+.hand-row {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: end;
