@@ -63,6 +63,52 @@ export function deal(deck: ReadonlyArray<Card>, count: number = HAND_SIZE): Deal
   };
 }
 
+export type SortMode = "rank" | "suit";
+
+const SUIT_DISPLAY_ORDER: Record<Suit, number> = {
+  clubs: 0,
+  diamonds: 1,
+  hearts: 2,
+  spades: 3,
+};
+
+const RANK_DISPLAY_ORDER: Record<Rank, number> = {
+  "2": 0,
+  "3": 1,
+  "4": 2,
+  "5": 3,
+  "6": 4,
+  "7": 5,
+  "8": 6,
+  "9": 7,
+  "10": 8,
+  J: 9,
+  Q: 10,
+  K: 11,
+  A: 12,
+};
+
+export function sortCards(
+  cards: ReadonlyArray<Card>,
+  mode: SortMode,
+): Card[] {
+  const arr = cards.slice();
+  if (mode === "rank") {
+    arr.sort(
+      (a, b) =>
+        RANK_DISPLAY_ORDER[a.rank] - RANK_DISPLAY_ORDER[b.rank] ||
+        SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit],
+    );
+  } else {
+    arr.sort(
+      (a, b) =>
+        SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit] ||
+        RANK_DISPLAY_ORDER[a.rank] - RANK_DISPLAY_ORDER[b.rank],
+    );
+  }
+  return arr;
+}
+
 export function groupBySuit(cards: ReadonlyArray<Card>): Record<Suit, Card[]> {
   const grouped: Record<Suit, Card[]> = {
     spades: [],

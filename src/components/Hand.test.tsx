@@ -81,3 +81,74 @@ describe("Hand", () => {
     expect(getCardButtons()).toHaveLength(2);
   });
 });
+
+describe("Hand sorting", () => {
+  const shuffledHand: CardType[] = [
+    { id: 1, rank: "K", suit: "hearts" },
+    { id: 2, rank: "2", suit: "spades" },
+    { id: 3, rank: "10", suit: "clubs" },
+    { id: 4, rank: "A", suit: "diamonds" },
+  ];
+
+  test("defaults to rank-ascending order", () => {
+    renderHand({ hand: shuffledHand, remaining: [] });
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "2 of Spades",
+      "10 of Clubs",
+      "K of Hearts",
+      "A of Diamonds",
+    ]);
+  });
+
+  test("Rank sort button is pressed by default", () => {
+    renderHand({ hand: shuffledHand, remaining: [] });
+    expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("clicking Suit re-orders cards by suit", () => {
+    renderHand({ hand: shuffledHand, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "10 of Clubs",
+      "A of Diamonds",
+      "K of Hearts",
+      "2 of Spades",
+    ]);
+  });
+
+  test("clicking Suit marks the Suit button as pressed", () => {
+    renderHand({ hand: shuffledHand, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    expect(screen.getByRole("button", { name: "Suit" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("clicking Suit unsets the Rank button", () => {
+    renderHand({ hand: shuffledHand, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  test("clicking Rank after Suit restores rank ordering", () => {
+    renderHand({ hand: shuffledHand, remaining: [] });
+    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    userEvent.click(screen.getByRole("button", { name: "Rank" }));
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "2 of Spades",
+      "10 of Clubs",
+      "K of Hearts",
+      "A of Diamonds",
+    ]);
+  });
+});
