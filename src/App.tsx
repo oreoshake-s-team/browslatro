@@ -35,6 +35,19 @@ function App() {
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
+  function startNewRound() {
+    setRoundScore(0);
+    setRemainingHands(4);
+    setRemainingDiscards(3);
+    setDealt(initialDeal());
+    setSelectedIds(new Set());
+    setDiscardingIds(new Set());
+    setSelectedHand(HANDS[0]);
+    setChips(20);
+    setMultiplier(2);
+    pendingDiscardCountRef.current = 0;
+  }
+
   function handleWin() {
     play("win");
     setRound((prev) => prev + 1);
@@ -45,9 +58,7 @@ function App() {
       setAnte((prev) => prev + 1);
       setBlind(1);
     }
-    setRoundScore(0);
-    setRemainingHands(4);
-    setRemainingDiscards(3);
+    startNewRound();
   }
 
   function handleReset(): void {
@@ -55,13 +66,7 @@ function App() {
     setRound(1);
     setAnte(1);
     setMoney(0);
-    setRoundScore(0);
-    setSelectedHand(HANDS[0]);
-    setRemainingHands(4);
-    setRemainingDiscards(3);
-    setDealt(initialDeal());
-    setSelectedIds(new Set());
-    setDiscardingIds(new Set());
+    startNewRound();
   }
 
   function addChips(amount: number) {

@@ -8,6 +8,50 @@ function getStatValue(label: string): HTMLElement {
   return screen.getByText(label).parentElement as HTMLElement;
 }
 
+describe("Winning a round resets the deck", () => {
+  test("restores the remaining deck count to its full post-deal size after a win", () => {
+    render(<App />);
+    // Use a discard to shrink the deck (44 → 42)
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(getHandCardButtons()[1]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    userEvent.click(screen.getByText(/Win/));
+    expect(
+      screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ })
+    ).toBeInTheDocument();
+  });
+
+  test("keeps the hand at 8 cards after a win resets the deck", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Win/));
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("clears any in-flight card selection on win", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/Win/));
+    const selectedCount = getHandCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(0);
+  });
+
+  test("deals different cards (fresh shuffle) after a win", () => {
+    render(<App />);
+    const before = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    userEvent.click(screen.getByText(/Win/));
+    const after = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    // With a fresh shuffle, the new hand should not match the old hand exactly
+    expect(after).not.toEqual(before);
+  });
+});
+
 describe("Win button integration", () => {
   test("advances blind, ante, round, and money across a full ante cycle", () => {
     render(<App />);
