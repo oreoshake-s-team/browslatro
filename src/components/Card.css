@@ -82,3 +82,76 @@
   justify-self: center;
   font-size: 2.6rem;
 }
+
+/* Shared face-card frame: an inner border + warm background so J/Q/K read
+   as a special class of card at a glance. */
+.card-face {
+  background-color: #fffaf0;
+}
+
+.card-face::before {
+  content: "";
+  position: absolute;
+  inset: 0.35rem;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+/* Stacked decoration: large rank-specific glyph, monogram letter, suit. */
+.card-face-decoration {
+  align-self: center;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.1rem;
+  line-height: 1;
+}
+
+.card-face-glyph {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.card-face-monogram {
+  font-family: "Georgia", serif;
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: 0.02em;
+}
+
+.card-face-suit {
+  font-size: 1.1rem;
+}
+
+/* Per-rank distinguishing accents. */
+.card-face-jack {
+  border-color: #adb5bd;
+}
+
+.card-face-jack .card-face-glyph {
+  font-size: 1.8rem;
+}
+
+.card-face-queen {
+  border-color: #b197fc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 0 0 1px #d0bfff;
+}
+
+.card-face-queen .card-face-glyph {
+  font-size: 2rem;
+}
+
+/* King gets the heaviest, "golden" accent. */
+.card-face-king {
+  border-color: #d4a017;
+  border-width: 3px;
+  box-shadow: 0 2px 6px rgba(212, 160, 23, 0.35),
+    inset 0 0 0 1px #f2d680;
+}
+
+.card-face-king .card-face-glyph {
+  font-size: 2.4rem;
+}

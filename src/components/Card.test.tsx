@@ -5,6 +5,9 @@ import type { Card as CardType } from "../types";
 
 const aceOfSpades: CardType = { id: 1, rank: "A", suit: "spades" };
 const queenOfHearts: CardType = { id: 2, rank: "Q", suit: "hearts" };
+const jackOfClubs: CardType = { id: 3, rank: "J", suit: "clubs" };
+const kingOfDiamonds: CardType = { id: 4, rank: "K", suit: "diamonds" };
+const sevenOfHearts: CardType = { id: 5, rank: "7", suit: "hearts" };
 
 describe("Card", () => {
   test("renders the rank label", () => {
@@ -75,5 +78,35 @@ describe("Card", () => {
     render(<Card card={aceOfSpades} onDiscardEnd={onDiscardEnd} />);
     fireEvent.animationEnd(screen.getByRole("button"));
     expect(onDiscardEnd).not.toHaveBeenCalled();
+  });
+
+  test("applies the shared face-card class to a Jack", () => {
+    render(<Card card={jackOfClubs} />);
+    expect(screen.getByRole("button")).toHaveClass("card-face");
+  });
+
+  test("applies the jack-specific class to a Jack", () => {
+    render(<Card card={jackOfClubs} />);
+    expect(screen.getByRole("button")).toHaveClass("card-face-jack");
+  });
+
+  test("applies the queen-specific class to a Queen", () => {
+    render(<Card card={queenOfHearts} />);
+    expect(screen.getByRole("button")).toHaveClass("card-face-queen");
+  });
+
+  test("applies the king-specific class to a King", () => {
+    render(<Card card={kingOfDiamonds} />);
+    expect(screen.getByRole("button")).toHaveClass("card-face-king");
+  });
+
+  test("does not apply the face-card class to a number card", () => {
+    render(<Card card={sevenOfHearts} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-face");
+  });
+
+  test("does not apply the face-card class to an Ace", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-face");
   });
 });
