@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./Options.css";
 import { createPortal } from "react-dom";
 import { isMuted, toggleMute } from "./sounds";
 

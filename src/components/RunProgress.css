@@ -1,0 +1,10 @@
+.run-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.run-progress-row {
+  display: flex;
+  gap: 1rem;
+}

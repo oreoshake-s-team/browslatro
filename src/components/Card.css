@@ -1,0 +1,68 @@
+.card {
+  position: relative;
+  width: 4.5rem;
+  height: 9.5rem;
+  padding: 0.4rem;
+  border: 2px solid #495057;
+  border-radius: 8px;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  font-family: "Georgia", serif;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card-selected {
+  transform: translateY(-1.2rem);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.25);
+  border-color: #339af0;
+}
+
+.card-selected:hover {
+  transform: translateY(-1.4rem);
+}
+
+.card-red {
+  color: #c92a2a;
+}
+
+.card-black {
+  color: #212529;
+}
+
+.card-corner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.card-corner-top {
+  justify-self: start;
+}
+
+.card-corner-bottom {
+  justify-self: end;
+  transform: rotate(180deg);
+}
+
+.card-rank {
+  font-size: 1.1rem;
+}
+
+.card-corner .card-suit {
+  font-size: 1rem;
+}
+
+.card-center {
+  align-self: center;
+  justify-self: center;
+  font-size: 2.6rem;
+}

@@ -1,0 +1,61 @@
+.deck-pile {
+  width: 4.5rem;
+  height: 9.5rem;
+  border: 2px solid #1864ab;
+  border-radius: 8px;
+  background-color: #1971c2;
+  background-image: repeating-linear-gradient(
+    45deg,
+    #1971c2 0,
+    #1971c2 6px,
+    #1864ab 6px,
+    #1864ab 12px
+  );
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 120ms ease;
+}
+
+.deck-pile:hover {
+  transform: translateY(-4px);
+}
+
+.deck-pile-count {
+  font-size: 1.4rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.deck-modal {
+  max-width: 56rem;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.deck-modal-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  width: 100%;
+}
+
+.deck-modal-group h4 {
+  margin: 0 0 0.6rem;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.deck-modal-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}

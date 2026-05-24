@@ -1,6 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
+import "./Game.css";
 import type { Hand } from "../types";
 import { HANDS } from "../constants";
+import HandComponent from "./Hand";
 
 interface GameProps {
   onWin: () => void;
@@ -48,6 +50,7 @@ export default function Game({
 
   return (
     <div className="game">
+      <HandComponent />
       <div className="hand-selection">
         <span className="step-label">1. Select hand</span>
         <select

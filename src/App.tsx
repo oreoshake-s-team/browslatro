@@ -1,4 +1,5 @@
 import { useState } from "react";
+import "./App.css";
 import type { Blind, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
