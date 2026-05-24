@@ -1,8 +1,12 @@
 import { useState } from "react";
 import "./Options.css";
 import { createPortal } from "react-dom";
-import { isMuted, toggleMute } from "./sounds";
-import { isHighVisibility, toggleHighVisibility } from "./preferences";
+import {
+  isHighVisibility,
+  isMuted,
+  toggleHighVisibility,
+  toggleMute,
+} from "./preferences";
 
 interface OptionsProps {
   onReset: () => void;

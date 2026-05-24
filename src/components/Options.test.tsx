@@ -1,25 +1,35 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Options from "./Options";
-import { isHighVisibility, toggleHighVisibility } from "./preferences";
+import {
+  isHighVisibility,
+  isMuted,
+  toggleHighVisibility,
+  toggleMute,
+} from "./preferences";
 
 const STORAGE_KEY = "browslatro:highVisibility";
+const MUTED_KEY = "browslatro:muted";
 
 /**
- * The preferences module is a singleton, so any test that flips the
- * highVisibility flag must reset it (and localStorage) afterwards to keep
- * tests independent. We do the reset via the public toggle so module state
- * and storage stay in sync.
+ * The preferences module is a singleton, so any test that flips a
+ * preference must reset it (and localStorage) afterwards to keep tests
+ * independent. We reset via the public toggles so module state and
+ * storage stay in sync.
  */
-function resetHighVisibility(): void {
+function resetPreferences(): void {
   if (isHighVisibility()) {
     toggleHighVisibility();
   }
+  if (isMuted()) {
+    toggleMute();
+  }
   window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(MUTED_KEY);
 }
 
 describe("Options", () => {
-  afterEach(resetHighVisibility);
+  afterEach(resetPreferences);
 
   test("button opens modal", () => {
     render(<Options onReset={() => {}} />);
@@ -61,7 +71,7 @@ describe("Options", () => {
 });
 
 describe("Options — high visibility toggle", () => {
-  afterEach(resetHighVisibility);
+  afterEach(resetPreferences);
 
   test("renders the high visibility toggle inside the modal", () => {
     render(<Options onReset={() => {}} />);

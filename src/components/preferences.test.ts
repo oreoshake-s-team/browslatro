@@ -7,6 +7,7 @@
 export {};
 
 const STORAGE_KEY = "browslatro:highVisibility";
+const MUTED_KEY = "browslatro:muted";
 
 describe("preferences (highVisibility)", () => {
   beforeEach(() => {
@@ -54,5 +55,42 @@ describe("preferences (highVisibility)", () => {
     window.localStorage.setItem(STORAGE_KEY, "yes");
     const { isHighVisibility } = require("./preferences");
     expect(isHighVisibility()).toBe(false);
+  });
+});
+
+describe("preferences (muted)", () => {
+  beforeEach(() => {
+    jest.resetModules();
+    window.localStorage.clear();
+  });
+
+  test("defaults to false when localStorage has no value", () => {
+    const { isMuted } = require("./preferences");
+    expect(isMuted()).toBe(false);
+  });
+
+  test("reads a persisted true value from localStorage on init", () => {
+    window.localStorage.setItem(MUTED_KEY, "true");
+    const { isMuted } = require("./preferences");
+    expect(isMuted()).toBe(true);
+  });
+
+  test("toggleMute flips the in-memory value", () => {
+    const { isMuted, toggleMute } = require("./preferences");
+    toggleMute();
+    expect(isMuted()).toBe(true);
+  });
+
+  test("toggleMute writes true to localStorage", () => {
+    const { toggleMute } = require("./preferences");
+    toggleMute();
+    expect(window.localStorage.getItem(MUTED_KEY)).toBe("true");
+  });
+
+  test("toggling twice writes false back to localStorage", () => {
+    const { toggleMute } = require("./preferences");
+    toggleMute();
+    toggleMute();
+    expect(window.localStorage.getItem(MUTED_KEY)).toBe("false");
   });
 });

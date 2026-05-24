@@ -8,6 +8,7 @@
  */
 
 const HIGH_VISIBILITY_KEY = "browslatro:highVisibility";
+const MUTED_KEY = "browslatro:muted";
 
 function readBoolean(key: string): boolean {
   try {
@@ -26,6 +27,7 @@ function writeBoolean(key: string, value: boolean): void {
 }
 
 let highVisibility = readBoolean(HIGH_VISIBILITY_KEY);
+let muted = readBoolean(MUTED_KEY);
 
 export function isHighVisibility(): boolean {
   return highVisibility;
@@ -34,4 +36,13 @@ export function isHighVisibility(): boolean {
 export function toggleHighVisibility(): void {
   highVisibility = !highVisibility;
   writeBoolean(HIGH_VISIBILITY_KEY, highVisibility);
+}
+
+export function isMuted(): boolean {
+  return muted;
+}
+
+export function toggleMute(): void {
+  muted = !muted;
+  writeBoolean(MUTED_KEY, muted);
 }
