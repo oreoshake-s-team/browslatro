@@ -83,4 +83,49 @@ describe("Hand", () => {
       screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ })
     ).toBeInTheDocument();
   });
+
+  test("allows selecting up to 5 cards", () => {
+    render(<Hand initialDeck={createDeck()} />);
+    const cards = getCardButtons();
+    for (let i = 0; i < 5; i++) {
+      userEvent.click(cards[i]);
+    }
+    const selectedCount = getCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(5);
+  });
+
+  test("ignores selection of a 6th card when 5 are already selected", () => {
+    render(<Hand initialDeck={createDeck()} />);
+    const cards = getCardButtons();
+    for (let i = 0; i < 5; i++) {
+      userEvent.click(cards[i]);
+    }
+    userEvent.click(cards[5]);
+    expect(cards[5]).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("a 6th click does not bump selected count past 5", () => {
+    render(<Hand initialDeck={createDeck()} />);
+    const cards = getCardButtons();
+    for (let i = 0; i < 6; i++) {
+      userEvent.click(cards[i]);
+    }
+    const selectedCount = getCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(5);
+  });
+
+  test("deselecting a card frees a slot so a new one can be selected", () => {
+    render(<Hand initialDeck={createDeck()} />);
+    const cards = getCardButtons();
+    for (let i = 0; i < 5; i++) {
+      userEvent.click(cards[i]);
+    }
+    userEvent.click(cards[0]);
+    userEvent.click(cards[5]);
+    expect(cards[5]).toHaveAttribute("aria-pressed", "true");
+  });
 });

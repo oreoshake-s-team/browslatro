@@ -5,6 +5,8 @@ import DeckPile from "./DeckPile";
 import type { Card as CardType } from "../types";
 import { createDeck, deal, shuffle, HAND_SIZE } from "../deck";
 
+export const MAX_SELECTED = 5;
+
 interface HandProps {
   initialDeck?: ReadonlyArray<CardType>;
 }
@@ -21,12 +23,16 @@ export default function Hand({ initialDeck }: HandProps) {
 
   function toggleCard(card: CardType) {
     setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(card.id)) {
+      if (prev.has(card.id)) {
+        const next = new Set(prev);
         next.delete(card.id);
-      } else {
-        next.add(card.id);
+        return next;
       }
+      if (prev.size >= MAX_SELECTED) {
+        return prev;
+      }
+      const next = new Set(prev);
+      next.add(card.id);
       return next;
     });
   }
