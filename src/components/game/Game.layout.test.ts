@@ -14,7 +14,7 @@ import { join } from "path";
  */
 
 const gameCss = readFileSync(join(__dirname, "Game.css"), "utf8");
-const appCss = readFileSync(join(__dirname, "..", "App.css"), "utf8");
+const appCss = readFileSync(join(__dirname, "..", "..", "App.css"), "utf8");
 
 function gameRuleBody(): string {
   // Extract just the `.game { ... }` block so assertions are scoped to it.
