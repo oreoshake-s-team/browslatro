@@ -14,9 +14,13 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onSubmitHand={jest.fn()}
       onSetMoney={jest.fn()}
       selectedHand={HANDS[0]}
-      onSelectHand={jest.fn()}
-      onSetChips={jest.fn()}
-      onSetMultiplier={jest.fn()}
+      hand={[]}
+      remaining={[]}
+      discarded={[]}
+      selectedIds={new Set()}
+      discardingIds={new Set()}
+      onToggleCard={jest.fn()}
+      onCardDiscardEnd={jest.fn()}
       {...overrides}
     />,
   );
@@ -70,5 +74,10 @@ describe("Game", () => {
   test("renders the player's hand of cards", () => {
     renderGame();
     expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
+  });
+
+  test("displays the selected hand label in the read-only current hand area", () => {
+    renderGame({ selectedHand: HANDS[3] });
+    expect(screen.getByText(HANDS[3].label)).toBeInTheDocument();
   });
 });

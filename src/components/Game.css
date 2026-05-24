@@ -37,14 +37,17 @@
   box-sizing: border-box;
 }
 
-.hand-selection select {
-  font-size: 1.4rem;
+.hand-display {
+  font-size: 1.6rem;
+  font-weight: 700;
   padding: 0.8rem 1.2rem;
   border: 1px solid #339af0;
   border-radius: 4px;
   background-color: white;
-  cursor: pointer;
   width: 100%;
+  text-align: center;
+  box-sizing: border-box;
+  color: #1864ab;
 }
 
 .modifier-selection {

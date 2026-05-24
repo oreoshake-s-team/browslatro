@@ -6,12 +6,17 @@ Browslatro is an educational journey meant to help the author brush up on their 
 
 - All functionality must have test coverage
 - Code should be as compartmenatalized as possible, including CSS
-- Tests should only have one assertion per test unless it is testing a multistep flow
 - Could should be written in strict typescript, no use of any types
-- All tests should be run after major changes
 - Only use strict typescript. No use of JS or "any" types
 - Prioritize accessibility and i18n.
 - When developing new branches, work in worktrees.
+- Always use ISSUE_TEMPLATE.md when creating issues
+
+# Testing
+
+- Tests should only have one assertion per test unless it is testing a multistep flow
+- All tests should be run after major changes
+- Include "negative" test cases whenever possible
 
 # Semantic commits
 

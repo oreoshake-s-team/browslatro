@@ -1,0 +1,74 @@
+.discard-pile {
+  position: relative;
+  width: 4.5rem;
+  height: 9.5rem;
+  border: 2px dashed #adb5bd;
+  border-radius: 8px;
+  background-color: #f1f3f5;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: transform 120ms ease;
+}
+
+.discard-pile:hover {
+  transform: translateY(-4px);
+}
+
+.discard-pile .card {
+  pointer-events: none;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.discard-pile-empty {
+  color: #868e96;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.discard-pile-count {
+  position: absolute;
+  bottom: -0.4rem;
+  right: -0.4rem;
+  background-color: #495057;
+  color: white;
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.discard-modal {
+  max-width: 56rem;
+  width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.discard-modal-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  width: 100%;
+}
+
+.discard-modal-group h4 {
+  margin: 0 0 0.6rem;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.discard-modal-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Card from "./Card";
 import type { Card as CardType } from "../types";
@@ -54,5 +54,26 @@ describe("Card", () => {
   test("does not throw when clicked without an onToggle handler", () => {
     render(<Card card={aceOfSpades} />);
     expect(() => userEvent.click(screen.getByRole("button"))).not.toThrow();
+  });
+
+  test("applies the discarding class when the discarding prop is set", () => {
+    render(<Card card={aceOfSpades} discarding />);
+    expect(screen.getByRole("button")).toHaveClass("card-discarding");
+  });
+
+  test("invokes onDiscardEnd with the card when the discard animation ends", () => {
+    const onDiscardEnd = jest.fn();
+    render(
+      <Card card={aceOfSpades} discarding onDiscardEnd={onDiscardEnd} />
+    );
+    fireEvent.animationEnd(screen.getByRole("button"));
+    expect(onDiscardEnd).toHaveBeenCalledWith(aceOfSpades);
+  });
+
+  test("does not invoke onDiscardEnd on animation end when not discarding", () => {
+    const onDiscardEnd = jest.fn();
+    render(<Card card={aceOfSpades} onDiscardEnd={onDiscardEnd} />);
+    fireEvent.animationEnd(screen.getByRole("button"));
+    expect(onDiscardEnd).not.toHaveBeenCalled();
   });
 });

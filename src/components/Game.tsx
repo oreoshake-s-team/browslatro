@@ -1,7 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
-import type { Hand } from "../types";
-import { HANDS } from "../constants";
+import type { Card, Hand } from "../types";
 import HandComponent from "./Hand";
 
 interface GameProps {
@@ -12,9 +11,13 @@ interface GameProps {
   onSubmitHand: () => void;
   onSetMoney: Dispatch<SetStateAction<number>>;
   selectedHand: Hand;
-  onSelectHand: (hand: Hand) => void;
-  onSetChips: Dispatch<SetStateAction<number>>;
-  onSetMultiplier: Dispatch<SetStateAction<number>>;
+  hand: ReadonlyArray<Card>;
+  remaining: ReadonlyArray<Card>;
+  discarded: ReadonlyArray<Card>;
+  selectedIds: ReadonlySet<number>;
+  discardingIds: ReadonlySet<number>;
+  onToggleCard: (card: Card) => void;
+  onCardDiscardEnd: (card: Card) => void;
 }
 
 export default function Game({
@@ -25,9 +28,13 @@ export default function Game({
   onSubmitHand,
   onSetMoney,
   selectedHand,
-  onSelectHand,
-  onSetChips,
-  onSetMultiplier,
+  hand,
+  remaining,
+  discarded,
+  selectedIds,
+  discardingIds,
+  onToggleCard,
+  onCardDiscardEnd,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -37,32 +44,22 @@ export default function Game({
     onSetMoney((prev) => prev - amount);
   }
 
-  function handleHandChange(hand: Hand) {
-    onSetChips(hand.chips);
-    onSetMultiplier(hand.multiplier);
-    onSelectHand(hand);
-  }
-
-  function handleSubmitHand() {
-    onSubmitHand();
-    onSelectHand(HANDS[0]);
-  }
-
   return (
     <div className="game">
-      <HandComponent />
+      <HandComponent
+        hand={hand}
+        remaining={remaining}
+        discarded={discarded}
+        selectedIds={selectedIds}
+        discardingIds={discardingIds}
+        onToggleCard={onToggleCard}
+        onCardDiscardEnd={onCardDiscardEnd}
+      />
       <div className="hand-selection">
-        <span className="step-label">1. Select hand</span>
-        <select
-          value={HANDS.indexOf(selectedHand)}
-          onChange={(e) => handleHandChange(HANDS[Number(e.target.value)])}
-        >
-          {HANDS.map((hand, i) => (
-            <option key={hand.label} value={i}>
-              {hand.label}
-            </option>
-          ))}
-        </select>
+        <span className="step-label">1. Current hand</span>
+        <div className="hand-display" aria-live="polite">
+          {selectedHand.label}
+        </div>
       </div>
       <div className="modifier-selection">
         <span className="step-label">2. Apply modifiers</span>
@@ -98,7 +95,7 @@ export default function Game({
       </div>
       <div className="submit-hand">
         <span className="step-label">3. Submit</span>
-        <button className="submit-hand-button" onClick={handleSubmitHand}>
+        <button className="submit-hand-button" onClick={onSubmitHand}>
           🃏 Submit Hand
         </button>
       </div>

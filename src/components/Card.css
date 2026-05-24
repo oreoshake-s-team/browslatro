@@ -28,6 +28,22 @@
   transform: translateY(-1.4rem);
 }
 
+.card-discarding {
+  animation: card-discard 400ms ease-in forwards;
+  pointer-events: none;
+}
+
+@keyframes card-discard {
+  0% {
+    transform: translate(0, 0) rotate(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-12rem, 4rem) rotate(-15deg) scale(0.7);
+    opacity: 0;
+  }
+}
+
 .card-red {
   color: #c92a2a;
 }

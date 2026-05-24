@@ -1,18 +1,19 @@
 .hand {
   width: 100%;
-  max-width: 60rem;
+  max-width: 64rem;
   padding: 1.6rem;
   border: 2px solid #dee2e6;
   border-radius: 8px;
   background-color: #f8f9fa;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: auto 1fr auto;
   align-items: end;
   gap: 1.2rem;
 }
 
-.hand-deck {
+.hand-deck,
+.hand-discard {
   display: flex;
   align-items: end;
 }

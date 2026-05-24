@@ -1,10 +1,17 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "./App.css";
-import type { Blind, Hand } from "./types";
+import type { Blind, Card, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
+import { evaluateHand } from "./handEvaluator";
+import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
+import { MAX_SELECTED } from "./components/Hand";
+
+function initialDeal(): DealResult {
+  return deal(shuffle(createDeck()), HAND_SIZE);
+}
 
 function App() {
   const [blind, setBlind] = useState<Blind>(1);
@@ -17,6 +24,15 @@ function App() {
   const [selectedHand, setSelectedHand] = useState<Hand>(HANDS[0]);
   const [remainingHands, setRemainingHands] = useState(4);
   const [remainingDiscards, setRemainingDiscards] = useState(3);
+  const [dealt, setDealt] = useState<DealResult>(initialDeal);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const [discardPile, setDiscardPile] = useState<ReadonlyArray<Card>>([]);
+  const [discardingIds, setDiscardingIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const pendingDiscardCountRef = useRef(0);
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -35,11 +51,19 @@ function App() {
     setRemainingDiscards(3);
   }
 
-  function handleReset() {
+  function handleReset(): void {
     setBlind(1);
     setRound(1);
     setAnte(1);
     setMoney(0);
+    setRoundScore(0);
+    setSelectedHand(HANDS[0]);
+    setRemainingHands(4);
+    setRemainingDiscards(3);
+    setDealt(initialDeal());
+    setSelectedIds(new Set());
+    setDiscardPile([]);
+    setDiscardingIds(new Set());
   }
 
   function addChips(amount: number) {
@@ -63,11 +87,58 @@ function App() {
     handleReset();
   }
 
+  function toggleCard(card: Card) {
+    if (discardingIds.size > 0) return;
+    let nextIds: Set<number>;
+    if (selectedIds.has(card.id)) {
+      nextIds = new Set(selectedIds);
+      nextIds.delete(card.id);
+    } else {
+      if (selectedIds.size >= MAX_SELECTED) return;
+      nextIds = new Set(selectedIds);
+      nextIds.add(card.id);
+    }
+    setSelectedIds(nextIds);
+    const nextSelected = dealt.hand.filter((c) => nextIds.has(c.id));
+    const hand = evaluateHand(nextSelected);
+    setSelectedHand(hand);
+    setChips(hand.chips);
+    setMultiplier(hand.multiplier);
+  }
+
+  function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
+    const discardedCards = dealt.hand.filter((c) => idsToDiscard.has(c.id));
+    const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
+    const drawn = dealt.remaining.slice(0, discardedCards.length);
+    const newRemaining = dealt.remaining.slice(discardedCards.length);
+    setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    setDiscardPile((prev) => [...prev, ...discardedCards]);
+    setSelectedIds(new Set());
+    setDiscardingIds(new Set());
+    setSelectedHand(HANDS[0]);
+  }
+
+  function handleCardDiscardEnd(card: Card) {
+    if (!discardingIds.has(card.id)) return;
+    pendingDiscardCountRef.current -= 1;
+    if (pendingDiscardCountRef.current <= 0) {
+      pendingDiscardCountRef.current = 0;
+      finalizeDiscard(discardingIds);
+    }
+  }
+
   function submitHand() {
+    if (discardingIds.size > 0) return;
+
     const newRoundScore = roundScore + chips * multiplier;
     setRoundScore(newRoundScore);
     setChips(20);
     setMultiplier(2);
+
+    if (selectedIds.size > 0) {
+      pendingDiscardCountRef.current = selectedIds.size;
+      setDiscardingIds(selectedIds);
+    }
 
     if (newRoundScore >= requiredScore) {
       handleWin();
@@ -105,9 +176,13 @@ function App() {
         onSetMoney={setMoney}
         onSubmitHand={submitHand}
         selectedHand={selectedHand}
-        onSelectHand={setSelectedHand}
-        onSetChips={setChips}
-        onSetMultiplier={setMultiplier}
+        hand={dealt.hand}
+        remaining={dealt.remaining}
+        discarded={discardPile}
+        selectedIds={selectedIds}
+        discardingIds={discardingIds}
+        onToggleCard={toggleCard}
+        onCardDiscardEnd={handleCardDiscardEnd}
       />
     </div>
   );

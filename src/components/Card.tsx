@@ -18,24 +18,38 @@ const SUIT_LABELS: Record<Suit, string> = {
 interface CardProps {
   card: CardType;
   selected?: boolean;
+  discarding?: boolean;
   onToggle?: (card: CardType) => void;
+  onDiscardEnd?: (card: CardType) => void;
 }
 
-export default function Card({ card, selected = false, onToggle }: CardProps) {
+export default function Card({
+  card,
+  selected = false,
+  discarding = false,
+  onToggle,
+  onDiscardEnd,
+}: CardProps) {
   const colorClass =
     card.suit === "hearts" || card.suit === "diamonds"
       ? "card-red"
       : "card-black";
   const selectedClass = selected ? "card-selected" : "";
+  const discardingClass = discarding ? "card-discarding" : "";
   const ariaLabel = `${card.rank} of ${SUIT_LABELS[card.suit]}`;
 
   return (
     <button
       type="button"
-      className={`card ${colorClass} ${selectedClass}`.trim()}
+      className={`card ${colorClass} ${selectedClass} ${discardingClass}`.trim()}
       aria-pressed={selected}
       aria-label={ariaLabel}
       onClick={() => onToggle?.(card)}
+      onAnimationEnd={() => {
+        if (discarding) {
+          onDiscardEnd?.(card);
+        }
+      }}
     >
       <span className="card-corner card-corner-top">
         <span className="card-rank">{card.rank}</span>
