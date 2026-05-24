@@ -1,10 +1,11 @@
 import { useState } from "react";
 import "./App.css";
-import type { Blind, Hand } from "./types";
+import type { Blind, Card, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
+import { evaluateHand } from "./handEvaluator";
 
 function App() {
   const [blind, setBlind] = useState<Blind>(1);
@@ -63,6 +64,13 @@ function App() {
     handleReset();
   }
 
+  function handleSelectionChange(cards: ReadonlyArray<Card>) {
+    const hand = evaluateHand(cards);
+    setSelectedHand(hand);
+    setChips(hand.chips);
+    setMultiplier(hand.multiplier);
+  }
+
   function submitHand() {
     const newRoundScore = roundScore + chips * multiplier;
     setRoundScore(newRoundScore);
@@ -108,6 +116,7 @@ function App() {
         onSelectHand={setSelectedHand}
         onSetChips={setChips}
         onSetMultiplier={setMultiplier}
+        onSelectionChange={handleSelectionChange}
       />
     </div>
   );

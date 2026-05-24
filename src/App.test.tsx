@@ -71,6 +71,26 @@ describe("Hand selection integration", () => {
   });
 });
 
+describe("Card selection drives hand detection", () => {
+  test("selecting a single card sets chips to High Card chip value", () => {
+    render(<App />);
+    const handCards = screen
+      .getByLabelText("Your hand")
+      .querySelectorAll("button");
+    userEvent.click(handCards[0] as HTMLElement);
+    expect(document.querySelector(".chips")).toHaveTextContent("5");
+  });
+
+  test("selecting a single card sets multiplier to High Card multiplier value", () => {
+    render(<App />);
+    const handCards = screen
+      .getByLabelText("Your hand")
+      .querySelectorAll("button");
+    userEvent.click(handCards[0] as HTMLElement);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("1");
+  });
+});
+
 describe("Submit Hand button integration", () => {
   test("updates round score by chips × multiplier then resets chips and multiplier", () => {
     render(<App />);

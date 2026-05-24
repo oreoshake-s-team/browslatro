@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
-import type { Hand } from "../types";
+import type { Card, Hand } from "../types";
 import { HANDS } from "../constants";
 import HandComponent from "./Hand";
 
@@ -15,6 +15,7 @@ interface GameProps {
   onSelectHand: (hand: Hand) => void;
   onSetChips: Dispatch<SetStateAction<number>>;
   onSetMultiplier: Dispatch<SetStateAction<number>>;
+  onSelectionChange?: (selectedCards: ReadonlyArray<Card>) => void;
 }
 
 export default function Game({
@@ -28,6 +29,7 @@ export default function Game({
   onSelectHand,
   onSetChips,
   onSetMultiplier,
+  onSelectionChange,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -50,7 +52,7 @@ export default function Game({
 
   return (
     <div className="game">
-      <HandComponent />
+      <HandComponent onSelectionChange={onSelectionChange} />
       <div className="hand-selection">
         <span className="step-label">1. Select hand</span>
         <select

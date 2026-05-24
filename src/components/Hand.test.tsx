@@ -128,4 +128,35 @@ describe("Hand", () => {
     userEvent.click(cards[5]);
     expect(cards[5]).toHaveAttribute("aria-pressed", "true");
   });
+
+  test("calls onSelectionChange with the selected card when a card is clicked", () => {
+    const deck = createDeck();
+    const onSelectionChange = jest.fn();
+    render(<Hand initialDeck={deck} onSelectionChange={onSelectionChange} />);
+    userEvent.click(getCardButtons()[0]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith([deck[0]]);
+  });
+
+  test("calls onSelectionChange with an empty array when the last card is deselected", () => {
+    const deck = createDeck();
+    const onSelectionChange = jest.fn();
+    render(<Hand initialDeck={deck} onSelectionChange={onSelectionChange} />);
+    userEvent.click(getCardButtons()[0]);
+    userEvent.click(getCardButtons()[0]);
+    expect(onSelectionChange).toHaveBeenLastCalledWith([]);
+  });
+
+  test("does not fire onSelectionChange when a 6th card is rejected", () => {
+    const onSelectionChange = jest.fn();
+    render(
+      <Hand initialDeck={createDeck()} onSelectionChange={onSelectionChange} />
+    );
+    const cards = getCardButtons();
+    for (let i = 0; i < 5; i++) {
+      userEvent.click(cards[i]);
+    }
+    const callsBefore = onSelectionChange.mock.calls.length;
+    userEvent.click(cards[5]);
+    expect(onSelectionChange.mock.calls.length).toBe(callsBefore);
+  });
 });

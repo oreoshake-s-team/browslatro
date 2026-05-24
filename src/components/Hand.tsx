@@ -9,9 +9,10 @@ export const MAX_SELECTED = 5;
 
 interface HandProps {
   initialDeck?: ReadonlyArray<CardType>;
+  onSelectionChange?: (selectedCards: ReadonlyArray<CardType>) => void;
 }
 
-export default function Hand({ initialDeck }: HandProps) {
+export default function Hand({ initialDeck, onSelectionChange }: HandProps) {
   const dealt = useMemo(() => {
     const source = initialDeck ?? shuffle(createDeck());
     return deal(source, HAND_SIZE);
@@ -22,19 +23,21 @@ export default function Hand({ initialDeck }: HandProps) {
   );
 
   function toggleCard(card: CardType) {
-    setSelectedIds((prev) => {
-      if (prev.has(card.id)) {
-        const next = new Set(prev);
-        next.delete(card.id);
-        return next;
+    let nextIds: Set<number>;
+    if (selectedIds.has(card.id)) {
+      nextIds = new Set(selectedIds);
+      nextIds.delete(card.id);
+    } else {
+      if (selectedIds.size >= MAX_SELECTED) {
+        return;
       }
-      if (prev.size >= MAX_SELECTED) {
-        return prev;
-      }
-      const next = new Set(prev);
-      next.add(card.id);
-      return next;
-    });
+      nextIds = new Set(selectedIds);
+      nextIds.add(card.id);
+    }
+    setSelectedIds(nextIds);
+    if (onSelectionChange) {
+      onSelectionChange(dealt.hand.filter((c) => nextIds.has(c.id)));
+    }
   }
 
   return (
