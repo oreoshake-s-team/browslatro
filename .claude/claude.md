@@ -7,10 +7,10 @@ Browslatro is an educational journey meant to help the author brush up on their 
 - All functionality must have test coverage
 - Code should be as compartmenatalized as possible, including CSS
 - Could should be written in strict typescript, no use of any types
-
 - Only use strict typescript. No use of JS or "any" types
 - Prioritize accessibility and i18n.
 - When developing new branches, work in worktrees.
+- Always use ISSUE_TEMPLATE.md when creating issues
 
 # Testing
 
