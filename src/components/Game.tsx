@@ -9,11 +9,12 @@ interface GameProps {
   onAddMultiplier: (amount: number) => void;
   onMultiplyMultiplier: (factor: number) => void;
   onSubmitHand: () => void;
+  onDiscard: () => void;
+  canDiscard: boolean;
   onSetMoney: Dispatch<SetStateAction<number>>;
   selectedHand: Hand;
   hand: ReadonlyArray<Card>;
   remaining: ReadonlyArray<Card>;
-  discarded: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
   onToggleCard: (card: Card) => void;
@@ -26,11 +27,12 @@ export default function Game({
   onAddMultiplier,
   onMultiplyMultiplier,
   onSubmitHand,
+  onDiscard,
+  canDiscard,
   onSetMoney,
   selectedHand,
   hand,
   remaining,
-  discarded,
   selectedIds,
   discardingIds,
   onToggleCard,
@@ -49,7 +51,6 @@ export default function Game({
       <HandComponent
         hand={hand}
         remaining={remaining}
-        discarded={discarded}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
         onToggleCard={onToggleCard}
@@ -94,10 +95,19 @@ export default function Game({
         </div>
       </div>
       <div className="submit-hand">
-        <span className="step-label">3. Submit</span>
-        <button className="submit-hand-button" onClick={onSubmitHand}>
-          🃏 Submit Hand
-        </button>
+        <span className="step-label">3. Play or discard</span>
+        <div className="play-actions">
+          <button className="submit-hand-button" onClick={onSubmitHand}>
+            🃏 Submit Hand
+          </button>
+          <button
+            className="discard-button"
+            onClick={onDiscard}
+            disabled={!canDiscard}
+          >
+            🗑️ Discard
+          </button>
+        </div>
       </div>
     </div>
   );

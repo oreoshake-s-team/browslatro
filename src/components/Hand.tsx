@@ -1,7 +1,6 @@
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
-import DiscardPile from "./DiscardPile";
 import type { Card as CardType } from "../types";
 
 export const MAX_SELECTED = 5;
@@ -9,7 +8,6 @@ export const MAX_SELECTED = 5;
 interface HandProps {
   hand: ReadonlyArray<CardType>;
   remaining: ReadonlyArray<CardType>;
-  discarded: ReadonlyArray<CardType>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
   onToggleCard: (card: CardType) => void;
@@ -19,7 +17,6 @@ interface HandProps {
 export default function Hand({
   hand,
   remaining,
-  discarded,
   selectedIds,
   discardingIds,
   onToggleCard,
@@ -27,9 +24,6 @@ export default function Hand({
 }: HandProps) {
   return (
     <div className="hand">
-      <div className="hand-discard">
-        <DiscardPile discarded={discarded} />
-      </div>
       <div className="hand-cards" aria-label="Your hand">
         {hand.map((card) => (
           <Card

@@ -85,6 +85,30 @@
 .submit-hand-button {
   padding: 1.6rem 4rem;
   font-size: 2rem;
+  flex: 1;
+}
+
+.play-actions {
+  display: flex;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.discard-button {
+  padding: 1.6rem 2rem;
+  font-size: 1.4rem;
+  background-color: #c92a2a;
+  color: white;
+  border: 2px solid #a51111;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.discard-button:disabled {
+  background-color: #adb5bd;
+  border-color: #868e96;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .add-chips-button,

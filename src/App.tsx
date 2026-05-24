@@ -28,7 +28,6 @@ function App() {
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
-  const [discardPile, setDiscardPile] = useState<ReadonlyArray<Card>>([]);
   const [discardingIds, setDiscardingIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
@@ -62,7 +61,6 @@ function App() {
     setRemainingDiscards(3);
     setDealt(initialDeal());
     setSelectedIds(new Set());
-    setDiscardPile([]);
     setDiscardingIds(new Set());
   }
 
@@ -107,12 +105,11 @@ function App() {
   }
 
   function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
-    const discardedCards = dealt.hand.filter((c) => idsToDiscard.has(c.id));
     const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
-    const drawn = dealt.remaining.slice(0, discardedCards.length);
-    const newRemaining = dealt.remaining.slice(discardedCards.length);
+    const drawCount = dealt.hand.length - kept.length;
+    const drawn = dealt.remaining.slice(0, drawCount);
+    const newRemaining = dealt.remaining.slice(drawCount);
     setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
-    setDiscardPile((prev) => [...prev, ...discardedCards]);
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(HANDS[0]);
@@ -152,6 +149,16 @@ function App() {
     }
   }
 
+  function discardSelected() {
+    if (discardingIds.size > 0) return;
+    if (selectedIds.size === 0) return;
+    if (remainingDiscards <= 0) return;
+
+    pendingDiscardCountRef.current = selectedIds.size;
+    setDiscardingIds(selectedIds);
+    setRemainingDiscards((prev) => prev - 1);
+  }
+
   return (
     <div className="App">
       <Sidebar
@@ -175,10 +182,15 @@ function App() {
         onMultiplyMultiplier={multiplyMultiplier}
         onSetMoney={setMoney}
         onSubmitHand={submitHand}
+        onDiscard={discardSelected}
+        canDiscard={
+          selectedIds.size > 0 &&
+          remainingDiscards > 0 &&
+          discardingIds.size === 0
+        }
         selectedHand={selectedHand}
         hand={dealt.hand}
         remaining={dealt.remaining}
-        discarded={discardPile}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
         onToggleCard={toggleCard}
