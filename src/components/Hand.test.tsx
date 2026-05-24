@@ -59,7 +59,8 @@ describe("Hand", () => {
     expect(pressedCount).toBe(2);
   });
 
-  test("calls onToggleCard with the card when a card is clicked", () => {
+  test("calls onToggleCard with the card when a card is clicked", async () => {
+    const user = userEvent.setup();
     const deck = createDeck();
     const handCards = deck.slice(0, 8);
     const onToggleCard = jest.fn();
@@ -68,7 +69,7 @@ describe("Hand", () => {
     const targetLabel = `${target.rank} of ${
       target.suit.charAt(0).toUpperCase() + target.suit.slice(1)
     }`;
-    userEvent.click(screen.getByRole("button", { name: targetLabel }));
+    await user.click(screen.getByRole("button", { name: targetLabel }));
     expect(onToggleCard).toHaveBeenCalledWith(target);
   });
 
@@ -117,9 +118,10 @@ describe("Hand sorting", () => {
     );
   });
 
-  test("clicking Suit re-orders cards by suit", () => {
+  test("clicking Suit re-orders cards by suit", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: shuffledHand, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    await user.click(screen.getByRole("button", { name: "Suit" }));
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "10 of Clubs",
@@ -129,28 +131,31 @@ describe("Hand sorting", () => {
     ]);
   });
 
-  test("clicking Suit marks the Suit button as pressed", () => {
+  test("clicking Suit marks the Suit button as pressed", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: shuffledHand, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    await user.click(screen.getByRole("button", { name: "Suit" }));
     expect(screen.getByRole("button", { name: "Suit" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
   });
 
-  test("clicking Suit unsets the Rank button", () => {
+  test("clicking Suit unsets the Rank button", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: shuffledHand, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Suit" }));
+    await user.click(screen.getByRole("button", { name: "Suit" }));
     expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );
   });
 
-  test("clicking Rank after Suit restores rank-descending ordering", () => {
+  test("clicking Rank after Suit restores rank-descending ordering", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: shuffledHand, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Suit" }));
-    userEvent.click(screen.getByRole("button", { name: "Rank" }));
+    await user.click(screen.getByRole("button", { name: "Suit" }));
+    await user.click(screen.getByRole("button", { name: "Rank" }));
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "A of Diamonds",
@@ -223,10 +228,11 @@ describe("Hand manual reordering", () => {
     ).toBeDisabled();
   });
 
-  test("clicking Move right moves the card one position to the right", () => {
+  test("clicking Move right moves the card one position to the right", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
     // Default order: A♦, K♥, 10♣, 2♠ → move K♥ right → A♦, 10♣, K♥, 2♠
-    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "A of Diamonds",
@@ -236,9 +242,10 @@ describe("Hand manual reordering", () => {
     ]);
   });
 
-  test("clicking Move left moves the card one position to the left", () => {
+  test("clicking Move left moves the card one position to the left", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Move 10 of Clubs left" }));
+    await user.click(screen.getByRole("button", { name: "Move 10 of Clubs left" }));
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "A of Diamonds",
@@ -248,28 +255,31 @@ describe("Hand manual reordering", () => {
     ]);
   });
 
-  test("moving a card activates the Manual sort indicator", () => {
+  test("moving a card activates the Manual sort indicator", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
     expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
       "aria-pressed",
       "true",
     );
   });
 
-  test("moving a card unsets the Rank sort indicator", () => {
+  test("moving a card unsets the Rank sort indicator", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
     expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );
   });
 
-  test("clicking Rank after a manual move restores rank-sorted order", () => {
+  test("clicking Rank after a manual move restores rank-sorted order", async () => {
+    const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    userEvent.click(screen.getByRole("button", { name: "Rank" }));
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    await user.click(screen.getByRole("button", { name: "Rank" }));
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "A of Diamonds",
@@ -279,9 +289,10 @@ describe("Hand manual reordering", () => {
     ]);
   });
 
-  test("a newly drawn card is appended to the manual order", () => {
+  test("a newly drawn card is appended to the manual order", async () => {
+    const user = userEvent.setup();
     const { rerender } = renderHand({ hand: fourCards, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
     const withNewCard: CardType[] = [
       ...fourCards,
       { id: 5, rank: "7", suit: "hearts" },
@@ -306,9 +317,10 @@ describe("Hand manual reordering", () => {
     ]);
   });
 
-  test("a removed card is dropped from the manual order without disturbing siblings", () => {
+  test("a removed card is dropped from the manual order without disturbing siblings", async () => {
+    const user = userEvent.setup();
     const { rerender } = renderHand({ hand: fourCards, remaining: [] });
-    userEvent.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
     const withoutTwo = fourCards.filter((c) => c.id !== 2);
     rerender(
       <Hand

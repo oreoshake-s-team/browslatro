@@ -18,44 +18,49 @@ describe("DeckPile", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("clicking the pile opens the modal", () => {
+  test("clicking the pile opens the modal", async () => {
+    const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
     expect(
       screen.getByRole("heading", { name: "Remaining Cards" })
     ).toBeInTheDocument();
   });
 
-  test("modal lists every suit heading", () => {
+  test("modal lists every suit heading", async () => {
+    const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
     const suitHeadings = ["Spades", "Hearts", "Diamonds", "Clubs"].filter(
       (suit) => screen.queryByRole("heading", { name: new RegExp(suit) })
     );
     expect(suitHeadings).toHaveLength(4);
   });
 
-  test("modal shows the per-suit count for a full deck", () => {
+  test("modal shows the per-suit count for a full deck", async () => {
+    const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
     expect(
       screen.getByRole("heading", { name: "Hearts (13)" })
     ).toBeInTheDocument();
   });
 
-  test("modal shows zero for missing suits", () => {
+  test("modal shows zero for missing suits", async () => {
+    const user = userEvent.setup();
     const onlySpades = createDeck().filter((c) => c.suit === "spades");
     render(<DeckPile remaining={onlySpades} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
     expect(
       screen.getByRole("heading", { name: "Clubs (0)" })
     ).toBeInTheDocument();
   });
 
-  test("modal renders one card button per remaining card", () => {
+  test("modal renders one card button per remaining card", async () => {
+    const user = userEvent.setup();
     const deck = createDeck();
     render(<DeckPile remaining={deck} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
     const modal = screen.getByRole("heading", { name: "Remaining Cards" })
       .parentElement as HTMLElement;
     const cardButtons = within(modal).getAllByRole("button").filter(
@@ -64,19 +69,21 @@ describe("DeckPile", () => {
     expect(cardButtons).toHaveLength(deck.length);
   });
 
-  test("Close button dismisses the modal", () => {
+  test("Close button dismisses the modal", async () => {
+    const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
-    userEvent.click(screen.getByText("Close"));
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(screen.getByText("Close"));
     expect(
       screen.queryByRole("heading", { name: "Remaining Cards" })
     ).not.toBeInTheDocument();
   });
 
-  test("clicking the overlay dismisses the modal", () => {
+  test("clicking the overlay dismisses the modal", async () => {
+    const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);
-    userEvent.click(screen.getByRole("button", { name: /Deck/ }));
-    userEvent.click(document.querySelector(".modal-overlay") as HTMLElement);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.click(document.querySelector(".modal-overlay") as HTMLElement);
     expect(
       screen.queryByRole("heading", { name: "Remaining Cards" })
     ).not.toBeInTheDocument();
