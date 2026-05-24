@@ -9,11 +9,16 @@ Browslatro is an educational journey meant to help the author brush up on their 
 - Tests should only have one assertion per test unless it is testing a multistep flow
 - Could should be written in strict typescript, no use of any types
 - All tests should be run after major changes
+- Only use strict typescript. No use of JS or "any" types
 
 # Semantic commits
 
 Use semantic (or Conventional) Commits provide a standardized framework for naming git commits
 
-# Feature branch and pull requests per feature
+# Work with feature branches
 
-Create a feature branch based on the issue number and title, create a pull request instead of merging to main.
+When asked to complete a task, first create a new branch based on the issue number and title. Do not commit directly to main. Create a pull request when done.
+
+# Conversations outside of Claude code
+
+See docs/conversation_summary.md for more background
