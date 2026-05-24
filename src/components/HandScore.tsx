@@ -11,9 +11,9 @@ function HandScore({ chips, multiplier, selectedHand }: HandScoreProps) {
     <div className="hand-score">
       <h3>{selectedHand.label}</h3>
       <p>
-        <span className="chips">{chips}</span>
+        <span key={chips} className="chips">{chips}</span>
         <span>X</span>
-        <span className="multiplier">{multiplier}</span>
+        <span key={multiplier} className="multiplier">{multiplier}</span>
       </p>
     </div>
   );

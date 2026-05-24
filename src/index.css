@@ -97,7 +97,6 @@
   gap: 1rem;
 }
 
-
 .submit-hand-button {
   padding: 1.6rem 4rem;
   font-size: 2rem;
@@ -148,20 +147,34 @@
   gap: 0.5rem;
 }
 
+@keyframes bounce {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.4); }
+  60%  { transform: scale(0.9); }
+  80%  { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
 .chips {
   background-color: #1971c2;
   color: white;
   font-weight: 700;
-  padding: 0.2rem 0.8rem;
-  border-radius: 4px;
+  font-size: 2.4rem;
+  padding: 0.4rem 1.4rem;
+  border-radius: 6px;
+  display: inline-block;
+  animation: bounce 0.35s ease-out;
 }
 
 .multiplier {
   background-color: #e03131;
   color: white;
   font-weight: 700;
-  padding: 0.2rem 0.8rem;
-  border-radius: 4px;
+  font-size: 2.4rem;
+  padding: 0.4rem 1.4rem;
+  border-radius: 6px;
+  display: inline-block;
+  animation: bounce 0.35s ease-out;
 }
 
 .round-info h3,
