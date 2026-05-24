@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Blind, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
@@ -42,18 +42,17 @@ function App() {
   }
 
   function addChips(amount: number) {
+    play("pop");
     setChips((prev) => prev + amount);
   }
 
-  useEffect(() => {
-    play("pop");
-  }, [chips, multiplier]);
-
   function addMultiplier(amount: number) {
+    play("pop");
     setMultiplier((prev) => prev + amount);
   }
 
   function multiplyMultiplier(factor: number) {
+    play("pop");
     setMultiplier((prev) => prev * factor);
   }
 
