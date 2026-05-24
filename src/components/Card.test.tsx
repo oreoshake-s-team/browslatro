@@ -32,6 +32,33 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-black");
   });
 
+  test("applies the per-suit class for spades", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button")).toHaveClass("card-suit-spades");
+  });
+
+  test("applies the per-suit class for hearts", () => {
+    render(<Card card={queenOfHearts} />);
+    expect(screen.getByRole("button")).toHaveClass("card-suit-hearts");
+  });
+
+  test("applies the per-suit class for diamonds", () => {
+    const fiveOfDiamonds: CardType = { id: 3, rank: "5", suit: "diamonds" };
+    render(<Card card={fiveOfDiamonds} />);
+    expect(screen.getByRole("button")).toHaveClass("card-suit-diamonds");
+  });
+
+  test("applies the per-suit class for clubs", () => {
+    const sevenOfClubs: CardType = { id: 4, rank: "7", suit: "clubs" };
+    render(<Card card={sevenOfClubs} />);
+    expect(screen.getByRole("button")).toHaveClass("card-suit-clubs");
+  });
+
+  test("does not apply an unrelated suit class", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-suit-hearts");
+  });
+
   test("is not selected by default", () => {
     render(<Card card={aceOfSpades} />);
     expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "false");

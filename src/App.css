@@ -4,3 +4,12 @@
   height: 100vh;
   margin: 0;
 }
+
+/*
+ * Marker class toggled by the "High visibility suits" preference. Visual
+ * effect lives in `components/Card.css` (`.high-visibility .card-suit-*`);
+ * this declaration intentionally has no own styles.
+ */
+.App.high-visibility {
+  /* TODO: style — currently a marker class only, see Card.css for the cascade */
+}

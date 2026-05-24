@@ -22,6 +22,7 @@ interface SidebarProps {
   remainingHands: number;
   remainingDiscards: number;
   handleReset: () => void;
+  onHighVisibilityChange?: (enabled: boolean) => void;
 }
 
 export default function Sidebar({
@@ -37,6 +38,7 @@ export default function Sidebar({
   remainingHands,
   remainingDiscards,
   handleReset,
+  onHighVisibilityChange,
 }: SidebarProps) {
   return (
     <div className="sidebar">
@@ -54,7 +56,10 @@ export default function Sidebar({
       <div className="sub-info-progress">
         <div className="sub-info">
           <RunInfo />
-          <Options onReset={handleReset} />
+          <Options
+            onReset={handleReset}
+            onHighVisibilityChange={onHighVisibilityChange}
+          />
         </div>
         <div className="progress">
           <RoundProgress remainingHands={remainingHands} remainingDiscards={remainingDiscards} />

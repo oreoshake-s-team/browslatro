@@ -55,6 +55,7 @@ export default function Card({
     card.suit === "hearts" || card.suit === "diamonds"
       ? "card-red"
       : "card-black";
+  const suitClass = `card-suit-${card.suit}`;
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
   const ariaLabel = `${card.rank} of ${SUIT_LABELS[card.suit]}`;
@@ -65,7 +66,7 @@ export default function Card({
   return (
     <button
       type="button"
-      className={`card ${colorClass} ${selectedClass} ${discardingClass} ${faceClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${faceClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}
