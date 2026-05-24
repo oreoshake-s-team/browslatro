@@ -42,7 +42,28 @@ export function createDeck(): Card[] {
   return deck;
 }
 
+/**
+ * Test-only seam: when `localStorage["browslatro:deterministicShuffle"]`
+ * is `"1"` at module import time, `shuffle` returns the input unchanged so
+ * Playwright tests can assert against a fixed dealt hand. Off by default in
+ * production; any other value (or missing storage) preserves real shuffling.
+ */
+const DETERMINISTIC_SHUFFLE_KEY = "browslatro:deterministicShuffle";
+
+function readDeterministicShuffleFlag(): boolean {
+  try {
+    return window.localStorage.getItem(DETERMINISTIC_SHUFFLE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+const deterministicShuffle = readDeterministicShuffleFlag();
+
 export function shuffle<T>(items: ReadonlyArray<T>, rng: () => number = Math.random): T[] {
+  if (deterministicShuffle) {
+    return items.slice();
+  }
   const arr = items.slice();
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
