@@ -36,28 +36,38 @@ describe("Win button integration", () => {
 describe("Add Chips button integration", () => {
   test("clicking Add Chips updates chips shown in the sidebar", () => {
     render(<App />);
-    const chipsEl = document.querySelector(".chips") as HTMLElement;
-    expect(chipsEl).toHaveTextContent("20");
     userEvent.click(screen.getByText(/Add Chips/));
-    expect(chipsEl).toHaveTextContent("30");
+    expect(document.querySelector(".chips")).toHaveTextContent("30");
   });
 });
 
 describe("Add Multiplier button integration", () => {
   test("clicking Add Multiplier updates multiplier shown in the sidebar", () => {
     render(<App />);
-    const multiplierEl = document.querySelector(".multiplier") as HTMLElement;
     userEvent.click(screen.getByText(/Add Multiplier/));
-    expect(multiplierEl).toHaveTextContent("3");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("3");
   });
 });
 
 describe("Multiply Multiplier button integration", () => {
   test("clicking Multiply Multiplier updates multiplier shown in the sidebar", () => {
     render(<App />);
-    const multiplierEl = document.querySelector(".multiplier") as HTMLElement;
     userEvent.click(screen.getByText(/Multiply Multiplier/));
-    expect(multiplierEl).toHaveTextContent("4");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("4");
+  });
+});
+
+describe("Hand selection integration", () => {
+  test("selecting a hand sets chips in the sidebar to the hand's chip value", () => {
+    render(<App />);
+    userEvent.selectOptions(screen.getByRole("combobox"), "Three of a Kind");
+    expect(document.querySelector(".chips")).toHaveTextContent("30");
+  });
+
+  test("selecting a hand sets multiplier in the sidebar to the hand's multiplier value", () => {
+    render(<App />);
+    userEvent.selectOptions(screen.getByRole("combobox"), "Three of a Kind");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("3");
   });
 });
 
@@ -73,6 +83,43 @@ describe("Submit Hand button integration", () => {
     expect(roundScoreEl).toHaveTextContent("90");
     expect(chipsEl).toHaveTextContent("20");
     expect(multiplierEl).toHaveTextContent("2");
+  });
+});
+
+describe("Submit Hand win integration", () => {
+  test("submitting a hand that meets the required score advances the blind", () => {
+    render(<App />);
+    userEvent.selectOptions(screen.getByRole("combobox"), "Flush Five");
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+});
+
+describe("Losing integration", () => {
+  beforeEach(() => {
+    jest.spyOn(window, "alert").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test("exhausting all hands without reaching the required score shows a game over alert", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(window.alert).toHaveBeenCalledWith("Game Over! Try again.");
+  });
+
+  test("exhausting all hands without reaching the required score resets the game", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(screen.getByText("Small Blind")).toBeInTheDocument();
   });
 });
 
