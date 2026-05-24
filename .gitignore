@@ -11,6 +11,9 @@
 # production
 /build
 
+# worktrees
+.claude/worktrees/
+
 # misc
 .DS_Store
 .env.local
