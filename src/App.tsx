@@ -6,6 +6,7 @@ import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
 import { evaluateHand } from "./handEvaluator";
+import { scoreHand } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/Hand";
 
@@ -132,7 +133,8 @@ function App() {
   function submitHand() {
     if (discardingIds.size > 0) return;
 
-    const newRoundScore = roundScore + chips * multiplier;
+    const playedCards = dealt.hand.filter((c) => selectedIds.has(c.id));
+    const newRoundScore = roundScore + scoreHand(playedCards);
     setRoundScore(newRoundScore);
     setChips(20);
     setMultiplier(2);

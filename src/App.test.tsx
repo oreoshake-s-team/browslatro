@@ -4,6 +4,25 @@ import App from "./App";
 
 jest.mock("./components/sounds", () => ({ play: jest.fn() }));
 
+// Controllable shuffle: by default delegates to the real Fisher–Yates shuffle,
+// but individual tests can opt into identity ordering to make the dealt hand
+// deterministic. With identity shuffle the dealt hand is Spades 2..9, which
+// displays in rank-descending order as 9♠, 8♠, 7♠, 6♠, 5♠, 4♠, 3♠, 2♠.
+// Name must start with "mock" so jest.mock can reference it from its factory.
+const mockShuffleConfig = { useIdentity: false };
+jest.mock("./deck", () => {
+  const actual = jest.requireActual("./deck");
+  return {
+    ...actual,
+    shuffle: <T,>(items: ReadonlyArray<T>): T[] =>
+      mockShuffleConfig.useIdentity ? items.slice() : actual.shuffle(items),
+  };
+});
+
+beforeEach(() => {
+  mockShuffleConfig.useIdentity = false;
+});
+
 function getStatValue(label: string): HTMLElement {
   return screen.getByText(label).parentElement as HTMLElement;
 }
@@ -389,27 +408,51 @@ describe("Discard animation", () => {
 });
 
 describe("Submit Hand button integration", () => {
-  test("updates round score by chips × multiplier then resets chips and multiplier", () => {
+  test("resets chips back to the default after submit", () => {
     render(<App />);
     userEvent.click(screen.getByText(/Add Chips/));
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(document.querySelector(".chips")).toHaveTextContent("20");
+  });
+
+  test("resets multiplier back to the default after submit", () => {
+    render(<App />);
     userEvent.click(screen.getByText(/Add Multiplier/));
     userEvent.click(screen.getByText(/Submit Hand/));
-    const roundScoreEl = document.querySelector(".round-score-value") as HTMLElement;
-    const chipsEl = document.querySelector(".chips") as HTMLElement;
-    const multiplierEl = document.querySelector(".multiplier") as HTMLElement;
-    expect(roundScoreEl).toHaveTextContent("90");
-    expect(chipsEl).toHaveTextContent("20");
-    expect(multiplierEl).toHaveTextContent("2");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("2");
+  });
+
+  test("submitting with no cards selected adds 0 to the round score", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(document.querySelector(".round-score-value")).toHaveTextContent("0");
+  });
+
+  test("adds the scoreHand result to the round score for a sub-threshold play", () => {
+    // Identity shuffle deals Spades 2..9. Sorted descending the top card is 9♠.
+    // Submitting just 9♠ → High Card: (base 5 + rank 9) * mult 1 = 14
+    mockShuffleConfig.useIdentity = true;
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/Submit Hand/));
+    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+      "14",
+    );
   });
 });
 
 describe("Submit Hand win integration", () => {
-  test("submitting a hand that meets the required score advances the blind", () => {
+  test("submitting a hand whose scoreHand value meets the required score advances the blind", () => {
+    // Identity shuffle deals Spades 2..9. Selecting the top 5 by rank (9,8,7,6,5 ♠)
+    // is a Straight Flush: (100 + 5+6+7+8+9) * 8 = 1080, well above 300.
+    mockShuffleConfig.useIdentity = true;
     render(<App />);
-    // Inflate score with modifiers: chips 20, mult 2 → 2 ×2 ×2 ×2 = 16, 20 × 16 = 320 ≥ 300
-    userEvent.click(screen.getByText(/Multiply Multiplier/));
-    userEvent.click(screen.getByText(/Multiply Multiplier/));
-    userEvent.click(screen.getByText(/Multiply Multiplier/));
+    const cards = getHandCardButtons();
+    userEvent.click(cards[0]);
+    userEvent.click(cards[1]);
+    userEvent.click(cards[2]);
+    userEvent.click(cards[3]);
+    userEvent.click(cards[4]);
     userEvent.click(screen.getByText(/Submit Hand/));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
