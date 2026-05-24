@@ -113,9 +113,6 @@ function App() {
         onSetMoney={setMoney}
         onSubmitHand={submitHand}
         selectedHand={selectedHand}
-        onSelectHand={setSelectedHand}
-        onSetChips={setChips}
-        onSetMultiplier={setMultiplier}
         onSelectionChange={handleSelectionChange}
       />
     </div>

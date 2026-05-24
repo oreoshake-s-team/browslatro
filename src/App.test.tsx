@@ -57,20 +57,6 @@ describe("Multiply Multiplier button integration", () => {
   });
 });
 
-describe("Hand selection integration", () => {
-  test("selecting a hand sets chips in the sidebar to the hand's chip value", () => {
-    render(<App />);
-    userEvent.selectOptions(screen.getByRole("combobox"), "Three of a Kind");
-    expect(document.querySelector(".chips")).toHaveTextContent("30");
-  });
-
-  test("selecting a hand sets multiplier in the sidebar to the hand's multiplier value", () => {
-    render(<App />);
-    userEvent.selectOptions(screen.getByRole("combobox"), "Three of a Kind");
-    expect(document.querySelector(".multiplier")).toHaveTextContent("3");
-  });
-});
-
 describe("Card selection drives hand detection", () => {
   test("selecting a single card sets chips to High Card chip value", () => {
     render(<App />);
@@ -109,7 +95,10 @@ describe("Submit Hand button integration", () => {
 describe("Submit Hand win integration", () => {
   test("submitting a hand that meets the required score advances the blind", () => {
     render(<App />);
-    userEvent.selectOptions(screen.getByRole("combobox"), "Flush Five");
+    // Inflate score with modifiers: chips 20, mult 2 → 2 ×2 ×2 ×2 = 16, 20 × 16 = 320 ≥ 300
+    userEvent.click(screen.getByText(/Multiply Multiplier/));
+    userEvent.click(screen.getByText(/Multiply Multiplier/));
+    userEvent.click(screen.getByText(/Multiply Multiplier/));
     userEvent.click(screen.getByText(/Submit Hand/));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });

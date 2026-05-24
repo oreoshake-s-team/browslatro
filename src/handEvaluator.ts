@@ -33,7 +33,7 @@ const RANK_VALUES: Record<Rank, number> = {
 };
 
 const HANDS_BY_LABEL: ReadonlyMap<HandLabel, Hand> = new Map(
-  HANDS.map((h) => [h.label, h])
+  HANDS.map((h) => [h.label as HandLabel, h])
 );
 
 function getHand(label: HandLabel): Hand {
@@ -49,7 +49,7 @@ function countByRank(cards: ReadonlyArray<Card>): number[] {
   for (const card of cards) {
     counts.set(card.rank, (counts.get(card.rank) ?? 0) + 1);
   }
-  return [...counts.values()].sort((a, b) => b - a);
+  return Array.from(counts.values()).sort((a, b) => b - a);
 }
 
 function isFlush(cards: ReadonlyArray<Card>): boolean {
