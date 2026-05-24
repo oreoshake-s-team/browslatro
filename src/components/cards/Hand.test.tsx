@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
-import type { Card as CardType } from "../types";
-import { createDeck } from "../deck";
+import type { Card as CardType } from "../../types";
+import { createDeck } from "../../deck";
 
 function getHandRegion(): HTMLElement {
   return screen.getByLabelText("Your hand");

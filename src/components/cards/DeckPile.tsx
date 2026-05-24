@@ -2,8 +2,8 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import "./DeckPile.css";
 import Card from "./Card";
-import type { Card as CardType, Suit } from "../types";
-import { SUITS, groupBySuit } from "../deck";
+import type { Card as CardType, Suit } from "../../types";
+import { SUITS, groupBySuit } from "../../deck";
 
 const SUIT_LABELS: Record<Suit, string> = {
   spades: "Spades",

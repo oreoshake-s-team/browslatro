@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
-import type { Card, Hand } from "../types";
-import HandComponent from "./Hand";
+import type { Card, Hand } from "../../types";
+import HandComponent from "../cards/Hand";
 
 interface GameProps {
   onWin: () => void;

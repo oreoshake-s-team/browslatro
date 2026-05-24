@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
-import type { Card as CardType, Suit } from "../types";
-import { sortCards, type SortMode } from "../deck";
+import type { Card as CardType, Suit } from "../../types";
+import { sortCards, type SortMode } from "../../deck";
 
 export const MAX_SELECTED = 5;
 

@@ -18,7 +18,7 @@ Given a file path (or the full hook JSON), do the following:
 
 2. **Determine the component's CSS file** using this mapping:
    - `src/App.tsx` → `src/App.css`
-   - `src/components/Foo.tsx` → `src/components/Foo.css`
+   - `src/components/<group>/Foo.tsx` → `src/components/<group>/Foo.css` (e.g. `src/components/cards/Hand.tsx` → `src/components/cards/Hand.css`)
    - If the CSS file doesn't exist yet, create it and add `import './Foo.css'` to the component.
 
 3. **Read the component's CSS file** and collect all CSS selectors already defined (e.g. `.foo`, `.foo h3`, `.foo p` all count as covering class `foo`). Also check `src/index.css` for shared classes (`.win-button`, `.stat`, `.stat-value`, `.stat-label`).

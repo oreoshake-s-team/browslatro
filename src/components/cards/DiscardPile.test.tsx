@@ -1,8 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DiscardPile from "./DiscardPile";
-import type { Card as CardType } from "../types";
-import { createDeck } from "../deck";
+import type { Card as CardType } from "../../types";
+import { createDeck } from "../../deck";
 
 const sampleCards: CardType[] = [
   { id: 1, rank: "A", suit: "spades" },

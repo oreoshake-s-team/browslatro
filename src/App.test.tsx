@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
-import { isHighVisibility, toggleHighVisibility } from "./components/preferences";
+import { isHighVisibility, toggleHighVisibility } from "./components/system/preferences";
 
-jest.mock("./components/sounds", () => ({ play: jest.fn() }));
+jest.mock("./components/system/sounds", () => ({ play: jest.fn() }));
 
 function resetHighVisibility(): void {
   if (isHighVisibility()) {
