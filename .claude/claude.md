@@ -13,3 +13,7 @@ Browslatro is an educational journey meant to help the author brush up on their 
 # Semantic commits
 
 Use semantic (or Conventional) Commits provide a standardized framework for naming git commits
+
+# Feature branch and pull requests per feature
+
+Create a feature branch based on the issue number and title, create a pull request instead of merging to main.
