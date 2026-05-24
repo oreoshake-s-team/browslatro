@@ -1,8 +1,16 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
+import { isHighVisibility, toggleHighVisibility } from "./components/preferences";
 
 jest.mock("./components/sounds", () => ({ play: jest.fn() }));
+
+function resetHighVisibility(): void {
+  if (isHighVisibility()) {
+    toggleHighVisibility();
+  }
+  window.localStorage.removeItem("browslatro:highVisibility");
+}
 
 function getStatValue(label: string): HTMLElement {
   return screen.getByText(label).parentElement as HTMLElement;
@@ -457,6 +465,39 @@ describe("Subtract Money button integration", () => {
     userEvent.click(screen.getByText(/Add \$10/));
     userEvent.click(screen.getByText(/Subtract \$10/));
     expect(getStatValue("Money")).toHaveTextContent("$0");
+  });
+});
+
+describe("High visibility preference integration", () => {
+  afterEach(resetHighVisibility);
+
+  test("App root does not carry the high-visibility class by default", () => {
+    const { container } = render(<App />);
+    expect(container.querySelector(".App")).not.toHaveClass("high-visibility");
+  });
+
+  test("toggling high visibility adds the class to the App root", () => {
+    const { container } = render(<App />);
+    userEvent.click(screen.getByText("Options"));
+    userEvent.click(screen.getByText(/Enable high visibility suits/));
+    expect(container.querySelector(".App")).toHaveClass("high-visibility");
+  });
+
+  test("toggling high visibility off removes the class from the App root", () => {
+    const { container } = render(<App />);
+    userEvent.click(screen.getByText("Options"));
+    userEvent.click(screen.getByText(/Enable high visibility suits/));
+    userEvent.click(screen.getByText(/Disable high visibility suits/));
+    expect(container.querySelector(".App")).not.toHaveClass("high-visibility");
+  });
+
+  test("toggling persists the preference value to localStorage", () => {
+    render(<App />);
+    userEvent.click(screen.getByText("Options"));
+    userEvent.click(screen.getByText(/Enable high visibility suits/));
+    expect(window.localStorage.getItem("browslatro:highVisibility")).toBe(
+      "true"
+    );
   });
 });
 

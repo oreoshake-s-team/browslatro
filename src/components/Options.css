@@ -32,3 +32,19 @@
   color: white;
   border-color: #c92a2a;
 }
+
+.high-visibility-toggle {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.high-visibility-toggle[aria-pressed="true"] {
+  background-color: #d3f9d8;
+  border-color: #2f9e44;
+  color: #2b8a3e;
+}

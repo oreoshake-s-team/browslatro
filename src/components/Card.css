@@ -52,6 +52,56 @@
   color: #212529;
 }
 
+/*
+ * Per-suit hooks. By default these are no-ops — the two-color scheme above
+ * (.card-red / .card-black) wins via specificity-tying source order. The
+ * high-visibility overrides further down activate only when a `.high-visibility`
+ * ancestor is set (driven by the user preference in `preferences.ts`).
+ */
+.card-suit-spades {
+  /* default: black, inherited from .card-black */
+}
+
+.card-suit-hearts {
+  /* default: red, inherited from .card-red */
+}
+
+.card-suit-diamonds {
+  /* default: red, inherited from .card-red */
+}
+
+.card-suit-clubs {
+  /* default: black, inherited from .card-black */
+}
+
+/*
+ * High-visibility four-color palette. Tuned for sufficient contrast against
+ * the card background (#f8f9fa, see `index.css`). Exposed as CSS variables
+ * so palettes can be tweaked without touching selector rules.
+ */
+.high-visibility {
+  --card-suit-spades-color: #212529;
+  --card-suit-hearts-color: #c92a2a;
+  --card-suit-diamonds-color: #1c7ed6;
+  --card-suit-clubs-color: #2f9e44;
+}
+
+.high-visibility .card-suit-spades {
+  color: var(--card-suit-spades-color);
+}
+
+.high-visibility .card-suit-hearts {
+  color: var(--card-suit-hearts-color);
+}
+
+.high-visibility .card-suit-diamonds {
+  color: var(--card-suit-diamonds-color);
+}
+
+.high-visibility .card-suit-clubs {
+  color: var(--card-suit-clubs-color);
+}
+
 .card-corner {
   display: flex;
   flex-direction: column;

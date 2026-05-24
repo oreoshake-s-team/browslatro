@@ -5,6 +5,7 @@ import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
+import { isHighVisibility } from "./components/preferences";
 import { evaluateHand } from "./handEvaluator";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/Hand";
@@ -25,6 +26,7 @@ function App() {
   const [remainingHands, setRemainingHands] = useState(4);
   const [remainingDiscards, setRemainingDiscards] = useState(3);
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
+  const [highVisibility, setHighVisibility] = useState<boolean>(isHighVisibility);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
@@ -165,7 +167,7 @@ function App() {
   }
 
   return (
-    <div className="App">
+    <div className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}>
       <Sidebar
         blind={blind}
         ante={ante}
@@ -179,6 +181,7 @@ function App() {
         remainingHands={remainingHands}
         remainingDiscards={remainingDiscards}
         handleReset={handleReset}
+        onHighVisibilityChange={setHighVisibility}
       />
       <Game
         onWin={handleWin}

@@ -34,6 +34,7 @@ export default function Card({
     card.suit === "hearts" || card.suit === "diamonds"
       ? "card-red"
       : "card-black";
+  const suitClass = `card-suit-${card.suit}`;
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
   const ariaLabel = `${card.rank} of ${SUIT_LABELS[card.suit]}`;
@@ -41,7 +42,7 @@ export default function Card({
   return (
     <button
       type="button"
-      className={`card ${colorClass} ${selectedClass} ${discardingClass}`.trim()}
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass}`.trim()}
       aria-pressed={selected}
       aria-label={ariaLabel}
       onClick={() => onToggle?.(card)}
