@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./types";
 import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
@@ -6,10 +6,20 @@ import Game from "./components/Game";
 import Sidebar from "./components/Sidebar";
 import { play } from "./components/sounds";
 import { isHighVisibility } from "./components/preferences";
+import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
-import { scoreHand } from "./scoring";
+import { getRankChips, getScoringCards } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/Hand";
+
+// Per-card delay in the scoring sequence. Each scoring card animates and adds
+// its chip contribution after this many milliseconds.
+export const SCORING_STEP_MS = 200;
+
+function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 function initialDeal(): DealResult {
   return deal(shuffle(createDeck()), HAND_SIZE);
@@ -36,6 +46,13 @@ function App() {
   );
   const pendingDiscardCountRef = useRef(0);
 
+  // Sequential scoring state.
+  const [scoringCards, setScoringCards] = useState<ReadonlyArray<Card>>([]);
+  const [scoringIndex, setScoringIndex] = useState<number>(0);
+  const scoringFinalizeRef = useRef<(() => void) | null>(null);
+  const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
+  const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
+
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
   function startNewRound() {
@@ -49,7 +66,35 @@ function App() {
     setChips(20);
     setMultiplier(2);
     pendingDiscardCountRef.current = 0;
+    setScoringCards([]);
+    setScoringIndex(0);
+    scoringFinalizeRef.current = null;
   }
+
+  // Drive the scoring sequence: tick one card per SCORING_STEP_MS, then call
+  // the stored finalize callback when the queue drains. The useEffect cleanup
+  // cancels any pending step when state changes (e.g. game reset).
+  useEffect(() => {
+    if (scoringCards.length === 0) return;
+
+    if (scoringIndex >= scoringCards.length) {
+      const finalize = scoringFinalizeRef.current;
+      if (finalize) {
+        scoringFinalizeRef.current = null;
+        finalize();
+      }
+      return;
+    }
+
+    const stepMs = prefersReducedMotion() ? 0 : SCORING_STEP_MS;
+    const timer = window.setTimeout(() => {
+      const card = scoringCards[scoringIndex];
+      setChips((prev) => prev + getRankChips(card.rank));
+      play("pop");
+      setScoringIndex((prev) => prev + 1);
+    }, stepMs);
+    return () => window.clearTimeout(timer);
+  }, [scoringCards, scoringIndex]);
 
   function handleWin() {
     play("win");
@@ -95,6 +140,7 @@ function App() {
 
   function toggleCard(card: Card) {
     if (discardingIds.size > 0) return;
+    if (isScoring) return;
     let nextIds: Set<number>;
     if (selectedIds.has(card.id)) {
       nextIds = new Set(selectedIds);
@@ -134,16 +180,53 @@ function App() {
 
   function submitHand() {
     if (discardingIds.size > 0) return;
+    if (isScoring) return;
 
     const playedCards = dealt.hand.filter((c) => selectedIds.has(c.id));
-    const newRoundScore = roundScore + scoreHand(playedCards);
+    const submittedSelection = selectedIds;
+
+    if (playedCards.length === 0) {
+      // Empty submission: no scoring sequence, finalize directly.
+      finalizeHandSubmission(0, submittedSelection);
+      return;
+    }
+
+    const label = detectHandLabel(playedCards);
+    const handStats = evaluateHand(playedCards);
+    const scoring = getScoringCards(playedCards, label);
+    const cardChipsTotal = scoring.reduce(
+      (sum, card) => sum + getRankChips(card.rank),
+      0,
+    );
+    const finalScore = Math.floor(
+      (handStats.chips + cardChipsTotal) * handStats.multiplier,
+    );
+
+    // Reset the live counters to the hand's base values so the ticking is
+    // observable against the starting point, then queue the per-card sequence.
+    setChips(handStats.chips);
+    setMultiplier(handStats.multiplier);
+    scoringFinalizeRef.current = () => {
+      finalizeHandSubmission(finalScore, submittedSelection);
+    };
+    setScoringCards(scoring);
+    setScoringIndex(0);
+  }
+
+  function finalizeHandSubmission(
+    score: number,
+    submittedSelection: ReadonlySet<number>,
+  ) {
+    const newRoundScore = roundScore + score;
     setRoundScore(newRoundScore);
     setChips(20);
     setMultiplier(2);
+    setScoringCards([]);
+    setScoringIndex(0);
 
-    if (selectedIds.size > 0) {
-      pendingDiscardCountRef.current = selectedIds.size;
-      setDiscardingIds(selectedIds);
+    if (submittedSelection.size > 0) {
+      pendingDiscardCountRef.current = submittedSelection.size;
+      setDiscardingIds(submittedSelection);
     }
 
     if (newRoundScore >= requiredScore) {
@@ -196,8 +279,11 @@ function App() {
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&
-          discardingIds.size === 0
+          discardingIds.size === 0 &&
+          !isScoring
         }
+        isScoring={isScoring}
+        scoringId={currentScoringId}
         selectedHand={selectedHand}
         hand={dealt.hand}
         remaining={dealt.remaining}

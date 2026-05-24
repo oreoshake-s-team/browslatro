@@ -11,6 +11,8 @@ interface GameProps {
   onSubmitHand: () => void;
   onDiscard: () => void;
   canDiscard: boolean;
+  isScoring?: boolean;
+  scoringId?: number | null;
   onSetMoney: Dispatch<SetStateAction<number>>;
   selectedHand: Hand;
   hand: ReadonlyArray<Card>;
@@ -29,6 +31,8 @@ export default function Game({
   onSubmitHand,
   onDiscard,
   canDiscard,
+  isScoring = false,
+  scoringId = null,
   onSetMoney,
   selectedHand,
   hand,
@@ -53,6 +57,7 @@ export default function Game({
         remaining={remaining}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
+        scoringId={scoringId}
         onToggleCard={onToggleCard}
         onCardDiscardEnd={onCardDiscardEnd}
       />
@@ -97,7 +102,11 @@ export default function Game({
       <div className="submit-hand">
         <span className="step-label">3. Play or discard</span>
         <div className="play-actions">
-          <button className="submit-hand-button" onClick={onSubmitHand}>
+          <button
+            className="submit-hand-button"
+            onClick={onSubmitHand}
+            disabled={isScoring}
+          >
             🃏 Submit Hand
           </button>
           <button
