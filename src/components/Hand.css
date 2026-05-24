@@ -6,6 +6,15 @@
   border-radius: 8px;
   background-color: #f8f9fa;
   box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 1.2rem;
+}
+
+.hand-deck {
+  display: flex;
+  align-items: end;
 }
 
 .hand-cards {

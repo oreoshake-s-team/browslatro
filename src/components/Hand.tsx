@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
+import DeckPile from "./DeckPile";
 import type { Card as CardType } from "../types";
 import { createDeck, deal, shuffle, HAND_SIZE } from "../deck";
 
@@ -31,8 +32,8 @@ export default function Hand({ initialDeck }: HandProps) {
   }
 
   return (
-    <div className="hand" aria-label="Your hand">
-      <div className="hand-cards">
+    <div className="hand">
+      <div className="hand-cards" aria-label="Your hand">
         {dealt.hand.map((card) => (
           <Card
             key={card.id}
@@ -41,6 +42,9 @@ export default function Hand({ initialDeck }: HandProps) {
             onToggle={toggleCard}
           />
         ))}
+      </div>
+      <div className="hand-deck">
+        <DeckPile remaining={dealt.remaining} />
       </div>
     </div>
   );

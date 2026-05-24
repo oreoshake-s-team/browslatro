@@ -76,4 +76,11 @@ describe("Hand", () => {
     render(<Hand initialDeck={tinyDeck} />);
     expect(getCardButtons()).toHaveLength(2);
   });
+
+  test("renders a deck pile showing the remaining card count", () => {
+    render(<Hand initialDeck={createDeck()} />);
+    expect(
+      screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ })
+    ).toBeInTheDocument();
+  });
 });
