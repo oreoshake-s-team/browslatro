@@ -12,11 +12,12 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onAddMultiplier={jest.fn()}
       onMultiplyMultiplier={jest.fn()}
       onSubmitHand={jest.fn()}
+      onDiscard={jest.fn()}
+      canDiscard={true}
       onSetMoney={jest.fn()}
       selectedHand={HANDS[0]}
       hand={[]}
       remaining={[]}
-      discarded={[]}
       selectedIds={new Set()}
       discardingIds={new Set()}
       onToggleCard={jest.fn()}
@@ -79,5 +80,22 @@ describe("Game", () => {
   test("displays the selected hand label in the read-only current hand area", () => {
     renderGame({ selectedHand: HANDS[3] });
     expect(screen.getByText(HANDS[3].label)).toBeInTheDocument();
+  });
+
+  test("Discard button calls onDiscard when enabled", () => {
+    const onDiscard = jest.fn();
+    renderGame({ onDiscard, canDiscard: true });
+    userEvent.click(screen.getByText(/Discard/));
+    expect(onDiscard).toHaveBeenCalledTimes(1);
+  });
+
+  test("Discard button is disabled when canDiscard is false", () => {
+    renderGame({ canDiscard: false });
+    expect(screen.getByText(/Discard/)).toBeDisabled();
+  });
+
+  test("Discard button is enabled when canDiscard is true", () => {
+    renderGame({ canDiscard: true });
+    expect(screen.getByText(/Discard/)).not.toBeDisabled();
   });
 });

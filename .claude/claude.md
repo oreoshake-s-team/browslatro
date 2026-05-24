@@ -5,6 +5,7 @@ Browslatro is an educational journey meant to help the author brush up on their 
 # Hard requirements
 
 - All functionality must have test coverage
+- If a change requires more than 100 lines of changes to non-application code (e.g. tests, configs, etc), it must be split up into a smaller problem.
 - Code should be as compartmenatalized as possible, including CSS
 - Could should be written in strict typescript, no use of any types
 - Only use strict typescript. No use of JS or "any" types

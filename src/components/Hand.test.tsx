@@ -18,7 +18,6 @@ function renderHand(overrides: Partial<React.ComponentProps<typeof Hand>> = {}) 
     <Hand
       hand={deck.slice(0, 8)}
       remaining={deck.slice(8)}
-      discarded={[]}
       selectedIds={new Set()}
       discardingIds={new Set()}
       onToggleCard={jest.fn()}

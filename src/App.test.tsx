@@ -8,6 +8,50 @@ function getStatValue(label: string): HTMLElement {
   return screen.getByText(label).parentElement as HTMLElement;
 }
 
+describe("Winning a round resets the deck", () => {
+  test("restores the remaining deck count to its full post-deal size after a win", () => {
+    render(<App />);
+    // Use a discard to shrink the deck (44 → 42)
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(getHandCardButtons()[1]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    userEvent.click(screen.getByText(/Win/));
+    expect(
+      screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ })
+    ).toBeInTheDocument();
+  });
+
+  test("keeps the hand at 8 cards after a win resets the deck", () => {
+    render(<App />);
+    userEvent.click(screen.getByText(/Win/));
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("clears any in-flight card selection on win", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/Win/));
+    const selectedCount = getHandCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true"
+    ).length;
+    expect(selectedCount).toBe(0);
+  });
+
+  test("deals different cards (fresh shuffle) after a win", () => {
+    render(<App />);
+    const before = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    userEvent.click(screen.getByText(/Win/));
+    const after = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    // With a fresh shuffle, the new hand should not match the old hand exactly
+    expect(after).not.toEqual(before);
+  });
+});
+
 describe("Win button integration", () => {
   test("advances blind, ante, round, and money across a full ante cycle", () => {
     render(<App />);
@@ -184,6 +228,77 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 });
 
+describe("Discard button", () => {
+  test("is disabled at the start of a round (no cards selected)", () => {
+    render(<App />);
+    expect(screen.getByText(/^🗑️ Discard$/)).toBeDisabled();
+  });
+
+  test("becomes enabled once at least one card is selected", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    expect(screen.getByText(/^🗑️ Discard$/)).not.toBeDisabled();
+  });
+
+  test("decrements the remaining discards count when clicked", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    expect(getStatValue("Discards")).toHaveTextContent("2");
+  });
+
+  test("does not change the round score", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    const roundScoreEl = document.querySelector(
+      ".round-score-value"
+    ) as HTMLElement;
+    expect(roundScoreEl).toHaveTextContent("0");
+  });
+
+  test("does not decrement remaining hands", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    expect(getStatValue("Hands")).toHaveTextContent("4");
+  });
+
+  test("removes the originally-selected cards from the hand", () => {
+    render(<App />);
+    const originalLabel = getHandCardButtons()[0].getAttribute("aria-label");
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    const afterLabels = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    expect(afterLabels).not.toContain(originalLabel);
+  });
+
+  test("refills the hand to 8 cards", () => {
+    render(<App />);
+    userEvent.click(getHandCardButtons()[0]);
+    userEvent.click(getHandCardButtons()[1]);
+    userEvent.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("is disabled once all 3 discards have been used", () => {
+    render(<App />);
+    for (let i = 0; i < 3; i++) {
+      userEvent.click(getHandCardButtons()[0]);
+      userEvent.click(screen.getByText(/^🗑️ Discard$/));
+      flushDiscardAnimation();
+    }
+    expect(screen.getByText(/^🗑️ Discard$/)).toBeDisabled();
+  });
+});
+
 describe("Discard animation", () => {
   test("marks selected cards with the discarding class on submit", () => {
     render(<App />);
@@ -200,25 +315,27 @@ describe("Discard animation", () => {
   test("does not finalize the discard until the animation ends", () => {
     render(<App />);
     const cards = getHandCardButtons();
+    const firstLabel = cards[0].getAttribute("aria-label");
     userEvent.click(cards[0]);
-    userEvent.click(cards[1]);
     userEvent.click(screen.getByText(/Submit Hand/));
-    // Discard pile should still be empty before animation ends
-    expect(
-      screen.getByRole("button", { name: /Discard pile \(0 cards\)/ })
-    ).toBeInTheDocument();
+    // Card is still rendered in the hand (just animating out)
+    const labelsMidAnimation = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    expect(labelsMidAnimation).toContain(firstLabel);
   });
 
-  test("moves discarded cards to the discard pile after animation completes", () => {
+  test("removes discarded cards from the hand after animation completes", () => {
     render(<App />);
     const cards = getHandCardButtons();
+    const firstLabel = cards[0].getAttribute("aria-label");
     userEvent.click(cards[0]);
-    userEvent.click(cards[1]);
     userEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    expect(
-      screen.getByRole("button", { name: /Discard pile \(2 cards\)/ })
-    ).toBeInTheDocument();
+    const labelsAfter = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label")
+    );
+    expect(labelsAfter).not.toContain(firstLabel);
   });
 
   test("blocks card toggles while a discard animation is in flight", () => {
