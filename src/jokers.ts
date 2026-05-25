@@ -9,6 +9,11 @@ export const ZANY_JOKER_MULT = 12;
 export const MAD_JOKER_MULT = 10;
 export const CRAZY_JOKER_MULT = 12;
 export const DROLL_JOKER_MULT = 10;
+export const SLY_JOKER_CHIPS = 50;
+export const WILY_JOKER_CHIPS = 100;
+export const CLEVER_JOKER_CHIPS = 80;
+export const DEVIOUS_JOKER_CHIPS = 100;
+export const CRAFTY_JOKER_CHIPS = 80;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -23,6 +28,11 @@ export type JokerEffect =
       readonly kind: "on-hand-type-mult";
       readonly requires: HandLabel;
       readonly amount: number;
+    }
+  | {
+      readonly kind: "on-hand-type-chips";
+      readonly requires: HandLabel;
+      readonly amount: number;
     };
 
 export interface Joker {
@@ -34,12 +44,14 @@ export interface Joker {
 
 export interface JokerScoringResult {
   readonly additiveMult: number;
+  readonly additiveChips: number;
   readonly xMult: number;
   readonly moneyEarned: number;
 }
 
 export interface JokerHandResult {
   readonly additiveMult: number;
+  readonly additiveChips: number;
   readonly xMult: number;
   readonly firedJokerIds: ReadonlyArray<string>;
 }
@@ -189,6 +201,71 @@ export function createDrollJoker(): Joker {
   };
 }
 
+export function createSlyJoker(): Joker {
+  return {
+    id: "sly-joker",
+    name: "Sly Joker",
+    description: "+50 Chips if played hand contains a Pair",
+    effect: {
+      kind: "on-hand-type-chips",
+      requires: "Pair",
+      amount: SLY_JOKER_CHIPS,
+    },
+  };
+}
+
+export function createWilyJoker(): Joker {
+  return {
+    id: "wily-joker",
+    name: "Wily Joker",
+    description: "+100 Chips if played hand contains Three of a Kind",
+    effect: {
+      kind: "on-hand-type-chips",
+      requires: "Three of a Kind",
+      amount: WILY_JOKER_CHIPS,
+    },
+  };
+}
+
+export function createCleverJoker(): Joker {
+  return {
+    id: "clever-joker",
+    name: "Clever Joker",
+    description: "+80 Chips if played hand contains Two Pair",
+    effect: {
+      kind: "on-hand-type-chips",
+      requires: "Two Pair",
+      amount: CLEVER_JOKER_CHIPS,
+    },
+  };
+}
+
+export function createDeviousJoker(): Joker {
+  return {
+    id: "devious-joker",
+    name: "Devious Joker",
+    description: "+100 Chips if played hand contains a Straight",
+    effect: {
+      kind: "on-hand-type-chips",
+      requires: "Straight",
+      amount: DEVIOUS_JOKER_CHIPS,
+    },
+  };
+}
+
+export function createCraftyJoker(): Joker {
+  return {
+    id: "crafty-joker",
+    name: "Crafty Joker",
+    description: "+80 Chips if played hand contains a Flush",
+    effect: {
+      kind: "on-hand-type-chips",
+      requires: "Flush",
+      amount: CRAFTY_JOKER_CHIPS,
+    },
+  };
+}
+
 export function createDefaultJokers(): Joker[] {
   return [
     createPlusFourMultJoker(),
@@ -211,6 +288,11 @@ export function createJokerCatalog(): Joker[] {
     createMadJoker(),
     createCrazyJoker(),
     createDrollJoker(),
+    createSlyJoker(),
+    createWilyJoker(),
+    createCleverJoker(),
+    createDeviousJoker(),
+    createCraftyJoker(),
   ];
 }
 
@@ -233,6 +315,7 @@ export function applyHandLevelJokers(
   context: HandLevelContext = {},
 ): JokerHandResult {
   let additiveMult = 0;
+  let additiveChips = 0;
   let xMult = 1;
   const fired: string[] = [];
 
@@ -255,6 +338,16 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "on-hand-type-chips": {
+        if (
+          context.playedHandLabel !== undefined &&
+          handContains(context.playedHandLabel, effect.requires)
+        ) {
+          additiveChips += effect.amount;
+          fired.push(joker.id);
+        }
+        break;
+      }
       case "stencil":
       case "business-card":
       case "per-suit-mult":
@@ -264,7 +357,7 @@ export function applyHandLevelJokers(
     }
   }
 
-  return { additiveMult, xMult, firedJokerIds: fired };
+  return { additiveMult, additiveChips, xMult, firedJokerIds: fired };
 }
 
 export function applyPostHandJokers(
@@ -291,6 +384,7 @@ export function applyPostHandJokers(
       case "business-card":
       case "per-suit-mult":
       case "on-hand-type-mult":
+      case "on-hand-type-chips":
         break;
       default:
         assertNeverEffect(effect);
@@ -330,6 +424,7 @@ export function applyPerCardJokers(
       case "additive-mult":
       case "stencil":
       case "on-hand-type-mult":
+      case "on-hand-type-chips":
         break;
       default:
         assertNeverEffect(effect);
@@ -356,6 +451,7 @@ export function applyJokersToScoring(
   const postHandResult = applyPostHandJokers(jokers);
   return {
     additiveMult: handResult.additiveMult + perCardAdditiveMult,
+    additiveChips: handResult.additiveChips,
     xMult: handResult.xMult * postHandResult.xMult,
     moneyEarned,
   };
@@ -367,7 +463,7 @@ export function computeFinalScoreWithJokers(
   cardChipsTotal: number,
   jokerResult: JokerScoringResult,
 ): number {
-  const chipsTotal = baseHandChips + cardChipsTotal;
+  const chipsTotal = baseHandChips + cardChipsTotal + jokerResult.additiveChips;
   const mult = (baseHandMultiplier + jokerResult.additiveMult) * jokerResult.xMult;
   return Math.floor(chipsTotal * mult);
 }

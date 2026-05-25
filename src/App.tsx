@@ -445,6 +445,7 @@ function App() {
       cardChipsTotal,
       {
         additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
+        additiveChips: handJokerResult.additiveChips,
         xMult: totalXMult,
         moneyEarned: 0,
       },

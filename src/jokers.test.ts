@@ -1,11 +1,16 @@
 import {
   BUSINESS_CARD_PROC_CHANCE,
+  CLEVER_JOKER_CHIPS,
+  CRAFTY_JOKER_CHIPS,
   CRAZY_JOKER_MULT,
+  DEVIOUS_JOKER_CHIPS,
   DROLL_JOKER_MULT,
   JOLLY_JOKER_MULT,
   MAD_JOKER_MULT,
   MAX_JOKERS,
+  SLY_JOKER_CHIPS,
   SUIT_MULT_AMOUNT,
+  WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
   applyHandLevelJokers,
   applyJokersToScoring,
@@ -13,8 +18,11 @@ import {
   applyPostHandJokers,
   computeFinalScoreWithJokers,
   createBusinessCardJoker,
+  createCleverJoker,
+  createCraftyJoker,
   createCrazyJoker,
   createDefaultJokers,
+  createDeviousJoker,
   createDrollJoker,
   createGluttonousJoker,
   createGreedyJoker,
@@ -23,6 +31,8 @@ import {
   createLustyJoker,
   createMadJoker,
   createPlusFourMultJoker,
+  createSlyJoker,
+  createWilyJoker,
   createWrathfulJoker,
   createZanyJoker,
   isFaceCard,
@@ -439,17 +449,32 @@ describe("Joker firing order respects input array order", () => {
 
 describe("computeFinalScoreWithJokers", () => {
   test("applies additive mult and xMult to base score", () => {
-    const jokerResult = { additiveMult: 4, xMult: 2, moneyEarned: 0 };
+    const jokerResult = {
+      additiveMult: 4,
+      additiveChips: 0,
+      xMult: 2,
+      moneyEarned: 0,
+    };
     expect(computeFinalScoreWithJokers(10, 1, 5, jokerResult)).toBe(150);
   });
 
   test("returns the floored integer score", () => {
-    const jokerResult = { additiveMult: 0, xMult: 1.5, moneyEarned: 0 };
+    const jokerResult = {
+      additiveMult: 0,
+      additiveChips: 0,
+      xMult: 1.5,
+      moneyEarned: 0,
+    };
     expect(computeFinalScoreWithJokers(10, 1, 0, jokerResult)).toBe(15);
   });
 
   test("matches the legacy formula when no joker effects are present", () => {
-    const jokerResult = { additiveMult: 0, xMult: 1, moneyEarned: 0 };
+    const jokerResult = {
+      additiveMult: 0,
+      additiveChips: 0,
+      xMult: 1,
+      moneyEarned: 0,
+    };
     expect(computeFinalScoreWithJokers(35, 4, 33, jokerResult)).toBe(272);
   });
 });
@@ -722,6 +747,7 @@ describe("Stencil composition with prior mult (issue #131)", () => {
     const emptySlots = MAX_JOKERS - 2;
     const finalScore = computeFinalScoreWithJokers(5, 1, 0, {
       additiveMult: 4,
+      additiveChips: 0,
       xMult: emptySlots,
       moneyEarned: 0,
     });
@@ -739,5 +765,149 @@ describe("Stencil composition with prior mult (issue #131)", () => {
     const emptySlots = MAX_JOKERS - 2;
     expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT * 2);
     expect(result.xMult).toBe(emptySlots);
+  });
+});
+
+describe("Hand-type Chips joker factories", () => {
+  test("Sly Joker requires a Pair and uses SLY_JOKER_CHIPS", () => {
+    expect(createSlyJoker().effect).toEqual({
+      kind: "on-hand-type-chips",
+      requires: "Pair",
+      amount: SLY_JOKER_CHIPS,
+    });
+  });
+
+  test("Wily Joker requires Three of a Kind and uses WILY_JOKER_CHIPS", () => {
+    expect(createWilyJoker().effect).toEqual({
+      kind: "on-hand-type-chips",
+      requires: "Three of a Kind",
+      amount: WILY_JOKER_CHIPS,
+    });
+  });
+
+  test("Clever Joker requires Two Pair and uses CLEVER_JOKER_CHIPS", () => {
+    expect(createCleverJoker().effect).toEqual({
+      kind: "on-hand-type-chips",
+      requires: "Two Pair",
+      amount: CLEVER_JOKER_CHIPS,
+    });
+  });
+
+  test("Devious Joker requires a Straight and uses DEVIOUS_JOKER_CHIPS", () => {
+    expect(createDeviousJoker().effect).toEqual({
+      kind: "on-hand-type-chips",
+      requires: "Straight",
+      amount: DEVIOUS_JOKER_CHIPS,
+    });
+  });
+
+  test("Crafty Joker requires a Flush and uses CRAFTY_JOKER_CHIPS", () => {
+    expect(createCraftyJoker().effect).toEqual({
+      kind: "on-hand-type-chips",
+      requires: "Flush",
+      amount: CRAFTY_JOKER_CHIPS,
+    });
+  });
+});
+
+describe("applyHandLevelJokers — Sly Joker", () => {
+  test("adds SLY_JOKER_CHIPS when played hand contains a Pair", () => {
+    const result = applyHandLevelJokers([createSlyJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.additiveChips).toBe(SLY_JOKER_CHIPS);
+  });
+
+  test("does not add chips when played hand does not contain a Pair", () => {
+    const result = applyHandLevelJokers([createSlyJoker()], {
+      playedHandLabel: "High Card",
+    });
+    expect(result.additiveChips).toBe(0);
+  });
+});
+
+describe("applyHandLevelJokers — Wily Joker", () => {
+  test("adds WILY_JOKER_CHIPS when played hand contains Three of a Kind", () => {
+    const result = applyHandLevelJokers([createWilyJoker()], {
+      playedHandLabel: "Three of a Kind",
+    });
+    expect(result.additiveChips).toBe(WILY_JOKER_CHIPS);
+  });
+
+  test("does not fire on a Pair (does not contain Three of a Kind)", () => {
+    const result = applyHandLevelJokers([createWilyJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.additiveChips).toBe(0);
+  });
+});
+
+describe("applyHandLevelJokers — Clever Joker", () => {
+  test("adds CLEVER_JOKER_CHIPS when played hand contains Two Pair", () => {
+    const result = applyHandLevelJokers([createCleverJoker()], {
+      playedHandLabel: "Two Pair",
+    });
+    expect(result.additiveChips).toBe(CLEVER_JOKER_CHIPS);
+  });
+
+  test("does not fire on a single Pair", () => {
+    const result = applyHandLevelJokers([createCleverJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.additiveChips).toBe(0);
+  });
+});
+
+describe("applyHandLevelJokers — Devious Joker", () => {
+  test("adds DEVIOUS_JOKER_CHIPS when played hand contains a Straight", () => {
+    const result = applyHandLevelJokers([createDeviousJoker()], {
+      playedHandLabel: "Straight",
+    });
+    expect(result.additiveChips).toBe(DEVIOUS_JOKER_CHIPS);
+  });
+
+  test("does not fire on a Flush (Flush does not contain Straight)", () => {
+    const result = applyHandLevelJokers([createDeviousJoker()], {
+      playedHandLabel: "Flush",
+    });
+    expect(result.additiveChips).toBe(0);
+  });
+});
+
+describe("applyHandLevelJokers — Crafty Joker", () => {
+  test("adds CRAFTY_JOKER_CHIPS when played hand contains a Flush", () => {
+    const result = applyHandLevelJokers([createCraftyJoker()], {
+      playedHandLabel: "Flush",
+    });
+    expect(result.additiveChips).toBe(CRAFTY_JOKER_CHIPS);
+  });
+
+  test("does not fire on a Straight (Straight does not contain Flush)", () => {
+    const result = applyHandLevelJokers([createCraftyJoker()], {
+      playedHandLabel: "Straight",
+    });
+    expect(result.additiveChips).toBe(0);
+  });
+});
+
+describe("applyHandLevelJokers — hand-type Chips containment composition", () => {
+  test("Flush House triggers Crafty (Flush) AND Sly (Pair)", () => {
+    const result = applyHandLevelJokers(
+      [createCraftyJoker(), createSlyJoker()],
+      { playedHandLabel: "Flush House" },
+    );
+    expect(result.additiveChips).toBe(CRAFTY_JOKER_CHIPS + SLY_JOKER_CHIPS);
+  });
+});
+
+describe("computeFinalScoreWithJokers — additive chips applied before mult", () => {
+  test("folds jokerResult.additiveChips into chips total before multiplying", () => {
+    const finalScore = computeFinalScoreWithJokers(10, 2, 5, {
+      additiveMult: 3,
+      additiveChips: 50,
+      xMult: 2,
+      moneyEarned: 0,
+    });
+    expect(finalScore).toBe((10 + 5 + 50) * (2 + 3) * 2);
   });
 });
