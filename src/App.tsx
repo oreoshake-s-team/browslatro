@@ -13,6 +13,13 @@ import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest } from "./payout";
+import {
+  applyHandLevelJokers,
+  applyPerCardJokers,
+  computeFinalScoreWithJokers,
+  createDefaultJokers,
+  type Joker,
+} from "./jokers";
 
 // Per-card delay in the scoring sequence. Each scoring card animates and adds
 // its chip contribution after this many milliseconds.
@@ -49,7 +56,24 @@ function App() {
   const [handDisplayOrder, setHandDisplayOrder] = useState<ReadonlyArray<number>>(
     [],
   );
+  const [jokers, setJokers] = useState<ReadonlyArray<Joker>>(() =>
+    createDefaultJokers(),
+  );
+  const [jokerPulseCounters, setJokerPulseCounters] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const pendingDiscardCountRef = useRef(0);
+
+  function pulseJokers(firedIds: ReadonlyArray<string>) {
+    if (firedIds.length === 0) return;
+    setJokerPulseCounters((prev) => {
+      const next = { ...prev };
+      for (const id of firedIds) {
+        next[id] = (next[id] ?? 0) + 1;
+      }
+      return next;
+    });
+  }
 
   // Sequential scoring state.
   const [scoringCards, setScoringCards] = useState<ReadonlyArray<Card>>([]);
@@ -98,13 +122,21 @@ function App() {
 
     const stepMs = prefersReducedMotion() ? 0 : SCORING_STEP_MS;
     const timer = window.setTimeout(() => {
-      const { chips: stepChips } = getScoringStep(scoringCards, scoringIndex);
+      const { card: stepCard, chips: stepChips } = getScoringStep(
+        scoringCards,
+        scoringIndex,
+      );
       setChips((prev) => prev + stepChips);
       play("pop");
+      const cardJokerResult = applyPerCardJokers(jokers, stepCard);
+      if (cardJokerResult.moneyEarned > 0) {
+        setMoney((prev) => prev + cardJokerResult.moneyEarned);
+      }
+      pulseJokers(cardJokerResult.firedJokerIds);
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
     return () => window.clearTimeout(timer);
-  }, [scoringCards, scoringIndex]);
+  }, [scoringCards, scoringIndex, jokers]);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -123,6 +155,7 @@ function App() {
     setRound(1);
     setAnte(1);
     setMoney(0);
+    setJokers(createDefaultJokers());
     startNewRound();
   }
 
@@ -210,14 +243,24 @@ function App() {
       (sum, card) => sum + getRankChips(card.rank),
       0,
     );
-    const finalScore = Math.floor(
-      (handStats.chips + cardChipsTotal) * handStats.multiplier,
+    const handJokerResult = applyHandLevelJokers(jokers);
+    pulseJokers(handJokerResult.firedJokerIds);
+
+    const finalScore = computeFinalScoreWithJokers(
+      handStats.chips,
+      handStats.multiplier,
+      cardChipsTotal,
+      {
+        additiveMult: handJokerResult.additiveMult,
+        xMult: handJokerResult.xMult,
+        moneyEarned: 0,
+      },
     );
 
-    // Reset the live counters to the hand's base values so the ticking is
-    // observable against the starting point, then queue the per-card sequence.
+    const liveMultiplier =
+      (handStats.multiplier + handJokerResult.additiveMult) * handJokerResult.xMult;
     setChips(handStats.chips);
-    setMultiplier(handStats.multiplier);
+    setMultiplier(liveMultiplier);
     scoringFinalizeRef.current = () => {
       finalizeHandSubmission(finalScore, submittedSelection);
     };
@@ -313,6 +356,8 @@ function App() {
         remaining={dealt.remaining}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
+        jokers={jokers}
+        jokerPulseCounters={jokerPulseCounters}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
