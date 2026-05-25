@@ -1154,9 +1154,9 @@ describe("Post-round shop integration", () => {
     ).toBeInTheDocument();
   });
 
-  test("shows exactly two joker offers in the shop", async () => {
+  test("shows exactly three offers in the shop (1 joker + 1 planet + 1 tarot)", async () => {
     await openShop();
-    expect(screen.getAllByTestId(/^shop-offer-/)).toHaveLength(2);
+    expect(screen.getAllByTestId(/^shop-offer-/)).toHaveLength(3);
   });
 
   test("clicking Next Round closes the shop and starts the next blind", async () => {
@@ -1468,5 +1468,78 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByText("New game"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
     expect(readRunInfoStats()).toEqual(baseline);
+  });
+});
+
+describe("Tarot purchase integration", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  function moneyOf(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  test("a third shop offer is rendered as a tarot", async () => {
+    await openShop();
+    expect(screen.getByTestId("shop-offer-2")).toHaveAttribute(
+      "data-offer-kind",
+      "tarot",
+    );
+  });
+
+  test("buying The Hermit when it appears doubles current money capped at +$20", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName !== "The Hermit") return;
+    const before = moneyOf();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    const after = moneyOf();
+    const bonus = Math.min(before - 3, 20);
+    expect(after).toBe(before - 3 + bonus);
+  });
+
+  test("buying any tarot offer marks it as Sold", async () => {
+    const user = await openShop();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(
+      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
+    ).toHaveTextContent(/Sold/);
+  });
+
+  test("buying any tarot offer deducts the $3 tarot price up front", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const before = moneyOf();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(moneyOf()).toBe(before - 3);
   });
 });

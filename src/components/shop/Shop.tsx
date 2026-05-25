@@ -64,7 +64,14 @@ function offerSubject(offer: ShopItem): {
   readonly name: string;
   readonly description: string;
 } {
-  return offer.kind === "joker" ? offer.joker : offer.planet;
+  switch (offer.kind) {
+    case "joker":
+      return offer.joker;
+    case "planet":
+      return offer.planet;
+    case "tarot":
+      return offer.tarot;
+  }
 }
 
 export default function Shop({
