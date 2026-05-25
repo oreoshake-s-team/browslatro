@@ -1,6 +1,7 @@
 import "./RoundWonModal.css";
 import { createPortal } from "react-dom";
 import { INTEREST_CAP, INTEREST_RATE_PER } from "../../payout";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export interface RoundWonInfo {
   readonly roundScore: number;
@@ -21,6 +22,7 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
   const beatBy = roundScore - requiredScore;
   const total = baseReward + interest;
   const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${walletAtPayout}`;
+  useEscapeToClose(onContinue, true);
 
   return createPortal(
     <div

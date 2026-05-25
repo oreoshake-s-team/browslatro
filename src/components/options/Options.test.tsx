@@ -73,6 +73,29 @@ describe("Options", () => {
     expect(onNewGame).toHaveBeenCalledTimes(1);
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
+
+  test("Escape closes the modal when open", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
+  });
+
+  test("Escape while modal is closed does not open or change anything", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
+  });
+
+  test("Enter while modal is open does not close it", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("heading", { name: "Options" })).toBeInTheDocument();
+  });
 });
 
 describe("Options — high visibility toggle", () => {
