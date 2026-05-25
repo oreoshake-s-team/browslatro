@@ -6,7 +6,13 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
-import { isHighVisibility } from "./components/system/preferences";
+import {
+  getAnimationSpeed,
+  getAnimationSpeedMultiplier,
+  hasUserOverriddenAnimationSpeed,
+  isHighVisibility,
+  type AnimationSpeed,
+} from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
 import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
@@ -21,13 +27,21 @@ import {
   type Joker,
 } from "./jokers";
 
-// Per-card delay in the scoring sequence. Each scoring card animates and adds
-// its chip contribution after this many milliseconds.
-export const SCORING_STEP_MS = 200;
+export const SCORING_STEP_MS = 500;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+export function getScoringStepMs(
+  speed: AnimationSpeed = getAnimationSpeed(),
+): number {
+  if (hasUserOverriddenAnimationSpeed(speed)) {
+    return Math.round(SCORING_STEP_MS * getAnimationSpeedMultiplier(speed));
+  }
+  if (prefersReducedMotion()) return 0;
+  return SCORING_STEP_MS;
 }
 
 function initialDeal(): DealResult {
@@ -47,6 +61,9 @@ function App() {
   const [remainingDiscards, setRemainingDiscards] = useState(3);
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
   const [highVisibility, setHighVisibility] = useState<boolean>(isHighVisibility);
+  const [animationSpeed, setAnimationSpeedState] = useState<AnimationSpeed>(
+    getAnimationSpeed,
+  );
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
@@ -105,9 +122,6 @@ function App() {
     setPendingWin(null);
   }
 
-  // Drive the scoring sequence: tick one card per SCORING_STEP_MS, then call
-  // the stored finalize callback when the queue drains. The useEffect cleanup
-  // cancels any pending step when state changes (e.g. game reset).
   useEffect(() => {
     if (scoringCards.length === 0) return;
 
@@ -120,7 +134,7 @@ function App() {
       return;
     }
 
-    const stepMs = prefersReducedMotion() ? 0 : SCORING_STEP_MS;
+    const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
       const { card: stepCard, chips: stepChips } = getScoringStep(
         scoringCards,
@@ -139,7 +153,7 @@ function App() {
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
     return () => window.clearTimeout(timer);
-  }, [scoringCards, scoringIndex, jokers]);
+  }, [scoringCards, scoringIndex, jokers, animationSpeed]);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -326,8 +340,17 @@ function App() {
     setRemainingDiscards((prev) => prev - 1);
   }
 
+  const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
+    ? ({
+        "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
+      } as React.CSSProperties)
+    : undefined;
+
   return (
-    <div className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}>
+    <div
+      className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}
+      style={appStyle}
+    >
       <Sidebar
         blind={blind}
         ante={ante}
@@ -342,6 +365,7 @@ function App() {
         remainingDiscards={remainingDiscards}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
+        onAnimationSpeedChange={setAnimationSpeedState}
       />
       <Game
         onWin={handleWin}
