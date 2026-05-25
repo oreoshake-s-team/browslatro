@@ -1,4 +1,5 @@
 import {
+  SUIT_DISPLAY_ORDER,
   createDeck,
   shuffle,
   deal,
@@ -10,7 +11,7 @@ import {
   HAND_SIZE,
   DECK_SIZE,
 } from "./deck";
-import type { Card } from "./types";
+import type { Card, Suit } from "./types";
 
 beforeEach(() => {
   resetCardIds();
@@ -117,7 +118,7 @@ describe("sortCards", () => {
     expect(sorted.map((c) => c.rank)).toEqual(["A", "K", "10", "2"]);
   });
 
-  test("rank mode breaks ties by suit (clubs → diamonds → hearts → spades)", () => {
+  test("rank mode breaks ties by suit (clubs → diamonds → spades → hearts)", () => {
     const pair: Card[] = [
       { id: 1, rank: "5", suit: "spades" },
       { id: 2, rank: "5", suit: "clubs" },
@@ -128,18 +129,18 @@ describe("sortCards", () => {
     expect(sorted.map((c) => c.suit)).toEqual([
       "clubs",
       "diamonds",
-      "hearts",
       "spades",
+      "hearts",
     ]);
   });
 
-  test("suit mode groups by suit in clubs → diamonds → hearts → spades order", () => {
+  test("suit mode groups by suit in clubs → diamonds → spades → hearts order", () => {
     const sorted = sortCards(sample, "suit");
     expect(sorted.map((c) => c.suit)).toEqual([
       "clubs",
       "diamonds",
-      "hearts",
       "spades",
+      "hearts",
     ]);
   });
 
@@ -161,5 +162,85 @@ describe("sortCards", () => {
 
   test("returns an empty array when given no cards", () => {
     expect(sortCards([], "rank")).toEqual([]);
+  });
+});
+
+describe("SUIT_DISPLAY_ORDER — alternation invariant (issue #114)", () => {
+  const RED_SUITS: ReadonlySet<Suit> = new Set<Suit>(["hearts", "diamonds"]);
+  const SHARP_SUITS: ReadonlySet<Suit> = new Set<Suit>(["spades", "diamonds"]);
+
+  function orderedSuits(): Suit[] {
+    return (Object.keys(SUIT_DISPLAY_ORDER) as Suit[]).sort(
+      (a, b) => SUIT_DISPLAY_ORDER[a] - SUIT_DISPLAY_ORDER[b],
+    );
+  }
+
+  function isRed(s: Suit): boolean {
+    return RED_SUITS.has(s);
+  }
+
+  function isSharp(s: Suit): boolean {
+    return SHARP_SUITS.has(s);
+  }
+
+  test("covers every suit exactly once", () => {
+    expect(new Set(orderedSuits()).size).toBe(4);
+  });
+
+  test("no two adjacent suits share BOTH color and shape", () => {
+    const order = orderedSuits();
+    const collisions: Array<[Suit, Suit]> = [];
+    for (let i = 0; i < order.length - 1; i += 1) {
+      const a = order[i];
+      const b = order[i + 1];
+      if (isRed(a) === isRed(b) && isSharp(a) === isSharp(b)) {
+        collisions.push([a, b]);
+      }
+    }
+    expect(collisions).toEqual([]);
+  });
+
+  test("color strictly alternates across the full ordering", () => {
+    const order = orderedSuits();
+    const colorRuns: Array<[Suit, Suit]> = [];
+    for (let i = 0; i < order.length - 1; i += 1) {
+      if (isRed(order[i]) === isRed(order[i + 1])) {
+        colorRuns.push([order[i], order[i + 1]]);
+      }
+    }
+    expect(colorRuns).toEqual([]);
+  });
+
+  test("at most one adjacent pair shares the same shape", () => {
+    const order = orderedSuits();
+    let sameShapePairs = 0;
+    for (let i = 0; i < order.length - 1; i += 1) {
+      if (isSharp(order[i]) === isSharp(order[i + 1])) {
+        sameShapePairs += 1;
+      }
+    }
+    expect(sameShapePairs).toBeLessThanOrEqual(1);
+  });
+
+  test("does not put the two reds (hearts, diamonds) adjacent to each other", () => {
+    const order = orderedSuits();
+    const redsAdjacent: Array<[Suit, Suit]> = [];
+    for (let i = 0; i < order.length - 1; i += 1) {
+      if (isRed(order[i]) && isRed(order[i + 1])) {
+        redsAdjacent.push([order[i], order[i + 1]]);
+      }
+    }
+    expect(redsAdjacent).toEqual([]);
+  });
+
+  test("does not put the two blacks (spades, clubs) adjacent to each other", () => {
+    const order = orderedSuits();
+    const blacksAdjacent: Array<[Suit, Suit]> = [];
+    for (let i = 0; i < order.length - 1; i += 1) {
+      if (!isRed(order[i]) && !isRed(order[i + 1])) {
+        blacksAdjacent.push([order[i], order[i + 1]]);
+      }
+    }
+    expect(blacksAdjacent).toEqual([]);
   });
 });

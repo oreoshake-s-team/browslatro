@@ -86,11 +86,11 @@ export function deal(deck: ReadonlyArray<Card>, count: number = HAND_SIZE): Deal
 
 export type SortMode = "rank" | "suit";
 
-const SUIT_DISPLAY_ORDER: Record<Suit, number> = {
+export const SUIT_DISPLAY_ORDER: Record<Suit, number> = {
   clubs: 0,
   diamonds: 1,
-  hearts: 2,
-  spades: 3,
+  spades: 2,
+  hearts: 3,
 };
 
 const RANK_DISPLAY_ORDER: Record<Rank, number> = {
