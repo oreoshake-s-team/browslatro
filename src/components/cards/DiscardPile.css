@@ -11,7 +11,7 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  transition: transform 120ms ease;
+  transition: transform calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .discard-pile:hover {

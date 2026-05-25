@@ -68,7 +68,7 @@
 }
 
 .joker-tile-pulse {
-  animation: joker-bounce 0.4s ease-out;
+  animation: joker-bounce calc(0.4s * var(--animation-speed, 1)) ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
