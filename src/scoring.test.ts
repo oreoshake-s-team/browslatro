@@ -1,4 +1,11 @@
-import { getRankChips, getScoringCards, scoreHand } from "./scoring";
+import {
+  forEachScoringStep,
+  getRankChips,
+  getScoringCards,
+  getScoringStep,
+  scoreHand,
+  type ScoringStep,
+} from "./scoring";
 import type { Card, Rank, Suit } from "./types";
 
 let nextId = 0;
@@ -218,5 +225,96 @@ describe("scoreHand — computed scores", () => {
         card("A", "diamonds"),
       ]),
     ).toBe(1208);
+  });
+});
+
+describe("per-card scoring iteration order", () => {
+  const sample = (): Card[] => [
+    card("3", "spades"),
+    card("7", "hearts"),
+    card("K", "diamonds"),
+  ];
+
+  function chipsOf(cards: ReadonlyArray<Card>): number[] {
+    const seen: number[] = [];
+    forEachScoringStep(cards, (entry) => seen.push(entry.chips));
+    return seen;
+  }
+
+  test("getScoringStep returns the card at the requested index", () => {
+    const cards = sample();
+    expect(getScoringStep(cards, 1).card).toBe(cards[1]);
+  });
+
+  test("getScoringStep returns the chip value for that card", () => {
+    expect(getScoringStep(sample(), 1).chips).toBe(getRankChips("7"));
+  });
+
+  test("getScoringStep rejects negative indices", () => {
+    expect(() => getScoringStep(sample(), -1)).toThrow(RangeError);
+  });
+
+  test("getScoringStep rejects indices past the end", () => {
+    expect(() => getScoringStep(sample(), 3)).toThrow(RangeError);
+  });
+
+  test("forEachScoringStep emits indices 0..N-1 in ascending order", () => {
+    const indices: number[] = [];
+    forEachScoringStep(sample(), (_entry, i) => indices.push(i));
+    expect(indices).toEqual([0, 1, 2]);
+  });
+
+  test("forEachScoringStep visits [3♠, 7♥, K♦] in that rank order", () => {
+    const ranks: Rank[] = [];
+    forEachScoringStep(sample(), (entry) => ranks.push(entry.card.rank));
+    expect(ranks).toEqual(["3", "7", "K"]);
+  });
+
+  test("forEachScoringStep emits chip values in input order", () => {
+    expect(chipsOf(sample())).toEqual([3, 7, 10]);
+  });
+
+  test("reversed input emits the reversed chip-value sequence", () => {
+    expect(chipsOf(sample().reverse())).toEqual([10, 7, 3]);
+  });
+
+  test("shuffled input emits chips in input order, not sorted", () => {
+    const shuffled = [
+      card("7", "hearts"),
+      card("K", "diamonds"),
+      card("3", "spades"),
+    ];
+    expect(chipsOf(shuffled)).toEqual([7, 10, 3]);
+  });
+
+  test("duplicate ranks emit duplicate chip values in input order", () => {
+    const cards = [
+      card("5", "spades"),
+      card("K", "hearts"),
+      card("5", "diamonds"),
+    ];
+    expect(chipsOf(cards)).toEqual([5, 10, 5]);
+  });
+
+  test("forEachScoringStep invokes the callback once per card", () => {
+    const spy = jest.fn();
+    forEachScoringStep(sample(), spy);
+    expect(spy).toHaveBeenCalledTimes(3);
+  });
+
+  test("forEachScoringStep passes cards to the spy in input order", () => {
+    const cards = sample();
+    const spy = jest.fn();
+    forEachScoringStep(cards, spy);
+    const seen = spy.mock.calls.map(
+      (args) => (args[0] as ScoringStep).card,
+    );
+    expect(seen).toEqual(cards);
+  });
+
+  test("empty input does not invoke the callback", () => {
+    const spy = jest.fn();
+    forEachScoringStep([], spy);
+    expect(spy).not.toHaveBeenCalled();
   });
 });

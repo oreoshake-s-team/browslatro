@@ -9,7 +9,7 @@ import { play } from "./components/system/sounds";
 import { isHighVisibility } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
-import { getRankChips, getScoringCards } from "./scoring";
+import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest } from "./payout";
@@ -95,8 +95,8 @@ function App() {
 
     const stepMs = prefersReducedMotion() ? 0 : SCORING_STEP_MS;
     const timer = window.setTimeout(() => {
-      const card = scoringCards[scoringIndex];
-      setChips((prev) => prev + getRankChips(card.rank));
+      const { chips: stepChips } = getScoringStep(scoringCards, scoringIndex);
+      setChips((prev) => prev + stepChips);
       play("pop");
       setScoringIndex((prev) => prev + 1);
     }, stepMs);

@@ -132,6 +132,33 @@ function pickHighestCard(cards: ReadonlyArray<Card>): Card {
   return best;
 }
 
+export interface ScoringStep {
+  readonly card: Card;
+  readonly chips: number;
+}
+
+export function getScoringStep(
+  cards: ReadonlyArray<Card>,
+  index: number,
+): ScoringStep {
+  if (index < 0 || index >= cards.length) {
+    throw new RangeError(
+      `Scoring step index ${index} is out of bounds for a sequence of length ${cards.length}`,
+    );
+  }
+  const card = cards[index];
+  return { card, chips: getRankChips(card.rank) };
+}
+
+export function forEachScoringStep(
+  cards: ReadonlyArray<Card>,
+  step: (entry: ScoringStep, index: number) => void,
+): void {
+  for (let i = 0; i < cards.length; i++) {
+    step(getScoringStep(cards, i), i);
+  }
+}
+
 /**
  * Computes the final score for the given played cards by:
  *   (hand chips + sum of scoring-card rank chips) × hand multiplier
