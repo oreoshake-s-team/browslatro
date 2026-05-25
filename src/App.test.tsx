@@ -856,17 +856,17 @@ describe("getScoringStepMs", () => {
     resetAnimationSpeed();
   });
 
-  test("returns 200 for normal when OS does not prefer reduced motion", () => {
+  test("returns 500 for normal when OS does not prefer reduced motion", () => {
     mockPrefersReducedMotion(false);
-    expect(getScoringStepMs("normal")).toBe(200);
+    expect(getScoringStepMs("normal")).toBe(500);
   });
 
-  test("returns 300 for slow", () => {
-    expect(getScoringStepMs("slow")).toBe(300);
+  test("returns 1000 for slow", () => {
+    expect(getScoringStepMs("slow")).toBe(1000);
   });
 
-  test("returns 100 for fast", () => {
-    expect(getScoringStepMs("fast")).toBe(100);
+  test("returns 250 for fast", () => {
+    expect(getScoringStepMs("fast")).toBe(250);
   });
 
   test("returns 0 for instant", () => {
@@ -878,14 +878,14 @@ describe("getScoringStepMs", () => {
     expect(getScoringStepMs("normal")).toBe(0);
   });
 
-  test("returns 100 for fast even when OS prefers reduced motion", () => {
+  test("returns 250 for fast even when OS prefers reduced motion", () => {
     mockPrefersReducedMotion(true);
-    expect(getScoringStepMs("fast")).toBe(100);
+    expect(getScoringStepMs("fast")).toBe(250);
   });
 
-  test("returns 300 for slow even when OS prefers reduced motion", () => {
+  test("returns 1000 for slow even when OS prefers reduced motion", () => {
     mockPrefersReducedMotion(true);
-    expect(getScoringStepMs("slow")).toBe(300);
+    expect(getScoringStepMs("slow")).toBe(1000);
   });
 
   test("returns 0 for instant even when OS does not prefer reduced motion", () => {
@@ -895,7 +895,7 @@ describe("getScoringStepMs", () => {
 
   test("reads from the persisted preference when no argument is passed", () => {
     setAnimationSpeed("fast");
-    expect(getScoringStepMs()).toBe(100);
+    expect(getScoringStepMs()).toBe(250);
   });
 });
 
@@ -924,11 +924,11 @@ describe("App animation speed CSS variable", () => {
     );
   });
 
-  test("sets the inline --animation-speed style to 1.5 when preference is slow", () => {
+  test("sets the inline --animation-speed style to 2 when preference is slow", () => {
     setAnimationSpeed("slow");
     const { container } = render(<App />);
     expect(container.querySelector(".App")?.getAttribute("style")).toContain(
-      "--animation-speed: 1.5",
+      "--animation-speed: 2",
     );
   });
 
@@ -957,12 +957,12 @@ describe("App scoring step honors animation speed preference", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     act(() => {
-      jest.advanceTimersByTime(200);
+      jest.advanceTimersByTime(500);
     });
     expect(document.querySelector(".chips")).toHaveTextContent("100");
   });
 
-  test("advances on the first slow tick after the 300ms threshold", async () => {
+  test("advances on the first slow tick after the 1000ms threshold", async () => {
     mockShuffleConfig.useIdentity = true;
     setAnimationSpeed("slow");
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
@@ -973,7 +973,7 @@ describe("App scoring step honors animation speed preference", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     act(() => {
-      jest.advanceTimersByTime(300);
+      jest.advanceTimersByTime(1000);
     });
     expect(document.querySelector(".chips")).toHaveTextContent("109");
   });

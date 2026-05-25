@@ -12,7 +12,7 @@ export const ANIMATION_SPEED_VALUES: ReadonlyArray<AnimationSpeed> = [
 ];
 
 const ANIMATION_SPEED_MULTIPLIERS: Readonly<Record<AnimationSpeed, number>> = {
-  slow: 1.5,
+  slow: 2,
   normal: 1,
   fast: 0.5,
   instant: 0,

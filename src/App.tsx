@@ -27,7 +27,7 @@ import {
   type Joker,
 } from "./jokers";
 
-export const SCORING_STEP_MS = 200;
+export const SCORING_STEP_MS = 500;
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
