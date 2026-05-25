@@ -404,6 +404,42 @@ describe("applyJokersToScoring — Suit Mult aggregation", () => {
   });
 });
 
+describe("Joker firing order respects input array order", () => {
+  test("applyHandLevelJokers fired ids follow the input array order", () => {
+    const a = createPlusFourMultJoker();
+    const b = createJokerStencilJoker();
+    const result = applyHandLevelJokers([a, b]);
+    expect(result.firedJokerIds).toEqual(["plus-four-mult", "joker-stencil"]);
+  });
+
+  test("applyHandLevelJokers fired ids reflect a swapped input order", () => {
+    const a = createPlusFourMultJoker();
+    const b = createJokerStencilJoker();
+    const result = applyHandLevelJokers([b, a]);
+    expect(result.firedJokerIds).toEqual(["joker-stencil", "plus-four-mult"]);
+  });
+
+  test("applyPerCardJokers fired ids follow the input array order", () => {
+    const rng = (): number => 0;
+    const result = applyPerCardJokers(
+      [createBusinessCardJoker(), createGreedyJoker()],
+      card("K", "diamonds"),
+      rng,
+    );
+    expect(result.firedJokerIds).toEqual(["business-card", "greedy-joker"]);
+  });
+
+  test("applyPerCardJokers fired ids reflect a swapped input order", () => {
+    const rng = (): number => 0;
+    const result = applyPerCardJokers(
+      [createGreedyJoker(), createBusinessCardJoker()],
+      card("K", "diamonds"),
+      rng,
+    );
+    expect(result.firedJokerIds).toEqual(["greedy-joker", "business-card"]);
+  });
+});
+
 describe("computeFinalScoreWithJokers", () => {
   test("applies additive mult and xMult to base score", () => {
     const jokerResult = { additiveMult: 4, xMult: 2, moneyEarned: 0 };

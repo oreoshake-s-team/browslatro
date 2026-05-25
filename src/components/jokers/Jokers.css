@@ -21,9 +21,10 @@
 }
 
 .jokers-list {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 0;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -31,6 +32,8 @@
 
 .joker-tile {
   display: flex;
+  flex: 1 1 0;
+  min-width: 0;
   flex-direction: column;
   align-items: center;
   justify-content: center;
@@ -41,6 +44,7 @@
   border: 2px solid #f59f00;
   background-color: #ffe066;
   color: #5c3c00;
+  margin: 0 0.3rem;
 }
 
 .joker-tile-inner {
@@ -96,4 +100,66 @@
   color: #868e96;
   font-style: italic;
   font-size: 0.85rem;
+}
+
+.jokers-list-dragging .joker-gap {
+  flex-basis: 1rem;
+}
+
+.joker-tile-draggable {
+  cursor: grab;
+}
+
+.joker-tile-draggable:active {
+  cursor: grabbing;
+}
+
+.joker-tile-dragging {
+  opacity: 0;
+  cursor: grabbing;
+}
+
+.joker-tile-reorder {
+  display: flex;
+  justify-content: center;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.joker-tile-reorder-button {
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid #f1c40f;
+  background-color: #fff9db;
+  color: #5c3c00;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.joker-tile-reorder-button:hover:not(:disabled) {
+  background-color: #ffe066;
+}
+
+.joker-tile-reorder-button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.joker-gap {
+  flex: 0 0 0.4rem;
+  align-self: stretch;
+  min-height: 4rem;
+  border-radius: 4px;
+  transition: flex-basis calc(120ms * var(--animation-speed, 1)) ease,
+    background-color calc(120ms * var(--animation-speed, 1)) ease;
+}
+
+.joker-gap-active {
+  flex-basis: 2.5rem;
+  background-color: rgba(245, 159, 0, 0.25);
+  outline: 2px dashed #f59f00;
+  outline-offset: -2px;
 }

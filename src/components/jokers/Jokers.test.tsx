@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import Jokers from "./Jokers";
 import {
   MAX_JOKERS,
@@ -10,6 +11,7 @@ import {
   createLustyJoker,
   createPlusFourMultJoker,
   createWrathfulJoker,
+  type Joker,
 } from "../../jokers";
 
 describe("Jokers UI", () => {
@@ -121,5 +123,207 @@ describe("Jokers UI", () => {
     expect(
       screen.getByTestId("joker-tile-inner-business-card"),
     ).not.toHaveClass("joker-tile-pulse");
+  });
+});
+
+describe("Jokers drag-and-drop reordering", () => {
+  const three: ReadonlyArray<Joker> = [
+    createPlusFourMultJoker(),
+    createBusinessCardJoker(),
+    createJokerStencilJoker(),
+  ];
+
+  function getTile(id: string): HTMLElement {
+    return screen.getByTestId(`joker-tile-filled-${id}`);
+  }
+
+  function getGap(idx: number): HTMLElement {
+    return screen.getByTestId(`joker-gap-${idx}`);
+  }
+
+  function dragTileToGap(sourceId: string, gapIdx: number) {
+    const source = getTile(sourceId);
+    const gap = getGap(gapIdx);
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(gap);
+    fireEvent.drop(gap);
+    fireEvent.dragEnd(source);
+  }
+
+  test("filled tiles are draggable when onReorder is provided", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(getTile("plus-four-mult").getAttribute("draggable")).toBe("true");
+  });
+
+  test("filled tiles are not draggable when onReorder is not provided", () => {
+    render(<Jokers jokers={three} />);
+    expect(getTile("plus-four-mult").getAttribute("draggable")).toBeNull();
+  });
+
+  test("renders one more gap than filled tiles when reorderable", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(screen.getAllByTestId(/^joker-gap-/)).toHaveLength(three.length + 1);
+  });
+
+  test("renders no gap drop zones when onReorder is not provided", () => {
+    render(<Jokers jokers={three} />);
+    expect(screen.queryAllByTestId(/^joker-gap-/)).toHaveLength(0);
+  });
+
+  test("empty slot tiles are not draggable", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    const empties = screen.getAllByTestId("joker-tile-empty");
+    expect(empties[0].getAttribute("draggable")).toBeNull();
+  });
+
+  test("dropping a tile into the leftmost gap moves it to position 0", () => {
+    const onReorder = jest.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    dragTileToGap("joker-stencil", 0);
+    expect(onReorder).toHaveBeenCalledWith([
+      "joker-stencil",
+      "plus-four-mult",
+      "business-card",
+    ]);
+  });
+
+  test("dropping a tile into the trailing gap moves it to the end", () => {
+    const onReorder = jest.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    dragTileToGap("plus-four-mult", 3);
+    expect(onReorder).toHaveBeenCalledWith([
+      "business-card",
+      "joker-stencil",
+      "plus-four-mult",
+    ]);
+  });
+
+  test("dropping a tile into a middle gap inserts at that position (left → right)", () => {
+    const onReorder = jest.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    dragTileToGap("plus-four-mult", 2);
+    expect(onReorder).toHaveBeenCalledWith([
+      "business-card",
+      "plus-four-mult",
+      "joker-stencil",
+    ]);
+  });
+
+  test("dropping a tile into a middle gap inserts at that position (right → left)", () => {
+    const onReorder = jest.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    dragTileToGap("joker-stencil", 1);
+    expect(onReorder).toHaveBeenCalledWith([
+      "plus-four-mult",
+      "joker-stencil",
+      "business-card",
+    ]);
+  });
+
+  test("dropping a tile into its own left-adjacent gap is a no-op", () => {
+    const onReorder = jest.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    dragTileToGap("business-card", 1);
+    expect(onReorder).not.toHaveBeenCalled();
+  });
+
+  test("dropping a tile into its own right-adjacent gap is a no-op", () => {
+    const onReorder = jest.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    dragTileToGap("business-card", 2);
+    expect(onReorder).not.toHaveBeenCalled();
+  });
+
+  test("the dragged tile is marked while a drag is in flight", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    const source = getTile("plus-four-mult");
+    fireEvent.dragStart(source);
+    expect(source).toHaveClass("joker-tile-dragging");
+  });
+
+  test("the hovered gap is marked active while dragging over it", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    fireEvent.dragStart(getTile("plus-four-mult"));
+    fireEvent.dragOver(getGap(3));
+    expect(getGap(3)).toHaveClass("joker-gap-active");
+  });
+
+  test("the source's self-adjacent gap does not become active during drag", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    fireEvent.dragStart(getTile("business-card"));
+    fireEvent.dragOver(getGap(1));
+    expect(getGap(1)).not.toHaveClass("joker-gap-active");
+  });
+
+  test("the active gap is cleared after the drop completes", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    dragTileToGap("plus-four-mult", 3);
+    const actives = screen
+      .getAllByTestId(/^joker-gap-/)
+      .filter((g) => g.classList.contains("joker-gap-active"));
+    expect(actives).toHaveLength(0);
+  });
+
+  test("renders a Move left button for every filled tile", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(
+      screen.getAllByRole("button", { name: /^Move .* left$/ }),
+    ).toHaveLength(three.length);
+  });
+
+  test("renders a Move right button for every filled tile", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(
+      screen.getAllByRole("button", { name: /^Move .* right$/ }),
+    ).toHaveLength(three.length);
+  });
+
+  test("disables Move left on the leftmost tile", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(
+      screen.getByRole("button", { name: "Move +4 Mult left" }),
+    ).toBeDisabled();
+  });
+
+  test("disables Move right on the rightmost tile", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(
+      screen.getByRole("button", { name: "Move Joker Stencil right" }),
+    ).toBeDisabled();
+  });
+
+  test("clicking Move right shifts the joker one position right", async () => {
+    const onReorder = jest.fn();
+    const user = userEvent.setup();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    await user.click(
+      screen.getByRole("button", { name: "Move +4 Mult right" }),
+    );
+    expect(onReorder).toHaveBeenCalledWith([
+      "business-card",
+      "plus-four-mult",
+      "joker-stencil",
+    ]);
+  });
+
+  test("clicking Move left shifts the joker one position left", async () => {
+    const onReorder = jest.fn();
+    const user = userEvent.setup();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    await user.click(
+      screen.getByRole("button", { name: "Move Joker Stencil left" }),
+    );
+    expect(onReorder).toHaveBeenCalledWith([
+      "plus-four-mult",
+      "joker-stencil",
+      "business-card",
+    ]);
+  });
+
+  test("Move buttons are not rendered when onReorder is not provided", () => {
+    render(<Jokers jokers={three} />);
+    expect(
+      screen.queryAllByRole("button", { name: /^Move .*/ }),
+    ).toHaveLength(0);
   });
 });
