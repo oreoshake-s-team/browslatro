@@ -13,6 +13,7 @@ test.beforeEach(async ({ context }) => {
 const HAND_CARDS = '[aria-label="Your hand"] .card';
 const SUBMIT_BUTTON = /^🃏 Submit Hand$/;
 const CONTINUE_BUTTON = /Continue/;
+const NEXT_ROUND_BUTTON = /Next Round/;
 
 function statValue(page: Page, label: string) {
   return page
@@ -26,6 +27,10 @@ async function playStraightFlushAndContinue(page: Page): Promise<void> {
   for (let i = 0; i < 5; i += 1) await cards.nth(i).click();
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+  // The post-round shop (#87) now sits between Continue and the next blind.
+  // Skip through it without purchasing so the round-flow assertions still
+  // hold (no money spent, no jokers added).
+  await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
 }
 
 test("always-win path: 4 consecutive Straight Flushes advance ante and money", async ({

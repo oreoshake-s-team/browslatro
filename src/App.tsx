@@ -16,7 +16,8 @@ import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest } from "./payout";
 import {
   MAX_JOKERS,
-  applyJokersToScoring,
+  applyHandLevelJokers,
+  applyPerCardJokers,
   computeFinalScoreWithJokers,
   createDefaultJokers,
   sampleShopJokers,
@@ -63,7 +64,21 @@ function App() {
   const [jokers, setJokers] = useState<ReadonlyArray<Joker>>(() =>
     createDefaultJokers(),
   );
+  const [jokerPulseCounters, setJokerPulseCounters] = useState<
+    Readonly<Record<string, number>>
+  >({});
   const pendingDiscardCountRef = useRef(0);
+
+  function pulseJokers(firedIds: ReadonlyArray<string>) {
+    if (firedIds.length === 0) return;
+    setJokerPulseCounters((prev) => {
+      const next = { ...prev };
+      for (const id of firedIds) {
+        next[id] = (next[id] ?? 0) + 1;
+      }
+      return next;
+    });
+  }
 
   // Sequential scoring state.
   const [scoringCards, setScoringCards] = useState<ReadonlyArray<Card>>([]);
@@ -118,13 +133,21 @@ function App() {
 
     const stepMs = prefersReducedMotion() ? 0 : SCORING_STEP_MS;
     const timer = window.setTimeout(() => {
-      const { chips: stepChips } = getScoringStep(scoringCards, scoringIndex);
+      const { card: stepCard, chips: stepChips } = getScoringStep(
+        scoringCards,
+        scoringIndex,
+      );
       setChips((prev) => prev + stepChips);
       play("pop");
+      const cardJokerResult = applyPerCardJokers(jokers, stepCard);
+      if (cardJokerResult.moneyEarned > 0) {
+        setMoney((prev) => prev + cardJokerResult.moneyEarned);
+      }
+      pulseJokers(cardJokerResult.firedJokerIds);
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
     return () => window.clearTimeout(timer);
-  }, [scoringCards, scoringIndex]);
+  }, [scoringCards, scoringIndex, jokers]);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -258,19 +281,22 @@ function App() {
       (sum, card) => sum + getRankChips(card.rank),
       0,
     );
-    const jokerResult = applyJokersToScoring(jokers, scoring);
-    if (jokerResult.moneyEarned > 0) {
-      setMoney((prev) => prev + jokerResult.moneyEarned);
-    }
+    const handJokerResult = applyHandLevelJokers(jokers);
+    pulseJokers(handJokerResult.firedJokerIds);
+
     const finalScore = computeFinalScoreWithJokers(
       handStats.chips,
       handStats.multiplier,
       cardChipsTotal,
-      jokerResult,
+      {
+        additiveMult: handJokerResult.additiveMult,
+        xMult: handJokerResult.xMult,
+        moneyEarned: 0,
+      },
     );
 
     const liveMultiplier =
-      (handStats.multiplier + jokerResult.additiveMult) * jokerResult.xMult;
+      (handStats.multiplier + handJokerResult.additiveMult) * handJokerResult.xMult;
     setChips(handStats.chips);
     setMultiplier(liveMultiplier);
     scoringFinalizeRef.current = () => {
@@ -369,6 +395,7 @@ function App() {
         selectedIds={selectedIds}
         discardingIds={discardingIds}
         jokers={jokers}
+        jokerPulseCounters={jokerPulseCounters}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}

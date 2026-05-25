@@ -2,7 +2,9 @@ import {
   BUSINESS_CARD_PROC_CHANCE,
   MAX_JOKERS,
   SHOP_JOKER_POOL,
+  applyHandLevelJokers,
   applyJokersToScoring,
+  applyPerCardJokers,
   cloneJokerWithFreshId,
   computeFinalScoreWithJokers,
   createBusinessCardJoker,
@@ -178,6 +180,82 @@ describe("applyJokersToScoring — Joker Stencil", () => {
     ];
     const result = applyJokersToScoring(jokers, []);
     expect(result.xMult).toBe(1);
+  });
+});
+
+describe("applyHandLevelJokers — fired ids", () => {
+  test("reports the +4 Mult joker as fired when equipped", () => {
+    const result = applyHandLevelJokers([createPlusFourMultJoker()]);
+    expect(result.firedJokerIds).toEqual(["plus-four-mult"]);
+  });
+
+  test("reports the Joker Stencil as fired when at least one slot is empty", () => {
+    const result = applyHandLevelJokers([createJokerStencilJoker()]);
+    expect(result.firedJokerIds).toEqual(["joker-stencil"]);
+  });
+
+  test("does not report the Joker Stencil as fired when all slots are filled", () => {
+    const five = [
+      createJokerStencilJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+    ];
+    const result = applyHandLevelJokers(five);
+    expect(result.firedJokerIds).not.toContain("joker-stencil");
+  });
+
+  test("does not report Business Card as fired at the hand level", () => {
+    const result = applyHandLevelJokers([createBusinessCardJoker()]);
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyPerCardJokers", () => {
+  test("reports Business Card as fired when a face card procs", () => {
+    const rng = (): number => 0;
+    const result = applyPerCardJokers(
+      [createBusinessCardJoker()],
+      card("J"),
+      rng,
+    );
+    expect(result.firedJokerIds).toEqual(["business-card"]);
+  });
+
+  test("does not report Business Card as fired when the roll fails", () => {
+    const rng = (): number => 0.99;
+    const result = applyPerCardJokers(
+      [createBusinessCardJoker()],
+      card("J"),
+      rng,
+    );
+    expect(result.firedJokerIds).toEqual([]);
+  });
+
+  test("does not report Business Card as fired on a non-face card", () => {
+    const rng = (): number => 0;
+    const result = applyPerCardJokers(
+      [createBusinessCardJoker()],
+      card("5"),
+      rng,
+    );
+    expect(result.firedJokerIds).toEqual([]);
+  });
+
+  test("returns $1 when Business Card procs on a face card", () => {
+    const rng = (): number => 0;
+    const result = applyPerCardJokers(
+      [createBusinessCardJoker()],
+      card("K"),
+      rng,
+    );
+    expect(result.moneyEarned).toBe(1);
+  });
+
+  test("does not fire +4 Mult during a per-card pass", () => {
+    const result = applyPerCardJokers([createPlusFourMultJoker()], card("J"));
+    expect(result.firedJokerIds).toEqual([]);
   });
 });
 

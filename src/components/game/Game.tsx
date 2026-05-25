@@ -22,6 +22,7 @@ interface GameProps {
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
   jokers: ReadonlyArray<Joker>;
+  jokerPulseCounters?: Readonly<Record<string, number>>;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -44,6 +45,7 @@ export default function Game({
   selectedIds,
   discardingIds,
   jokers,
+  jokerPulseCounters,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -58,7 +60,7 @@ export default function Game({
 
   return (
     <div className="game">
-      <Jokers jokers={jokers} />
+      <Jokers jokers={jokers} pulseCounters={jokerPulseCounters} />
       <HandComponent
         hand={hand}
         remaining={remaining}
