@@ -217,6 +217,12 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveAccessibleName("K of Hearts (Wild)");
   });
 
+  test("applies the wild enhancement class when the card is wild", () => {
+    const wild: CardType = { id: 13, rank: "K", suit: "hearts", enhancement: "wild" };
+    render(<Card card={wild} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-wild");
+  });
+
   test("applies the glass enhancement class when the card is glass", () => {
     const glass: CardType = { id: 14, rank: "4", suit: "spades", enhancement: "glass" };
     render(<Card card={glass} />);

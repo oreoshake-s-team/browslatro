@@ -1,9 +1,11 @@
 import { detectHandLabel, evaluateHand, handContains } from "./handEvaluator";
-import type { Card, Rank, Suit } from "./types";
+import type { Card, Enhancement, Rank, Suit } from "./types";
 
 let nextId = 0;
-function card(rank: Rank, suit: Suit): Card {
-  return { id: ++nextId, rank, suit };
+function card(rank: Rank, suit: Suit, enhancement?: Enhancement): Card {
+  return enhancement
+    ? { id: ++nextId, rank, suit, enhancement }
+    : { id: ++nextId, rank, suit };
 }
 
 beforeEach(() => {
@@ -291,5 +293,73 @@ describe("handContains", () => {
 
   test("Straight does not contain Flush", () => {
     expect(handContains("Straight", "Flush")).toBe(false);
+  });
+});
+
+describe("detectHandLabel — Wild enhancement promotes suit-based hands", () => {
+  test("four hearts plus one Wild non-heart detects as a Flush", () => {
+    expect(
+      detectHandLabel([
+        card("2", "hearts"),
+        card("5", "hearts"),
+        card("9", "hearts"),
+        card("J", "hearts"),
+        card("K", "clubs", "wild"),
+      ]),
+    ).toBe("Flush");
+  });
+
+  test("a straight whose non-Wild cards share a suit detects as a Straight Flush", () => {
+    expect(
+      detectHandLabel([
+        card("5", "spades"),
+        card("6", "spades"),
+        card("7", "spades"),
+        card("8", "spades"),
+        card("9", "diamonds", "wild"),
+      ]),
+    ).toBe("Straight Flush");
+  });
+
+  test("five Wild cards always count as a Flush (every suit collapses)", () => {
+    expect(
+      detectHandLabel([
+        card("2", "spades", "wild"),
+        card("5", "hearts", "wild"),
+        card("9", "diamonds", "wild"),
+        card("J", "clubs", "wild"),
+        card("K", "spades", "wild"),
+      ]),
+    ).toBe("Flush");
+  });
+
+  test("Wild does not turn a non-suit hand into a Flush (3 hearts + 1 club + 1 Wild diamond)", () => {
+    expect(
+      detectHandLabel([
+        card("2", "hearts"),
+        card("5", "hearts"),
+        card("9", "hearts"),
+        card("J", "clubs"),
+        card("K", "diamonds", "wild"),
+      ]),
+    ).toBe("High Card");
+  });
+
+  test("a Wild card on a Pair scores the same hand label as the vanilla equivalent (no Flush)", () => {
+    const wild = detectHandLabel([
+      card("5", "spades", "wild"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("J", "diamonds"),
+      card("K", "hearts"),
+    ]);
+    const vanilla = detectHandLabel([
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("J", "diamonds"),
+      card("K", "hearts"),
+    ]);
+    expect(wild).toBe(vanilla);
   });
 });

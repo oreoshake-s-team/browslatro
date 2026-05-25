@@ -140,9 +140,15 @@ describe("cardSuitForEvaluation", () => {
     expect(cardSuitForEvaluation(makeCard())).toBe("spades");
   });
 
-  test("returns the card's suit for every foundation enhancement", () => {
-    const suits = ENHANCEMENT_KINDS.map((k) => cardSuitForEvaluation(makeCard(k)));
+  test("returns the card's suit for every non-wild enhancement", () => {
+    const suits = ENHANCEMENT_KINDS.filter((k) => k !== "wild").map((k) =>
+      cardSuitForEvaluation(makeCard(k)),
+    );
     expect(suits.every((s) => s === "spades")).toBe(true);
+  });
+
+  test("returns null for a Wild card so the hand evaluator treats it as any suit", () => {
+    expect(cardSuitForEvaluation(makeCard("wild"))).toBeNull();
   });
 });
 

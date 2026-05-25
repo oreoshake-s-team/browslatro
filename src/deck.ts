@@ -35,6 +35,7 @@ export function resetCardIds(): void {
 export const RANK_ENHANCEMENTS: Readonly<Partial<Record<Rank, Enhancement>>> = {
   A: "steel",
   "4": "mult",
+  "9": "wild",
 };
 
 export function defaultEnhancementForRank(rank: Rank): Enhancement {
