@@ -857,7 +857,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$18");
+    expect(getStatValue("Money")).toHaveTextContent("$15");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
@@ -877,10 +877,10 @@ describe("Round won modal", () => {
 
   test("gold scoring animation pays $3 per held gold card into the wallet before the modal opens", async () => {
     await triggerWin();
-    expect(getStatValue("Money")).toHaveTextContent("$13");
+    expect(getStatValue("Money")).toHaveTextContent("$10");
   });
 
-  test("modal interest is calculated on the gold-augmented wallet (floor($13 / $5) = $2)", async () => {
+  test("modal interest is calculated on the gold-augmented wallet (floor($10 / $5) = $2)", async () => {
     await triggerWin();
     expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$2");
   });
@@ -888,14 +888,14 @@ describe("Round won modal", () => {
   test("modal interest label reflects the gold-augmented wallet", async () => {
     await triggerWin();
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
-      "on $13",
+      "on $10",
     );
   });
 
   test("gold scoring plays the gold sound once per held gold card", async () => {
     await triggerWin();
     const goldCalls = playMock.mock.calls.filter(([name]) => name === "gold");
-    expect(goldCalls).toHaveLength(3);
+    expect(goldCalls).toHaveLength(2);
   });
 
   test("submitting an empty hand never plays the gold sound (negative)", async () => {
@@ -1257,5 +1257,52 @@ describe("Post-round shop integration", () => {
     expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
       "Reroll ($5)",
     );
+  });
+});
+
+describe("Run information modal integration", () => {
+  test("submitting a non-empty play increments that hand label's count", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
+      "1",
+    );
+  });
+
+  test("submitting an empty hand does not increment any count", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
+      "0",
+    );
+  });
+
+  test("starting a new game resets the play counts to zero", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
+      "0",
+    );
+  });
+
+  test("the run info modal is reachable from the sidebar trigger button", () => {
+    render(<App />);
+    expect(
+      screen.getByRole("button", { name: "Run info" }),
+    ).toBeInTheDocument();
   });
 });

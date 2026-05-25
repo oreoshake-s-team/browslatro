@@ -6,6 +6,10 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop, { type ShopOffer } from "./components/shop/Shop";
 import Sidebar from "./components/hud/Sidebar";
+import {
+  emptyHandCounts,
+  type HandPlayCounts,
+} from "./components/hud/RunInfo";
 import { play } from "./components/system/sounds";
 import {
   getAnimationSpeed,
@@ -16,7 +20,12 @@ import {
 } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
-import { getCardChips, getScoringCards, getScoringStep } from "./scoring";
+import {
+  getCardChips,
+  getCardMultDelta,
+  getScoringCards,
+  getScoringStep,
+} from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
@@ -86,6 +95,9 @@ function App() {
   const [jokerPulseCounters, setJokerPulseCounters] = useState<
     Readonly<Record<string, number>>
   >({});
+  const [handPlayCounts, setHandPlayCounts] = useState<HandPlayCounts>(
+    emptyHandCounts,
+  );
   const pendingDiscardCountRef = useRef(0);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
@@ -173,6 +185,10 @@ function App() {
       );
       setChips((prev) => prev + stepChips);
       play("pop");
+      const enhancementMultDelta = getCardMultDelta(stepCard);
+      if (enhancementMultDelta > 0) {
+        setMultiplier((prev) => prev + enhancementMultDelta);
+      }
       const cardJokerResult = applyPerCardJokers(jokers, stepCard);
       if (cardJokerResult.moneyEarned > 0) {
         setMoney((prev) => prev + cardJokerResult.moneyEarned);
@@ -310,6 +326,7 @@ function App() {
     setAnte(1);
     setMoney(4);
     setJokers(createDefaultJokers());
+    setHandPlayCounts(emptyHandCounts());
     startNewRound();
   }
 
@@ -399,6 +416,7 @@ function App() {
     }
 
     const label = detectHandLabel(playedCards);
+    setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
     const handStats = evaluateHand(playedCards);
     const scoring = getScoringCards(playedCards, label);
     const cardChipsTotal = scoring.reduce(
@@ -413,6 +431,7 @@ function App() {
     let perCardAdditiveMult = 0;
     for (let i = 0; i < scoring.length; i += 1) {
       perCardAdditiveMult += applyPerCardJokers(jokers, scoring[i]).additiveMult;
+      perCardAdditiveMult += getCardMultDelta(scoring[i]);
     }
 
     const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
@@ -538,6 +557,7 @@ function App() {
         selectedHand={selectedHand}
         remainingHands={remainingHands}
         remainingDiscards={remainingDiscards}
+        handPlayCounts={handPlayCounts}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
         onAnimationSpeedChange={setAnimationSpeedState}

@@ -17,6 +17,7 @@ export const NO_ENHANCEMENT_EFFECT: EnhancementEffect = {
 };
 
 export const BONUS_ENHANCEMENT_CHIPS = 30;
+export const MULT_ENHANCEMENT_MULT_DELTA = 4;
 
 export type EnhancementRandomSource = () => number;
 
@@ -38,6 +39,7 @@ export function applyCardEnhancement(
     case "bonus":
       return { ...NO_ENHANCEMENT_EFFECT, chipsDelta: BONUS_ENHANCEMENT_CHIPS };
     case "mult":
+      return { ...NO_ENHANCEMENT_EFFECT, multDelta: MULT_ENHANCEMENT_MULT_DELTA };
     case "wild":
     case "glass":
     case "steel":
@@ -54,9 +56,10 @@ export function cardSuitForEvaluation(card: Card): Suit | null {
   const enhancement = card.enhancement;
   if (!enhancement) return card.suit;
   switch (enhancement) {
+    case "wild":
+      return null;
     case "bonus":
     case "mult":
-    case "wild":
     case "glass":
     case "steel":
     case "gold":

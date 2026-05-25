@@ -1,6 +1,7 @@
 import {
   SUIT_DISPLAY_ORDER,
   createDeck,
+  defaultEnhancementForRank,
   shuffle,
   deal,
   groupBySuit,
@@ -32,6 +33,44 @@ describe("createDeck", () => {
     const deck = createDeck();
     const ids = new Set(deck.map((c) => c.id));
     expect(ids.size).toBe(deck.length);
+  });
+
+  test("assigns the Mult enhancement to every rank-4 card", () => {
+    const fours = createDeck().filter((c) => c.rank === "4");
+    expect(fours.every((c) => c.enhancement === "mult")).toBe(true);
+  });
+
+  test("does not assign Mult to any non-4 card", () => {
+    const nonFours = createDeck().filter((c) => c.rank !== "4");
+    expect(nonFours.every((c) => c.enhancement !== "mult")).toBe(true);
+  });
+
+  test("assigns the Wild enhancement to every rank-9 card", () => {
+    const nines = createDeck().filter((c) => c.rank === "9");
+    expect(nines.every((c) => c.enhancement === "wild")).toBe(true);
+  });
+
+  test("does not assign Wild to any non-9 card", () => {
+    const nonNines = createDeck().filter((c) => c.rank !== "9");
+    expect(nonNines.every((c) => c.enhancement !== "wild")).toBe(true);
+  });
+});
+
+describe("defaultEnhancementForRank", () => {
+  test("returns steel for Aces", () => {
+    expect(defaultEnhancementForRank("A")).toBe("steel");
+  });
+
+  test("returns mult for 4s", () => {
+    expect(defaultEnhancementForRank("4")).toBe("mult");
+  });
+
+  test("returns wild for 9s", () => {
+    expect(defaultEnhancementForRank("9")).toBe("wild");
+  });
+
+  test("returns gold for ranks without an explicit assignment", () => {
+    expect(defaultEnhancementForRank("J")).toBe("gold");
   });
 });
 
