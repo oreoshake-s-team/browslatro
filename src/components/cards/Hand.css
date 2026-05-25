@@ -83,6 +83,11 @@
   justify-content: safe center;
   align-items: end;
   min-height: 11rem;
+  /* `overflow-x: auto` forces `overflow-y` to compute to `auto` per the CSS
+   * spec, which would clip the hover (-4px) and selected (-1.4rem) card
+   * lifts at the top. Reserve enough top padding to hold the lifted card
+   * inside the box so it isn't clipped. */
+  padding-top: 1.6rem;
   /* No `gap` here: spacing is provided by interleaved .hand-card-gap drop
    * zones so the row can visibly open when a card is dragged over a gap. */
   gap: 0;
