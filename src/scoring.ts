@@ -37,6 +37,10 @@ export function getCardMultDelta(card: Card): number {
   return applyCardEnhancement(card).multDelta;
 }
 
+export function getCardMultTimes(card: Card): number {
+  return applyCardEnhancement(card).multTimes;
+}
+
 /**
  * Groups cards by rank, preserving each card's original identity.
  */
@@ -188,5 +192,11 @@ export function scoreHand(cards: ReadonlyArray<Card>): number {
     (sum, card) => sum + getCardMultDelta(card),
     0,
   );
-  return Math.floor((hand.chips + cardChips) * (hand.multiplier + cardMultDelta));
+  const cardMultTimes = scoringCards.reduce(
+    (m, card) => m * getCardMultTimes(card),
+    1,
+  );
+  return Math.floor(
+    (hand.chips + cardChips) * (hand.multiplier + cardMultDelta) * cardMultTimes,
+  );
 }

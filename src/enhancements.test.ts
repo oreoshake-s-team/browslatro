@@ -1,11 +1,15 @@
 import {
   BONUS_ENHANCEMENT_CHIPS,
   ENHANCEMENT_KINDS,
+  GLASS_ENHANCEMENT_DESTROY_CHANCE,
+  GLASS_ENHANCEMENT_MULT_TIMES,
   MULT_ENHANCEMENT_MULT_DELTA,
   NO_ENHANCEMENT_EFFECT,
   applyCardEnhancement,
   cardRankForEvaluation,
   cardSuitForEvaluation,
+  enhancementRngConfig,
+  rollEnhancementChance,
 } from "./enhancements";
 import type { Card, Enhancement } from "./types";
 
@@ -67,10 +71,73 @@ describe("applyCardEnhancement — foundation no-op per enhancement", () => {
   for (const kind of ENHANCEMENT_KINDS) {
     if (kind === "bonus") continue;
     if (kind === "mult") continue;
+    if (kind === "glass") continue;
     test(`returns the no-op effect for ${kind} (foundation does not implement effects)`, () => {
       expect(applyCardEnhancement(makeCard(kind))).toEqual(NO_ENHANCEMENT_EFFECT);
     });
   }
+});
+
+describe("applyCardEnhancement — Glass", () => {
+  test("returns multTimes=2 for a Glass card", () => {
+    expect(applyCardEnhancement(makeCard("glass")).multTimes).toBe(
+      GLASS_ENHANCEMENT_MULT_TIMES,
+    );
+  });
+
+  test("returns destroyChance=0.25 for a Glass card", () => {
+    expect(applyCardEnhancement(makeCard("glass")).destroyChance).toBe(
+      GLASS_ENHANCEMENT_DESTROY_CHANCE,
+    );
+  });
+
+  test("GLASS_ENHANCEMENT_MULT_TIMES equals 2 per the Balatro wiki", () => {
+    expect(GLASS_ENHANCEMENT_MULT_TIMES).toBe(2);
+  });
+
+  test("GLASS_ENHANCEMENT_DESTROY_CHANCE equals 0.25 per the Balatro wiki", () => {
+    expect(GLASS_ENHANCEMENT_DESTROY_CHANCE).toBe(0.25);
+  });
+
+  test("Glass does not change chipsDelta", () => {
+    expect(applyCardEnhancement(makeCard("glass")).chipsDelta).toBe(0);
+  });
+
+  test("Glass does not change multDelta", () => {
+    expect(applyCardEnhancement(makeCard("glass")).multDelta).toBe(0);
+  });
+});
+
+describe("rollEnhancementChance", () => {
+  const originalRng = enhancementRngConfig.rng;
+  afterEach(() => {
+    enhancementRngConfig.rng = originalRng;
+  });
+
+  test("returns false for a 0 chance regardless of the rng", () => {
+    enhancementRngConfig.rng = () => 0;
+    expect(rollEnhancementChance(0)).toBe(false);
+  });
+
+  test("returns true for a 1 chance regardless of the rng", () => {
+    enhancementRngConfig.rng = () => 0.999;
+    expect(rollEnhancementChance(1)).toBe(true);
+  });
+
+  test("returns true when the rng undershoots the threshold", () => {
+    enhancementRngConfig.rng = () => 0.1;
+    expect(rollEnhancementChance(0.25)).toBe(true);
+  });
+
+  test("returns false when the rng meets the threshold", () => {
+    enhancementRngConfig.rng = () => 0.25;
+    expect(rollEnhancementChance(0.25)).toBe(false);
+  });
+
+  test("returns false when the rng exceeds the threshold", () => {
+    enhancementRngConfig.rng = () => 0.5;
+    expect(rollEnhancementChance(0.25)).toBe(false);
+  });
 });
 
 describe("applyCardEnhancement — Mult", () => {

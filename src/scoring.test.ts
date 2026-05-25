@@ -2,6 +2,7 @@ import {
   forEachScoringStep,
   getCardChips,
   getCardMultDelta,
+  getCardMultTimes,
   getRankChips,
   getScoringCards,
   getScoringStep,
@@ -449,5 +450,71 @@ describe("scoreHand — Mult enhancement", () => {
       card("2", "spades"),
     ];
     expect(scoreHand(handWithMultKicker)).toBe(scoreHand(vanillaHand));
+  });
+});
+
+describe("getCardMultTimes — Glass enhancement", () => {
+  test("returns 2 for a Glass card", () => {
+    expect(getCardMultTimes(card("5", "spades", "glass"))).toBe(2);
+  });
+
+  test("returns 1 for a vanilla card", () => {
+    expect(getCardMultTimes(card("5", "spades"))).toBe(1);
+  });
+
+  test("returns 1 for a Mult card (Mult is additive, not multiplicative)", () => {
+    expect(getCardMultTimes(card("5", "spades", "mult"))).toBe(1);
+  });
+});
+
+describe("scoreHand — Glass enhancement", () => {
+  test("a played Pair with one Glass card scores 2x the mult vs the vanilla version", () => {
+    const glassHand = [
+      card("5", "spades", "glass"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const vanillaHand = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const baseChips = 10 + 5 + 5;
+    expect(scoreHand(glassHand)).toBe(baseChips * 2 * 2);
+    expect(scoreHand(vanillaHand)).toBe(baseChips * 2);
+  });
+
+  test("two scoring Glass cards stack to x4 mult", () => {
+    const glassHand = [
+      card("5", "spades", "glass"),
+      card("5", "hearts", "glass"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const baseChips = 10 + 5 + 5;
+    expect(scoreHand(glassHand)).toBe(baseChips * 2 * 4);
+  });
+
+  test("a Glass card not in the scoring set does not multiply the mult", () => {
+    const handWithGlassKicker = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs", "glass"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const vanillaHand = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    expect(scoreHand(handWithGlassKicker)).toBe(scoreHand(vanillaHand));
   });
 });
