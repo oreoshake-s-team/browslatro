@@ -36,7 +36,8 @@ export function createDeck(): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) {
     for (const rank of RANKS) {
-      deck.push({ id: ++cardIdCounter, rank, suit, enhancement: "gold" });
+      const enhancement = rank === "A" ? "steel" : "gold";
+      deck.push({ id: ++cardIdCounter, rank, suit, enhancement });
     }
   }
   return deck;

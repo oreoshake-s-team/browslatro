@@ -174,4 +174,16 @@ describe("Card", () => {
     render(<Card card={gold} />);
     expect(screen.getByRole("button")).not.toHaveClass("card-gold-scoring");
   });
+
+  test("applies the steel enhancement class when the card is steel", () => {
+    const steel: CardType = { id: 10, rank: "A", suit: "hearts", enhancement: "steel" };
+    render(<Card card={steel} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-steel");
+  });
+
+  test("appends the steel suffix to the accessible label", () => {
+    const steel: CardType = { id: 10, rank: "A", suit: "hearts", enhancement: "steel" };
+    render(<Card card={steel} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("A of Hearts (Steel)");
+  });
 });

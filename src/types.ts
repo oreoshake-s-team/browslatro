@@ -24,7 +24,7 @@ export type Rank =
   | "K"
   | "A";
 
-export type Enhancement = "gold";
+export type Enhancement = "gold" | "steel";
 
 export interface Card {
   readonly id: number;
