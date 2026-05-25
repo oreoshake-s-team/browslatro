@@ -891,6 +891,20 @@ describe("Round won modal", () => {
       "on $13",
     );
   });
+
+  test("gold scoring plays the gold sound once per held gold card", async () => {
+    await triggerWin();
+    const goldCalls = playMock.mock.calls.filter(([name]) => name === "gold");
+    expect(goldCalls).toHaveLength(3);
+  });
+
+  test("submitting an empty hand never plays the gold sound (negative)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    const goldCalls = playMock.mock.calls.filter(([name]) => name === "gold");
+    expect(goldCalls).toHaveLength(0);
+  });
 });
 
 describe("Jokers integration", () => {

@@ -187,7 +187,7 @@ function App() {
     const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
       setMoney((prev) => prev + GOLD_HELD_BONUS_PER_CARD);
-      play("pop");
+      play("gold");
       setGoldScoringIndex((prev) => prev + 1);
     }, stepMs);
     return () => window.clearTimeout(timer);
