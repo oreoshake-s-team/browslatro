@@ -55,4 +55,47 @@ describe("Jokers UI", () => {
     render(<Jokers jokers={[createPlusFourMultJoker()]} />);
     expect(screen.getByText("Adds +4 Mult to every played hand")).toBeInTheDocument();
   });
+
+  test("does not apply the pulse class when the joker has not fired", () => {
+    render(<Jokers jokers={[createPlusFourMultJoker()]} pulseCounters={{}} />);
+    expect(
+      screen.getByTestId("joker-tile-inner-plus-four-mult"),
+    ).not.toHaveClass("joker-tile-pulse");
+  });
+
+  test("applies the pulse class when the joker's counter is non-zero", () => {
+    render(
+      <Jokers
+        jokers={[createPlusFourMultJoker()]}
+        pulseCounters={{ "plus-four-mult": 1 }}
+      />,
+    );
+    expect(
+      screen.getByTestId("joker-tile-inner-plus-four-mult"),
+    ).toHaveClass("joker-tile-pulse");
+  });
+
+  test("reflects the current pulse count on the inner element", () => {
+    render(
+      <Jokers
+        jokers={[createPlusFourMultJoker()]}
+        pulseCounters={{ "plus-four-mult": 3 }}
+      />,
+    );
+    expect(
+      screen.getByTestId("joker-tile-inner-plus-four-mult"),
+    ).toHaveAttribute("data-pulse", "3");
+  });
+
+  test("leaves other jokers' inner elements unpulsed when only one joker fires", () => {
+    render(
+      <Jokers
+        jokers={createDefaultJokers()}
+        pulseCounters={{ "plus-four-mult": 1 }}
+      />,
+    );
+    expect(
+      screen.getByTestId("joker-tile-inner-business-card"),
+    ).not.toHaveClass("joker-tile-pulse");
+  });
 });

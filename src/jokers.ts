@@ -25,6 +25,17 @@ export interface JokerScoringResult {
   readonly moneyEarned: number;
 }
 
+export interface JokerHandResult {
+  readonly additiveMult: number;
+  readonly xMult: number;
+  readonly firedJokerIds: ReadonlyArray<string>;
+}
+
+export interface JokerCardResult {
+  readonly moneyEarned: number;
+  readonly firedJokerIds: ReadonlyArray<string>;
+}
+
 export function createPlusFourMultJoker(): Joker {
   return {
     id: "plus-four-mult",
@@ -68,37 +79,69 @@ export function isFaceCard(card: Card): boolean {
   return FACE_RANKS.has(card.rank);
 }
 
-export function applyJokersToScoring(
+export function applyHandLevelJokers(
   jokers: ReadonlyArray<Joker>,
-  scoredCards: ReadonlyArray<Card>,
-  rng: RandomSource = Math.random,
-): JokerScoringResult {
+): JokerHandResult {
   let additiveMult = 0;
   let xMult = 1;
-  let moneyEarned = 0;
+  const fired: string[] = [];
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
     const effect = joker.effect;
     if (effect.kind === "additive-mult") {
       additiveMult += effect.amount;
-    } else if (effect.kind === "business-card") {
-      for (let c = 0; c < scoredCards.length; c += 1) {
-        const card = scoredCards[c];
-        if (!isFaceCard(card)) continue;
-        if (rng() < effect.chance) {
-          moneyEarned += effect.payout;
-        }
-      }
-    } else {
+      fired.push(joker.id);
+    } else if (effect.kind === "stencil") {
       const emptySlots = MAX_JOKERS - jokers.length;
       if (emptySlots > 0) {
         xMult *= emptySlots;
+        fired.push(joker.id);
       }
     }
   }
 
-  return { additiveMult, xMult, moneyEarned };
+  return { additiveMult, xMult, firedJokerIds: fired };
+}
+
+export function applyPerCardJokers(
+  jokers: ReadonlyArray<Joker>,
+  card: Card,
+  rng: RandomSource = Math.random,
+): JokerCardResult {
+  let moneyEarned = 0;
+  const fired: string[] = [];
+
+  for (let i = 0; i < jokers.length; i += 1) {
+    const joker = jokers[i];
+    const effect = joker.effect;
+    if (effect.kind === "business-card") {
+      if (isFaceCard(card) && rng() < effect.chance) {
+        moneyEarned += effect.payout;
+        fired.push(joker.id);
+      }
+    }
+  }
+
+  return { moneyEarned, firedJokerIds: fired };
+}
+
+export function applyJokersToScoring(
+  jokers: ReadonlyArray<Joker>,
+  scoredCards: ReadonlyArray<Card>,
+  rng: RandomSource = Math.random,
+): JokerScoringResult {
+  const handResult = applyHandLevelJokers(jokers);
+  let moneyEarned = 0;
+  for (let c = 0; c < scoredCards.length; c += 1) {
+    const cardResult = applyPerCardJokers(jokers, scoredCards[c], rng);
+    moneyEarned += cardResult.moneyEarned;
+  }
+  return {
+    additiveMult: handResult.additiveMult,
+    xMult: handResult.xMult,
+    moneyEarned,
+  };
 }
 
 export function computeFinalScoreWithJokers(
