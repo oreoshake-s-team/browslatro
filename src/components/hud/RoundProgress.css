@@ -1,5 +1,10 @@
 .round-progress {
   display: flex;
   flex-direction: row;
-  gap: 1rem;
+  gap: 0.5rem;
+}
+
+.round-progress > .stat {
+  flex: 1 1 0;
+  min-width: 0;
 }
