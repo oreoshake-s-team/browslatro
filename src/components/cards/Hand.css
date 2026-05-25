@@ -97,7 +97,11 @@
 }
 
 .hand-cards-dragging .hand-card-gap {
-  flex-basis: 2rem;
+  /* Modest widening during drag for a more forgiving hitbox. Keeping
+   * this below ~1.5rem ensures 8 cards (4.5rem each) + 9 gaps + the
+   * active gap's +3rem expansion stay under the .hand max-width so
+   * the row doesn't wrap mid-drag and relocate the user's target. */
+  flex-basis: 1.5rem;
 }
 
 .hand-card-gap-active {
@@ -124,20 +128,12 @@
 }
 
 .hand-card-slot-dragging {
-  /* Hide the source slot entirely once a drag is in flight: the
-   * dragged card's ghost follows the cursor and the active gap is the
-   * visible landing target, so showing the original position would be
-   * a duplicate visual. Collapsing to zero width also prevents the
-   * gap-widening overhead from pushing the row past its container and
-   * triggering flex-wrap mid-drag (which had been relocating the
-   * target gap and making the drop "impossible"). */
+  /* Hide the source visually (opacity:0) but keep its 4.5rem slot in
+   * layout. `visibility:hidden` or `width:0` here cancels the drag in
+   * Chrome — the source element must remain trackable for the drag to
+   * stay alive — so opacity is the only safe knob. */
+  opacity: 0;
   cursor: grabbing;
-  width: 0;
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
-  pointer-events: none;
-  visibility: hidden;
 }
 
 .hand-card-reorder {
