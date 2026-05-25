@@ -1,7 +1,9 @@
 import "./Shop.css";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import type { Joker } from "../../jokers";
 import { MAX_JOKERS } from "../../jokers";
+import { rerollCostFor } from "../../shop";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export interface ShopOffer {
@@ -15,6 +17,7 @@ interface ShopProps {
   offers: ReadonlyArray<ShopOffer>;
   pricePerJoker: number;
   onBuy: (offerIdx: number) => void;
+  onReroll: (cost: number) => void;
   onNext: () => void;
 }
 
@@ -68,9 +71,22 @@ export default function Shop({
   offers,
   pricePerJoker,
   onBuy,
+  onReroll,
   onNext,
 }: ShopProps) {
   useEscapeToClose(onNext, true);
+  const [rerollCount, setRerollCount] = useState(0);
+  const currentRerollCost = rerollCostFor(rerollCount);
+  const canAffordReroll = money >= currentRerollCost;
+  const rerollTooltip = canAffordReroll
+    ? undefined
+    : "Not enough money to reroll";
+
+  function handleReroll() {
+    if (!canAffordReroll) return;
+    onReroll(currentRerollCost);
+    setRerollCount((prev) => prev + 1);
+  }
 
   return createPortal(
     <div
@@ -123,14 +139,26 @@ export default function Shop({
             );
           })}
         </ul>
-        <button
-          type="button"
-          className="shop-next"
-          onClick={onNext}
-          autoFocus
-        >
-          Next Round →
-        </button>
+        <div className="shop-actions">
+          <button
+            type="button"
+            className="shop-reroll"
+            onClick={handleReroll}
+            disabled={!canAffordReroll}
+            title={rerollTooltip}
+            aria-label={`Reroll shop offers for $${currentRerollCost}`}
+          >
+            Reroll (${currentRerollCost})
+          </button>
+          <button
+            type="button"
+            className="shop-next"
+            onClick={onNext}
+            autoFocus
+          >
+            Next Round →
+          </button>
+        </div>
       </div>
     </div>,
     document.body,

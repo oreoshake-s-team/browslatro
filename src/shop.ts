@@ -2,6 +2,13 @@ import type { Joker, RandomSource } from "./jokers";
 
 export const SHOP_OFFER_SLOTS = 2;
 
+export const BASE_REROLL_COST = 5;
+
+export function rerollCostFor(rerollCount: number): number {
+  const safe = rerollCount < 0 ? 0 : Math.floor(rerollCount);
+  return BASE_REROLL_COST + safe;
+}
+
 export function pickShopJokers(
   catalog: ReadonlyArray<Joker>,
   ownedIds: ReadonlyArray<string>,

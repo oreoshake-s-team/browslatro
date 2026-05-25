@@ -199,6 +199,34 @@ function App() {
     );
   }
 
+  function rerollShopOffers(cost: number) {
+    if (!shopOffers) return;
+    if (money < cost) return;
+    const soldOfferIds = shopOffers
+      .filter((o) => o.sold)
+      .map((o) => o.joker.id);
+    const excludedIds = [...jokers.map((j) => j.id), ...soldOfferIds];
+    const unsoldCount = shopOffers.filter((o) => !o.sold).length;
+    const replacements = pickShopJokers(
+      createJokerCatalog(),
+      excludedIds,
+      unsoldCount,
+    );
+    play("pop");
+    setMoney((prev) => prev - cost);
+    setShopOffers((current) => {
+      if (!current) return current;
+      let cursor = 0;
+      return current.map((offer) => {
+        if (offer.sold) return offer;
+        const replacement = replacements[cursor];
+        cursor += 1;
+        if (!replacement) return offer;
+        return { joker: replacement, sold: false };
+      });
+    });
+  }
+
   function closeShopAndStartNextRound() {
     setShopOffers(null);
     startNewRound();
@@ -441,6 +469,7 @@ function App() {
           offers={shopOffers}
           pricePerJoker={JOKER_BASE_PRICE}
           onBuy={buyShopOffer}
+          onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
         />
       )}

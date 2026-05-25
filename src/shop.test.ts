@@ -10,7 +10,12 @@ import {
   type Joker,
   type RandomSource,
 } from "./jokers";
-import { SHOP_OFFER_SLOTS, pickShopJokers } from "./shop";
+import {
+  BASE_REROLL_COST,
+  SHOP_OFFER_SLOTS,
+  pickShopJokers,
+  rerollCostFor,
+} from "./shop";
 
 function sequenceRng(values: ReadonlyArray<number>): RandomSource {
   let i = 0;
@@ -35,6 +40,34 @@ function mulberry32(seed: number): RandomSource {
 describe("SHOP_OFFER_SLOTS", () => {
   test("defaults to two offer slots per shop visit", () => {
     expect(SHOP_OFFER_SLOTS).toBe(2);
+  });
+});
+
+describe("BASE_REROLL_COST", () => {
+  test("is five dollars", () => {
+    expect(BASE_REROLL_COST).toBe(5);
+  });
+});
+
+describe("rerollCostFor", () => {
+  test("returns 5 when no rerolls have happened yet", () => {
+    expect(rerollCostFor(0)).toBe(5);
+  });
+
+  test("returns 6 after the first reroll", () => {
+    expect(rerollCostFor(1)).toBe(6);
+  });
+
+  test("returns 7 after the second reroll", () => {
+    expect(rerollCostFor(2)).toBe(7);
+  });
+
+  test("scales linearly with reroll count", () => {
+    expect(rerollCostFor(10)).toBe(15);
+  });
+
+  test("treats a negative reroll count as zero", () => {
+    expect(rerollCostFor(-3)).toBe(5);
   });
 });
 
