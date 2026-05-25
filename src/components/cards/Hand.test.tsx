@@ -2,7 +2,11 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
 import type { Card as CardType } from "../../types";
-import { createDeck } from "../../deck";
+import { createDeck as createGoldDeck } from "../../deck";
+
+function createDeck(): CardType[] {
+  return createGoldDeck().map(({ rank, suit, id }) => ({ rank, suit, id }));
+}
 
 function getHandRegion(): HTMLElement {
   return screen.getByLabelText("Your hand");

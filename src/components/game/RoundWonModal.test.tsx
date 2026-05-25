@@ -9,6 +9,7 @@ function buildInfo(overrides: Partial<RoundWonInfo> = {}): RoundWonInfo {
     baseReward: 3,
     walletAtPayout: 15,
     interest: 3,
+    goldHeldCount: 0,
     ...overrides,
   };
 }
@@ -36,6 +37,37 @@ describe("RoundWonModal payout breakdown", () => {
       <RoundWonModal info={buildInfo({ baseReward: 4, interest: 3 })} onContinue={() => {}} />,
     );
     expect(screen.getByTestId("round-won-total")).toHaveTextContent("$7");
+  });
+
+  test("renders the gold row when one gold card is held", () => {
+    render(
+      <RoundWonModal info={buildInfo({ goldHeldCount: 1 })} onContinue={() => {}} />,
+    );
+    expect(screen.getByTestId("round-won-gold")).toHaveTextContent("+$3");
+  });
+
+  test("renders the gold row count in its label", () => {
+    render(
+      <RoundWonModal info={buildInfo({ goldHeldCount: 2 })} onContinue={() => {}} />,
+    );
+    expect(screen.getByTestId("round-won-gold-label")).toHaveTextContent("2 × $3");
+  });
+
+  test("does not render the gold row when no gold cards are held", () => {
+    render(
+      <RoundWonModal info={buildInfo({ goldHeldCount: 0 })} onContinue={() => {}} />,
+    );
+    expect(screen.queryByTestId("round-won-gold")).not.toBeInTheDocument();
+  });
+
+  test("includes the gold bonus in the total", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({ baseReward: 3, interest: 1, goldHeldCount: 2 })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$10");
   });
 
   test("shows the wallet balance in the interest row label", () => {

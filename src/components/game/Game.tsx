@@ -15,6 +15,7 @@ interface GameProps {
   canDiscard: boolean;
   isScoring?: boolean;
   scoringId?: number | null;
+  goldScoringId?: number | null;
   onSetMoney: Dispatch<SetStateAction<number>>;
   selectedHand: Hand | null;
   hand: ReadonlyArray<Card>;
@@ -39,6 +40,7 @@ export default function Game({
   canDiscard,
   isScoring = false,
   scoringId = null,
+  goldScoringId = null,
   onSetMoney,
   selectedHand,
   hand,
@@ -73,6 +75,7 @@ export default function Game({
         selectedIds={selectedIds}
         discardingIds={discardingIds}
         scoringId={scoringId}
+        goldScoringId={goldScoringId}
         onToggleCard={onToggleCard}
         onCardDiscardEnd={onCardDiscardEnd}
         onDisplayOrderChange={onDisplayOrderChange}

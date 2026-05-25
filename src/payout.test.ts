@@ -1,8 +1,18 @@
 import {
   calculateInterest,
+  countGoldHeldInHand,
+  goldHeldBonus,
+  GOLD_HELD_BONUS_PER_CARD,
   INTEREST_CAP,
   INTEREST_RATE_PER,
 } from "./payout";
+import type { Card } from "./types";
+
+function card(id: number, enhancement?: "gold"): Card {
+  return enhancement
+    ? { id, rank: "5", suit: "spades", enhancement }
+    : { id, rank: "5", suit: "spades" };
+}
 
 describe("calculateInterest", () => {
   test("returns 0 when wallet is empty", () => {
@@ -63,5 +73,41 @@ describe("calculateInterest", () => {
 
   test("INTEREST_CAP is defined as 5", () => {
     expect(INTEREST_CAP).toBe(5);
+  });
+});
+
+describe("countGoldHeldInHand", () => {
+  test("returns 0 for a hand with no gold cards", () => {
+    expect(countGoldHeldInHand([card(1), card(2)], new Set())).toBe(0);
+  });
+
+  test("counts each gold card that is not in the submitted set", () => {
+    const hand = [card(1, "gold"), card(2, "gold"), card(3)];
+    expect(countGoldHeldInHand(hand, new Set())).toBe(2);
+  });
+
+  test("excludes gold cards that are in the submitted set", () => {
+    const hand = [card(1, "gold"), card(2, "gold"), card(3, "gold")];
+    expect(countGoldHeldInHand(hand, new Set([2]))).toBe(2);
+  });
+
+  test("returns 0 when every gold card was submitted", () => {
+    const hand = [card(1, "gold"), card(2, "gold")];
+    expect(countGoldHeldInHand(hand, new Set([1, 2]))).toBe(0);
+  });
+});
+
+describe("goldHeldBonus", () => {
+  test("returns 0 when no gold is held", () => {
+    expect(goldHeldBonus([card(1)], new Set())).toBe(0);
+  });
+
+  test("returns $3 for one held gold card", () => {
+    expect(goldHeldBonus([card(1, "gold")], new Set())).toBe(3);
+  });
+
+  test("multiplies by GOLD_HELD_BONUS_PER_CARD across the held gold count", () => {
+    const hand = [card(1, "gold"), card(2, "gold"), card(3, "gold")];
+    expect(goldHeldBonus(hand, new Set())).toBe(3 * GOLD_HELD_BONUS_PER_CARD);
   });
 });

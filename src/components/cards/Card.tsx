@@ -1,5 +1,5 @@
 import "./Card.css";
-import type { Card as CardType, Rank, Suit } from "../../types";
+import type { Card as CardType, Enhancement, Rank, Suit } from "../../types";
 
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
@@ -32,6 +32,10 @@ const FACE_RANK_GLYPH: Record<FaceRank, string> = {
   K: "♚",
 };
 
+const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
+  gold: "Gold",
+};
+
 function isFaceRank(rank: Rank): rank is FaceRank {
   return rank === "J" || rank === "Q" || rank === "K";
 }
@@ -41,6 +45,7 @@ interface CardProps {
   selected?: boolean;
   discarding?: boolean;
   scoring?: boolean;
+  goldScoring?: boolean;
   onToggle?: (card: CardType) => void;
   onDiscardEnd?: (card: CardType) => void;
 }
@@ -50,6 +55,7 @@ export default function Card({
   selected = false,
   discarding = false,
   scoring = false,
+  goldScoring = false,
   onToggle,
   onDiscardEnd,
 }: CardProps) {
@@ -61,7 +67,13 @@ export default function Card({
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
   const scoringClass = scoring ? "card-scoring" : "";
-  const ariaLabel = `${card.rank} of ${SUIT_LABELS[card.suit]}`;
+  const goldScoringClass = goldScoring ? "card-gold-scoring" : "";
+  const enhancementClass = card.enhancement
+    ? `card-enhancement-${card.enhancement}`
+    : "";
+  const ariaLabel = card.enhancement
+    ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
+    : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
   const faceClass = isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
@@ -69,7 +81,7 @@ export default function Card({
   return (
     <button
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${faceClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${faceClass} ${enhancementClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}

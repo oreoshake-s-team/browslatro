@@ -19,7 +19,7 @@ import { evaluateHand } from "./handEvaluator";
 import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
-import { calculateInterest } from "./payout";
+import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -103,6 +103,14 @@ function App() {
   const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
   const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
 
+  const [goldScoringIds, setGoldScoringIds] = useState<ReadonlyArray<number>>([]);
+  const [goldScoringIndex, setGoldScoringIndex] = useState<number>(0);
+  const goldFinalizeRef = useRef<(() => void) | null>(null);
+  const currentGoldScoringId =
+    goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
+      ? goldScoringIds[goldScoringIndex]
+      : null;
+
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
   const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
@@ -127,6 +135,9 @@ function App() {
     setScoringCards([]);
     setScoringIndex(0);
     scoringFinalizeRef.current = null;
+    setGoldScoringIds([]);
+    setGoldScoringIndex(0);
+    goldFinalizeRef.current = null;
     setPendingWin(null);
   }
 
@@ -162,6 +173,25 @@ function App() {
     }, stepMs);
     return () => window.clearTimeout(timer);
   }, [scoringCards, scoringIndex, jokers, animationSpeed]);
+
+  useEffect(() => {
+    if (goldScoringIds.length === 0) return;
+    if (goldScoringIndex >= goldScoringIds.length) {
+      const finalize = goldFinalizeRef.current;
+      goldFinalizeRef.current = null;
+      setGoldScoringIds([]);
+      setGoldScoringIndex(0);
+      if (finalize) finalize();
+      return;
+    }
+    const stepMs = getScoringStepMs(animationSpeed);
+    const timer = window.setTimeout(() => {
+      setMoney((prev) => prev + GOLD_HELD_BONUS_PER_CARD);
+      play("pop");
+      setGoldScoringIndex((prev) => prev + 1);
+    }, stepMs);
+    return () => window.clearTimeout(timer);
+  }, [goldScoringIds, goldScoringIndex, animationSpeed]);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -390,14 +420,28 @@ function App() {
     }
 
     if (newRoundScore >= requiredScore) {
-      play("win");
-      setPendingWin({
-        roundScore: newRoundScore,
-        requiredScore,
-        baseReward: blind + 2,
-        walletAtPayout: money,
-        interest: calculateInterest(money),
-      });
+      const heldGoldIds = dealt.hand
+        .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
+        .map((c) => c.id);
+      const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
+      const openModal = () => {
+        play("win");
+        setPendingWin({
+          roundScore: newRoundScore,
+          requiredScore,
+          baseReward: blind + 2,
+          walletAtPayout: postGoldWallet,
+          interest: calculateInterest(postGoldWallet),
+          goldHeldCount: heldGoldIds.length,
+        });
+      };
+      if (heldGoldIds.length === 0) {
+        openModal();
+        return;
+      }
+      goldFinalizeRef.current = openModal;
+      setGoldScoringIds(heldGoldIds);
+      setGoldScoringIndex(0);
       return;
     }
 
@@ -466,6 +510,7 @@ function App() {
         }
         isScoring={isScoring}
         scoringId={currentScoringId}
+        goldScoringId={currentGoldScoringId}
         selectedHand={selectedHand}
         hand={dealt.hand}
         remaining={dealt.remaining}

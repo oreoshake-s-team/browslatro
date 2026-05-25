@@ -856,7 +856,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$7");
+    expect(getStatValue("Money")).toHaveTextContent("$18");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
@@ -872,6 +872,23 @@ describe("Round won modal", () => {
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
     expect(winCalls).toHaveLength(0);
+  });
+
+  test("gold scoring animation pays $3 per held gold card into the wallet before the modal opens", async () => {
+    await triggerWin();
+    expect(getStatValue("Money")).toHaveTextContent("$13");
+  });
+
+  test("modal interest is calculated on the gold-augmented wallet (floor($13 / $5) = $2)", async () => {
+    await triggerWin();
+    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$2");
+  });
+
+  test("modal interest label reflects the gold-augmented wallet", async () => {
+    await triggerWin();
+    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
+      "on $13",
+    );
   });
 });
 
@@ -1197,11 +1214,13 @@ describe("Post-round shop integration", () => {
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
     expect(screen.getByRole("button", { name: /Reroll/ })).toBeDisabled();
   });
 
   test("clicking Reroll when disabled is a no-op on money", async () => {
     const user = await openShop();
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
