@@ -1,0 +1,65 @@
+.jokers {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.6rem;
+  width: 100%;
+  max-width: 48rem;
+  padding: 1rem 1.4rem;
+  border: 2px solid #f59f00;
+  border-radius: 8px;
+  background-color: #fff9db;
+  box-sizing: border-box;
+}
+
+.jokers-label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #5c3c00;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.jokers-list {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.6rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.joker-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 0.4rem;
+  min-height: 5.2rem;
+  border-radius: 6px;
+  border: 2px solid #f59f00;
+  background-color: #ffe066;
+  color: #5c3c00;
+}
+
+.joker-tile-name {
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.joker-tile-description {
+  font-size: 0.8rem;
+  line-height: 1.2;
+  margin-top: 0.3rem;
+}
+
+.joker-tile-empty {
+  background-color: #fff3bf;
+  border-style: dashed;
+  border-color: #f1c40f;
+  color: #868e96;
+  font-style: italic;
+  font-size: 0.85rem;
+}

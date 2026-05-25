@@ -741,7 +741,7 @@ describe("Round won modal", () => {
 
   test("displays the final round score in the modal", async () => {
     await triggerWin();
-    expect(screen.getByTestId("round-won-score")).toHaveTextContent("1080");
+    expect(screen.getByTestId("round-won-score")).toHaveTextContent("3240");
   });
 
   test("displays the required score in the modal", async () => {
@@ -789,5 +789,27 @@ describe("Round won modal", () => {
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
     expect(winCalls).toHaveLength(0);
+  });
+});
+
+describe("Jokers integration", () => {
+  test("renders the +4 Mult joker tile on new game", () => {
+    render(<App />);
+    expect(screen.getByTestId("joker-tile-filled-plus-four-mult")).toBeInTheDocument();
+  });
+
+  test("renders the Business Card joker tile on new game", () => {
+    render(<App />);
+    expect(screen.getByTestId("joker-tile-filled-business-card")).toBeInTheDocument();
+  });
+
+  test("renders the Joker Stencil joker tile on new game", () => {
+    render(<App />);
+    expect(screen.getByTestId("joker-tile-filled-joker-stencil")).toBeInTheDocument();
+  });
+
+  test("renders two empty joker slots when three defaults are equipped", () => {
+    render(<App />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(2);
   });
 });

@@ -1,7 +1,9 @@
 import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
 import type { Card, Hand } from "../../types";
+import type { Joker } from "../../jokers";
 import HandComponent from "../cards/Hand";
+import Jokers from "../jokers/Jokers";
 
 interface GameProps {
   onWin: () => void;
@@ -19,6 +21,7 @@ interface GameProps {
   remaining: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
+  jokers: ReadonlyArray<Joker>;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -40,6 +43,7 @@ export default function Game({
   remaining,
   selectedIds,
   discardingIds,
+  jokers,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -54,6 +58,7 @@ export default function Game({
 
   return (
     <div className="game">
+      <Jokers jokers={jokers} />
       <HandComponent
         hand={hand}
         remaining={remaining}

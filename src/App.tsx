@@ -13,6 +13,12 @@ import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest } from "./payout";
+import {
+  applyJokersToScoring,
+  computeFinalScoreWithJokers,
+  createDefaultJokers,
+  type Joker,
+} from "./jokers";
 
 // Per-card delay in the scoring sequence. Each scoring card animates and adds
 // its chip contribution after this many milliseconds.
@@ -48,6 +54,9 @@ function App() {
   );
   const [handDisplayOrder, setHandDisplayOrder] = useState<ReadonlyArray<number>>(
     [],
+  );
+  const [jokers, setJokers] = useState<ReadonlyArray<Joker>>(() =>
+    createDefaultJokers(),
   );
   const pendingDiscardCountRef = useRef(0);
 
@@ -123,6 +132,7 @@ function App() {
     setRound(1);
     setAnte(1);
     setMoney(0);
+    setJokers(createDefaultJokers());
     startNewRound();
   }
 
@@ -210,14 +220,21 @@ function App() {
       (sum, card) => sum + getRankChips(card.rank),
       0,
     );
-    const finalScore = Math.floor(
-      (handStats.chips + cardChipsTotal) * handStats.multiplier,
+    const jokerResult = applyJokersToScoring(jokers, scoring);
+    if (jokerResult.moneyEarned > 0) {
+      setMoney((prev) => prev + jokerResult.moneyEarned);
+    }
+    const finalScore = computeFinalScoreWithJokers(
+      handStats.chips,
+      handStats.multiplier,
+      cardChipsTotal,
+      jokerResult,
     );
 
-    // Reset the live counters to the hand's base values so the ticking is
-    // observable against the starting point, then queue the per-card sequence.
+    const liveMultiplier =
+      (handStats.multiplier + jokerResult.additiveMult) * jokerResult.xMult;
     setChips(handStats.chips);
-    setMultiplier(handStats.multiplier);
+    setMultiplier(liveMultiplier);
     scoringFinalizeRef.current = () => {
       finalizeHandSubmission(finalScore, submittedSelection);
     };
@@ -313,6 +330,7 @@ function App() {
         remaining={dealt.remaining}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
+        jokers={jokers}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
