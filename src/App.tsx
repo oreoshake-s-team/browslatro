@@ -16,7 +16,7 @@ import {
 } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
-import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
+import { getCardChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
@@ -370,7 +370,7 @@ function App() {
     const handStats = evaluateHand(playedCards);
     const scoring = getScoringCards(playedCards, label);
     const cardChipsTotal = scoring.reduce(
-      (sum, card) => sum + getRankChips(card.rank),
+      (sum, card) => sum + getCardChips(card),
       0,
     );
     const handJokerResult = applyHandLevelJokers(jokers, {

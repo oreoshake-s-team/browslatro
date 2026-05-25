@@ -1,16 +1,19 @@
 import {
   forEachScoringStep,
+  getCardChips,
   getRankChips,
   getScoringCards,
   getScoringStep,
   scoreHand,
   type ScoringStep,
 } from "./scoring";
-import type { Card, Rank, Suit } from "./types";
+import type { Card, Enhancement, Rank, Suit } from "./types";
 
 let nextId = 0;
-function card(rank: Rank, suit: Suit): Card {
-  return { id: ++nextId, rank, suit };
+function card(rank: Rank, suit: Suit, enhancement?: Enhancement): Card {
+  return enhancement
+    ? { id: ++nextId, rank, suit, enhancement }
+    : { id: ++nextId, rank, suit };
 }
 
 beforeEach(() => {
@@ -316,5 +319,68 @@ describe("per-card scoring iteration order", () => {
     const spy = vi.fn();
     forEachScoringStep([], spy);
     expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe("getCardChips — Bonus enhancement", () => {
+  test("returns rank chips plus 30 for a Bonus card", () => {
+    expect(getCardChips(card("5", "spades", "bonus"))).toBe(5 + 30);
+  });
+
+  test("returns rank chips alone for a vanilla card", () => {
+    expect(getCardChips(card("5", "spades"))).toBe(5);
+  });
+
+  test("Bonus on a face card returns 10 + 30 = 40", () => {
+    expect(getCardChips(card("K", "spades", "bonus"))).toBe(40);
+  });
+
+  test("Bonus on an Ace returns 11 + 30 = 41", () => {
+    expect(getCardChips(card("A", "spades", "bonus"))).toBe(41);
+  });
+});
+
+describe("scoreHand — Bonus enhancement", () => {
+  test("a played Pair with one Bonus card scores 30 more than the vanilla version", () => {
+    const bonusHand = [
+      card("5", "spades", "bonus"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const vanillaHand = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    expect(scoreHand(bonusHand) - scoreHand(vanillaHand)).toBe(30 * 2);
+  });
+
+  test("a Bonus card not in the scoring set contributes 0 chips (kicker on a Pair)", () => {
+    const handWithBonusKicker = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs", "bonus"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const vanillaHand = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    expect(scoreHand(handWithBonusKicker)).toBe(scoreHand(vanillaHand));
+  });
+});
+
+describe("getScoringStep — Bonus enhancement", () => {
+  test("layers +30 chips onto the step for a Bonus card", () => {
+    const step = getScoringStep([card("5", "spades", "bonus")], 0);
+    expect(step.chips).toBe(35);
   });
 });

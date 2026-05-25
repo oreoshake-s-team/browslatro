@@ -1,5 +1,6 @@
 import type { Card, Rank } from "./types";
 import { detectHandLabel, evaluateHand, type HandLabel } from "./handEvaluator";
+import { applyCardEnhancement } from "./enhancements";
 
 /**
  * Per-rank chip contribution for "scoring" cards. Face cards (J, Q, K) are
@@ -26,6 +27,10 @@ const RANK_CHIPS: Record<Rank, number> = {
  */
 export function getRankChips(rank: Rank): number {
   return RANK_CHIPS[rank];
+}
+
+export function getCardChips(card: Card): number {
+  return RANK_CHIPS[card.rank] + applyCardEnhancement(card).chipsDelta;
 }
 
 /**
@@ -147,7 +152,7 @@ export function getScoringStep(
     );
   }
   const card = cards[index];
-  return { card, chips: getRankChips(card.rank) };
+  return { card, chips: getCardChips(card) };
 }
 
 export function forEachScoringStep(
@@ -172,7 +177,7 @@ export function scoreHand(cards: ReadonlyArray<Card>): number {
   const hand = evaluateHand(cards);
   const scoringCards = getScoringCards(cards, label);
   const cardChips = scoringCards.reduce(
-    (sum, card) => sum + getRankChips(card.rank),
+    (sum, card) => sum + getCardChips(card),
     0,
   );
   return Math.floor((hand.chips + cardChips) * hand.multiplier);

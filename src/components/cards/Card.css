@@ -368,6 +368,17 @@
 }
 
 .card-enhancement-bonus {
+  border-color: #1971c2;
+  border-width: 3px;
+  box-shadow: 0 0 0 2px rgba(25, 113, 194, 0.4),
+    0 2px 6px rgba(25, 113, 194, 0.4),
+    inset 0 0 14px rgba(116, 192, 252, 0.4);
+  background-image: linear-gradient(
+    135deg,
+    rgba(116, 192, 252, 0.55) 0%,
+    rgba(255, 255, 255, 0.85) 45%,
+    rgba(116, 192, 252, 0.55) 100%
+  );
 }
 
 .card-enhancement-mult {
