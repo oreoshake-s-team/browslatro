@@ -1,4 +1,4 @@
-import type { Card, Rank, Suit } from "./types";
+import type { Card, Enhancement, Rank, Suit } from "./types";
 
 export const SUITS: ReadonlyArray<Suit> = [
   "spades",
@@ -32,12 +32,25 @@ export function resetCardIds(): void {
   cardIdCounter = 0;
 }
 
+export const RANK_ENHANCEMENTS: Readonly<Partial<Record<Rank, Enhancement>>> = {
+  A: "steel",
+  "4": "mult",
+};
+
+export function defaultEnhancementForRank(rank: Rank): Enhancement {
+  return RANK_ENHANCEMENTS[rank] ?? "gold";
+}
+
 export function createDeck(): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) {
     for (const rank of RANKS) {
-      const enhancement = rank === "A" ? "steel" : "gold";
-      deck.push({ id: ++cardIdCounter, rank, suit, enhancement });
+      deck.push({
+        id: ++cardIdCounter,
+        rank,
+        suit,
+        enhancement: defaultEnhancementForRank(rank),
+      });
     }
   }
   return deck;

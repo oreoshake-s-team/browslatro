@@ -857,7 +857,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$18");
+    expect(getStatValue("Money")).toHaveTextContent("$15");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
@@ -877,10 +877,10 @@ describe("Round won modal", () => {
 
   test("gold scoring animation pays $3 per held gold card into the wallet before the modal opens", async () => {
     await triggerWin();
-    expect(getStatValue("Money")).toHaveTextContent("$13");
+    expect(getStatValue("Money")).toHaveTextContent("$10");
   });
 
-  test("modal interest is calculated on the gold-augmented wallet (floor($13 / $5) = $2)", async () => {
+  test("modal interest is calculated on the gold-augmented wallet (floor($10 / $5) = $2)", async () => {
     await triggerWin();
     expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$2");
   });
@@ -888,14 +888,14 @@ describe("Round won modal", () => {
   test("modal interest label reflects the gold-augmented wallet", async () => {
     await triggerWin();
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
-      "on $13",
+      "on $10",
     );
   });
 
   test("gold scoring plays the gold sound once per held gold card", async () => {
     await triggerWin();
     const goldCalls = playMock.mock.calls.filter(([name]) => name === "gold");
-    expect(goldCalls).toHaveLength(3);
+    expect(goldCalls).toHaveLength(2);
   });
 
   test("submitting an empty hand never plays the gold sound (negative)", async () => {
