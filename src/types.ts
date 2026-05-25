@@ -24,7 +24,15 @@ export type Rank =
   | "K"
   | "A";
 
-export type Enhancement = "gold" | "steel";
+export type Enhancement =
+  | "bonus"
+  | "mult"
+  | "wild"
+  | "glass"
+  | "steel"
+  | "stone"
+  | "gold"
+  | "lucky";
 
 export interface Card {
   readonly id: number;

@@ -33,8 +33,14 @@ const FACE_RANK_GLYPH: Record<FaceRank, string> = {
 };
 
 const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
-  gold: "Gold",
+  bonus: "Bonus",
+  mult: "Mult",
+  wild: "Wild",
+  glass: "Glass",
   steel: "Steel",
+  stone: "Stone",
+  gold: "Gold",
+  lucky: "Lucky",
 };
 
 function isFaceRank(rank: Rank): rank is FaceRank {
