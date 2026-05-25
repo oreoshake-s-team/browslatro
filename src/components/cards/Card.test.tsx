@@ -186,4 +186,46 @@ describe("Card", () => {
     render(<Card card={steel} />);
     expect(screen.getByRole("button")).toHaveAccessibleName("A of Hearts (Steel)");
   });
+
+  test("applies the bonus enhancement class when the card is bonus", () => {
+    const bonus: CardType = { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-bonus");
+  });
+
+  test("appends the bonus suffix to the accessible label", () => {
+    const bonus: CardType = { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("7 of Clubs (Bonus)");
+  });
+
+  test("applies the mult enhancement class when the card is mult", () => {
+    const mult: CardType = { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" };
+    render(<Card card={mult} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-mult");
+  });
+
+  test("appends the wild suffix to the accessible label", () => {
+    const wild: CardType = { id: 13, rank: "K", suit: "hearts", enhancement: "wild" };
+    render(<Card card={wild} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("K of Hearts (Wild)");
+  });
+
+  test("applies the glass enhancement class when the card is glass", () => {
+    const glass: CardType = { id: 14, rank: "4", suit: "spades", enhancement: "glass" };
+    render(<Card card={glass} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-glass");
+  });
+
+  test("applies the stone enhancement class when the card is stone", () => {
+    const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
+    render(<Card card={stone} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-stone");
+  });
+
+  test("applies the lucky enhancement class when the card is lucky", () => {
+    const lucky: CardType = { id: 16, rank: "3", suit: "hearts", enhancement: "lucky" };
+    render(<Card card={lucky} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
+  });
 });
