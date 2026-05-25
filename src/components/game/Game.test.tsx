@@ -2,7 +2,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import Game from "./Game";
-import { HANDS } from "../../constants";
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
@@ -15,7 +14,6 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onDiscard={vi.fn()}
       canDiscard={true}
       onSetMoney={vi.fn()}
-      selectedHand={HANDS[0]}
       hand={[]}
       remaining={[]}
       selectedIds={new Set()}
@@ -28,11 +26,18 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   );
 }
 
+async function openModifiers(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  await user.click(screen.getByText(/Apply modifiers/));
+}
+
 describe("Game", () => {
   test("Win button calls onWin", async () => {
     const user = userEvent.setup();
     const onWin = vi.fn();
     renderGame({ onWin });
+    await openModifiers(user);
     await user.click(screen.getByText(/Win/));
     expect(onWin).toHaveBeenCalledTimes(1);
   });
@@ -41,6 +46,7 @@ describe("Game", () => {
     const user = userEvent.setup();
     const onWin = vi.fn();
     renderGame({ onWin });
+    await openModifiers(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
@@ -51,6 +57,7 @@ describe("Game", () => {
     const user = userEvent.setup();
     const onAddChips = vi.fn();
     renderGame({ onAddChips });
+    await openModifiers(user);
     await user.click(screen.getByText(/Add Chips/));
     expect(onAddChips).toHaveBeenCalledWith(10);
   });
@@ -59,6 +66,7 @@ describe("Game", () => {
     const user = userEvent.setup();
     const onAddMultiplier = vi.fn();
     renderGame({ onAddMultiplier });
+    await openModifiers(user);
     await user.click(screen.getByText(/Add Multiplier/));
     expect(onAddMultiplier).toHaveBeenCalledWith(1);
   });
@@ -67,6 +75,7 @@ describe("Game", () => {
     const user = userEvent.setup();
     const onMultiplyMultiplier = vi.fn();
     renderGame({ onMultiplyMultiplier });
+    await openModifiers(user);
     await user.click(screen.getByText(/Multiply Multiplier/));
     expect(onMultiplyMultiplier).toHaveBeenCalledWith(2);
   });
@@ -82,11 +91,6 @@ describe("Game", () => {
   test("renders the player's hand of cards", () => {
     renderGame();
     expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
-  });
-
-  test("displays the selected hand label in the read-only current hand area", () => {
-    renderGame({ selectedHand: HANDS[3] });
-    expect(screen.getByText(HANDS[3].label)).toBeInTheDocument();
   });
 
   test("Discard button calls onDiscard when enabled", async () => {
@@ -105,5 +109,31 @@ describe("Game", () => {
   test("Discard button is enabled when canDiscard is true", () => {
     renderGame({ canDiscard: true });
     expect(screen.getByText(/Discard/)).not.toBeDisabled();
+  });
+
+  test("the modifier disclosure is closed on first render", () => {
+    renderGame();
+    expect(screen.getByText(/Apply modifiers/).closest("details")).not.toHaveAttribute(
+      "open",
+    );
+  });
+
+  test("clicking the modifier disclosure opens it", async () => {
+    const user = userEvent.setup();
+    renderGame();
+    await openModifiers(user);
+    expect(screen.getByText(/Apply modifiers/).closest("details")).toHaveAttribute(
+      "open",
+    );
+  });
+
+  test("does not render a Current hand readout (negative)", () => {
+    renderGame();
+    expect(screen.queryByText(/Current hand/i)).not.toBeInTheDocument();
+  });
+
+  test("does not render a Play or discard step label (negative)", () => {
+    renderGame();
+    expect(screen.queryByText(/Play or discard/i)).not.toBeInTheDocument();
   });
 });

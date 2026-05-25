@@ -517,7 +517,6 @@ function App() {
         isScoring={isScoring}
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
-        selectedHand={selectedHand}
         hand={dealt.hand}
         remaining={dealt.remaining}
         selectedIds={selectedIds}
