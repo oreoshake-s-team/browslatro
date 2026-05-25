@@ -258,4 +258,10 @@ describe("Card", () => {
     render(<Card card={lucky} />);
     expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
   });
+
+  test("appends the lucky suffix to the accessible label", () => {
+    const lucky: CardType = { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" };
+    render(<Card card={lucky} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("Q of Hearts (Lucky)");
+  });
 });

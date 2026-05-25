@@ -21,6 +21,10 @@ export const MULT_ENHANCEMENT_MULT_DELTA = 4;
 export const GLASS_ENHANCEMENT_MULT_TIMES = 2;
 export const GLASS_ENHANCEMENT_DESTROY_CHANCE = 0.25;
 export const STONE_ENHANCEMENT_CHIPS = 50;
+export const LUCKY_ENHANCEMENT_MULT_CHANCE = 0.2;
+export const LUCKY_ENHANCEMENT_MULT_AMOUNT = 20;
+export const LUCKY_ENHANCEMENT_MONEY_CHANCE = 1 / 15;
+export const LUCKY_ENHANCEMENT_MONEY_AMOUNT = 20;
 
 export type EnhancementRandomSource = () => number;
 
@@ -111,6 +115,23 @@ export function cardRankForEvaluation(card: Card): Rank | null {
 
 export function isStoneCard(card: Card): boolean {
   return card.enhancement === "stone";
+}
+
+export interface LuckyRollResult {
+  readonly multBonus: number;
+  readonly moneyBonus: number;
+}
+
+export function applyLuckyRolls(card: Card): LuckyRollResult {
+  if (card.enhancement !== "lucky") {
+    return { multBonus: 0, moneyBonus: 0 };
+  }
+  const multHit = rollEnhancementChance(LUCKY_ENHANCEMENT_MULT_CHANCE);
+  const moneyHit = rollEnhancementChance(LUCKY_ENHANCEMENT_MONEY_CHANCE);
+  return {
+    multBonus: multHit ? LUCKY_ENHANCEMENT_MULT_AMOUNT : 0,
+    moneyBonus: moneyHit ? LUCKY_ENHANCEMENT_MONEY_AMOUNT : 0,
+  };
 }
 
 export const ENHANCEMENT_KINDS: ReadonlyArray<Enhancement> = [
