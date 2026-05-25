@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
-import type { Card, Hand } from "../../types";
+import type { Card } from "../../types";
 import type { Joker } from "../../jokers";
 import HandComponent from "../cards/Hand";
 import Jokers from "../jokers/Jokers";
@@ -17,7 +17,6 @@ interface GameProps {
   scoringId?: number | null;
   goldScoringId?: number | null;
   onSetMoney: Dispatch<SetStateAction<number>>;
-  selectedHand: Hand | null;
   hand: ReadonlyArray<Card>;
   remaining: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
@@ -42,7 +41,6 @@ export default function Game({
   scoringId = null,
   goldScoringId = null,
   onSetMoney,
-  selectedHand,
   hand,
   remaining,
   selectedIds,
@@ -80,14 +78,8 @@ export default function Game({
         onCardDiscardEnd={onCardDiscardEnd}
         onDisplayOrderChange={onDisplayOrderChange}
       />
-      <div className="hand-selection">
-        <span className="step-label">1. Current hand</span>
-        <div className="hand-display" aria-live="polite">
-          {selectedHand !== null ? selectedHand.label : ""}
-        </div>
-      </div>
-      <div className="modifier-selection">
-        <span className="step-label">2. Apply modifiers</span>
+      <details className="modifier-selection">
+        <summary className="modifier-disclosure">Apply modifiers</summary>
         <div className="modifier-grid">
           <button className="add-chips-button" onClick={() => onAddChips(10)}>
             🪙 Add Chips
@@ -117,9 +109,8 @@ export default function Game({
             💸 Subtract $10
           </button>
         </div>
-      </div>
+      </details>
       <div className="submit-hand">
-        <span className="step-label">3. Play or discard</span>
         <div className="play-actions">
           <button
             className="submit-hand-button"
