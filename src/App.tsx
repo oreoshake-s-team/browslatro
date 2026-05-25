@@ -26,10 +26,18 @@ import {
   getScoringCards,
   getScoringStep,
 } from "./scoring";
-import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
+import {
+  cardKey,
+  createDeck,
+  deal,
+  shuffle,
+  HAND_SIZE,
+  type DealResult,
+} from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
 import { steelHeldMultiplier } from "./heldInHand";
+import { applyCardEnhancement, rollEnhancementChance } from "./enhancements";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -60,8 +68,10 @@ export function getScoringStepMs(
   return SCORING_STEP_MS;
 }
 
-function initialDeal(): DealResult {
-  return deal(shuffle(createDeck()), HAND_SIZE);
+function initialDeal(
+  excludedKeys: ReadonlySet<string> = new Set(),
+): DealResult {
+  return deal(shuffle(createDeck(excludedKeys)), HAND_SIZE);
 }
 
 function App() {
@@ -99,6 +109,9 @@ function App() {
     emptyHandCounts,
   );
   const pendingDiscardCountRef = useRef(0);
+  const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -146,7 +159,7 @@ function App() {
     setRoundScore(0);
     setRemainingHands(4);
     setRemainingDiscards(3);
-    setDealt(initialDeal());
+    setDealt(initialDeal(destroyedCardKeys));
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -185,9 +198,21 @@ function App() {
       );
       setChips((prev) => prev + stepChips);
       play("pop");
-      const enhancementMultDelta = getCardMultDelta(stepCard);
-      if (enhancementMultDelta > 0) {
-        setMultiplier((prev) => prev + enhancementMultDelta);
+      const enhancementEffect = applyCardEnhancement(stepCard);
+      if (enhancementEffect.multDelta > 0) {
+        setMultiplier((prev) => prev + enhancementEffect.multDelta);
+      }
+      if (enhancementEffect.multTimes !== 1) {
+        setMultiplier((prev) => prev * enhancementEffect.multTimes);
+      }
+      if (rollEnhancementChance(enhancementEffect.destroyChance)) {
+        const key = cardKey(stepCard);
+        setDestroyedCardKeys((prev) => {
+          if (prev.has(key)) return prev;
+          const next = new Set(prev);
+          next.add(key);
+          return next;
+        });
       }
       const cardJokerResult = applyPerCardJokers(jokers, stepCard);
       if (cardJokerResult.moneyEarned > 0) {
@@ -327,6 +352,7 @@ function App() {
     setMoney(4);
     setJokers(createDefaultJokers());
     setHandPlayCounts(emptyHandCounts());
+    setDestroyedCardKeys(new Set());
     startNewRound();
   }
 
@@ -435,7 +461,11 @@ function App() {
     }
 
     const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
-    const preHandXMult = handJokerResult.xMult * steelMult;
+    const enhancementXMult = scoring.reduce(
+      (m, card) => m * applyCardEnhancement(card).multTimes,
+      1,
+    );
+    const preHandXMult = handJokerResult.xMult * steelMult * enhancementXMult;
     const postHandResult = applyPostHandJokers(jokers);
     const totalXMult = preHandXMult * postHandResult.xMult;
 

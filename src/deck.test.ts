@@ -54,6 +54,28 @@ describe("createDeck", () => {
     const nonNines = createDeck().filter((c) => c.rank !== "9");
     expect(nonNines.every((c) => c.enhancement !== "wild")).toBe(true);
   });
+
+  test("assigns the Glass enhancement to every rank-K card", () => {
+    const kings = createDeck().filter((c) => c.rank === "K");
+    expect(kings.every((c) => c.enhancement === "glass")).toBe(true);
+  });
+
+  test("does not assign Glass to any non-K card", () => {
+    const nonKings = createDeck().filter((c) => c.rank !== "K");
+    expect(nonKings.every((c) => c.enhancement !== "glass")).toBe(true);
+  });
+
+  test("omits cards whose keys appear in the excludedKeys set", () => {
+    const excluded = new Set(["K-hearts", "5-spades"]);
+    const deck = createDeck(excluded);
+    expect(deck.find((c) => c.rank === "K" && c.suit === "hearts")).toBeUndefined();
+    expect(deck.find((c) => c.rank === "5" && c.suit === "spades")).toBeUndefined();
+  });
+
+  test("excludedKeys shrinks the deck by exactly the number of removed keys", () => {
+    const excluded = new Set(["K-hearts", "5-spades"]);
+    expect(createDeck(excluded)).toHaveLength(DECK_SIZE - 2);
+  });
 });
 
 describe("defaultEnhancementForRank", () => {
@@ -67,6 +89,10 @@ describe("defaultEnhancementForRank", () => {
 
   test("returns wild for 9s", () => {
     expect(defaultEnhancementForRank("9")).toBe("wild");
+  });
+
+  test("returns glass for Ks", () => {
+    expect(defaultEnhancementForRank("K")).toBe("glass");
   });
 
   test("returns gold for ranks without an explicit assignment", () => {

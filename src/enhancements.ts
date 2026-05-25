@@ -18,11 +18,23 @@ export const NO_ENHANCEMENT_EFFECT: EnhancementEffect = {
 
 export const BONUS_ENHANCEMENT_CHIPS = 30;
 export const MULT_ENHANCEMENT_MULT_DELTA = 4;
+export const GLASS_ENHANCEMENT_MULT_TIMES = 2;
+export const GLASS_ENHANCEMENT_DESTROY_CHANCE = 0.25;
 
 export type EnhancementRandomSource = () => number;
 
 export interface EnhancementContext {
   readonly rng?: EnhancementRandomSource;
+}
+
+export const enhancementRngConfig: { rng: EnhancementRandomSource } = {
+  rng: Math.random,
+};
+
+export function rollEnhancementChance(chance: number): boolean {
+  if (chance <= 0) return false;
+  if (chance >= 1) return true;
+  return enhancementRngConfig.rng() < chance;
 }
 
 function assertNeverEnhancement(e: never): never {
@@ -40,8 +52,13 @@ export function applyCardEnhancement(
       return { ...NO_ENHANCEMENT_EFFECT, chipsDelta: BONUS_ENHANCEMENT_CHIPS };
     case "mult":
       return { ...NO_ENHANCEMENT_EFFECT, multDelta: MULT_ENHANCEMENT_MULT_DELTA };
-    case "wild":
     case "glass":
+      return {
+        ...NO_ENHANCEMENT_EFFECT,
+        multTimes: GLASS_ENHANCEMENT_MULT_TIMES,
+        destroyChance: GLASS_ENHANCEMENT_DESTROY_CHANCE,
+      };
+    case "wild":
     case "steel":
     case "stone":
     case "gold":

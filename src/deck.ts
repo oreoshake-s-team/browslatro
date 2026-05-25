@@ -36,16 +36,24 @@ export const RANK_ENHANCEMENTS: Readonly<Partial<Record<Rank, Enhancement>>> = {
   A: "steel",
   "4": "mult",
   "9": "wild",
+  K: "glass",
 };
 
 export function defaultEnhancementForRank(rank: Rank): Enhancement {
   return RANK_ENHANCEMENTS[rank] ?? "gold";
 }
 
-export function createDeck(): Card[] {
+export function cardKey(card: Pick<Card, "rank" | "suit">): string {
+  return `${card.rank}-${card.suit}`;
+}
+
+export function createDeck(
+  excludedKeys: ReadonlySet<string> = new Set(),
+): Card[] {
   const deck: Card[] = [];
   for (const suit of SUITS) {
     for (const rank of RANKS) {
+      if (excludedKeys.has(cardKey({ rank, suit }))) continue;
       deck.push({
         id: ++cardIdCounter,
         rank,
