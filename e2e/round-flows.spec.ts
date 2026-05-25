@@ -125,6 +125,22 @@ test("clicking Next Round in the shop closes it and starts the next blind", asyn
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
 });
 
+test("losing 3 games in a row leaves exactly one chips/multiplier span in the sidebar HandScore (issue #118)", async ({
+  page,
+}) => {
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.goto("/");
+  const submit = page.getByRole("button", { name: SUBMIT_BUTTON });
+
+  for (let cycle = 0; cycle < 3; cycle += 1) {
+    for (let hand = 0; hand < 4; hand += 1) {
+      await submit.click();
+    }
+    await expect(page.locator(".sidebar .chips")).toHaveCount(1);
+    await expect(page.locator(".sidebar .multiplier")).toHaveCount(1);
+  }
+});
+
 test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", async ({
   page,
 }) => {
