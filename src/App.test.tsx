@@ -628,6 +628,26 @@ describe("Losing integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
   });
+
+  test("losing and auto-restarting leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+  });
+
+  test("losing and auto-restarting leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
+  });
 });
 
 describe("Add Money button integration", () => {
