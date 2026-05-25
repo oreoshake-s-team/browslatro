@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./types";
-import { BASE_CHIPS, BLIND_MULTIPLIERS, JOKER_BASE_PRICE } from "./constants";
+import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
-import Shop, { type ShopOffer } from "./components/shop/Shop";
+import Shop from "./components/shop/Shop";
+import { createPlanetCatalog } from "./planets";
 import Sidebar from "./components/hud/Sidebar";
 import {
   emptyHandCounts,
@@ -53,7 +54,7 @@ import {
   type Joker,
   type JokerPostHandStep,
 } from "./jokers";
-import { SHOP_OFFER_SLOTS, pickShopJokers } from "./shop";
+import { pickShopOffers, rerollShopOffer, type ShopItem } from "./shop";
 
 export const SCORING_STEP_MS = 500;
 
@@ -154,7 +155,7 @@ function App() {
   // the modal is showing. Dismissal triggers handleWin().
   const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
 
-  const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopOffer> | null>(
+  const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
     null,
   );
 
@@ -289,25 +290,27 @@ function App() {
       setBlind(1);
     }
     setShopOffers(
-      pickShopJokers(
-        createJokerCatalog(),
-        jokers.map((j) => j.id),
-        SHOP_OFFER_SLOTS,
-      ).map((joker) => ({
-        joker,
-        sold: false,
-      })),
+      pickShopOffers({
+        jokerCatalog: createJokerCatalog(),
+        excludedJokerIds: jokers.map((j) => j.id),
+        planetCatalog: createPlanetCatalog(),
+      }),
     );
   }
 
   function buyShopOffer(idx: number) {
     const offer = shopOffers?.[idx];
     if (!offer || offer.sold) return;
-    if (jokers.length >= MAX_JOKERS) return;
-    if (money < JOKER_BASE_PRICE) return;
-    play("pop");
-    setMoney((prev) => prev - JOKER_BASE_PRICE);
-    setJokers((prev) => [...prev, offer.joker]);
+    if (money < offer.price) return;
+    if (offer.kind === "joker") {
+      if (jokers.length >= MAX_JOKERS) return;
+      play("pop");
+      setMoney((prev) => prev - offer.price);
+      setJokers((prev) => [...prev, offer.joker]);
+    } else {
+      play("pop");
+      setMoney((prev) => prev - offer.price);
+    }
     setShopOffers((current) =>
       current
         ? current.map((o, i) => (i === idx ? { ...o, sold: true } : o))
@@ -318,27 +321,23 @@ function App() {
   function rerollShopOffers(cost: number) {
     if (!shopOffers) return;
     if (money < cost) return;
-    const soldOfferIds = shopOffers
-      .filter((o) => o.sold)
-      .map((o) => o.joker.id);
-    const excludedIds = [...jokers.map((j) => j.id), ...soldOfferIds];
-    const unsoldCount = shopOffers.filter((o) => !o.sold).length;
-    const replacements = pickShopJokers(
-      createJokerCatalog(),
-      excludedIds,
-      unsoldCount,
-    );
+    const soldJokerIds = shopOffers
+      .filter((o) => o.kind === "joker" && o.sold)
+      .map((o) => (o.kind === "joker" ? o.joker.id : ""));
+    const excludedJokerIds = [...jokers.map((j) => j.id), ...soldJokerIds];
+    const args = {
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds,
+      planetCatalog: createPlanetCatalog(),
+    };
     play("pop");
     setMoney((prev) => prev - cost);
     setShopOffers((current) => {
       if (!current) return current;
-      let cursor = 0;
       return current.map((offer) => {
         if (offer.sold) return offer;
-        const replacement = replacements[cursor];
-        cursor += 1;
-        if (!replacement) return offer;
-        return { joker: replacement, sold: false };
+        const replacement = rerollShopOffer(offer, args);
+        return replacement ?? offer;
       });
     });
   }
@@ -644,7 +643,6 @@ function App() {
           money={money}
           equippedJokerCount={jokers.length}
           offers={shopOffers}
-          pricePerJoker={JOKER_BASE_PRICE}
           onBuy={buyShopOffer}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}

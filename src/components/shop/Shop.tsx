@@ -1,21 +1,14 @@
 import "./Shop.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import type { Joker } from "../../jokers";
 import { MAX_JOKERS } from "../../jokers";
-import { rerollCostFor } from "../../shop";
+import { rerollCostFor, type ShopItem } from "../../shop";
 import { useEscapeToClose } from "../system/useEscapeToClose";
-
-export interface ShopOffer {
-  readonly joker: Joker;
-  readonly sold: boolean;
-}
 
 interface ShopProps {
   money: number;
   equippedJokerCount: number;
-  offers: ReadonlyArray<ShopOffer>;
-  pricePerJoker: number;
+  offers: ReadonlyArray<ShopItem>;
   onBuy: (offerIdx: number) => void;
   onReroll: (cost: number) => void;
   onNext: () => void;
@@ -28,14 +21,15 @@ type BuyButtonState =
   | { kind: "available" };
 
 function resolveBuyState(
-  offer: ShopOffer,
+  offer: ShopItem,
   money: number,
-  equippedCount: number,
-  price: number,
+  equippedJokerCount: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
-  if (equippedCount >= MAX_JOKERS) return { kind: "slots-full" };
-  if (money < price) return { kind: "unaffordable" };
+  if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
+    return { kind: "slots-full" };
+  }
+  if (money < offer.price) return { kind: "unaffordable" };
   return { kind: "available" };
 }
 
@@ -65,11 +59,18 @@ function buyButtonTooltip(state: BuyButtonState): string | undefined {
   }
 }
 
+function offerSubject(offer: ShopItem): {
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+} {
+  return offer.kind === "joker" ? offer.joker : offer.planet;
+}
+
 export default function Shop({
   money,
   equippedJokerCount,
   offers,
-  pricePerJoker,
   onBuy,
   onReroll,
   onNext,
@@ -102,38 +103,32 @@ export default function Shop({
         <p className="shop-money" data-testid="shop-money">
           Money: ${money}
         </p>
-        <ul className="shop-offers" aria-label="Jokers for sale">
+        <ul className="shop-offers" aria-label="Items for sale">
           {offers.map((offer, idx) => {
-            const state = resolveBuyState(
-              offer,
-              money,
-              equippedJokerCount,
-              pricePerJoker,
-            );
-            const disabled = state.kind !== "available";
-            const tooltip = buyButtonTooltip(state);
+            const state = resolveBuyState(offer, money, equippedJokerCount);
+            const label = buyButtonLabel(state, offer.price);
+            const subject = offerSubject(offer);
             return (
               <li
-                key={offer.joker.id}
-                className={`shop-offer${
+                key={`${offer.kind}-${subject.id}-${idx}`}
+                className={`shop-offer shop-offer-${offer.kind}${
                   offer.sold ? " shop-offer-sold" : ""
                 }`}
                 data-testid={`shop-offer-${idx}`}
+                data-offer-kind={offer.kind}
               >
-                <span className="shop-offer-name">{offer.joker.name}</span>
-                <span className="shop-offer-description">
-                  {offer.joker.description}
-                </span>
-                <span className="shop-offer-price">${pricePerJoker}</span>
+                <span className="shop-offer-name">{subject.name}</span>
+                <span className="shop-offer-description">{subject.description}</span>
+                <span className="shop-offer-price">${offer.price}</span>
                 <button
                   type="button"
                   className="shop-offer-buy"
-                  disabled={disabled}
-                  title={tooltip}
-                  aria-label={`${buyButtonLabel(state, pricePerJoker)}: ${offer.joker.name}`}
+                  disabled={state.kind !== "available"}
+                  title={buyButtonTooltip(state)}
+                  aria-label={`${label}: ${subject.name}`}
                   onClick={() => onBuy(idx)}
                 >
-                  {buyButtonLabel(state, pricePerJoker)}
+                  {label}
                 </button>
               </li>
             );
