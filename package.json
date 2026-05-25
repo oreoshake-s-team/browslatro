@@ -47,5 +47,5 @@
     "serve": "^14.2.4",
     "typescript": "^6.0.3"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@4.15.0"
 }

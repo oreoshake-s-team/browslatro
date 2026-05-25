@@ -4,9 +4,28 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Package manager
 
-This project uses [Yarn](https://classic.yarnpkg.com/) (pinned via the `packageManager` field in `package.json`). Install dependencies with:
+This project uses [Yarn 4 (Berry)](https://yarnpkg.com/) (pinned via the `packageManager` field in `package.json`) with the `node-modules` linker.
+
+Activate the pinned version through Corepack, then install:
 
 ```sh
+corepack enable
+yarn install
+```
+
+Corepack ships with Node.js and reads `packageManager` from `package.json` to pick the right Yarn version automatically — the release binary is committed to `.yarn/releases/`, so no network call is needed to bootstrap Yarn itself.
+
+### Why node-modules instead of PnP
+
+Yarn Berry's Plug'n'Play (PnP) linker is incompatible with Create React App 5's webpack configuration. We use Yarn 4 with `nodeLinker: node-modules` to keep CRA working today while still gaining Yarn 4 improvements (Corepack pinning, immutable installs, faster resolutions, modern lockfile). Migrating off CRA would unlock PnP — tracked in issue #107.
+
+### Worktrees
+
+Each git worktree gets its own `node_modules/`. Bootstrap a new worktree with:
+
+```sh
+git worktree add ../some-branch some-branch
+cd ../some-branch
 yarn install
 ```
 
