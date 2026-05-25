@@ -16,7 +16,7 @@ interface GameProps {
   isScoring?: boolean;
   scoringId?: number | null;
   onSetMoney: Dispatch<SetStateAction<number>>;
-  selectedHand: Hand;
+  selectedHand: Hand | null;
   hand: ReadonlyArray<Card>;
   remaining: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
@@ -74,7 +74,7 @@ export default function Game({
       <div className="hand-selection">
         <span className="step-label">1. Current hand</span>
         <div className="hand-display" aria-live="polite">
-          {selectedHand.label}
+          {selectedHand !== null ? selectedHand.label : ""}
         </div>
       </div>
       <div className="modifier-selection">

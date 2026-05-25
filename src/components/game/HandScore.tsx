@@ -4,17 +4,17 @@ import "./HandScore.css";
 interface HandScoreProps {
   chips: number;
   multiplier: number;
-  selectedHand: Hand;
+  selectedHand: Hand | null;
 }
 
 function HandScore({ chips, multiplier, selectedHand }: HandScoreProps) {
   return (
     <div className="hand-score">
-      <h3>{selectedHand.label}</h3>
+      {selectedHand !== null && <h3>{selectedHand.label}</h3>}
       <p>
-        <span key={chips} className="chips">{chips}</span>
+        <span key={`chips-${chips}`} className="chips">{chips}</span>
         <span>X</span>
-        <span key={multiplier} className="multiplier">{multiplier}</span>
+        <span key={`mult-${multiplier}`} className="multiplier">{multiplier}</span>
       </p>
     </div>
   );
