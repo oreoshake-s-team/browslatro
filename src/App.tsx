@@ -455,7 +455,6 @@ function App() {
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
     setConsumables([]);
-    setPendingTarot(null);
     const freshOwned = new Set<VoucherId>();
     setOwnedVoucherIds(freshOwned);
     setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
