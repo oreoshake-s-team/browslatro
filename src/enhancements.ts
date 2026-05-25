@@ -20,6 +20,7 @@ export const BONUS_ENHANCEMENT_CHIPS = 30;
 export const MULT_ENHANCEMENT_MULT_DELTA = 4;
 export const GLASS_ENHANCEMENT_MULT_TIMES = 2;
 export const GLASS_ENHANCEMENT_DESTROY_CHANCE = 0.25;
+export const STONE_ENHANCEMENT_CHIPS = 50;
 
 export type EnhancementRandomSource = () => number;
 
@@ -58,9 +59,10 @@ export function applyCardEnhancement(
         multTimes: GLASS_ENHANCEMENT_MULT_TIMES,
         destroyChance: GLASS_ENHANCEMENT_DESTROY_CHANCE,
       };
+    case "stone":
+      return { ...NO_ENHANCEMENT_EFFECT, chipsDelta: STONE_ENHANCEMENT_CHIPS };
     case "wild":
     case "steel":
-    case "stone":
     case "gold":
     case "lucky":
       return NO_ENHANCEMENT_EFFECT;
@@ -74,6 +76,7 @@ export function cardSuitForEvaluation(card: Card): Suit | null {
   if (!enhancement) return card.suit;
   switch (enhancement) {
     case "wild":
+    case "stone":
       return null;
     case "bonus":
     case "mult":
@@ -81,7 +84,6 @@ export function cardSuitForEvaluation(card: Card): Suit | null {
     case "steel":
     case "gold":
     case "lucky":
-    case "stone":
       return card.suit;
     default:
       return assertNeverEnhancement(enhancement);
@@ -92,6 +94,8 @@ export function cardRankForEvaluation(card: Card): Rank | null {
   const enhancement = card.enhancement;
   if (!enhancement) return card.rank;
   switch (enhancement) {
+    case "stone":
+      return null;
     case "bonus":
     case "mult":
     case "wild":
@@ -99,11 +103,14 @@ export function cardRankForEvaluation(card: Card): Rank | null {
     case "steel":
     case "gold":
     case "lucky":
-    case "stone":
       return card.rank;
     default:
       return assertNeverEnhancement(enhancement);
   }
+}
+
+export function isStoneCard(card: Card): boolean {
+  return card.enhancement === "stone";
 }
 
 export const ENHANCEMENT_KINDS: ReadonlyArray<Enhancement> = [

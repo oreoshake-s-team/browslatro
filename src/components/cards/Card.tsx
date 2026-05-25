@@ -66,8 +66,10 @@ export default function Card({
   onToggle,
   onDiscardEnd,
 }: CardProps) {
-  const colorClass =
-    card.suit === "hearts" || card.suit === "diamonds"
+  const isStone = card.enhancement === "stone";
+  const colorClass = isStone
+    ? "card-stone-text"
+    : card.suit === "hearts" || card.suit === "diamonds"
       ? "card-red"
       : "card-black";
   const suitClass = `card-suit-${card.suit}`;
@@ -78,10 +80,12 @@ export default function Card({
   const enhancementClass = card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
-  const ariaLabel = card.enhancement
-    ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
-    : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
-  const faceClass = isFaceRank(card.rank)
+  const ariaLabel = isStone
+    ? "Stone card"
+    : card.enhancement
+      ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
+      : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
+  const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
 
@@ -100,25 +104,31 @@ export default function Card({
         }
       }}
     >
-      <span className="card-corner card-corner-top">
-        <span className="card-rank">{card.rank}</span>
-        <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
-      </span>
-      {isFaceRank(card.rank) ? (
-        <span className="card-face-decoration" aria-hidden="true">
-          <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
-          <span className="card-face-monogram">{card.rank}</span>
-          <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
-        </span>
+      {isStone ? (
+        <span className="card-stone-face" aria-hidden="true" />
       ) : (
-        <span className="card-center" aria-hidden="true">
-          {SUIT_GLYPHS[card.suit]}
-        </span>
+        <>
+          <span className="card-corner card-corner-top">
+            <span className="card-rank">{card.rank}</span>
+            <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
+          </span>
+          {isFaceRank(card.rank) ? (
+            <span className="card-face-decoration" aria-hidden="true">
+              <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
+              <span className="card-face-monogram">{card.rank}</span>
+              <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
+            </span>
+          ) : (
+            <span className="card-center" aria-hidden="true">
+              {SUIT_GLYPHS[card.suit]}
+            </span>
+          )}
+          <span className="card-corner card-corner-bottom">
+            <span className="card-rank">{card.rank}</span>
+            <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
+          </span>
+        </>
       )}
-      <span className="card-corner card-corner-bottom">
-        <span className="card-rank">{card.rank}</span>
-        <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
-      </span>
     </button>
   );
 }

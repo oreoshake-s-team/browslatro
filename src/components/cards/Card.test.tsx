@@ -235,6 +235,24 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-enhancement-stone");
   });
 
+  test("uses 'Stone card' as the accessible name (rank/suit are invisible)", () => {
+    const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
+    render(<Card card={stone} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("Stone card");
+  });
+
+  test("does not render the rank label for a Stone card", () => {
+    const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
+    render(<Card card={stone} />);
+    expect(screen.queryByText("2")).not.toBeInTheDocument();
+  });
+
+  test("does not render the suit pip for a Stone card", () => {
+    const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
+    const { container } = render(<Card card={stone} />);
+    expect(container.querySelector(".card-suit")).toBeNull();
+  });
+
   test("applies the lucky enhancement class when the card is lucky", () => {
     const lucky: CardType = { id: 16, rank: "3", suit: "hearts", enhancement: "lucky" };
     render(<Card card={lucky} />);

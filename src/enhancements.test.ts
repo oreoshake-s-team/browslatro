@@ -5,10 +5,12 @@ import {
   GLASS_ENHANCEMENT_MULT_TIMES,
   MULT_ENHANCEMENT_MULT_DELTA,
   NO_ENHANCEMENT_EFFECT,
+  STONE_ENHANCEMENT_CHIPS,
   applyCardEnhancement,
   cardRankForEvaluation,
   cardSuitForEvaluation,
   enhancementRngConfig,
+  isStoneCard,
   rollEnhancementChance,
 } from "./enhancements";
 import type { Card, Enhancement } from "./types";
@@ -72,10 +74,45 @@ describe("applyCardEnhancement — foundation no-op per enhancement", () => {
     if (kind === "bonus") continue;
     if (kind === "mult") continue;
     if (kind === "glass") continue;
+    if (kind === "stone") continue;
     test(`returns the no-op effect for ${kind} (foundation does not implement effects)`, () => {
       expect(applyCardEnhancement(makeCard(kind))).toEqual(NO_ENHANCEMENT_EFFECT);
     });
   }
+});
+
+describe("applyCardEnhancement — Stone", () => {
+  test("returns +50 chipsDelta for a Stone card", () => {
+    expect(applyCardEnhancement(makeCard("stone")).chipsDelta).toBe(
+      STONE_ENHANCEMENT_CHIPS,
+    );
+  });
+
+  test("STONE_ENHANCEMENT_CHIPS equals 50 per the Balatro wiki", () => {
+    expect(STONE_ENHANCEMENT_CHIPS).toBe(50);
+  });
+
+  test("Stone does not change multDelta", () => {
+    expect(applyCardEnhancement(makeCard("stone")).multDelta).toBe(0);
+  });
+
+  test("Stone does not change multTimes", () => {
+    expect(applyCardEnhancement(makeCard("stone")).multTimes).toBe(1);
+  });
+});
+
+describe("isStoneCard", () => {
+  test("returns true for a Stone card", () => {
+    expect(isStoneCard(makeCard("stone"))).toBe(true);
+  });
+
+  test("returns false for a vanilla card", () => {
+    expect(isStoneCard(makeCard())).toBe(false);
+  });
+
+  test("returns false for a non-Stone enhanced card", () => {
+    expect(isStoneCard(makeCard("gold"))).toBe(false);
+  });
 });
 
 describe("applyCardEnhancement — Glass", () => {
@@ -207,15 +244,19 @@ describe("cardSuitForEvaluation", () => {
     expect(cardSuitForEvaluation(makeCard())).toBe("spades");
   });
 
-  test("returns the card's suit for every non-wild enhancement", () => {
-    const suits = ENHANCEMENT_KINDS.filter((k) => k !== "wild").map((k) =>
-      cardSuitForEvaluation(makeCard(k)),
-    );
+  test("returns the card's suit for every non-wild non-stone enhancement", () => {
+    const suits = ENHANCEMENT_KINDS.filter(
+      (k) => k !== "wild" && k !== "stone",
+    ).map((k) => cardSuitForEvaluation(makeCard(k)));
     expect(suits.every((s) => s === "spades")).toBe(true);
   });
 
   test("returns null for a Wild card so the hand evaluator treats it as any suit", () => {
     expect(cardSuitForEvaluation(makeCard("wild"))).toBeNull();
+  });
+
+  test("returns null for a Stone card so suit-based detection skips it", () => {
+    expect(cardSuitForEvaluation(makeCard("stone"))).toBeNull();
   });
 });
 
@@ -224,8 +265,14 @@ describe("cardRankForEvaluation", () => {
     expect(cardRankForEvaluation(makeCard())).toBe("5");
   });
 
-  test("returns the card's rank for every foundation enhancement", () => {
-    const ranks = ENHANCEMENT_KINDS.map((k) => cardRankForEvaluation(makeCard(k)));
+  test("returns the card's rank for every non-stone enhancement", () => {
+    const ranks = ENHANCEMENT_KINDS.filter((k) => k !== "stone").map((k) =>
+      cardRankForEvaluation(makeCard(k)),
+    );
     expect(ranks.every((r) => r === "5")).toBe(true);
+  });
+
+  test("returns null for a Stone card so rank-based detection skips it", () => {
+    expect(cardRankForEvaluation(makeCard("stone"))).toBeNull();
   });
 });

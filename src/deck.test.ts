@@ -65,6 +65,16 @@ describe("createDeck", () => {
     expect(nonKings.every((c) => c.enhancement !== "glass")).toBe(true);
   });
 
+  test("assigns the Stone enhancement to every rank-3 card", () => {
+    const threes = createDeck().filter((c) => c.rank === "3");
+    expect(threes.every((c) => c.enhancement === "stone")).toBe(true);
+  });
+
+  test("does not assign Stone to any non-3 card", () => {
+    const nonThrees = createDeck().filter((c) => c.rank !== "3");
+    expect(nonThrees.every((c) => c.enhancement !== "stone")).toBe(true);
+  });
+
   test("omits cards whose keys appear in the excludedKeys set", () => {
     const excluded = new Set(["K-hearts", "5-spades"]);
     const deck = createDeck(excluded);
@@ -89,6 +99,10 @@ describe("defaultEnhancementForRank", () => {
 
   test("returns wild for 9s", () => {
     expect(defaultEnhancementForRank("9")).toBe("wild");
+  });
+
+  test("returns stone for 3s", () => {
+    expect(defaultEnhancementForRank("3")).toBe("stone");
   });
 
   test("returns glass for Ks", () => {

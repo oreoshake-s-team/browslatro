@@ -445,8 +445,9 @@ describe("Discard button", () => {
 });
 
 describe("Hand stays sorted after a play", () => {
-  function rankIndex(label: string | null): number {
-    if (!label) return -1;
+  function rankIndex(label: string | null): number | null {
+    if (!label) return null;
+    if (label === "Stone card") return null;
     const rank = label.split(" ")[0];
     const order = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
     return order.indexOf(rank);
@@ -459,9 +460,9 @@ describe("Hand stays sorted after a play", () => {
     await user.click(getHandCardButtons()[1]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    const ranks = getHandCardButtons().map((btn) =>
-      rankIndex(btn.getAttribute("aria-label")),
-    );
+    const ranks = getHandCardButtons()
+      .map((btn) => rankIndex(btn.getAttribute("aria-label")))
+      .filter((r): r is number => r !== null);
     const isDescending = ranks.every(
       (r, i) => i === 0 || ranks[i - 1] >= r,
     );
@@ -475,9 +476,9 @@ describe("Hand stays sorted after a play", () => {
     await user.click(getHandCardButtons()[1]);
     await user.click(screen.getByText(/^🗑️ Discard$/));
     flushDiscardAnimation();
-    const ranks = getHandCardButtons().map((btn) =>
-      rankIndex(btn.getAttribute("aria-label")),
-    );
+    const ranks = getHandCardButtons()
+      .map((btn) => rankIndex(btn.getAttribute("aria-label")))
+      .filter((r): r is number => r !== null);
     const isDescending = ranks.every(
       (r, i) => i === 0 || ranks[i - 1] >= r,
     );
@@ -857,7 +858,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$15");
+    expect(getStatValue("Money")).toHaveTextContent("$11");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
@@ -877,25 +878,25 @@ describe("Round won modal", () => {
 
   test("gold scoring animation pays $3 per held gold card into the wallet before the modal opens", async () => {
     await triggerWin();
-    expect(getStatValue("Money")).toHaveTextContent("$10");
+    expect(getStatValue("Money")).toHaveTextContent("$7");
   });
 
-  test("modal interest is calculated on the gold-augmented wallet (floor($10 / $5) = $2)", async () => {
+  test("modal interest is calculated on the gold-augmented wallet (floor($7 / $5) = $1)", async () => {
     await triggerWin();
-    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$2");
+    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
   });
 
   test("modal interest label reflects the gold-augmented wallet", async () => {
     await triggerWin();
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
-      "on $10",
+      "on $7",
     );
   });
 
   test("gold scoring plays the gold sound once per held gold card", async () => {
     await triggerWin();
     const goldCalls = playMock.mock.calls.filter(([name]) => name === "gold");
-    expect(goldCalls).toHaveLength(2);
+    expect(goldCalls).toHaveLength(1);
   });
 
   test("submitting an empty hand never plays the gold sound (negative)", async () => {
