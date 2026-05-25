@@ -140,4 +140,26 @@ describe("Card", () => {
     render(<Card card={aceOfSpades} />);
     expect(screen.getByRole("button")).not.toHaveClass("card-face");
   });
+
+  test("applies the gold enhancement class when the card is gold", () => {
+    const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-gold");
+  });
+
+  test("does not apply any enhancement class to a vanilla card", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button").className).not.toMatch(/card-enhancement-/);
+  });
+
+  test("appends the enhancement to the accessible label when gold", () => {
+    const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold)");
+  });
+
+  test("does not append an enhancement suffix to a vanilla card's accessible label", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("A of Spades");
+  });
 });

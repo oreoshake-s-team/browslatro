@@ -1,6 +1,10 @@
 import "./RoundWonModal.css";
 import { createPortal } from "react-dom";
-import { INTEREST_CAP, INTEREST_RATE_PER } from "../../payout";
+import {
+  GOLD_HELD_BONUS_PER_CARD,
+  INTEREST_CAP,
+  INTEREST_RATE_PER,
+} from "../../payout";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export interface RoundWonInfo {
@@ -9,6 +13,7 @@ export interface RoundWonInfo {
   readonly baseReward: number;
   readonly walletAtPayout: number;
   readonly interest: number;
+  readonly goldHeldCount: number;
 }
 
 interface RoundWonModalProps {
@@ -17,11 +22,19 @@ interface RoundWonModalProps {
 }
 
 export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) {
-  const { roundScore, requiredScore, baseReward, walletAtPayout, interest } =
-    info;
+  const {
+    roundScore,
+    requiredScore,
+    baseReward,
+    walletAtPayout,
+    interest,
+    goldHeldCount,
+  } = info;
   const beatBy = roundScore - requiredScore;
-  const total = baseReward + interest;
+  const goldBonus = goldHeldCount * GOLD_HELD_BONUS_PER_CARD;
+  const total = baseReward + interest + goldBonus;
   const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${walletAtPayout}`;
+  const goldLabel = `Gold cards (${goldHeldCount} × $${GOLD_HELD_BONUS_PER_CARD})`;
   useEscapeToClose(onContinue, true);
 
   return createPortal(
@@ -63,6 +76,12 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
               <dt data-testid="round-won-interest-label">{interestLabel}</dt>
               <dd data-testid="round-won-interest">+${interest}</dd>
             </div>
+            {goldHeldCount > 0 && (
+              <div className="round-won-payout-row">
+                <dt data-testid="round-won-gold-label">{goldLabel}</dt>
+                <dd data-testid="round-won-gold">+${goldBonus}</dd>
+              </div>
+            )}
             <div className="round-won-payout-row round-won-payout-total">
               <dt>Total</dt>
               <dd data-testid="round-won-total">${total}</dd>

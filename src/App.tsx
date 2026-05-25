@@ -19,7 +19,7 @@ import { evaluateHand } from "./handEvaluator";
 import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
-import { calculateInterest } from "./payout";
+import { calculateInterest, countGoldHeldInHand, GOLD_HELD_BONUS_PER_CARD } from "./payout";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -165,7 +165,10 @@ function App() {
 
   function handleWin() {
     setRound((prev) => prev + 1);
-    setMoney((prev) => prev + (blind + 2) + calculateInterest(prev));
+    const goldBonus = pendingWin
+      ? pendingWin.goldHeldCount * GOLD_HELD_BONUS_PER_CARD
+      : 0;
+    setMoney((prev) => prev + (blind + 2) + calculateInterest(prev) + goldBonus);
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
@@ -397,6 +400,7 @@ function App() {
         baseReward: blind + 2,
         walletAtPayout: money,
         interest: calculateInterest(money),
+        goldHeldCount: countGoldHeldInHand(dealt.hand, submittedSelection),
       });
       return;
     }

@@ -836,7 +836,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$7");
+    expect(getStatValue("Money")).toHaveTextContent("$16");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
@@ -1177,11 +1177,13 @@ describe("Post-round shop integration", () => {
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
     expect(screen.getByRole("button", { name: /Reroll/ })).toBeDisabled();
   });
 
   test("clicking Reroll when disabled is a no-op on money", async () => {
     const user = await openShop();
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));

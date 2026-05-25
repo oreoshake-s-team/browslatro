@@ -40,30 +40,30 @@ test("always-win path: 4 consecutive Straight Flushes advance ante and money", a
   await page.goto("/");
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
-  // Round 1 — Ante 1 Small Blind (need 300) → start $4, +$3 base, interest on $4 = $0.
+  // Round 1 — start $4, +$3 base, +$0 interest, +$9 gold (3 held). End $16.
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$7");
+  await expect(statValue(page, "Money")).toHaveText("$16");
 
-  // Round 2 — Ante 1 Big Blind (need 450) → +$4 base, interest on $7 = $1.
+  // Round 2 — +$4 base, +$3 interest, +$9 gold. End $32.
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$12");
+  await expect(statValue(page, "Money")).toHaveText("$32");
 
-  // Round 3 — Ante 1 Boss Blind (need 600) → +$5 base, interest on $12 = $2.
+  // Round 3 — +$5 base, +$5 interest (capped), +$9 gold. End $51.
   await expect(page.getByRole("heading", { name: "Boss Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$19");
+  await expect(statValue(page, "Money")).toHaveText("$51");
 
-  // Round 4 — Ante 2 Small Blind (need 800) → +$3 base, interest on $19 = $3.
+  // Round 4 — +$3 base, +$5 interest (capped), +$9 gold. End $68.
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await expect(statValue(page, "Ante")).toHaveText("2");
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$25");
+  await expect(statValue(page, "Money")).toHaveText("$68");
 
   // End state: Ante 2 Big Blind, hand re-dealt. No Game Over alert fired.
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();

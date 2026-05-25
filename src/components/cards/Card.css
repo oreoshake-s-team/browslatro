@@ -229,3 +229,17 @@
 .card-face-king .card-face-glyph {
   font-size: 2.4rem;
 }
+
+.card-enhancement-gold {
+  border-color: #f59f00;
+  border-width: 3px;
+  box-shadow: 0 0 0 2px rgba(245, 159, 0, 0.45),
+    0 2px 8px rgba(245, 159, 0, 0.5),
+    inset 0 0 14px rgba(255, 224, 102, 0.55);
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 224, 102, 0.55) 0%,
+    rgba(255, 255, 255, 0.85) 45%,
+    rgba(255, 224, 102, 0.55) 100%
+  );
+}
