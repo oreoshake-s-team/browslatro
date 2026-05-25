@@ -20,6 +20,7 @@ import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
+import { steelHeldMultiplier } from "./heldInHand";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -380,19 +381,22 @@ function App() {
       perCardAdditiveMult += applyPerCardJokers(jokers, scoring[i]).additiveMult;
     }
 
+    const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
+    const combinedXMult = handJokerResult.xMult * steelMult;
+
     const finalScore = computeFinalScoreWithJokers(
       handStats.chips,
       handStats.multiplier,
       cardChipsTotal,
       {
         additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
-        xMult: handJokerResult.xMult,
+        xMult: combinedXMult,
         moneyEarned: 0,
       },
     );
 
     const liveMultiplier =
-      (handStats.multiplier + handJokerResult.additiveMult) * handJokerResult.xMult;
+      (handStats.multiplier + handJokerResult.additiveMult) * combinedXMult;
     setChips(handStats.chips);
     setMultiplier(liveMultiplier);
     scoringFinalizeRef.current = () => {

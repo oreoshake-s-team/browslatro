@@ -1,4 +1,5 @@
 import type { Card } from "./types";
+import { countHeldEnhancement } from "./heldInHand";
 
 export const INTEREST_RATE_PER = 5;
 export const INTEREST_CAP = 5;
@@ -14,9 +15,7 @@ export function countGoldHeldInHand(
   hand: ReadonlyArray<Card>,
   submittedIds: ReadonlySet<number>,
 ): number {
-  return hand.filter(
-    (c) => c.enhancement === "gold" && !submittedIds.has(c.id),
-  ).length;
+  return countHeldEnhancement(hand, submittedIds, "gold");
 }
 
 export function goldHeldBonus(
