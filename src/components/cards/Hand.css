@@ -112,6 +112,25 @@
   outline-color: #339af0;
 }
 
+.hand-card-gap {
+  align-self: stretch;
+  width: 0.4rem;
+  min-height: 7rem;
+  border-radius: 4px;
+  background-color: transparent;
+  transition: background-color 80ms linear, width 80ms linear;
+}
+
+.hand-card-gap-trailing {
+  justify-self: start;
+}
+
+.hand-card-gap-active {
+  background-color: #339af0;
+  width: 0.6rem;
+  box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.35);
+}
+
 .hand-card-reorder {
   display: flex;
   gap: 0.25rem;

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
@@ -62,7 +62,7 @@ export default function Hand({
     null,
   );
   const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
 
   const displayedHand = useMemo(
     () =>
@@ -95,6 +95,19 @@ export default function Hand({
     swapByIds(cardId, currentOrder[target]);
   }
 
+  function insertAtIndex(sourceId: number, destIndex: number) {
+    const currentOrder = displayedHand.map((c) => c.id);
+    const fromIdx = currentOrder.indexOf(sourceId);
+    if (fromIdx < 0) return;
+    if (destIndex < 0 || destIndex > currentOrder.length) return;
+    if (destIndex === fromIdx || destIndex === fromIdx + 1) return;
+    const next = currentOrder.slice();
+    next.splice(fromIdx, 1);
+    const adjusted = destIndex > fromIdx ? destIndex - 1 : destIndex;
+    next.splice(adjusted, 0, sourceId);
+    setManualOrder(next);
+  }
+
   function insertRelativeToTarget(sourceId: number, targetId: number) {
     if (sourceId === targetId) return;
     const currentOrder = displayedHand.map((c) => c.id);
@@ -109,7 +122,7 @@ export default function Hand({
 
   function endDrag() {
     setDraggingId(null);
-    setDragOverId(null);
+    setActiveGapIndex(null);
   }
 
   function handleDragStart(cardId: number, e: React.DragEvent<HTMLDivElement>) {
@@ -120,24 +133,30 @@ export default function Hand({
     }
   }
 
-  function handleDragOver(cardId: number, e: React.DragEvent<HTMLDivElement>) {
-    if (draggingId === null || draggingId === cardId) return;
+  function handleGapDragOver(
+    gapIndex: number,
+    e: React.DragEvent<HTMLDivElement>,
+  ) {
+    if (draggingId === null) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    if (dragOverId !== cardId) setDragOverId(cardId);
+    if (activeGapIndex !== gapIndex) setActiveGapIndex(gapIndex);
   }
 
-  function handleDragLeave(cardId: number) {
-    if (dragOverId === cardId) setDragOverId(null);
+  function handleGapDragLeave(gapIndex: number) {
+    if (activeGapIndex === gapIndex) setActiveGapIndex(null);
   }
 
-  function handleDrop(targetId: number, e: React.DragEvent<HTMLDivElement>) {
+  function handleGapDrop(
+    gapIndex: number,
+    e: React.DragEvent<HTMLDivElement>,
+  ) {
     e.preventDefault();
     const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
     const draggedId =
       raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
     if (draggedId !== null) {
-      insertRelativeToTarget(draggedId, targetId);
+      insertAtIndex(draggedId, gapIndex);
     }
     endDrag();
   }
@@ -189,63 +208,111 @@ export default function Hand({
         <div className="hand-cards" aria-label="Your hand">
           {displayedHand.map((card, idx) => {
             const isDragging = draggingId === card.id;
-            const isDragOver =
-              dragOverId === card.id && draggingId !== null && draggingId !== card.id;
             const slotClass = [
               "hand-card-slot",
               isDragging ? "hand-card-slot-dragging" : "",
-              isDragOver ? "hand-card-slot-drop-target" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            const draggingIdx =
+              draggingId !== null
+                ? displayedHand.findIndex((c) => c.id === draggingId)
+                : -1;
+            const leftGapIsNoOp =
+              draggingIdx >= 0 && (idx === draggingIdx || idx === draggingIdx + 1);
+            const leftGapActive =
+              activeGapIndex === idx && draggingId !== null && !leftGapIsNoOp;
+            const leftGapClass = [
+              "hand-card-gap",
+              leftGapActive ? "hand-card-gap-active" : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            return (
+              <Fragment key={card.id}>
+                <div
+                  className={leftGapClass}
+                  data-testid={`hand-gap-${idx}`}
+                  aria-hidden="true"
+                  onDragOver={(e) => handleGapDragOver(idx, e)}
+                  onDragLeave={() => handleGapDragLeave(idx)}
+                  onDrop={(e) => handleGapDrop(idx, e)}
+                />
+                <div
+                  className={slotClass}
+                  draggable
+                  aria-grabbed={isDragging || undefined}
+                  data-testid={`hand-slot-${card.id}`}
+                  onDragStart={(e) => handleDragStart(card.id, e)}
+                  onDragEnd={endDrag}
+                >
+                  <Card
+                    card={card}
+                    selected={selectedIds.has(card.id)}
+                    discarding={discardingIds.has(card.id)}
+                    scoring={scoringId === card.id}
+                    onToggle={onToggleCard}
+                    onDiscardEnd={onCardDiscardEnd}
+                  />
+                  <div
+                    className="hand-card-reorder"
+                    role="group"
+                    aria-label={`Reorder ${cardLabel(card)}`}
+                  >
+                    <button
+                      type="button"
+                      className="hand-card-reorder-button"
+                      aria-label={`Move ${cardLabel(card)} left`}
+                      disabled={idx === 0}
+                      onClick={() => moveCard(card.id, -1)}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="hand-card-reorder-button"
+                      aria-label={`Move ${cardLabel(card)} right`}
+                      disabled={idx === displayedHand.length - 1}
+                      onClick={() => moveCard(card.id, 1)}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                </div>
+              </Fragment>
+            );
+          })}
+          {(() => {
+            const lastIdx = displayedHand.length;
+            const draggingIdx =
+              draggingId !== null
+                ? displayedHand.findIndex((c) => c.id === draggingId)
+                : -1;
+            const lastGapIsNoOp =
+              draggingIdx >= 0 &&
+              (lastIdx === draggingIdx || lastIdx === draggingIdx + 1);
+            const lastGapActive =
+              activeGapIndex === lastIdx &&
+              draggingId !== null &&
+              !lastGapIsNoOp;
+            const lastGapClass = [
+              "hand-card-gap",
+              "hand-card-gap-trailing",
+              lastGapActive ? "hand-card-gap-active" : "",
             ]
               .filter(Boolean)
               .join(" ");
             return (
               <div
-                key={card.id}
-                className={slotClass}
-                draggable
-                aria-grabbed={isDragging || undefined}
-                data-testid={`hand-slot-${card.id}`}
-                onDragStart={(e) => handleDragStart(card.id, e)}
-                onDragOver={(e) => handleDragOver(card.id, e)}
-                onDragLeave={() => handleDragLeave(card.id)}
-                onDrop={(e) => handleDrop(card.id, e)}
-                onDragEnd={endDrag}
-              >
-                <Card
-                  card={card}
-                  selected={selectedIds.has(card.id)}
-                  discarding={discardingIds.has(card.id)}
-                  scoring={scoringId === card.id}
-                  onToggle={onToggleCard}
-                  onDiscardEnd={onCardDiscardEnd}
-                />
-                <div
-                  className="hand-card-reorder"
-                  role="group"
-                  aria-label={`Reorder ${cardLabel(card)}`}
-                >
-                  <button
-                    type="button"
-                    className="hand-card-reorder-button"
-                    aria-label={`Move ${cardLabel(card)} left`}
-                    disabled={idx === 0}
-                    onClick={() => moveCard(card.id, -1)}
-                  >
-                    ◀
-                  </button>
-                  <button
-                    type="button"
-                    className="hand-card-reorder-button"
-                    aria-label={`Move ${cardLabel(card)} right`}
-                    disabled={idx === displayedHand.length - 1}
-                    onClick={() => moveCard(card.id, 1)}
-                  >
-                    ▶
-                  </button>
-                </div>
-              </div>
+                className={lastGapClass}
+                data-testid={`hand-gap-${lastIdx}`}
+                aria-hidden="true"
+                onDragOver={(e) => handleGapDragOver(lastIdx, e)}
+                onDragLeave={() => handleGapDragLeave(lastIdx)}
+                onDrop={(e) => handleGapDrop(lastIdx, e)}
+              />
             );
-          })}
+          })()}
         </div>
         <div className="hand-deck">
           <DeckPile remaining={remaining} />
