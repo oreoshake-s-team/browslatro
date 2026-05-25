@@ -2,7 +2,7 @@ import type { Blind } from "../../types";
 import "./Sidebar.css";
 import { BlindValues } from "../../constants";
 import Round from "./Round";
-import RunInfo from "./RunInfo";
+import RunInfo, { type HandPlayCounts } from "./RunInfo";
 import Options from "../options/Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
@@ -22,6 +22,7 @@ interface SidebarProps {
   selectedHand: Hand | null;
   remainingHands: number;
   remainingDiscards: number;
+  handPlayCounts: HandPlayCounts;
   onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
@@ -39,6 +40,7 @@ export default function Sidebar({
   selectedHand,
   remainingHands,
   remainingDiscards,
+  handPlayCounts,
   onNewGame,
   onHighVisibilityChange,
   onAnimationSpeedChange,
@@ -58,7 +60,7 @@ export default function Sidebar({
       />
       <div className="sub-info-progress">
         <div className="sub-info">
-          <RunInfo />
+          <RunInfo handPlayCounts={handPlayCounts} />
           <Options
             onNewGame={onNewGame}
             onHighVisibilityChange={onHighVisibilityChange}

@@ -6,6 +6,10 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop, { type ShopOffer } from "./components/shop/Shop";
 import Sidebar from "./components/hud/Sidebar";
+import {
+  emptyHandCounts,
+  type HandPlayCounts,
+} from "./components/hud/RunInfo";
 import { play } from "./components/system/sounds";
 import {
   getAnimationSpeed,
@@ -91,6 +95,9 @@ function App() {
   const [jokerPulseCounters, setJokerPulseCounters] = useState<
     Readonly<Record<string, number>>
   >({});
+  const [handPlayCounts, setHandPlayCounts] = useState<HandPlayCounts>(
+    emptyHandCounts,
+  );
   const pendingDiscardCountRef = useRef(0);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
@@ -319,6 +326,7 @@ function App() {
     setAnte(1);
     setMoney(4);
     setJokers(createDefaultJokers());
+    setHandPlayCounts(emptyHandCounts());
     startNewRound();
   }
 
@@ -408,6 +416,7 @@ function App() {
     }
 
     const label = detectHandLabel(playedCards);
+    setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
     const handStats = evaluateHand(playedCards);
     const scoring = getScoringCards(playedCards, label);
     const cardChipsTotal = scoring.reduce(
@@ -548,6 +557,7 @@ function App() {
         selectedHand={selectedHand}
         remainingHands={remainingHands}
         remainingDiscards={remainingDiscards}
+        handPlayCounts={handPlayCounts}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
         onAnimationSpeedChange={setAnimationSpeedState}

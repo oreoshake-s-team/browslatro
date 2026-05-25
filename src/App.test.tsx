@@ -1259,3 +1259,50 @@ describe("Post-round shop integration", () => {
     );
   });
 });
+
+describe("Run information modal integration", () => {
+  test("submitting a non-empty play increments that hand label's count", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
+      "1",
+    );
+  });
+
+  test("submitting an empty hand does not increment any count", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
+      "0",
+    );
+  });
+
+  test("starting a new game resets the play counts to zero", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
+      "0",
+    );
+  });
+
+  test("the run info modal is reachable from the sidebar trigger button", () => {
+    render(<App />);
+    expect(
+      screen.getByRole("button", { name: "Run info" }),
+    ).toBeInTheDocument();
+  });
+});
