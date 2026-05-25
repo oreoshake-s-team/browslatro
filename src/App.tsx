@@ -62,6 +62,7 @@ import {
   type JokerPostHandStep,
 } from "./jokers";
 import { pickShopOffers, rerollShopOffer, type ShopItem } from "./shop";
+import { pickVoucherForAnte, type Voucher, type VoucherId } from "./vouchers";
 
 export const SCORING_STEP_MS = 500;
 
@@ -124,6 +125,7 @@ function App() {
   const pendingDiscardCountRef = useRef(0);
   const pendingHandPlayResetRef = useRef(false);
   const [handPlaySignal, setHandPlaySignal] = useState(0);
+  const skipDrawAfterDiscardRef = useRef(false);
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -168,6 +170,13 @@ function App() {
     null,
   );
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
+  const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
+    () => new Set(),
+  );
+  const [currentAnteVoucher, setCurrentAnteVoucher] = useState<Voucher | null>(
+    () => pickVoucherForAnte({ ante: 1, ownedIds: new Set() }),
+  );
+  const [currentAnteVoucherSold, setCurrentAnteVoucherSold] = useState(false);
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -183,6 +192,7 @@ function App() {
     setMultiplier(0);
     pendingDiscardCountRef.current = 0;
     pendingHandPlayResetRef.current = false;
+    skipDrawAfterDiscardRef.current = false;
     setScoringCards([]);
     setScoringIndex(0);
     scoringFinalizeRef.current = null;
@@ -300,8 +310,13 @@ function App() {
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
-      setAnte((prev) => prev + 1);
+      const nextAnte = ante + 1;
+      setAnte(nextAnte);
       setBlind(1);
+      setCurrentAnteVoucher(
+        pickVoucherForAnte({ ante: nextAnte, ownedIds: ownedVoucherIds }),
+      );
+      setCurrentAnteVoucherSold(false);
     }
     setShopOffers(
       pickShopOffers({
@@ -405,6 +420,22 @@ function App() {
     startNewRound();
   }
 
+  function buyCurrentAnteVoucher() {
+    const voucher = currentAnteVoucher;
+    if (!voucher) return;
+    if (currentAnteVoucherSold) return;
+    if (money < voucher.cost) return;
+    if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
+    play("pop");
+    setMoney((prev) => prev - voucher.cost);
+    setOwnedVoucherIds((prev) => {
+      const next = new Set(prev);
+      next.add(voucher.id);
+      return next;
+    });
+    setCurrentAnteVoucherSold(true);
+  }
+
   function reorderJokers(orderedIds: ReadonlyArray<string>) {
     setJokers((prev) => {
       const byId = new Map(prev.map((j) => [j.id, j]));
@@ -424,6 +455,11 @@ function App() {
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
     setConsumables([]);
+    setPendingTarot(null);
+    const freshOwned = new Set<VoucherId>();
+    setOwnedVoucherIds(freshOwned);
+    setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
+    setCurrentAnteVoucherSold(false);
     startNewRound();
   }
 
@@ -478,10 +514,15 @@ function App() {
 
   function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
     const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
-    const drawCount = dealt.hand.length - kept.length;
-    const drawn = dealt.remaining.slice(0, drawCount);
-    const newRemaining = dealt.remaining.slice(drawCount);
-    setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    if (skipDrawAfterDiscardRef.current) {
+      skipDrawAfterDiscardRef.current = false;
+      setDealt({ hand: kept, remaining: dealt.remaining });
+    } else {
+      const drawCount = dealt.hand.length - kept.length;
+      const drawn = dealt.remaining.slice(0, drawCount);
+      const newRemaining = dealt.remaining.slice(drawCount);
+      setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    }
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -595,12 +636,14 @@ function App() {
     setScoringCards([]);
     setScoringIndex(0);
 
+    const roundWon = newRoundScore >= requiredScore;
     if (submittedSelection.size > 0) {
       pendingDiscardCountRef.current = submittedSelection.size;
+      skipDrawAfterDiscardRef.current = roundWon;
       setDiscardingIds(submittedSelection);
     }
 
-    if (newRoundScore >= requiredScore) {
+    if (roundWon) {
       const heldGoldIds = dealt.hand
         .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
         .map((c) => c.id);
@@ -717,7 +760,11 @@ function App() {
           equippedJokerCount={jokers.length}
           consumableCount={consumables.length}
           offers={shopOffers}
+          voucher={currentAnteVoucher}
+          voucherSold={currentAnteVoucherSold}
+          ownedVoucherIds={ownedVoucherIds}
           onBuy={buyShopOffer}
+          onBuyVoucher={buyCurrentAnteVoucher}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
         />

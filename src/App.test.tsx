@@ -307,6 +307,10 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("keeps the hand at 8 cards by drawing replacements from the deck", async () => {
+    // Identity shuffle deals Spades 2..9; selecting the top 3 (9,8,7♠) scores
+    // a High Card well below the 300 threshold, so the round is not won and
+    // replacements are drawn.
+    mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
@@ -319,6 +323,7 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("decrements the remaining deck count by the number of discarded cards", async () => {
+    mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
@@ -620,6 +625,33 @@ describe("Submit Hand win integration", () => {
     // Round-won modal now blocks until dismissed.
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+
+  test("no replacement cards are drawn into the hand after a winning hand", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(getHandCardButtons()).toHaveLength(3);
+  });
+
+  test("the deck pile retains its remaining count after a winning hand", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const beforeLabel = screen
+      .getByRole("button", { name: /Deck \(\d+ cards remaining\)/ })
+      .getAttribute("aria-label");
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(
+      screen.getByRole("button", { name: /Deck \(\d+ cards remaining\)/ }),
+    ).toHaveAttribute("aria-label", beforeLabel ?? "");
   });
 });
 
@@ -1205,8 +1237,11 @@ describe("Post-round shop integration", () => {
 
   test("buying an offer adds the joker to the equipped set", async () => {
     const user = await openShop();
-    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
-    await user.click(buyButtons[0]);
+    const buy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
     expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(4);
   });
 
@@ -1277,8 +1312,11 @@ describe("Post-round shop integration", () => {
 
   test("Reroll preserves already-sold offers in place", async () => {
     const user = await openShop();
-    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
-    await user.click(buyButtons[0]);
+    const buy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
     const soldNameBefore = screen
       .getByTestId("shop-offer-0")
       .querySelector(".shop-offer-name")?.textContent;
@@ -1751,5 +1789,76 @@ describe("Tarot purchase integration", () => {
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
+  });
+});
+
+describe("Voucher integration", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  function moneyValue(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  test("renders the voucher slot when the shop opens", async () => {
+    await openShop();
+    expect(screen.getByTestId("shop-voucher")).toBeInTheDocument();
+  });
+
+  test("buying the voucher deducts its cost from money", async () => {
+    const user = await openShop();
+    const before = moneyValue();
+    const buy = screen.getByTestId("shop-voucher-buy");
+    await user.click(buy);
+    expect(moneyValue()).toBe(before - 10);
+  });
+
+  test("buying the voucher marks the voucher slot as Sold", async () => {
+    const user = await openShop();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+  });
+
+  test("clicking Reroll does not change the voucher's name", async () => {
+    const user = await openShop();
+    const slot = screen.getByTestId("shop-voucher");
+    const before = slot.querySelector(".shop-voucher-name")?.textContent ?? "";
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    const after =
+      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name")
+        ?.textContent ?? "";
+    expect(after).toBe(before);
+  });
+
+  test("clicking Reroll does not clear the voucher Sold state", async () => {
+    const user = await openShop();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+  });
+
+  test("the voucher remains Sold across blinds within the same ante", async () => {
+    const user = await openShop();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
   });
 });
