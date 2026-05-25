@@ -51,6 +51,7 @@ export function applyPlanetUpgrade(
     next[label] = {
       chips: prev.chips + card.chipsDelta,
       multiplier: prev.multiplier + card.multDelta,
+      level: prev.level + 1,
     };
   }
   return next;

@@ -84,7 +84,7 @@ describe("RunInfo with upgraded handStats", () => {
   test("renders upgraded chips × mult for a hand whose stats are above baseline", async () => {
     const upgraded: HandStats = {
       ...defaultStats,
-      "High Card": { chips: 15, multiplier: 2 },
+      "High Card": { chips: 15, multiplier: 2, level: 2 },
     };
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
@@ -94,10 +94,34 @@ describe("RunInfo with upgraded handStats", () => {
     );
   });
 
+  test("renders the upgraded level for the hand", async () => {
+    const upgraded: HandStats = {
+      ...defaultStats,
+      "High Card": { chips: 15, multiplier: 2, level: 2 },
+    };
+    const user = userEvent.setup();
+    render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent(
+      "2",
+    );
+  });
+
+  test("non-upgraded hand rows render level 1", async () => {
+    const upgraded: HandStats = {
+      ...defaultStats,
+      "High Card": { chips: 15, multiplier: 2, level: 2 },
+    };
+    const user = userEvent.setup();
+    render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-Pair")).toHaveTextContent("1");
+  });
+
   test("leaves non-upgraded hand rows showing their baseline stats", async () => {
     const upgraded: HandStats = {
       ...defaultStats,
-      "High Card": { chips: 15, multiplier: 2 },
+      "High Card": { chips: 15, multiplier: 2, level: 2 },
     };
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);

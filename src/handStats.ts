@@ -4,6 +4,7 @@ import { HANDS } from "./constants";
 export interface HandStatsEntry {
   readonly chips: number;
   readonly multiplier: number;
+  readonly level: number;
 }
 
 export type HandStats = Readonly<Record<HandLabel, HandStatsEntry>>;
@@ -14,6 +15,7 @@ export function createDefaultHandStats(): HandStats {
     stats[hand.label as HandLabel] = {
       chips: hand.chips,
       multiplier: hand.multiplier,
+      level: 1,
     };
   }
   return stats;

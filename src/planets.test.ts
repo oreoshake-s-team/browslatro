@@ -130,6 +130,36 @@ describe("applyPlanetUpgrade", () => {
     );
   });
 
+  test("increments the level of the matching hand by 1", () => {
+    const before = createDefaultHandStats();
+    const after = applyPlanetUpgrade(before, planetById("pluto"));
+    expect(after["High Card"].level).toBe(before["High Card"].level + 1);
+  });
+
+  test("leaves unrelated hand levels untouched", () => {
+    const before = createDefaultHandStats();
+    const after = applyPlanetUpgrade(before, planetById("pluto"));
+    expect(after.Pair.level).toBe(before.Pair.level);
+  });
+
+  test("Neptune increments level on both Straight Flush and Royal Flush", () => {
+    const before = createDefaultHandStats();
+    const after = applyPlanetUpgrade(before, planetById("neptune"));
+    expect(after["Straight Flush"].level).toBe(
+      before["Straight Flush"].level + 1,
+    );
+    expect(after["Royal Flush"].level).toBe(before["Royal Flush"].level + 1);
+  });
+
+  test("two applications of the same planet bring level to 3", () => {
+    const before = createDefaultHandStats();
+    const twice = applyPlanetUpgrade(
+      applyPlanetUpgrade(before, planetById("pluto")),
+      planetById("pluto"),
+    );
+    expect(twice["High Card"].level).toBe(3);
+  });
+
   test("does not mutate the input stats object", () => {
     const before = createDefaultHandStats();
     const snapshot = before["High Card"];
