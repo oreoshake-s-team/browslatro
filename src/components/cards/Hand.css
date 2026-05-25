@@ -84,15 +84,20 @@
 }
 
 /* Drop-zone spacers interleaved between (and around) every card slot.
- * Resting width is a small column that supplies the visual gap between
- * cards; on drag-over the spacer expands to a card-sized slot to show
- * exactly where the dragged card will land. */
+ * Resting width gives the row visible breathing room between cards. While
+ * a drag is in flight the spacers widen to make the drop hitbox more
+ * forgiving, and the actively-hovered spacer expands again to a
+ * card-sized slot so the insertion point is unmistakable. */
 .hand-card-gap {
-  flex: 0 0 0.3rem;
+  flex: 0 0 1rem;
   align-self: stretch;
   min-height: 9.5rem;
   border-radius: 4px;
   transition: flex-basis 120ms ease, background-color 120ms ease;
+}
+
+.hand-cards-dragging .hand-card-gap {
+  flex-basis: 2rem;
 }
 
 .hand-card-gap-active {

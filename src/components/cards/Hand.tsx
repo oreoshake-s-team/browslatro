@@ -223,7 +223,12 @@ export default function Hand({
         </div>
       </div>
       <div className="hand-row">
-        <div className="hand-cards" aria-label="Your hand">
+        <div
+          className={`hand-cards${
+            draggingId !== null ? " hand-cards-dragging" : ""
+          }`}
+          aria-label="Your hand"
+        >
           {displayedHand.map((card, idx) => {
             const isDragging = draggingId === card.id;
             const slotClass = [
