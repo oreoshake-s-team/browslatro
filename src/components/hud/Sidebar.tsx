@@ -19,7 +19,7 @@ interface SidebarProps {
   multiplier: number;
   roundScore: number;
   requiredScore: number;
-  selectedHand: Hand;
+  selectedHand: Hand | null;
   remainingHands: number;
   remainingDiscards: number;
   onNewGame: () => void;

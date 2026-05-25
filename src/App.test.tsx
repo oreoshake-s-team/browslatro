@@ -113,23 +113,23 @@ describe("Win button integration", () => {
     render(<App />);
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 300")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$0");
+    expect(getStatValue("Money")).toHaveTextContent("$4");
 
-    await user.click(screen.getByText(/Win/)); // small → big, +$3
+    await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 450")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$3");
+    expect(getStatValue("Money")).toHaveTextContent("$7");
     expect(getStatValue("Round")).toHaveTextContent("2");
 
-    await user.click(screen.getByText(/Win/)); // big → boss, +$4
+    await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$7");
+    expect(getStatValue("Money")).toHaveTextContent("$12");
 
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 800")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
-    expect(getStatValue("Money")).toHaveTextContent("$13");
+    expect(getStatValue("Money")).toHaveTextContent("$19");
   });
 });
 
@@ -138,7 +138,7 @@ describe("Add Chips button integration", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
-    expect(document.querySelector(".chips")).toHaveTextContent("30");
+    expect(document.querySelector(".chips")).toHaveTextContent("10");
   });
 });
 
@@ -147,7 +147,7 @@ describe("Add Multiplier button integration", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
-    expect(document.querySelector(".multiplier")).toHaveTextContent("3");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("1");
   });
 });
 
@@ -155,8 +155,9 @@ describe("Multiply Multiplier button integration", () => {
   test("clicking Multiply Multiplier updates multiplier shown in the sidebar", async () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<App />);
+    await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Multiply Multiplier/));
-    expect(document.querySelector(".multiplier")).toHaveTextContent("4");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("2");
   });
 });
 
@@ -188,6 +189,56 @@ function flushDiscardAnimation(): void {
     .filter((btn) => btn.classList.contains("card-discarding"))
     .forEach((btn) => fireEvent.animationEnd(btn));
 }
+
+describe("Fresh round empty HandScore", () => {
+  test("does not render the High Card label in the sidebar on a fresh round", () => {
+    render(<App />);
+    const sidebarHeadings = Array.from(
+      document.querySelectorAll(".sidebar h3"),
+    ).map((el) => el.textContent);
+    expect(sidebarHeadings).not.toContain("High Card");
+  });
+
+  test("renders chips as 0 in the sidebar on a fresh round", () => {
+    render(<App />);
+    expect(document.querySelector(".chips")).toHaveTextContent("0");
+  });
+
+  test("renders multiplier as 0 in the sidebar on a fresh round", () => {
+    render(<App />);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+  });
+
+  test("deselecting the last selected card returns chips to 0", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const card = getHandCardButtons()[0];
+    await user.click(card);
+    await user.click(card);
+    expect(document.querySelector(".chips")).toHaveTextContent("0");
+  });
+
+  test("deselecting the last selected card returns multiplier to 0", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const card = getHandCardButtons()[0];
+    await user.click(card);
+    await user.click(card);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+  });
+
+  test("deselecting the last selected card removes the hand label from the sidebar", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const card = getHandCardButtons()[0];
+    await user.click(card);
+    await user.click(card);
+    const sidebarHeadings = Array.from(
+      document.querySelectorAll(".sidebar h3"),
+    ).map((el) => el.textContent);
+    expect(sidebarHeadings).not.toContain("High Card");
+  });
+});
 
 describe("Card selection drives hand detection", () => {
   test("selecting a single card sets chips to High Card chip value", async () => {
@@ -495,7 +546,7 @@ describe("Submit Hand button integration", () => {
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
     await user.click(screen.getByText(/Submit Hand/));
-    expect(document.querySelector(".chips")).toHaveTextContent("20");
+    expect(document.querySelector(".chips")).toHaveTextContent("0");
   });
 
   test("resets multiplier back to the default after submit", async () => {
@@ -503,7 +554,7 @@ describe("Submit Hand button integration", () => {
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
     await user.click(screen.getByText(/Submit Hand/));
-    expect(document.querySelector(".multiplier")).toHaveTextContent("2");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
   });
 
   test("submitting with no cards selected adds 0 to the round score", async () => {
@@ -584,7 +635,7 @@ describe("Add Money button integration", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
-    expect(getStatValue("Money")).toHaveTextContent("$10");
+    expect(getStatValue("Money")).toHaveTextContent("$14");
   });
 });
 
@@ -594,7 +645,7 @@ describe("Subtract Money button integration", () => {
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
     await user.click(screen.getByText(/Subtract \$10/));
-    expect(getStatValue("Money")).toHaveTextContent("$0");
+    expect(getStatValue("Money")).toHaveTextContent("$4");
   });
 });
 
@@ -642,7 +693,7 @@ describe("Options modal new game integration", () => {
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$7"); // was $7 before new game
+    expect(getStatValue("Money")).toHaveTextContent("$12");
 
     await user.click(screen.getByText("Options"));
     expect(screen.getByRole("heading", { name: "Options" })).toBeInTheDocument();
@@ -652,7 +703,7 @@ describe("Options modal new game integration", () => {
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 300")).toBeInTheDocument();
-    expect(getStatValue("Money")).toHaveTextContent("$0"); // was $7 before new game
+    expect(getStatValue("Money")).toHaveTextContent("$4");
     expect(getStatValue("Ante")).toHaveTextContent("1");
     expect(getStatValue("Round")).toHaveTextContent("1");
   });
@@ -785,7 +836,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$3");
+    expect(getStatValue("Money")).toHaveTextContent("$7");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
