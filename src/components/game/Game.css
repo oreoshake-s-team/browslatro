@@ -13,12 +13,12 @@
 
 .game-top-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
   width: 100%;
-  max-width: 48rem;
+  max-width: 64rem;
   box-sizing: border-box;
   align-items: flex-start;
-  /* TODO: style */
 }
 
 .modifier-grid button,

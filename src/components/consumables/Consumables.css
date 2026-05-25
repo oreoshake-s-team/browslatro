@@ -1,10 +1,11 @@
 .consumables {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   align-items: stretch;
   gap: 0.6rem;
-  width: 100%;
-  max-width: 24rem;
+  width: 18rem;
+  max-width: 18rem;
   padding: 1rem 1.4rem;
   border: 2px solid #845ef7;
   border-radius: 8px;
