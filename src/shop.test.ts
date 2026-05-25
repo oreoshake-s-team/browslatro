@@ -82,6 +82,11 @@ describe("createJokerCatalog", () => {
       "lusty-joker",
       "wrathful-joker",
       "gluttonous-joker",
+      "jolly-joker",
+      "zany-joker",
+      "mad-joker",
+      "crazy-joker",
+      "droll-joker",
     ]);
   });
 

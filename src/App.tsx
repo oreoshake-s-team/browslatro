@@ -372,7 +372,9 @@ function App() {
       (sum, card) => sum + getRankChips(card.rank),
       0,
     );
-    const handJokerResult = applyHandLevelJokers(jokers);
+    const handJokerResult = applyHandLevelJokers(jokers, {
+      playedHandLabel: label,
+    });
     pulseJokers(handJokerResult.firedJokerIds);
 
     let perCardAdditiveMult = 0;
