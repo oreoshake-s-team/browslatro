@@ -23,8 +23,8 @@ function renderHand(overrides: Partial<React.ComponentProps<typeof Hand>> = {}) 
       remaining={deck.slice(8)}
       selectedIds={new Set()}
       discardingIds={new Set()}
-      onToggleCard={jest.fn()}
-      onCardDiscardEnd={jest.fn()}
+      onToggleCard={vi.fn()}
+      onCardDiscardEnd={vi.fn()}
       {...overrides}
     />
   );
@@ -63,7 +63,7 @@ describe("Hand", () => {
     const user = userEvent.setup();
     const deck = createDeck();
     const handCards = deck.slice(0, 8);
-    const onToggleCard = jest.fn();
+    const onToggleCard = vi.fn();
     renderHand({ hand: handCards, onToggleCard });
     const target = handCards[0];
     const targetLabel = `${target.rank} of ${
@@ -181,8 +181,8 @@ describe("Hand sorting", () => {
         remaining={[]}
         selectedIds={new Set()}
         discardingIds={new Set()}
-        onToggleCard={jest.fn()}
-        onCardDiscardEnd={jest.fn()}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
       />,
     );
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
@@ -303,8 +303,8 @@ describe("Hand manual reordering", () => {
         remaining={[]}
         selectedIds={new Set()}
         discardingIds={new Set()}
-        onToggleCard={jest.fn()}
-        onCardDiscardEnd={jest.fn()}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
       />,
     );
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
@@ -328,8 +328,8 @@ describe("Hand manual reordering", () => {
         remaining={[]}
         selectedIds={new Set()}
         discardingIds={new Set()}
-        onToggleCard={jest.fn()}
-        onCardDiscardEnd={jest.fn()}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
       />,
     );
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));

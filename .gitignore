@@ -2,11 +2,10 @@
 
 # dependencies
 /node_modules
-/.pnp
-.pnp.*
 
-# yarn berry (node-modules linker — cache is not committed)
+# yarn berry (PnP linker — commit .pnp.cjs, .pnp.loader.mjs, and .yarn/cache for zero-installs)
 .yarn/*
+!.yarn/cache
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases

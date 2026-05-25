@@ -177,7 +177,7 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("dropping a tile into the leftmost gap moves it to position 0", () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     dragTileToGap("joker-stencil", 0);
     expect(onReorder).toHaveBeenCalledWith([
@@ -188,7 +188,7 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("dropping a tile into the trailing gap moves it to the end", () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     dragTileToGap("plus-four-mult", 3);
     expect(onReorder).toHaveBeenCalledWith([
@@ -199,7 +199,7 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("dropping a tile into a middle gap inserts at that position (left → right)", () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     dragTileToGap("plus-four-mult", 2);
     expect(onReorder).toHaveBeenCalledWith([
@@ -210,7 +210,7 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("dropping a tile into a middle gap inserts at that position (right → left)", () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     dragTileToGap("joker-stencil", 1);
     expect(onReorder).toHaveBeenCalledWith([
@@ -221,14 +221,14 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("dropping a tile into its own left-adjacent gap is a no-op", () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     dragTileToGap("business-card", 1);
     expect(onReorder).not.toHaveBeenCalled();
   });
 
   test("dropping a tile into its own right-adjacent gap is a no-op", () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     dragTileToGap("business-card", 2);
     expect(onReorder).not.toHaveBeenCalled();
@@ -293,7 +293,7 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("clicking Move right shifts the joker one position right", async () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     const user = userEvent.setup();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     await user.click(
@@ -307,7 +307,7 @@ describe("Jokers drag-and-drop reordering", () => {
   });
 
   test("clicking Move left shifts the joker one position left", async () => {
-    const onReorder = jest.fn();
+    const onReorder = vi.fn();
     const user = userEvent.setup();
     render(<Jokers jokers={three} onReorder={onReorder} />);
     await user.click(

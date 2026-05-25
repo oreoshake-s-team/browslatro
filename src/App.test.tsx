@@ -1,3 +1,4 @@
+import type { MockedFunction } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App, { getScoringStepMs } from "./App";
@@ -9,9 +10,9 @@ import {
 } from "./components/system/preferences";
 import { play } from "./components/system/sounds";
 
-jest.mock("./components/system/sounds", () => ({ play: jest.fn() }));
+vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
-const playMock = play as jest.MockedFunction<typeof play>;
+const playMock = play as MockedFunction<typeof play>;
 
 function resetHighVisibility(): void {
   if (isHighVisibility()) {
@@ -24,10 +25,10 @@ function resetHighVisibility(): void {
 // but individual tests can opt into identity ordering to make the dealt hand
 // deterministic. With identity shuffle the dealt hand is Spades 2..9, which
 // displays in rank-descending order as 9♠, 8♠, 7♠, 6♠, 5♠, 4♠, 3♠, 2♠.
-// Name must start with "mock" so jest.mock can reference it from its factory.
+// Name must start with "mock" so vi.mock can reference it from its factory.
 const mockShuffleConfig = { useIdentity: false };
-jest.mock("./deck", () => {
-  const actual = jest.requireActual("./deck");
+vi.mock("./deck", async () => {
+  const actual = await vi.importActual<typeof import("./deck")>("./deck");
   return {
     ...actual,
     shuffle: <T,>(items: ReadonlyArray<T>): T[] =>
@@ -38,16 +39,16 @@ jest.mock("./deck", () => {
 beforeEach(() => {
   mockShuffleConfig.useIdentity = false;
   playMock.mockClear();
-  jest.useFakeTimers();
+  vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
 afterEach(() => {
   // Drain anything still scheduled before switching back, so React doesn't try
   // to update unmounted state.
   act(() => {
-    jest.runOnlyPendingTimers();
+    vi.runOnlyPendingTimers();
   });
-  jest.useRealTimers();
+  vi.useRealTimers();
 });
 
 function getStatValue(label: string): HTMLElement {
@@ -56,7 +57,7 @@ function getStatValue(label: string): HTMLElement {
 
 describe("Winning a round resets the deck", () => {
   test("restores the remaining deck count to its full post-deal size after a win", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     // Use a discard to shrink the deck (44 → 42)
     await user.click(getHandCardButtons()[0]);
@@ -73,14 +74,14 @@ describe("Winning a round resets the deck", () => {
   });
 
   test("keeps the hand at 8 cards after a win resets the deck", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Win/));
     expect(getHandCardButtons()).toHaveLength(8);
   });
 
   test("clears any in-flight card selection on win", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Win/));
@@ -92,7 +93,7 @@ describe("Winning a round resets the deck", () => {
   });
 
   test("deals different cards (fresh shuffle) after a win", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const before = getHandCardButtons().map((btn) =>
       btn.getAttribute("aria-label")
@@ -109,7 +110,7 @@ describe("Winning a round resets the deck", () => {
 
 describe("Win button integration", () => {
   test("advances blind, ante, round, and money across a full ante cycle", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 300")).toBeInTheDocument();
@@ -135,7 +136,7 @@ describe("Win button integration", () => {
 
 describe("Add Chips button integration", () => {
   test("clicking Add Chips updates chips shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
     expect(document.querySelector(".chips")).toHaveTextContent("10");
@@ -144,7 +145,7 @@ describe("Add Chips button integration", () => {
 
 describe("Add Multiplier button integration", () => {
   test("clicking Add Multiplier updates multiplier shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
     expect(document.querySelector(".multiplier")).toHaveTextContent("1");
@@ -153,7 +154,7 @@ describe("Add Multiplier button integration", () => {
 
 describe("Multiply Multiplier button integration", () => {
   test("clicking Multiply Multiplier updates multiplier shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Multiply Multiplier/));
@@ -174,9 +175,9 @@ function flushScoringSequence(): void {
   // runs after that commit, so a single runAllTimers can only fire one step.
   // Loop until the queue truly drains (with a safety cap).
   for (let i = 0; i < 20; i++) {
-    if (jest.getTimerCount() === 0) return;
+    if (vi.getTimerCount() === 0) return;
     act(() => {
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
     });
   }
 }
@@ -210,7 +211,7 @@ describe("Fresh round empty HandScore", () => {
   });
 
   test("deselecting the last selected card returns chips to 0", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const card = getHandCardButtons()[0];
     await user.click(card);
@@ -219,7 +220,7 @@ describe("Fresh round empty HandScore", () => {
   });
 
   test("deselecting the last selected card returns multiplier to 0", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const card = getHandCardButtons()[0];
     await user.click(card);
@@ -228,7 +229,7 @@ describe("Fresh round empty HandScore", () => {
   });
 
   test("deselecting the last selected card removes the hand label from the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const card = getHandCardButtons()[0];
     await user.click(card);
@@ -242,21 +243,21 @@ describe("Fresh round empty HandScore", () => {
 
 describe("Card selection drives hand detection", () => {
   test("selecting a single card sets chips to High Card chip value", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     expect(document.querySelector(".chips")).toHaveTextContent("5");
   });
 
   test("selecting a single card sets multiplier to High Card multiplier value", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     expect(document.querySelector(".multiplier")).toHaveTextContent("1");
   });
 
   test("clicking a selected card deselects it", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -265,7 +266,7 @@ describe("Card selection drives hand detection", () => {
   });
 
   test("selection cap of 5 blocks a 6th selection", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     for (let i = 0; i < 6; i++) {
@@ -278,7 +279,7 @@ describe("Card selection drives hand detection", () => {
   });
 
   test("deselecting frees a slot so a previously blocked card can be selected", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i++) {
@@ -292,7 +293,7 @@ describe("Card selection drives hand detection", () => {
 
 describe("Submitting a hand discards the selected cards", () => {
   test("clears all selection highlights after submit and animation", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -306,7 +307,7 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("keeps the hand at 8 cards by drawing replacements from the deck", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -318,7 +319,7 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("decrements the remaining deck count by the number of discarded cards", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -332,7 +333,7 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("replaces the originally-selected cards with different cards", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const beforeLabels = getHandCardButtons()
       .slice(0, 2)
@@ -352,7 +353,7 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("submitting with no cards selected leaves the hand unchanged", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const before = getHandCardButtons().map((btn) =>
       btn.getAttribute("aria-label")
@@ -372,14 +373,14 @@ describe("Discard button", () => {
   });
 
   test("becomes enabled once at least one card is selected", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     expect(screen.getByText(/^🗑️ Discard$/)).not.toBeDisabled();
   });
 
   test("decrements the remaining discards count when clicked", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/^🗑️ Discard$/));
@@ -388,7 +389,7 @@ describe("Discard button", () => {
   });
 
   test("does not change the round score", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/^🗑️ Discard$/));
@@ -400,7 +401,7 @@ describe("Discard button", () => {
   });
 
   test("does not decrement remaining hands", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/^🗑️ Discard$/));
@@ -409,7 +410,7 @@ describe("Discard button", () => {
   });
 
   test("removes the originally-selected cards from the hand", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const originalLabel = getHandCardButtons()[0].getAttribute("aria-label");
     await user.click(getHandCardButtons()[0]);
@@ -422,7 +423,7 @@ describe("Discard button", () => {
   });
 
   test("refills the hand to 8 cards", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(getHandCardButtons()[1]);
@@ -432,7 +433,7 @@ describe("Discard button", () => {
   });
 
   test("is disabled once all 3 discards have been used", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let i = 0; i < 3; i++) {
       await user.click(getHandCardButtons()[0]);
@@ -452,7 +453,7 @@ describe("Hand stays sorted after a play", () => {
   }
 
   test("hand is in rank-descending order after submitting (replacement cards land sorted)", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(getHandCardButtons()[1]);
@@ -468,7 +469,7 @@ describe("Hand stays sorted after a play", () => {
   });
 
   test("hand is in rank-descending order after discarding (replacement cards land sorted)", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(getHandCardButtons()[1]);
@@ -486,7 +487,7 @@ describe("Hand stays sorted after a play", () => {
 
 describe("Discard animation", () => {
   test("marks selected cards with the discarding class after the scoring sequence completes", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -500,7 +501,7 @@ describe("Discard animation", () => {
   });
 
   test("does not finalize the discard until the animation ends", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     const firstLabel = cards[0].getAttribute("aria-label");
@@ -514,7 +515,7 @@ describe("Discard animation", () => {
   });
 
   test("removes discarded cards from the hand after animation completes", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     const firstLabel = cards[0].getAttribute("aria-label");
@@ -528,7 +529,7 @@ describe("Discard animation", () => {
   });
 
   test("blocks card toggles while a discard animation is in flight", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -542,7 +543,7 @@ describe("Discard animation", () => {
 
 describe("Submit Hand button integration", () => {
   test("resets chips back to the default after submit", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
     await user.click(screen.getByText(/Submit Hand/));
@@ -550,7 +551,7 @@ describe("Submit Hand button integration", () => {
   });
 
   test("resets multiplier back to the default after submit", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
     await user.click(screen.getByText(/Submit Hand/));
@@ -558,7 +559,7 @@ describe("Submit Hand button integration", () => {
   });
 
   test("submitting with no cards selected adds 0 to the round score", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     expect(document.querySelector(".round-score-value")).toHaveTextContent("0");
@@ -568,7 +569,7 @@ describe("Submit Hand button integration", () => {
     // Identity shuffle deals Spades 2..9. Sorted descending the top card is 9♠.
     // Submitting just 9♠ → High Card: (base 5 + rank 9) * mult 1 = 14
     mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
@@ -584,7 +585,7 @@ describe("Submit Hand win integration", () => {
     // Identity shuffle deals Spades 2..9. Selecting the top 5 by rank (9,8,7,6,5 ♠)
     // is a Straight Flush: (100 + 5+6+7+8+9) * 8 = 1080, well above 300.
     mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     await user.click(cards[0]);
@@ -602,15 +603,15 @@ describe("Submit Hand win integration", () => {
 
 describe("Losing integration", () => {
   beforeEach(() => {
-    jest.spyOn(window, "alert").mockImplementation(() => {});
+    vi.spyOn(window, "alert").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("exhausting all hands without reaching the required score shows a game over alert", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
@@ -620,7 +621,7 @@ describe("Losing integration", () => {
   });
 
   test("exhausting all hands without reaching the required score resets the game", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
@@ -630,7 +631,7 @@ describe("Losing integration", () => {
   });
 
   test("losing and auto-restarting leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
@@ -640,7 +641,7 @@ describe("Losing integration", () => {
   });
 
   test("losing and auto-restarting leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
@@ -652,7 +653,7 @@ describe("Losing integration", () => {
 
 describe("Add Money button integration", () => {
   test("clicking Add $10 updates money shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
     expect(getStatValue("Money")).toHaveTextContent("$14");
@@ -661,7 +662,7 @@ describe("Add Money button integration", () => {
 
 describe("Subtract Money button integration", () => {
   test("clicking Subtract $10 updates money shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
     await user.click(screen.getByText(/Subtract \$10/));
@@ -678,7 +679,7 @@ describe("High visibility preference integration", () => {
   });
 
   test("toggling high visibility adds the class to the App root", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { container } = render(<App />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
@@ -686,7 +687,7 @@ describe("High visibility preference integration", () => {
   });
 
   test("toggling high visibility off removes the class from the App root", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { container } = render(<App />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
@@ -695,7 +696,7 @@ describe("High visibility preference integration", () => {
   });
 
   test("toggling persists the preference value to localStorage", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
@@ -707,7 +708,7 @@ describe("High visibility preference integration", () => {
 
 describe("Options modal new game integration", () => {
   test("opening options and clicking new game restores initial state", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
 
     await user.click(screen.getByText(/Win/));
@@ -734,7 +735,7 @@ describe("Sequential card scoring", () => {
     // Identity shuffle deals Spades 2..9, displayed rank-descending as 9♠..2♠.
     // Selecting the top 5 → 9,8,7,6,5 of Spades, a Straight Flush.
     mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
@@ -756,14 +757,14 @@ describe("Sequential card scoring", () => {
   test("chips counter ticks up by the leftmost displayed card's rank value after one step", async () => {
     await submitFirstFiveSpades();
     act(() => {
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
     });
     expect(document.querySelector(".chips")).toHaveTextContent("109");
   });
 
   test("reordering the hand changes which card is scored first (5♠ moved to leftmost is scored first)", async () => {
     mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const moveFiveLeft = screen.getByRole("button", { name: "Move 5 of Spades left" });
     for (let i = 0; i < 4; i += 1) await user.click(moveFiveLeft);
@@ -771,7 +772,7 @@ describe("Sequential card scoring", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     act(() => {
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
     });
     expect(document.querySelector(".chips")).toHaveTextContent("105");
   });
@@ -779,7 +780,7 @@ describe("Sequential card scoring", () => {
   test("round score is unchanged mid-sequence", async () => {
     await submitFirstFiveSpades();
     act(() => {
-      jest.runOnlyPendingTimers();
+      vi.runOnlyPendingTimers();
     });
     // After one step the sequence is in flight; round score should still be 0.
     expect(document.querySelector(".round-score-value")).toHaveTextContent("0");
@@ -789,7 +790,7 @@ describe("Sequential card scoring", () => {
     // Straight Flush: (100 + 5+6+7+8+9) * 8 = 1080.
     // Required score in Ante 1 / Small Blind = 300, so this win-advances the
     // blind once the round-won modal is dismissed.
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await submitFirstFiveSpades();
     flushDiscardAnimation();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
@@ -802,7 +803,7 @@ describe("Round won modal", () => {
     // Identity shuffle deals Spades 2..9; selecting top 5 → Straight Flush
     // = 1080 score, above Ante 1 Small Blind required 300.
     mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
@@ -837,7 +838,7 @@ describe("Round won modal", () => {
   });
 
   test("clicking Continue dismisses the modal", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     // The round-won modal is gone (the post-round shop now takes over the
@@ -846,14 +847,14 @@ describe("Round won modal", () => {
   });
 
   test("clicking Continue advances to the next blind", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 
   test("clicking Continue adds the base reward to the wallet", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(getStatValue("Money")).toHaveTextContent("$7");
@@ -866,7 +867,7 @@ describe("Round won modal", () => {
   });
 
   test("does not play the win sound again when the modal is dismissed", async () => {
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     playMock.mockClear();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
@@ -912,11 +913,11 @@ function mockPrefersReducedMotion(reduce: boolean): void {
       matches: query === "(prefers-reduced-motion: reduce)" ? reduce : false,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     }),
   });
 }
@@ -930,7 +931,7 @@ describe("getScoringStepMs", () => {
       writable: true,
       value: originalMatchMedia,
     });
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
     resetAnimationSpeed();
   });
 
@@ -1012,7 +1013,7 @@ describe("App animation speed CSS variable", () => {
 
   test("clears the inline --animation-speed style after switching back to normal via the Options modal", async () => {
     setAnimationSpeed("fast");
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { container } = render(<App />);
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Animation speed"), "normal");
@@ -1027,7 +1028,7 @@ describe("App scoring step honors animation speed preference", () => {
   test("does not advance the scoring sequence on the first timer flush when preference is slow", async () => {
     mockShuffleConfig.useIdentity = true;
     setAnimationSpeed("slow");
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = Array.from(
       screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
@@ -1035,7 +1036,7 @@ describe("App scoring step honors animation speed preference", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     act(() => {
-      jest.advanceTimersByTime(500);
+      vi.advanceTimersByTime(500);
     });
     expect(document.querySelector(".chips")).toHaveTextContent("100");
   });
@@ -1043,7 +1044,7 @@ describe("App scoring step honors animation speed preference", () => {
   test("advances on the first slow tick after the 1000ms threshold", async () => {
     mockShuffleConfig.useIdentity = true;
     setAnimationSpeed("slow");
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = Array.from(
       screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
@@ -1051,7 +1052,7 @@ describe("App scoring step honors animation speed preference", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     act(() => {
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
     });
     expect(document.querySelector(".chips")).toHaveTextContent("109");
   });
@@ -1060,7 +1061,7 @@ describe("App scoring step honors animation speed preference", () => {
 describe("Post-round shop integration", () => {
   async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
     mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
     const cards = getHandCardButtons();
@@ -1160,7 +1161,7 @@ describe("Post-round shop integration", () => {
   });
 
   test("Reroll replaces the unsold offers with new joker names", async () => {
-    const randomSpy = jest
+    const randomSpy = vi
       .spyOn(Math, "random")
       .mockReturnValueOnce(0)
       .mockReturnValueOnce(0)
