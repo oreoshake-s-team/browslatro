@@ -141,6 +141,9 @@ function App() {
       if (cardJokerResult.moneyEarned > 0) {
         setMoney((prev) => prev + cardJokerResult.moneyEarned);
       }
+      if (cardJokerResult.additiveMult > 0) {
+        setMultiplier((prev) => prev + cardJokerResult.additiveMult);
+      }
       pulseJokers(cardJokerResult.firedJokerIds);
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
@@ -280,12 +283,17 @@ function App() {
     const handJokerResult = applyHandLevelJokers(jokers);
     pulseJokers(handJokerResult.firedJokerIds);
 
+    let perCardAdditiveMult = 0;
+    for (let i = 0; i < scoring.length; i += 1) {
+      perCardAdditiveMult += applyPerCardJokers(jokers, scoring[i]).additiveMult;
+    }
+
     const finalScore = computeFinalScoreWithJokers(
       handStats.chips,
       handStats.multiplier,
       cardChipsTotal,
       {
-        additiveMult: handJokerResult.additiveMult,
+        additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
         xMult: handJokerResult.xMult,
         moneyEarned: 0,
       },

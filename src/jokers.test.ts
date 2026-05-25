@@ -2,6 +2,7 @@ import {
   BUSINESS_CARD_PROC_CHANCE,
   MAX_JOKERS,
   SHOP_JOKER_POOL,
+  SUIT_MULT_AMOUNT,
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
@@ -9,8 +10,12 @@ import {
   computeFinalScoreWithJokers,
   createBusinessCardJoker,
   createDefaultJokers,
+  createGluttonousJoker,
+  createGreedyJoker,
   createJokerStencilJoker,
+  createLustyJoker,
   createPlusFourMultJoker,
+  createWrathfulJoker,
   isFaceCard,
   sampleShopJokers,
 } from "./jokers";
@@ -256,6 +261,149 @@ describe("applyPerCardJokers", () => {
   test("does not fire +4 Mult during a per-card pass", () => {
     const result = applyPerCardJokers([createPlusFourMultJoker()], card("J"));
     expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("Suit-conditional Mult jokers", () => {
+  test("SUIT_MULT_AMOUNT equals 3", () => {
+    expect(SUIT_MULT_AMOUNT).toBe(3);
+  });
+
+  test("Greedy Joker carries a per-suit-mult effect targeting diamonds", () => {
+    expect(createGreedyJoker().effect).toEqual({
+      kind: "per-suit-mult",
+      suit: "diamonds",
+      amount: SUIT_MULT_AMOUNT,
+    });
+  });
+
+  test("Lusty Joker carries a per-suit-mult effect targeting hearts", () => {
+    expect(createLustyJoker().effect).toEqual({
+      kind: "per-suit-mult",
+      suit: "hearts",
+      amount: SUIT_MULT_AMOUNT,
+    });
+  });
+
+  test("Wrathful Joker carries a per-suit-mult effect targeting spades", () => {
+    expect(createWrathfulJoker().effect).toEqual({
+      kind: "per-suit-mult",
+      suit: "spades",
+      amount: SUIT_MULT_AMOUNT,
+    });
+  });
+
+  test("Gluttonous Joker carries a per-suit-mult effect targeting clubs", () => {
+    expect(createGluttonousJoker().effect).toEqual({
+      kind: "per-suit-mult",
+      suit: "clubs",
+      amount: SUIT_MULT_AMOUNT,
+    });
+  });
+});
+
+describe("applyPerCardJokers — Greedy Joker", () => {
+  test("adds SUIT_MULT_AMOUNT when scored card is a Diamond", () => {
+    const result = applyPerCardJokers([createGreedyJoker()], card("5", "diamonds"));
+    expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT);
+  });
+
+  test("reports Greedy Joker as fired on a Diamond", () => {
+    const result = applyPerCardJokers([createGreedyJoker()], card("5", "diamonds"));
+    expect(result.firedJokerIds).toEqual(["greedy-joker"]);
+  });
+
+  test("does not add mult when scored card is not a Diamond", () => {
+    const result = applyPerCardJokers([createGreedyJoker()], card("5", "spades"));
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not fire on a non-Diamond card", () => {
+    const result = applyPerCardJokers([createGreedyJoker()], card("5", "spades"));
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyPerCardJokers — Lusty Joker", () => {
+  test("adds SUIT_MULT_AMOUNT when scored card is a Heart", () => {
+    const result = applyPerCardJokers([createLustyJoker()], card("9", "hearts"));
+    expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT);
+  });
+
+  test("reports Lusty Joker as fired on a Heart", () => {
+    const result = applyPerCardJokers([createLustyJoker()], card("9", "hearts"));
+    expect(result.firedJokerIds).toEqual(["lusty-joker"]);
+  });
+
+  test("does not add mult when scored card is not a Heart", () => {
+    const result = applyPerCardJokers([createLustyJoker()], card("9", "clubs"));
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not fire on a non-Heart card", () => {
+    const result = applyPerCardJokers([createLustyJoker()], card("9", "clubs"));
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyPerCardJokers — Wrathful Joker", () => {
+  test("adds SUIT_MULT_AMOUNT when scored card is a Spade", () => {
+    const result = applyPerCardJokers([createWrathfulJoker()], card("K", "spades"));
+    expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT);
+  });
+
+  test("reports Wrathful Joker as fired on a Spade", () => {
+    const result = applyPerCardJokers([createWrathfulJoker()], card("K", "spades"));
+    expect(result.firedJokerIds).toEqual(["wrathful-joker"]);
+  });
+
+  test("does not add mult when scored card is not a Spade", () => {
+    const result = applyPerCardJokers([createWrathfulJoker()], card("K", "hearts"));
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not fire on a non-Spade card", () => {
+    const result = applyPerCardJokers([createWrathfulJoker()], card("K", "hearts"));
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyPerCardJokers — Gluttonous Joker", () => {
+  test("adds SUIT_MULT_AMOUNT when scored card is a Club", () => {
+    const result = applyPerCardJokers([createGluttonousJoker()], card("A", "clubs"));
+    expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT);
+  });
+
+  test("reports Gluttonous Joker as fired on a Club", () => {
+    const result = applyPerCardJokers([createGluttonousJoker()], card("A", "clubs"));
+    expect(result.firedJokerIds).toEqual(["gluttonous-joker"]);
+  });
+
+  test("does not add mult when scored card is not a Club", () => {
+    const result = applyPerCardJokers([createGluttonousJoker()], card("A", "diamonds"));
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not fire on a non-Club card", () => {
+    const result = applyPerCardJokers([createGluttonousJoker()], card("A", "diamonds"));
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyJokersToScoring — Suit Mult aggregation", () => {
+  test("sums per-card additive mult across scored cards matching the suit", () => {
+    const scored = [card("2", "diamonds"), card("3", "diamonds"), card("4", "spades")];
+    const result = applyJokersToScoring([createGreedyJoker()], scored);
+    expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT * 2);
+  });
+
+  test("combines hand-level and per-card additive mult contributions", () => {
+    const scored = [card("2", "hearts"), card("3", "hearts")];
+    const result = applyJokersToScoring(
+      [createPlusFourMultJoker(), createLustyJoker()],
+      scored,
+    );
+    expect(result.additiveMult).toBe(4 + SUIT_MULT_AMOUNT * 2);
   });
 });
 

@@ -4,8 +4,12 @@ import {
   MAX_JOKERS,
   createBusinessCardJoker,
   createDefaultJokers,
+  createGluttonousJoker,
+  createGreedyJoker,
   createJokerStencilJoker,
+  createLustyJoker,
   createPlusFourMultJoker,
+  createWrathfulJoker,
 } from "../../jokers";
 
 describe("Jokers UI", () => {
@@ -17,6 +21,26 @@ describe("Jokers UI", () => {
   test("renders one filled tile per equipped joker", () => {
     render(<Jokers jokers={createDefaultJokers()} />);
     expect(screen.getByTestId("joker-tile-filled-plus-four-mult")).toBeInTheDocument();
+  });
+
+  test("renders the Greedy Joker tile when equipped", () => {
+    render(<Jokers jokers={[createGreedyJoker()]} />);
+    expect(screen.getByTestId("joker-tile-filled-greedy-joker")).toBeInTheDocument();
+  });
+
+  test("renders the Lusty Joker tile when equipped", () => {
+    render(<Jokers jokers={[createLustyJoker()]} />);
+    expect(screen.getByTestId("joker-tile-filled-lusty-joker")).toBeInTheDocument();
+  });
+
+  test("renders the Wrathful Joker tile when equipped", () => {
+    render(<Jokers jokers={[createWrathfulJoker()]} />);
+    expect(screen.getByTestId("joker-tile-filled-wrathful-joker")).toBeInTheDocument();
+  });
+
+  test("renders the Gluttonous Joker tile when equipped", () => {
+    render(<Jokers jokers={[createGluttonousJoker()]} />);
+    expect(screen.getByTestId("joker-tile-filled-gluttonous-joker")).toBeInTheDocument();
   });
 
   test("renders the Business Card joker tile when equipped", () => {
