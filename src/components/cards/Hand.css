@@ -1,10 +1,10 @@
 .hand {
   width: 100%;
-  /* Was 60rem, bumped to 70rem so 8 cards (4.5rem each) + 9 gaps
-   * (2rem at rest, expanding during drag) + the deck pile column
-   * (4.5rem + 1.2rem gap) fit on one row at typical desktop widths
-   * without forcing flex-wrap mid-drag. */
-  max-width: 70rem;
+  /* Generous max-width so 8 cards (4.5rem each) + 9 gaps (2.5rem at
+   * rest, ~3rem during drag with one active at 4.5rem) + the deck pile
+   * column (4.5rem + 1.2rem gap) all fit on one row at typical desktop
+   * widths without forcing flex-wrap mid-drag. */
+  max-width: 75rem;
   padding: 1.6rem;
   border: 2px solid #dee2e6;
   border-radius: 8px;
@@ -93,7 +93,7 @@
  * forgiving, and the actively-hovered spacer expands again to a
  * card-sized slot so the insertion point is unmistakable. */
 .hand-card-gap {
-  flex: 0 0 2rem;
+  flex: 0 0 2.5rem;
   align-self: stretch;
   min-height: 9.5rem;
   border-radius: 4px;
@@ -101,12 +101,17 @@
 }
 
 .hand-cards-dragging .hand-card-gap {
-  /* During drag the resting 2rem gaps widen further for a much more
-   * forgiving hitbox. Math at max-width 70rem (inner ~61rem after the
-   * deck column and row gap): 8 cards × 4.5 + 8 non-active gaps × 2.25
-   * + 1 active gap × 4.5 = 58.5rem — fits with headroom so the row
-   * never wraps mid-drag. */
-  flex-basis: 2.25rem;
+  /* During drag the resting 2.5rem gaps widen further so the cursor
+   * has a generous landing area between cards. Math at max-width
+   * 75rem (inner ~66rem after the deck column and row gap):
+   * 8 cards × 4.5 + 8 non-active gaps × 3 + 1 active gap × 4.5
+   * = 64.5rem — fits with headroom so the row never wraps mid-drag.
+   *
+   * Geometric "card-over-zone" detection in Hand.tsx widens this even
+   * further in practice: when the cursor is hovering over a card slot
+   * the container resolves to the nearest gap, so the effective drop
+   * area for each gap is roughly half a card-width on either side. */
+  flex-basis: 3rem;
 }
 
 .hand-card-gap-active {

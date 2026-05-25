@@ -539,4 +539,26 @@ describe("Hand drag-and-drop reordering", () => {
     expect(getGap(1)).not.toHaveClass("hand-card-gap-active");
     fireEvent.dragEnd(source);
   });
+
+  test("dropping on the hand container commits at the currently-active gap", () => {
+    // The container-level drop handler is the fallback when the cursor
+    // is released over a card slot or the hand background rather than a
+    // gap element directly — so the dragged card still lands at the
+    // last-resolved active gap. Hover gap 3 to set it active, then
+    // drop on the container.
+    renderHand({ hand: fourCards, remaining: [] });
+    const source = getSlot(4);
+    const handRow = screen.getByLabelText("Your hand");
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(getGap(3));
+    fireEvent.drop(handRow);
+    fireEvent.dragEnd(source);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "K of Hearts",
+      "10 of Clubs",
+      "A of Diamonds",
+      "2 of Spades",
+    ]);
+  });
 });

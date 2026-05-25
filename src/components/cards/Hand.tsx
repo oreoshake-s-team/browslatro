@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
@@ -63,6 +63,7 @@ export default function Hand({
   );
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverGap, setDragOverGap] = useState<number | null>(null);
+  const handCardsRef = useRef<HTMLDivElement | null>(null);
 
   const displayedHand = useMemo(
     () =>
@@ -146,11 +147,68 @@ export default function Hand({
     e: React.DragEvent<HTMLDivElement>,
   ) {
     e.preventDefault();
+    e.stopPropagation();
     const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
     const draggedId =
       raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
     if (draggedId !== null) {
       insertAtGap(draggedId, gapIdx);
+    }
+    endDrag();
+  }
+
+  // Compute the gap whose center is closest to a viewport X coordinate.
+  // Lets the active drop zone follow the dragged card's position even
+  // when the cursor isn't strictly inside a gap element (e.g. cursor
+  // is hovering over a card slot but the dragged card image overlaps
+  // a neighbouring gap).
+  function gapNearestToClientX(clientX: number): number | null {
+    const container = handCardsRef.current;
+    if (!container) return null;
+    const gaps = container.querySelectorAll<HTMLElement>(".hand-card-gap");
+    let bestIdx: number | null = null;
+    let bestDist = Number.POSITIVE_INFINITY;
+    gaps.forEach((gap, i) => {
+      const rect = gap.getBoundingClientRect();
+      // jsdom returns zeroed rects for everything; skip resolving in that
+      // case so unit tests can drive the per-gap handlers directly without
+      // the container handler clobbering their setDragOverGap call.
+      if (rect.width === 0 && rect.left === 0) return;
+      const center = rect.left + rect.width / 2;
+      const dist = Math.abs(clientX - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    });
+    return bestIdx;
+  }
+
+  function handleHandDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (draggingId === null) return;
+    // Per-gap handlers fire first (event bubbles target → ancestors). If
+    // the cursor is inside a gap element it already set the active gap;
+    // we only need to compute the nearest gap when the cursor is over a
+    // card slot or container background.
+    const target = e.target as HTMLElement | null;
+    if (target?.classList?.contains("hand-card-gap")) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    const gap = gapNearestToClientX(e.clientX);
+    if (gap !== null && dragOverGap !== gap) setDragOverGap(gap);
+  }
+
+  function handleHandDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    // Per-gap drop handlers stop propagation, so reaching here means the
+    // drop happened over a card slot or the container itself. Use the
+    // currently-resolved active gap, which the dragover handler keeps in
+    // sync with the dragged card's geometric position.
+    const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+    const draggedId =
+      raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
+    if (draggedId !== null && dragOverGap !== null) {
+      insertAtGap(draggedId, dragOverGap);
     }
     endDrag();
   }
@@ -224,10 +282,13 @@ export default function Hand({
       </div>
       <div className="hand-row">
         <div
+          ref={handCardsRef}
           className={`hand-cards${
             draggingId !== null ? " hand-cards-dragging" : ""
           }`}
           aria-label="Your hand"
+          onDragOver={handleHandDragOver}
+          onDrop={handleHandDrop}
         >
           {displayedHand.map((card, idx) => {
             const isDragging = draggingId === card.id;
