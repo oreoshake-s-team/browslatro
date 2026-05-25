@@ -34,16 +34,23 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.6rem 0.5rem;
+  background-color: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-sizing: border-box;
 }
 
 .stat-value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .stat-label {
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: #868e96;
   text-transform: uppercase;
   letter-spacing: 0.05em;
