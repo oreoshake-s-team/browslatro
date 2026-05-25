@@ -76,7 +76,7 @@ describe("Card", () => {
 
   test("invokes onToggle with the card when clicked", async () => {
     const user = userEvent.setup();
-    const onToggle = jest.fn();
+    const onToggle = vi.fn();
     render(<Card card={aceOfSpades} onToggle={onToggle} />);
     await user.click(screen.getByRole("button"));
     expect(onToggle).toHaveBeenCalledWith(aceOfSpades);
@@ -96,7 +96,7 @@ describe("Card", () => {
   });
 
   test("invokes onDiscardEnd with the card when the discard animation ends", () => {
-    const onDiscardEnd = jest.fn();
+    const onDiscardEnd = vi.fn();
     render(
       <Card card={aceOfSpades} discarding onDiscardEnd={onDiscardEnd} />
     );
@@ -105,7 +105,7 @@ describe("Card", () => {
   });
 
   test("does not invoke onDiscardEnd on animation end when not discarding", () => {
-    const onDiscardEnd = jest.fn();
+    const onDiscardEnd = vi.fn();
     render(<Card card={aceOfSpades} onDiscardEnd={onDiscardEnd} />);
     fireEvent.animationEnd(screen.getByRole("button"));
     expect(onDiscardEnd).not.toHaveBeenCalled();

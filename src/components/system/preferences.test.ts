@@ -4,86 +4,90 @@ const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
 const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
 
+async function loadPreferences(): Promise<typeof import("./preferences")> {
+  return await import("./preferences");
+}
+
 describe("preferences (highVisibility)", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     window.localStorage.clear();
   });
 
-  test("defaults to false when localStorage has no value", () => {
-    const { isHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("defaults to false when localStorage has no value", async () => {
+    const { isHighVisibility } = await loadPreferences();
     expect(isHighVisibility()).toBe(false);
   });
 
-  test("reads a persisted true value from localStorage on init", () => {
+  test("reads a persisted true value from localStorage on init", async () => {
     window.localStorage.setItem(STORAGE_KEY, "true");
-    const { isHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    const { isHighVisibility } = await loadPreferences();
     expect(isHighVisibility()).toBe(true);
   });
 
-  test("reads a persisted false value from localStorage on init", () => {
+  test("reads a persisted false value from localStorage on init", async () => {
     window.localStorage.setItem(STORAGE_KEY, "false");
-    const { isHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    const { isHighVisibility } = await loadPreferences();
     expect(isHighVisibility()).toBe(false);
   });
 
-  test("toggleHighVisibility flips the in-memory value", () => {
-    const { isHighVisibility, toggleHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("toggleHighVisibility flips the in-memory value", async () => {
+    const { isHighVisibility, toggleHighVisibility } = await loadPreferences();
     toggleHighVisibility();
     expect(isHighVisibility()).toBe(true);
   });
 
-  test("toggleHighVisibility writes true to localStorage", () => {
-    const { toggleHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("toggleHighVisibility writes true to localStorage", async () => {
+    const { toggleHighVisibility } = await loadPreferences();
     toggleHighVisibility();
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("true");
   });
 
-  test("toggling twice writes false back to localStorage", () => {
-    const { toggleHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("toggling twice writes false back to localStorage", async () => {
+    const { toggleHighVisibility } = await loadPreferences();
     toggleHighVisibility();
     toggleHighVisibility();
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("false");
   });
 
-  test("ignores unrelated stored values and defaults to false", () => {
+  test("ignores unrelated stored values and defaults to false", async () => {
     window.localStorage.setItem(STORAGE_KEY, "yes");
-    const { isHighVisibility } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    const { isHighVisibility } = await loadPreferences();
     expect(isHighVisibility()).toBe(false);
   });
 });
 
 describe("preferences (muted)", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     window.localStorage.clear();
   });
 
-  test("defaults to false when localStorage has no value", () => {
-    const { isMuted } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("defaults to false when localStorage has no value", async () => {
+    const { isMuted } = await loadPreferences();
     expect(isMuted()).toBe(false);
   });
 
-  test("reads a persisted true value from localStorage on init", () => {
+  test("reads a persisted true value from localStorage on init", async () => {
     window.localStorage.setItem(MUTED_KEY, "true");
-    const { isMuted } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    const { isMuted } = await loadPreferences();
     expect(isMuted()).toBe(true);
   });
 
-  test("toggleMute flips the in-memory value", () => {
-    const { isMuted, toggleMute } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("toggleMute flips the in-memory value", async () => {
+    const { isMuted, toggleMute } = await loadPreferences();
     toggleMute();
     expect(isMuted()).toBe(true);
   });
 
-  test("toggleMute writes true to localStorage", () => {
-    const { toggleMute } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("toggleMute writes true to localStorage", async () => {
+    const { toggleMute } = await loadPreferences();
     toggleMute();
     expect(window.localStorage.getItem(MUTED_KEY)).toBe("true");
   });
 
-  test("toggling twice writes false back to localStorage", () => {
-    const { toggleMute } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("toggling twice writes false back to localStorage", async () => {
+    const { toggleMute } = await loadPreferences();
     toggleMute();
     toggleMute();
     expect(window.localStorage.getItem(MUTED_KEY)).toBe("false");
@@ -92,58 +96,58 @@ describe("preferences (muted)", () => {
 
 describe("preferences (animationSpeed)", () => {
   beforeEach(() => {
-    jest.resetModules();
+    vi.resetModules();
     window.localStorage.clear();
   });
 
-  test("defaults to normal when localStorage has no value", () => {
-    const { getAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("defaults to normal when localStorage has no value", async () => {
+    const { getAnimationSpeed } = await loadPreferences();
     expect(getAnimationSpeed()).toBe("normal");
   });
 
-  test("reads a persisted fast value from localStorage on init", () => {
+  test("reads a persisted fast value from localStorage on init", async () => {
     window.localStorage.setItem(ANIMATION_SPEED_KEY, "fast");
-    const { getAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    const { getAnimationSpeed } = await loadPreferences();
     expect(getAnimationSpeed()).toBe("fast");
   });
 
-  test("falls back to normal when an unknown value is stored", () => {
+  test("falls back to normal when an unknown value is stored", async () => {
     window.localStorage.setItem(ANIMATION_SPEED_KEY, "lightspeed");
-    const { getAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    const { getAnimationSpeed } = await loadPreferences();
     expect(getAnimationSpeed()).toBe("normal");
   });
 
-  test("setAnimationSpeed persists the value to localStorage", () => {
-    const { setAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("setAnimationSpeed persists the value to localStorage", async () => {
+    const { setAnimationSpeed } = await loadPreferences();
     setAnimationSpeed("instant");
     expect(window.localStorage.getItem(ANIMATION_SPEED_KEY)).toBe("instant");
   });
 
-  test("setAnimationSpeed roundtrips through localStorage to a re-imported module", () => {
-    const first = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("setAnimationSpeed roundtrips through localStorage to a re-imported module", async () => {
+    const first = await loadPreferences();
     first.setAnimationSpeed("slow");
-    jest.resetModules();
-    const second = jest.requireActual<typeof import("./preferences")>("./preferences");
+    vi.resetModules();
+    const second = await loadPreferences();
     expect(second.getAnimationSpeed()).toBe("slow");
   });
 
-  test("getAnimationSpeedMultiplier returns 1 for normal", () => {
-    const { getAnimationSpeedMultiplier } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("getAnimationSpeedMultiplier returns 1 for normal", async () => {
+    const { getAnimationSpeedMultiplier } = await loadPreferences();
     expect(getAnimationSpeedMultiplier("normal")).toBe(1);
   });
 
-  test("getAnimationSpeedMultiplier returns 0 for instant", () => {
-    const { getAnimationSpeedMultiplier } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("getAnimationSpeedMultiplier returns 0 for instant", async () => {
+    const { getAnimationSpeedMultiplier } = await loadPreferences();
     expect(getAnimationSpeedMultiplier("instant")).toBe(0);
   });
 
-  test("hasUserOverriddenAnimationSpeed is false for normal", () => {
-    const { hasUserOverriddenAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("hasUserOverriddenAnimationSpeed is false for normal", async () => {
+    const { hasUserOverriddenAnimationSpeed } = await loadPreferences();
     expect(hasUserOverriddenAnimationSpeed("normal")).toBe(false);
   });
 
-  test("hasUserOverriddenAnimationSpeed is true for slow", () => {
-    const { hasUserOverriddenAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+  test("hasUserOverriddenAnimationSpeed is true for slow", async () => {
+    const { hasUserOverriddenAnimationSpeed } = await loadPreferences();
     expect(hasUserOverriddenAnimationSpeed("slow")).toBe(true);
   });
 });

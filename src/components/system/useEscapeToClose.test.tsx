@@ -10,7 +10,7 @@ function Probe({ onClose, isOpen }: { onClose: () => void; isOpen: boolean }) {
 describe("useEscapeToClose", () => {
   test("invokes onClose when Escape is pressed while open", async () => {
     const user = userEvent.setup();
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(<Probe onClose={onClose} isOpen={true} />);
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -18,7 +18,7 @@ describe("useEscapeToClose", () => {
 
   test("ignores Escape while closed", async () => {
     const user = userEvent.setup();
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(<Probe onClose={onClose} isOpen={false} />);
     await user.keyboard("{Escape}");
     expect(onClose).not.toHaveBeenCalled();
@@ -26,15 +26,15 @@ describe("useEscapeToClose", () => {
 
   test("ignores non-Escape keys while open", async () => {
     const user = userEvent.setup();
-    const onClose = jest.fn();
+    const onClose = vi.fn();
     render(<Probe onClose={onClose} isOpen={true} />);
     await user.keyboard("{Enter}");
     expect(onClose).not.toHaveBeenCalled();
   });
 
   test("detaches its listener on unmount", () => {
-    const onClose = jest.fn();
-    const removeSpy = jest.spyOn(window, "removeEventListener");
+    const onClose = vi.fn();
+    const removeSpy = vi.spyOn(window, "removeEventListener");
     const before = removeSpy.mock.calls.filter(([t]) => t === "keydown").length;
     const { unmount } = render(<Probe onClose={onClose} isOpen={true} />);
     unmount();

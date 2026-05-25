@@ -297,14 +297,14 @@ describe("per-card scoring iteration order", () => {
   });
 
   test("forEachScoringStep invokes the callback once per card", () => {
-    const spy = jest.fn();
+    const spy = vi.fn();
     forEachScoringStep(sample(), spy);
     expect(spy).toHaveBeenCalledTimes(3);
   });
 
   test("forEachScoringStep passes cards to the spy in input order", () => {
     const cards = sample();
-    const spy = jest.fn();
+    const spy = vi.fn();
     forEachScoringStep(cards, spy);
     const seen = spy.mock.calls.map(
       (args) => (args[0] as ScoringStep).card,
@@ -313,7 +313,7 @@ describe("per-card scoring iteration order", () => {
   });
 
   test("empty input does not invoke the callback", () => {
-    const spy = jest.fn();
+    const spy = vi.fn();
     forEachScoringStep([], spy);
     expect(spy).not.toHaveBeenCalled();
   });

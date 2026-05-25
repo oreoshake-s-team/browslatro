@@ -22,9 +22,9 @@ function renderShop(
       equippedJokerCount={0}
       offers={[makeOffer("plus"), makeOffer("biz")]}
       pricePerJoker={5}
-      onBuy={jest.fn()}
-      onReroll={jest.fn()}
-      onNext={jest.fn()}
+      onBuy={vi.fn()}
+      onReroll={vi.fn()}
+      onNext={vi.fn()}
       {...overrides}
     />,
   );
@@ -56,7 +56,7 @@ describe("Shop", () => {
 
   test("clicking an affordable buy button invokes onBuy with the offer index", async () => {
     const user = userEvent.setup();
-    const onBuy = jest.fn();
+    const onBuy = vi.fn();
     renderShop({ onBuy });
     const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
     await user.click(buyButtons[1]);
@@ -94,7 +94,7 @@ describe("Shop", () => {
 
   test("a sold offer does not invoke onBuy when clicked", async () => {
     const user = userEvent.setup();
-    const onBuy = jest.fn();
+    const onBuy = vi.fn();
     renderShop({
       onBuy,
       offers: [makeOffer("plus", true), makeOffer("biz")],
@@ -105,7 +105,7 @@ describe("Shop", () => {
 
   test("clicking Next Round invokes onNext", async () => {
     const user = userEvent.setup();
-    const onNext = jest.fn();
+    const onNext = vi.fn();
     renderShop({ onNext });
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(onNext).toHaveBeenCalledTimes(1);
@@ -113,7 +113,7 @@ describe("Shop", () => {
 
   test("pressing Escape invokes onNext (skip purchase)", async () => {
     const user = userEvent.setup();
-    const onNext = jest.fn();
+    const onNext = vi.fn();
     renderShop({ onNext });
     await user.keyboard("{Escape}");
     expect(onNext).toHaveBeenCalledTimes(1);
@@ -136,7 +136,7 @@ describe("Shop", () => {
 
     test("clicking Reroll invokes onReroll with the current cost", async () => {
       const user = userEvent.setup();
-      const onReroll = jest.fn();
+      const onReroll = vi.fn();
       renderShop({ money: 10, onReroll });
       await user.click(screen.getByRole("button", { name: /Reroll/ }));
       expect(onReroll).toHaveBeenCalledWith(5);
@@ -176,7 +176,7 @@ describe("Shop", () => {
 
     test("clicking Reroll when disabled does not invoke onReroll", async () => {
       const user = userEvent.setup();
-      const onReroll = jest.fn();
+      const onReroll = vi.fn();
       renderShop({ money: 4, onReroll });
       await user.click(screen.getByRole("button", { name: /Reroll/ }));
       expect(onReroll).not.toHaveBeenCalled();

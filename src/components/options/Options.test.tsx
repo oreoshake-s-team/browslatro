@@ -67,7 +67,7 @@ describe("Options", () => {
 
   test("New game button calls onNewGame and closes modal", async () => {
     const user = userEvent.setup();
-    const onNewGame = jest.fn();
+    const onNewGame = vi.fn();
     render(<Options onNewGame={onNewGame} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
@@ -155,7 +155,7 @@ describe("Options — high visibility toggle", () => {
 
   test("invokes onHighVisibilityChange with the new value when toggled on", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<Options onNewGame={() => {}} onHighVisibilityChange={onChange} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
@@ -164,7 +164,7 @@ describe("Options — high visibility toggle", () => {
 
   test("invokes onHighVisibilityChange with false when toggled back off", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<Options onNewGame={() => {}} onHighVisibilityChange={onChange} />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
@@ -210,7 +210,7 @@ describe("Options — animation speed", () => {
 
   test("changing the value invokes onAnimationSpeedChange with the new value", async () => {
     const user = userEvent.setup();
-    const onChange = jest.fn();
+    const onChange = vi.fn();
     render(<Options onNewGame={() => {}} onAnimationSpeedChange={onChange} />);
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Animation speed"), "instant");
