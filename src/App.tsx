@@ -107,7 +107,6 @@ function App() {
   }, [scoringCards, scoringIndex]);
 
   function handleWin() {
-    play("win");
     setRound((prev) => prev + 1);
     setMoney((prev) => prev + (blind + 2) + calculateInterest(prev));
     if (blind < 3) {
@@ -243,6 +242,7 @@ function App() {
     }
 
     if (newRoundScore >= requiredScore) {
+      play("win");
       setPendingWin({
         roundScore: newRoundScore,
         requiredScore,

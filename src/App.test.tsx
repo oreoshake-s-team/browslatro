@@ -2,8 +2,11 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { isHighVisibility, toggleHighVisibility } from "./components/system/preferences";
+import { play } from "./components/system/sounds";
 
 jest.mock("./components/system/sounds", () => ({ play: jest.fn() }));
+
+const playMock = play as jest.MockedFunction<typeof play>;
 
 function resetHighVisibility(): void {
   if (isHighVisibility()) {
@@ -29,6 +32,7 @@ jest.mock("./deck", () => {
 
 beforeEach(() => {
   mockShuffleConfig.useIdentity = false;
+  playMock.mockClear();
   jest.useFakeTimers();
 });
 
@@ -770,5 +774,20 @@ describe("Round won modal", () => {
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(getStatValue("Money")).toHaveTextContent("$3");
+  });
+
+  test("plays the win sound exactly once when the modal opens", async () => {
+    await triggerWin();
+    const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
+    expect(winCalls).toHaveLength(1);
+  });
+
+  test("does not play the win sound again when the modal is dismissed", async () => {
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    await triggerWin();
+    playMock.mockClear();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
+    expect(winCalls).toHaveLength(0);
   });
 });
