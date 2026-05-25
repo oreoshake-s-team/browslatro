@@ -16,6 +16,8 @@ export const NO_ENHANCEMENT_EFFECT: EnhancementEffect = {
   destroyChance: 0,
 };
 
+export const BONUS_ENHANCEMENT_CHIPS = 30;
+
 export type EnhancementRandomSource = () => number;
 
 export interface EnhancementContext {
@@ -34,6 +36,7 @@ export function applyCardEnhancement(
   if (!enhancement) return NO_ENHANCEMENT_EFFECT;
   switch (enhancement) {
     case "bonus":
+      return { ...NO_ENHANCEMENT_EFFECT, chipsDelta: BONUS_ENHANCEMENT_CHIPS };
     case "mult":
     case "wild":
     case "glass":
