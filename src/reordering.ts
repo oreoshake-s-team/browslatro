@@ -12,3 +12,25 @@ export function insertIdAtIndex<T>(
   next.splice(insertIdx, 0, sourceId);
   return next;
 }
+
+export function nearestGapIndex(
+  container: Element | null,
+  clientX: number,
+  gapSelector: string,
+): number | null {
+  if (!container) return null;
+  const gaps = container.querySelectorAll<HTMLElement>(gapSelector);
+  let bestIdx: number | null = null;
+  let bestDist = Number.POSITIVE_INFINITY;
+  gaps.forEach((gap, i) => {
+    const rect = gap.getBoundingClientRect();
+    if (rect.width === 0 && rect.left === 0) return;
+    const center = rect.left + rect.width / 2;
+    const dist = Math.abs(clientX - center);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestIdx = i;
+    }
+  });
+  return bestIdx;
+}

@@ -1,7 +1,7 @@
-import { Fragment, useState } from "react";
+import { Fragment, useRef, useState } from "react";
 import "./Jokers.css";
 import { MAX_JOKERS, type Joker } from "../../jokers";
-import { insertIdAtIndex } from "../../reordering";
+import { insertIdAtIndex, nearestGapIndex } from "../../reordering";
 
 interface JokersProps {
   jokers: ReadonlyArray<Joker>;
@@ -12,6 +12,7 @@ interface JokersProps {
 export default function Jokers({ jokers, pulseCounters, onReorder }: JokersProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
   const emptyCount = Math.max(0, MAX_JOKERS - jokers.length);
   const reorderable = Boolean(onReorder);
 
@@ -33,6 +34,24 @@ export default function Jokers({ jokers, pulseCounters, onReorder }: JokersProps
     const target = idx + direction;
     if (target < 0 || target >= jokers.length) return;
     applyDrop(jokerId, direction === -1 ? target : target + 1);
+  }
+
+  function handleListDragOver(e: React.DragEvent<HTMLUListElement>) {
+    if (draggingId === null) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.classList?.contains("joker-gap")) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    const gap = nearestGapIndex(listRef.current, e.clientX, ".joker-gap");
+    if (gap !== null && activeGapIndex !== gap) setActiveGapIndex(gap);
+  }
+
+  function handleListDrop(e: React.DragEvent<HTMLUListElement>) {
+    e.preventDefault();
+    const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+    const id = raw || draggingId;
+    if (id && activeGapIndex !== null) applyDrop(id, activeGapIndex);
+    endDrag();
   }
 
   function renderGap(gapIdx: number) {
@@ -70,7 +89,10 @@ export default function Jokers({ jokers, pulseCounters, onReorder }: JokersProps
     <section className="jokers" aria-label="Equipped jokers">
       <span className="jokers-label">Jokers</span>
       <ul
+        ref={listRef}
         className={`jokers-list${draggingId !== null ? " jokers-list-dragging" : ""}`}
+        onDragOver={reorderable ? handleListDragOver : undefined}
+        onDrop={reorderable ? handleListDrop : undefined}
       >
         {jokers.map((joker, idx) => {
           const pulse = pulseCounters?.[joker.id] ?? 0;
