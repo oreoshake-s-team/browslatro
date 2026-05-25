@@ -1,6 +1,10 @@
 .hand {
   width: 100%;
-  max-width: 60rem;
+  /* Was 60rem, bumped to 70rem so 8 cards (4.5rem each) + 9 gaps
+   * (2rem at rest, expanding during drag) + the deck pile column
+   * (4.5rem + 1.2rem gap) fit on one row at typical desktop widths
+   * without forcing flex-wrap mid-drag. */
+  max-width: 70rem;
   padding: 1.6rem;
   border: 2px solid #dee2e6;
   border-radius: 8px;
@@ -89,7 +93,7 @@
  * forgiving, and the actively-hovered spacer expands again to a
  * card-sized slot so the insertion point is unmistakable. */
 .hand-card-gap {
-  flex: 0 0 1rem;
+  flex: 0 0 2rem;
   align-self: stretch;
   min-height: 9.5rem;
   border-radius: 4px;
@@ -97,11 +101,12 @@
 }
 
 .hand-cards-dragging .hand-card-gap {
-  /* Modest widening during drag for a more forgiving hitbox. Keeping
-   * this below ~1.5rem ensures 8 cards (4.5rem each) + 9 gaps + the
-   * active gap's +3rem expansion stay under the .hand max-width so
-   * the row doesn't wrap mid-drag and relocate the user's target. */
-  flex-basis: 1.5rem;
+  /* During drag the resting 2rem gaps widen further for a much more
+   * forgiving hitbox. Math at max-width 70rem (inner ~61rem after the
+   * deck column and row gap): 8 cards × 4.5 + 8 non-active gaps × 2.25
+   * + 1 active gap × 4.5 = 58.5rem — fits with headroom so the row
+   * never wraps mid-drag. */
+  flex-basis: 2.25rem;
 }
 
 .hand-card-gap-active {
