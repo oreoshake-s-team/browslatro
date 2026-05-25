@@ -1,0 +1,119 @@
+.shop-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.shop-modal {
+  background-color: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 2rem 2.4rem;
+  min-width: 22rem;
+  max-width: 36rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.shop-title {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #495057;
+  text-align: center;
+}
+
+.shop-money {
+  margin: 0;
+  font-size: 1rem;
+  color: #495057;
+  text-align: center;
+  font-weight: 600;
+}
+
+.shop-offers {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.shop-offer {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.6rem 0.8rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background-color: white;
+  transition: opacity 120ms linear;
+}
+
+.shop-offer-sold {
+  opacity: 0.45;
+}
+
+.shop-offer-name {
+  grid-column: 1 / 2;
+  font-weight: 600;
+  color: #495057;
+}
+
+.shop-offer-description {
+  grid-column: 1 / 4;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.shop-offer-price {
+  grid-column: 2 / 3;
+  grid-row: 1;
+  font-weight: 700;
+  color: #099268;
+}
+
+.shop-offer-buy {
+  grid-column: 3 / 4;
+  grid-row: 1;
+  padding: 0.4rem 0.9rem;
+  background-color: #339af0;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shop-offer-buy:hover:not(:disabled) {
+  background-color: #1c7ed6;
+}
+
+.shop-offer-buy:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.shop-next {
+  align-self: center;
+  padding: 0.6rem 1.4rem;
+  background-color: #495057;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shop-next:hover {
+  background-color: #343a40;
+}

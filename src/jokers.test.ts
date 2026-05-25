@@ -1,15 +1,18 @@
 import {
   BUSINESS_CARD_PROC_CHANCE,
   MAX_JOKERS,
+  SHOP_JOKER_POOL,
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
+  cloneJokerWithFreshId,
   computeFinalScoreWithJokers,
   createBusinessCardJoker,
   createDefaultJokers,
   createJokerStencilJoker,
   createPlusFourMultJoker,
   isFaceCard,
+  sampleShopJokers,
 } from "./jokers";
 import type { Card, Rank, Suit } from "./types";
 
@@ -270,5 +273,52 @@ describe("computeFinalScoreWithJokers", () => {
   test("matches the legacy formula when no joker effects are present", () => {
     const jokerResult = { additiveMult: 0, xMult: 1, moneyEarned: 0 };
     expect(computeFinalScoreWithJokers(35, 4, 33, jokerResult)).toBe(272);
+  });
+});
+
+describe("cloneJokerWithFreshId", () => {
+  test("preserves the joker's effect", () => {
+    const original = createPlusFourMultJoker();
+    const clone = cloneJokerWithFreshId(original);
+    expect(clone.effect).toEqual(original.effect);
+  });
+
+  test("mints a new id distinct from the original template", () => {
+    const original = createPlusFourMultJoker();
+    const clone = cloneJokerWithFreshId(original);
+    expect(clone.id).not.toBe(original.id);
+  });
+
+  test("mints a unique id for every clone of the same template", () => {
+    const a = cloneJokerWithFreshId(createPlusFourMultJoker());
+    const b = cloneJokerWithFreshId(createPlusFourMultJoker());
+    expect(a.id).not.toBe(b.id);
+  });
+});
+
+describe("sampleShopJokers", () => {
+  test("returns the requested number of offers", () => {
+    expect(sampleShopJokers(2, () => 0)).toHaveLength(2);
+  });
+
+  test("returns jokers drawn from the shop pool", () => {
+    const offers = sampleShopJokers(2, () => 0);
+    // rng=0 → idx 0 → first pool entry every time → name matches first factory.
+    const expectedName = SHOP_JOKER_POOL[0]().name;
+    expect(offers.every((j) => j.name === expectedName)).toBe(true);
+  });
+
+  test("allows duplicate templates across the returned offers", () => {
+    const offers = sampleShopJokers(2, () => 0);
+    expect(offers[0].name).toBe(offers[1].name);
+  });
+
+  test("gives duplicate offers distinct instance ids so React keys do not collide", () => {
+    const offers = sampleShopJokers(2, () => 0);
+    expect(offers[0].id).not.toBe(offers[1].id);
+  });
+
+  test("returns an empty array when count is zero", () => {
+    expect(sampleShopJokers(0, () => 0)).toEqual([]);
   });
 });

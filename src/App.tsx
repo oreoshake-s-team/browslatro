@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./types";
-import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
+import { HANDS, BASE_CHIPS, BLIND_MULTIPLIERS, JOKER_BASE_PRICE } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
+import Shop, { type ShopOffer } from "./components/shop/Shop";
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
 import { isHighVisibility } from "./components/system/preferences";
@@ -14,12 +15,16 @@ import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest } from "./payout";
 import {
+  MAX_JOKERS,
   applyHandLevelJokers,
   applyPerCardJokers,
   computeFinalScoreWithJokers,
   createDefaultJokers,
+  sampleShopJokers,
   type Joker,
 } from "./jokers";
+
+const SHOP_OFFER_COUNT = 2;
 
 // Per-card delay in the scoring sequence. Each scoring card animates and adds
 // its chip contribution after this many milliseconds.
@@ -86,6 +91,10 @@ function App() {
   // the modal is showing. Dismissal triggers handleWin().
   const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
 
+  const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopOffer> | null>(
+    null,
+  );
+
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
   function startNewRound() {
@@ -147,6 +156,31 @@ function App() {
       setAnte((prev) => prev + 1);
       setBlind(1);
     }
+    setShopOffers(
+      sampleShopJokers(SHOP_OFFER_COUNT).map((joker) => ({
+        joker,
+        sold: false,
+      })),
+    );
+  }
+
+  function buyShopOffer(idx: number) {
+    const offer = shopOffers?.[idx];
+    if (!offer || offer.sold) return;
+    if (jokers.length >= MAX_JOKERS) return;
+    if (money < JOKER_BASE_PRICE) return;
+    play("pop");
+    setMoney((prev) => prev - JOKER_BASE_PRICE);
+    setJokers((prev) => [...prev, offer.joker]);
+    setShopOffers((current) =>
+      current
+        ? current.map((o, i) => (i === idx ? { ...o, sold: true } : o))
+        : current,
+    );
+  }
+
+  function closeShopAndStartNextRound() {
+    setShopOffers(null);
     startNewRound();
   }
 
@@ -364,6 +398,16 @@ function App() {
       />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+      )}
+      {shopOffers && (
+        <Shop
+          money={money}
+          equippedJokerCount={jokers.length}
+          offers={shopOffers}
+          pricePerJoker={JOKER_BASE_PRICE}
+          onBuy={buyShopOffer}
+          onNext={closeShopAndStartNextRound}
+        />
       )}
     </div>
   );
