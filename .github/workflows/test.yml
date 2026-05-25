@@ -3,7 +3,11 @@ name: Test
 on:
   push:
   pull_request:
-    branches: [main]
+    # Run on PRs against any base branch (not just main) so that stacked
+    # PRs trigger the workflow — the e2e publish step needs the
+    # pull_request event to fire so it can resolve the PR number for the
+    # /pr-<n>/ destination directory on gh-pages.
+    branches: ['**']
 
 jobs:
   test:
