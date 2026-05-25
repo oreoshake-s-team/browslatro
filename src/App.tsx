@@ -5,8 +5,9 @@ import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
+import TarotPicker from "./components/shop/TarotPicker";
 import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
-import { createTarotCatalog, resolveHermitPayout } from "./tarots";
+import { createTarotCatalog, resolveHermitPayout, type TarotCard } from "./tarots";
 import Sidebar from "./components/hud/Sidebar";
 import {
   emptyHandCounts,
@@ -159,6 +160,10 @@ function App() {
   const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
     null,
   );
+  const [pendingTarot, setPendingTarot] = useState<{
+    offerIdx: number;
+    tarot: TarotCard;
+  } | null>(null);
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -303,28 +308,62 @@ function App() {
     );
   }
 
-  function buyShopOffer(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold) return;
-    if (money < offer.price) return;
-    play("pop");
-    setMoney((prev) => prev - offer.price);
-    if (offer.kind === "joker") {
-      if (jokers.length >= MAX_JOKERS) return;
-      setJokers((prev) => [...prev, offer.joker]);
-    } else if (offer.kind === "planet") {
-      setHandStats((prev) => applyPlanetUpgrade(prev, offer.planet));
-    } else {
-      const effect = offer.tarot.effect;
-      if (effect.kind === "money-multiply") {
-        setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
-      }
-    }
+  function markOfferSold(idx: number) {
     setShopOffers((current) =>
       current
         ? current.map((o, i) => (i === idx ? { ...o, sold: true } : o))
         : current,
     );
+  }
+
+  function buyShopOffer(idx: number) {
+    const offer = shopOffers?.[idx];
+    if (!offer || offer.sold) return;
+    if (money < offer.price) return;
+    if (offer.kind === "joker") {
+      if (jokers.length >= MAX_JOKERS) return;
+      play("pop");
+      setMoney((prev) => prev - offer.price);
+      setJokers((prev) => [...prev, offer.joker]);
+      markOfferSold(idx);
+      return;
+    }
+    if (offer.kind === "planet") {
+      play("pop");
+      setMoney((prev) => prev - offer.price);
+      setHandStats((prev) => applyPlanetUpgrade(prev, offer.planet));
+      markOfferSold(idx);
+      return;
+    }
+    const effect = offer.tarot.effect;
+    if (effect.kind === "money-multiply") {
+      play("pop");
+      setMoney((prev) => prev - offer.price + resolveHermitPayout(prev - offer.price, effect.bonusCap));
+      markOfferSold(idx);
+      return;
+    }
+    setPendingTarot({ offerIdx: idx, tarot: offer.tarot });
+  }
+
+  function confirmTarotPicker(cardIds: ReadonlyArray<number>) {
+    if (!pendingTarot) return;
+    const { offerIdx, tarot } = pendingTarot;
+    const effect = tarot.effect;
+    if (effect.kind !== "apply-enhancement" || cardIds.length === 0) {
+      setPendingTarot(null);
+      return;
+    }
+    const targets = new Set(cardIds);
+    setDealt((prev) => ({
+      hand: prev.hand.map((c) =>
+        targets.has(c.id) ? { ...c, enhancement: effect.enhancement } : c,
+      ),
+      remaining: prev.remaining,
+    }));
+    play("pop");
+    setMoney((prev) => prev - (shopOffers?.[offerIdx]?.price ?? 0));
+    markOfferSold(offerIdx);
+    setPendingTarot(null);
   }
 
   function rerollShopOffers(cost: number) {
@@ -661,6 +700,14 @@ function App() {
           onBuy={buyShopOffer}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
+        />
+      )}
+      {pendingTarot && (
+        <TarotPicker
+          tarot={pendingTarot.tarot}
+          hand={dealt.hand}
+          onConfirm={confirmTarotPicker}
+          onCancel={() => setPendingTarot(null)}
         />
       )}
     </div>

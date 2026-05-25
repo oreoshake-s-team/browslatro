@@ -1516,8 +1516,12 @@ describe("Tarot purchase integration", () => {
     expect(after).toBe(before - 3 + bonus);
   });
 
-  test("buying any tarot offer marks it as Sold", async () => {
+  test("buying The Hermit marks the tarot offer Sold immediately", async () => {
     const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName !== "The Hermit") return;
     const buy = screen
       .getByTestId("shop-offer-2")
       .querySelector("button.shop-offer-buy");
@@ -1528,7 +1532,21 @@ describe("Tarot purchase integration", () => {
     ).toHaveTextContent(/Sold/);
   });
 
-  test("buying any tarot offer deducts the $3 tarot price up front", async () => {
+  test("buying an enhancement tarot opens the card-picker dialog", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(document.querySelector(".tarot-picker-modal")).not.toBeNull();
+  });
+
+  test("opening the picker does not deduct money", async () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId("shop-offer-2")
@@ -1540,6 +1558,82 @@ describe("Tarot purchase integration", () => {
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
+    expect(moneyOf()).toBe(before);
+  });
+
+  test("cancelling the picker does not deduct money", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const before = moneyOf();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(moneyOf()).toBe(before);
+  });
+
+  test("cancelling the picker does not mark the offer Sold", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
+    ).not.toHaveTextContent(/Sold/);
+  });
+
+  test("confirming the picker deducts $3 from money", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const before = moneyOf();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    const firstCardBtn = screen
+      .getByLabelText("Pick cards to enhance")
+      .querySelector("button.tarot-picker-card");
+    if (!(firstCardBtn instanceof HTMLButtonElement)) throw new Error("missing card");
+    await user.click(firstCardBtn);
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
     expect(moneyOf()).toBe(before - 3);
+  });
+
+  test("confirming the picker marks the offer Sold", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    const firstCardBtn = screen
+      .getByLabelText("Pick cards to enhance")
+      .querySelector("button.tarot-picker-card");
+    if (!(firstCardBtn instanceof HTMLButtonElement)) throw new Error("missing card");
+    await user.click(firstCardBtn);
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+    expect(
+      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
+    ).toHaveTextContent(/Sold/);
   });
 });
