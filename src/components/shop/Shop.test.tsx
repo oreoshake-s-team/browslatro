@@ -23,6 +23,7 @@ function renderShop(
       offers={[makeOffer("plus"), makeOffer("biz")]}
       pricePerJoker={5}
       onBuy={jest.fn()}
+      onReroll={jest.fn()}
       onNext={jest.fn()}
       {...overrides}
     />,
@@ -116,5 +117,78 @@ describe("Shop", () => {
     renderShop({ onNext });
     await user.keyboard("{Escape}");
     expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  describe("Reroll button", () => {
+    test("renders a Reroll button with the base $5 cost on first render", () => {
+      renderShop({ money: 10 });
+      expect(
+        screen.getByRole("button", { name: /Reroll shop offers for \$5/ }),
+      ).toBeInTheDocument();
+    });
+
+    test("Reroll button label shows the current cost", () => {
+      renderShop({ money: 10 });
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+        "Reroll ($5)",
+      );
+    });
+
+    test("clicking Reroll invokes onReroll with the current cost", async () => {
+      const user = userEvent.setup();
+      const onReroll = jest.fn();
+      renderShop({ money: 10, onReroll });
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      expect(onReroll).toHaveBeenCalledWith(5);
+    });
+
+    test("after one reroll, the button shows $6", async () => {
+      const user = userEvent.setup();
+      renderShop({ money: 20 });
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+        "Reroll ($6)",
+      );
+    });
+
+    test("after two rerolls, the button shows $7", async () => {
+      const user = userEvent.setup();
+      renderShop({ money: 20 });
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+        "Reroll ($7)",
+      );
+    });
+
+    test("Reroll button is disabled when the player can't afford the cost", () => {
+      renderShop({ money: 4 });
+      expect(screen.getByRole("button", { name: /Reroll/ })).toBeDisabled();
+    });
+
+    test("Reroll button has a tooltip when the player can't afford it", () => {
+      renderShop({ money: 4 });
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveAttribute(
+        "title",
+        "Not enough money to reroll",
+      );
+    });
+
+    test("clicking Reroll when disabled does not invoke onReroll", async () => {
+      const user = userEvent.setup();
+      const onReroll = jest.fn();
+      renderShop({ money: 4, onReroll });
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      expect(onReroll).not.toHaveBeenCalled();
+    });
+
+    test("clicking Reroll when disabled does not increment the reroll cost", async () => {
+      const user = userEvent.setup();
+      renderShop({ money: 4 });
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+        "Reroll ($5)",
+      );
+    });
   });
 });
