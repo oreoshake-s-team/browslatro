@@ -64,6 +64,41 @@ export function createDefaultJokers(): Joker[] {
   ];
 }
 
+// The pool the post-round shop samples from. Returning factories (not
+// memoized joker objects) keeps each call independent so the sampler
+// can pick the same template more than once without sharing references.
+export const SHOP_JOKER_POOL: ReadonlyArray<() => Joker> = [
+  createPlusFourMultJoker,
+  createBusinessCardJoker,
+  createJokerStencilJoker,
+];
+
+// Monotonically-increasing counter so every joker minted into the
+// equipped set has a globally-unique React key, even when the shop
+// sells a duplicate of an already-equipped template.
+let nextJokerInstanceCounter = 0;
+
+export function cloneJokerWithFreshId(joker: Joker): Joker {
+  nextJokerInstanceCounter += 1;
+  return { ...joker, id: `${joker.id}-instance-${nextJokerInstanceCounter}` };
+}
+
+// Sample `count` jokers from the shop pool, allowing duplicates. Each
+// returned joker has a fresh instance id so two offers (or two purchased
+// copies of the same template) never collide as React keys.
+export function sampleShopJokers(
+  count: number,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  const offers: Joker[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const idx = Math.floor(rng() * SHOP_JOKER_POOL.length);
+    const template = SHOP_JOKER_POOL[idx]();
+    offers.push(cloneJokerWithFreshId(template));
+  }
+  return offers;
+}
+
 export function isFaceCard(card: Card): boolean {
   return FACE_RANKS.has(card.rank);
 }
