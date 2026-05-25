@@ -56,9 +56,10 @@ export function cardSuitForEvaluation(card: Card): Suit | null {
   const enhancement = card.enhancement;
   if (!enhancement) return card.suit;
   switch (enhancement) {
+    case "wild":
+      return null;
     case "bonus":
     case "mult":
-    case "wild":
     case "glass":
     case "steel":
     case "gold":

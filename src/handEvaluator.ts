@@ -1,5 +1,6 @@
 import type { Card, Hand, Rank } from "./types";
 import { HANDS } from "./constants";
+import { cardSuitForEvaluation } from "./enhancements";
 
 export type HandLabel =
   | "High Card"
@@ -79,8 +80,10 @@ function countByRank(cards: ReadonlyArray<Card>): number[] {
 
 function isFlush(cards: ReadonlyArray<Card>): boolean {
   if (cards.length !== 5) return false;
-  const suit = cards[0].suit;
-  return cards.every((c) => c.suit === suit);
+  const suits = cards.map(cardSuitForEvaluation);
+  const anchor = suits.find((s) => s !== null);
+  if (anchor === undefined) return true;
+  return suits.every((s) => s === null || s === anchor);
 }
 
 function isStraight(cards: ReadonlyArray<Card>): boolean {
