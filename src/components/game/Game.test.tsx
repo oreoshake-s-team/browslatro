@@ -19,6 +19,8 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       selectedIds={new Set()}
       discardingIds={new Set()}
       jokers={[]}
+      consumables={[]}
+      onUseConsumable={vi.fn()}
       onToggleCard={vi.fn()}
       onCardDiscardEnd={vi.fn()}
       {...overrides}

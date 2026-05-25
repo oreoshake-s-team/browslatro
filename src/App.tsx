@@ -8,6 +8,12 @@ import Shop from "./components/shop/Shop";
 import TarotPicker from "./components/shop/TarotPicker";
 import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
 import { createTarotCatalog, resolveHermitPayout, type TarotCard } from "./tarots";
+import {
+  addConsumable,
+  hasFreeConsumableSlot,
+  removeConsumableAt,
+  type Consumable,
+} from "./consumables";
 import Sidebar from "./components/hud/Sidebar";
 import {
   emptyHandCounts,
@@ -161,9 +167,10 @@ function App() {
     null,
   );
   const [pendingTarot, setPendingTarot] = useState<{
-    offerIdx: number;
+    consumableIdx: number;
     tarot: TarotCard;
   } | null>(null);
+  const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -328,26 +335,39 @@ function App() {
       markOfferSold(idx);
       return;
     }
-    if (offer.kind === "planet") {
+    if (!hasFreeConsumableSlot(consumables)) return;
+    const next: Consumable =
+      offer.kind === "planet"
+        ? { kind: "planet", card: offer.planet }
+        : { kind: "tarot", card: offer.tarot };
+    play("pop");
+    setMoney((prev) => prev - offer.price);
+    setConsumables((prev) => addConsumable(prev, next));
+    markOfferSold(idx);
+  }
+
+  function useConsumable(consumableIdx: number) {
+    const entry = consumables[consumableIdx];
+    if (!entry) return;
+    if (entry.kind === "planet") {
       play("pop");
-      setMoney((prev) => prev - offer.price);
-      setHandStats((prev) => applyPlanetUpgrade(prev, offer.planet));
-      markOfferSold(idx);
+      setHandStats((prev) => applyPlanetUpgrade(prev, entry.card));
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
-    const effect = offer.tarot.effect;
+    const effect = entry.card.effect;
     if (effect.kind === "money-multiply") {
       play("pop");
-      setMoney((prev) => prev - offer.price + resolveHermitPayout(prev - offer.price, effect.bonusCap));
-      markOfferSold(idx);
+      setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
-    setPendingTarot({ offerIdx: idx, tarot: offer.tarot });
+    setPendingTarot({ consumableIdx, tarot: entry.card });
   }
 
   function confirmTarotPicker(cardIds: ReadonlyArray<number>) {
     if (!pendingTarot) return;
-    const { offerIdx, tarot } = pendingTarot;
+    const { consumableIdx, tarot } = pendingTarot;
     const effect = tarot.effect;
     if (effect.kind !== "apply-enhancement" || cardIds.length === 0) {
       setPendingTarot(null);
@@ -361,8 +381,7 @@ function App() {
       remaining: prev.remaining,
     }));
     play("pop");
-    setMoney((prev) => prev - (shopOffers?.[offerIdx]?.price ?? 0));
-    markOfferSold(offerIdx);
+    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
     setPendingTarot(null);
   }
 
@@ -414,6 +433,8 @@ function App() {
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
+    setConsumables([]);
+    setPendingTarot(null);
     startNewRound();
   }
 
@@ -684,6 +705,8 @@ function App() {
         discardingIds={discardingIds}
         jokers={jokers}
         jokerPulseCounters={jokerPulseCounters}
+        consumables={consumables}
+        onUseConsumable={useConsumable}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
@@ -696,6 +719,7 @@ function App() {
         <Shop
           money={money}
           equippedJokerCount={jokers.length}
+          consumableCount={consumables.length}
           offers={shopOffers}
           onBuy={buyShopOffer}
           onReroll={rerollShopOffers}

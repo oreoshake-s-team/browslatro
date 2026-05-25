@@ -2,12 +2,14 @@ import "./Shop.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { MAX_JOKERS } from "../../jokers";
+import { MAX_CONSUMABLE_SLOTS } from "../../consumables";
 import { rerollCostFor, type ShopItem } from "../../shop";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 interface ShopProps {
   money: number;
   equippedJokerCount: number;
+  consumableCount: number;
   offers: ReadonlyArray<ShopItem>;
   onBuy: (offerIdx: number) => void;
   onReroll: (cost: number) => void;
@@ -17,6 +19,7 @@ interface ShopProps {
 type BuyButtonState =
   | { kind: "sold" }
   | { kind: "slots-full" }
+  | { kind: "consumable-slots-full" }
   | { kind: "unaffordable" }
   | { kind: "available" };
 
@@ -24,10 +27,17 @@ function resolveBuyState(
   offer: ShopItem,
   money: number,
   equippedJokerCount: number,
+  consumableCount: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
   if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
     return { kind: "slots-full" };
+  }
+  if (
+    (offer.kind === "planet" || offer.kind === "tarot") &&
+    consumableCount >= MAX_CONSUMABLE_SLOTS
+  ) {
+    return { kind: "consumable-slots-full" };
   }
   if (money < offer.price) return { kind: "unaffordable" };
   return { kind: "available" };
@@ -38,6 +48,8 @@ function buyButtonLabel(state: BuyButtonState, price: number): string {
     case "sold":
       return "Sold";
     case "slots-full":
+      return "Slots full";
+    case "consumable-slots-full":
       return "Slots full";
     case "unaffordable":
       return `Buy ($${price})`;
@@ -52,6 +64,8 @@ function buyButtonTooltip(state: BuyButtonState): string | undefined {
       return "Already purchased this round";
     case "slots-full":
       return `Joker slots are full (max ${MAX_JOKERS})`;
+    case "consumable-slots-full":
+      return `Consumable slots are full (max ${MAX_CONSUMABLE_SLOTS})`;
     case "unaffordable":
       return "Not enough money";
     case "available":
@@ -77,6 +91,7 @@ function offerSubject(offer: ShopItem): {
 export default function Shop({
   money,
   equippedJokerCount,
+  consumableCount,
   offers,
   onBuy,
   onReroll,
@@ -112,7 +127,12 @@ export default function Shop({
         </p>
         <ul className="shop-offers" aria-label="Items for sale">
           {offers.map((offer, idx) => {
-            const state = resolveBuyState(offer, money, equippedJokerCount);
+            const state = resolveBuyState(
+              offer,
+              money,
+              equippedJokerCount,
+              consumableCount,
+            );
             const label = buyButtonLabel(state, offer.price);
             const subject = offerSubject(offer);
             return (

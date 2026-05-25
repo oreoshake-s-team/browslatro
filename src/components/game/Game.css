@@ -11,6 +11,16 @@
   box-sizing: border-box;
 }
 
+.game-top-row {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  max-width: 48rem;
+  box-sizing: border-box;
+  align-items: flex-start;
+  /* TODO: style */
+}
+
 .modifier-grid button,
 .submit-hand-button {
   padding: 10px 20px;
