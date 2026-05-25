@@ -33,6 +33,10 @@ export function getCardChips(card: Card): number {
   return RANK_CHIPS[card.rank] + applyCardEnhancement(card).chipsDelta;
 }
 
+export function getCardMultDelta(card: Card): number {
+  return applyCardEnhancement(card).multDelta;
+}
+
 /**
  * Groups cards by rank, preserving each card's original identity.
  */
@@ -180,5 +184,9 @@ export function scoreHand(cards: ReadonlyArray<Card>): number {
     (sum, card) => sum + getCardChips(card),
     0,
   );
-  return Math.floor((hand.chips + cardChips) * hand.multiplier);
+  const cardMultDelta = scoringCards.reduce(
+    (sum, card) => sum + getCardMultDelta(card),
+    0,
+  );
+  return Math.floor((hand.chips + cardChips) * (hand.multiplier + cardMultDelta));
 }

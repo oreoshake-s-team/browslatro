@@ -16,7 +16,12 @@ import {
 } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
-import { getCardChips, getScoringCards, getScoringStep } from "./scoring";
+import {
+  getCardChips,
+  getCardMultDelta,
+  getScoringCards,
+  getScoringStep,
+} from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
@@ -173,6 +178,10 @@ function App() {
       );
       setChips((prev) => prev + stepChips);
       play("pop");
+      const enhancementMultDelta = getCardMultDelta(stepCard);
+      if (enhancementMultDelta > 0) {
+        setMultiplier((prev) => prev + enhancementMultDelta);
+      }
       const cardJokerResult = applyPerCardJokers(jokers, stepCard);
       if (cardJokerResult.moneyEarned > 0) {
         setMoney((prev) => prev + cardJokerResult.moneyEarned);
@@ -413,6 +422,7 @@ function App() {
     let perCardAdditiveMult = 0;
     for (let i = 0; i < scoring.length; i += 1) {
       perCardAdditiveMult += applyPerCardJokers(jokers, scoring[i]).additiveMult;
+      perCardAdditiveMult += getCardMultDelta(scoring[i]);
     }
 
     const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);

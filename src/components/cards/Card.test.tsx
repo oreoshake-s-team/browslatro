@@ -205,6 +205,12 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-enhancement-mult");
   });
 
+  test("appends the mult suffix to the accessible label", () => {
+    const mult: CardType = { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" };
+    render(<Card card={mult} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName("9 of Diamonds (Mult)");
+  });
+
   test("appends the wild suffix to the accessible label", () => {
     const wild: CardType = { id: 13, rank: "K", suit: "hearts", enhancement: "wild" };
     render(<Card card={wild} />);

@@ -1,6 +1,7 @@
 import {
   BONUS_ENHANCEMENT_CHIPS,
   ENHANCEMENT_KINDS,
+  MULT_ENHANCEMENT_MULT_DELTA,
   NO_ENHANCEMENT_EFFECT,
   applyCardEnhancement,
   cardRankForEvaluation,
@@ -65,10 +66,31 @@ describe("applyCardEnhancement — vanilla card", () => {
 describe("applyCardEnhancement — foundation no-op per enhancement", () => {
   for (const kind of ENHANCEMENT_KINDS) {
     if (kind === "bonus") continue;
+    if (kind === "mult") continue;
     test(`returns the no-op effect for ${kind} (foundation does not implement effects)`, () => {
       expect(applyCardEnhancement(makeCard(kind))).toEqual(NO_ENHANCEMENT_EFFECT);
     });
   }
+});
+
+describe("applyCardEnhancement — Mult", () => {
+  test("returns +4 multDelta for a Mult card", () => {
+    expect(applyCardEnhancement(makeCard("mult")).multDelta).toBe(
+      MULT_ENHANCEMENT_MULT_DELTA,
+    );
+  });
+
+  test("MULT_ENHANCEMENT_MULT_DELTA equals 4 per the Balatro wiki", () => {
+    expect(MULT_ENHANCEMENT_MULT_DELTA).toBe(4);
+  });
+
+  test("Mult does not change chipsDelta", () => {
+    expect(applyCardEnhancement(makeCard("mult")).chipsDelta).toBe(0);
+  });
+
+  test("Mult does not change multTimes", () => {
+    expect(applyCardEnhancement(makeCard("mult")).multTimes).toBe(1);
+  });
 });
 
 describe("applyCardEnhancement — Bonus", () => {

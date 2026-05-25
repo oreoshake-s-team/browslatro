@@ -1,6 +1,7 @@
 import {
   forEachScoringStep,
   getCardChips,
+  getCardMultDelta,
   getRankChips,
   getScoringCards,
   getScoringStep,
@@ -382,5 +383,71 @@ describe("getScoringStep — Bonus enhancement", () => {
   test("layers +30 chips onto the step for a Bonus card", () => {
     const step = getScoringStep([card("5", "spades", "bonus")], 0);
     expect(step.chips).toBe(35);
+  });
+});
+
+describe("getCardMultDelta — Mult enhancement", () => {
+  test("returns +4 for a Mult card", () => {
+    expect(getCardMultDelta(card("5", "spades", "mult"))).toBe(4);
+  });
+
+  test("returns 0 for a vanilla card", () => {
+    expect(getCardMultDelta(card("5", "spades"))).toBe(0);
+  });
+
+  test("returns 0 for a Bonus card (Bonus adds chips, not mult)", () => {
+    expect(getCardMultDelta(card("5", "spades", "bonus"))).toBe(0);
+  });
+});
+
+describe("scoreHand — Mult enhancement", () => {
+  test("a played Pair with one Mult card adds +4 to the mult before multiplication", () => {
+    const multHand = [
+      card("5", "spades", "mult"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const vanillaHand = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const baseChips = 10 + 5 + 5;
+    expect(scoreHand(multHand)).toBe(baseChips * (2 + 4));
+    expect(scoreHand(vanillaHand)).toBe(baseChips * 2);
+  });
+
+  test("two scoring Mult cards stack to +8 mult", () => {
+    const multHand = [
+      card("5", "spades", "mult"),
+      card("5", "hearts", "mult"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const baseChips = 10 + 5 + 5;
+    expect(scoreHand(multHand)).toBe(baseChips * (2 + 4 + 4));
+  });
+
+  test("a Mult card not in the scoring set does not change the mult (kicker on a Pair)", () => {
+    const handWithMultKicker = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs", "mult"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    const vanillaHand = [
+      card("5", "spades"),
+      card("5", "hearts"),
+      card("9", "clubs"),
+      card("7", "diamonds"),
+      card("2", "spades"),
+    ];
+    expect(scoreHand(handWithMultKicker)).toBe(scoreHand(vanillaHand));
   });
 });
