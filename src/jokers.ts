@@ -1,7 +1,8 @@
-import type { Card, Rank } from "./types";
+import type { Card, Rank, Suit } from "./types";
 
 export const MAX_JOKERS = 5;
 export const BUSINESS_CARD_PROC_CHANCE = 0.5;
+export const SUIT_MULT_AMOUNT = 3;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -10,7 +11,8 @@ export type RandomSource = () => number;
 export type JokerEffect =
   | { readonly kind: "additive-mult"; readonly amount: number }
   | { readonly kind: "business-card"; readonly chance: number; readonly payout: number }
-  | { readonly kind: "stencil" };
+  | { readonly kind: "stencil" }
+  | { readonly kind: "per-suit-mult"; readonly suit: Suit; readonly amount: number };
 
 export interface Joker {
   readonly id: string;
@@ -33,6 +35,7 @@ export interface JokerHandResult {
 
 export interface JokerCardResult {
   readonly moneyEarned: number;
+  readonly additiveMult: number;
   readonly firedJokerIds: ReadonlyArray<string>;
 }
 
@@ -67,6 +70,42 @@ export function createJokerStencilJoker(): Joker {
   };
 }
 
+export function createGreedyJoker(): Joker {
+  return {
+    id: "greedy-joker",
+    name: "Greedy Joker",
+    description: "+3 Mult per scored Diamond",
+    effect: { kind: "per-suit-mult", suit: "diamonds", amount: SUIT_MULT_AMOUNT },
+  };
+}
+
+export function createLustyJoker(): Joker {
+  return {
+    id: "lusty-joker",
+    name: "Lusty Joker",
+    description: "+3 Mult per scored Heart",
+    effect: { kind: "per-suit-mult", suit: "hearts", amount: SUIT_MULT_AMOUNT },
+  };
+}
+
+export function createWrathfulJoker(): Joker {
+  return {
+    id: "wrathful-joker",
+    name: "Wrathful Joker",
+    description: "+3 Mult per scored Spade",
+    effect: { kind: "per-suit-mult", suit: "spades", amount: SUIT_MULT_AMOUNT },
+  };
+}
+
+export function createGluttonousJoker(): Joker {
+  return {
+    id: "gluttonous-joker",
+    name: "Gluttonous Joker",
+    description: "+3 Mult per scored Club",
+    effect: { kind: "per-suit-mult", suit: "clubs", amount: SUIT_MULT_AMOUNT },
+  };
+}
+
 export function createDefaultJokers(): Joker[] {
   return [
     createPlusFourMultJoker(),
@@ -79,6 +118,12 @@ export function isFaceCard(card: Card): boolean {
   return FACE_RANKS.has(card.rank);
 }
 
+function assertNeverEffect(effect: never): never {
+  throw new Error(
+    `Unhandled joker effect: ${JSON.stringify(effect)}`,
+  );
+}
+
 export function applyHandLevelJokers(
   jokers: ReadonlyArray<Joker>,
 ): JokerHandResult {
@@ -89,15 +134,25 @@ export function applyHandLevelJokers(
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
     const effect = joker.effect;
-    if (effect.kind === "additive-mult") {
-      additiveMult += effect.amount;
-      fired.push(joker.id);
-    } else if (effect.kind === "stencil") {
-      const emptySlots = MAX_JOKERS - jokers.length;
-      if (emptySlots > 0) {
-        xMult *= emptySlots;
+    switch (effect.kind) {
+      case "additive-mult": {
+        additiveMult += effect.amount;
         fired.push(joker.id);
+        break;
       }
+      case "stencil": {
+        const emptySlots = MAX_JOKERS - jokers.length;
+        if (emptySlots > 0) {
+          xMult *= emptySlots;
+          fired.push(joker.id);
+        }
+        break;
+      }
+      case "business-card":
+      case "per-suit-mult":
+        break;
+      default:
+        assertNeverEffect(effect);
     }
   }
 
@@ -110,20 +165,36 @@ export function applyPerCardJokers(
   rng: RandomSource = Math.random,
 ): JokerCardResult {
   let moneyEarned = 0;
+  let additiveMult = 0;
   const fired: string[] = [];
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
     const effect = joker.effect;
-    if (effect.kind === "business-card") {
-      if (isFaceCard(card) && rng() < effect.chance) {
-        moneyEarned += effect.payout;
-        fired.push(joker.id);
+    switch (effect.kind) {
+      case "business-card": {
+        if (isFaceCard(card) && rng() < effect.chance) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+        }
+        break;
       }
+      case "per-suit-mult": {
+        if (card.suit === effect.suit) {
+          additiveMult += effect.amount;
+          fired.push(joker.id);
+        }
+        break;
+      }
+      case "additive-mult":
+      case "stencil":
+        break;
+      default:
+        assertNeverEffect(effect);
     }
   }
 
-  return { moneyEarned, firedJokerIds: fired };
+  return { moneyEarned, additiveMult, firedJokerIds: fired };
 }
 
 export function applyJokersToScoring(
@@ -133,12 +204,14 @@ export function applyJokersToScoring(
 ): JokerScoringResult {
   const handResult = applyHandLevelJokers(jokers);
   let moneyEarned = 0;
+  let perCardAdditiveMult = 0;
   for (let c = 0; c < scoredCards.length; c += 1) {
     const cardResult = applyPerCardJokers(jokers, scoredCards[c], rng);
     moneyEarned += cardResult.moneyEarned;
+    perCardAdditiveMult += cardResult.additiveMult;
   }
   return {
-    additiveMult: handResult.additiveMult,
+    additiveMult: handResult.additiveMult + perCardAdditiveMult,
     xMult: handResult.xMult,
     moneyEarned,
   };
