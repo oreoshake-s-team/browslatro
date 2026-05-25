@@ -1,19 +1,29 @@
 import {
   BUSINESS_CARD_PROC_CHANCE,
+  CRAZY_JOKER_MULT,
+  DROLL_JOKER_MULT,
+  JOLLY_JOKER_MULT,
+  MAD_JOKER_MULT,
   MAX_JOKERS,
   SUIT_MULT_AMOUNT,
+  ZANY_JOKER_MULT,
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
   computeFinalScoreWithJokers,
   createBusinessCardJoker,
+  createCrazyJoker,
   createDefaultJokers,
+  createDrollJoker,
   createGluttonousJoker,
   createGreedyJoker,
   createJokerStencilJoker,
+  createJollyJoker,
   createLustyJoker,
+  createMadJoker,
   createPlusFourMultJoker,
   createWrathfulJoker,
+  createZanyJoker,
   isFaceCard,
 } from "./jokers";
 import type { Card, Rank, Suit } from "./types";
@@ -457,3 +467,171 @@ describe("computeFinalScoreWithJokers", () => {
   });
 });
 
+describe("Hand-type Mult joker factories", () => {
+  test("Jolly Joker requires a Pair and uses JOLLY_JOKER_MULT", () => {
+    expect(createJollyJoker().effect).toEqual({
+      kind: "on-hand-type-mult",
+      requires: "Pair",
+      amount: JOLLY_JOKER_MULT,
+    });
+  });
+
+  test("Zany Joker requires Three of a Kind and uses ZANY_JOKER_MULT", () => {
+    expect(createZanyJoker().effect).toEqual({
+      kind: "on-hand-type-mult",
+      requires: "Three of a Kind",
+      amount: ZANY_JOKER_MULT,
+    });
+  });
+
+  test("Mad Joker requires Two Pair and uses MAD_JOKER_MULT", () => {
+    expect(createMadJoker().effect).toEqual({
+      kind: "on-hand-type-mult",
+      requires: "Two Pair",
+      amount: MAD_JOKER_MULT,
+    });
+  });
+
+  test("Crazy Joker requires a Straight and uses CRAZY_JOKER_MULT", () => {
+    expect(createCrazyJoker().effect).toEqual({
+      kind: "on-hand-type-mult",
+      requires: "Straight",
+      amount: CRAZY_JOKER_MULT,
+    });
+  });
+
+  test("Droll Joker requires a Flush and uses DROLL_JOKER_MULT", () => {
+    expect(createDrollJoker().effect).toEqual({
+      kind: "on-hand-type-mult",
+      requires: "Flush",
+      amount: DROLL_JOKER_MULT,
+    });
+  });
+});
+
+describe("applyHandLevelJokers — Jolly Joker", () => {
+  test("adds JOLLY_JOKER_MULT when played hand contains a Pair", () => {
+    const result = applyHandLevelJokers([createJollyJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.additiveMult).toBe(JOLLY_JOKER_MULT);
+  });
+
+  test("reports Jolly Joker as fired on a Pair", () => {
+    const result = applyHandLevelJokers([createJollyJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.firedJokerIds).toEqual(["jolly-joker"]);
+  });
+
+  test("does not add mult when played hand does not contain a Pair", () => {
+    const result = applyHandLevelJokers([createJollyJoker()], {
+      playedHandLabel: "High Card",
+    });
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not fire when no played hand label is provided", () => {
+    const result = applyHandLevelJokers([createJollyJoker()]);
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyHandLevelJokers — Zany Joker", () => {
+  test("adds ZANY_JOKER_MULT when played hand contains Three of a Kind", () => {
+    const result = applyHandLevelJokers([createZanyJoker()], {
+      playedHandLabel: "Three of a Kind",
+    });
+    expect(result.additiveMult).toBe(ZANY_JOKER_MULT);
+  });
+
+  test("does not fire on a Pair (does not contain Three of a Kind)", () => {
+    const result = applyHandLevelJokers([createZanyJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyHandLevelJokers — Mad Joker", () => {
+  test("adds MAD_JOKER_MULT when played hand contains Two Pair", () => {
+    const result = applyHandLevelJokers([createMadJoker()], {
+      playedHandLabel: "Two Pair",
+    });
+    expect(result.additiveMult).toBe(MAD_JOKER_MULT);
+  });
+
+  test("does not fire on a single Pair", () => {
+    const result = applyHandLevelJokers([createMadJoker()], {
+      playedHandLabel: "Pair",
+    });
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyHandLevelJokers — Crazy Joker", () => {
+  test("adds CRAZY_JOKER_MULT when played hand contains a Straight", () => {
+    const result = applyHandLevelJokers([createCrazyJoker()], {
+      playedHandLabel: "Straight",
+    });
+    expect(result.additiveMult).toBe(CRAZY_JOKER_MULT);
+  });
+
+  test("does not fire on a Flush (Flush does not contain Straight)", () => {
+    const result = applyHandLevelJokers([createCrazyJoker()], {
+      playedHandLabel: "Flush",
+    });
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyHandLevelJokers — Droll Joker", () => {
+  test("adds DROLL_JOKER_MULT when played hand contains a Flush", () => {
+    const result = applyHandLevelJokers([createDrollJoker()], {
+      playedHandLabel: "Flush",
+    });
+    expect(result.additiveMult).toBe(DROLL_JOKER_MULT);
+  });
+
+  test("does not fire on a Straight (Straight does not contain Flush)", () => {
+    const result = applyHandLevelJokers([createDrollJoker()], {
+      playedHandLabel: "Straight",
+    });
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("applyHandLevelJokers — hand-type containment composition", () => {
+  test("Full House triggers Jolly (contains Pair) and Zany (contains 3oaK) but not Crazy (Straight)", () => {
+    const result = applyHandLevelJokers(
+      [createJollyJoker(), createZanyJoker(), createCrazyJoker()],
+      { playedHandLabel: "Full House" },
+    );
+    expect(result.firedJokerIds).toEqual(["jolly-joker", "zany-joker"]);
+  });
+
+  test("Straight Flush triggers Crazy (Straight) and Droll (Flush)", () => {
+    const result = applyHandLevelJokers(
+      [createCrazyJoker(), createDrollJoker()],
+      { playedHandLabel: "Straight Flush" },
+    );
+    expect(result.additiveMult).toBe(CRAZY_JOKER_MULT + DROLL_JOKER_MULT);
+  });
+});
+
+describe("applyJokersToScoring — hand-type Mult threading", () => {
+  test("threads playedHandLabel context into hand-level apply", () => {
+    const result = applyJokersToScoring(
+      [createJollyJoker()],
+      [],
+      Math.random,
+      { playedHandLabel: "Two Pair" },
+    );
+    expect(result.additiveMult).toBe(JOLLY_JOKER_MULT);
+  });
+
+  test("does not fire hand-type Mult when context is omitted", () => {
+    const result = applyJokersToScoring([createJollyJoker()], []);
+    expect(result.additiveMult).toBe(0);
+  });
+});

@@ -1,8 +1,14 @@
 import type { Card, Rank, Suit } from "./types";
+import { type HandLabel, handContains } from "./handEvaluator";
 
 export const MAX_JOKERS = 5;
 export const BUSINESS_CARD_PROC_CHANCE = 0.5;
 export const SUIT_MULT_AMOUNT = 3;
+export const JOLLY_JOKER_MULT = 8;
+export const ZANY_JOKER_MULT = 12;
+export const MAD_JOKER_MULT = 10;
+export const CRAZY_JOKER_MULT = 12;
+export const DROLL_JOKER_MULT = 10;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -12,7 +18,12 @@ export type JokerEffect =
   | { readonly kind: "additive-mult"; readonly amount: number }
   | { readonly kind: "business-card"; readonly chance: number; readonly payout: number }
   | { readonly kind: "stencil" }
-  | { readonly kind: "per-suit-mult"; readonly suit: Suit; readonly amount: number };
+  | { readonly kind: "per-suit-mult"; readonly suit: Suit; readonly amount: number }
+  | {
+      readonly kind: "on-hand-type-mult";
+      readonly requires: HandLabel;
+      readonly amount: number;
+    };
 
 export interface Joker {
   readonly id: string;
@@ -106,6 +117,67 @@ export function createGluttonousJoker(): Joker {
   };
 }
 
+export function createJollyJoker(): Joker {
+  return {
+    id: "jolly-joker",
+    name: "Jolly Joker",
+    description: "+8 Mult if played hand contains a Pair",
+    effect: { kind: "on-hand-type-mult", requires: "Pair", amount: JOLLY_JOKER_MULT },
+  };
+}
+
+export function createZanyJoker(): Joker {
+  return {
+    id: "zany-joker",
+    name: "Zany Joker",
+    description: "+12 Mult if played hand contains Three of a Kind",
+    effect: {
+      kind: "on-hand-type-mult",
+      requires: "Three of a Kind",
+      amount: ZANY_JOKER_MULT,
+    },
+  };
+}
+
+export function createMadJoker(): Joker {
+  return {
+    id: "mad-joker",
+    name: "Mad Joker",
+    description: "+10 Mult if played hand contains Two Pair",
+    effect: {
+      kind: "on-hand-type-mult",
+      requires: "Two Pair",
+      amount: MAD_JOKER_MULT,
+    },
+  };
+}
+
+export function createCrazyJoker(): Joker {
+  return {
+    id: "crazy-joker",
+    name: "Crazy Joker",
+    description: "+12 Mult if played hand contains a Straight",
+    effect: {
+      kind: "on-hand-type-mult",
+      requires: "Straight",
+      amount: CRAZY_JOKER_MULT,
+    },
+  };
+}
+
+export function createDrollJoker(): Joker {
+  return {
+    id: "droll-joker",
+    name: "Droll Joker",
+    description: "+10 Mult if played hand contains a Flush",
+    effect: {
+      kind: "on-hand-type-mult",
+      requires: "Flush",
+      amount: DROLL_JOKER_MULT,
+    },
+  };
+}
+
 export function createDefaultJokers(): Joker[] {
   return [
     createPlusFourMultJoker(),
@@ -123,6 +195,11 @@ export function createJokerCatalog(): Joker[] {
     createLustyJoker(),
     createWrathfulJoker(),
     createGluttonousJoker(),
+    createJollyJoker(),
+    createZanyJoker(),
+    createMadJoker(),
+    createCrazyJoker(),
+    createDrollJoker(),
   ];
 }
 
@@ -136,8 +213,13 @@ function assertNeverEffect(effect: never): never {
   );
 }
 
+export interface HandLevelContext {
+  readonly playedHandLabel?: HandLabel;
+}
+
 export function applyHandLevelJokers(
   jokers: ReadonlyArray<Joker>,
+  context: HandLevelContext = {},
 ): JokerHandResult {
   let additiveMult = 0;
   let xMult = 1;
@@ -156,6 +238,16 @@ export function applyHandLevelJokers(
         const emptySlots = MAX_JOKERS - jokers.length;
         if (emptySlots > 0) {
           xMult *= emptySlots;
+          fired.push(joker.id);
+        }
+        break;
+      }
+      case "on-hand-type-mult": {
+        if (
+          context.playedHandLabel !== undefined &&
+          handContains(context.playedHandLabel, effect.requires)
+        ) {
+          additiveMult += effect.amount;
           fired.push(joker.id);
         }
         break;
@@ -200,6 +292,7 @@ export function applyPerCardJokers(
       }
       case "additive-mult":
       case "stencil":
+      case "on-hand-type-mult":
         break;
       default:
         assertNeverEffect(effect);
@@ -213,8 +306,9 @@ export function applyJokersToScoring(
   jokers: ReadonlyArray<Joker>,
   scoredCards: ReadonlyArray<Card>,
   rng: RandomSource = Math.random,
+  context: HandLevelContext = {},
 ): JokerScoringResult {
-  const handResult = applyHandLevelJokers(jokers);
+  const handResult = applyHandLevelJokers(jokers, context);
   let moneyEarned = 0;
   let perCardAdditiveMult = 0;
   for (let c = 0; c < scoredCards.length; c += 1) {

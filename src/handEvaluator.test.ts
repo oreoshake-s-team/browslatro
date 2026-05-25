@@ -1,4 +1,4 @@
-import { detectHandLabel, evaluateHand } from "./handEvaluator";
+import { detectHandLabel, evaluateHand, handContains } from "./handEvaluator";
 import type { Card, Rank, Suit } from "./types";
 
 let nextId = 0;
@@ -241,5 +241,55 @@ describe("evaluateHand", () => {
       card("A", "hearts"),
     ]);
     expect(result.multiplier).toBe(2);
+  });
+});
+
+describe("handContains", () => {
+  test("Full House contains Pair", () => {
+    expect(handContains("Full House", "Pair")).toBe(true);
+  });
+
+  test("Full House contains Three of a Kind", () => {
+    expect(handContains("Full House", "Three of a Kind")).toBe(true);
+  });
+
+  test("Full House does not contain Straight", () => {
+    expect(handContains("Full House", "Straight")).toBe(false);
+  });
+
+  test("Two Pair contains Pair", () => {
+    expect(handContains("Two Pair", "Pair")).toBe(true);
+  });
+
+  test("Pair does not contain Two Pair", () => {
+    expect(handContains("Pair", "Two Pair")).toBe(false);
+  });
+
+  test("Four of a Kind contains Three of a Kind", () => {
+    expect(handContains("Four of a Kind", "Three of a Kind")).toBe(true);
+  });
+
+  test("Straight Flush contains Straight", () => {
+    expect(handContains("Straight Flush", "Straight")).toBe(true);
+  });
+
+  test("Straight Flush contains Flush", () => {
+    expect(handContains("Straight Flush", "Flush")).toBe(true);
+  });
+
+  test("Flush House contains Full House", () => {
+    expect(handContains("Flush House", "Full House")).toBe(true);
+  });
+
+  test("Flush Five contains Flush", () => {
+    expect(handContains("Flush Five", "Flush")).toBe(true);
+  });
+
+  test("Flush does not contain Straight", () => {
+    expect(handContains("Flush", "Straight")).toBe(false);
+  });
+
+  test("Straight does not contain Flush", () => {
+    expect(handContains("Straight", "Flush")).toBe(false);
   });
 });

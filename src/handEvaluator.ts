@@ -16,6 +16,31 @@ export type HandLabel =
   | "Flush House"
   | "Flush Five";
 
+const CONTAINMENT_ROWS: ReadonlyArray<readonly [HandLabel, ReadonlyArray<HandLabel>]> = [
+  ["High Card", ["High Card"]],
+  ["Pair", ["High Card", "Pair"]],
+  ["Two Pair", ["High Card", "Pair", "Two Pair"]],
+  ["Three of a Kind", ["High Card", "Pair", "Three of a Kind"]],
+  ["Straight", ["High Card", "Straight"]],
+  ["Flush", ["High Card", "Flush"]],
+  ["Full House", ["High Card", "Pair", "Three of a Kind", "Full House"]],
+  ["Four of a Kind", ["High Card", "Pair", "Three of a Kind", "Four of a Kind"]],
+  ["Straight Flush", ["High Card", "Straight", "Flush", "Straight Flush"]],
+  ["Royal Flush", ["High Card", "Straight", "Flush", "Straight Flush", "Royal Flush"]],
+  ["Five of a Kind", ["High Card", "Pair", "Three of a Kind", "Four of a Kind", "Five of a Kind"]],
+  ["Flush House", ["High Card", "Pair", "Three of a Kind", "Full House", "Flush", "Flush House"]],
+  ["Flush Five", ["High Card", "Pair", "Three of a Kind", "Four of a Kind", "Five of a Kind", "Flush", "Flush Five"]],
+];
+
+export const HAND_TYPE_CONTAINS: ReadonlyMap<HandLabel, ReadonlySet<HandLabel>> = new Map(
+  CONTAINMENT_ROWS.map(([label, contained]) => [label, new Set<HandLabel>(contained)]),
+);
+
+export function handContains(played: HandLabel, requires: HandLabel): boolean {
+  const set = HAND_TYPE_CONTAINS.get(played);
+  return set !== undefined && set.has(requires);
+}
+
 const RANK_VALUES: Record<Rank, number> = {
   "2": 2,
   "3": 3,
