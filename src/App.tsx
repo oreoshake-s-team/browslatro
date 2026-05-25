@@ -9,7 +9,7 @@ import { play } from "./components/system/sounds";
 import { isHighVisibility } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
 import { evaluateHand } from "./handEvaluator";
-import { getRankChips, getScoringCards } from "./scoring";
+import { getRankChips, getScoringCards, getScoringStep } from "./scoring";
 import { createDeck, deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest } from "./payout";
@@ -45,6 +45,9 @@ function App() {
   );
   const [discardingIds, setDiscardingIds] = useState<ReadonlySet<number>>(
     () => new Set(),
+  );
+  const [handDisplayOrder, setHandDisplayOrder] = useState<ReadonlyArray<number>>(
+    [],
   );
   const pendingDiscardCountRef = useRef(0);
 
@@ -95,8 +98,8 @@ function App() {
 
     const stepMs = prefersReducedMotion() ? 0 : SCORING_STEP_MS;
     const timer = window.setTimeout(() => {
-      const card = scoringCards[scoringIndex];
-      setChips((prev) => prev + getRankChips(card.rank));
+      const { chips: stepChips } = getScoringStep(scoringCards, scoringIndex);
+      setChips((prev) => prev + stepChips);
       play("pop");
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
@@ -189,7 +192,10 @@ function App() {
     if (discardingIds.size > 0) return;
     if (isScoring) return;
 
-    const playedCards = dealt.hand.filter((c) => selectedIds.has(c.id));
+    const handById = new Map(dealt.hand.map((c) => [c.id, c]));
+    const playedCards = handDisplayOrder
+      .map((id) => handById.get(id))
+      .filter((c): c is Card => c !== undefined && selectedIds.has(c.id));
     const submittedSelection = selectedIds;
 
     if (playedCards.length === 0) {
@@ -309,6 +315,7 @@ function App() {
         discardingIds={discardingIds}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
+        onDisplayOrderChange={setHandDisplayOrder}
       />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
