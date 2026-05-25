@@ -1,5 +1,8 @@
 import "./Card.css";
+import { useEffect, useId, useRef, useState } from "react";
 import type { Card as CardType, Enhancement, Rank, Suit } from "../../types";
+import CardTooltip from "./CardTooltip";
+import { getCardInfo } from "./cardInfo";
 
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
@@ -66,6 +69,22 @@ export default function Card({
   onToggle,
   onDiscardEnd,
 }: CardProps) {
+  const tooltipId = useId();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const showTooltip = () => {
+    const el = buttonRef.current;
+    if (el) setTooltipRect(el.getBoundingClientRect());
+  };
+  const hideTooltip = () => setTooltipRect(null);
+  useEffect(() => {
+    if (!tooltipRect) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTooltipRect(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tooltipRect]);
   const isStone = card.enhancement === "stone";
   const colorClass = isStone
     ? "card-stone-text"
@@ -91,13 +110,19 @@ export default function Card({
 
   return (
     <button
+      ref={buttonRef}
       type="button"
       className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${faceClass} ${enhancementClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}
       aria-label={ariaLabel}
+      aria-describedby={tooltipRect ? tooltipId : undefined}
       onClick={() => onToggle?.(card)}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
       onAnimationEnd={() => {
         if (discarding) {
           onDiscardEnd?.(card);
@@ -128,6 +153,9 @@ export default function Card({
             <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
           </span>
         </>
+      )}
+      {tooltipRect && (
+        <CardTooltip id={tooltipId} info={getCardInfo(card)} anchorRect={tooltipRect} />
       )}
     </button>
   );

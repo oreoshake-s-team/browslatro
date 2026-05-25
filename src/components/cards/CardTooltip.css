@@ -1,0 +1,57 @@
+.card-tooltip {
+  position: fixed;
+  z-index: 200;
+  transform: translateX(-50%);
+  min-width: 11rem;
+  max-width: 17rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #212529;
+  color: #f8f9fa;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  font-size: 0.85rem;
+  line-height: 1.3;
+  pointer-events: none;
+}
+
+.card-tooltip p {
+  margin: 0.2rem 0;
+}
+
+.card-tooltip-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.card-tooltip-suit-hearts,
+.card-tooltip-suit-diamonds {
+  color: #ff8787;
+}
+
+.card-tooltip-suit-spades,
+.card-tooltip-suit-clubs {
+  color: #f8f9fa;
+}
+
+.card-tooltip-chips {
+  color: #adb5bd;
+}
+
+.card-tooltip-enhancement {
+  color: #ffe066;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
