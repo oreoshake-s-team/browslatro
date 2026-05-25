@@ -25,10 +25,12 @@ import {
   MAX_JOKERS,
   applyHandLevelJokers,
   applyPerCardJokers,
+  applyPostHandJokers,
   computeFinalScoreWithJokers,
   createDefaultJokers,
   createJokerCatalog,
   type Joker,
+  type JokerPostHandStep,
 } from "./jokers";
 import { SHOP_OFFER_SLOTS, pickShopJokers } from "./shop";
 
@@ -112,6 +114,12 @@ function App() {
       ? goldScoringIds[goldScoringIndex]
       : null;
 
+  const [postHandSteps, setPostHandSteps] = useState<
+    ReadonlyArray<JokerPostHandStep>
+  >([]);
+  const [postHandIndex, setPostHandIndex] = useState<number>(0);
+  const postHandFinalizeRef = useRef<(() => void) | null>(null);
+
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
   const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
@@ -139,6 +147,9 @@ function App() {
     setGoldScoringIds([]);
     setGoldScoringIndex(0);
     goldFinalizeRef.current = null;
+    setPostHandSteps([]);
+    setPostHandIndex(0);
+    postHandFinalizeRef.current = null;
     setPendingWin(null);
   }
 
@@ -193,6 +204,27 @@ function App() {
     }, stepMs);
     return () => window.clearTimeout(timer);
   }, [goldScoringIds, goldScoringIndex, animationSpeed]);
+
+  useEffect(() => {
+    if (postHandSteps.length === 0) return;
+    if (postHandIndex >= postHandSteps.length) {
+      const finalize = postHandFinalizeRef.current;
+      postHandFinalizeRef.current = null;
+      setPostHandSteps([]);
+      setPostHandIndex(0);
+      if (finalize) finalize();
+      return;
+    }
+    const stepMs = getScoringStepMs(animationSpeed);
+    const timer = window.setTimeout(() => {
+      const step = postHandSteps[postHandIndex];
+      setMultiplier((prev) => prev * step.xMultFactor);
+      play("pop");
+      pulseJokers([step.jokerId]);
+      setPostHandIndex((prev) => prev + 1);
+    }, stepMs);
+    return () => window.clearTimeout(timer);
+  }, [postHandSteps, postHandIndex, animationSpeed]);
 
   function handleWin() {
     setRound((prev) => prev + 1);
@@ -384,7 +416,9 @@ function App() {
     }
 
     const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
-    const combinedXMult = handJokerResult.xMult * steelMult;
+    const preHandXMult = handJokerResult.xMult * steelMult;
+    const postHandResult = applyPostHandJokers(jokers);
+    const totalXMult = preHandXMult * postHandResult.xMult;
 
     const finalScore = computeFinalScoreWithJokers(
       handStats.chips,
@@ -392,17 +426,25 @@ function App() {
       cardChipsTotal,
       {
         additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
-        xMult: combinedXMult,
+        xMult: totalXMult,
         moneyEarned: 0,
       },
     );
 
     const liveMultiplier =
-      (handStats.multiplier + handJokerResult.additiveMult) * combinedXMult;
+      (handStats.multiplier + handJokerResult.additiveMult) * preHandXMult;
     setChips(handStats.chips);
     setMultiplier(liveMultiplier);
     scoringFinalizeRef.current = () => {
-      finalizeHandSubmission(finalScore, submittedSelection);
+      if (postHandResult.steps.length === 0) {
+        finalizeHandSubmission(finalScore, submittedSelection);
+        return;
+      }
+      postHandFinalizeRef.current = () => {
+        finalizeHandSubmission(finalScore, submittedSelection);
+      };
+      setPostHandSteps(postHandResult.steps);
+      setPostHandIndex(0);
     };
     setScoringCards(scoring);
     setScoringIndex(0);

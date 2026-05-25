@@ -50,6 +50,17 @@ export interface JokerCardResult {
   readonly firedJokerIds: ReadonlyArray<string>;
 }
 
+export interface JokerPostHandStep {
+  readonly jokerId: string;
+  readonly xMultFactor: number;
+}
+
+export interface JokerPostHandResult {
+  readonly steps: ReadonlyArray<JokerPostHandStep>;
+  readonly xMult: number;
+  readonly firedJokerIds: ReadonlyArray<string>;
+}
+
 export function createPlusFourMultJoker(): Joker {
   return {
     id: "plus-four-mult",
@@ -234,14 +245,6 @@ export function applyHandLevelJokers(
         fired.push(joker.id);
         break;
       }
-      case "stencil": {
-        const emptySlots = MAX_JOKERS - jokers.length;
-        if (emptySlots > 0) {
-          xMult *= emptySlots;
-          fired.push(joker.id);
-        }
-        break;
-      }
       case "on-hand-type-mult": {
         if (
           context.playedHandLabel !== undefined &&
@@ -252,6 +255,7 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "stencil":
       case "business-card":
       case "per-suit-mult":
         break;
@@ -261,6 +265,39 @@ export function applyHandLevelJokers(
   }
 
   return { additiveMult, xMult, firedJokerIds: fired };
+}
+
+export function applyPostHandJokers(
+  jokers: ReadonlyArray<Joker>,
+): JokerPostHandResult {
+  const steps: JokerPostHandStep[] = [];
+  const fired: string[] = [];
+  let xMult = 1;
+
+  for (let i = 0; i < jokers.length; i += 1) {
+    const joker = jokers[i];
+    const effect = joker.effect;
+    switch (effect.kind) {
+      case "stencil": {
+        const emptySlots = MAX_JOKERS - jokers.length;
+        if (emptySlots > 0) {
+          xMult *= emptySlots;
+          steps.push({ jokerId: joker.id, xMultFactor: emptySlots });
+          fired.push(joker.id);
+        }
+        break;
+      }
+      case "additive-mult":
+      case "business-card":
+      case "per-suit-mult":
+      case "on-hand-type-mult":
+        break;
+      default:
+        assertNeverEffect(effect);
+    }
+  }
+
+  return { steps, xMult, firedJokerIds: fired };
 }
 
 export function applyPerCardJokers(
@@ -316,9 +353,10 @@ export function applyJokersToScoring(
     moneyEarned += cardResult.moneyEarned;
     perCardAdditiveMult += cardResult.additiveMult;
   }
+  const postHandResult = applyPostHandJokers(jokers);
   return {
     additiveMult: handResult.additiveMult + perCardAdditiveMult,
-    xMult: handResult.xMult,
+    xMult: handResult.xMult * postHandResult.xMult,
     moneyEarned,
   };
 }

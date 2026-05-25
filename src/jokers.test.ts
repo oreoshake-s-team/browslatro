@@ -10,6 +10,7 @@ import {
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
+  applyPostHandJokers,
   computeFinalScoreWithJokers,
   createBusinessCardJoker,
   createCrazyJoker,
@@ -201,21 +202,14 @@ describe("applyHandLevelJokers — fired ids", () => {
     expect(result.firedJokerIds).toEqual(["plus-four-mult"]);
   });
 
-  test("reports the Joker Stencil as fired when at least one slot is empty", () => {
+  test("no longer reports the Joker Stencil at the hand-pre pass (issue #131 — moved to post-hand)", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
-    expect(result.firedJokerIds).toEqual(["joker-stencil"]);
+    expect(result.firedJokerIds).not.toContain("joker-stencil");
   });
 
-  test("does not report the Joker Stencil as fired when all slots are filled", () => {
-    const five = [
-      createJokerStencilJoker(),
-      createPlusFourMultJoker(),
-      createPlusFourMultJoker(),
-      createPlusFourMultJoker(),
-      createPlusFourMultJoker(),
-    ];
-    const result = applyHandLevelJokers(five);
-    expect(result.firedJokerIds).not.toContain("joker-stencil");
+  test("does not multiply xMult at the hand-pre pass when Stencil is equipped (issue #131)", () => {
+    const result = applyHandLevelJokers([createJokerStencilJoker()]);
+    expect(result.xMult).toBe(1);
   });
 
   test("does not report Business Card as fired at the hand level", () => {
@@ -417,16 +411,9 @@ describe("applyJokersToScoring — Suit Mult aggregation", () => {
 describe("Joker firing order respects input array order", () => {
   test("applyHandLevelJokers fired ids follow the input array order", () => {
     const a = createPlusFourMultJoker();
-    const b = createJokerStencilJoker();
+    const b = createPlusFourMultJoker();
     const result = applyHandLevelJokers([a, b]);
-    expect(result.firedJokerIds).toEqual(["plus-four-mult", "joker-stencil"]);
-  });
-
-  test("applyHandLevelJokers fired ids reflect a swapped input order", () => {
-    const a = createPlusFourMultJoker();
-    const b = createJokerStencilJoker();
-    const result = applyHandLevelJokers([b, a]);
-    expect(result.firedJokerIds).toEqual(["joker-stencil", "plus-four-mult"]);
+    expect(result.firedJokerIds).toEqual(["plus-four-mult", "plus-four-mult"]);
   });
 
   test("applyPerCardJokers fired ids follow the input array order", () => {
@@ -633,5 +620,124 @@ describe("applyJokersToScoring — hand-type Mult threading", () => {
   test("does not fire hand-type Mult when context is omitted", () => {
     const result = applyJokersToScoring([createJollyJoker()], []);
     expect(result.additiveMult).toBe(0);
+  });
+});
+
+describe("applyPostHandJokers — Joker Stencil (issue #131)", () => {
+  test("multiplies xMult by empty-slot count when only Stencil is equipped", () => {
+    const result = applyPostHandJokers([createJokerStencilJoker()]);
+    expect(result.xMult).toBe(MAX_JOKERS - 1);
+  });
+
+  test("reports Stencil as fired when at least one slot is empty", () => {
+    const result = applyPostHandJokers([createJokerStencilJoker()]);
+    expect(result.firedJokerIds).toEqual(["joker-stencil"]);
+  });
+
+  test("emits one step per fired Stencil with xMultFactor = emptySlots", () => {
+    const result = applyPostHandJokers([createJokerStencilJoker()]);
+    expect(result.steps).toEqual([
+      { jokerId: "joker-stencil", xMultFactor: MAX_JOKERS - 1 },
+    ]);
+  });
+
+  test("does NOT fire when all 5 slots are filled (existing behavior preserved)", () => {
+    const stencil = createJokerStencilJoker();
+    const result = applyPostHandJokers([
+      stencil,
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+    ]);
+    expect(result.firedJokerIds).toEqual([]);
+  });
+
+  test("returns xMult=1 when Stencil does not fire", () => {
+    const stencil = createJokerStencilJoker();
+    const result = applyPostHandJokers([
+      stencil,
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+    ]);
+    expect(result.xMult).toBe(1);
+  });
+
+  test("returns no steps when Stencil does not fire", () => {
+    const stencil = createJokerStencilJoker();
+    const result = applyPostHandJokers([
+      stencil,
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+      createPlusFourMultJoker(),
+    ]);
+    expect(result.steps).toEqual([]);
+  });
+
+  test("ignores hand-pre and per-card jokers (only post-hand jokers fire here)", () => {
+    const result = applyPostHandJokers([
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createGreedyJoker(),
+      createJollyJoker(),
+    ]);
+    expect(result.firedJokerIds).toEqual([]);
+  });
+
+  test("walks the joker row left → right and emits steps in array order", () => {
+    const a = createJokerStencilJoker();
+    const b = createJokerStencilJoker();
+    const result = applyPostHandJokers([a, b]);
+    expect(result.steps.map((s) => s.jokerId)).toEqual([
+      "joker-stencil",
+      "joker-stencil",
+    ]);
+  });
+
+  test("two Stencils equipped multiply their xMult contributions", () => {
+    const result = applyPostHandJokers([
+      createJokerStencilJoker(),
+      createJokerStencilJoker(),
+    ]);
+    const emptySlots = MAX_JOKERS - 2;
+    expect(result.xMult).toBe(emptySlots * emptySlots);
+  });
+});
+
+describe("Stencil composition with prior mult (issue #131)", () => {
+  test("hand-level additive mult is added before Stencil multiplies", () => {
+    const result = applyJokersToScoring(
+      [createPlusFourMultJoker(), createJokerStencilJoker()],
+      [],
+    );
+    const emptySlots = MAX_JOKERS - 2;
+    expect(result.additiveMult).toBe(4);
+    expect(result.xMult).toBe(emptySlots);
+  });
+
+  test("computeFinalScoreWithJokers folds (additive) before (xMult)", () => {
+    const emptySlots = MAX_JOKERS - 2;
+    const finalScore = computeFinalScoreWithJokers(5, 1, 0, {
+      additiveMult: 4,
+      xMult: emptySlots,
+      moneyEarned: 0,
+    });
+    expect(finalScore).toBe(5 * (1 + 4) * emptySlots);
+  });
+
+  test("per-card additive mult from a suit joker also counts before Stencil multiplies", () => {
+    const result = applyJokersToScoring(
+      [createGreedyJoker(), createJokerStencilJoker()],
+      [
+        { id: 1, rank: "5", suit: "diamonds" },
+        { id: 2, rank: "5", suit: "diamonds" },
+      ],
+    );
+    const emptySlots = MAX_JOKERS - 2;
+    expect(result.additiveMult).toBe(SUIT_MULT_AMOUNT * 2);
+    expect(result.xMult).toBe(emptySlots);
   });
 });
