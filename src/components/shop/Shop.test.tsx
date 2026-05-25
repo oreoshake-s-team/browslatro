@@ -1,16 +1,30 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import Shop, { type ShopOffer } from "./Shop";
+import Shop from "./Shop";
+import type { ShopItem } from "../../shop";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
   createPlusFourMultJoker,
 } from "../../jokers";
+import { createPlanetCatalog } from "../../planets";
 
-function makeOffer(name: "plus" | "biz", sold = false): ShopOffer {
+const PLUTO = createPlanetCatalog().find((p) => p.id === "pluto")!;
+const MERCURY = createPlanetCatalog().find((p) => p.id === "mercury")!;
+
+function jokerOffer(name: "plus" | "biz", sold = false): ShopItem {
   const joker =
     name === "plus" ? createPlusFourMultJoker() : createBusinessCardJoker();
-  return { joker, sold };
+  return { kind: "joker", joker, price: 5, sold };
+}
+
+function planetOffer(id: "pluto" | "mercury", sold = false): ShopItem {
+  return {
+    kind: "planet",
+    planet: id === "pluto" ? PLUTO : MERCURY,
+    price: 3,
+    sold,
+  };
 }
 
 function renderShop(
@@ -20,8 +34,7 @@ function renderShop(
     <Shop
       money={10}
       equippedJokerCount={0}
-      offers={[makeOffer("plus"), makeOffer("biz")]}
-      pricePerJoker={5}
+      offers={[jokerOffer("plus"), planetOffer("pluto")]}
       onBuy={vi.fn()}
       onReroll={vi.fn()}
       onNext={vi.fn()}
@@ -48,10 +61,31 @@ describe("Shop", () => {
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
   });
 
-  test("each offer shows its price", () => {
-    renderShop({ pricePerJoker: 5 });
-    const priceLabels = screen.getAllByText("$5");
-    expect(priceLabels.length).toBeGreaterThanOrEqual(2);
+  test("the joker offer renders its joker price", () => {
+    renderShop();
+    expect(screen.getAllByText("$5").length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("the planet offer renders its planet price", () => {
+    renderShop();
+    expect(screen.getAllByText("$3").length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("renders the planet offer's name", () => {
+    renderShop();
+    expect(screen.getByText("Pluto")).toBeInTheDocument();
+  });
+
+  test("tags each offer with its kind via data-offer-kind", () => {
+    renderShop();
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-offer-kind",
+      "joker",
+    );
+    expect(screen.getByTestId("shop-offer-1")).toHaveAttribute(
+      "data-offer-kind",
+      "planet",
+    );
   });
 
   test("clicking an affordable buy button invokes onBuy with the offer index", async () => {
@@ -63,22 +97,38 @@ describe("Shop", () => {
     expect(onBuy).toHaveBeenCalledWith(1);
   });
 
-  test("the buy button is disabled when the player can't afford the price", () => {
-    renderShop({ money: 4, pricePerJoker: 5 });
+  test("the joker buy button is disabled when the player can't afford the joker price", () => {
+    renderShop({ money: 4 });
     const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
     expect(buyButtons[0]).toBeDisabled();
   });
 
-  test("the buy button is disabled and labeled when joker slots are full", () => {
+  test("the planet buy button stays enabled when joker slots are full", () => {
+    renderShop({ equippedJokerCount: MAX_JOKERS });
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    expect(planetBuy).not.toBeDisabled();
+  });
+
+  test("the joker buy button is disabled and labeled when joker slots are full", () => {
     renderShop({ equippedJokerCount: MAX_JOKERS });
     expect(
       screen.getAllByRole("button", { name: /Slots full/ })[0],
     ).toBeDisabled();
   });
 
+  test("the planet buy button is disabled when the player can't afford the planet price", () => {
+    renderShop({ money: 2 });
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    expect(planetBuy).toBeDisabled();
+  });
+
   test("a sold offer renders a Sold button instead of a Buy button", () => {
     renderShop({
-      offers: [makeOffer("plus", true), makeOffer("biz")],
+      offers: [jokerOffer("plus", true), planetOffer("pluto")],
     });
     expect(
       screen.getByRole("button", { name: /Sold/ }),
@@ -87,7 +137,7 @@ describe("Shop", () => {
 
   test("a sold offer's button is disabled", () => {
     renderShop({
-      offers: [makeOffer("plus", true), makeOffer("biz")],
+      offers: [jokerOffer("plus", true), planetOffer("pluto")],
     });
     expect(screen.getByRole("button", { name: /Sold/ })).toBeDisabled();
   });
@@ -97,7 +147,7 @@ describe("Shop", () => {
     const onBuy = vi.fn();
     renderShop({
       onBuy,
-      offers: [makeOffer("plus", true), makeOffer("biz")],
+      offers: [jokerOffer("plus", true), planetOffer("pluto")],
     });
     await user.click(screen.getByRole("button", { name: /Sold/ }));
     expect(onBuy).not.toHaveBeenCalled();
