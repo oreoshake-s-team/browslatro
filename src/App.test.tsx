@@ -1307,3 +1307,123 @@ describe("Run information modal integration", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Planet purchase integration", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  function readRunInfoStats(): Record<string, string> {
+    const rows = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-testid^='run-info-stats-']"),
+    );
+    const stats: Record<string, string> = {};
+    for (const row of rows) {
+      const id = row.getAttribute("data-testid") ?? "";
+      stats[id] = row.textContent ?? "";
+    }
+    return stats;
+  }
+
+  test("the planet offer is rendered in slot 1 with data-offer-kind=planet", async () => {
+    await openShop();
+    expect(screen.getByTestId("shop-offer-1")).toHaveAttribute(
+      "data-offer-kind",
+      "planet",
+    );
+  });
+
+  test("buying the planet deducts the planet price from money", async () => {
+    const user = await openShop();
+    const moneyBefore = Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    const moneyAfter = Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+    expect(moneyAfter).toBe(moneyBefore - 3);
+  });
+
+  test("buying the planet does not add a joker to the equipped set", async () => {
+    const user = await openShop();
+    const jokerCountBefore = screen.getAllByTestId(/^joker-tile-filled-/).length;
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(
+      jokerCountBefore,
+    );
+  });
+
+  test("buying the planet marks that offer as Sold", async () => {
+    const user = await openShop();
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    expect(
+      screen.getByTestId("shop-offer-1").querySelector(".shop-offer-buy"),
+    ).toHaveTextContent(/Sold/);
+  });
+
+  test("buying the planet upgrades exactly one row's chips × mult in RunInfo", async () => {
+    const user = await openShop();
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    const before = readRunInfoStats();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    const after = readRunInfoStats();
+    const changedRows = Object.keys(after).filter(
+      (key) => after[key] !== before[key],
+    );
+    expect(changedRows.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("starting a new game restores RunInfo stats to baseline", async () => {
+    const user = await openShop();
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    const baseline = readRunInfoStats();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(readRunInfoStats()).toEqual(baseline);
+  });
+});

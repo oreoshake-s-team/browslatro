@@ -8,6 +8,7 @@ import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import HandScore from "../game/HandScore";
 import type { Hand } from "../../types";
+import type { HandStats } from "../../handStats";
 import type { AnimationSpeed } from "../system/preferences";
 
 interface SidebarProps {
@@ -23,6 +24,7 @@ interface SidebarProps {
   remainingHands: number;
   remainingDiscards: number;
   handPlayCounts: HandPlayCounts;
+  handStats: HandStats;
   onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
@@ -41,6 +43,7 @@ export default function Sidebar({
   remainingHands,
   remainingDiscards,
   handPlayCounts,
+  handStats,
   onNewGame,
   onHighVisibilityChange,
   onAnimationSpeedChange,
@@ -60,7 +63,7 @@ export default function Sidebar({
       />
       <div className="sub-info-progress">
         <div className="sub-info">
-          <RunInfo handPlayCounts={handPlayCounts} />
+          <RunInfo handPlayCounts={handPlayCounts} handStats={handStats} />
           <Options
             onNewGame={onNewGame}
             onHighVisibilityChange={onHighVisibilityChange}

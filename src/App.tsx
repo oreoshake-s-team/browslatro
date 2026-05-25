@@ -5,7 +5,7 @@ import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
-import { createPlanetCatalog } from "./planets";
+import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
 import Sidebar from "./components/hud/Sidebar";
 import {
   emptyHandCounts,
@@ -310,6 +310,7 @@ function App() {
     } else {
       play("pop");
       setMoney((prev) => prev - offer.price);
+      setHandStats((prev) => applyPlanetUpgrade(prev, offer.planet));
     }
     setShopOffers((current) =>
       current
@@ -603,6 +604,7 @@ function App() {
         remainingHands={remainingHands}
         remainingDiscards={remainingDiscards}
         handPlayCounts={handPlayCounts}
+        handStats={handStats}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
         onAnimationSpeedChange={setAnimationSpeedState}
