@@ -63,6 +63,7 @@ import {
   type JokerPostHandStep,
 } from "./jokers";
 import { pickShopOffers, rerollShopOffer, type ShopItem } from "./shop";
+import { pickVoucherForAnte, type Voucher, type VoucherId } from "./vouchers";
 
 export const SCORING_STEP_MS = 500;
 
@@ -173,6 +174,13 @@ function App() {
     tarot: TarotCard;
   } | null>(null);
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
+  const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
+    () => new Set(),
+  );
+  const [currentAnteVoucher, setCurrentAnteVoucher] = useState<Voucher | null>(
+    () => pickVoucherForAnte({ ante: 1, ownedIds: new Set() }),
+  );
+  const [currentAnteVoucherSold, setCurrentAnteVoucherSold] = useState(false);
 
   const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
@@ -305,8 +313,13 @@ function App() {
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
-      setAnte((prev) => prev + 1);
+      const nextAnte = ante + 1;
+      setAnte(nextAnte);
       setBlind(1);
+      setCurrentAnteVoucher(
+        pickVoucherForAnte({ ante: nextAnte, ownedIds: ownedVoucherIds }),
+      );
+      setCurrentAnteVoucherSold(false);
     }
     setShopOffers(
       pickShopOffers({
@@ -418,6 +431,22 @@ function App() {
     startNewRound();
   }
 
+  function buyCurrentAnteVoucher() {
+    const voucher = currentAnteVoucher;
+    if (!voucher) return;
+    if (currentAnteVoucherSold) return;
+    if (money < voucher.cost) return;
+    if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
+    play("pop");
+    setMoney((prev) => prev - voucher.cost);
+    setOwnedVoucherIds((prev) => {
+      const next = new Set(prev);
+      next.add(voucher.id);
+      return next;
+    });
+    setCurrentAnteVoucherSold(true);
+  }
+
   function reorderJokers(orderedIds: ReadonlyArray<string>) {
     setJokers((prev) => {
       const byId = new Map(prev.map((j) => [j.id, j]));
@@ -438,6 +467,10 @@ function App() {
     setDestroyedCardKeys(new Set());
     setConsumables([]);
     setPendingTarot(null);
+    const freshOwned = new Set<VoucherId>();
+    setOwnedVoucherIds(freshOwned);
+    setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
+    setCurrentAnteVoucherSold(false);
     startNewRound();
   }
 
@@ -731,7 +764,11 @@ function App() {
           equippedJokerCount={jokers.length}
           consumableCount={consumables.length}
           offers={shopOffers}
+          voucher={currentAnteVoucher}
+          voucherSold={currentAnteVoucherSold}
+          ownedVoucherIds={ownedVoucherIds}
           onBuy={buyShopOffer}
+          onBuyVoucher={buyCurrentAnteVoucher}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
         />
