@@ -429,6 +429,46 @@
 }
 
 .card-enhancement-stone {
+  border-color: #495057;
+  border-width: 3px;
+  background-color: #adb5bd;
+  background-image: linear-gradient(
+    140deg,
+    #ced4da 0%,
+    #868e96 35%,
+    #adb5bd 55%,
+    #6c757d 80%,
+    #adb5bd 100%
+  );
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35),
+    inset 0 0 12px rgba(0, 0, 0, 0.35);
+}
+
+.card-stone-text {
+  color: #212529;
+}
+
+.card-stone-face {
+  align-self: stretch;
+  justify-self: stretch;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  border-radius: 4px;
+  background-image: radial-gradient(
+      circle at 25% 30%,
+      rgba(0, 0, 0, 0.18) 0%,
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 70% 65%,
+      rgba(0, 0, 0, 0.22) 0%,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 55% 20%,
+      rgba(0, 0, 0, 0.16) 0%,
+      transparent 18%
+    );
 }
 
 .card-enhancement-lucky {

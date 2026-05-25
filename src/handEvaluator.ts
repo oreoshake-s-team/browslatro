@@ -1,6 +1,6 @@
 import type { Card, Hand, Rank } from "./types";
 import { HANDS } from "./constants";
-import { cardSuitForEvaluation } from "./enhancements";
+import { cardSuitForEvaluation, isStoneCard } from "./enhancements";
 
 export type HandLabel =
   | "High Card"
@@ -110,16 +110,21 @@ function isRoyal(cards: ReadonlyArray<Card>): boolean {
 export function detectHandLabel(cards: ReadonlyArray<Card>): HandLabel {
   if (cards.length === 0) return "High Card";
 
-  const counts = countByRank(cards);
-  const flush = isFlush(cards);
-  const straight = isStraight(cards);
+  // Stone cards have no rank or suit for the purposes of hand detection.
+  // They still always score (handled in getScoringCards) but are invisible
+  // to flush/straight/grouping checks.
+  const meaningful = cards.filter((c) => !isStoneCard(c));
+
+  const counts = countByRank(meaningful);
+  const flush = isFlush(meaningful);
+  const straight = isStraight(meaningful);
   const fiveOfKind = counts[0] === 5;
   const fullHouse = counts[0] === 3 && counts[1] === 2;
 
   if (flush && fiveOfKind) return "Flush Five";
   if (flush && fullHouse) return "Flush House";
   if (fiveOfKind) return "Five of a Kind";
-  if (flush && straight && isRoyal(cards)) return "Royal Flush";
+  if (flush && straight && isRoyal(meaningful)) return "Royal Flush";
   if (flush && straight) return "Straight Flush";
   if (counts[0] === 4) return "Four of a Kind";
   if (fullHouse) return "Full House";

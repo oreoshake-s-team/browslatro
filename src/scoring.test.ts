@@ -518,3 +518,66 @@ describe("scoreHand — Glass enhancement", () => {
     expect(scoreHand(handWithGlassKicker)).toBe(scoreHand(vanillaHand));
   });
 });
+
+describe("getCardChips — Stone enhancement", () => {
+  test("returns 50 chips for a Stone card regardless of underlying rank", () => {
+    expect(getCardChips(card("3", "spades", "stone"))).toBe(50);
+  });
+
+  test("a Stone face card returns 50 chips (rank is invisible)", () => {
+    expect(getCardChips(card("K", "spades", "stone"))).toBe(50);
+  });
+
+  test("a Stone Ace returns 50 chips (rank is invisible)", () => {
+    expect(getCardChips(card("A", "spades", "stone"))).toBe(50);
+  });
+});
+
+describe("getScoringCards — Stone enhancement is always in the scoring set", () => {
+  test("a Pair with 3 stones includes all 5 cards in the scoring set", () => {
+    const cards = [
+      card("3", "spades", "stone"),
+      card("3", "hearts", "stone"),
+      card("3", "clubs", "stone"),
+      card("5", "diamonds"),
+      card("5", "hearts"),
+    ];
+    expect(getScoringCards(cards, "Pair")).toHaveLength(5);
+  });
+
+  test("a High Card with a stone kicker scores the stone but not the other kickers", () => {
+    const cards = [
+      card("3", "spades", "stone"),
+      card("4", "hearts"),
+      card("5", "hearts"),
+      card("6", "hearts"),
+      card("7", "hearts"),
+    ];
+    const scored = getScoringCards(cards, "High Card");
+    expect(scored.map((c) => c.rank).sort()).toEqual(["3", "7"]);
+  });
+
+  test("a lone stone is in the scoring set", () => {
+    const cards = [card("3", "spades", "stone")];
+    expect(getScoringCards(cards, "High Card")).toHaveLength(1);
+  });
+});
+
+describe("scoreHand — Stone enhancement contributes +50 chips", () => {
+  test("a played [Stone, Stone, K, K, K] scores Three of a Kind + 100 stone chips", () => {
+    const baseChips = 30;
+    const stoneHand = [
+      card("3", "spades", "stone"),
+      card("3", "hearts", "stone"),
+      card("K", "clubs"),
+      card("K", "diamonds"),
+      card("K", "hearts"),
+    ];
+    expect(scoreHand(stoneHand)).toBe((baseChips + 10 + 10 + 10 + 50 + 50) * 3);
+  });
+
+  test("a lone stone scores as High Card with +50 chips", () => {
+    const stoneAlone = [card("3", "spades", "stone")];
+    expect(scoreHand(stoneAlone)).toBe((5 + 50) * 1);
+  });
+});

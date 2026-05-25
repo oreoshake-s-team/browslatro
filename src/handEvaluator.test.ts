@@ -363,3 +363,57 @@ describe("detectHandLabel — Wild enhancement promotes suit-based hands", () =>
     expect(wild).toBe(vanilla);
   });
 });
+
+describe("detectHandLabel — Stone enhancement is invisible to rank/suit detection", () => {
+  test("[Stone, Stone, Stone, 5d, 5h] detects as a Pair from the two 5s", () => {
+    expect(
+      detectHandLabel([
+        card("3", "spades", "stone"),
+        card("3", "hearts", "stone"),
+        card("3", "clubs", "stone"),
+        card("5", "diamonds"),
+        card("5", "hearts"),
+      ]),
+    ).toBe("Pair");
+  });
+
+  test("[Stone, Stone, K, K, K] detects as Three of a Kind, not Four of a Kind", () => {
+    expect(
+      detectHandLabel([
+        card("3", "spades", "stone"),
+        card("3", "hearts", "stone"),
+        card("K", "clubs"),
+        card("K", "diamonds"),
+        card("K", "hearts"),
+      ]),
+    ).toBe("Three of a Kind");
+  });
+
+  test("[Stone, 4h, 5h, 6h, 7h] does NOT detect as a Flush (only 4 hearts)", () => {
+    expect(
+      detectHandLabel([
+        card("3", "spades", "stone"),
+        card("4", "hearts"),
+        card("5", "hearts"),
+        card("6", "hearts"),
+        card("7", "hearts"),
+      ]),
+    ).toBe("High Card");
+  });
+
+  test("[Stone] alone detects as High Card", () => {
+    expect(detectHandLabel([card("3", "spades", "stone")])).toBe("High Card");
+  });
+
+  test("a pure-Stone 5-card hand detects as High Card (no rank or suit structure)", () => {
+    expect(
+      detectHandLabel([
+        card("3", "spades", "stone"),
+        card("3", "hearts", "stone"),
+        card("3", "clubs", "stone"),
+        card("3", "diamonds", "stone"),
+        card("K", "hearts", "stone"),
+      ]),
+    ).toBe("High Card");
+  });
+});

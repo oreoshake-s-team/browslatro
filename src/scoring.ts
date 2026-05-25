@@ -1,6 +1,10 @@
 import type { Card, Rank } from "./types";
 import { detectHandLabel, evaluateHand, type HandLabel } from "./handEvaluator";
-import { applyCardEnhancement } from "./enhancements";
+import {
+  applyCardEnhancement,
+  cardRankForEvaluation,
+  isStoneCard,
+} from "./enhancements";
 
 /**
  * Per-rank chip contribution for "scoring" cards. Face cards (J, Q, K) are
@@ -30,7 +34,9 @@ export function getRankChips(rank: Rank): number {
 }
 
 export function getCardChips(card: Card): number {
-  return RANK_CHIPS[card.rank] + applyCardEnhancement(card).chipsDelta;
+  const evalRank = cardRankForEvaluation(card);
+  const rankChips = evalRank === null ? 0 : RANK_CHIPS[evalRank];
+  return rankChips + applyCardEnhancement(card).chipsDelta;
 }
 
 export function getCardMultDelta(card: Card): number {
@@ -90,6 +96,10 @@ export function getScoringCards(
 ): Card[] {
   if (cards.length === 0) return [];
 
+  const stones = cards.filter(isStoneCard);
+  const nonStones = cards.filter((c) => !isStoneCard(c));
+
+  let matched: Card[];
   switch (label) {
     case "Straight":
     case "Flush":
@@ -99,18 +109,30 @@ export function getScoringCards(
     case "Five of a Kind":
     case "Flush House":
     case "Flush Five":
-      return cards.slice();
+      matched = nonStones.slice();
+      break;
     case "Four of a Kind":
-      return pickByGroupSize(cards, 4);
+      matched = pickByGroupSize(nonStones, 4);
+      break;
     case "Three of a Kind":
-      return pickByGroupSize(cards, 3);
+      matched = pickByGroupSize(nonStones, 3);
+      break;
     case "Two Pair":
-      return pickAllGroupsOfSize(cards, 2);
+      matched = pickAllGroupsOfSize(nonStones, 2);
+      break;
     case "Pair":
-      return pickByGroupSize(cards, 2);
+      matched = pickByGroupSize(nonStones, 2);
+      break;
     case "High Card":
-      return [pickHighestCard(cards)];
+      matched = nonStones.length === 0 ? [] : [pickHighestCard(nonStones)];
+      break;
   }
+
+  const includedIds = new Set([
+    ...matched.map((c) => c.id),
+    ...stones.map((c) => c.id),
+  ]);
+  return cards.filter((c) => includedIds.has(c.id));
 }
 
 function pickByGroupSize(cards: ReadonlyArray<Card>, size: number): Card[] {

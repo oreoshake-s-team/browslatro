@@ -37,6 +37,7 @@ export const RANK_ENHANCEMENTS: Readonly<Partial<Record<Rank, Enhancement>>> = {
   "4": "mult",
   "9": "wild",
   K: "glass",
+  "3": "stone",
 };
 
 export function defaultEnhancementForRank(rank: Rank): Enhancement {
