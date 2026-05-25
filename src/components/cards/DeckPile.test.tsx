@@ -1,7 +1,11 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DeckPile from "./DeckPile";
-import { createDeck } from "../../deck";
+import { createDeck as createGoldDeck } from "../../deck";
+
+function createDeck() {
+  return createGoldDeck().map(({ rank, suit, id }) => ({ rank, suit, id }));
+}
 
 describe("DeckPile", () => {
   test("renders the remaining card count on the pile", () => {
