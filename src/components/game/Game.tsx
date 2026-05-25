@@ -26,6 +26,7 @@ interface GameProps {
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
+  onReorderJokers?: (orderedIds: ReadonlyArray<string>) => void;
 }
 
 export default function Game({
@@ -49,6 +50,7 @@ export default function Game({
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
+  onReorderJokers,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -60,7 +62,11 @@ export default function Game({
 
   return (
     <div className="game">
-      <Jokers jokers={jokers} pulseCounters={jokerPulseCounters} />
+      <Jokers
+        jokers={jokers}
+        pulseCounters={jokerPulseCounters}
+        onReorder={onReorderJokers}
+      />
       <HandComponent
         hand={hand}
         remaining={remaining}

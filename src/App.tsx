@@ -204,6 +204,15 @@ function App() {
     startNewRound();
   }
 
+  function reorderJokers(orderedIds: ReadonlyArray<string>) {
+    setJokers((prev) => {
+      const byId = new Map(prev.map((j) => [j.id, j]));
+      const ordered = orderedIds.flatMap((id) => byId.get(id) ?? []);
+      const seen = new Set(orderedIds);
+      return [...ordered, ...prev.filter((j) => !seen.has(j.id))];
+    });
+  }
+
   function startNewGame(): void {
     setBlind(1);
     setRound(1);
@@ -430,6 +439,7 @@ function App() {
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
+        onReorderJokers={reorderJokers}
       />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
