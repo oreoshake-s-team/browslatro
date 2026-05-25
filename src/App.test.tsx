@@ -865,7 +865,6 @@ describe("Post-round shop integration", () => {
   test("buying an affordable joker deducts the price from money", async () => {
     const user = await openShop();
     const moneyBefore = getStatValue("Money").textContent;
-    // The straight flush win pays out enough money to afford at least one $5 joker.
     const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
     await user.click(buyButtons[0]);
     expect(getStatValue("Money").textContent).not.toBe(moneyBefore);
@@ -879,7 +878,6 @@ describe("Post-round shop integration", () => {
   });
 
   test("buying an offer adds the joker to the equipped set", async () => {
-    // Default new game equips 3 jokers (#13). Buying adds one more = 4.
     const user = await openShop();
     const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
     await user.click(buyButtons[0]);
@@ -887,7 +885,6 @@ describe("Post-round shop integration", () => {
   });
 
   test("pressing Escape in the shop closes it without purchase", async () => {
-    // Default new game equips 3 jokers; Escape skips → equipped count unchanged.
     const user = await openShop();
     await user.keyboard("{Escape}");
     expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(3);

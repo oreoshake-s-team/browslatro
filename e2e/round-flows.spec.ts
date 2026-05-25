@@ -13,6 +13,8 @@ test.beforeEach(async ({ context }) => {
 const HAND_CARDS = '[aria-label="Your hand"] .card';
 const SUBMIT_BUTTON = /^🃏 Submit Hand$/;
 const CONTINUE_BUTTON = /Continue/;
+const NEXT_ROUND_BUTTON = /Next Round/;
+const SHOP_HEADING = /Shop/;
 
 function statValue(page: Page, label: string) {
   return page
@@ -20,12 +22,16 @@ function statValue(page: Page, label: string) {
     .locator(".stat-value");
 }
 
-async function playStraightFlushAndContinue(page: Page): Promise<void> {
-  // Top 5 displayed cards (9♠,8♠,7♠,6♠,5♠) → Straight Flush, 1080 chips.
+async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
   const cards = page.locator(HAND_CARDS);
   for (let i = 0; i < 5; i += 1) await cards.nth(i).click();
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+}
+
+async function playStraightFlushAndContinue(page: Page): Promise<void> {
+  await selectAndSubmitStraightFlush(page);
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+  await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
 }
 
 test("always-win path: 4 consecutive Straight Flushes advance ante and money", async ({
@@ -60,6 +66,39 @@ test("always-win path: 4 consecutive Straight Flushes advance ante and money", a
   await expect(statValue(page, "Money")).toHaveText("$18");
 
   // End state: Ante 2 Big Blind, hand re-dealt. No Game Over alert fired.
+  await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
+});
+
+test("the post-round shop appears after dismissing the round-won modal", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+
+  await selectAndSubmitStraightFlush(page);
+  await expect(page.getByRole("heading", { name: /Round Won!/ })).toBeVisible();
+
+  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+
+  await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
+  await expect(page.getByTestId(/^shop-offer-/)).toHaveCount(2);
+  await expect(
+    page.getByRole("button", { name: NEXT_ROUND_BUTTON }),
+  ).toBeVisible();
+});
+
+test("clicking Next Round in the shop closes it and starts the next blind", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await selectAndSubmitStraightFlush(page);
+  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+  await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
+
+  await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
+
+  await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
 });
 
