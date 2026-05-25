@@ -76,7 +76,11 @@ export default function Game({
           pulseCounters={jokerPulseCounters}
           onReorder={onReorderJokers}
         />
-        <Consumables consumables={consumables} onUse={onUseConsumable} />
+        <Consumables
+          consumables={consumables}
+          selectedCount={selectedIds.size}
+          onUse={onUseConsumable}
+        />
       </div>
       <HandComponent
         hand={hand}

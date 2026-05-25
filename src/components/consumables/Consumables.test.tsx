@@ -12,7 +12,12 @@ function renderConsumables(
   overrides: Partial<Parameters<typeof Consumables>[0]> = {},
 ): ReturnType<typeof render> {
   return render(
-    <Consumables consumables={[]} onUse={vi.fn()} {...overrides} />,
+    <Consumables
+      consumables={[]}
+      selectedCount={0}
+      onUse={vi.fn()}
+      {...overrides}
+    />,
   );
 }
 
@@ -76,7 +81,7 @@ describe("Consumables", () => {
     expect(screen.queryAllByTestId("consumable-tile-empty")).toHaveLength(0);
   });
 
-  test("clicking a filled tile invokes onUse with that index", async () => {
+  test("clicking a filled planet tile invokes onUse with that index", async () => {
     const user = userEvent.setup();
     const onUse = vi.fn();
     const filled: ReadonlyArray<Consumable> = [
@@ -84,8 +89,52 @@ describe("Consumables", () => {
       { kind: "tarot", card: tarot },
     ];
     renderConsumables({ consumables: filled, onUse });
-    await user.click(screen.getByTestId("consumable-tile-filled-1"));
-    expect(onUse).toHaveBeenCalledWith(1);
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(onUse).toHaveBeenCalledWith(0);
+  });
+
+  test("clicking an enhancement-tarot tile invokes onUse when selection is valid", async () => {
+    const user = userEvent.setup();
+    const onUse = vi.fn();
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: tarot }];
+    renderConsumables({ consumables: filled, selectedCount: 1, onUse });
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(onUse).toHaveBeenCalledWith(0);
+  });
+
+  test("an enhancement-tarot tile is disabled when no cards are selected", () => {
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: tarot }];
+    renderConsumables({ consumables: filled, selectedCount: 0 });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeDisabled();
+  });
+
+  test("an enhancement-tarot tile is disabled when too many cards are selected", () => {
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: tarot }];
+    renderConsumables({ consumables: filled, selectedCount: 5 });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeDisabled();
+  });
+
+  test("a disabled enhancement-tarot tile exposes a why-disabled tooltip", () => {
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: tarot }];
+    renderConsumables({ consumables: filled, selectedCount: 0 });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
+      "title",
+      expect.stringMatching(/Select/),
+    );
+  });
+
+  test("a planet tile is always enabled (no selection check)", () => {
+    const filled: ReadonlyArray<Consumable> = [{ kind: "planet", card: planet }];
+    renderConsumables({ consumables: filled, selectedCount: 0 });
+    expect(screen.getByTestId("consumable-tile-filled-0")).not.toBeDisabled();
+  });
+
+  test("The Hermit tile is enabled regardless of selection", () => {
+    const hermit = createTarotCatalog().find((t) => t.id === "the-hermit");
+    if (!hermit) throw new Error("missing hermit");
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: hermit }];
+    renderConsumables({ consumables: filled, selectedCount: 0 });
+    expect(screen.getByTestId("consumable-tile-filled-0")).not.toBeDisabled();
   });
 
   test("clicking an empty tile does not invoke onUse", async () => {
