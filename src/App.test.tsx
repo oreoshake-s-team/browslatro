@@ -650,6 +650,49 @@ describe("Losing integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
+
+  async function submitOneHighCard(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+  }
+
+  test("losing after a real scoring sequence leaves exactly one chips span (issue #118)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+  });
+
+  test("losing after a real scoring sequence leaves exactly one multiplier span (issue #118)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
+  });
+
+  test("two consecutive loss → restart cycles do not duplicate the HandScore (issue #118)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let cycle = 0; cycle < 2; cycle += 1) {
+      await submitOneHighCard(user);
+      await submitOneHighCard(user);
+      await submitOneHighCard(user);
+      await submitOneHighCard(user);
+    }
+    expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+  });
 });
 
 describe("Add Money button integration", () => {
