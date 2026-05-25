@@ -1,0 +1,90 @@
+.run-info-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.run-info-modal {
+  background-color: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 1.8rem 2rem;
+  min-width: 22rem;
+  max-width: 36rem;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.run-info-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #495057;
+  text-align: center;
+}
+
+.run-info-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.run-info-table thead th {
+  text-align: left;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #495057;
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.run-info-table thead th:last-child,
+.run-info-table tbody td:last-child {
+  text-align: right;
+}
+
+.run-info-table tbody th {
+  text-align: left;
+  font-weight: 600;
+  color: #212529;
+  padding: 0.4rem 0.6rem;
+}
+
+.run-info-table tbody td {
+  padding: 0.4rem 0.6rem;
+  color: #495057;
+}
+
+.run-info-table tbody tr + tr th,
+.run-info-table tbody tr + tr td {
+  border-top: 1px solid #f1f3f5;
+}
+
+.run-info-close {
+  align-self: center;
+  padding: 0.7rem 1.6rem;
+  border: 1px solid #1c7ed6;
+  background-color: #339af0;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.run-info-close:hover {
+  background-color: #1c7ed6;
+}
+
+.run-info-close:focus-visible {
+  outline: 2px solid #1c7ed6;
+  outline-offset: 2px;
+}
