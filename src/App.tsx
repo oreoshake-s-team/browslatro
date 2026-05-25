@@ -117,6 +117,8 @@ function App() {
   );
   const [handStats, setHandStats] = useState<HandStats>(createDefaultHandStats);
   const pendingDiscardCountRef = useRef(0);
+  const pendingHandPlayResetRef = useRef(false);
+  const [handPlaySignal, setHandPlaySignal] = useState(0);
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -178,6 +180,7 @@ function App() {
     setChips(0);
     setMultiplier(0);
     pendingDiscardCountRef.current = 0;
+    pendingHandPlayResetRef.current = false;
     setScoringCards([]);
     setScoringIndex(0);
     scoringFinalizeRef.current = null;
@@ -477,6 +480,10 @@ function App() {
     setSelectedHand(null);
     setChips(0);
     setMultiplier(0);
+    if (pendingHandPlayResetRef.current) {
+      pendingHandPlayResetRef.current = false;
+      setHandPlaySignal((prev) => prev + 1);
+    }
   }
 
   function handleCardDiscardEnd(card: Card) {
@@ -503,6 +510,8 @@ function App() {
       finalizeHandSubmission(0, submittedSelection);
       return;
     }
+
+    pendingHandPlayResetRef.current = true;
 
     const label = detectHandLabel(playedCards);
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
@@ -678,6 +687,7 @@ function App() {
         isScoring={isScoring}
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
+        handPlaySignal={handPlaySignal}
         hand={dealt.hand}
         remaining={dealt.remaining}
         selectedIds={selectedIds}

@@ -45,6 +45,7 @@ interface HandProps {
   discardingIds: ReadonlySet<number>;
   scoringId?: number | null;
   goldScoringId?: number | null;
+  handPlaySignal?: number;
   onToggleCard: (card: CardType) => void;
   onCardDiscardEnd: (card: CardType) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -57,6 +58,7 @@ export default function Hand({
   discardingIds,
   scoringId = null,
   goldScoringId = null,
+  handPlaySignal = 0,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -68,6 +70,13 @@ export default function Hand({
   const [draggingId, setDraggingId] = useState<number | null>(null);
   const [dragOverGap, setDragOverGap] = useState<number | null>(null);
   const handCardsRef = useRef<HTMLDivElement | null>(null);
+  const lastHandPlaySignalRef = useRef<number>(handPlaySignal);
+
+  useEffect(() => {
+    if (lastHandPlaySignalRef.current === handPlaySignal) return;
+    lastHandPlaySignalRef.current = handPlaySignal;
+    setManualOrder(null);
+  }, [handPlaySignal]);
 
   const displayedHand = useMemo(
     () =>
