@@ -97,7 +97,8 @@
   align-self: stretch;
   min-height: 9.5rem;
   border-radius: 4px;
-  transition: flex-basis 120ms ease, background-color 120ms ease;
+  transition: flex-basis calc(120ms * var(--animation-speed, 1)) ease,
+    background-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .hand-cards-dragging .hand-card-gap {
@@ -128,7 +129,8 @@
   gap: 0.4rem;
   cursor: grab;
   border-radius: 6px;
-  transition: outline-color 80ms linear, opacity 80ms linear;
+  transition: outline-color calc(80ms * var(--animation-speed, 1)) linear,
+    opacity calc(80ms * var(--animation-speed, 1)) linear;
   outline: 2px dashed transparent;
   outline-offset: 4px;
 }

@@ -11,7 +11,8 @@
   display: grid;
   grid-template-rows: auto 1fr auto;
   font-family: "Georgia", serif;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition: transform calc(120ms * var(--animation-speed, 1)) ease,
+    box-shadow calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .card:hover {
@@ -29,7 +30,7 @@
 }
 
 .card-discarding {
-  animation: card-discard 400ms ease-in forwards;
+  animation: card-discard calc(400ms * var(--animation-speed, 1)) ease-in forwards;
   pointer-events: none;
 }
 
@@ -45,7 +46,7 @@
 }
 
 .card-scoring {
-  animation: card-scoring-pulse 200ms ease-out;
+  animation: card-scoring-pulse calc(200ms * var(--animation-speed, 1)) ease-out;
   box-shadow: 0 0 18px rgba(51, 154, 240, 0.7);
 }
 
@@ -64,7 +65,6 @@
 @media (prefers-reduced-motion: reduce) {
   .card-scoring {
     animation: none;
-    /* Keep the highlight so the player can still see which card is scoring. */
   }
 }
 

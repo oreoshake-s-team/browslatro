@@ -25,7 +25,7 @@
   padding: 0.4rem 1.4rem;
   border-radius: 6px;
   display: inline-block;
-  animation: bounce 0.35s ease-out;
+  animation: bounce calc(0.35s * var(--animation-speed, 1)) ease-out;
 }
 
 .multiplier {
@@ -36,5 +36,5 @@
   padding: 0.4rem 1.4rem;
   border-radius: 6px;
   display: inline-block;
-  animation: bounce 0.35s ease-out;
+  animation: bounce calc(0.35s * var(--animation-speed, 1)) ease-out;
 }

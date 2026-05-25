@@ -1,7 +1,12 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import App from "./App";
-import { isHighVisibility, toggleHighVisibility } from "./components/system/preferences";
+import App, { getScoringStepMs } from "./App";
+import {
+  getAnimationSpeed,
+  isHighVisibility,
+  setAnimationSpeed,
+  toggleHighVisibility,
+} from "./components/system/preferences";
 import { play } from "./components/system/sounds";
 
 jest.mock("./components/system/sounds", () => ({ play: jest.fn() }));
@@ -811,5 +816,165 @@ describe("Jokers integration", () => {
   test("renders two empty joker slots when three defaults are equipped", () => {
     render(<App />);
     expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(2);
+  });
+});
+
+function resetAnimationSpeed(): void {
+  if (getAnimationSpeed() !== "normal") {
+    setAnimationSpeed("normal");
+  }
+  window.localStorage.removeItem("browslatro:animationSpeed");
+}
+
+function mockPrefersReducedMotion(reduce: boolean): void {
+  Object.defineProperty(window, "matchMedia", {
+    configurable: true,
+    writable: true,
+    value: (query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)" ? reduce : false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+      dispatchEvent: jest.fn(),
+    }),
+  });
+}
+
+describe("getScoringStepMs", () => {
+  const originalMatchMedia = window.matchMedia;
+
+  afterEach(() => {
+    Object.defineProperty(window, "matchMedia", {
+      configurable: true,
+      writable: true,
+      value: originalMatchMedia,
+    });
+    jest.restoreAllMocks();
+    resetAnimationSpeed();
+  });
+
+  test("returns 200 for normal when OS does not prefer reduced motion", () => {
+    mockPrefersReducedMotion(false);
+    expect(getScoringStepMs("normal")).toBe(200);
+  });
+
+  test("returns 300 for slow", () => {
+    expect(getScoringStepMs("slow")).toBe(300);
+  });
+
+  test("returns 100 for fast", () => {
+    expect(getScoringStepMs("fast")).toBe(100);
+  });
+
+  test("returns 0 for instant", () => {
+    expect(getScoringStepMs("instant")).toBe(0);
+  });
+
+  test("returns 0 for normal when OS prefers reduced motion", () => {
+    mockPrefersReducedMotion(true);
+    expect(getScoringStepMs("normal")).toBe(0);
+  });
+
+  test("returns 100 for fast even when OS prefers reduced motion", () => {
+    mockPrefersReducedMotion(true);
+    expect(getScoringStepMs("fast")).toBe(100);
+  });
+
+  test("returns 300 for slow even when OS prefers reduced motion", () => {
+    mockPrefersReducedMotion(true);
+    expect(getScoringStepMs("slow")).toBe(300);
+  });
+
+  test("returns 0 for instant even when OS does not prefer reduced motion", () => {
+    mockPrefersReducedMotion(false);
+    expect(getScoringStepMs("instant")).toBe(0);
+  });
+
+  test("reads from the persisted preference when no argument is passed", () => {
+    setAnimationSpeed("fast");
+    expect(getScoringStepMs()).toBe(100);
+  });
+});
+
+describe("App animation speed CSS variable", () => {
+  afterEach(resetAnimationSpeed);
+
+  test("does not set the inline --animation-speed style when preference is normal", () => {
+    const { container } = render(<App />);
+    const style = container.querySelector(".App")?.getAttribute("style") ?? "";
+    expect(style).not.toContain("--animation-speed");
+  });
+
+  test("sets the inline --animation-speed style to 0 when preference is instant", () => {
+    setAnimationSpeed("instant");
+    const { container } = render(<App />);
+    expect(container.querySelector(".App")?.getAttribute("style")).toContain(
+      "--animation-speed: 0",
+    );
+  });
+
+  test("sets the inline --animation-speed style to 0.5 when preference is fast", () => {
+    setAnimationSpeed("fast");
+    const { container } = render(<App />);
+    expect(container.querySelector(".App")?.getAttribute("style")).toContain(
+      "--animation-speed: 0.5",
+    );
+  });
+
+  test("sets the inline --animation-speed style to 1.5 when preference is slow", () => {
+    setAnimationSpeed("slow");
+    const { container } = render(<App />);
+    expect(container.querySelector(".App")?.getAttribute("style")).toContain(
+      "--animation-speed: 1.5",
+    );
+  });
+
+  test("clears the inline --animation-speed style after switching back to normal via the Options modal", async () => {
+    setAnimationSpeed("fast");
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Animation speed"), "normal");
+    const style = container.querySelector(".App")?.getAttribute("style") ?? "";
+    expect(style).not.toContain("--animation-speed");
+  });
+});
+
+describe("App scoring step honors animation speed preference", () => {
+  afterEach(resetAnimationSpeed);
+
+  test("does not advance the scoring sequence on the first timer flush when preference is slow", async () => {
+    mockShuffleConfig.useIdentity = true;
+    setAnimationSpeed("slow");
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const cards = Array.from(
+      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    );
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    act(() => {
+      jest.advanceTimersByTime(200);
+    });
+    expect(document.querySelector(".chips")).toHaveTextContent("100");
+  });
+
+  test("advances on the first slow tick after the 300ms threshold", async () => {
+    mockShuffleConfig.useIdentity = true;
+    setAnimationSpeed("slow");
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const cards = Array.from(
+      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    );
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    act(() => {
+      jest.advanceTimersByTime(300);
+    });
+    expect(document.querySelector(".chips")).toHaveTextContent("109");
   });
 });
