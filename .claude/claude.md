@@ -7,7 +7,7 @@ Browlatro is an educational journey meant to help the author brush up on their f
 - Squash all PRs into a single commit instead of merging/rebasing.
 - All functionality must have test coverage
 - Ensure there are no typescript issues before committing
-- If a change requires more than 100 lines of changes to non-application code (e.g. tests, configs, etc), it must be split up into a smaller problem.
+- If a change requires more than 100 lines of changes to application code, split it up into multiple changes.
 - Code should be as compartmenatalized as possible, including CSS
 - Code should be written in strict typescript, no use of any types
 - Only use strict typescript. No use of JS or "any" types
@@ -25,7 +25,7 @@ Browlatro is an educational journey meant to help the author brush up on their f
 
 # Style
 
-- Do not add comments to code.
+- Do not add comments to code, especially CSS
 
 # Semantic commits
 
