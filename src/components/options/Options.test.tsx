@@ -2,21 +2,18 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Options from "./Options";
 import {
+  getAnimationSpeed,
   isHighVisibility,
   isMuted,
+  setAnimationSpeed,
   toggleHighVisibility,
   toggleMute,
 } from "../system/preferences";
 
 const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
+const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
 
-/**
- * The preferences module is a singleton, so any test that flips a
- * preference must reset it (and localStorage) afterwards to keep tests
- * independent. We reset via the public toggles so module state and
- * storage stay in sync.
- */
 function resetPreferences(): void {
   if (isHighVisibility()) {
     toggleHighVisibility();
@@ -24,8 +21,12 @@ function resetPreferences(): void {
   if (isMuted()) {
     toggleMute();
   }
+  if (getAnimationSpeed() !== "normal") {
+    setAnimationSpeed("normal");
+  }
   window.localStorage.removeItem(STORAGE_KEY);
   window.localStorage.removeItem(MUTED_KEY);
+  window.localStorage.removeItem(ANIMATION_SPEED_KEY);
 }
 
 describe("Options", () => {
@@ -169,5 +170,58 @@ describe("Options — high visibility toggle", () => {
     await user.click(screen.getByText(/Enable high visibility suits/));
     await user.click(screen.getByText(/Disable high visibility suits/));
     expect(onChange).toHaveBeenLastCalledWith(false);
+  });
+});
+
+describe("Options — animation speed", () => {
+  afterEach(resetPreferences);
+
+  test("renders the animation speed control inside the modal", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Animation speed")).toBeInTheDocument();
+  });
+
+  test("defaults to normal when no preference is stored", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Animation speed")).toHaveValue("normal");
+  });
+
+  test.each(["Slow", "Normal", "Fast", "Instant"])(
+    "renders the %s option",
+    async (label) => {
+      const user = userEvent.setup();
+      render(<Options onNewGame={() => {}} />);
+      await user.click(screen.getByText("Options"));
+      expect(screen.getByRole("option", { name: label })).toBeInTheDocument();
+    },
+  );
+
+  test("changing the value persists the new selection to localStorage", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Animation speed"), "fast");
+    expect(window.localStorage.getItem(ANIMATION_SPEED_KEY)).toBe("fast");
+  });
+
+  test("changing the value invokes onAnimationSpeedChange with the new value", async () => {
+    const user = userEvent.setup();
+    const onChange = jest.fn();
+    render(<Options onNewGame={() => {}} onAnimationSpeedChange={onChange} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Animation speed"), "instant");
+    expect(onChange).toHaveBeenLastCalledWith("instant");
+  });
+
+  test("reflects a previously stored value on the next mount", async () => {
+    setAnimationSpeed("slow");
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Animation speed")).toHaveValue("slow");
   });
 });
