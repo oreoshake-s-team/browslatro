@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
@@ -64,7 +64,8 @@ export default function Hand({
     null,
   );
   const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOverId, setDragOverId] = useState<number | null>(null);
+  const [dragOverGap, setDragOverGap] = useState<number | null>(null);
+  const handCardsRef = useRef<HTMLDivElement | null>(null);
 
   const displayedHand = useMemo(
     () =>
@@ -102,21 +103,28 @@ export default function Hand({
     swapByIds(cardId, currentOrder[target]);
   }
 
-  function insertRelativeToTarget(sourceId: number, targetId: number) {
-    if (sourceId === targetId) return;
+  // Gap indices run 0..N where N = hand size; gap K is "before card K"
+  // (and gap N is "after the last card"). Inserting source at gap K means
+  // the source ends up at index K after removal — except when K is to the
+  // right of source's old position, in which case the removal shifts the
+  // target index left by one. Gaps adjacent to the source (K === fromIdx
+  // or K === fromIdx + 1) are no-ops since the card would land where it
+  // already is.
+  function insertAtGap(sourceId: number, gapIdx: number) {
     const currentOrder = displayedHand.map((c) => c.id);
     const fromIdx = currentOrder.indexOf(sourceId);
-    const toIdx = currentOrder.indexOf(targetId);
-    if (fromIdx < 0 || toIdx < 0) return;
+    if (fromIdx < 0) return;
+    if (gapIdx === fromIdx || gapIdx === fromIdx + 1) return;
     const next = currentOrder.slice();
     next.splice(fromIdx, 1);
-    next.splice(toIdx, 0, sourceId);
+    const insertIdx = gapIdx > fromIdx ? gapIdx - 1 : gapIdx;
+    next.splice(insertIdx, 0, sourceId);
     setManualOrder(next);
   }
 
   function endDrag() {
     setDraggingId(null);
-    setDragOverId(null);
+    setDragOverGap(null);
   }
 
   function handleDragStart(cardId: number, e: React.DragEvent<HTMLDivElement>) {
@@ -127,26 +135,113 @@ export default function Hand({
     }
   }
 
-  function handleDragOver(cardId: number, e: React.DragEvent<HTMLDivElement>) {
-    if (draggingId === null || draggingId === cardId) return;
+  function handleGapDragOver(
+    gapIdx: number,
+    e: React.DragEvent<HTMLDivElement>,
+  ) {
+    if (draggingId === null) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    if (dragOverId !== cardId) setDragOverId(cardId);
+    if (dragOverGap !== gapIdx) setDragOverGap(gapIdx);
   }
 
-  function handleDragLeave(cardId: number) {
-    if (dragOverId === cardId) setDragOverId(null);
+  function handleGapDragLeave(gapIdx: number) {
+    if (dragOverGap === gapIdx) setDragOverGap(null);
   }
 
-  function handleDrop(targetId: number, e: React.DragEvent<HTMLDivElement>) {
+  function handleGapDrop(
+    gapIdx: number,
+    e: React.DragEvent<HTMLDivElement>,
+  ) {
     e.preventDefault();
+    e.stopPropagation();
     const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
     const draggedId =
       raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
     if (draggedId !== null) {
-      insertRelativeToTarget(draggedId, targetId);
+      insertAtGap(draggedId, gapIdx);
     }
     endDrag();
+  }
+
+  // Compute the gap whose center is closest to a viewport X coordinate.
+  // Lets the active drop zone follow the dragged card's position even
+  // when the cursor isn't strictly inside a gap element (e.g. cursor
+  // is hovering over a card slot but the dragged card image overlaps
+  // a neighbouring gap).
+  function gapNearestToClientX(clientX: number): number | null {
+    const container = handCardsRef.current;
+    if (!container) return null;
+    const gaps = container.querySelectorAll<HTMLElement>(".hand-card-gap");
+    let bestIdx: number | null = null;
+    let bestDist = Number.POSITIVE_INFINITY;
+    gaps.forEach((gap, i) => {
+      const rect = gap.getBoundingClientRect();
+      // jsdom returns zeroed rects for everything; skip resolving in that
+      // case so unit tests can drive the per-gap handlers directly without
+      // the container handler clobbering their setDragOverGap call.
+      if (rect.width === 0 && rect.left === 0) return;
+      const center = rect.left + rect.width / 2;
+      const dist = Math.abs(clientX - center);
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestIdx = i;
+      }
+    });
+    return bestIdx;
+  }
+
+  function handleHandDragOver(e: React.DragEvent<HTMLDivElement>) {
+    if (draggingId === null) return;
+    // Per-gap handlers fire first (event bubbles target → ancestors). If
+    // the cursor is inside a gap element it already set the active gap;
+    // we only need to compute the nearest gap when the cursor is over a
+    // card slot or container background.
+    const target = e.target as HTMLElement | null;
+    if (target?.classList?.contains("hand-card-gap")) return;
+    e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+    const gap = gapNearestToClientX(e.clientX);
+    if (gap !== null && dragOverGap !== gap) setDragOverGap(gap);
+  }
+
+  function handleHandDrop(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    // Per-gap drop handlers stop propagation, so reaching here means the
+    // drop happened over a card slot or the container itself. Use the
+    // currently-resolved active gap, which the dragover handler keeps in
+    // sync with the dragged card's geometric position.
+    const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+    const draggedId =
+      raw && !Number.isNaN(Number(raw)) ? Number(raw) : draggingId;
+    if (draggedId !== null && dragOverGap !== null) {
+      insertAtGap(draggedId, dragOverGap);
+    }
+    endDrag();
+  }
+
+  function renderGap(gapIdx: number) {
+    const fromIdx =
+      draggingId !== null
+        ? displayedHand.findIndex((c) => c.id === draggingId)
+        : -1;
+    const isSelfAdjacent =
+      fromIdx >= 0 && (gapIdx === fromIdx || gapIdx === fromIdx + 1);
+    const isActive =
+      draggingId !== null && dragOverGap === gapIdx && !isSelfAdjacent;
+    const gapClass = ["hand-card-gap", isActive ? "hand-card-gap-active" : ""]
+      .filter(Boolean)
+      .join(" ");
+    return (
+      <div
+        className={gapClass}
+        data-testid={`hand-gap-${gapIdx}`}
+        onDragOver={(e) => handleGapDragOver(gapIdx, e)}
+        onDragLeave={() => handleGapDragLeave(gapIdx)}
+        onDrop={(e) => handleGapDrop(gapIdx, e)}
+        aria-hidden="true"
+      />
+    );
   }
 
   return (
@@ -193,66 +288,71 @@ export default function Hand({
         </div>
       </div>
       <div className="hand-row">
-        <div className="hand-cards" aria-label="Your hand">
+        <div
+          ref={handCardsRef}
+          className={`hand-cards${
+            draggingId !== null ? " hand-cards-dragging" : ""
+          }`}
+          aria-label="Your hand"
+          onDragOver={handleHandDragOver}
+          onDrop={handleHandDrop}
+        >
           {displayedHand.map((card, idx) => {
             const isDragging = draggingId === card.id;
-            const isDragOver =
-              dragOverId === card.id && draggingId !== null && draggingId !== card.id;
             const slotClass = [
               "hand-card-slot",
               isDragging ? "hand-card-slot-dragging" : "",
-              isDragOver ? "hand-card-slot-drop-target" : "",
             ]
               .filter(Boolean)
               .join(" ");
             return (
-              <div
-                key={card.id}
-                className={slotClass}
-                draggable
-                aria-grabbed={isDragging || undefined}
-                data-testid={`hand-slot-${card.id}`}
-                onDragStart={(e) => handleDragStart(card.id, e)}
-                onDragOver={(e) => handleDragOver(card.id, e)}
-                onDragLeave={() => handleDragLeave(card.id)}
-                onDrop={(e) => handleDrop(card.id, e)}
-                onDragEnd={endDrag}
-              >
-                <Card
-                  card={card}
-                  selected={selectedIds.has(card.id)}
-                  discarding={discardingIds.has(card.id)}
-                  scoring={scoringId === card.id}
-                  onToggle={onToggleCard}
-                  onDiscardEnd={onCardDiscardEnd}
-                />
+              <Fragment key={card.id}>
+                {renderGap(idx)}
                 <div
-                  className="hand-card-reorder"
-                  role="group"
-                  aria-label={`Reorder ${cardLabel(card)}`}
+                  className={slotClass}
+                  draggable
+                  aria-grabbed={isDragging || undefined}
+                  data-testid={`hand-slot-${card.id}`}
+                  onDragStart={(e) => handleDragStart(card.id, e)}
+                  onDragEnd={endDrag}
                 >
-                  <button
-                    type="button"
-                    className="hand-card-reorder-button"
-                    aria-label={`Move ${cardLabel(card)} left`}
-                    disabled={idx === 0}
-                    onClick={() => moveCard(card.id, -1)}
+                  <Card
+                    card={card}
+                    selected={selectedIds.has(card.id)}
+                    discarding={discardingIds.has(card.id)}
+                    scoring={scoringId === card.id}
+                    onToggle={onToggleCard}
+                    onDiscardEnd={onCardDiscardEnd}
+                  />
+                  <div
+                    className="hand-card-reorder"
+                    role="group"
+                    aria-label={`Reorder ${cardLabel(card)}`}
                   >
-                    ◀
-                  </button>
-                  <button
-                    type="button"
-                    className="hand-card-reorder-button"
-                    aria-label={`Move ${cardLabel(card)} right`}
-                    disabled={idx === displayedHand.length - 1}
-                    onClick={() => moveCard(card.id, 1)}
-                  >
-                    ▶
-                  </button>
+                    <button
+                      type="button"
+                      className="hand-card-reorder-button"
+                      aria-label={`Move ${cardLabel(card)} left`}
+                      disabled={idx === 0}
+                      onClick={() => moveCard(card.id, -1)}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="hand-card-reorder-button"
+                      aria-label={`Move ${cardLabel(card)} right`}
+                      disabled={idx === displayedHand.length - 1}
+                      onClick={() => moveCard(card.id, 1)}
+                    >
+                      ▶
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </Fragment>
             );
           })}
+          {renderGap(displayedHand.length)}
         </div>
         <div className="hand-deck">
           <DeckPile remaining={remaining} />

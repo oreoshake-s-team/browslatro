@@ -1,6 +1,10 @@
 .hand {
   width: 100%;
-  max-width: 60rem;
+  /* Generous max-width so 8 cards (4.5rem each) + 9 gaps (2.5rem at
+   * rest, ~3rem during drag with one active at 4.5rem) + the deck pile
+   * column (4.5rem + 1.2rem gap) all fit on one row at typical desktop
+   * widths without forcing flex-wrap mid-drag. */
+  max-width: 75rem;
   padding: 1.6rem;
   border: 2px solid #dee2e6;
   border-radius: 8px;
@@ -72,19 +76,49 @@
 }
 
 .hand-cards {
-  display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  gap: 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: end;
-  justify-items: center;
   min-height: 11rem;
+  /* No `gap` here: spacing is provided by interleaved .hand-card-gap drop
+   * zones so the row can visibly open when a card is dragged over a gap. */
+  gap: 0;
+  row-gap: 1.6rem;
 }
 
-@media (max-width: 720px) {
-  .hand-cards {
-    grid-template-columns: repeat(4, 1fr);
-    row-gap: 1.6rem;
-  }
+/* Drop-zone spacers interleaved between (and around) every card slot.
+ * Resting width gives the row visible breathing room between cards. While
+ * a drag is in flight the spacers widen to make the drop hitbox more
+ * forgiving, and the actively-hovered spacer expands again to a
+ * card-sized slot so the insertion point is unmistakable. */
+.hand-card-gap {
+  flex: 0 0 2.5rem;
+  align-self: stretch;
+  min-height: 9.5rem;
+  border-radius: 4px;
+  transition: flex-basis 120ms ease, background-color 120ms ease;
+}
+
+.hand-cards-dragging .hand-card-gap {
+  /* During drag the resting 2.5rem gaps widen further so the cursor
+   * has a generous landing area between cards. Math at max-width
+   * 75rem (inner ~66rem after the deck column and row gap):
+   * 8 cards × 4.5 + 8 non-active gaps × 3 + 1 active gap × 4.5
+   * = 64.5rem — fits with headroom so the row never wraps mid-drag.
+   *
+   * Geometric "card-over-zone" detection in Hand.tsx widens this even
+   * further in practice: when the cursor is hovering over a card slot
+   * the container resolves to the nearest gap, so the effective drop
+   * area for each gap is roughly half a card-width on either side. */
+  flex-basis: 3rem;
+}
+
+.hand-card-gap-active {
+  flex-basis: 4.5rem;
+  background-color: rgba(51, 154, 240, 0.18);
+  outline: 2px dashed #339af0;
+  outline-offset: -2px;
 }
 
 .hand-card-slot {
@@ -104,12 +138,12 @@
 }
 
 .hand-card-slot-dragging {
-  opacity: 0.4;
+  /* Hide the source visually (opacity:0) but keep its 4.5rem slot in
+   * layout. `visibility:hidden` or `width:0` here cancels the drag in
+   * Chrome — the source element must remain trackable for the drag to
+   * stay alive — so opacity is the only safe knob. */
+  opacity: 0;
   cursor: grabbing;
-}
-
-.hand-card-slot-drop-target {
-  outline-color: #339af0;
 }
 
 .hand-card-reorder {

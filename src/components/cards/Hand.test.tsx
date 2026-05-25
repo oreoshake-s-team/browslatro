@@ -345,16 +345,25 @@ describe("Hand drag-and-drop reordering", () => {
     { id: 4, rank: "A", suit: "diamonds" },
   ];
 
+  // Default rank-sort displays as: A♦(id 4), K♥(id 1), 10♣(id 3), 2♠(id 2)
+  // → displayedHand indices: 0=4, 1=1, 2=3, 3=2
+  // → gaps: 0 (before 4), 1 (between 4 and 1), 2 (between 1 and 3),
+  //         3 (between 3 and 2), 4 (after 2)
+
   function getSlot(cardId: number): HTMLElement {
     return screen.getByTestId(`hand-slot-${cardId}`);
   }
 
-  function dragAndDrop(sourceId: number, targetId: number) {
+  function getGap(gapIdx: number): HTMLElement {
+    return screen.getByTestId(`hand-gap-${gapIdx}`);
+  }
+
+  function dragCardToGap(sourceId: number, gapIdx: number) {
     const source = getSlot(sourceId);
-    const target = getSlot(targetId);
+    const gap = getGap(gapIdx);
     fireEvent.dragStart(source);
-    fireEvent.dragOver(target);
-    fireEvent.drop(target);
+    fireEvent.dragOver(gap);
+    fireEvent.drop(gap);
     fireEvent.dragEnd(source);
   }
 
@@ -364,21 +373,16 @@ describe("Hand drag-and-drop reordering", () => {
     expect(slots.every((s) => s.getAttribute("draggable") === "true")).toBe(true);
   });
 
-  test("dragging a left card past a right card inserts it immediately to the right of the target", () => {
+  test("renders one more gap drop zone than cards in the hand", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 2);
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "K of Hearts",
-      "10 of Clubs",
-      "2 of Spades",
-      "A of Diamonds",
-    ]);
+    const gaps = screen.getAllByTestId(/^hand-gap-/);
+    expect(gaps).toHaveLength(fourCards.length + 1);
   });
 
-  test("dragging a right card past a left card inserts it immediately to the left of the target", () => {
+  test("dropping a card into the leftmost gap moves it to position 0", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(2, 4);
+    // 2♠ starts at index 3; drop into gap 0 → 2♠ becomes first.
+    dragCardToGap(2, 0);
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "2 of Spades",
@@ -388,25 +392,66 @@ describe("Hand drag-and-drop reordering", () => {
     ]);
   });
 
-  test("dragging onto an adjacent right neighbour swaps the two cards", () => {
+  test("dropping a card into the rightmost gap moves it to the last position", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 1);
+    // A♦ starts at index 0; drop into gap 4 → A♦ becomes last.
+    dragCardToGap(4, 4);
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
       "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
       "A of Diamonds",
+    ]);
+  });
+
+  test("dropping into a middle gap inserts at that position (moving left → right)", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // A♦ at idx 0; drop into gap 3 (between 10♣ and 2♠) → A♦ lands at idx 2.
+    dragCardToGap(4, 3);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "K of Hearts",
+      "10 of Clubs",
+      "A of Diamonds",
+      "2 of Spades",
+    ]);
+  });
+
+  test("dropping into a middle gap inserts at that position (moving right → left)", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // 2♠ at idx 3; drop into gap 1 (between A♦ and K♥) → 2♠ lands at idx 1.
+    dragCardToGap(2, 1);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "2 of Spades",
+      "K of Hearts",
+      "10 of Clubs",
+    ]);
+  });
+
+  test("dropping a card into its own left-adjacent gap is a no-op", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // K♥ is at idx 1; gap 1 is its own left edge → no-op.
+    dragCardToGap(1, 1);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
       "10 of Clubs",
       "2 of Spades",
     ]);
   });
 
-  test("dragging onto an adjacent left neighbour swaps the two cards", () => {
+  test("dropping a card into its own right-adjacent gap is a no-op", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(1, 4);
+    // K♥ is at idx 1; gap 2 is its own right edge → no-op.
+    dragCardToGap(1, 2);
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual([
-      "K of Hearts",
       "A of Diamonds",
+      "K of Hearts",
       "10 of Clubs",
       "2 of Spades",
     ]);
@@ -414,7 +459,7 @@ describe("Hand drag-and-drop reordering", () => {
 
   test("dragging activates the Manual sort indicator", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 3);
+    dragCardToGap(4, 3);
     expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -423,23 +468,11 @@ describe("Hand drag-and-drop reordering", () => {
 
   test("dragging unsets the Rank sort indicator", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 3);
+    dragCardToGap(4, 3);
     expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );
-  });
-
-  test("dropping a card on itself is a no-op", () => {
-    renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 4);
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "K of Hearts",
-      "10 of Clubs",
-      "2 of Spades",
-    ]);
   });
 
   test("the dragging slot is marked while a drag is in flight", () => {
@@ -450,19 +483,82 @@ describe("Hand drag-and-drop reordering", () => {
     fireEvent.dragEnd(source);
   });
 
-  test("the hovered drop target is marked while dragging over it", () => {
+  test("the hand row widens its drop hitboxes while a drag is in flight", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    const handRow = screen.getByLabelText("Your hand");
+    expect(handRow).not.toHaveClass("hand-cards-dragging");
+    fireEvent.dragStart(getSlot(4));
+    expect(handRow).toHaveClass("hand-cards-dragging");
+  });
+
+  test("the hand row stops widening its drop hitboxes once the drag ends", () => {
     renderHand({ hand: fourCards, remaining: [] });
     const source = getSlot(4);
-    const target = getSlot(3);
+    const handRow = screen.getByLabelText("Your hand");
+    fireEvent.dragStart(source);
+    fireEvent.dragEnd(source);
+    expect(handRow).not.toHaveClass("hand-cards-dragging");
+  });
+
+  test("the hovered gap is marked active while dragging over it", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    const source = getSlot(4);
+    const target = getGap(3);
     fireEvent.dragStart(source);
     fireEvent.dragOver(target);
-    expect(target).toHaveClass("hand-card-slot-drop-target");
+    expect(target).toHaveClass("hand-card-gap-active");
     fireEvent.dragEnd(source);
   });
 
-  test("drop-target highlight is removed after the drop completes", () => {
+  test("a non-hovered gap does not get the active class while a different gap is hovered", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    dragAndDrop(4, 3);
-    expect(getSlot(3)).not.toHaveClass("hand-card-slot-drop-target");
+    const source = getSlot(4);
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(getGap(3));
+    expect(getGap(0)).not.toHaveClass("hand-card-gap-active");
+    fireEvent.dragEnd(source);
+  });
+
+  test("gap-active highlight is removed after the drop completes", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    dragCardToGap(4, 3);
+    // Post-drop, no gap should still be highlighted.
+    const activeGaps = screen
+      .getAllByTestId(/^hand-gap-/)
+      .filter((g) => g.classList.contains("hand-card-gap-active"));
+    expect(activeGaps).toHaveLength(0);
+  });
+
+  test("the source card's own adjacent gaps are not marked active even while a drag is in flight", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    // K♥ at idx 1; its self-adjacent gaps are 1 and 2. Hovering gap 1
+    // (a no-op target) must NOT trigger the active highlight.
+    const source = getSlot(1);
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(getGap(1));
+    expect(getGap(1)).not.toHaveClass("hand-card-gap-active");
+    fireEvent.dragEnd(source);
+  });
+
+  test("dropping on the hand container commits at the currently-active gap", () => {
+    // The container-level drop handler is the fallback when the cursor
+    // is released over a card slot or the hand background rather than a
+    // gap element directly — so the dragged card still lands at the
+    // last-resolved active gap. Hover gap 3 to set it active, then
+    // drop on the container.
+    renderHand({ hand: fourCards, remaining: [] });
+    const source = getSlot(4);
+    const handRow = screen.getByLabelText("Your hand");
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(getGap(3));
+    fireEvent.drop(handRow);
+    fireEvent.dragEnd(source);
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "K of Hearts",
+      "10 of Clubs",
+      "A of Diamonds",
+      "2 of Spades",
+    ]);
   });
 });
