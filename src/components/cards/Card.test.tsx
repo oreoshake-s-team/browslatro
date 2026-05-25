@@ -162,4 +162,16 @@ describe("Card", () => {
     render(<Card card={aceOfSpades} />);
     expect(screen.getByRole("button")).toHaveAccessibleName("A of Spades");
   });
+
+  test("applies the gold scoring class when goldScoring is true", () => {
+    const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
+    render(<Card card={gold} goldScoring />);
+    expect(screen.getByRole("button")).toHaveClass("card-gold-scoring");
+  });
+
+  test("does not apply the gold scoring class when goldScoring is omitted", () => {
+    const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-gold-scoring");
+  });
 });

@@ -45,6 +45,7 @@ interface CardProps {
   selected?: boolean;
   discarding?: boolean;
   scoring?: boolean;
+  goldScoring?: boolean;
   onToggle?: (card: CardType) => void;
   onDiscardEnd?: (card: CardType) => void;
 }
@@ -54,6 +55,7 @@ export default function Card({
   selected = false,
   discarding = false,
   scoring = false,
+  goldScoring = false,
   onToggle,
   onDiscardEnd,
 }: CardProps) {
@@ -65,6 +67,7 @@ export default function Card({
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
   const scoringClass = scoring ? "card-scoring" : "";
+  const goldScoringClass = goldScoring ? "card-gold-scoring" : "";
   const enhancementClass = card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
@@ -78,7 +81,7 @@ export default function Card({
   return (
     <button
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${faceClass} ${enhancementClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${faceClass} ${enhancementClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}

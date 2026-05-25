@@ -72,16 +72,16 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
               <dt>Base reward</dt>
               <dd data-testid="round-won-base-reward">${baseReward}</dd>
             </div>
-            <div className="round-won-payout-row">
-              <dt data-testid="round-won-interest-label">{interestLabel}</dt>
-              <dd data-testid="round-won-interest">+${interest}</dd>
-            </div>
             {goldHeldCount > 0 && (
               <div className="round-won-payout-row">
                 <dt data-testid="round-won-gold-label">{goldLabel}</dt>
                 <dd data-testid="round-won-gold">+${goldBonus}</dd>
               </div>
             )}
+            <div className="round-won-payout-row">
+              <dt data-testid="round-won-interest-label">{interestLabel}</dt>
+              <dd data-testid="round-won-interest">+${interest}</dd>
+            </div>
             <div className="round-won-payout-row round-won-payout-total">
               <dt>Total</dt>
               <dd data-testid="round-won-total">${total}</dd>
