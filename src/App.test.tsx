@@ -307,6 +307,10 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("keeps the hand at 8 cards by drawing replacements from the deck", async () => {
+    // Identity shuffle deals Spades 2..9; selecting the top 3 (9,8,7♠) scores
+    // a High Card well below the 300 threshold, so the round is not won and
+    // replacements are drawn.
+    mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
@@ -319,6 +323,7 @@ describe("Submitting a hand discards the selected cards", () => {
   });
 
   test("decrements the remaining deck count by the number of discarded cards", async () => {
+    mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
@@ -620,6 +625,33 @@ describe("Submit Hand win integration", () => {
     // Round-won modal now blocks until dismissed.
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+
+  test("no replacement cards are drawn into the hand after a winning hand", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(getHandCardButtons()).toHaveLength(3);
+  });
+
+  test("the deck pile retains its remaining count after a winning hand", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const beforeLabel = screen
+      .getByRole("button", { name: /Deck \(\d+ cards remaining\)/ })
+      .getAttribute("aria-label");
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(
+      screen.getByRole("button", { name: /Deck \(\d+ cards remaining\)/ }),
+    ).toHaveAttribute("aria-label", beforeLabel ?? "");
   });
 });
 
