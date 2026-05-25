@@ -125,6 +125,7 @@ function App() {
   const pendingDiscardCountRef = useRef(0);
   const pendingHandPlayResetRef = useRef(false);
   const [handPlaySignal, setHandPlaySignal] = useState(0);
+  const skipDrawAfterDiscardRef = useRef(false);
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
@@ -188,6 +189,7 @@ function App() {
     setMultiplier(0);
     pendingDiscardCountRef.current = 0;
     pendingHandPlayResetRef.current = false;
+    skipDrawAfterDiscardRef.current = false;
     setScoringCards([]);
     setScoringIndex(0);
     scoringFinalizeRef.current = null;
@@ -492,10 +494,15 @@ function App() {
 
   function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
     const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
-    const drawCount = dealt.hand.length - kept.length;
-    const drawn = dealt.remaining.slice(0, drawCount);
-    const newRemaining = dealt.remaining.slice(drawCount);
-    setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    if (skipDrawAfterDiscardRef.current) {
+      skipDrawAfterDiscardRef.current = false;
+      setDealt({ hand: kept, remaining: dealt.remaining });
+    } else {
+      const drawCount = dealt.hand.length - kept.length;
+      const drawn = dealt.remaining.slice(0, drawCount);
+      const newRemaining = dealt.remaining.slice(drawCount);
+      setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+    }
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -609,12 +616,14 @@ function App() {
     setScoringCards([]);
     setScoringIndex(0);
 
+    const roundWon = newRoundScore >= requiredScore;
     if (submittedSelection.size > 0) {
       pendingDiscardCountRef.current = submittedSelection.size;
+      skipDrawAfterDiscardRef.current = roundWon;
       setDiscardingIds(submittedSelection);
     }
 
-    if (newRoundScore >= requiredScore) {
+    if (roundWon) {
       const heldGoldIds = dealt.hand
         .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
         .map((c) => c.id);

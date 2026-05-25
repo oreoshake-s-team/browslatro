@@ -621,6 +621,42 @@ describe("Submit Hand win integration", () => {
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
+
+  test("no replacement cards are drawn into the hand after a winning hand", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(getHandCardButtons()).toHaveLength(3);
+  });
+
+  test("the deck pile retains its remaining count after a winning hand", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const beforeLabel = screen
+      .getByRole("button", { name: /Deck \(\d+ cards remaining\)/ })
+      .getAttribute("aria-label");
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(
+      screen.getByRole("button", { name: /Deck \(\d+ cards remaining\)/ }),
+    ).toHaveAttribute("aria-label", beforeLabel ?? "");
+  });
+
+  test("a non-winning hand still draws replacement cards into the hand", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
 });
 
 describe("Losing integration", () => {
