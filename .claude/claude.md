@@ -35,6 +35,8 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 
 When asked to complete a task, first create a new branch based on the issue number and title. Do not commit directly to main. Create a pull request when done.
 
+Always merge main before pushing new code.
+
 # Conversations outside of Claude code
 
 See docs/conversation_summary.md for more background
