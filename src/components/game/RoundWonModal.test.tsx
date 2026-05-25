@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RoundWonModal, { type RoundWonInfo } from "./RoundWonModal";
 
@@ -59,5 +59,31 @@ describe("RoundWonModal payout breakdown", () => {
     render(<RoundWonModal info={buildInfo()} onContinue={onContinue} />);
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  test("Escape invokes the onContinue callback while the modal is open", async () => {
+    const user = userEvent.setup();
+    const onContinue = jest.fn();
+    render(<RoundWonModal info={buildInfo()} onContinue={onContinue} />);
+    await user.keyboard("{Escape}");
+    expect(onContinue).toHaveBeenCalledTimes(1);
+  });
+
+  test("Escape does not invoke onContinue after the modal is unmounted", async () => {
+    const user = userEvent.setup();
+    const onContinue = jest.fn();
+    const { unmount } = render(
+      <RoundWonModal info={buildInfo()} onContinue={onContinue} />,
+    );
+    unmount();
+    await user.keyboard("{Escape}");
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  test("a non-Escape global keydown does not invoke onContinue", () => {
+    const onContinue = jest.fn();
+    render(<RoundWonModal info={buildInfo()} onContinue={onContinue} />);
+    fireEvent.keyDown(window, { key: "a" });
+    expect(onContinue).not.toHaveBeenCalled();
   });
 });

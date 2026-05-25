@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import "./Options.css";
 import { createPortal } from "react-dom";
 import {
@@ -7,6 +7,7 @@ import {
   toggleHighVisibility,
   toggleMute,
 } from "../system/preferences";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 
 interface OptionsProps {
   onNewGame: () => void;
@@ -17,6 +18,8 @@ function Options({ onNewGame, onHighVisibilityChange }: OptionsProps) {
   const [open, setOpen] = useState(false);
   const [muted, setMuted] = useState(isMuted);
   const [highVisibility, setHighVisibility] = useState(isHighVisibility);
+  const handleClose = useCallback(() => setOpen(false), []);
+  useEscapeToClose(handleClose, open);
 
   function handleToggleMute() {
     toggleMute();
@@ -35,7 +38,7 @@ function Options({ onNewGame, onHighVisibilityChange }: OptionsProps) {
       <button onClick={() => setOpen(true)}>Options</button>
       {open &&
         createPortal(
-          <div className="modal-overlay" onClick={() => setOpen(false)}>
+          <div className="modal-overlay" onClick={handleClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
               <h3>Options</h3>
               <button
@@ -58,15 +61,12 @@ function Options({ onNewGame, onHighVisibilityChange }: OptionsProps) {
                 className="options-button options-button--destructive"
                 onClick={() => {
                   onNewGame();
-                  setOpen(false);
+                  handleClose();
                 }}
               >
                 New game
               </button>
-              <button
-                className="options-button"
-                onClick={() => setOpen(false)}
-              >
+              <button className="options-button" onClick={handleClose}>
                 Close
               </button>
             </div>

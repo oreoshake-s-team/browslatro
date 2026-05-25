@@ -74,4 +74,33 @@ describe("DiscardPile", () => {
       screen.queryByRole("heading", { name: "Discarded Cards" })
     ).not.toBeInTheDocument();
   });
+
+  test("Escape closes the modal when open", async () => {
+    const user = userEvent.setup();
+    render(<DiscardPile discarded={sampleCards} />);
+    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("heading", { name: "Discarded Cards" })
+    ).not.toBeInTheDocument();
+  });
+
+  test("Escape while modal is closed is a no-op", async () => {
+    const user = userEvent.setup();
+    render(<DiscardPile discarded={sampleCards} />);
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("heading", { name: "Discarded Cards" })
+    ).not.toBeInTheDocument();
+  });
+
+  test("Enter while modal is open does not close it", async () => {
+    const user = userEvent.setup();
+    render(<DiscardPile discarded={sampleCards} />);
+    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.keyboard("{Enter}");
+    expect(
+      screen.getByRole("heading", { name: "Discarded Cards" })
+    ).toBeInTheDocument();
+  });
 });
