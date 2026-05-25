@@ -1047,4 +1047,24 @@ describe("Post-round shop integration", () => {
     await user.keyboard("{Escape}");
     expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(3);
   });
+
+  test("the shop never offers a joker that the player already owns", async () => {
+    await openShop();
+    const offerNames = screen
+      .getAllByTestId(/^shop-offer-/)
+      .map((el) => el.querySelector(".shop-offer-name")?.textContent);
+    const equippedNames = ["+4 Mult", "Business Card", "Joker Stencil"];
+    const overlap = offerNames.filter((n) =>
+      n !== null && n !== undefined && equippedNames.includes(n),
+    );
+    expect(overlap).toEqual([]);
+  });
+
+  test("the two shop offers never share a name in a single shop visit", async () => {
+    await openShop();
+    const offerNames = screen
+      .getAllByTestId(/^shop-offer-/)
+      .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
+    expect(new Set(offerNames).size).toBe(offerNames.length);
+  });
 });
