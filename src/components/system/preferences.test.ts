@@ -1,13 +1,8 @@
-/**
- * The preferences module hydrates from localStorage at import time, so each
- * test must seed storage and then re-require the module to observe the
- * desired initial state.
- */
-
 export {};
 
 const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
+const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
 
 describe("preferences (highVisibility)", () => {
   beforeEach(() => {
@@ -92,5 +87,63 @@ describe("preferences (muted)", () => {
     toggleMute();
     toggleMute();
     expect(window.localStorage.getItem(MUTED_KEY)).toBe("false");
+  });
+});
+
+describe("preferences (animationSpeed)", () => {
+  beforeEach(() => {
+    jest.resetModules();
+    window.localStorage.clear();
+  });
+
+  test("defaults to normal when localStorage has no value", () => {
+    const { getAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(getAnimationSpeed()).toBe("normal");
+  });
+
+  test("reads a persisted fast value from localStorage on init", () => {
+    window.localStorage.setItem(ANIMATION_SPEED_KEY, "fast");
+    const { getAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(getAnimationSpeed()).toBe("fast");
+  });
+
+  test("falls back to normal when an unknown value is stored", () => {
+    window.localStorage.setItem(ANIMATION_SPEED_KEY, "lightspeed");
+    const { getAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(getAnimationSpeed()).toBe("normal");
+  });
+
+  test("setAnimationSpeed persists the value to localStorage", () => {
+    const { setAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    setAnimationSpeed("instant");
+    expect(window.localStorage.getItem(ANIMATION_SPEED_KEY)).toBe("instant");
+  });
+
+  test("setAnimationSpeed roundtrips through localStorage to a re-imported module", () => {
+    const first = jest.requireActual<typeof import("./preferences")>("./preferences");
+    first.setAnimationSpeed("slow");
+    jest.resetModules();
+    const second = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(second.getAnimationSpeed()).toBe("slow");
+  });
+
+  test("getAnimationSpeedMultiplier returns 1 for normal", () => {
+    const { getAnimationSpeedMultiplier } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(getAnimationSpeedMultiplier("normal")).toBe(1);
+  });
+
+  test("getAnimationSpeedMultiplier returns 0 for instant", () => {
+    const { getAnimationSpeedMultiplier } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(getAnimationSpeedMultiplier("instant")).toBe(0);
+  });
+
+  test("hasUserOverriddenAnimationSpeed is false for normal", () => {
+    const { hasUserOverriddenAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(hasUserOverriddenAnimationSpeed("normal")).toBe(false);
+  });
+
+  test("hasUserOverriddenAnimationSpeed is true for slow", () => {
+    const { hasUserOverriddenAnimationSpeed } = jest.requireActual<typeof import("./preferences")>("./preferences");
+    expect(hasUserOverriddenAnimationSpeed("slow")).toBe(true);
   });
 });

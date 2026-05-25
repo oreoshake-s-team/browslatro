@@ -55,3 +55,33 @@
   color: white;
   border-color: #c92a2a;
 }
+
+.options-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: #495057;
+}
+
+.options-field-label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #495057;
+}
+
+.options-select {
+  padding: 0.4rem 0.6rem;
+  font-size: 1rem;
+  color: #495057;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.options-select:focus-visible {
+  outline: 2px solid #1c7ed6;
+  outline-offset: 2px;
+}
