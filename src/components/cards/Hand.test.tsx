@@ -339,6 +339,87 @@ describe("Hand manual reordering", () => {
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual(["A of Diamonds", "10 of Clubs", "K of Hearts"]);
   });
+
+  test("an incremented handPlaySignal clears manual order back to the active sort mode", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderHand({
+      hand: fourCards,
+      remaining: [],
+      handPlaySignal: 0,
+    });
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    rerender(
+      <Hand
+        hand={fourCards}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        handPlaySignal={1}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("an incremented handPlaySignal deactivates the Manual sort indicator", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderHand({
+      hand: fourCards,
+      remaining: [],
+      handPlaySignal: 0,
+    });
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    rerender(
+      <Hand
+        hand={fourCards}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        handPlaySignal={1}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  test("an unchanged handPlaySignal preserves the manual order across rerenders", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderHand({
+      hand: fourCards,
+      remaining: [],
+      handPlaySignal: 3,
+    });
+    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
+    rerender(
+      <Hand
+        hand={fourCards}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        handPlaySignal={3}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
+      "2 of Spades",
+    ]);
+  });
 });
 
 describe("Hand drag-and-drop reordering", () => {

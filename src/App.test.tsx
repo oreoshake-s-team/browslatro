@@ -1,5 +1,5 @@
 import type { MockedFunction } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App, { getScoringStepMs } from "./App";
 import {
@@ -483,6 +483,27 @@ describe("Hand stays sorted after a play", () => {
       (r, i) => i === 0 || ranks[i - 1] >= r,
     );
     expect(isDescending).toBe(true);
+  });
+
+  test("playing a hand clears a manual sort override and restores rank order", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const handRegion = screen.getByLabelText("Your hand");
+    const moveRightButtons = within(handRegion)
+      .getAllByRole("button", { name: /^Move .* right$/ })
+      .filter((btn) => !(btn as HTMLButtonElement).disabled);
+    await user.click(moveRightButtons[0]);
+    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
   });
 });
 
