@@ -124,8 +124,20 @@
 }
 
 .hand-card-slot-dragging {
-  opacity: 0.4;
+  /* Hide the source slot entirely once a drag is in flight: the
+   * dragged card's ghost follows the cursor and the active gap is the
+   * visible landing target, so showing the original position would be
+   * a duplicate visual. Collapsing to zero width also prevents the
+   * gap-widening overhead from pushing the row past its container and
+   * triggering flex-wrap mid-drag (which had been relocating the
+   * target gap and making the drop "impossible"). */
   cursor: grabbing;
+  width: 0;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .hand-card-reorder {
