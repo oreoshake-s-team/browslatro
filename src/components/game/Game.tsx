@@ -21,6 +21,7 @@ interface GameProps {
   discardingIds: ReadonlySet<number>;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
+  onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
 }
 
 export default function Game({
@@ -41,6 +42,7 @@ export default function Game({
   discardingIds,
   onToggleCard,
   onCardDiscardEnd,
+  onDisplayOrderChange,
 }: GameProps) {
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
@@ -60,6 +62,7 @@ export default function Game({
         scoringId={scoringId}
         onToggleCard={onToggleCard}
         onCardDiscardEnd={onCardDiscardEnd}
+        onDisplayOrderChange={onDisplayOrderChange}
       />
       <div className="hand-selection">
         <span className="step-label">1. Current hand</span>

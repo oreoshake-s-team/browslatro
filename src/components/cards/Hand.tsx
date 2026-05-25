@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
@@ -46,6 +46,7 @@ interface HandProps {
   scoringId?: number | null;
   onToggleCard: (card: CardType) => void;
   onCardDiscardEnd: (card: CardType) => void;
+  onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
 }
 
 export default function Hand({
@@ -56,6 +57,7 @@ export default function Hand({
   scoringId = null,
   onToggleCard,
   onCardDiscardEnd,
+  onDisplayOrderChange,
 }: HandProps) {
   const [sortMode, setSortMode] = useState<SortMode>("rank");
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
@@ -69,6 +71,11 @@ export default function Hand({
       manualOrder ? applyManualOrder(hand, manualOrder) : sortCards(hand, sortMode),
     [hand, sortMode, manualOrder],
   );
+
+  useEffect(() => {
+    if (!onDisplayOrderChange) return;
+    onDisplayOrderChange(displayedHand.map((c) => c.id));
+  }, [displayedHand, onDisplayOrderChange]);
 
   function selectSort(mode: SortMode) {
     setSortMode(mode);
