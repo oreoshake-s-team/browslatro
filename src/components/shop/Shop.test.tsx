@@ -8,6 +8,22 @@ import {
   createPlusFourMultJoker,
 } from "../../jokers";
 import { createPlanetCatalog } from "../../planets";
+import type { Voucher, VoucherId } from "../../vouchers";
+
+const OVERSTOCK_VOUCHER: Voucher = {
+  id: "overstock",
+  name: "Overstock",
+  description: "Adds an extra shop slot.",
+  cost: 10,
+};
+
+const OVERSTOCK_PLUS_VOUCHER: Voucher = {
+  id: "overstock-plus",
+  name: "Overstock Plus",
+  description: "Adds yet another shop slot.",
+  cost: 10,
+  requires: "overstock",
+};
 
 const PLUTO = createPlanetCatalog().find((p) => p.id === "pluto")!;
 const MERCURY = createPlanetCatalog().find((p) => p.id === "mercury")!;
@@ -36,7 +52,11 @@ function renderShop(
       equippedJokerCount={0}
       consumableCount={0}
       offers={[jokerOffer("plus"), planetOffer("pluto")]}
+      voucher={null}
+      voucherSold={false}
+      ownedVoucherIds={new Set<VoucherId>()}
       onBuy={vi.fn()}
+      onBuyVoucher={vi.fn()}
       onReroll={vi.fn()}
       onNext={vi.fn()}
       {...overrides}
@@ -267,6 +287,89 @@ describe("Shop", () => {
       expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
         "Reroll ($5)",
       );
+    });
+  });
+
+  describe("voucher slot", () => {
+    test("renders the voucher slot region", () => {
+      renderShop();
+      expect(screen.getByTestId("shop-voucher")).toBeInTheDocument();
+    });
+
+    test("renders the empty placeholder when no voucher is available", () => {
+      renderShop({ voucher: null });
+      expect(screen.getByTestId("shop-voucher-empty")).toBeInTheDocument();
+    });
+
+    test("renders the voucher name when one is provided", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER });
+      expect(screen.getByText("Overstock")).toBeInTheDocument();
+    });
+
+    test("renders the voucher description when one is provided", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER });
+      expect(
+        screen.getByText("Adds an extra shop slot."),
+      ).toBeInTheDocument();
+    });
+
+    test("renders the voucher price when one is provided", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER });
+      expect(screen.getByText("$10")).toBeInTheDocument();
+    });
+
+    test("the buy button is enabled when affordable, unsold, and prereqs are met", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER, money: 10 });
+      expect(screen.getByTestId("shop-voucher-buy")).toBeEnabled();
+    });
+
+    test("clicking the buy button invokes onBuyVoucher", async () => {
+      const user = userEvent.setup();
+      const onBuyVoucher = vi.fn();
+      renderShop({ voucher: OVERSTOCK_VOUCHER, money: 10, onBuyVoucher });
+      await user.click(screen.getByTestId("shop-voucher-buy"));
+      expect(onBuyVoucher).toHaveBeenCalledTimes(1);
+    });
+
+    test("the buy button is disabled when the player cannot afford the voucher", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER, money: 4 });
+      expect(screen.getByTestId("shop-voucher-buy")).toBeDisabled();
+    });
+
+    test("the buy button is disabled when the voucher is already sold", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER, voucherSold: true, money: 50 });
+      expect(screen.getByTestId("shop-voucher-buy")).toBeDisabled();
+    });
+
+    test("the buy button label reads 'Sold' when the voucher is already sold", () => {
+      renderShop({ voucher: OVERSTOCK_VOUCHER, voucherSold: true });
+      expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+    });
+
+    test("the buy button is disabled when the prerequisite voucher is not owned", () => {
+      renderShop({
+        voucher: OVERSTOCK_PLUS_VOUCHER,
+        money: 50,
+        ownedVoucherIds: new Set<VoucherId>(),
+      });
+      expect(screen.getByTestId("shop-voucher-buy")).toBeDisabled();
+    });
+
+    test("the buy button is enabled once the prerequisite is owned", () => {
+      renderShop({
+        voucher: OVERSTOCK_PLUS_VOUCHER,
+        money: 50,
+        ownedVoucherIds: new Set<VoucherId>(["overstock"]),
+      });
+      expect(screen.getByTestId("shop-voucher-buy")).toBeEnabled();
+    });
+
+    test("clicking the buy button when disabled does not invoke onBuyVoucher", async () => {
+      const user = userEvent.setup();
+      const onBuyVoucher = vi.fn();
+      renderShop({ voucher: OVERSTOCK_VOUCHER, money: 0, onBuyVoucher });
+      await user.click(screen.getByTestId("shop-voucher-buy"));
+      expect(onBuyVoucher).not.toHaveBeenCalled();
     });
   });
 });

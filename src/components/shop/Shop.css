@@ -36,6 +36,86 @@
   font-weight: 600;
 }
 
+.shop-voucher {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 2px dashed #b197fc;
+  border-radius: 8px;
+  background-color: #f3f0ff;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shop-voucher-heading {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5f3dc4;
+}
+
+.shop-voucher-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 0.4rem 0.8rem;
+  transition: opacity 120ms linear;
+}
+
+.shop-voucher-sold {
+  opacity: 0.45;
+}
+
+.shop-voucher-name {
+  grid-column: 1 / 2;
+  font-weight: 600;
+  color: #343a40;
+}
+
+.shop-voucher-description {
+  grid-column: 1 / 4;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.shop-voucher-price {
+  grid-column: 2 / 3;
+  grid-row: 1;
+  font-weight: 700;
+  color: #099268;
+}
+
+.shop-voucher-buy {
+  grid-column: 3 / 4;
+  grid-row: 1;
+  padding: 0.4rem 0.9rem;
+  background-color: #845ef7;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.shop-voucher-buy:hover:not(:disabled) {
+  background-color: #7048e8;
+}
+
+.shop-voucher-buy:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.shop-voucher-empty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-style: italic;
+}
+
 .shop-offers {
   margin: 0;
   padding: 0;

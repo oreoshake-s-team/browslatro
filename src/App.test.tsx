@@ -1237,8 +1237,11 @@ describe("Post-round shop integration", () => {
 
   test("buying an offer adds the joker to the equipped set", async () => {
     const user = await openShop();
-    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
-    await user.click(buyButtons[0]);
+    const buy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
     expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(4);
   });
 
@@ -1309,8 +1312,11 @@ describe("Post-round shop integration", () => {
 
   test("Reroll preserves already-sold offers in place", async () => {
     const user = await openShop();
-    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
-    await user.click(buyButtons[0]);
+    const buy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
     const soldNameBefore = screen
       .getByTestId("shop-offer-0")
       .querySelector(".shop-offer-name")?.textContent;
@@ -1753,5 +1759,76 @@ describe("Tarot purchase integration", () => {
     await user.click(firstCardBtn);
     await user.click(screen.getByRole("button", { name: "Confirm" }));
     expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
+  });
+});
+
+describe("Voucher integration", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  function moneyValue(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  test("renders the voucher slot when the shop opens", async () => {
+    await openShop();
+    expect(screen.getByTestId("shop-voucher")).toBeInTheDocument();
+  });
+
+  test("buying the voucher deducts its cost from money", async () => {
+    const user = await openShop();
+    const before = moneyValue();
+    const buy = screen.getByTestId("shop-voucher-buy");
+    await user.click(buy);
+    expect(moneyValue()).toBe(before - 10);
+  });
+
+  test("buying the voucher marks the voucher slot as Sold", async () => {
+    const user = await openShop();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+  });
+
+  test("clicking Reroll does not change the voucher's name", async () => {
+    const user = await openShop();
+    const slot = screen.getByTestId("shop-voucher");
+    const before = slot.querySelector(".shop-voucher-name")?.textContent ?? "";
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    const after =
+      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name")
+        ?.textContent ?? "";
+    expect(after).toBe(before);
+  });
+
+  test("clicking Reroll does not clear the voucher Sold state", async () => {
+    const user = await openShop();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+  });
+
+  test("the voucher remains Sold across blinds within the same ante", async () => {
+    const user = await openShop();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
   });
 });

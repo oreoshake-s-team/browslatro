@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { MAX_JOKERS } from "../../jokers";
 import { MAX_CONSUMABLE_SLOTS } from "../../consumables";
 import { rerollCostFor, type ShopItem } from "../../shop";
+import type { Voucher, VoucherId } from "../../vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 interface ShopProps {
@@ -11,9 +12,35 @@ interface ShopProps {
   equippedJokerCount: number;
   consumableCount: number;
   offers: ReadonlyArray<ShopItem>;
+  voucher: Voucher | null;
+  voucherSold: boolean;
+  ownedVoucherIds: ReadonlySet<VoucherId>;
   onBuy: (offerIdx: number) => void;
+  onBuyVoucher: () => void;
   onReroll: (cost: number) => void;
   onNext: () => void;
+}
+
+interface VoucherButtonState {
+  readonly disabled: boolean;
+  readonly label: string;
+  readonly title: string | undefined;
+}
+
+function resolveVoucherButton(
+  voucher: Voucher,
+  sold: boolean,
+  money: number,
+  ownedIds: ReadonlySet<VoucherId>,
+): VoucherButtonState {
+  if (sold) return { disabled: true, label: "Sold", title: "Already purchased this ante" };
+  if (voucher.requires && !ownedIds.has(voucher.requires)) {
+    return { disabled: true, label: `Buy ($${voucher.cost})`, title: `Requires ${voucher.requires}` };
+  }
+  if (money < voucher.cost) {
+    return { disabled: true, label: `Buy ($${voucher.cost})`, title: "Not enough money" };
+  }
+  return { disabled: false, label: `Buy ($${voucher.cost})`, title: undefined };
 }
 
 type BuyButtonState =
@@ -93,7 +120,11 @@ export default function Shop({
   equippedJokerCount,
   consumableCount,
   offers,
+  voucher,
+  voucherSold,
+  ownedVoucherIds,
   onBuy,
+  onBuyVoucher,
   onReroll,
   onNext,
 }: ShopProps) {
@@ -125,6 +156,44 @@ export default function Shop({
         <p className="shop-money" data-testid="shop-money">
           Money: ${money}
         </p>
+        <section
+          className="shop-voucher"
+          data-testid="shop-voucher"
+          aria-label="Voucher for this ante"
+        >
+          <h3 className="shop-voucher-heading">Voucher</h3>
+          {voucher ? (() => {
+            const btn = resolveVoucherButton(voucher, voucherSold, money, ownedVoucherIds);
+            return (
+              <div
+                className={`shop-voucher-card${voucherSold ? " shop-voucher-sold" : ""}`}
+                data-voucher-id={voucher.id}
+              >
+                <span className="shop-voucher-name">{voucher.name}</span>
+                <span className="shop-voucher-description">{voucher.description}</span>
+                <span className="shop-voucher-price">${voucher.cost}</span>
+                <button
+                  type="button"
+                  className="shop-voucher-buy"
+                  data-testid="shop-voucher-buy"
+                  disabled={btn.disabled}
+                  title={btn.title}
+                  aria-label={`${btn.label}: ${voucher.name}`}
+                  onClick={onBuyVoucher}
+                >
+                  {btn.label}
+                </button>
+              </div>
+            );
+          })() : (
+            <p
+              className="shop-voucher-empty"
+              data-testid="shop-voucher-empty"
+            >
+              No voucher available this ante.
+            </p>
+          )}
+        </section>
         <ul className="shop-offers" aria-label="Items for sale">
           {offers.map((offer, idx) => {
             const state = resolveBuyState(
