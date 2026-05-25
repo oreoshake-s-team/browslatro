@@ -3,10 +3,15 @@ import {
   ENHANCEMENT_KINDS,
   GLASS_ENHANCEMENT_DESTROY_CHANCE,
   GLASS_ENHANCEMENT_MULT_TIMES,
+  LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+  LUCKY_ENHANCEMENT_MONEY_CHANCE,
+  LUCKY_ENHANCEMENT_MULT_AMOUNT,
+  LUCKY_ENHANCEMENT_MULT_CHANCE,
   MULT_ENHANCEMENT_MULT_DELTA,
   NO_ENHANCEMENT_EFFECT,
   STONE_ENHANCEMENT_CHIPS,
   applyCardEnhancement,
+  applyLuckyRolls,
   cardRankForEvaluation,
   cardSuitForEvaluation,
   enhancementRngConfig,
@@ -274,5 +279,89 @@ describe("cardRankForEvaluation", () => {
 
   test("returns null for a Stone card so rank-based detection skips it", () => {
     expect(cardRankForEvaluation(makeCard("stone"))).toBeNull();
+  });
+});
+
+describe("Lucky enhancement constants", () => {
+  test("LUCKY_ENHANCEMENT_MULT_CHANCE equals 1-in-5 per the Balatro wiki", () => {
+    expect(LUCKY_ENHANCEMENT_MULT_CHANCE).toBe(0.2);
+  });
+
+  test("LUCKY_ENHANCEMENT_MULT_AMOUNT equals 20 per the Balatro wiki", () => {
+    expect(LUCKY_ENHANCEMENT_MULT_AMOUNT).toBe(20);
+  });
+
+  test("LUCKY_ENHANCEMENT_MONEY_CHANCE equals 1-in-15 per the Balatro wiki", () => {
+    expect(LUCKY_ENHANCEMENT_MONEY_CHANCE).toBe(1 / 15);
+  });
+
+  test("LUCKY_ENHANCEMENT_MONEY_AMOUNT equals 20 per the Balatro wiki", () => {
+    expect(LUCKY_ENHANCEMENT_MONEY_AMOUNT).toBe(20);
+  });
+});
+
+describe("applyLuckyRolls", () => {
+  const originalRng = enhancementRngConfig.rng;
+  afterEach(() => {
+    enhancementRngConfig.rng = originalRng;
+  });
+
+  function luckyCard(): Card {
+    return { id: 1, rank: "Q", suit: "spades", enhancement: "lucky" };
+  }
+
+  function vanillaCard(): Card {
+    return { id: 1, rank: "Q", suit: "spades" };
+  }
+
+  test("returns zero bonuses for a non-Lucky card regardless of rng", () => {
+    enhancementRngConfig.rng = () => 0;
+    expect(applyLuckyRolls(vanillaCard())).toEqual({
+      multBonus: 0,
+      moneyBonus: 0,
+    });
+  });
+
+  test("both rolls hit returns +20 mult AND +$20", () => {
+    enhancementRngConfig.rng = () => 0;
+    expect(applyLuckyRolls(luckyCard())).toEqual({
+      multBonus: LUCKY_ENHANCEMENT_MULT_AMOUNT,
+      moneyBonus: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+    });
+  });
+
+  test("mult hits but money misses returns only +20 mult", () => {
+    const values = [0.1, 0.5];
+    let i = 0;
+    enhancementRngConfig.rng = () => values[i++];
+    expect(applyLuckyRolls(luckyCard())).toEqual({
+      multBonus: LUCKY_ENHANCEMENT_MULT_AMOUNT,
+      moneyBonus: 0,
+    });
+  });
+
+  test("money hits but mult misses returns only +$20", () => {
+    const values = [0.5, 0.05];
+    let i = 0;
+    enhancementRngConfig.rng = () => values[i++];
+    expect(applyLuckyRolls(luckyCard())).toEqual({
+      multBonus: 0,
+      moneyBonus: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+    });
+  });
+
+  test("both rolls miss returns zero bonuses", () => {
+    enhancementRngConfig.rng = () => 0.999;
+    expect(applyLuckyRolls(luckyCard())).toEqual({
+      multBonus: 0,
+      moneyBonus: 0,
+    });
+  });
+
+  test("two scoring Lucky cards roll independently", () => {
+    enhancementRngConfig.rng = () => 0;
+    const a = applyLuckyRolls(luckyCard());
+    const b = applyLuckyRolls(luckyCard());
+    expect(a.multBonus + b.multBonus).toBe(2 * LUCKY_ENHANCEMENT_MULT_AMOUNT);
   });
 });

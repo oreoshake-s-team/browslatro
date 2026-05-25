@@ -75,6 +75,16 @@ describe("createDeck", () => {
     expect(nonThrees.every((c) => c.enhancement !== "stone")).toBe(true);
   });
 
+  test("assigns the Lucky enhancement to every rank-Q card", () => {
+    const queens = createDeck().filter((c) => c.rank === "Q");
+    expect(queens.every((c) => c.enhancement === "lucky")).toBe(true);
+  });
+
+  test("does not assign Lucky to any non-Q card", () => {
+    const nonQueens = createDeck().filter((c) => c.rank !== "Q");
+    expect(nonQueens.every((c) => c.enhancement !== "lucky")).toBe(true);
+  });
+
   test("omits cards whose keys appear in the excludedKeys set", () => {
     const excluded = new Set(["K-hearts", "5-spades"]);
     const deck = createDeck(excluded);
@@ -107,6 +117,10 @@ describe("defaultEnhancementForRank", () => {
 
   test("returns glass for Ks", () => {
     expect(defaultEnhancementForRank("K")).toBe("glass");
+  });
+
+  test("returns lucky for Qs", () => {
+    expect(defaultEnhancementForRank("Q")).toBe("lucky");
   });
 
   test("returns gold for ranks without an explicit assignment", () => {

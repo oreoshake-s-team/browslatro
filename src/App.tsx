@@ -37,7 +37,11 @@ import {
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
 import { steelHeldMultiplier } from "./heldInHand";
-import { applyCardEnhancement, rollEnhancementChance } from "./enhancements";
+import {
+  applyCardEnhancement,
+  applyLuckyRolls,
+  rollEnhancementChance,
+} from "./enhancements";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -214,6 +218,13 @@ function App() {
           next.add(key);
           return next;
         });
+      }
+      const luckyResult = applyLuckyRolls(stepCard);
+      if (luckyResult.multBonus > 0) {
+        setMultiplier((prev) => prev + luckyResult.multBonus);
+      }
+      if (luckyResult.moneyBonus > 0) {
+        setMoney((prev) => prev + luckyResult.moneyBonus);
       }
       const cardJokerResult = applyPerCardJokers(jokers, stepCard);
       if (cardJokerResult.moneyEarned > 0) {

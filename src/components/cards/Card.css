@@ -472,4 +472,26 @@
 }
 
 .card-enhancement-lucky {
+  border-color: #2f9e44;
+  border-width: 3px;
+  box-shadow: 0 0 0 2px rgba(47, 158, 68, 0.4),
+    0 2px 6px rgba(47, 158, 68, 0.4),
+    inset 0 0 14px rgba(143, 240, 164, 0.45);
+  background-image: linear-gradient(
+    135deg,
+    rgba(143, 240, 164, 0.55) 0%,
+    rgba(255, 255, 255, 0.85) 45%,
+    rgba(143, 240, 164, 0.55) 100%
+  );
+}
+
+.card-enhancement-lucky::after {
+  content: "☘";
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  font-size: 1.1rem;
+  color: #2b8a3e;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85);
+  pointer-events: none;
 }
