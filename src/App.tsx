@@ -19,7 +19,7 @@ import {
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel } from "./handEvaluator";
-import { evaluateHand } from "./handEvaluator";
+import { createDefaultHandStats, type HandStats } from "./handStats";
 import {
   getCardChips,
   getCardMultDelta,
@@ -108,6 +108,7 @@ function App() {
   const [handPlayCounts, setHandPlayCounts] = useState<HandPlayCounts>(
     emptyHandCounts,
   );
+  const [handStats, setHandStats] = useState<HandStats>(createDefaultHandStats);
   const pendingDiscardCountRef = useRef(0);
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -352,6 +353,7 @@ function App() {
     setMoney(4);
     setJokers(createDefaultJokers());
     setHandPlayCounts(emptyHandCounts());
+    setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
     startNewRound();
   }
@@ -397,10 +399,12 @@ function App() {
       return;
     }
     const nextSelected = dealt.hand.filter((c) => nextIds.has(c.id));
-    const hand = evaluateHand(nextSelected);
+    const label = detectHandLabel(nextSelected);
+    const entry = handStats[label];
+    const hand: Hand = { label, chips: entry.chips, multiplier: entry.multiplier };
     setSelectedHand(hand);
-    setChips(hand.chips);
-    setMultiplier(hand.multiplier);
+    setChips(entry.chips);
+    setMultiplier(entry.multiplier);
   }
 
   function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
@@ -443,7 +447,7 @@ function App() {
 
     const label = detectHandLabel(playedCards);
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
-    const handStats = evaluateHand(playedCards);
+    const handEntry = handStats[label];
     const scoring = getScoringCards(playedCards, label);
     const cardChipsTotal = scoring.reduce(
       (sum, card) => sum + getCardChips(card),
@@ -470,8 +474,8 @@ function App() {
     const totalXMult = preHandXMult * postHandResult.xMult;
 
     const finalScore = computeFinalScoreWithJokers(
-      handStats.chips,
-      handStats.multiplier,
+      handEntry.chips,
+      handEntry.multiplier,
       cardChipsTotal,
       {
         additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
@@ -482,8 +486,8 @@ function App() {
     );
 
     const liveMultiplier =
-      (handStats.multiplier + handJokerResult.additiveMult) * preHandXMult;
-    setChips(handStats.chips);
+      (handEntry.multiplier + handJokerResult.additiveMult) * preHandXMult;
+    setChips(handEntry.chips);
     setMultiplier(liveMultiplier);
     scoringFinalizeRef.current = () => {
       if (postHandResult.steps.length === 0) {
