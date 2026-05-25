@@ -246,60 +246,108 @@
 
 .card-gold-scoring {
   position: relative;
-  animation: card-gold-pulse calc(280ms * var(--animation-speed, 1)) ease-out;
-  box-shadow: 0 0 24px rgba(245, 159, 0, 0.85),
-    0 0 8px rgba(255, 215, 0, 0.7);
+  animation: card-gold-pulse calc(380ms * var(--animation-speed, 1)) ease-out;
+  box-shadow: 0 0 32px rgba(245, 159, 0, 0.95),
+    0 0 12px rgba(255, 215, 0, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.9);
   z-index: 2;
+  overflow: hidden;
+}
+
+.card-gold-scoring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.9) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 250% 100%;
+  animation: card-gold-sheen calc(450ms * var(--animation-speed, 1)) ease-out;
 }
 
 .card-gold-scoring::after {
   content: "+$3";
   position: absolute;
-  top: -1.2rem;
+  top: -1.4rem;
   left: 50%;
   transform: translateX(-50%);
   color: #5c3c00;
   background-color: #ffe066;
   border: 2px solid #f59f00;
   border-radius: 999px;
-  padding: 0.1rem 0.6rem;
-  font-weight: 700;
-  font-size: 0.85rem;
+  padding: 0.15rem 0.7rem;
+  font-weight: 800;
+  font-size: 0.95rem;
   line-height: 1.1;
   white-space: nowrap;
   pointer-events: none;
-  animation: card-gold-bonus-float calc(420ms * var(--animation-speed, 1)) ease-out;
+  box-shadow: 0 2px 6px rgba(245, 159, 0, 0.55);
+  animation: card-gold-bonus-float calc(480ms * var(--animation-speed, 1)) ease-out;
+  z-index: 3;
 }
 
 @keyframes card-gold-pulse {
   0% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) rotate(0deg);
   }
-  45% {
-    transform: translateY(-0.5rem) scale(1.1);
+  35% {
+    transform: translateY(-0.7rem) scale(1.14) rotate(-3deg);
+  }
+  60% {
+    transform: translateY(-0.2rem) scale(1.05) rotate(2deg);
   }
   100% {
-    transform: translateY(0) scale(1);
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes card-gold-sheen {
+  0% {
+    background-position: 130% 0;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    background-position: -30% 0;
+    opacity: 0;
   }
 }
 
 @keyframes card-gold-bonus-float {
   0% {
     opacity: 0;
-    transform: translate(-50%, 0.4rem);
+    transform: translate(-50%, 0.4rem) scale(0.7);
   }
-  25% {
+  15% {
     opacity: 1;
-    transform: translate(-50%, 0);
+    transform: translate(-50%, -0.2rem) scale(1.18);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -0.4rem) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -1rem) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -1.2rem);
+    transform: translate(-50%, -1.6rem) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .card-gold-scoring,
+  .card-gold-scoring::before,
   .card-gold-scoring::after {
     animation: none;
   }
