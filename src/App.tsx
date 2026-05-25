@@ -6,6 +6,7 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
 import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
+import { createTarotCatalog, resolveHermitPayout } from "./tarots";
 import Sidebar from "./components/hud/Sidebar";
 import {
   emptyHandCounts,
@@ -297,6 +298,7 @@ function App() {
         jokerCatalog: createJokerCatalog(),
         excludedJokerIds: jokers.map((j) => j.id),
         planetCatalog: createPlanetCatalog(),
+        tarotCatalog: createTarotCatalog(),
       }),
     );
   }
@@ -305,15 +307,18 @@ function App() {
     const offer = shopOffers?.[idx];
     if (!offer || offer.sold) return;
     if (money < offer.price) return;
+    play("pop");
+    setMoney((prev) => prev - offer.price);
     if (offer.kind === "joker") {
       if (jokers.length >= MAX_JOKERS) return;
-      play("pop");
-      setMoney((prev) => prev - offer.price);
       setJokers((prev) => [...prev, offer.joker]);
-    } else {
-      play("pop");
-      setMoney((prev) => prev - offer.price);
+    } else if (offer.kind === "planet") {
       setHandStats((prev) => applyPlanetUpgrade(prev, offer.planet));
+    } else {
+      const effect = offer.tarot.effect;
+      if (effect.kind === "money-multiply") {
+        setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      }
     }
     setShopOffers((current) =>
       current
@@ -333,6 +338,7 @@ function App() {
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds,
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
     };
     play("pop");
     setMoney((prev) => prev - cost);

@@ -1,9 +1,11 @@
 import type { Joker, RandomSource } from "./jokers";
 import type { PlanetCard } from "./planets";
+import type { TarotCard } from "./tarots";
 import { JOKER_BASE_PRICE } from "./constants";
 import { PLANET_BASE_PRICE } from "./planets";
+import { TAROT_BASE_PRICE } from "./tarots";
 
-export const SHOP_OFFER_SLOTS = 2;
+export const SHOP_OFFER_SLOTS = 3;
 
 export const BASE_REROLL_COST = 5;
 
@@ -17,6 +19,12 @@ export type ShopItem =
   | {
       readonly kind: "planet";
       readonly planet: PlanetCard;
+      readonly price: number;
+      readonly sold: boolean;
+    }
+  | {
+      readonly kind: "tarot";
+      readonly tarot: TarotCard;
       readonly price: number;
       readonly sold: boolean;
     };
@@ -53,6 +61,14 @@ export function pickRandomPlanet(
   return pickRandom(catalog, excludedIds, rng);
 }
 
+export function pickRandomTarot(
+  catalog: ReadonlyArray<TarotCard>,
+  excludedIds: ReadonlyArray<string>,
+  rng: RandomSource = Math.random,
+): TarotCard | null {
+  return pickRandom(catalog, excludedIds, rng);
+}
+
 function jokerOffer(joker: Joker): ShopItem {
   return { kind: "joker", joker, price: JOKER_BASE_PRICE, sold: false };
 }
@@ -61,27 +77,28 @@ function planetOffer(planet: PlanetCard): ShopItem {
   return { kind: "planet", planet, price: PLANET_BASE_PRICE, sold: false };
 }
 
+function tarotOffer(tarot: TarotCard): ShopItem {
+  return { kind: "tarot", tarot, price: TAROT_BASE_PRICE, sold: false };
+}
+
 export interface PickShopOffersArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly excludedJokerIds: ReadonlyArray<string>;
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
+  readonly tarotCatalog: ReadonlyArray<TarotCard>;
   readonly rng?: RandomSource;
 }
 
 export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
   const rng = args.rng ?? Math.random;
+  const slots: ShopItem[] = [];
   const joker = pickRandom(args.jokerCatalog, args.excludedJokerIds, rng);
+  if (joker) slots.push(jokerOffer(joker));
   const planet = pickRandom(args.planetCatalog, [], rng);
-  if (joker && planet) return [jokerOffer(joker), planetOffer(planet)];
-  if (joker) {
-    const fallback = pickRandom(args.jokerCatalog, [...args.excludedJokerIds, joker.id], rng);
-    return fallback ? [jokerOffer(joker), jokerOffer(fallback)] : [jokerOffer(joker)];
-  }
-  if (planet) {
-    const fallback = pickRandom(args.planetCatalog, [planet.id], rng);
-    return fallback ? [planetOffer(planet), planetOffer(fallback)] : [planetOffer(planet)];
-  }
-  return [];
+  if (planet) slots.push(planetOffer(planet));
+  const tarot = pickRandom(args.tarotCatalog, [], rng);
+  if (tarot) slots.push(tarotOffer(tarot));
+  return slots;
 }
 
 export function rerollShopOffer(
@@ -89,17 +106,18 @@ export function rerollShopOffer(
   args: PickShopOffersArgs,
 ): ShopItem | null {
   const rng = args.rng ?? Math.random;
-  const joker = (): Joker | null =>
-    pickRandom(args.jokerCatalog, args.excludedJokerIds, rng);
-  const planet = (): PlanetCard | null => pickRandom(args.planetCatalog, [], rng);
-  if (current.kind === "joker") {
-    const next = joker();
-    if (next) return jokerOffer(next);
-    const fb = planet();
-    return fb ? planetOffer(fb) : null;
+  switch (current.kind) {
+    case "joker": {
+      const next = pickRandom(args.jokerCatalog, args.excludedJokerIds, rng);
+      return next ? jokerOffer(next) : null;
+    }
+    case "planet": {
+      const next = pickRandom(args.planetCatalog, [], rng);
+      return next ? planetOffer(next) : null;
+    }
+    case "tarot": {
+      const next = pickRandom(args.tarotCatalog, [], rng);
+      return next ? tarotOffer(next) : null;
+    }
   }
-  const next = planet();
-  if (next) return planetOffer(next);
-  const fb = joker();
-  return fb ? jokerOffer(fb) : null;
 }
