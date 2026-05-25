@@ -5,9 +5,16 @@ import {
   CRAZY_JOKER_MULT,
   DEVIOUS_JOKER_CHIPS,
   DROLL_JOKER_MULT,
+  EVEN_STEVEN_MULT,
+  HALF_JOKER_MAX_CARDS,
+  HALF_JOKER_MULT,
   JOLLY_JOKER_MULT,
   MAD_JOKER_MULT,
   MAX_JOKERS,
+  MISPRINT_MAX_MULT,
+  MISPRINT_MIN_MULT,
+  ODD_TODD_CHIPS,
+  RANK_PARITY,
   SLY_JOKER_CHIPS,
   SUIT_MULT_AMOUNT,
   WILY_JOKER_CHIPS,
@@ -24,12 +31,16 @@ import {
   createDefaultJokers,
   createDeviousJoker,
   createDrollJoker,
+  createEvenStevenJoker,
   createGluttonousJoker,
   createGreedyJoker,
+  createHalfJoker,
   createJokerStencilJoker,
   createJollyJoker,
   createLustyJoker,
   createMadJoker,
+  createMisprintJoker,
+  createOddToddJoker,
   createPlusFourMultJoker,
   createSlyJoker,
   createWilyJoker,
@@ -909,5 +920,136 @@ describe("computeFinalScoreWithJokers — additive chips applied before mult", (
       moneyEarned: 0,
     });
     expect(finalScore).toBe((10 + 5 + 50) * (2 + 3) * 2);
+  });
+});
+
+describe("RANK_PARITY", () => {
+  test("classifies Ace as odd (Balatro canon)", () => {
+    expect(RANK_PARITY.A).toBe("odd");
+  });
+
+  test("classifies 4 as even", () => {
+    expect(RANK_PARITY["4"]).toBe("even");
+  });
+
+  test("classifies Jack as face (neither parity)", () => {
+    expect(RANK_PARITY.J).toBe("face");
+  });
+});
+
+describe("Even Steven joker", () => {
+  test("adds EVEN_STEVEN_MULT per scored even-rank card", () => {
+    const result = applyPerCardJokers([createEvenStevenJoker()], card("4"));
+    expect(result.additiveMult).toBe(EVEN_STEVEN_MULT);
+  });
+
+  test("does not proc on an odd-rank card", () => {
+    const result = applyPerCardJokers([createEvenStevenJoker()], card("3"));
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not proc on a face card", () => {
+    const result = applyPerCardJokers([createEvenStevenJoker()], card("K"));
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("contributes EVEN_STEVEN_MULT × even-card count across a played hand", () => {
+    const result = applyJokersToScoring(
+      [createEvenStevenJoker()],
+      [card("2"), card("4"), card("7")],
+    );
+    expect(result.additiveMult).toBe(EVEN_STEVEN_MULT * 2);
+  });
+});
+
+describe("Odd Todd joker", () => {
+  test("adds ODD_TODD_CHIPS per scored odd-rank card", () => {
+    const result = applyPerCardJokers([createOddToddJoker()], card("3"));
+    expect(result.additiveChips).toBe(ODD_TODD_CHIPS);
+  });
+
+  test("counts Ace as an odd-rank card", () => {
+    const result = applyPerCardJokers([createOddToddJoker()], card("A"));
+    expect(result.additiveChips).toBe(ODD_TODD_CHIPS);
+  });
+
+  test("does not proc on an even-rank card", () => {
+    const result = applyPerCardJokers([createOddToddJoker()], card("8"));
+    expect(result.additiveChips).toBe(0);
+  });
+
+  test("does not proc on a face card", () => {
+    const result = applyPerCardJokers([createOddToddJoker()], card("Q"));
+    expect(result.additiveChips).toBe(0);
+  });
+
+  test("contributes per-card additive chips into the aggregated scoring result", () => {
+    const result = applyJokersToScoring(
+      [createOddToddJoker()],
+      [card("3"), card("A"), card("4")],
+    );
+    expect(result.additiveChips).toBe(ODD_TODD_CHIPS * 2);
+  });
+});
+
+describe("Half Joker", () => {
+  test("adds HALF_JOKER_MULT when the played hand has exactly HALF_JOKER_MAX_CARDS cards", () => {
+    const result = applyHandLevelJokers([createHalfJoker()], {
+      playedCardCount: HALF_JOKER_MAX_CARDS,
+    });
+    expect(result.additiveMult).toBe(HALF_JOKER_MULT);
+  });
+
+  test("adds HALF_JOKER_MULT when the played hand has a single card", () => {
+    const result = applyHandLevelJokers([createHalfJoker()], {
+      playedCardCount: 1,
+    });
+    expect(result.additiveMult).toBe(HALF_JOKER_MULT);
+  });
+
+  test("does not proc when the played hand has more than HALF_JOKER_MAX_CARDS cards", () => {
+    const result = applyHandLevelJokers([createHalfJoker()], {
+      playedCardCount: HALF_JOKER_MAX_CARDS + 1,
+    });
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not proc when playedCardCount is missing from context", () => {
+    const result = applyHandLevelJokers([createHalfJoker()], {});
+    expect(result.additiveMult).toBe(0);
+  });
+});
+
+describe("Misprint joker", () => {
+  test("with rng() → 0 returns the minimum (MISPRINT_MIN_MULT)", () => {
+    const result = applyHandLevelJokers([createMisprintJoker()], {
+      rng: () => 0,
+    });
+    expect(result.additiveMult).toBe(MISPRINT_MIN_MULT);
+  });
+
+  test("with rng() just under 1 returns the maximum (MISPRINT_MAX_MULT)", () => {
+    const result = applyHandLevelJokers([createMisprintJoker()], {
+      rng: () => 0.9999999,
+    });
+    expect(result.additiveMult).toBe(MISPRINT_MAX_MULT);
+  });
+
+  test("over many draws all integers in [min..max] are reachable", () => {
+    const seen = new Set<number>();
+    const span = MISPRINT_MAX_MULT - MISPRINT_MIN_MULT + 1;
+    for (let i = 0; i < span; i += 1) {
+      const rng = (): number => i / span + 0.001;
+      const result = applyHandLevelJokers([createMisprintJoker()], { rng });
+      seen.add(result.additiveMult);
+    }
+    expect(seen.size).toBe(span);
+  });
+
+  test("always fires (records itself in firedJokerIds)", () => {
+    const result = applyHandLevelJokers([createMisprintJoker()], {
+      rng: () => 0,
+    });
+    expect(result.firedJokerIds).toContain("misprint");
   });
 });
