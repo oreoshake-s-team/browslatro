@@ -47,6 +47,7 @@ function RunInfo({ handPlayCounts, handStats }: RunInfoProps) {
                 <thead>
                   <tr>
                     <th scope="col">Hand</th>
+                    <th scope="col" aria-label="Level">Lvl</th>
                     <th scope="col">Chips × Mult</th>
                     <th scope="col">Played</th>
                   </tr>
@@ -58,6 +59,12 @@ function RunInfo({ handPlayCounts, handStats }: RunInfoProps) {
                     return (
                       <tr key={label} data-testid={`run-info-row-${label}`}>
                         <th scope="row">{label}</th>
+                        <td
+                          className="run-info-level"
+                          data-testid={`run-info-level-${label}`}
+                        >
+                          {stats.level}
+                        </td>
                         <td data-testid={`run-info-stats-${label}`}>
                           {stats.chips} × {stats.multiplier}
                         </td>

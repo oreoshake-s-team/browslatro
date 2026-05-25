@@ -24,6 +24,13 @@ describe("createDefaultHandStats", () => {
     }
   });
 
+  test("initializes every hand to level 1", () => {
+    const stats = createDefaultHandStats();
+    for (const hand of HANDS) {
+      expect(stats[hand.label as HandLabel].level).toBe(1);
+    }
+  });
+
   test("produces independent copies between calls (mutation safety)", () => {
     const a = createDefaultHandStats();
     const b = createDefaultHandStats();
