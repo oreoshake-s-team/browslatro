@@ -34,6 +34,7 @@ function renderShop(
     <Shop
       money={10}
       equippedJokerCount={0}
+      consumableCount={0}
       offers={[jokerOffer("plus"), planetOffer("pluto")]}
       onBuy={vi.fn()}
       onReroll={vi.fn()}
@@ -124,6 +125,33 @@ describe("Shop", () => {
       .getByTestId("shop-offer-1")
       .querySelector("button.shop-offer-buy");
     expect(planetBuy).toBeDisabled();
+  });
+
+  test("the planet buy button is disabled when consumable slots are full", () => {
+    renderShop({ consumableCount: 2 });
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    expect(planetBuy).toBeDisabled();
+  });
+
+  test("the planet buy button tooltip explains a full consumables tray", () => {
+    renderShop({ consumableCount: 2 });
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    expect(planetBuy).toHaveAttribute(
+      "title",
+      "Consumable slots are full (max 2)",
+    );
+  });
+
+  test("the joker buy button stays enabled when consumable slots are full", () => {
+    renderShop({ consumableCount: 2 });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).not.toBeDisabled();
   });
 
   test("a sold offer renders a Sold button instead of a Buy button", () => {

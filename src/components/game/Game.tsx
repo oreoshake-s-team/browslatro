@@ -2,8 +2,10 @@ import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
 import type { Card } from "../../types";
 import type { Joker } from "../../jokers";
+import type { Consumable } from "../../consumables";
 import HandComponent from "../cards/Hand";
 import Jokers from "../jokers/Jokers";
+import Consumables from "../consumables/Consumables";
 
 interface GameProps {
   onWin: () => void;
@@ -24,6 +26,8 @@ interface GameProps {
   discardingIds: ReadonlySet<number>;
   jokers: ReadonlyArray<Joker>;
   jokerPulseCounters?: Readonly<Record<string, number>>;
+  consumables: ReadonlyArray<Consumable>;
+  onUseConsumable: (index: number) => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -49,6 +53,8 @@ export default function Game({
   discardingIds,
   jokers,
   jokerPulseCounters,
+  consumables,
+  onUseConsumable,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -64,11 +70,14 @@ export default function Game({
 
   return (
     <div className="game">
-      <Jokers
-        jokers={jokers}
-        pulseCounters={jokerPulseCounters}
-        onReorder={onReorderJokers}
-      />
+      <div className="game-top-row">
+        <Jokers
+          jokers={jokers}
+          pulseCounters={jokerPulseCounters}
+          onReorder={onReorderJokers}
+        />
+        <Consumables consumables={consumables} onUse={onUseConsumable} />
+      </div>
       <HandComponent
         hand={hand}
         remaining={remaining}

@@ -1453,7 +1453,22 @@ describe("Planet purchase integration", () => {
     ).toHaveTextContent(/Sold/);
   });
 
-  test("buying the planet upgrades exactly one row's chips × mult in RunInfo", async () => {
+  test("buying the planet enqueues it into a consumable slot", async () => {
+    const user = await openShop();
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
+      "data-consumable-kind",
+      "planet",
+    );
+  });
+
+  test("buying the planet alone does not change RunInfo stats", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: "Run info" }));
     const before = readRunInfoStats();
@@ -1466,11 +1481,43 @@ describe("Planet purchase integration", () => {
     }
     await user.click(planetBuy);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(readRunInfoStats()).toEqual(before);
+  });
+
+  test("using the planet consumable upgrades exactly one row's chips × mult in RunInfo", async () => {
+    const user = await openShop();
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    const before = readRunInfoStats();
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
     const after = readRunInfoStats();
     const changedRows = Object.keys(after).filter(
       (key) => after[key] !== before[key],
     );
     expect(changedRows.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("using the planet consumable empties the slot", async () => {
+    const user = await openShop();
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
   });
 
   test("starting a new game restores RunInfo stats to baseline", async () => {
@@ -1485,11 +1532,29 @@ describe("Planet purchase integration", () => {
       throw new Error("Planet buy button not found");
     }
     await user.click(planetBuy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
     expect(readRunInfoStats()).toEqual(baseline);
   });
+
+  test("starting a new game clears any unused consumables", async () => {
+    const user = await openShop();
+    const planetBuy = screen
+      .getByTestId("shop-offer-1")
+      .querySelector("button.shop-offer-buy");
+    if (!(planetBuy instanceof HTMLButtonElement)) {
+      throw new Error("Planet buy button not found");
+    }
+    await user.click(planetBuy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
+  });
+
 });
 
 describe("Tarot purchase integration", () => {
@@ -1520,123 +1585,76 @@ describe("Tarot purchase integration", () => {
     );
   });
 
-  test("buying The Hermit when it appears doubles current money capped at +$20", async () => {
+  test("buying any tarot deducts the tarot price from money", async () => {
     const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName !== "The Hermit") return;
     const before = moneyOf();
     const buy = screen
       .getByTestId("shop-offer-2")
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
-    const after = moneyOf();
-    const bonus = Math.min(before - 3, 20);
-    expect(after).toBe(before - 3 + bonus);
-  });
-
-  test("buying The Hermit marks the tarot offer Sold immediately", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName !== "The Hermit") return;
-    const buy = screen
-      .getByTestId("shop-offer-2")
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(
-      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
-    ).toHaveTextContent(/Sold/);
-  });
-
-  test("buying an enhancement tarot opens the card-picker dialog", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId("shop-offer-2")
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(document.querySelector(".tarot-picker-modal")).not.toBeNull();
-  });
-
-  test("opening the picker does not deduct money", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const before = moneyOf();
-    const buy = screen
-      .getByTestId("shop-offer-2")
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(moneyOf()).toBe(before);
-  });
-
-  test("cancelling the picker does not deduct money", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const before = moneyOf();
-    const buy = screen
-      .getByTestId("shop-offer-2")
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(moneyOf()).toBe(before);
-  });
-
-  test("cancelling the picker does not mark the offer Sold", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId("shop-offer-2")
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(
-      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
-    ).not.toHaveTextContent(/Sold/);
-  });
-
-  test("confirming the picker deducts $3 from money", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId("shop-offer-2")
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const before = moneyOf();
-    const buy = screen
-      .getByTestId("shop-offer-2")
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    const firstCardBtn = screen
-      .getByLabelText("Pick cards to enhance")
-      .querySelector("button.tarot-picker-card");
-    if (!(firstCardBtn instanceof HTMLButtonElement)) throw new Error("missing card");
-    await user.click(firstCardBtn);
-    await user.click(screen.getByRole("button", { name: "Confirm" }));
     expect(moneyOf()).toBe(before - 3);
   });
 
-  test("confirming the picker marks the offer Sold", async () => {
+  test("buying any tarot marks the offer Sold immediately", async () => {
+    const user = await openShop();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(
+      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
+    ).toHaveTextContent(/Sold/);
+  });
+
+  test("buying any tarot enqueues it into a consumable slot", async () => {
+    const user = await openShop();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
+      "data-consumable-kind",
+      "tarot",
+    );
+  });
+
+  test("buying The Hermit alone does not apply the money payout", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName !== "The Hermit") return;
+    const before = moneyOf();
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(moneyOf()).toBe(before - 3);
+  });
+
+  test("using The Hermit consumable doubles current money capped at +$20", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName !== "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    const afterBuy = moneyOf();
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    const bonus = Math.min(afterBuy, 20);
+    expect(moneyOf()).toBe(afterBuy + bonus);
+  });
+
+  test("buying an enhancement tarot does not open the card-picker dialog", async () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId("shop-offer-2")
@@ -1647,14 +1665,61 @@ describe("Tarot purchase integration", () => {
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
+    expect(document.querySelector(".tarot-picker-modal")).toBeNull();
+  });
+
+  test("using an enhancement tarot consumable opens the card-picker dialog", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(document.querySelector(".tarot-picker-modal")).not.toBeNull();
+  });
+
+  test("cancelling the picker leaves the consumable in its slot", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
+  });
+
+  test("confirming the picker empties the consumable slot", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
     const firstCardBtn = screen
       .getByLabelText("Pick cards to enhance")
       .querySelector("button.tarot-picker-card");
     if (!(firstCardBtn instanceof HTMLButtonElement)) throw new Error("missing card");
     await user.click(firstCardBtn);
     await user.click(screen.getByRole("button", { name: "Confirm" }));
-    expect(
-      screen.getByTestId("shop-offer-2").querySelector(".shop-offer-buy"),
-    ).toHaveTextContent(/Sold/);
+    expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
   });
 });
