@@ -111,11 +111,11 @@ describe("Win button integration", () => {
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$7");
 
-    await user.click(screen.getByText(/Win/)); // boss → ante 2 small, +$5
+    await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 800")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
-    expect(getStatValue("Money")).toHaveTextContent("$12");
+    expect(getStatValue("Money")).toHaveTextContent("$13");
   });
 });
 
@@ -668,10 +668,23 @@ describe("Sequential card scoring", () => {
     expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
   });
 
-  test("chips counter ticks up by each scored card's rank value during the sequence", async () => {
-    // Straight Flush base chips = 100. After ticking 5♠ only, chips should be 105.
+  test("chips counter ticks up by the leftmost displayed card's rank value after one step", async () => {
     await submitFirstFiveSpades();
-    // Advance exactly one scoring step.
+    act(() => {
+      jest.runOnlyPendingTimers();
+    });
+    expect(document.querySelector(".chips")).toHaveTextContent("109");
+  });
+
+  test("reordering the hand changes which card is scored first (5♠ moved to leftmost is scored first)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    const moveFiveLeft = screen.getByRole("button", { name: "Move 5 of Spades left" });
+    for (let i = 0; i < 4; i += 1) await user.click(moveFiveLeft);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
     act(() => {
       jest.runOnlyPendingTimers();
     });

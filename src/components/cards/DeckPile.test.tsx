@@ -88,4 +88,33 @@ describe("DeckPile", () => {
       screen.queryByRole("heading", { name: "Remaining Cards" })
     ).not.toBeInTheDocument();
   });
+
+  test("Escape closes the modal when open", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("heading", { name: "Remaining Cards" })
+    ).not.toBeInTheDocument();
+  });
+
+  test("Escape while modal is closed is a no-op", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.keyboard("{Escape}");
+    expect(
+      screen.queryByRole("heading", { name: "Remaining Cards" })
+    ).not.toBeInTheDocument();
+  });
+
+  test("Enter while modal is open does not close it", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    await user.keyboard("{Enter}");
+    expect(
+      screen.getByRole("heading", { name: "Remaining Cards" })
+    ).toBeInTheDocument();
+  });
 });

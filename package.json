@@ -17,7 +17,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "e2e": "playwright test"
   },
   "eslintConfig": {
     "extends": [
@@ -38,10 +39,12 @@
     ]
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.9.1",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
+    "serve": "^14.2.4",
     "typescript": "^6.0.3"
   },
   "packageManager": "yarn@1.22.22"
