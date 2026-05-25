@@ -26,6 +26,11 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
+    # Needed so peaceiris/actions-gh-pages can push to the gh-pages branch
+    # and the sticky-comment action can write the PR comment.
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -55,3 +60,39 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+      # Publish the unzipped HTML report to GitHub Pages so reviewers can
+      # browse it directly without downloading + unzipping the artifact.
+      # Each PR lands under /pr-<number>/; pushes to main land under /main/.
+      # `keep_files: true` preserves the other subdirectories on each run.
+      # Skipped for PRs from forks because the default GITHUB_TOKEN is
+      # read-only there and the push would fail.
+      - name: Publish Playwright report to GitHub Pages
+        if: >-
+          always() &&
+          (
+            (github.event_name == 'pull_request' &&
+             github.event.pull_request.head.repo.full_name == github.repository) ||
+            (github.event_name == 'push' && github.ref == 'refs/heads/main')
+          )
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./playwright-report
+          publish_branch: gh-pages
+          destination_dir: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'main' }}
+          keep_files: true
+          commit_message: "ci: publish playwright report for ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'main' }} (${{ github.sha }})"
+
+      - name: Comment PR with report link
+        if: >-
+          always() &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: playwright-report
+          message: |
+            🎭 **Playwright report:** <https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${{ github.event.pull_request.number }}/>
+
+            _Updated for commit ${{ github.sha }}. The zipped artifact is also attached to the run if you'd rather download it._
