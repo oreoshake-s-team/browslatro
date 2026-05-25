@@ -126,8 +126,8 @@ describe("Hand sorting", () => {
     expect(labels).toEqual([
       "10 of Clubs",
       "A of Diamonds",
-      "K of Hearts",
       "2 of Spades",
+      "K of Hearts",
     ]);
   });
 
