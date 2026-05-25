@@ -64,6 +64,9 @@ describe("Winning a round resets the deck", () => {
     await user.click(screen.getByText(/^🗑️ Discard$/));
     flushDiscardAnimation();
     await user.click(screen.getByText(/Win/));
+    // Dev Win now opens the post-round shop; skip through it to reach the
+    // next-round deal.
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(
       screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ })
     ).toBeInTheDocument();
@@ -81,6 +84,7 @@ describe("Winning a round resets the deck", () => {
     render(<App />);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
     const selectedCount = getHandCardButtons().filter(
       (btn) => btn.getAttribute("aria-pressed") === "true"
     ).length;
@@ -94,6 +98,7 @@ describe("Winning a round resets the deck", () => {
       btn.getAttribute("aria-label")
     );
     await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
     const after = getHandCardButtons().map((btn) =>
       btn.getAttribute("aria-label")
     );
@@ -764,7 +769,9 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    // The round-won modal is gone (the post-round shop now takes over the
+    // dialog role, so we assert on the round-won title specifically).
+    expect(screen.queryByText(/Round Won!/)).not.toBeInTheDocument();
   });
 
   test("clicking Continue advances to the next blind", async () => {
@@ -976,5 +983,68 @@ describe("App scoring step honors animation speed preference", () => {
       jest.advanceTimersByTime(1000);
     });
     expect(document.querySelector(".chips")).toHaveTextContent("109");
+  });
+});
+
+describe("Post-round shop integration", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  test("opens the shop after the round-won modal is dismissed", async () => {
+    await openShop();
+    expect(
+      screen.getByRole("heading", { name: /Shop/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("shows exactly two joker offers in the shop", async () => {
+    await openShop();
+    expect(screen.getAllByTestId(/^shop-offer-/)).toHaveLength(2);
+  });
+
+  test("clicking Next Round closes the shop and starts the next blind", async () => {
+    const user = await openShop();
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(
+      screen.queryByRole("heading", { name: /Shop/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("buying an affordable joker deducts the price from money", async () => {
+    const user = await openShop();
+    const moneyBefore = getStatValue("Money").textContent;
+    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
+    await user.click(buyButtons[0]);
+    expect(getStatValue("Money").textContent).not.toBe(moneyBefore);
+  });
+
+  test("buying an offer marks it as Sold", async () => {
+    const user = await openShop();
+    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
+    await user.click(buyButtons[0]);
+    expect(screen.getByRole("button", { name: /Sold/ })).toBeInTheDocument();
+  });
+
+  test("buying an offer adds the joker to the equipped set", async () => {
+    const user = await openShop();
+    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
+    await user.click(buyButtons[0]);
+    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(4);
+  });
+
+  test("pressing Escape in the shop closes it without purchase", async () => {
+    const user = await openShop();
+    await user.keyboard("{Escape}");
+    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(3);
   });
 });

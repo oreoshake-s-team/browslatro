@@ -114,6 +114,32 @@ export function createDefaultJokers(): Joker[] {
   ];
 }
 
+export const SHOP_JOKER_POOL: ReadonlyArray<() => Joker> = [
+  createPlusFourMultJoker,
+  createBusinessCardJoker,
+  createJokerStencilJoker,
+];
+
+let nextJokerInstanceCounter = 0;
+
+export function cloneJokerWithFreshId(joker: Joker): Joker {
+  nextJokerInstanceCounter += 1;
+  return { ...joker, id: `${joker.id}-instance-${nextJokerInstanceCounter}` };
+}
+
+export function sampleShopJokers(
+  count: number,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  const offers: Joker[] = [];
+  for (let i = 0; i < count; i += 1) {
+    const idx = Math.floor(rng() * SHOP_JOKER_POOL.length);
+    const template = SHOP_JOKER_POOL[idx]();
+    offers.push(cloneJokerWithFreshId(template));
+  }
+  return offers;
+}
+
 export function isFaceCard(card: Card): boolean {
   return FACE_RANKS.has(card.rank);
 }

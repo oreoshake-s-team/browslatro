@@ -9,6 +9,10 @@ export const BlindValues: BlindValuesMap = {
 export const BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] as const;
 export const BLIND_MULTIPLIERS = [1, 1.5, 2] as const;
 
+// Flat price for every joker offer in the post-round shop. Tuning per
+// rarity / ante is a follow-up; one constant keeps the v1 economy simple.
+export const JOKER_BASE_PRICE = 5;
+
 export const HANDS: ReadonlyArray<Hand> = [
   { label: "High Card", chips: 5, multiplier: 1 },
   { label: "Pair", chips: 10, multiplier: 2 },
