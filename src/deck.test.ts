@@ -103,6 +103,48 @@ describe("groupBySuit", () => {
     const grouped = groupBySuit(onlyHearts);
     expect(grouped.clubs).toEqual([]);
   });
+
+  test("sorts cards within a suit by rank descending (A high → 2 low)", () => {
+    const unordered: Card[] = [
+      { id: 1, rank: "2", suit: "hearts" },
+      { id: 2, rank: "A", suit: "hearts" },
+      { id: 3, rank: "7", suit: "hearts" },
+      { id: 4, rank: "K", suit: "hearts" },
+      { id: 5, rank: "10", suit: "hearts" },
+    ];
+    const grouped = groupBySuit(unordered);
+    expect(grouped.hearts.map((c) => c.rank)).toEqual([
+      "A",
+      "K",
+      "10",
+      "7",
+      "2",
+    ]);
+  });
+
+  test("a full deck's hearts bucket runs A, K, Q, J, 10, …, 2", () => {
+    const grouped = groupBySuit(createDeck());
+    expect(grouped.hearts.map((c) => c.rank)).toEqual([
+      "A",
+      "K",
+      "Q",
+      "J",
+      "10",
+      "9",
+      "8",
+      "7",
+      "6",
+      "5",
+      "4",
+      "3",
+      "2",
+    ]);
+  });
+
+  test("an empty input produces empty suit buckets", () => {
+    const grouped = groupBySuit([]);
+    expect(grouped.spades).toEqual([]);
+  });
 });
 
 describe("sortCards", () => {

@@ -117,4 +117,30 @@ describe("DeckPile", () => {
       screen.getByRole("heading", { name: "Remaining Cards" })
     ).toBeInTheDocument();
   });
+
+  test("modal lists each suit's cards in descending rank order", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    const heartsHeading = screen.getByRole("heading", { name: "Hearts (13)" });
+    const section = heartsHeading.parentElement as HTMLElement;
+    const ranks = within(section)
+      .getAllByRole("button")
+      .map((btn) => btn.getAttribute("aria-label"));
+    expect(ranks).toEqual([
+      "A of Hearts",
+      "K of Hearts",
+      "Q of Hearts",
+      "J of Hearts",
+      "10 of Hearts",
+      "9 of Hearts",
+      "8 of Hearts",
+      "7 of Hearts",
+      "6 of Hearts",
+      "5 of Hearts",
+      "4 of Hearts",
+      "3 of Hearts",
+      "2 of Hearts",
+    ]);
+  });
 });

@@ -140,5 +140,10 @@ export function groupBySuit(cards: ReadonlyArray<Card>): Record<Suit, Card[]> {
   for (const card of cards) {
     grouped[card.suit].push(card);
   }
+  for (const suit of SUITS) {
+    grouped[suit].sort(
+      (a, b) => RANK_DISPLAY_ORDER[b.rank] - RANK_DISPLAY_ORDER[a.rank],
+    );
+  }
   return grouped;
 }
