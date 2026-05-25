@@ -131,3 +131,10 @@
   color: white;
   border-color: #c92a2a;
 }
+
+@media (max-width: 1024px) {
+  .game {
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
