@@ -26,11 +26,10 @@ import {
   applyPerCardJokers,
   computeFinalScoreWithJokers,
   createDefaultJokers,
-  sampleShopJokers,
+  createJokerCatalog,
   type Joker,
 } from "./jokers";
-
-const SHOP_OFFER_COUNT = 2;
+import { SHOP_OFFER_SLOTS, pickShopJokers } from "./shop";
 
 export const SCORING_STEP_MS = 500;
 
@@ -174,7 +173,11 @@ function App() {
       setBlind(1);
     }
     setShopOffers(
-      sampleShopJokers(SHOP_OFFER_COUNT).map((joker) => ({
+      pickShopJokers(
+        createJokerCatalog(),
+        jokers.map((j) => j.id),
+        SHOP_OFFER_SLOTS,
+      ).map((joker) => ({
         joker,
         sold: false,
       })),
