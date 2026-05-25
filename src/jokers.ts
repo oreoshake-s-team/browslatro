@@ -14,8 +14,32 @@ export const WILY_JOKER_CHIPS = 100;
 export const CLEVER_JOKER_CHIPS = 80;
 export const DEVIOUS_JOKER_CHIPS = 100;
 export const CRAFTY_JOKER_CHIPS = 80;
+export const EVEN_STEVEN_MULT = 4;
+export const ODD_TODD_CHIPS = 31;
+export const HALF_JOKER_MULT = 20;
+export const HALF_JOKER_MAX_CARDS = 3;
+export const MISPRINT_MIN_MULT = 0;
+export const MISPRINT_MAX_MULT = 23;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
+
+export type RankParity = "even" | "odd" | "face";
+
+export const RANK_PARITY: Record<Rank, RankParity> = {
+  A: "odd",
+  "2": "even",
+  "3": "odd",
+  "4": "even",
+  "5": "odd",
+  "6": "even",
+  "7": "odd",
+  "8": "even",
+  "9": "odd",
+  "10": "even",
+  J: "face",
+  Q: "face",
+  K: "face",
+};
 
 export type RandomSource = () => number;
 
@@ -33,6 +57,23 @@ export type JokerEffect =
       readonly kind: "on-hand-type-chips";
       readonly requires: HandLabel;
       readonly amount: number;
+    }
+  | {
+      readonly kind: "per-scored-rank-parity";
+      readonly parity: "even" | "odd";
+      readonly contribution:
+        | { readonly kind: "mult"; readonly amount: number }
+        | { readonly kind: "chips"; readonly amount: number };
+    }
+  | {
+      readonly kind: "additive-mult-when-hand-size";
+      readonly maxCardsPlayed: number;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "additive-mult-random";
+      readonly min: number;
+      readonly max: number;
     };
 
 export interface Joker {
@@ -59,6 +100,7 @@ export interface JokerHandResult {
 export interface JokerCardResult {
   readonly moneyEarned: number;
   readonly additiveMult: number;
+  readonly additiveChips: number;
   readonly firedJokerIds: ReadonlyArray<string>;
 }
 
@@ -266,6 +308,58 @@ export function createCraftyJoker(): Joker {
   };
 }
 
+export function createEvenStevenJoker(): Joker {
+  return {
+    id: "even-steven",
+    name: "Even Steven",
+    description: `+${EVEN_STEVEN_MULT} Mult per scored even-rank card (2, 4, 6, 8, 10)`,
+    effect: {
+      kind: "per-scored-rank-parity",
+      parity: "even",
+      contribution: { kind: "mult", amount: EVEN_STEVEN_MULT },
+    },
+  };
+}
+
+export function createOddToddJoker(): Joker {
+  return {
+    id: "odd-todd",
+    name: "Odd Todd",
+    description: `+${ODD_TODD_CHIPS} Chips per scored odd-rank card (A, 3, 5, 7, 9)`,
+    effect: {
+      kind: "per-scored-rank-parity",
+      parity: "odd",
+      contribution: { kind: "chips", amount: ODD_TODD_CHIPS },
+    },
+  };
+}
+
+export function createHalfJoker(): Joker {
+  return {
+    id: "half-joker",
+    name: "Half Joker",
+    description: `+${HALF_JOKER_MULT} Mult if the played hand has ${HALF_JOKER_MAX_CARDS} or fewer cards`,
+    effect: {
+      kind: "additive-mult-when-hand-size",
+      maxCardsPlayed: HALF_JOKER_MAX_CARDS,
+      amount: HALF_JOKER_MULT,
+    },
+  };
+}
+
+export function createMisprintJoker(): Joker {
+  return {
+    id: "misprint",
+    name: "Misprint",
+    description: `+${MISPRINT_MIN_MULT}..+${MISPRINT_MAX_MULT} random Mult per played hand`,
+    effect: {
+      kind: "additive-mult-random",
+      min: MISPRINT_MIN_MULT,
+      max: MISPRINT_MAX_MULT,
+    },
+  };
+}
+
 export function createDefaultJokers(): Joker[] {
   return [
     createPlusFourMultJoker(),
@@ -293,6 +387,10 @@ export function createJokerCatalog(): Joker[] {
     createCleverJoker(),
     createDeviousJoker(),
     createCraftyJoker(),
+    createEvenStevenJoker(),
+    createOddToddJoker(),
+    createHalfJoker(),
+    createMisprintJoker(),
   ];
 }
 
@@ -308,6 +406,8 @@ function assertNeverEffect(effect: never): never {
 
 export interface HandLevelContext {
   readonly playedHandLabel?: HandLabel;
+  readonly playedCardCount?: number;
+  readonly rng?: RandomSource;
 }
 
 export function applyHandLevelJokers(
@@ -348,9 +448,27 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "additive-mult-when-hand-size": {
+        if (
+          context.playedCardCount !== undefined &&
+          context.playedCardCount <= effect.maxCardsPlayed
+        ) {
+          additiveMult += effect.amount;
+          fired.push(joker.id);
+        }
+        break;
+      }
+      case "additive-mult-random": {
+        const rng = context.rng ?? Math.random;
+        const span = effect.max - effect.min + 1;
+        additiveMult += Math.floor(rng() * span) + effect.min;
+        fired.push(joker.id);
+        break;
+      }
       case "stencil":
       case "business-card":
       case "per-suit-mult":
+      case "per-scored-rank-parity":
         break;
       default:
         assertNeverEffect(effect);
@@ -385,6 +503,9 @@ export function applyPostHandJokers(
       case "per-suit-mult":
       case "on-hand-type-mult":
       case "on-hand-type-chips":
+      case "per-scored-rank-parity":
+      case "additive-mult-when-hand-size":
+      case "additive-mult-random":
         break;
       default:
         assertNeverEffect(effect);
@@ -401,6 +522,7 @@ export function applyPerCardJokers(
 ): JokerCardResult {
   let moneyEarned = 0;
   let additiveMult = 0;
+  let additiveChips = 0;
   const fired: string[] = [];
 
   for (let i = 0; i < jokers.length; i += 1) {
@@ -421,17 +543,30 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "per-scored-rank-parity": {
+        if (RANK_PARITY[card.rank] === effect.parity) {
+          if (effect.contribution.kind === "mult") {
+            additiveMult += effect.contribution.amount;
+          } else {
+            additiveChips += effect.contribution.amount;
+          }
+          fired.push(joker.id);
+        }
+        break;
+      }
       case "additive-mult":
       case "stencil":
       case "on-hand-type-mult":
       case "on-hand-type-chips":
+      case "additive-mult-when-hand-size":
+      case "additive-mult-random":
         break;
       default:
         assertNeverEffect(effect);
     }
   }
 
-  return { moneyEarned, additiveMult, firedJokerIds: fired };
+  return { moneyEarned, additiveMult, additiveChips, firedJokerIds: fired };
 }
 
 export function applyJokersToScoring(
@@ -443,15 +578,17 @@ export function applyJokersToScoring(
   const handResult = applyHandLevelJokers(jokers, context);
   let moneyEarned = 0;
   let perCardAdditiveMult = 0;
+  let perCardAdditiveChips = 0;
   for (let c = 0; c < scoredCards.length; c += 1) {
     const cardResult = applyPerCardJokers(jokers, scoredCards[c], rng);
     moneyEarned += cardResult.moneyEarned;
     perCardAdditiveMult += cardResult.additiveMult;
+    perCardAdditiveChips += cardResult.additiveChips;
   }
   const postHandResult = applyPostHandJokers(jokers);
   return {
     additiveMult: handResult.additiveMult + perCardAdditiveMult,
-    additiveChips: handResult.additiveChips,
+    additiveChips: handResult.additiveChips + perCardAdditiveChips,
     xMult: handResult.xMult * postHandResult.xMult,
     moneyEarned,
   };

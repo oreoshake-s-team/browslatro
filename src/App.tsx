@@ -234,6 +234,9 @@ function App() {
       if (cardJokerResult.additiveMult > 0) {
         setMultiplier((prev) => prev + cardJokerResult.additiveMult);
       }
+      if (cardJokerResult.additiveChips > 0) {
+        setChips((prev) => prev + cardJokerResult.additiveChips);
+      }
       pulseJokers(cardJokerResult.firedJokerIds);
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
@@ -466,12 +469,16 @@ function App() {
     );
     const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,
+      playedCardCount: playedCards.length,
     });
     pulseJokers(handJokerResult.firedJokerIds);
 
     let perCardAdditiveMult = 0;
+    let perCardAdditiveChips = 0;
     for (let i = 0; i < scoring.length; i += 1) {
-      perCardAdditiveMult += applyPerCardJokers(jokers, scoring[i]).additiveMult;
+      const perCard = applyPerCardJokers(jokers, scoring[i]);
+      perCardAdditiveMult += perCard.additiveMult;
+      perCardAdditiveChips += perCard.additiveChips;
       perCardAdditiveMult += getCardMultDelta(scoring[i]);
     }
 
@@ -490,7 +497,7 @@ function App() {
       cardChipsTotal,
       {
         additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
-        additiveChips: handJokerResult.additiveChips,
+        additiveChips: handJokerResult.additiveChips + perCardAdditiveChips,
         xMult: totalXMult,
         moneyEarned: 0,
       },
