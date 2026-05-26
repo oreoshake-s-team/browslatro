@@ -50,23 +50,23 @@ test("always-win path: 4 consecutive Straight Flushes advance ante and money", a
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$11");
+  await expect(statValue(page, "Money")).toHaveText("$10");
 
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$20");
+  await expect(statValue(page, "Money")).toHaveText("$19");
 
   await expect(page.getByRole("heading", { name: "Boss Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$32");
+  await expect(statValue(page, "Money")).toHaveText("$30");
 
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await expect(statValue(page, "Ante")).toHaveText("2");
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$43");
+  await expect(statValue(page, "Money")).toHaveText("$41");
 
   // End state: Ante 2 Big Blind, hand re-dealt. No Game Over alert fired.
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
