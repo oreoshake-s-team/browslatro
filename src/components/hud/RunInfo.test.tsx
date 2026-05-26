@@ -1,9 +1,16 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RunInfo, { emptyHandCounts, type HandPlayCounts } from "./RunInfo";
 import { HANDS } from "../../constants";
 import type { HandLabel } from "../../handEvaluator";
 import { createDefaultHandStats, type HandStats } from "../../handStats";
+import { VOUCHER_CATALOG, type Voucher } from "../../vouchers";
+
+function findVoucher(id: Voucher["id"]): Voucher {
+  const v = VOUCHER_CATALOG.find((entry) => entry.id === id);
+  if (!v) throw new Error(`voucher fixture missing: ${id}`);
+  return v;
+}
 
 const defaultStats: HandStats = createDefaultHandStats();
 
@@ -180,5 +187,212 @@ describe("emptyHandCounts", () => {
     for (const hand of HANDS) {
       expect(counts[hand.label as HandLabel]).toBe(0);
     }
+  });
+});
+
+describe("RunInfo tab control", () => {
+  async function openWithVouchers(
+    vouchers: ReadonlyArray<Voucher> = [],
+  ): Promise<ReturnType<typeof userEvent.setup>> {
+    const user = userEvent.setup();
+    render(
+      <RunInfo
+        handPlayCounts={buildCounts()}
+        handStats={defaultStats}
+        ownedVouchers={vouchers}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    return user;
+  }
+
+  test("renders a tablist with exactly two tabs", async () => {
+    await openWithVouchers();
+    const tablist = screen.getByRole("tablist");
+    expect(within(tablist).getAllByRole("tab")).toHaveLength(2);
+  });
+
+  test("renders a Hands tab", async () => {
+    await openWithVouchers();
+    expect(screen.getByRole("tab", { name: "Hands" })).toBeInTheDocument();
+  });
+
+  test("renders a Vouchers tab", async () => {
+    await openWithVouchers();
+    expect(screen.getByRole("tab", { name: "Vouchers" })).toBeInTheDocument();
+  });
+
+  test("Hands tab is selected by default", async () => {
+    await openWithVouchers();
+    expect(screen.getByRole("tab", { name: "Hands" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("Vouchers tab is not selected by default", async () => {
+    await openWithVouchers();
+    expect(screen.getByRole("tab", { name: "Vouchers" })).toHaveAttribute(
+      "aria-selected",
+      "false",
+    );
+  });
+
+  test("clicking the Vouchers tab selects it", async () => {
+    const user = await openWithVouchers();
+    await user.click(screen.getByRole("tab", { name: "Vouchers" }));
+    expect(screen.getByRole("tab", { name: "Vouchers" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("clicking the Vouchers tab hides the Hands panel content", async () => {
+    const user = await openWithVouchers();
+    await user.click(screen.getByRole("tab", { name: "Vouchers" }));
+    const handsPanel = screen.getByRole("tab", { name: "Hands" }).getAttribute(
+      "aria-controls",
+    );
+    expect(document.getElementById(handsPanel ?? "")).toHaveAttribute("hidden");
+  });
+
+  test("ArrowRight on the Hands tab moves selection to Vouchers", async () => {
+    const user = await openWithVouchers();
+    const handsTab = screen.getByRole("tab", { name: "Hands" });
+    handsTab.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(screen.getByRole("tab", { name: "Vouchers" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("ArrowLeft on the Vouchers tab moves selection to Hands", async () => {
+    const user = await openWithVouchers();
+    await user.click(screen.getByRole("tab", { name: "Vouchers" }));
+    await user.keyboard("{ArrowLeft}");
+    expect(screen.getByRole("tab", { name: "Hands" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("Home key selects the first tab", async () => {
+    const user = await openWithVouchers();
+    await user.click(screen.getByRole("tab", { name: "Vouchers" }));
+    await user.keyboard("{Home}");
+    expect(screen.getByRole("tab", { name: "Hands" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("End key selects the last tab", async () => {
+    const user = await openWithVouchers();
+    screen.getByRole("tab", { name: "Hands" }).focus();
+    await user.keyboard("{End}");
+    expect(screen.getByRole("tab", { name: "Vouchers" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("reopening the modal resets the active tab to Hands", async () => {
+    const user = userEvent.setup();
+    render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    await user.click(screen.getByRole("tab", { name: "Vouchers" }));
+    await user.click(screen.getByRole("button", { name: "Close" }));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByRole("tab", { name: "Hands" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
+
+  test("each tab uses a roving tabindex (active = 0, inactive = -1)", async () => {
+    await openWithVouchers();
+    expect(screen.getByRole("tab", { name: "Hands" })).toHaveAttribute(
+      "tabindex",
+      "0",
+    );
+    expect(screen.getByRole("tab", { name: "Vouchers" })).toHaveAttribute(
+      "tabindex",
+      "-1",
+    );
+  });
+});
+
+describe("RunInfo vouchers panel", () => {
+  async function openVouchersPanel(
+    vouchers: ReadonlyArray<Voucher>,
+  ): Promise<void> {
+    const user = userEvent.setup();
+    render(
+      <RunInfo
+        handPlayCounts={buildCounts()}
+        handStats={defaultStats}
+        ownedVouchers={vouchers}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    await user.click(screen.getByRole("tab", { name: "Vouchers" }));
+  }
+
+  test("renders the empty-state placeholder when no vouchers are owned", async () => {
+    await openVouchersPanel([]);
+    expect(screen.getByTestId("run-info-voucher-empty")).toBeInTheDocument();
+  });
+
+  test("the empty-state placeholder reads 'No vouchers purchased yet.'", async () => {
+    await openVouchersPanel([]);
+    expect(screen.getByTestId("run-info-voucher-empty")).toHaveTextContent(
+      "No vouchers purchased yet.",
+    );
+  });
+
+  test("does not render a voucher row when no vouchers are owned (negative)", async () => {
+    await openVouchersPanel([]);
+    expect(
+      screen.queryByTestId("run-info-voucher-row-overstock"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders a row for each owned voucher", async () => {
+    const overstock = findVoucher("overstock");
+    await openVouchersPanel([overstock]);
+    expect(
+      screen.getByTestId("run-info-voucher-row-overstock"),
+    ).toBeInTheDocument();
+  });
+
+  test("renders the voucher's name", async () => {
+    const overstock = findVoucher("overstock");
+    await openVouchersPanel([overstock]);
+    expect(
+      screen.getByTestId("run-info-voucher-row-overstock"),
+    ).toHaveTextContent(overstock.name);
+  });
+
+  test("renders the voucher's description", async () => {
+    const overstock = findVoucher("overstock");
+    await openVouchersPanel([overstock]);
+    expect(
+      screen.getByTestId("run-info-voucher-row-overstock"),
+    ).toHaveTextContent(overstock.description);
+  });
+
+  test("does not render a voucher the player has not purchased (negative)", async () => {
+    await openVouchersPanel([findVoucher("overstock")]);
+    expect(
+      screen.queryByTestId("run-info-voucher-row-crystal-ball"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("hides the empty-state when at least one voucher is owned (negative)", async () => {
+    await openVouchersPanel([findVoucher("overstock")]);
+    expect(
+      screen.queryByTestId("run-info-voucher-empty"),
+    ).not.toBeInTheDocument();
   });
 });
