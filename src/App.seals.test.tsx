@@ -43,10 +43,23 @@ vi.mock("./cards/deck", async () => {
 });
 
 import App from "./App";
+import {
+  createBusinessCardJoker,
+  createJokerStencilJoker,
+  createPlusFourMultJoker,
+  initialJokersConfig,
+} from "./items/jokers";
+
+const originalJokersFactory = initialJokersConfig.factory;
 
 beforeEach(() => {
   playMock.mockClear();
   vi.useFakeTimers({ shouldAdvanceTime: true });
+  initialJokersConfig.factory = () => [
+    createPlusFourMultJoker(),
+    createBusinessCardJoker(),
+    createJokerStencilJoker(),
+  ];
 });
 
 afterEach(() => {
@@ -54,6 +67,7 @@ afterEach(() => {
     vi.runOnlyPendingTimers();
   });
   vi.useRealTimers();
+  initialJokersConfig.factory = originalJokersFactory;
 });
 
 function getHandCardButtons(): HTMLElement[] {

@@ -19,10 +19,7 @@ test("hand card, joker tile, consumable tile, and deck pile all render at the sa
   await page.goto("/");
   await page.waitForSelector(".card");
   const card = await boxOf(page, ".card");
-  const joker = await boxOf(
-    page,
-    '.joker-tile[data-testid^="joker-tile-filled-"]',
-  );
+  const joker = await boxOf(page, ".joker-tile");
   const consumable = await boxOf(page, '[data-testid^="consumable-tile-"]');
   const deck = await boxOf(page, ".deck-pile");
 

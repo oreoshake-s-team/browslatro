@@ -72,8 +72,8 @@ import {
   applyHandLevelJokers,
   applyPerCardJokers,
   computeFinalScoreWithJokers,
-  createDefaultJokers,
   createJokerCatalog,
+  initialJokersConfig,
   isFaceCard,
   jokerSellValue,
   type Joker,
@@ -144,7 +144,7 @@ function App() {
     [],
   );
   const [jokers, setJokers] = useState<ReadonlyArray<Joker>>(() =>
-    createDefaultJokers(),
+    initialJokersConfig.factory(),
   );
   const [jokerPulseCounters, setJokerPulseCounters] = useState<
     Readonly<Record<string, number>>
@@ -627,7 +627,7 @@ function App() {
     setRound(1);
     setAnte(1);
     setMoney(4);
-    setJokers(createDefaultJokers());
+    setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());

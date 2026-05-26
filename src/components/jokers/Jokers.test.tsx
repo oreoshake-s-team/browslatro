@@ -3,7 +3,6 @@ import Jokers from "./Jokers";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
-  createDefaultJokers,
   createGluttonousJoker,
   createGreedyJoker,
   createJokerStencilJoker,
@@ -13,6 +12,14 @@ import {
   type Joker,
 } from "../../items/jokers";
 
+function threeMixedJokers(): Joker[] {
+  return [
+    createPlusFourMultJoker(),
+    createBusinessCardJoker(),
+    createJokerStencilJoker(),
+  ];
+}
+
 describe("Jokers UI", () => {
   test("renders MAX_JOKERS tiles in total when no jokers are equipped", () => {
     render(<Jokers jokers={[]} />);
@@ -20,7 +27,7 @@ describe("Jokers UI", () => {
   });
 
   test("renders one filled tile per equipped joker", () => {
-    render(<Jokers jokers={createDefaultJokers()} />);
+    render(<Jokers jokers={threeMixedJokers()} />);
     expect(screen.getByTestId("joker-tile-filled-plus-four-mult")).toBeInTheDocument();
   });
 
@@ -55,7 +62,7 @@ describe("Jokers UI", () => {
   });
 
   test("renders the remaining empty slots when a partial set is equipped", () => {
-    render(<Jokers jokers={createDefaultJokers()} />);
+    render(<Jokers jokers={threeMixedJokers()} />);
     expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(MAX_JOKERS - 3);
   });
 
@@ -84,8 +91,8 @@ describe("Jokers UI", () => {
   });
 
   test("renders the right number of spacers when only some slots are empty (issue #221)", () => {
-    render(<Jokers jokers={createDefaultJokers()} />);
-    const emptyCount = MAX_JOKERS - createDefaultJokers().length;
+    render(<Jokers jokers={threeMixedJokers()} />);
+    const emptyCount = MAX_JOKERS - threeMixedJokers().length;
     expect(screen.getAllByTestId(/^joker-gap-empty-/)).toHaveLength(
       emptyCount - 1,
     );
@@ -146,7 +153,7 @@ describe("Jokers UI", () => {
   test("leaves other jokers' inner elements unpulsed when only one joker fires", () => {
     render(
       <Jokers
-        jokers={createDefaultJokers()}
+        jokers={threeMixedJokers()}
         pulseCounters={{ "plus-four-mult": 1 }}
       />,
     );

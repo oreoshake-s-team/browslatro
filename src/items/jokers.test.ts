@@ -24,7 +24,6 @@ import {
   createCleverJoker,
   createCraftyJoker,
   createCrazyJoker,
-  createDefaultJokers,
   createDeviousJoker,
   createDrollJoker,
   createGluttonousJoker,
@@ -39,6 +38,7 @@ import {
   createWilyJoker,
   createWrathfulJoker,
   createZanyJoker,
+  initialJokersConfig,
   isFaceCard,
 } from "./jokers";
 import type { Card, Rank, Suit } from "../cards/types";
@@ -72,23 +72,13 @@ describe("jokerSellValue", () => {
   });
 });
 
+describe("Initial jokers (issue #223)", () => {
+  test("initialJokersConfig.factory returns an empty array by default", () => {
+    expect(initialJokersConfig.factory()).toEqual([]);
+  });
+});
+
 describe("Default jokers", () => {
-  test("createDefaultJokers returns three jokers", () => {
-    expect(createDefaultJokers()).toHaveLength(3);
-  });
-
-  test("default jokers include the +4 Mult joker", () => {
-    expect(createDefaultJokers().map((j) => j.id)).toContain("plus-four-mult");
-  });
-
-  test("default jokers include the Business Card joker", () => {
-    expect(createDefaultJokers().map((j) => j.id)).toContain("business-card");
-  });
-
-  test("default jokers include the Joker Stencil joker", () => {
-    expect(createDefaultJokers().map((j) => j.id)).toContain("joker-stencil");
-  });
-
   test("+4 Mult joker carries an additive amount of 4", () => {
     const joker = createPlusFourMultJoker();
     expect(joker.effect).toEqual({ kind: "additive-mult", amount: 4 });
