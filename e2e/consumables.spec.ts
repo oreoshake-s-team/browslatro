@@ -33,6 +33,7 @@ async function buyForcedKindThenLeaveShop(
   kind: string,
 ): Promise<void> {
   await page.goto("/");
+  await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   for (let i = 0; i < 5; i += 1) {
     await page.locator(HAND_CARDS).nth(i).click();
@@ -46,6 +47,7 @@ async function buyForcedKindThenLeaveShop(
     .locator("button.shop-offer-buy")
     .click();
   await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
+  await page.getByTestId("blind-select-play").click();
 }
 
 test.describe("Consumables in-game flow (issue #240)", () => {

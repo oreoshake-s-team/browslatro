@@ -1,0 +1,113 @@
+import "./BlindSelectScreen.css";
+import { createPortal } from "react-dom";
+import type { Blind } from "../../cards/types";
+import type { BossBlind } from "../../items/bosses";
+import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
+
+interface BlindSelectScreenProps {
+  ante: number;
+  currentBlind: Blind;
+  boss: BossBlind;
+  onPlay: () => void;
+}
+
+const BLIND_NAMES: Readonly<Record<Blind, string>> = {
+  1: "Small Blind",
+  2: "Big Blind",
+  3: "Boss Blind",
+};
+
+function requiredScoreFor(
+  blind: Blind,
+  ante: number,
+  boss: BossBlind,
+): number {
+  const base = BASE_CHIPS[ante - 1];
+  if (blind === 3) return base * boss.scoreMultiplier;
+  return base * BLIND_MULTIPLIERS[blind - 1];
+}
+
+function payoutFor(blind: Blind): number {
+  return blind + 2;
+}
+
+export default function BlindSelectScreen({
+  ante,
+  currentBlind,
+  boss,
+  onPlay,
+}: BlindSelectScreenProps) {
+  const blinds: ReadonlyArray<Blind> = [1, 2, 3];
+  const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
+
+  return createPortal(
+    <div
+      className="blind-select-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="blind-select-title"
+    >
+      <div className="blind-select-modal" onClick={(e) => e.stopPropagation()}>
+        <h2 id="blind-select-title" className="blind-select-title">
+          Ante {ante}
+        </h2>
+        <ul className="blind-select-rows" aria-label="Blinds for this ante">
+          {blinds.map((b) => {
+            const isCurrent = b === currentBlind;
+            const isCompleted = b < currentBlind;
+            const name = b === 3 ? boss.name : BLIND_NAMES[b];
+            const stateClass = isCurrent
+              ? " blind-select-row-current"
+              : isCompleted
+                ? " blind-select-row-completed"
+                : " blind-select-row-upcoming";
+            return (
+              <li
+                key={b}
+                className={`blind-select-row${stateClass}`}
+                data-testid={`blind-select-row-${b}`}
+                data-blind-state={
+                  isCurrent ? "current" : isCompleted ? "completed" : "upcoming"
+                }
+              >
+                <span className="blind-select-row-name">{name}</span>
+                {b === 3 && (
+                  <span
+                    className="blind-select-row-boss-description"
+                    data-testid="blind-select-boss-description"
+                  >
+                    {boss.description}
+                  </span>
+                )}
+                <dl className="blind-select-row-stats">
+                  <div className="blind-select-row-stat">
+                    <dt>Score at least</dt>
+                    <dd data-testid={`blind-select-required-${b}`}>
+                      {requiredScoreFor(b, ante, boss)}
+                    </dd>
+                  </div>
+                  <div className="blind-select-row-stat">
+                    <dt>Payout</dt>
+                    <dd data-testid={`blind-select-payout-${b}`}>
+                      ${payoutFor(b)}
+                    </dd>
+                  </div>
+                </dl>
+              </li>
+            );
+          })}
+        </ul>
+        <button
+          type="button"
+          className="blind-select-play"
+          data-testid="blind-select-play"
+          onClick={onPlay}
+          autoFocus
+        >
+          Play {currentName} →
+        </button>
+      </div>
+    </div>,
+    document.body,
+  );
+}

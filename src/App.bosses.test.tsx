@@ -28,10 +28,18 @@ function getStatValue(label: string): HTMLElement {
   return screen.getByText(label).parentElement as HTMLElement;
 }
 
+async function dismissBlindSelect(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
+  const btn = screen.queryByTestId("blind-select-play");
+  if (btn) await user.click(btn);
+}
+
 describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
   test("with rng=0 the picker lands on boss-default ('Boss Blind')", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
@@ -40,6 +48,7 @@ describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
   test("default boss yields a 2x required score (300 → 600)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Score at least: 600")).toBeInTheDocument();
@@ -50,10 +59,12 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
   async function advanceToAnte2BossBlind(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
   }
@@ -77,10 +88,6 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
 describe("Boss Blinds — Phase 1 effects (#245)", () => {
   function findBossById(id: string): () => number {
     return () => {
-      // Index The Wall (1) when fresh pool starts with the-wall.
-      // The catalog ordering used by picker: boss-default (0), the-wall (1),
-      // the-needle (2), the-water (3), the-manacle (4), the-psychic (5),
-      // the-tooth (6, anteMin=3).
       const indexes: Record<string, number> = {
         "boss-default": 0,
         "the-wall": 1,
@@ -91,10 +98,6 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
         "the-tooth": 6,
       };
       const idx = indexes[id];
-      // pool length depends on ante + recent; tests below pin enough rng
-      // determinism to compute. Returns a rng that lands on idx for the
-      // ante-1 eligible pool (which excludes the-wall, the-needle, the-water,
-      // the-tooth, leaving 3 entries: boss-default, the-manacle, the-psychic).
       const ante1Eligible = ["boss-default", "the-manacle", "the-psychic"];
       const i = ante1Eligible.indexOf(id);
       if (i >= 0) return i / ante1Eligible.length + 0.001;
@@ -105,10 +108,13 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   async function advanceToBossBlindAfterStartingTheRound(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
   }
 
   test("The Manacle on ante 1 deals only 7 cards on blind 3", async () => {
@@ -145,9 +151,11 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   async function advanceToAnte2BossBlindStartedRound(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
+    await dismissBlindSelect(user);
     for (let i = 0; i < 5; i += 1) {
       await user.click(screen.getByText(/Win/));
       await user.click(screen.getByRole("button", { name: /Next Round/ }));
+      await dismissBlindSelect(user);
     }
   }
 
@@ -172,12 +180,15 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   test("New game with no boss picks resets the picker back to ante 1", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
