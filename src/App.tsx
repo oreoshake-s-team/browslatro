@@ -122,8 +122,9 @@ export function getScoringStepMs(
 
 function initialDeal(
   excludedKeys: ReadonlySet<string> = new Set(),
+  size: number = HAND_SIZE,
 ): DealResult {
-  return deal(shuffle(createDeck(excludedKeys)), HAND_SIZE);
+  return deal(shuffle(createDeck(excludedKeys)), Math.max(1, size));
 }
 
 function App() {
@@ -217,6 +218,8 @@ function App() {
     null,
   );
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
+  const [handSizeModifier, setHandSizeModifier] = useState(0);
+  const currentHandSize = Math.max(1, HAND_SIZE + handSizeModifier);
   const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
     number | null
   >(null);
@@ -245,11 +248,13 @@ function App() {
       ? BASE_CHIPS[ante - 1] * bossScoreMultiplier
       : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
-  function startNewRound() {
+  function startNewRound(handSizeOverride?: number) {
     setRoundScore(0);
     setRemainingHands(4);
     setRemainingDiscards(3);
-    setDealt(initialDeal(destroyedCardKeys));
+    setDealt(
+      initialDeal(destroyedCardKeys, handSizeOverride ?? currentHandSize),
+    );
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -710,6 +715,7 @@ function App() {
     setRound(1);
     setAnte(1);
     setMoney(4);
+    setHandSizeModifier(0);
     setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
@@ -721,7 +727,7 @@ function App() {
     setCurrentAnteVoucherSold(false);
     setRecentBossIds(new Set());
     setCurrentBoss(pickBossForAnte({ ante: 1, rng: bossPickerRngConfig.rng }));
-    startNewRound();
+    startNewRound(HAND_SIZE);
   }
 
   function addChips(amount: number) {
@@ -780,7 +786,7 @@ function App() {
       setDealt({ hand: kept, remaining: dealt.remaining });
     } else {
       const drawCount = drawCountForRefill(
-        HAND_SIZE,
+        currentHandSize,
         kept.length,
         dealt.remaining.length,
       );
@@ -1095,6 +1101,8 @@ function App() {
         onJokerDragEnd={() => setDraggingJokerIndex(null)}
         onSellJoker={sellJoker}
         onJokerDropOnDeck={onJokerDrop(sellJoker)}
+        onShrinkHandSize={() => setHandSizeModifier((prev) => prev - 1)}
+        onGrowHandSize={() => setHandSizeModifier((prev) => prev + 1)}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}

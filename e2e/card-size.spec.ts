@@ -54,3 +54,24 @@ test("8 hand cards fit on one row at desktop width without wrapping (issue #214)
   expect(lastTop).toBeDefined();
   expect(Math.abs((firstTop ?? 0) - (lastTop ?? 0))).toBeLessThan(2);
 });
+
+test("13 hand cards squish instead of producing a horizontal scrollbar (issue #210)", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  await page.waitForSelector(".card");
+  await page.locator(".modifier-disclosure").click();
+  const grow = page.getByRole("button", { name: /Hand \+1/ });
+  for (let i = 0; i < 5; i += 1) await grow.click();
+  await page.getByText(/Win/).click();
+  await page.getByRole("button", { name: /Next Round/ }).click();
+  await expect(
+    page.locator('[aria-label="Your hand"] .card'),
+  ).toHaveCount(13);
+  const overflow = await page.locator(".hand-cards").evaluate((el) => ({
+    scrollWidth: el.scrollWidth,
+    clientWidth: el.clientWidth,
+  }));
+  expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
+});

@@ -46,8 +46,8 @@ describe("Hand layout — no wrap, scroll instead (issue #105)", () => {
     expect(handCardsRuleBody()).toMatch(/flex-wrap\s*:\s*nowrap/);
   });
 
-  test(".hand-cards uses overflow-x: auto so the row becomes scrollable when too narrow", () => {
-    expect(handCardsRuleBody()).toMatch(/overflow-x\s*:\s*auto/);
+  test(".hand-cards uses overflow-x: clip so over-cap hands squish instead of producing a scrollbar (issue #210)", () => {
+    expect(handCardsRuleBody()).toMatch(/overflow-x\s*:\s*clip/);
   });
 
   test(".hand-cards uses justify-content: safe center so the leftmost card is reachable when scrolling", () => {

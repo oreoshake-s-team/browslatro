@@ -79,15 +79,15 @@
 .hand-cards {
   display: flex;
   flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  /* `overflow-x: clip` (not `auto`) so over-cap hands never show a
+   * horizontal scrollbar; cards squish via flex-shrink instead. `clip`
+   * is preferred over `hidden` because it keeps `overflow-y: visible`,
+   * so the hover lift (-4px) and selected lift (-1.4rem) stay onscreen
+   * without needing the y-axis to be reserved as a scroll area. */
+  overflow-x: clip;
   justify-content: safe center;
   align-items: end;
   min-height: calc(var(--card-height) + 1.6rem);
-  /* `overflow-x: auto` forces `overflow-y` to compute to `auto` per the CSS
-   * spec, which would clip the hover (-4px) and selected (-1.4rem) card
-   * lifts at the top. Reserve enough top padding to hold the lifted card
-   * inside the box so it isn't clipped. */
   padding-top: 1.6rem;
   /* No `gap` here: spacing is provided by interleaved .hand-card-gap drop
    * zones so the row can visibly open when a card is dragged over a gap. */
@@ -99,9 +99,11 @@
  * Resting width gives the row visible breathing room between cards. While
  * a drag is in flight the spacers widen to make the drop hitbox more
  * forgiving, and the actively-hovered spacer expands again to a
- * card-sized slot so the insertion point is unmistakable. */
+ * card-sized slot so the insertion point is unmistakable.
+ * `flex-shrink: 1` lets the gap collapse first when the row over-fills. */
 .hand-card-gap {
-  flex: 0 0 2.5rem;
+  flex: 0 1 2.5rem;
+  min-width: 0;
   align-self: stretch;
   min-height: var(--card-height);
   border-radius: 4px;
@@ -142,6 +144,11 @@
     opacity calc(80ms * var(--animation-speed, 1)) linear;
   outline: 2px dashed transparent;
   outline-offset: 4px;
+  /* Slot shrinks once gaps are fully collapsed. The card inside keeps
+   * `width: var(--card-width)` and visually overlaps neighbouring slots
+   * — that's the squish-instead-of-scroll behaviour for over-cap hands. */
+  flex: 0 1 var(--card-width);
+  min-width: 0;
 }
 
 .hand-card-slot:active {
