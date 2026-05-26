@@ -54,7 +54,11 @@ describe("applyHandLevelJokers — Joker Stencil (issue #131, #225)", () => {
   test("emits one step per fired Stencil with xMultFactor = emptySlots", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
     expect(result.steps).toEqual([
-      { jokerId: "joker-stencil", xMultFactor: MAX_JOKERS - 1 },
+      {
+        jokerId: "joker-stencil",
+        jokerName: "Joker Stencil",
+        xMultFactor: MAX_JOKERS - 1,
+      },
     ]);
   });
 
@@ -102,7 +106,11 @@ describe("applyHandLevelJokers — Joker Stencil (issue #131, #225)", () => {
       createJokerStencilJoker(),
     ]);
     expect(result.steps).toEqual([
-      { jokerId: "joker-stencil", xMultFactor: MAX_JOKERS - 3 },
+      {
+        jokerId: "joker-stencil",
+        jokerName: "Joker Stencil",
+        xMultFactor: MAX_JOKERS - 3,
+      },
     ]);
   });
 

@@ -446,6 +446,21 @@ function App() {
       if (cardJokerResult.xMult !== 1) {
         setMultiplier((prev) => prev * cardJokerResult.xMult);
       }
+      for (const step of cardJokerResult.steps) {
+        const source = `${step.jokerName} on ${stepCardLabel}`;
+        if (step.moneyEarned !== undefined && step.moneyEarned !== 0) {
+          pushScoringEvent({ kind: "money-delta", amount: step.moneyEarned, source });
+        }
+        if (step.additiveChips !== undefined && step.additiveChips !== 0) {
+          pushScoringEvent({ kind: "chips-delta", amount: step.additiveChips, source });
+        }
+        if (step.additiveMult !== undefined && step.additiveMult !== 0) {
+          pushScoringEvent({ kind: "mult-delta", amount: step.additiveMult, source });
+        }
+        if (step.xMultFactor !== undefined && step.xMultFactor !== 1) {
+          pushScoringEvent({ kind: "mult-times", factor: step.xMultFactor, source });
+        }
+      }
       pulseJokers(cardJokerResult.firedJokerIds);
       setScoringIndex((prev) => prev + 1);
     }, stepMs);
@@ -505,12 +520,27 @@ function App() {
       const step = handLevelSteps[handLevelIndex];
       if (step.additiveChips) {
         setChips((prev) => prev + (step.additiveChips ?? 0));
+        pushScoringEvent({
+          kind: "chips-delta",
+          amount: step.additiveChips,
+          source: step.jokerName,
+        });
       }
       if (step.additiveMult) {
         setMultiplier((prev) => prev + (step.additiveMult ?? 0));
+        pushScoringEvent({
+          kind: "mult-delta",
+          amount: step.additiveMult,
+          source: step.jokerName,
+        });
       }
       if (step.xMultFactor !== undefined && step.xMultFactor !== 1) {
         setMultiplier((prev) => prev * (step.xMultFactor ?? 1));
+        pushScoringEvent({
+          kind: "mult-times",
+          factor: step.xMultFactor,
+          source: step.jokerName,
+        });
       }
       play("pop");
       pulseJokers([step.jokerId]);
