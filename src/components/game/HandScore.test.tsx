@@ -47,3 +47,75 @@ describe("HandScore populated state", () => {
     expect(container.querySelector(".multiplier")).toHaveTextContent("7");
   });
 });
+
+describe("HandScore level chip (#241)", () => {
+  test("renders the level chip when selectedHandLevel is provided", () => {
+    render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    expect(screen.getByText("Lv 2")).toBeInTheDocument();
+  });
+
+  test("reflects the current level number passed in (not stale)", () => {
+    const { rerender } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={3}
+      />,
+    );
+    expect(screen.getByText("Lv 3")).toBeInTheDocument();
+  });
+
+  test("does not render a level chip when selectedHandLevel is omitted", () => {
+    render(<HandScore chips={10} multiplier={2} selectedHand={HANDS[1]} />);
+    expect(screen.queryByText(/Lv\s/)).not.toBeInTheDocument();
+  });
+
+  test("does not render a level chip when no hand is selected", () => {
+    render(
+      <HandScore
+        chips={0}
+        multiplier={0}
+        selectedHand={null}
+        selectedHandLevel={5}
+      />,
+    );
+    expect(screen.queryByText(/Lv\s/)).not.toBeInTheDocument();
+  });
+
+  test("exposes the level via the heading's accessible name", () => {
+    render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={4}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Pair, level 4" }),
+    ).toBeInTheDocument();
+  });
+
+  test("omits the level from the heading's accessible name when no level is provided", () => {
+    render(<HandScore chips={10} multiplier={2} selectedHand={HANDS[1]} />);
+    expect(
+      screen.getByRole("heading", { name: "Pair" }),
+    ).toBeInTheDocument();
+  });
+});
