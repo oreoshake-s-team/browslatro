@@ -426,3 +426,117 @@ describe("PackOpenModal — Spectral pack rendering", () => {
     expect(onPick).toHaveBeenCalledWith(0);
   });
 });
+
+function standardPack(
+  variant: "normal" | "jumbo" | "mega",
+  cards: ReadonlyArray<{
+    id: number;
+    rank: "A" | "K" | "2";
+    suit: "spades" | "hearts";
+    enhancement?: "mult" | "lucky";
+    seal?: "red";
+  }>,
+): PackOffer {
+  return {
+    pool: "standard",
+    variant,
+    options: cards.map((card) => ({ kind: "playing-card" as const, card })),
+  };
+}
+
+describe("PackOpenModal — Standard pack rendering", () => {
+  test("renders the Standard pack display name", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9001, rank: "A", suit: "spades" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: /Standard Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("Pick button label includes the playing-card's rank-suit name", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9002, rank: "K", suit: "hearts" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /Pick K/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("playing-card options stay enabled even when consumable or joker slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9003, rank: "2", suit: "hearts" },
+        ])}
+        picksRemaining={1}
+        consumableSlotsFull
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const pick = screen.getByRole("button", { name: /^Pick / });
+    expect(pick).not.toBeDisabled();
+  });
+
+  test("clicking Pick on a playing-card invokes onPick with the option index", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(
+      <PackOpenModal
+        pack={standardPack("mega", [
+          { id: 9004, rank: "A", suit: "spades" },
+          { id: 9005, rank: "K", suit: "hearts" },
+        ])}
+        picksRemaining={2}
+        onPick={onPick}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-pick-1"));
+    expect(onPick).toHaveBeenCalledWith(1);
+  });
+
+  test("playing-card description includes the enhancement label when present", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9006, rank: "A", suit: "spades", enhancement: "lucky" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/lucky/)).toBeInTheDocument();
+  });
+
+  test("playing-card description includes the seal label when present", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9007, rank: "K", suit: "hearts", seal: "red" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByText(/red seal/)).toBeInTheDocument();
+  });
+});
