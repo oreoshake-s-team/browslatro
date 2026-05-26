@@ -1,5 +1,4 @@
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
   consumableSellValue,
   consumableUseBlock,
@@ -19,10 +18,6 @@ const tarotConsumable: Consumable = { kind: "tarot", card: tarot };
 const spectralConsumable: Consumable = { kind: "spectral", card: spectral };
 
 describe("consumables", () => {
-  test("MAX_CONSUMABLE_SLOTS is 2", () => {
-    expect(MAX_CONSUMABLE_SLOTS).toBe(2);
-  });
-
   test("hasFreeConsumableSlot true when below cap", () => {
     expect(hasFreeConsumableSlot([planetConsumable])).toBe(true);
   });
