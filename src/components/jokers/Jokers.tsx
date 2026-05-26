@@ -162,14 +162,22 @@ export default function Jokers({
         })}
         {reorderable && jokers.length > 0 && renderGap(jokers.length)}
         {Array.from({ length: emptyCount }, (_, slotIndex) => (
-          <li
-            key={`empty-${slotIndex}`}
-            className="joker-tile joker-tile-empty"
-            aria-label="Empty joker slot"
-            data-testid="joker-tile-empty"
-          >
-            Empty
-          </li>
+          <Fragment key={`empty-${slotIndex}`}>
+            {slotIndex > 0 && (
+              <div
+                className="joker-gap joker-gap-empty"
+                data-testid={`joker-gap-empty-${slotIndex}`}
+                aria-hidden="true"
+              />
+            )}
+            <li
+              className="joker-tile joker-tile-empty"
+              aria-label="Empty joker slot"
+              data-testid="joker-tile-empty"
+            >
+              Empty
+            </li>
+          </Fragment>
         ))}
       </ul>
     </section>
