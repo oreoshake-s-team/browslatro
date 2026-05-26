@@ -17,6 +17,7 @@ interface GameProps {
   canDiscard: boolean;
   isScoring?: boolean;
   scoringId?: number | null;
+  scoringPulseTick?: number;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
   handPlaySignal?: number;
@@ -58,6 +59,7 @@ export default function Game({
   canDiscard,
   isScoring = false,
   scoringId = null,
+  scoringPulseTick = 0,
   goldScoringId = null,
   steelScoringId = null,
   handPlaySignal,
@@ -127,6 +129,7 @@ export default function Game({
         selectedIds={selectedIds}
         discardingIds={discardingIds}
         scoringId={scoringId}
+        scoringPulseTick={scoringPulseTick}
         goldScoringId={goldScoringId}
         steelScoringId={steelScoringId}
         handPlaySignal={handPlaySignal}

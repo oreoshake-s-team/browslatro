@@ -354,3 +354,40 @@ describe("Card", () => {
     );
   });
 });
+
+describe("Card scoring pulse animation", () => {
+  test("does not apply card-scoring when scoring is false", () => {
+    render(<Card card={aceOfSpades} scoring={false} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-scoring");
+  });
+
+  test("applies card-scoring when scoring is true", () => {
+    render(<Card card={aceOfSpades} scoring />);
+    expect(screen.getByRole("button")).toHaveClass("card-scoring");
+  });
+
+  test("applies card-scoring-tick-0 when the pulse tick is even", () => {
+    render(<Card card={aceOfSpades} scoring scoringPulseTick={0} />);
+    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-0");
+  });
+
+  test("applies card-scoring-tick-1 when the pulse tick is odd", () => {
+    render(<Card card={aceOfSpades} scoring scoringPulseTick={1} />);
+    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-1");
+  });
+
+  test("alternates tick classes across consecutive ticks (so a Red Seal retrigger restarts the animation)", () => {
+    const { rerender } = render(
+      <Card card={aceOfSpades} scoring scoringPulseTick={3} />,
+    );
+    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-1");
+    rerender(<Card card={aceOfSpades} scoring scoringPulseTick={4} />);
+    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-0");
+  });
+
+  test("a non-scoring card does not carry either tick class", () => {
+    render(<Card card={aceOfSpades} scoring={false} scoringPulseTick={5} />);
+    const button = screen.getByRole("button");
+    expect(button).not.toHaveClass("card-scoring-tick-0");
+  });
+});

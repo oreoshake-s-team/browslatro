@@ -1004,6 +1004,7 @@ function App() {
         }
         isScoring={isScoring}
         scoringId={currentScoringId}
+        scoringPulseTick={scoringIndex}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
         handPlaySignal={handPlaySignal}
