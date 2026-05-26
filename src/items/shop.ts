@@ -13,7 +13,77 @@ export const SHOP_OFFER_SLOTS = 2;
 
 export const BASE_REROLL_COST = 5;
 
-export const shopPickerRngConfig: { rng: RandomSource } = { rng: Math.random };
+type ForceableShopOfferKind = "joker" | "planet" | "tarot" | "spectral";
+
+const KIND_TO_RNG: Record<ForceableShopOfferKind, number> = {
+  joker: 0.05,
+  planet: 0.4,
+  tarot: 0.75,
+  spectral: 0,
+};
+
+export function forceShopLayout(
+  kinds: ReadonlyArray<ForceableShopOfferKind>,
+): () => number {
+  let slotIdx = 0;
+  let callsConsumed = 0;
+  return () => {
+    const target = kinds[slotIdx] ?? "joker";
+    if (target === "spectral") {
+      if (callsConsumed === 0) {
+        callsConsumed = 1;
+        return 0;
+      }
+      callsConsumed = 0;
+      slotIdx += 1;
+      return 0;
+    }
+    if (callsConsumed === 0) {
+      callsConsumed = 1;
+      return 0.99;
+    }
+    if (callsConsumed === 1) {
+      callsConsumed = 2;
+      return KIND_TO_RNG[target];
+    }
+    callsConsumed = 0;
+    slotIdx += 1;
+    return 0;
+  };
+}
+
+const FORCE_OFFER_KINDS_KEY = "browslatro:forceShopOfferKinds";
+const FORCEABLE_KINDS: ReadonlyArray<ForceableShopOfferKind> = [
+  "joker",
+  "planet",
+  "tarot",
+  "spectral",
+];
+
+function isForceableKind(value: string): value is ForceableShopOfferKind {
+  return (FORCEABLE_KINDS as ReadonlyArray<string>).includes(value);
+}
+
+function readForcedKindsFromStorage(): ReadonlyArray<ForceableShopOfferKind> | null {
+  try {
+    const raw = window.localStorage.getItem(FORCE_OFFER_KINDS_KEY);
+    if (!raw) return null;
+    const parsed = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(isForceableKind);
+    return parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function defaultRng(): RandomSource {
+  const forced = readForcedKindsFromStorage();
+  return forced !== null ? forceShopLayout(forced) : Math.random;
+}
+
+export const shopPickerRngConfig: { rng: RandomSource } = { rng: defaultRng() };
 
 export type ShopItem =
   | {
