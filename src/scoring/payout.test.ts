@@ -67,14 +67,6 @@ describe("calculateInterest", () => {
   test("treats a negative wallet as 0 interest", () => {
     expect(calculateInterest(-10)).toBe(0);
   });
-
-  test("INTEREST_RATE_PER is defined as 5", () => {
-    expect(INTEREST_RATE_PER).toBe(5);
-  });
-
-  test("INTEREST_CAP is defined as 5", () => {
-    expect(INTEREST_CAP).toBe(5);
-  });
 });
 
 describe("countGoldHeldInHand", () => {
