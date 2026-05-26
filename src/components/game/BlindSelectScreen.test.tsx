@@ -126,4 +126,32 @@ describe("BlindSelectScreen", () => {
     await user.click(screen.getByTestId("blind-select-play"));
     expect(onPlay).toHaveBeenCalled();
   });
+
+  test("Skip button renders on Small Blind when onSkip is provided", () => {
+    renderScreen({ currentBlind: 1, onSkip: vi.fn() });
+    expect(screen.getByTestId("blind-select-skip")).toBeInTheDocument();
+  });
+
+  test("Skip button renders on Big Blind when onSkip is provided", () => {
+    renderScreen({ currentBlind: 2, onSkip: vi.fn() });
+    expect(screen.getByTestId("blind-select-skip")).toBeInTheDocument();
+  });
+
+  test("Skip button does NOT render on Boss Blind even when onSkip is provided", () => {
+    renderScreen({ currentBlind: 3, onSkip: vi.fn() });
+    expect(screen.queryByTestId("blind-select-skip")).not.toBeInTheDocument();
+  });
+
+  test("Skip button does not render when onSkip is omitted", () => {
+    renderScreen({ currentBlind: 1 });
+    expect(screen.queryByTestId("blind-select-skip")).not.toBeInTheDocument();
+  });
+
+  test("clicking Skip invokes onSkip", async () => {
+    const user = userEvent.setup();
+    const onSkip = vi.fn();
+    renderScreen({ currentBlind: 1, onSkip });
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(onSkip).toHaveBeenCalled();
+  });
 });
