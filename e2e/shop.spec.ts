@@ -130,9 +130,10 @@ test.describe("Shop purchases (issue #240)", () => {
     await setForcedShopKinds(page, ["joker", "joker"]);
     await openShopAfterRound1Win(page);
     await page.getByRole("button", { name: /Reroll/ }).click();
-    await page.getByRole("button", { name: /Reroll/ }).click();
+    const offers = page.locator('.shop-offer[data-offer-kind="joker"]');
+    await offers.first().locator("button.shop-offer-buy").click();
     await expect(
-      offerOfKind(page, "joker").locator("button.shop-offer-buy"),
+      offers.nth(1).locator("button.shop-offer-buy"),
     ).toBeDisabled();
   });
 

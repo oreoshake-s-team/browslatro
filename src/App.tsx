@@ -630,12 +630,14 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [handLevelSteps, handLevelIndex, animationSpeed]);
 
-  function handleWin() {
+  function handleWin(
+    precomputed?: { readonly interest: number; readonly interestWallet: number },
+  ) {
     setRound((prev) => prev + 1);
     const blindReward = blind + 2;
-    const interestBefore = money;
-    const interest = calculateInterest(interestBefore);
-    setMoney((prev) => prev + blindReward + calculateInterest(prev));
+    const interestBefore = precomputed?.interestWallet ?? money;
+    const interest = precomputed?.interest ?? calculateInterest(interestBefore);
+    setMoney((prev) => prev + blindReward + interest);
     pushScoringEvent({
       kind: "money-delta",
       amount: blindReward,
@@ -1532,7 +1534,8 @@ function App() {
           requiredScore,
           baseReward: blind + 2,
           walletAtPayout: postBonusesWallet,
-          interest: calculateInterest(postBonusesWallet),
+          interestWallet: postGoldWallet,
+          interest: calculateInterest(postGoldWallet),
           goldHeldCount: heldGoldIds.length,
           remainingHandsCount,
         });
@@ -1555,8 +1558,11 @@ function App() {
   }
 
   function dismissRoundWonModal() {
+    const precomputed = pendingWin
+      ? { interest: pendingWin.interest, interestWallet: pendingWin.interestWallet }
+      : undefined;
     setPendingWin(null);
-    handleWin();
+    handleWin(precomputed);
   }
 
   function discardSelected() {
