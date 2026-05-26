@@ -3,7 +3,14 @@ import "./App.css";
 import type { Blind, Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
+  DEFAULT_STARTING_DISCARDS,
+  DEFAULT_STARTING_HANDS,
+  bossHandSize,
+  bossMoneyPenaltyPerCard,
   bossPickerRngConfig,
+  bossRequiredCardCount,
+  bossStartingDiscards,
+  bossStartingHands,
   pickBossForAnte,
   type BossBlind,
 } from "./items/bosses";
@@ -122,9 +129,9 @@ export function getScoringStepMs(
 
 function initialDeal(
   excludedKeys: ReadonlySet<string> = new Set(),
-  size: number = HAND_SIZE,
+  handSize: number = HAND_SIZE,
 ): DealResult {
-  return deal(shuffle(createDeck(excludedKeys)), Math.max(1, size));
+  return deal(shuffle(createDeck(excludedKeys)), Math.max(1, handSize));
 }
 
 function App() {
@@ -248,13 +255,31 @@ function App() {
       ? BASE_CHIPS[ante - 1] * bossScoreMultiplier
       : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
-  function startNewRound(handSizeOverride?: number) {
+  function startNewRound(
+    opts: {
+      blind?: Blind;
+      boss?: BossBlind | null;
+      handSizeOverride?: number;
+    } = {},
+  ) {
+    const effectiveBlind = opts.blind ?? blind;
+    const effectiveBoss =
+      opts.boss !== undefined ? opts.boss : currentBoss;
+    const isBossRound = effectiveBlind === 3;
+    const baseHandSize = opts.handSizeOverride ?? currentHandSize;
+    const startingHands = isBossRound
+      ? bossStartingHands(effectiveBoss)
+      : DEFAULT_STARTING_HANDS;
+    const startingDiscards = isBossRound
+      ? bossStartingDiscards(effectiveBoss)
+      : DEFAULT_STARTING_DISCARDS;
+    const handSize = isBossRound
+      ? bossHandSize(effectiveBoss, baseHandSize)
+      : baseHandSize;
     setRoundScore(0);
-    setRemainingHands(4);
-    setRemainingDiscards(3);
-    setDealt(
-      initialDeal(destroyedCardKeys, handSizeOverride ?? currentHandSize),
-    );
+    setRemainingHands(startingHands);
+    setRemainingDiscards(startingDiscards);
+    setDealt(initialDeal(destroyedCardKeys, handSize));
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -726,8 +751,12 @@ function App() {
     setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
     setCurrentAnteVoucherSold(false);
     setRecentBossIds(new Set());
-    setCurrentBoss(pickBossForAnte({ ante: 1, rng: bossPickerRngConfig.rng }));
-    startNewRound(HAND_SIZE);
+    const freshBoss = pickBossForAnte({
+      ante: 1,
+      rng: bossPickerRngConfig.rng,
+    });
+    setCurrentBoss(freshBoss);
+    startNewRound({ blind: 1, boss: freshBoss, handSizeOverride: HAND_SIZE });
   }
 
   function addChips(amount: number) {
@@ -785,8 +814,10 @@ function App() {
       skipDrawAfterDiscardRef.current = false;
       setDealt({ hand: kept, remaining: dealt.remaining });
     } else {
+      const effectiveHandSize =
+        blind === 3 ? bossHandSize(currentBoss, currentHandSize) : currentHandSize;
       const drawCount = drawCountForRefill(
-        currentHandSize,
+        effectiveHandSize,
         kept.length,
         dealt.remaining.length,
       );
@@ -817,6 +848,14 @@ function App() {
   function submitHand() {
     if (discardingIds.size > 0) return;
     if (isScoring) return;
+    const requiredCardCount =
+      blind === 3 ? bossRequiredCardCount(currentBoss) : null;
+    if (
+      requiredCardCount !== null &&
+      selectedIds.size !== requiredCardCount
+    ) {
+      return;
+    }
 
     const handById = new Map(dealt.hand.map((c) => [c.id, c]));
     const playedCards = handDisplayOrder
@@ -828,6 +867,14 @@ function App() {
       // Empty submission: no scoring sequence, finalize directly.
       finalizeHandSubmission(0, submittedSelection);
       return;
+    }
+
+    const moneyPenalty =
+      blind === 3
+        ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
+        : 0;
+    if (moneyPenalty > 0) {
+      setMoney((prev) => Math.max(0, prev - moneyPenalty));
     }
 
     pendingHandPlayResetRef.current = true;
@@ -1068,6 +1115,11 @@ function App() {
         onSetMoney={setMoney}
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
+        canSubmit={(() => {
+          const required =
+            blind === 3 ? bossRequiredCardCount(currentBoss) : null;
+          return required === null || selectedIds.size === required;
+        })()}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

@@ -6,6 +6,7 @@ import { test, expect, type Page } from "@playwright/test";
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     window.localStorage.setItem("browslatro:deterministicShuffle", "1");
+    window.localStorage.setItem("browslatro:deterministicBoss", "1");
     window.localStorage.setItem("browslatro:muted", "true");
   });
 });
