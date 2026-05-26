@@ -42,4 +42,5 @@ export interface Card {
   readonly suit: Suit;
   readonly enhancement?: Enhancement | null;
   readonly seal?: Seal | null;
+  readonly faceDown?: boolean;
 }

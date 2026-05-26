@@ -403,3 +403,85 @@ describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
     expect(document.querySelector(".chips")).toHaveTextContent("2");
   });
 });
+
+describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
+  function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
+    let callIdx = 0;
+    const recent = new Set<string>();
+    return () => {
+      const id = idsPerAnte[callIdx];
+      const ante = callIdx + 1;
+      const eligible = createBossCatalog().filter((b) => ante >= b.anteMin);
+      const fresh = eligible.filter((b) => !recent.has(b.id));
+      const pool = fresh.length > 0 ? fresh : eligible;
+      const idx = pool.findIndex((b) => b.id === id);
+      if (idx < 0) {
+        throw new Error(`${id} not in pool for ante ${ante}`);
+      }
+      callIdx += 1;
+      recent.add(id);
+      return idx / pool.length + 0.0001;
+    };
+  }
+
+  async function advanceThroughBlind(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+  }
+
+  test("The House makes every card in the initial boss-blind deal face-down", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-house"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
+    await dismissBlindSelect(user);
+    expect(
+      screen.getByRole("heading", { name: "The House" }),
+    ).toBeInTheDocument();
+    const handCards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    expect(
+      handCards.every((el) => el.classList.contains("card-face-down")),
+    ).toBe(true);
+  });
+
+  test("The Mark only face-downs face cards in the dealt hand", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-mark"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
+    await dismissBlindSelect(user);
+    expect(
+      screen.getByRole("heading", { name: "The Mark" }),
+    ).toBeInTheDocument();
+    const handCards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll<HTMLElement>("button[aria-pressed]"),
+    );
+    for (const el of handCards) {
+      const facedown = el.classList.contains("card-face-down");
+      const label = el.getAttribute("aria-label") ?? "";
+      if (facedown) {
+        expect(label).toBe("Face-down card");
+      }
+    }
+  });
+
+  test("non-face-down bosses leave the boss-blind hand face-up", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-wall"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
+    await dismissBlindSelect(user);
+    expect(
+      document.querySelectorAll('[aria-label="Your hand"] .card-face-down'),
+    ).toHaveLength(0);
+  });
+});

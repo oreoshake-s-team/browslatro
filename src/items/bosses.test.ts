@@ -1,6 +1,7 @@
 import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
+  applyBossFaceDown,
   availableBosses,
   bossAdjustHandEntry,
   bossBlocksHandLabel,
@@ -405,5 +406,102 @@ describe("bossAdjustHandEntry (The Arm / The Flint)", () => {
 
   test("null boss returns the entry unchanged", () => {
     expect(bossAdjustHandEntry(null, "Pair", level2Pair)).toEqual(level2Pair);
+  });
+});
+
+describe("Phase 4 face-down catalog entries (#245)", () => {
+  test.each([
+    ["the-house", { kind: "face-down-initial" }, 2],
+    ["the-fish", { kind: "face-down-on-refill" }, 2],
+    ["the-wheel", { kind: "face-down-chance", oneIn: 7 }, 2],
+    ["the-mark", { kind: "face-down-faces" }, 2],
+  ] as const)("%s has the expected effect", (id, effect, anteMin) => {
+    const boss = createBossCatalog().find((b) => b.id === id);
+    expect(boss?.effect).toEqual(effect);
+    expect(boss?.anteMin).toBe(anteMin);
+  });
+});
+
+describe("applyBossFaceDown", () => {
+  const sample: ReadonlyArray<Card> = [
+    { id: 1, rank: "5", suit: "spades" },
+    { id: 2, rank: "K", suit: "hearts" },
+    { id: 3, rank: "2", suit: "clubs" },
+  ];
+  const house = createBossCatalog().find((b) => b.id === "the-house")!;
+  const fish = createBossCatalog().find((b) => b.id === "the-fish")!;
+  const wheel = createBossCatalog().find((b) => b.id === "the-wheel")!;
+  const mark = createBossCatalog().find((b) => b.id === "the-mark")!;
+  const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+
+  test("returns cards unchanged when not a boss round", () => {
+    expect(applyBossFaceDown(sample, house, false, "initial")).toEqual(sample);
+  });
+
+  test("returns cards unchanged when boss is null", () => {
+    expect(applyBossFaceDown(sample, null, true, "initial")).toEqual(sample);
+  });
+
+  test("The House face-downs every initial-deal card", () => {
+    expect(
+      applyBossFaceDown(sample, house, true, "initial").every(
+        (c) => c.faceDown === true,
+      ),
+    ).toBe(true);
+  });
+
+  test("The House leaves refill draws face-up", () => {
+    expect(
+      applyBossFaceDown(sample, house, true, "refill").some((c) => c.faceDown),
+    ).toBe(false);
+  });
+
+  test("The Fish leaves the initial deal face-up", () => {
+    expect(
+      applyBossFaceDown(sample, fish, true, "initial").some((c) => c.faceDown),
+    ).toBe(false);
+  });
+
+  test("The Fish face-downs every refill draw", () => {
+    expect(
+      applyBossFaceDown(sample, fish, true, "refill").every(
+        (c) => c.faceDown === true,
+      ),
+    ).toBe(true);
+  });
+
+  test("The Mark face-downs only face cards", () => {
+    const out = applyBossFaceDown(sample, mark, true, "initial");
+    expect(out.find((c) => c.id === 2)?.faceDown).toBe(true);
+    expect(out.find((c) => c.id === 1)?.faceDown).toBeUndefined();
+    expect(out.find((c) => c.id === 3)?.faceDown).toBeUndefined();
+  });
+
+  test("The Wheel uses the rng to face-down 1-in-N cards", () => {
+    const allFaceDown = applyBossFaceDown(
+      sample,
+      wheel,
+      true,
+      "initial",
+      () => 0,
+    );
+    expect(allFaceDown.every((c) => c.faceDown === true)).toBe(true);
+  });
+
+  test("The Wheel leaves cards face-up when rng exceeds the threshold", () => {
+    const noneFaceDown = applyBossFaceDown(
+      sample,
+      wheel,
+      true,
+      "initial",
+      () => 0.99,
+    );
+    expect(noneFaceDown.some((c) => c.faceDown)).toBe(false);
+  });
+
+  test("Non face-down bosses leave the hand face-up", () => {
+    expect(
+      applyBossFaceDown(sample, wall, true, "initial").some((c) => c.faceDown),
+    ).toBe(false);
   });
 });

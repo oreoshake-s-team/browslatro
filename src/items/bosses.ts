@@ -23,7 +23,11 @@ export type BossEffect =
       readonly kind: "hand-stats-multiplier";
       readonly chipsFactor: number;
       readonly multFactor: number;
-    };
+    }
+  | { readonly kind: "face-down-initial" }
+  | { readonly kind: "face-down-on-refill" }
+  | { readonly kind: "face-down-chance"; readonly oneIn: number }
+  | { readonly kind: "face-down-faces" };
 
 export interface BossBlind {
   readonly id: string;
@@ -171,6 +175,38 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     anteMin: 2,
     effect: { kind: "hand-stats-multiplier", chipsFactor: 0.5, multFactor: 0.5 },
   },
+  {
+    id: "the-house",
+    name: "The House",
+    description: "First hand is drawn face down.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "face-down-initial" },
+  },
+  {
+    id: "the-fish",
+    name: "The Fish",
+    description: "Cards drawn face down after each hand played.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "face-down-on-refill" },
+  },
+  {
+    id: "the-wheel",
+    name: "The Wheel",
+    description: "1 in 7 dealt cards are face down.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "face-down-chance", oneIn: 7 },
+  },
+  {
+    id: "the-mark",
+    name: "The Mark",
+    description: "All face cards are drawn face down.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "face-down-faces" },
+  },
 ];
 
 export function createBossCatalog(): BossBlind[] {
@@ -307,6 +343,39 @@ export function bossBlocksHandLabel(
     return history.includes(label);
   }
   return false;
+}
+
+export type FaceDownContext = "initial" | "refill";
+
+export function applyBossFaceDown(
+  cards: ReadonlyArray<Card>,
+  boss: BossBlind | null,
+  isBossRound: boolean,
+  context: FaceDownContext,
+  rng: () => number = Math.random,
+): Card[] {
+  if (!isBossRound || !boss) return cards.slice();
+  const effect = boss.effect;
+  return cards.map((c) => {
+    let faceDown = false;
+    switch (effect.kind) {
+      case "face-down-initial":
+        faceDown = context === "initial";
+        break;
+      case "face-down-on-refill":
+        faceDown = context === "refill";
+        break;
+      case "face-down-chance":
+        faceDown = rng() < 1 / effect.oneIn;
+        break;
+      case "face-down-faces":
+        faceDown = FACE_RANKS.has(c.rank);
+        break;
+      default:
+        break;
+    }
+    return faceDown ? { ...c, faceDown: true } : c;
+  });
 }
 
 export function bossAdjustHandEntry(

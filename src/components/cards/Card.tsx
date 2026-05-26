@@ -125,16 +125,22 @@ export default function Card({
       ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
       : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
   const withSeal = card.seal ? `${baseName}, ${getSealInfo(card.seal).name}` : baseName;
-  const ariaLabel = debuffed ? `${withSeal}, debuffed` : withSeal;
+  const showBack = card.faceDown === true && !scoring;
+  const ariaLabel = showBack
+    ? "Face-down card"
+    : debuffed
+      ? `${withSeal}, debuffed`
+      : withSeal;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
+  const faceDownClass = showBack ? "card-face-down" : "";
 
   return (
     <button
       ref={buttonRef}
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${debuffedClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${debuffedClass} ${faceDownClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}
@@ -152,7 +158,13 @@ export default function Card({
         }
       }}
     >
-      {isStone ? (
+      {showBack ? (
+        <span
+          className="card-back-face"
+          aria-hidden="true"
+          data-testid={`card-back-${card.id}`}
+        />
+      ) : isStone ? (
         <span className="card-stone-face" aria-hidden="true" />
       ) : (
         <>
@@ -202,7 +214,7 @@ export default function Card({
           +$20
         </span>
       )}
-      {tooltipRect && (
+      {tooltipRect && !showBack && (
         <CardTooltip id={tooltipId} info={getCardInfo(card)} anchorRect={tooltipRect} />
       )}
     </button>
