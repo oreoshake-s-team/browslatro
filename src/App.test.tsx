@@ -1706,7 +1706,7 @@ describe("Tarot purchase integration", () => {
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
   });
 
-  test("using an enhancement tarot consumable opens the card-picker dialog", async () => {
+  test("an enhancement-tarot consumable tile is disabled when no card is selected", async () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId("shop-offer-2")
@@ -1718,11 +1718,10 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(document.querySelector(".tarot-picker-modal")).not.toBeNull();
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeDisabled();
   });
 
-  test("cancelling the picker leaves the consumable in its slot", async () => {
+  test("selecting a hand card enables the enhancement-tarot consumable tile", async () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId("shop-offer-2")
@@ -1734,12 +1733,11 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    await user.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
+    await user.click(getHandCardButtons()[0]);
+    expect(screen.getByTestId("consumable-tile-filled-0")).not.toBeDisabled();
   });
 
-  test("confirming the picker empties the consumable slot", async () => {
+  test("using an enhancement-tarot consumable empties the slot", async () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId("shop-offer-2")
@@ -1751,14 +1749,46 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    const firstCardBtn = screen
-      .getByLabelText("Pick cards to enhance")
-      .querySelector("button.tarot-picker-card");
-    if (!(firstCardBtn instanceof HTMLButtonElement)) throw new Error("missing card");
-    await user.click(firstCardBtn);
-    await user.click(screen.getByRole("button", { name: "Confirm" }));
     expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
+  });
+
+  test("using an enhancement-tarot consumable clears the selection", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    const pressedCount = getHandCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true",
+    ).length;
+    expect(pressedCount).toBe(0);
+  });
+
+  test("no TarotPicker modal is ever rendered (selection replaces it)", async () => {
+    const user = await openShop();
+    const tarotName = screen
+      .getByTestId("shop-offer-2")
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId("shop-offer-2")
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(document.querySelector(".tarot-picker-modal")).toBeNull();
   });
 });
 

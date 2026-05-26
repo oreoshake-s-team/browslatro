@@ -80,6 +80,7 @@ export default function Game({
         />
         <Consumables
           consumables={consumables}
+          selectedCount={selectedIds.size}
           capacity={consumableCapacity}
           onUse={onUseConsumable}
         />

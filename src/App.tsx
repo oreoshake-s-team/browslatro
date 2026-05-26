@@ -5,9 +5,8 @@ import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
-import TarotPicker from "./components/shop/TarotPicker";
 import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
-import { createTarotCatalog, resolveHermitPayout, type TarotCard } from "./tarots";
+import { createTarotCatalog, resolveHermitPayout } from "./tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -178,10 +177,6 @@ function App() {
   const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
     null,
   );
-  const [pendingTarot, setPendingTarot] = useState<{
-    consumableIdx: number;
-    tarot: TarotCard;
-  } | null>(null);
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
@@ -393,27 +388,19 @@ function App() {
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
-    setPendingTarot({ consumableIdx, tarot: entry.card });
-  }
-
-  function confirmTarotPicker(cardIds: ReadonlyArray<number>) {
-    if (!pendingTarot) return;
-    const { consumableIdx, tarot } = pendingTarot;
-    const effect = tarot.effect;
-    if (effect.kind !== "apply-enhancement" || cardIds.length === 0) {
-      setPendingTarot(null);
-      return;
-    }
-    const targets = new Set(cardIds);
+    if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
+    play("pop");
     setDealt((prev) => ({
       hand: prev.hand.map((c) =>
-        targets.has(c.id) ? { ...c, enhancement: effect.enhancement } : c,
+        selectedIds.has(c.id) ? { ...c, enhancement: effect.enhancement } : c,
       ),
       remaining: prev.remaining,
     }));
-    play("pop");
+    setSelectedIds(new Set());
+    setSelectedHand(null);
+    setChips(0);
+    setMultiplier(0);
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-    setPendingTarot(null);
   }
 
   function rerollShopOffers(cost: number) {
@@ -481,7 +468,6 @@ function App() {
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
     setConsumables([]);
-    setPendingTarot(null);
     const freshOwned = new Set<VoucherId>();
     setOwnedVoucherIds(freshOwned);
     setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
@@ -795,14 +781,6 @@ function App() {
           onBuyVoucher={buyCurrentAnteVoucher}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
-        />
-      )}
-      {pendingTarot && (
-        <TarotPicker
-          tarot={pendingTarot.tarot}
-          hand={dealt.hand}
-          onConfirm={confirmTarotPicker}
-          onCancel={() => setPendingTarot(null)}
         />
       )}
     </div>
