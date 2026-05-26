@@ -1,5 +1,5 @@
 import type { MockedFunction } from "vitest";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
@@ -140,20 +140,94 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     ).toHaveLength(7);
   });
 
-  test("The Psychic on ante 1 disables Submit Hand until 5 cards are selected", async () => {
+  test("The Psychic does not gate Submit by selection count (#329)", async () => {
     bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToBossBlindAfterStartingTheRound(user);
-    expect(screen.getByText("The Psychic")).toBeInTheDocument();
-    expect(screen.getByText(/Submit Hand/)).toBeDisabled();
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
+  });
+
+  function flushScoringSequence(): void {
+    for (let i = 0; i < 60; i += 1) {
+      if (vi.getTimerCount() === 0) return;
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+    }
+  }
+
+  function flushDiscardAnimation(): void {
+    flushScoringSequence();
+    Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    )
+      .filter((btn) => btn.classList.contains("card-discarding"))
+      .forEach((btn) => fireEvent.animationEnd(btn));
+  }
+
+  test("submitting 4 cards on The Psychic consumes a hand but leaves round score at 0 (#329)", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const handsBefore = Number(
+      getStatValue("Hands").textContent?.replace(/[^0-9]/g, "") ?? "0",
+    );
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    for (let i = 0; i < 4; i += 1) await user.click(cards[i] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const handsAfter = Number(
+      getStatValue("Hands").textContent?.replace(/[^0-9]/g, "") ?? "0",
+    );
+    expect(handsAfter).toBe(handsBefore - 1);
+  });
+
+  test("submitting 4 cards on The Psychic leaves the round score at 0 (#329)", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    for (let i = 0; i < 4; i += 1) await user.click(cards[i] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const value = document.querySelector(".round-score-value");
+    expect(value?.textContent ?? "").toBe("0");
+  });
+
+  test("submitting 5 cards on The Psychic still scores normally (#329)", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
     const cards = Array.from(
       screen
         .getByLabelText("Your hand")
         .querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 5; i += 1) await user.click(cards[i] as HTMLElement);
-    expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const value = document.querySelector(".round-score-value");
+    expect(Number(value?.textContent ?? "0")).toBeGreaterThan(0);
   });
 
   function statByLabel(label: string): HTMLElement {
