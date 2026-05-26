@@ -13,7 +13,6 @@ function getHandRegion(): HTMLElement {
 }
 
 function getCardButtons(): HTMLElement[] {
-  // Card buttons expose aria-pressed; reorder controls in the slot do not.
   return within(getHandRegion())
     .getAllByRole("button")
     .filter((btn) => btn.hasAttribute("aria-pressed"));
@@ -191,234 +190,6 @@ describe("Hand sorting", () => {
     );
     const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
     expect(labels).toEqual(["Q of Diamonds", "5 of Hearts"]);
-  });
-});
-
-describe("Hand manual reordering", () => {
-  const fourCards: CardType[] = [
-    { id: 1, rank: "K", suit: "hearts" },
-    { id: 2, rank: "2", suit: "spades" },
-    { id: 3, rank: "10", suit: "clubs" },
-    { id: 4, rank: "A", suit: "diamonds" },
-  ];
-
-  test("renders a Move left button for every card", () => {
-    renderHand({ hand: fourCards, remaining: [] });
-    expect(screen.getAllByRole("button", { name: /^Move .* left$/ })).toHaveLength(
-      4,
-    );
-  });
-
-  test("renders a Move right button for every card", () => {
-    renderHand({ hand: fourCards, remaining: [] });
-    expect(
-      screen.getAllByRole("button", { name: /^Move .* right$/ }),
-    ).toHaveLength(4);
-  });
-
-  test("disables Move left on the leftmost card", () => {
-    renderHand({ hand: fourCards, remaining: [] });
-    // Default rank-sort puts A of Diamonds first
-    expect(
-      screen.getByRole("button", { name: "Move A of Diamonds left" }),
-    ).toBeDisabled();
-  });
-
-  test("disables Move right on the rightmost card", () => {
-    renderHand({ hand: fourCards, remaining: [] });
-    // Default rank-sort puts 2 of Spades last
-    expect(
-      screen.getByRole("button", { name: "Move 2 of Spades right" }),
-    ).toBeDisabled();
-  });
-
-  test("clicking Move right moves the card one position to the right", async () => {
-    const user = userEvent.setup();
-    renderHand({ hand: fourCards, remaining: [] });
-    // Default order: A♦, K♥, 10♣, 2♠ → move K♥ right → A♦, 10♣, K♥, 2♠
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "10 of Clubs",
-      "K of Hearts",
-      "2 of Spades",
-    ]);
-  });
-
-  test("clicking Move left moves the card one position to the left", async () => {
-    const user = userEvent.setup();
-    renderHand({ hand: fourCards, remaining: [] });
-    await user.click(screen.getByRole("button", { name: "Move 10 of Clubs left" }));
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "10 of Clubs",
-      "K of Hearts",
-      "2 of Spades",
-    ]);
-  });
-
-  test("moving a card activates the Manual sort indicator", async () => {
-    const user = userEvent.setup();
-    renderHand({ hand: fourCards, remaining: [] });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
-  });
-
-  test("moving a card unsets the Rank sort indicator", async () => {
-    const user = userEvent.setup();
-    renderHand({ hand: fourCards, remaining: [] });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    expect(screen.getByRole("button", { name: "Rank" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-  });
-
-  test("clicking Rank after a manual move restores rank-sorted order", async () => {
-    const user = userEvent.setup();
-    renderHand({ hand: fourCards, remaining: [] });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    await user.click(screen.getByRole("button", { name: "Rank" }));
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "K of Hearts",
-      "10 of Clubs",
-      "2 of Spades",
-    ]);
-  });
-
-  test("a newly drawn card is appended to the manual order", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderHand({ hand: fourCards, remaining: [] });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    const withNewCard: CardType[] = [
-      ...fourCards,
-      { id: 5, rank: "7", suit: "hearts" },
-    ];
-    rerender(
-      <Hand
-        hand={withNewCard}
-        remaining={[]}
-        selectedIds={new Set()}
-        discardingIds={new Set()}
-        onToggleCard={vi.fn()}
-        onCardDiscardEnd={vi.fn()}
-      />,
-    );
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "10 of Clubs",
-      "K of Hearts",
-      "2 of Spades",
-      "7 of Hearts",
-    ]);
-  });
-
-  test("a removed card is dropped from the manual order without disturbing siblings", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderHand({ hand: fourCards, remaining: [] });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    const withoutTwo = fourCards.filter((c) => c.id !== 2);
-    rerender(
-      <Hand
-        hand={withoutTwo}
-        remaining={[]}
-        selectedIds={new Set()}
-        discardingIds={new Set()}
-        onToggleCard={vi.fn()}
-        onCardDiscardEnd={vi.fn()}
-      />,
-    );
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual(["A of Diamonds", "10 of Clubs", "K of Hearts"]);
-  });
-
-  test("an incremented handPlaySignal clears manual order back to the active sort mode", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderHand({
-      hand: fourCards,
-      remaining: [],
-      handPlaySignal: 0,
-    });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    rerender(
-      <Hand
-        hand={fourCards}
-        remaining={[]}
-        selectedIds={new Set()}
-        discardingIds={new Set()}
-        handPlaySignal={1}
-        onToggleCard={vi.fn()}
-        onCardDiscardEnd={vi.fn()}
-      />,
-    );
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "K of Hearts",
-      "10 of Clubs",
-      "2 of Spades",
-    ]);
-  });
-
-  test("an incremented handPlaySignal deactivates the Manual sort indicator", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderHand({
-      hand: fourCards,
-      remaining: [],
-      handPlaySignal: 0,
-    });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    rerender(
-      <Hand
-        hand={fourCards}
-        remaining={[]}
-        selectedIds={new Set()}
-        discardingIds={new Set()}
-        handPlaySignal={1}
-        onToggleCard={vi.fn()}
-        onCardDiscardEnd={vi.fn()}
-      />,
-    );
-    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
-      "aria-pressed",
-      "false",
-    );
-  });
-
-  test("an unchanged handPlaySignal preserves the manual order across rerenders", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderHand({
-      hand: fourCards,
-      remaining: [],
-      handPlaySignal: 3,
-    });
-    await user.click(screen.getByRole("button", { name: "Move K of Hearts right" }));
-    rerender(
-      <Hand
-        hand={fourCards}
-        remaining={[]}
-        selectedIds={new Set()}
-        discardingIds={new Set()}
-        handPlaySignal={3}
-        onToggleCard={vi.fn()}
-        onCardDiscardEnd={vi.fn()}
-      />,
-    );
-    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
-    expect(labels).toEqual([
-      "A of Diamonds",
-      "10 of Clubs",
-      "K of Hearts",
-      "2 of Spades",
-    ]);
   });
 });
 
@@ -643,6 +414,143 @@ describe("Hand drag-and-drop reordering", () => {
       "K of Hearts",
       "10 of Clubs",
       "A of Diamonds",
+      "2 of Spades",
+    ]);
+  });
+
+  test("clicking Rank after a manual drag restores rank-sorted order", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    dragCardToGap(1, 3);
+    await user.click(screen.getByRole("button", { name: "Rank" }));
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("a newly drawn card is appended to the manual order", () => {
+    const { rerender } = renderHand({ hand: fourCards, remaining: [] });
+    dragCardToGap(1, 3);
+    const withNewCard: CardType[] = [
+      ...fourCards,
+      { id: 5, rank: "7", suit: "hearts" },
+    ];
+    rerender(
+      <Hand
+        hand={withNewCard}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
+      "2 of Spades",
+      "7 of Hearts",
+    ]);
+  });
+
+  test("a removed card is dropped from the manual order without disturbing siblings", () => {
+    const { rerender } = renderHand({ hand: fourCards, remaining: [] });
+    dragCardToGap(1, 3);
+    const withoutTwo = fourCards.filter((c) => c.id !== 2);
+    rerender(
+      <Hand
+        hand={withoutTwo}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual(["A of Diamonds", "10 of Clubs", "K of Hearts"]);
+  });
+
+  test("an incremented handPlaySignal clears manual order back to the active sort mode", () => {
+    const { rerender } = renderHand({
+      hand: fourCards,
+      remaining: [],
+      handPlaySignal: 0,
+    });
+    dragCardToGap(1, 3);
+    rerender(
+      <Hand
+        hand={fourCards}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        handPlaySignal={1}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("an incremented handPlaySignal deactivates the Manual sort indicator", () => {
+    const { rerender } = renderHand({
+      hand: fourCards,
+      remaining: [],
+      handPlaySignal: 0,
+    });
+    dragCardToGap(1, 3);
+    rerender(
+      <Hand
+        hand={fourCards}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        handPlaySignal={1}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
+      "aria-pressed",
+      "false",
+    );
+  });
+
+  test("an unchanged handPlaySignal preserves the manual order across rerenders", () => {
+    const { rerender } = renderHand({
+      hand: fourCards,
+      remaining: [],
+      handPlaySignal: 3,
+    });
+    dragCardToGap(1, 3);
+    rerender(
+      <Hand
+        hand={fourCards}
+        remaining={[]}
+        selectedIds={new Set()}
+        discardingIds={new Set()}
+        handPlaySignal={3}
+        onToggleCard={vi.fn()}
+        onCardDiscardEnd={vi.fn()}
+      />,
+    );
+    const labels = getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    expect(labels).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
       "2 of Spades",
     ]);
   });

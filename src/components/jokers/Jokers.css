@@ -123,35 +123,6 @@
   cursor: grabbing;
 }
 
-.joker-tile-reorder {
-  display: flex;
-  justify-content: center;
-  gap: 0.25rem;
-  margin-top: 0.4rem;
-}
-
-.joker-tile-reorder-button {
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 1px solid #f1c40f;
-  background-color: #fff9db;
-  color: #5c3c00;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.joker-tile-reorder-button:hover:not(:disabled) {
-  background-color: #ffe066;
-}
-
-.joker-tile-reorder-button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
 .joker-gap {
   flex: 0 0 2.5rem;
   align-self: stretch;

@@ -1,5 +1,5 @@
 import type { MockedFunction } from "vitest";
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App, { getScoringStepMs } from "./App";
 import {
@@ -225,10 +225,33 @@ describe("Multiply Multiplier button integration", () => {
 });
 
 function getHandCardButtons(): HTMLElement[] {
-  // Card buttons expose aria-pressed; reorder controls in each slot do not.
   return Array.from(
     screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]")
   );
+}
+
+function getHandGaps(): HTMLElement[] {
+  return Array.from(
+    screen
+      .getByLabelText("Your hand")
+      .querySelectorAll('[data-testid^="hand-gap-"]'),
+  );
+}
+
+function findHandSlotByCardLabel(label: string): HTMLElement {
+  const button = screen.getByRole("button", { name: label });
+  const slot = button.closest('[data-testid^="hand-slot-"]');
+  if (!slot) throw new Error(`Could not find hand slot for "${label}"`);
+  return slot as HTMLElement;
+}
+
+function dragCardToGap(cardLabel: string, gapIdx: number): void {
+  const source = findHandSlotByCardLabel(cardLabel);
+  const gap = getHandGaps()[gapIdx];
+  fireEvent.dragStart(source);
+  fireEvent.dragOver(gap);
+  fireEvent.drop(gap);
+  fireEvent.dragEnd(source);
 }
 
 function flushScoringSequence(): void {
@@ -555,11 +578,9 @@ describe("Hand stays sorted after a play", () => {
   test("playing a hand clears a manual sort override and restores rank order", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    const handRegion = screen.getByLabelText("Your hand");
-    const moveRightButtons = within(handRegion)
-      .getAllByRole("button", { name: /^Move .* right$/ })
-      .filter((btn) => !(btn as HTMLButtonElement).disabled);
-    await user.click(moveRightButtons[0]);
+    const firstCardLabel = getHandCardButtons()[0].getAttribute("aria-label");
+    if (!firstCardLabel) throw new Error("First hand card has no aria-label");
+    dragCardToGap(firstCardLabel, 2);
     expect(screen.getByRole("button", { name: "Manual order" })).toHaveAttribute(
       "aria-pressed",
       "true",
@@ -948,8 +969,7 @@ describe("Sequential card scoring", () => {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    const moveFiveLeft = screen.getByRole("button", { name: "Move 5 of Spades left" });
-    for (let i = 0; i < 4; i += 1) await user.click(moveFiveLeft);
+    dragCardToGap("5 of Spades", 0);
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));

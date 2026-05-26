@@ -2,21 +2,10 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
-import type { Card as CardType, Suit } from "../../types";
+import type { Card as CardType } from "../../types";
 import { sortCards, type SortMode } from "../../deck";
 
 export const MAX_SELECTED = 5;
-
-const SUIT_LABELS: Record<Suit, string> = {
-  spades: "Spades",
-  hearts: "Hearts",
-  diamonds: "Diamonds",
-  clubs: "Clubs",
-};
-
-function cardLabel(card: CardType): string {
-  return `${card.rank} of ${SUIT_LABELS[card.suit]}`;
-}
 
 function applyManualOrder(
   hand: ReadonlyArray<CardType>,
@@ -98,26 +87,6 @@ export default function Hand({
   function selectSort(mode: SortMode) {
     setSortMode(mode);
     setManualOrder(null);
-  }
-
-  function swapByIds(aId: number, bId: number) {
-    if (aId === bId) return;
-    const currentOrder = displayedHand.map((c) => c.id);
-    const fromIdx = currentOrder.indexOf(aId);
-    const toIdx = currentOrder.indexOf(bId);
-    if (fromIdx < 0 || toIdx < 0) return;
-    const next = currentOrder.slice();
-    [next[fromIdx], next[toIdx]] = [next[toIdx], next[fromIdx]];
-    setManualOrder(next);
-  }
-
-  function moveCard(cardId: number, direction: -1 | 1) {
-    const currentOrder = displayedHand.map((c) => c.id);
-    const idx = currentOrder.indexOf(cardId);
-    if (idx < 0) return;
-    const target = idx + direction;
-    if (target < 0 || target >= currentOrder.length) return;
-    swapByIds(cardId, currentOrder[target]);
   }
 
   // Gap indices run 0..N where N = hand size; gap K is "before card K"
@@ -298,7 +267,7 @@ export default function Hand({
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
             aria-label="Manual order"
-            title="Manual order (drag a card or use the arrows on each card to rearrange)"
+            title="Manual order (drag a card to rearrange)"
           >
             Manual
           </button>
@@ -343,30 +312,6 @@ export default function Hand({
                     onToggle={onToggleCard}
                     onDiscardEnd={onCardDiscardEnd}
                   />
-                  <div
-                    className="hand-card-reorder"
-                    role="group"
-                    aria-label={`Reorder ${cardLabel(card)}`}
-                  >
-                    <button
-                      type="button"
-                      className="hand-card-reorder-button"
-                      aria-label={`Move ${cardLabel(card)} left`}
-                      disabled={idx === 0}
-                      onClick={() => moveCard(card.id, -1)}
-                    >
-                      ◀
-                    </button>
-                    <button
-                      type="button"
-                      className="hand-card-reorder-button"
-                      aria-label={`Move ${cardLabel(card)} right`}
-                      disabled={idx === displayedHand.length - 1}
-                      onClick={() => moveCard(card.id, 1)}
-                    >
-                      ▶
-                    </button>
-                  </div>
                 </div>
               </Fragment>
             );

@@ -155,33 +155,6 @@
   cursor: grabbing;
 }
 
-.hand-card-reorder {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.hand-card-reorder-button {
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  border: 1px solid #dee2e6;
-  background-color: white;
-  color: #495057;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.hand-card-reorder-button:hover:not(:disabled) {
-  background-color: #e9ecef;
-}
-
-.hand-card-reorder-button:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
 .hand-sort-button:disabled {
   cursor: default;
 }
