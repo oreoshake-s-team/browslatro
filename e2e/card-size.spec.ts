@@ -61,11 +61,13 @@ test("13 hand cards squish instead of producing a horizontal scrollbar (issue #2
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
   await page.waitForSelector(".card");
+  await page.getByTestId("blind-select-play").click();
   await page.locator(".modifier-disclosure").click();
   const grow = page.getByRole("button", { name: /Hand \+1/ });
   for (let i = 0; i < 5; i += 1) await grow.click();
   await page.getByText(/Win/).click();
   await page.getByRole("button", { name: /Next Round/ }).click();
+  await page.getByTestId("blind-select-play").click();
   await expect(
     page.locator('[aria-label="Your hand"] .card'),
   ).toHaveCount(13);
