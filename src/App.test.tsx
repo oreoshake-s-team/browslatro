@@ -642,20 +642,20 @@ describe("Discard animation", () => {
 });
 
 describe("Submit Hand button integration", () => {
-  test("dev Add Chips bump survives an empty Submit Hand (sticky offset, #265)", async () => {
+  test("dev Add Chips bump resets after Submit Hand (per-hand reset, #265)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
     await user.click(screen.getByText(/Submit Hand/));
-    expect(document.querySelector(".chips")).toHaveTextContent("10");
+    expect(document.querySelector(".chips")).toHaveTextContent("0");
   });
 
-  test("dev Add Multiplier bump survives an empty Submit Hand (sticky offset, #265)", async () => {
+  test("dev Add Multiplier bump resets after Submit Hand (per-hand reset, #265)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
     await user.click(screen.getByText(/Submit Hand/));
-    expect(document.querySelector(".multiplier")).toHaveTextContent("1");
+    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
   });
 
   test("submitting with no cards selected adds 0 to the round score", async () => {
@@ -3103,5 +3103,33 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     await user.click(screen.getByRole("button", { name: /New game/ }));
     expect(document.querySelector(".chips")).toHaveTextContent("0");
     expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+  });
+
+  test("Add Chips bump appears as a +N Chips entry in the scoring trace", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add Chips/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+      /\+10 Chips \(Apply Modifiers \(dev\)\)/,
+    );
+  });
+
+  test("Multiply Multiplier appears as a ×N Mult entry in the scoring trace", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Multiply Multiplier/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+      /×2 Mult \(Apply Modifiers \(dev\)\)/,
+    );
   });
 });

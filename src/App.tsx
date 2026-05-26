@@ -1259,6 +1259,27 @@ function App() {
         source: `${currentBoss.name}: ${playedCards.length} cards played`,
       });
     }
+    if (devChipsBonus !== 0) {
+      submitEvents.push({
+        kind: "chips-delta",
+        amount: devChipsBonus,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    if (devMultBonus !== 0) {
+      submitEvents.push({
+        kind: "mult-delta",
+        amount: devMultBonus,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    if (devMultFactor !== 1) {
+      submitEvents.push({
+        kind: "mult-times",
+        factor: devMultFactor,
+        source: "Apply Modifiers (dev)",
+      });
+    }
     setScoringEvents((prev) => [...prev, ...submitEvents]);
     setScoringCards(scoring);
     setScoringIndex(0);
@@ -1273,6 +1294,9 @@ function App() {
     setRoundScore(newRoundScore);
     setChips(0);
     setMultiplier(0);
+    setDevChipsBonus(0);
+    setDevMultBonus(0);
+    setDevMultFactor(1);
     setSelectedHand(null);
     setScoringCards([]);
     setScoringIndex(0);
