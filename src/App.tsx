@@ -436,6 +436,7 @@ function App() {
   function buyShopOffer(idx: number) {
     const offer = shopOffers?.[idx];
     if (!offer || offer.sold) return;
+    if (offer.kind === "pack") return;
     const price = applyShopDiscount(offer.price, ownedVoucherIds);
     if (money < price) return;
     if (offer.kind === "joker") {

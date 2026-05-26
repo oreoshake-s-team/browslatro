@@ -6,10 +6,12 @@ import { JOKER_BASE_PRICE } from "../constants";
 import { PLANET_BASE_PRICE } from "./planets";
 import { SPECTRAL_BASE_PRICE } from "./spectrals";
 import { TAROT_BASE_PRICE } from "./tarots";
+import { type PackOffer, packPrice, rollPack } from "./packs";
 
 export const SPECTRAL_OFFER_CHANCE = 0.15;
 
 export const SHOP_OFFER_SLOTS = 2;
+export const SHOP_PACK_SLOTS = 2;
 
 export const BASE_REROLL_COST = 5;
 
@@ -109,6 +111,12 @@ export type ShopItem =
       readonly spectral: SpectralCard;
       readonly price: number;
       readonly sold: boolean;
+    }
+  | {
+      readonly kind: "pack";
+      readonly pack: PackOffer;
+      readonly price: number;
+      readonly sold: boolean;
     };
 
 export function rerollCostFor(rerollCount: number): number {
@@ -167,6 +175,10 @@ function spectralOffer(spectral: SpectralCard): ShopItem {
   return { kind: "spectral", spectral, price: SPECTRAL_BASE_PRICE, sold: false };
 }
 
+function packShopOffer(pack: PackOffer): ShopItem {
+  return { kind: "pack", pack, price: packPrice(pack.variant), sold: false };
+}
+
 export interface PickShopOffersArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly excludedJokerIds: ReadonlyArray<string>;
@@ -177,7 +189,7 @@ export interface PickShopOffersArgs {
   readonly rng?: RandomSource;
 }
 
-type ShopOfferKind = ShopItem["kind"];
+type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
 const COMMON_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = ["joker", "planet", "tarot"];
 
 interface PickedOfferIds {
@@ -237,6 +249,8 @@ function recordPicked(picked: PickedOfferIds, offer: ShopItem): void {
     case "spectral":
       (picked.spectral as Set<string>).add(offer.spectral.id);
       return;
+    case "pack":
+      return;
   }
 }
 
@@ -270,6 +284,9 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
       slots.push(offer);
     }
   }
+  for (let i = 0; i < SHOP_PACK_SLOTS; i += 1) {
+    slots.push(packShopOffer(rollPack({ planetCatalog: args.planetCatalog, rng })));
+  }
   return slots;
 }
 
@@ -277,6 +294,7 @@ export function rerollShopOffer(
   current: ShopItem,
   args: PickShopOffersArgs,
 ): ShopItem | null {
+  if (current.kind === "pack") return null;
   const picked = emptyPickedIds();
   recordPicked(picked, current);
   return pickRandomKindOffer(args, args.rng ?? Math.random, picked);

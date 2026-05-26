@@ -2,6 +2,7 @@ import "./Shop.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { MAX_JOKERS } from "../../items/jokers";
+import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
   applyShopDiscount,
@@ -52,6 +53,7 @@ type BuyButtonState =
   | { kind: "slots-full" }
   | { kind: "consumable-slots-full" }
   | { kind: "unaffordable" }
+  | { kind: "pack-pending" }
   | { kind: "available" };
 
 function resolveBuyState(
@@ -63,6 +65,7 @@ function resolveBuyState(
   consumableCapacity: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
+  if (offer.kind === "pack") return { kind: "pack-pending" };
   if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
     return { kind: "slots-full" };
   }
@@ -88,6 +91,8 @@ function buyButtonLabel(state: BuyButtonState, price: number): string {
       return "Slots full";
     case "unaffordable":
       return `Buy ($${price})`;
+    case "pack-pending":
+      return `Open ($${price})`;
     case "available":
       return `Buy ($${price})`;
   }
@@ -106,6 +111,8 @@ function buyButtonTooltip(
       return `Consumable slots are full (max ${consumableCapacity})`;
     case "unaffordable":
       return "Not enough money";
+    case "pack-pending":
+      return "Pack opening coming soon";
     case "available":
       return undefined;
   }
@@ -125,6 +132,16 @@ function offerSubject(offer: ShopItem): {
       return offer.tarot;
     case "spectral":
       return offer.spectral;
+    case "pack": {
+      const optionCount = packOptionsCount(offer.pack.pool, offer.pack.variant);
+      const pickCount = packPickLimit(offer.pack.variant);
+      const picks = pickCount === 1 ? "1 card" : `${pickCount} cards`;
+      return {
+        id: `pack-${offer.pack.pool}-${offer.pack.variant}`,
+        name: packDisplayName(offer.pack),
+        description: `Open to pick ${picks} from ${optionCount} options`,
+      };
+    }
   }
 }
 
@@ -135,6 +152,7 @@ const OFFER_KIND_BADGE: Readonly<
   planet: { icon: "🪐", label: "Planet" },
   tarot: { icon: "🔮", label: "Tarot" },
   spectral: { icon: "👻", label: "Spectral" },
+  pack: { icon: "🎁", label: "Pack" },
 };
 
 export default function Shop({
