@@ -59,5 +59,5 @@ export function consumableLabel(c: Consumable): string {
 }
 
 export function consumableDescription(c: Consumable): string {
-  return c.kind === "planet" ? c.card.description : c.card.description;
+  return c.card.description;
 }
