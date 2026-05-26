@@ -1,8 +1,9 @@
 import type { PlanetCard } from "./planets";
 import type { TarotCard } from "./tarots";
+import type { SpectralCard } from "./spectrals";
 import type { Joker, RandomSource } from "./jokers";
 
-export type PackPool = "celestial" | "arcana" | "buffoon";
+export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral";
 
 export type PackVariant = "normal" | "jumbo" | "mega";
 
@@ -14,6 +15,7 @@ export const PACK_POOL_WEIGHTS: Readonly<Record<PackPool, number>> = {
   arcana: 4,
   celestial: 1,
   buffoon: 1,
+  spectral: 0.25,
 };
 
 export const PACK_VARIANT_WEIGHTS: Readonly<Record<PackVariant, number>> = {
@@ -26,6 +28,7 @@ const PACK_BASE_OPTIONS: Readonly<Record<PackPool, number>> = {
   celestial: 3,
   arcana: 3,
   buffoon: 2,
+  spectral: 2,
 };
 
 const PACK_PICK_LIMIT: Readonly<Record<PackVariant, number>> = {
@@ -38,12 +41,14 @@ const POOL_LABELS: Readonly<Record<PackPool, string>> = {
   celestial: "Celestial",
   arcana: "Arcana",
   buffoon: "Buffoon",
+  spectral: "Spectral",
 };
 
 export type PackOption =
   | { readonly kind: "planet"; readonly planet: PlanetCard }
   | { readonly kind: "tarot"; readonly tarot: TarotCard }
-  | { readonly kind: "joker"; readonly joker: Joker };
+  | { readonly kind: "joker"; readonly joker: Joker }
+  | { readonly kind: "spectral"; readonly spectral: SpectralCard };
 
 export interface PackOffer {
   readonly pool: PackPool;
@@ -101,6 +106,7 @@ export interface RollPackOptionsArgs {
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
   readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly excludedJokerIds?: ReadonlyArray<string>;
   readonly rng: RandomSource;
 }
@@ -127,6 +133,12 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
       joker,
     }));
   }
+  if (args.pool === "spectral") {
+    return drawWithoutReplacement(args.spectralCatalog, want, args.rng).map((spectral) => ({
+      kind: "spectral" as const,
+      spectral,
+    }));
+  }
   return [];
 }
 
@@ -149,6 +161,7 @@ export interface RollPackArgs {
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
   readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly excludedJokerIds?: ReadonlyArray<string>;
   readonly rng: RandomSource;
 }
@@ -162,6 +175,7 @@ export function rollPack(args: RollPackArgs): PackOffer {
     planetCatalog: args.planetCatalog,
     tarotCatalog: args.tarotCatalog,
     jokerCatalog: args.jokerCatalog,
+    spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
     rng: args.rng,
   });

@@ -5,10 +5,12 @@ import type { PackOffer } from "../../items/packs";
 import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
 import { createJokerCatalog } from "../../items/jokers";
+import { createSpectralCatalog } from "../../items/spectrals";
 
 const PLANETS = createPlanetCatalog();
 const TAROTS = createTarotCatalog();
 const JOKERS = createJokerCatalog();
+const SPECTRALS = createSpectralCatalog();
 
 function celestialPack(
   variant: "normal" | "jumbo" | "mega",
@@ -322,5 +324,105 @@ describe("PackOpenModal — Buffoon pack rendering", () => {
     );
     await user.click(screen.getByTestId("pack-open-pick-1"));
     expect(onPick).toHaveBeenCalledWith(1);
+  });
+});
+
+function spectralPack(
+  variant: "normal" | "jumbo" | "mega",
+  count: number,
+): PackOffer {
+  return {
+    pool: "spectral",
+    variant,
+    options: SPECTRALS.slice(0, count).map((spectral) => ({
+      kind: "spectral" as const,
+      spectral,
+    })),
+  };
+}
+
+describe("PackOpenModal — Spectral pack rendering", () => {
+  test("renders the Spectral pack display name", () => {
+    render(
+      <PackOpenModal
+        pack={spectralPack("normal", 2)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: /Spectral Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("renders one Pick button per spectral in a Spectral pack", () => {
+    render(
+      <PackOpenModal
+        pack={spectralPack("jumbo", 4)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: /^Pick / })).toHaveLength(4);
+  });
+
+  test("Pick button label includes the spectral card's name", () => {
+    render(
+      <PackOpenModal
+        pack={spectralPack("normal", 2)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const firstSpectral = SPECTRALS[0];
+    expect(
+      screen.getByRole("button", { name: `Pick ${firstSpectral.name}` }),
+    ).toBeInTheDocument();
+  });
+
+  test("Pick buttons disable when consumable slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={spectralPack("normal", 2)}
+        picksRemaining={1}
+        consumableSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("Pick buttons stay enabled in a Spectral pack when only joker slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={spectralPack("normal", 2)}
+        picksRemaining={1}
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).not.toBeDisabled();
+  });
+
+  test("clicking Pick on a spectral invokes onPick with the option index", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(
+      <PackOpenModal
+        pack={spectralPack("normal", 2)}
+        picksRemaining={1}
+        onPick={onPick}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(onPick).toHaveBeenCalledWith(0);
   });
 });
