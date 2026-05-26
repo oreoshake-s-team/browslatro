@@ -175,6 +175,30 @@ describe("Card", () => {
     expect(screen.getByRole("button")).not.toHaveClass("card-gold-scoring");
   });
 
+  test("applies the steel scoring class when steelScoring is true", () => {
+    const steel: CardType = { id: 20, rank: "A", suit: "spades", enhancement: "steel" };
+    render(<Card card={steel} steelScoring />);
+    expect(screen.getByRole("button")).toHaveClass("card-steel-scoring");
+  });
+
+  test("does not apply the steel scoring class when steelScoring is omitted", () => {
+    const steel: CardType = { id: 21, rank: "A", suit: "spades", enhancement: "steel" };
+    render(<Card card={steel} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-steel-scoring");
+  });
+
+  test("exposes a steel-scoring-<id> testid while steelScoring is true", () => {
+    const steel: CardType = { id: 22, rank: "A", suit: "spades", enhancement: "steel" };
+    render(<Card card={steel} steelScoring />);
+    expect(screen.getByTestId("steel-scoring-22")).toBeInTheDocument();
+  });
+
+  test("omits the steel-scoring testid when steelScoring is false", () => {
+    const steel: CardType = { id: 23, rank: "A", suit: "spades", enhancement: "steel" };
+    render(<Card card={steel} />);
+    expect(screen.queryByTestId("steel-scoring-23")).not.toBeInTheDocument();
+  });
+
   test("applies the steel enhancement class when the card is steel", () => {
     const steel: CardType = { id: 10, rank: "A", suit: "hearts", enhancement: "steel" };
     render(<Card card={steel} />);

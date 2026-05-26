@@ -45,6 +45,7 @@ interface HandProps {
   discardingIds: ReadonlySet<number>;
   scoringId?: number | null;
   goldScoringId?: number | null;
+  steelScoringId?: number | null;
   handPlaySignal?: number;
   onToggleCard: (card: CardType) => void;
   onCardDiscardEnd: (card: CardType) => void;
@@ -58,6 +59,7 @@ export default function Hand({
   discardingIds,
   scoringId = null,
   goldScoringId = null,
+  steelScoringId = null,
   handPlaySignal = 0,
   onToggleCard,
   onCardDiscardEnd,
@@ -333,6 +335,7 @@ export default function Hand({
                     discarding={discardingIds.has(card.id)}
                     scoring={scoringId === card.id}
                     goldScoring={goldScoringId === card.id}
+                    steelScoring={steelScoringId === card.id}
                     onToggle={onToggleCard}
                     onDiscardEnd={onCardDiscardEnd}
                   />

@@ -56,6 +56,7 @@ interface CardProps {
   discarding?: boolean;
   scoring?: boolean;
   goldScoring?: boolean;
+  steelScoring?: boolean;
   onToggle?: (card: CardType) => void;
   onDiscardEnd?: (card: CardType) => void;
 }
@@ -66,6 +67,7 @@ export default function Card({
   discarding = false,
   scoring = false,
   goldScoring = false,
+  steelScoring = false,
   onToggle,
   onDiscardEnd,
 }: CardProps) {
@@ -96,6 +98,7 @@ export default function Card({
   const discardingClass = discarding ? "card-discarding" : "";
   const scoringClass = scoring ? "card-scoring" : "";
   const goldScoringClass = goldScoring ? "card-gold-scoring" : "";
+  const steelScoringClass = steelScoring ? "card-steel-scoring" : "";
   const enhancementClass = card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
@@ -112,12 +115,13 @@ export default function Card({
     <button
       ref={buttonRef}
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${faceClass} ${enhancementClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${faceClass} ${enhancementClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}
       aria-label={ariaLabel}
       aria-describedby={tooltipRect ? tooltipId : undefined}
+      data-testid={steelScoring ? `steel-scoring-${card.id}` : undefined}
       onClick={() => onToggle?.(card)}
       onMouseEnter={showTooltip}
       onMouseLeave={hideTooltip}
