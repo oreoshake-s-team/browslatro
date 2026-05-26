@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Consumables from "./Consumables";
-import { createPlanetCatalog } from "../../planets";
-import { createTarotCatalog } from "../../tarots";
-import type { Consumable } from "../../consumables";
+import { createPlanetCatalog } from "../../items/planets";
+import { createTarotCatalog } from "../../items/tarots";
+import type { Consumable } from "../../items/consumables";
 
 const planet = createPlanetCatalog()[0];
 const tarot = createTarotCatalog()[0];

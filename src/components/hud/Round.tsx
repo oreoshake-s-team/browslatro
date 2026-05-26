@@ -1,4 +1,4 @@
-import type { Blind, BlindValuesMap } from "../../types";
+import type { Blind, BlindValuesMap } from "../../cards/types";
 import "./Round.css";
 
 interface RoundProps {

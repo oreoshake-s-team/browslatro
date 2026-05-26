@@ -1,4 +1,4 @@
-import type { Blind } from "../../types";
+import type { Blind } from "../../cards/types";
 import "./Sidebar.css";
 import { BlindValues } from "../../constants";
 import Round from "./Round";
@@ -7,9 +7,9 @@ import Options from "../options/Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import HandScore from "../game/HandScore";
-import type { Hand } from "../../types";
-import type { HandStats } from "../../handStats";
-import type { Voucher } from "../../vouchers";
+import type { Hand } from "../../cards/types";
+import type { HandStats } from "../../scoring/handStats";
+import type { Voucher } from "../../items/vouchers";
 import type { AnimationSpeed } from "../system/preferences";
 
 interface SidebarProps {

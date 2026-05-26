@@ -5,7 +5,7 @@ import {
   INTEREST_CAP,
   INTEREST_RATE_PER,
   REMAINING_HAND_BONUS,
-} from "../../payout";
+} from "../../scoring/payout";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export interface RoundWonInfo {

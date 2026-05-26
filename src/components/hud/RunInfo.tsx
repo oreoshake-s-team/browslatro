@@ -2,9 +2,9 @@ import { useCallback, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import "./RunInfo.css";
 import { HANDS } from "../../constants";
-import type { HandLabel } from "../../handEvaluator";
-import type { HandStats } from "../../handStats";
-import type { Voucher } from "../../vouchers";
+import type { HandLabel } from "../../scoring/handEvaluator";
+import type { HandStats } from "../../scoring/handStats";
+import type { Voucher } from "../../items/vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export type HandPlayCounts = Readonly<Record<HandLabel, number>>;

@@ -4,7 +4,7 @@ import {
   consumableSellValue,
   consumableUseBlock,
   type Consumable,
-} from "../../consumables";
+} from "../../items/consumables";
 
 export const CONSUMABLE_DRAG_MIME = "application/x-browslatro-consumable";
 

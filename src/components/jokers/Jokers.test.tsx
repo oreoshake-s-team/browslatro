@@ -11,7 +11,7 @@ import {
   createPlusFourMultJoker,
   createWrathfulJoker,
   type Joker,
-} from "../../jokers";
+} from "../../items/jokers";
 
 describe("Jokers UI", () => {
   test("renders MAX_JOKERS tiles in total when no jokers are equipped", () => {

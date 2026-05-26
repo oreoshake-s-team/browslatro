@@ -1,8 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
-import type { Card as CardType } from "../../types";
-import { createDeck as createGoldDeck } from "../../deck";
+import type { Card as CardType } from "../../cards/types";
+import { createDeck as createGoldDeck } from "../../cards/deck";
 
 function createDeck(): CardType[] {
   return createGoldDeck().map(({ rank, suit, id }) => ({ rank, suit, id }));

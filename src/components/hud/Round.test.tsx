@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import Round from "./Round";
-import type { BlindValuesMap } from "../../types";
+import type { BlindValuesMap } from "../../cards/types";
 
 const BlindValues: BlindValuesMap = {
   1: "Small Blind",

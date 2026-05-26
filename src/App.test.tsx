@@ -9,9 +9,9 @@ import {
   toggleHighVisibility,
 } from "./components/system/preferences";
 import { play } from "./components/system/sounds";
-import { shopPickerRngConfig } from "./shop";
-import type { ShopItem } from "./shop";
-import { createPhotographJoker, defaultJokersConfig } from "./jokers";
+import { shopPickerRngConfig } from "./items/shop";
+import type { ShopItem } from "./items/shop";
+import { createPhotographJoker, defaultJokersConfig } from "./items/jokers";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
@@ -76,8 +76,8 @@ function resetHighVisibility(): void {
 // Name must start with "mock" so vi.mock can reference it from its factory.
 const mockShuffleConfig = { useIdentity: false, useReverse: false };
 const mockDeckConfig = { useDefaultEnhancements: false };
-vi.mock("./deck", async () => {
-  const actual = await vi.importActual<typeof import("./deck")>("./deck");
+vi.mock("./cards/deck", async () => {
+  const actual = await vi.importActual<typeof import("./cards/deck")>("./cards/deck");
   return {
     ...actual,
     shuffle: <T,>(items: ReadonlyArray<T>): T[] => {

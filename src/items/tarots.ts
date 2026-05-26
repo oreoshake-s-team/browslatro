@@ -1,4 +1,4 @@
-import type { Enhancement } from "./types";
+import type { Enhancement } from "../cards/types";
 
 export const TAROT_BASE_PRICE = 3;
 export const HERMIT_MONEY_CAP = 20;

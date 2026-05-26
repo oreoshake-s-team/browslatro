@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { ENHANCEMENT_KINDS } from "./enhancements";
+import { ENHANCEMENT_KINDS } from "../cards/enhancements";
 import {
   HERMIT_MONEY_CAP,
   TAROT_BASE_PRICE,

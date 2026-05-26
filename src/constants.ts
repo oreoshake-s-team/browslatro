@@ -1,4 +1,4 @@
-import type { BlindValuesMap, Hand } from "./types";
+import type { BlindValuesMap, Hand } from "./cards/types";
 
 export const BlindValues: BlindValuesMap = {
   1: "Small Blind",

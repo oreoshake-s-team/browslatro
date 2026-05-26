@@ -2,8 +2,8 @@ import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import "./DiscardPile.css";
 import Card from "./Card";
-import type { Card as CardType, Suit } from "../../types";
-import { SUITS, groupBySuit } from "../../deck";
+import type { Card as CardType, Suit } from "../../cards/types";
+import { SUITS, groupBySuit } from "../../cards/deck";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 const SUIT_LABELS: Record<Suit, string> = {

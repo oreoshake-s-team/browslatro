@@ -1,6 +1,6 @@
 import "./Card.css";
 import { useEffect, useId, useRef, useState } from "react";
-import type { Card as CardType, Enhancement, Rank, Suit } from "../../types";
+import type { Card as CardType, Enhancement, Rank, Suit } from "../../cards/types";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 

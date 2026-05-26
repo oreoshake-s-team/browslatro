@@ -1,6 +1,6 @@
-import type { Card, Hand, Rank } from "./types";
-import { HANDS } from "./constants";
-import { cardSuitForEvaluation, isStoneCard } from "./enhancements";
+import type { Card, Hand, Rank } from "../cards/types";
+import { HANDS } from "../constants";
+import { cardSuitForEvaluation, isStoneCard } from "../cards/enhancements";
 
 export type HandLabel =
   | "High Card"

@@ -7,7 +7,7 @@ vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const playMock = play as MockedFunction<typeof play>;
 
-import type { Card } from "./types";
+import type { Card } from "./cards/types";
 
 let deckIdCounter = 0;
 function makeCard(
@@ -21,8 +21,8 @@ function makeCard(
     : { id: deckIdCounter, rank, suit };
 }
 
-vi.mock("./deck", async () => {
-  const actual = await vi.importActual<typeof import("./deck")>("./deck");
+vi.mock("./cards/deck", async () => {
+  const actual = await vi.importActual<typeof import("./cards/deck")>("./cards/deck");
   return {
     ...actual,
     shuffle: <T,>(items: ReadonlyArray<T>): T[] => items.slice(),

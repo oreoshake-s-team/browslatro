@@ -2,9 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import RunInfo, { emptyHandCounts, type HandPlayCounts } from "./RunInfo";
 import { HANDS } from "../../constants";
-import type { HandLabel } from "../../handEvaluator";
-import { createDefaultHandStats, type HandStats } from "../../handStats";
-import { VOUCHER_CATALOG, type Voucher } from "../../vouchers";
+import type { HandLabel } from "../../scoring/handEvaluator";
+import { createDefaultHandStats, type HandStats } from "../../scoring/handStats";
+import { VOUCHER_CATALOG, type Voucher } from "../../items/vouchers";
 
 function findVoucher(id: Voucher["id"]): Voucher {
   const v = VOUCHER_CATALOG.find((entry) => entry.id === id);
