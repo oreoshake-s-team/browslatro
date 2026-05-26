@@ -5,9 +5,24 @@ import { createDefaultHandStats } from "./handStats";
 import {
   PLANET_BASE_PRICE,
   applyPlanetUpgrade,
+  availablePlanets,
   createPlanetCatalog,
   type PlanetCard,
 } from "./planets";
+
+type HandPlayCounts = Readonly<Record<HandLabel, number>>;
+
+function emptyCounts(): HandPlayCounts {
+  const counts = {} as Record<HandLabel, number>;
+  for (const hand of HANDS) {
+    counts[hand.label as HandLabel] = 0;
+  }
+  return counts;
+}
+
+function countsWith(overrides: Partial<Record<HandLabel, number>>): HandPlayCounts {
+  return { ...emptyCounts(), ...overrides };
+}
 
 function planetById(id: string): PlanetCard {
   const found = createPlanetCatalog().find((p) => p.id === id);
@@ -166,5 +181,97 @@ describe("applyPlanetUpgrade", () => {
     const snapshot = before["High Card"];
     applyPlanetUpgrade(before, planetById("pluto"));
     expect(before["High Card"]).toEqual(snapshot);
+  });
+});
+
+describe("secret-hand planet metadata", () => {
+  test("Planet X is gated by Five of a Kind", () => {
+    expect(planetById("planet-x").hiddenUntilPlayed).toBe("Five of a Kind");
+  });
+
+  test("Ceres is gated by Flush House", () => {
+    expect(planetById("ceres").hiddenUntilPlayed).toBe("Flush House");
+  });
+
+  test("Eris is gated by Flush Five", () => {
+    expect(planetById("eris").hiddenUntilPlayed).toBe("Flush Five");
+  });
+
+  test("Neptune is not gated", () => {
+    expect(planetById("neptune").hiddenUntilPlayed).toBeUndefined();
+  });
+
+  test("all non-secret planets have no hiddenUntilPlayed", () => {
+    const nonSecret = createPlanetCatalog().filter(
+      (p) => !["planet-x", "ceres", "eris"].includes(p.id),
+    );
+    expect(nonSecret.every((p) => p.hiddenUntilPlayed === undefined)).toBe(true);
+  });
+});
+
+describe("availablePlanets", () => {
+  test("hides Planet X, Ceres, and Eris on a fresh run", () => {
+    const ids = availablePlanets(createPlanetCatalog(), emptyCounts()).map((p) => p.id);
+    expect(ids).not.toEqual(expect.arrayContaining(["planet-x", "ceres", "eris"]));
+  });
+
+  test("keeps all nine non-secret planets on a fresh run", () => {
+    const result = availablePlanets(createPlanetCatalog(), emptyCounts());
+    expect(result).toHaveLength(9);
+  });
+
+  test("unlocks Planet X after Five of a Kind is played", () => {
+    const ids = availablePlanets(
+      createPlanetCatalog(),
+      countsWith({ "Five of a Kind": 1 }),
+    ).map((p) => p.id);
+    expect(ids).toContain("planet-x");
+  });
+
+  test("unlocking Five of a Kind does not unlock Ceres or Eris", () => {
+    const ids = availablePlanets(
+      createPlanetCatalog(),
+      countsWith({ "Five of a Kind": 1 }),
+    ).map((p) => p.id);
+    expect(ids).not.toContain("ceres");
+    expect(ids).not.toContain("eris");
+  });
+
+  test("unlocks Ceres after Flush House is played", () => {
+    const ids = availablePlanets(
+      createPlanetCatalog(),
+      countsWith({ "Flush House": 1 }),
+    ).map((p) => p.id);
+    expect(ids).toContain("ceres");
+  });
+
+  test("unlocks Eris after Flush Five is played", () => {
+    const ids = availablePlanets(
+      createPlanetCatalog(),
+      countsWith({ "Flush Five": 1 }),
+    ).map((p) => p.id);
+    expect(ids).toContain("eris");
+  });
+
+  test("returns the full catalog when all three secret hands are played", () => {
+    const result = availablePlanets(
+      createPlanetCatalog(),
+      countsWith({
+        "Five of a Kind": 1,
+        "Flush House": 1,
+        "Flush Five": 1,
+      }),
+    );
+    expect(result).toHaveLength(12);
+  });
+
+  test("playing an unrelated hand does not unlock any secret planet", () => {
+    const ids = availablePlanets(
+      createPlanetCatalog(),
+      countsWith({ Pair: 5, Flush: 3 }),
+    ).map((p) => p.id);
+    expect(ids).not.toContain("planet-x");
+    expect(ids).not.toContain("ceres");
+    expect(ids).not.toContain("eris");
   });
 });
