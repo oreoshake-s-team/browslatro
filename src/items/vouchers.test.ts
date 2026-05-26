@@ -4,6 +4,7 @@ import {
   extraConsumableSlots,
   extraShopOfferSlots,
   pickVoucherForAnte,
+  pickVouchersForAnte,
   shopPriceDiscount,
   VOUCHER_BASE_PRICE,
   type Voucher,
@@ -97,6 +98,94 @@ describe("pickVoucherForAnte", () => {
     const owned = new Set<VoucherId>(createVoucherCatalog().map((v) => v.id));
     const picked = pickVoucherForAnte({ ante: 1, ownedIds: owned, rng: rngOf([0]) });
     expect(picked).toBeNull();
+  });
+
+  test("a voucher in excludeIds but not ownedIds does NOT satisfy a prereq", () => {
+    const catalog: ReadonlyArray<Voucher> = [
+      { id: "overstock", name: "Overstock", description: "x", cost: 10 },
+      { id: "overstock-plus", name: "Plus", description: "x", cost: 10, requires: "overstock" },
+    ];
+    // Overstock is in the shop (excluded so we don't double-list it) but
+    // not actually owned. Overstock Plus must NOT be eligible.
+    const picked = pickVoucherForAnte({
+      ante: 1,
+      ownedIds: new Set<VoucherId>(),
+      excludeIds: new Set<VoucherId>(["overstock"]),
+      catalog,
+      rng: rngOf([0]),
+    });
+    expect(picked).toBeNull();
+  });
+
+  test("excludeIds defaults to ownedIds when omitted (back-compat)", () => {
+    const catalog: ReadonlyArray<Voucher> = [
+      { id: "overstock", name: "Overstock", description: "x", cost: 10 },
+      { id: "overstock-plus", name: "Plus", description: "x", cost: 10, requires: "overstock" },
+    ];
+    const picked = pickVoucherForAnte({
+      ante: 1,
+      ownedIds: new Set<VoucherId>(["overstock"]),
+      catalog,
+      rng: rngOf([0]),
+    });
+    expect(picked?.id).toBe("overstock-plus");
+  });
+});
+
+describe("pickVouchersForAnte", () => {
+  test("a voucher in excludeIds but not ownedIds does NOT satisfy its upgrade's prereq", () => {
+    const catalog: ReadonlyArray<Voucher> = [
+      { id: "overstock", name: "Overstock", description: "x", cost: 10 },
+      { id: "overstock-plus", name: "Plus", description: "x", cost: 10, requires: "overstock" },
+    ];
+    const picked = pickVouchersForAnte(
+      {
+        ante: 1,
+        ownedIds: new Set<VoucherId>(),
+        excludeIds: new Set<VoucherId>(["overstock"]),
+        catalog,
+        rng: rngOf([0]),
+      },
+      1,
+    );
+    expect(picked).toEqual([]);
+  });
+
+  test("excludeIds prevents already-shown vouchers from being picked again as duplicates", () => {
+    const catalog: ReadonlyArray<Voucher> = [
+      { id: "overstock", name: "Overstock", description: "x", cost: 10 },
+      { id: "clearance-sale", name: "Clearance", description: "x", cost: 10 },
+    ];
+    const picked = pickVouchersForAnte(
+      {
+        ante: 1,
+        ownedIds: new Set<VoucherId>(),
+        excludeIds: new Set<VoucherId>(["overstock"]),
+        catalog,
+        rng: rngOf([0]),
+      },
+      1,
+    );
+    expect(picked.map((v) => v.id)).toEqual(["clearance-sale"]);
+  });
+
+  test("picks distinct vouchers when called for multiple slots", () => {
+    const catalog: ReadonlyArray<Voucher> = [
+      { id: "overstock", name: "Overstock", description: "x", cost: 10 },
+      { id: "clearance-sale", name: "Clearance", description: "x", cost: 10 },
+      { id: "crystal-ball", name: "Crystal", description: "x", cost: 10 },
+    ];
+    const picked = pickVouchersForAnte(
+      {
+        ante: 1,
+        ownedIds: new Set<VoucherId>(),
+        catalog,
+        rng: rngOf([0]),
+      },
+      3,
+    );
+    const ids = picked.map((v) => v.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 

@@ -925,7 +925,8 @@ function App() {
       const additional = pickVouchersForAnte(
         {
           ante,
-          ownedIds: new Set<VoucherId>([...ownedVoucherIds, ...existingIds]),
+          ownedIds: ownedVoucherIds,
+          excludeIds: new Set<VoucherId>([...ownedVoucherIds, ...existingIds]),
         },
         nextCount - prev.length,
       );
