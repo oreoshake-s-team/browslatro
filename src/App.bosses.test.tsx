@@ -270,3 +270,62 @@ describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
   });
 
 });
+
+describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
+  function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
+    let callIdx = 0;
+    const recent = new Set<string>();
+    return () => {
+      const id = idsPerAnte[callIdx];
+      const ante = callIdx + 1;
+      const eligible = createBossCatalog().filter((b) => ante >= b.anteMin);
+      const fresh = eligible.filter((b) => !recent.has(b.id));
+      const pool = fresh.length > 0 ? fresh : eligible;
+      const idx = pool.findIndex((b) => b.id === id);
+      if (idx < 0) {
+        throw new Error(`${id} not in pool for ante ${ante}`);
+      }
+      callIdx += 1;
+      recent.add(id);
+      return idx / pool.length + 0.0001;
+    };
+  }
+
+  async function advanceThroughBlind(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+  }
+
+  test("The Mouth disables Submit when the second-played-hand type would differ from the first", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-mouth"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
+    await dismissBlindSelect(user);
+    expect(
+      screen.getByRole("heading", { name: "The Mouth" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
+  });
+
+  test("The Flint on ante 2 halves the displayed chips preview", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-flint"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
+    await dismissBlindSelect(user);
+    expect(
+      screen.getByRole("heading", { name: "The Flint" }),
+    ).toBeInTheDocument();
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    expect(document.querySelector(".chips")).toHaveTextContent("2");
+  });
+});
