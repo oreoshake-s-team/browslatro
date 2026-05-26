@@ -8,12 +8,15 @@ import {
   type Consumable,
 } from "./consumables";
 import { createPlanetCatalog } from "./planets";
+import { createSpectralCatalog } from "./spectrals";
 import { createTarotCatalog } from "./tarots";
 
 const planet = createPlanetCatalog()[0];
 const tarot = createTarotCatalog()[0];
+const spectral = createSpectralCatalog()[0];
 const planetConsumable: Consumable = { kind: "planet", card: planet };
 const tarotConsumable: Consumable = { kind: "tarot", card: tarot };
+const spectralConsumable: Consumable = { kind: "spectral", card: spectral };
 
 describe("consumables", () => {
   test("MAX_CONSUMABLE_SLOTS is 2", () => {
@@ -127,5 +130,21 @@ describe("consumables", () => {
     if (!hermit) throw new Error("missing hermit");
     const c: Consumable = { kind: "tarot", card: hermit };
     expect(consumableUseBlock(c, 0)).toBeNull();
+  });
+
+  test("addConsumable accepts a spectral consumable", () => {
+    expect(addConsumable([], spectralConsumable)).toEqual([spectralConsumable]);
+  });
+
+  test("consumableSellValue returns half the spectral base price, floored", () => {
+    expect(consumableSellValue(spectralConsumable)).toBe(2);
+  });
+
+  test("consumableUseBlock returns null for a spectral regardless of selection", () => {
+    expect(consumableUseBlock(spectralConsumable, 0)).toBeNull();
+  });
+
+  test("consumableUseBlock returns null for a spectral even with many cards selected", () => {
+    expect(consumableUseBlock(spectralConsumable, 5)).toBeNull();
   });
 });

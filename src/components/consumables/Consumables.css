@@ -61,6 +61,12 @@
   color: #3b1f7a;
 }
 
+.consumable-tile-spectral {
+  background-color: #c3fae8;
+  border-color: #099268;
+  color: #0b5d3b;
+}
+
 .consumable-tile-empty {
   background-color: #e5dbff;
   border-style: dashed;

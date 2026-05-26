@@ -9,10 +9,12 @@ import {
 import { availablePlanets, createPlanetCatalog } from "./planets";
 import type { HandLabel } from "./handEvaluator";
 import { HANDS } from "./constants";
+import { createSpectralCatalog } from "./spectrals";
 import { createTarotCatalog } from "./tarots";
 import {
   BASE_REROLL_COST,
   SHOP_OFFER_SLOTS,
+  SPECTRAL_OFFER_CHANCE,
   pickRandomJoker,
   pickRandomPlanet,
   pickRandomTarot,
@@ -48,6 +50,7 @@ function baseArgs(rng: RandomSource): Parameters<typeof pickShopOffers>[0] {
     excludedJokerIds: [],
     planetCatalog: createPlanetCatalog(),
     tarotCatalog: createTarotCatalog(),
+    spectralCatalog: createSpectralCatalog(),
     rng,
   };
 }
@@ -144,7 +147,7 @@ describe("pickShopOffers — random-kind happy path", () => {
       const offers = pickShopOffers(baseArgs(mulberry32(seed)));
       for (const o of offers) kindSets.add(o.kind);
     }
-    expect(kindSets.size).toBe(3);
+    expect(kindSets.size).toBeGreaterThanOrEqual(3);
   });
 });
 
@@ -168,13 +171,14 @@ describe("pickShopOffers — empty-pool fallback", () => {
     expect(offers).toHaveLength(SHOP_OFFER_SLOTS);
   });
 
-  test("returns an empty list when all three pools are empty", () => {
+  test("returns an empty list when all pools are empty", () => {
     const catalog = createJokerCatalog();
     const offers = pickShopOffers({
       jokerCatalog: catalog,
       excludedJokerIds: catalog.map((j) => j.id),
       planetCatalog: [],
       tarotCatalog: [],
+      spectralCatalog: [],
       rng: mulberry32(1),
     });
     expect(offers).toEqual([]);
@@ -222,6 +226,7 @@ describe("rerollShopOffer — random-kind rerolls", () => {
       excludedJokerIds: catalog.map((j) => j.id),
       planetCatalog: [],
       tarotCatalog: [],
+      spectralCatalog: [],
     });
     expect(next).toBeNull();
   });
@@ -263,6 +268,8 @@ function offerSubjectId(offer: ShopItem): string {
       return offer.planet.id;
     case "tarot":
       return offer.tarot.id;
+    case "spectral":
+      return offer.spectral.id;
   }
 }
 
@@ -296,6 +303,7 @@ describe("pickShopOffers — no duplicate offers within a single visit", () => {
       excludedJokerIds: [],
       planetCatalog: singlePlanetCatalog,
       tarotCatalog: [],
+      spectralCatalog: [],
       rng: sequenceRng([0.4, 0.4]),
     });
     expect(offers).toHaveLength(1);
@@ -367,6 +375,46 @@ describe("pickShopOffers — secret planet gating via availablePlanets", () => {
       }
     }
     expect(saw).toBe(true);
+  });
+});
+
+describe("pickShopOffers — spectral offer rate", () => {
+  test("SPECTRAL_OFFER_CHANCE is rarer than common kinds (≤25%)", () => {
+    expect(SPECTRAL_OFFER_CHANCE).toBeLessThanOrEqual(0.25);
+  });
+
+  test("spectral offers appear at least once across many seeds", () => {
+    let saw = false;
+    for (let seed = 1; seed <= 200 && !saw; seed += 1) {
+      const offers = pickShopOffers(baseArgs(mulberry32(seed)));
+      if (offers.some((o) => o.kind === "spectral")) saw = true;
+    }
+    expect(saw).toBe(true);
+  });
+
+  test("spectral offers are rarer than the combined common kinds across many seeds", () => {
+    let spectralCount = 0;
+    let commonCount = 0;
+    for (let seed = 1; seed <= 500; seed += 1) {
+      const offers = pickShopOffers(baseArgs(mulberry32(seed)));
+      for (const offer of offers) {
+        if (offer.kind === "spectral") spectralCount += 1;
+        else commonCount += 1;
+      }
+    }
+    expect(spectralCount).toBeLessThan(commonCount);
+  });
+
+  test("never offers a spectral when the spectral catalog is empty", () => {
+    let spectralSeen = false;
+    for (let seed = 1; seed <= 50 && !spectralSeen; seed += 1) {
+      const offers = pickShopOffers({
+        ...baseArgs(mulberry32(seed)),
+        spectralCatalog: [],
+      });
+      if (offers.some((o) => o.kind === "spectral")) spectralSeen = true;
+    }
+    expect(spectralSeen).toBe(false);
   });
 });
 

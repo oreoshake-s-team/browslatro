@@ -19,8 +19,7 @@ interface ConsumablesProps {
 }
 
 function tileLabel(c: Consumable, sellValue: number): string {
-  const kindLabel = c.kind === "planet" ? "planet" : "tarot";
-  return `Use ${c.card.name} (${kindLabel}). Shift-click or drag to deck to sell for $${sellValue}.`;
+  return `Use ${c.card.name} (${c.kind}). Shift-click or drag to deck to sell for $${sellValue}.`;
 }
 
 export default function Consumables({

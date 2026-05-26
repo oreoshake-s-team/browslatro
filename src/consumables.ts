@@ -1,14 +1,21 @@
 import { PLANET_BASE_PRICE, type PlanetCard } from "./planets";
+import { SPECTRAL_BASE_PRICE, type SpectralCard } from "./spectrals";
 import { TAROT_BASE_PRICE, type TarotCard } from "./tarots";
 
 export const MAX_CONSUMABLE_SLOTS = 2;
 
 export type Consumable =
   | { readonly kind: "planet"; readonly card: PlanetCard }
-  | { readonly kind: "tarot"; readonly card: TarotCard };
+  | { readonly kind: "tarot"; readonly card: TarotCard }
+  | { readonly kind: "spectral"; readonly card: SpectralCard };
 
 export function consumableSellValue(c: Consumable): number {
-  const base = c.kind === "planet" ? PLANET_BASE_PRICE : TAROT_BASE_PRICE;
+  const base =
+    c.kind === "planet"
+      ? PLANET_BASE_PRICE
+      : c.kind === "tarot"
+        ? TAROT_BASE_PRICE
+        : SPECTRAL_BASE_PRICE;
   return Math.floor(base / 2);
 }
 
