@@ -288,4 +288,69 @@ describe("Card", () => {
     render(<Card card={lucky} />);
     expect(screen.getByRole("button")).toHaveAccessibleName("Q of Hearts (Lucky)");
   });
+
+  test("renders a seal badge when the card has a Gold Seal", () => {
+    const sealed: CardType = { id: 30, rank: "5", suit: "spades", seal: "gold" };
+    render(<Card card={sealed} />);
+    expect(screen.getByTestId("card-seal-30")).toBeInTheDocument();
+  });
+
+  test("applies the gold seal class to the badge", () => {
+    const sealed: CardType = { id: 31, rank: "5", suit: "spades", seal: "gold" };
+    render(<Card card={sealed} />);
+    expect(screen.getByTestId("card-seal-31")).toHaveClass(
+      "card-seal-badge-gold",
+    );
+  });
+
+  test("applies the red seal class to the badge", () => {
+    const sealed: CardType = { id: 32, rank: "6", suit: "hearts", seal: "red" };
+    render(<Card card={sealed} />);
+    expect(screen.getByTestId("card-seal-32")).toHaveClass(
+      "card-seal-badge-red",
+    );
+  });
+
+  test("applies the blue seal class to the badge", () => {
+    const sealed: CardType = { id: 33, rank: "7", suit: "clubs", seal: "blue" };
+    render(<Card card={sealed} />);
+    expect(screen.getByTestId("card-seal-33")).toHaveClass(
+      "card-seal-badge-blue",
+    );
+  });
+
+  test("applies the purple seal class to the badge", () => {
+    const sealed: CardType = { id: 34, rank: "8", suit: "diamonds", seal: "purple" };
+    render(<Card card={sealed} />);
+    expect(screen.getByTestId("card-seal-34")).toHaveClass(
+      "card-seal-badge-purple",
+    );
+  });
+
+  test("does not render a seal badge for a card without a seal", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.queryByTestId("card-seal-1")).not.toBeInTheDocument();
+  });
+
+  test("appends the seal name to the accessible label", () => {
+    const sealed: CardType = { id: 35, rank: "9", suit: "spades", seal: "blue" };
+    render(<Card card={sealed} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName(
+      "9 of Spades, Blue Seal",
+    );
+  });
+
+  test("combines enhancement and seal in the accessible label", () => {
+    const sealed: CardType = {
+      id: 36,
+      rank: "K",
+      suit: "diamonds",
+      enhancement: "gold",
+      seal: "red",
+    };
+    render(<Card card={sealed} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName(
+      "K of Diamonds (Gold), Red Seal",
+    );
+  });
 });

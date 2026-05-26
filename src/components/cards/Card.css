@@ -604,3 +604,38 @@
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85);
   pointer-events: none;
 }
+
+.card-seal {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  width: 0.95rem;
+  height: 0.95rem;
+  border-radius: 50%;
+  border: 1.5px solid rgba(33, 37, 41, 0.55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35),
+    inset 0 1px 2px rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.card-seal-badge-gold {
+  background: radial-gradient(circle at 30% 30%, #fff3bf 0%, #f59f00 70%);
+  border-color: #b46d00;
+}
+
+.card-seal-badge-red {
+  background: radial-gradient(circle at 30% 30%, #ffc9c9 0%, #c92a2a 70%);
+  border-color: #8b1818;
+}
+
+.card-seal-badge-blue {
+  background: radial-gradient(circle at 30% 30%, #c5e6ff 0%, #339af0 70%);
+  border-color: #1864ab;
+}
+
+.card-seal-badge-purple {
+  background: radial-gradient(circle at 30% 30%, #e5d6ff 0%, #845ef7 70%);
+  border-color: #5f3dc4;
+}

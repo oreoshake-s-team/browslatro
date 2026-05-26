@@ -30,7 +30,7 @@ import {
   isHighVisibility,
   type AnimationSpeed,
 } from "./components/system/preferences";
-import { detectHandLabel } from "./scoring/handEvaluator";
+import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
 import { createDefaultHandStats, type HandStats } from "./scoring/handStats";
 import {
   getCardChips,
@@ -59,6 +59,14 @@ import {
   applyLuckyRolls,
   rollEnhancementChance,
 } from "./cards/enhancements";
+import {
+  blueSealHeldCards,
+  expandRedSealRetriggers,
+  goldSealMoney,
+  pickRandomTarot,
+  planetForHand,
+  purpleSealDiscarded,
+} from "./cards/seals";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -287,6 +295,10 @@ function App() {
       }
       if (luckyResult.moneyBonus > 0) {
         setMoney((prev) => prev + luckyResult.moneyBonus);
+      }
+      const sealMoney = goldSealMoney(stepCard);
+      if (sealMoney > 0) {
+        setMoney((prev) => prev + sealMoney);
       }
       const firstFaceAlreadyScored = scoringCards
         .slice(0, scoringIndex)
@@ -728,7 +740,7 @@ function App() {
     const label = detectHandLabel(playedCards);
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
     const handEntry = handStats[label];
-    const scoring = getScoringCards(playedCards, label);
+    const scoring = expandRedSealRetriggers(getScoringCards(playedCards, label));
     const cardChipsTotal = scoring.reduce(
       (sum, card) => sum + getCardChips(card),
       0,
@@ -785,7 +797,7 @@ function App() {
     setMultiplier(liveMultiplier);
 
     const finalize = () => {
-      finalizeHandSubmission(finalScore, submittedSelection);
+      finalizeHandSubmission(finalScore, submittedSelection, label);
     };
     const runHandLevel = () => {
       if (handJokerResult.steps.length === 0) {
@@ -812,6 +824,7 @@ function App() {
   function finalizeHandSubmission(
     score: number,
     submittedSelection: ReadonlySet<number>,
+    playedHandLabel: HandLabel | null = null,
   ) {
     const newRoundScore = roundScore + score;
     setRoundScore(newRoundScore);
@@ -829,6 +842,27 @@ function App() {
     }
 
     if (roundWon) {
+      if (playedHandLabel !== null) {
+        const blueHeld = blueSealHeldCards(dealt.hand, submittedSelection);
+        if (blueHeld.length > 0) {
+          const planet = planetForHand(playedHandLabel);
+          if (planet) {
+            setConsumables((prev) => {
+              let next = prev;
+              for (let i = 0; i < blueHeld.length; i += 1) {
+                const after = addConsumable(
+                  next,
+                  { kind: "planet", card: planet },
+                  consumableCapacity,
+                );
+                if (after === next) break;
+                next = after;
+              }
+              return next;
+            });
+          }
+        }
+      }
       const heldGoldIds = dealt.hand
         .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
         .map((c) => c.id);
@@ -877,6 +911,23 @@ function App() {
     if (discardingIds.size > 0) return;
     if (selectedIds.size === 0) return;
     if (remainingDiscards <= 0) return;
+
+    const purpleDiscards = purpleSealDiscarded(dealt.hand, selectedIds);
+    if (purpleDiscards.length > 0) {
+      setConsumables((prev) => {
+        let next = prev;
+        for (let i = 0; i < purpleDiscards.length; i += 1) {
+          const after = addConsumable(
+            next,
+            { kind: "tarot", card: pickRandomTarot() },
+            consumableCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        return next;
+      });
+    }
 
     pendingDiscardCountRef.current = selectedIds.size;
     setDiscardingIds(selectedIds);

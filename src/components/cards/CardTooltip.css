@@ -44,6 +44,10 @@
   color: #ffe066;
 }
 
+.card-tooltip-seal {
+  color: #d0bfff;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
