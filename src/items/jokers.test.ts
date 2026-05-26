@@ -124,14 +124,14 @@ describe("applyHandLevelJokers — fired ids", () => {
     expect(result.firedJokerIds).toEqual(["plus-four-mult"]);
   });
 
-  test("no longer reports the Joker Stencil at the hand-pre pass (issue #131 — moved to post-hand)", () => {
+  test("reports the Joker Stencil as fired at the hand-level pass (issue #225)", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
-    expect(result.firedJokerIds).not.toContain("joker-stencil");
+    expect(result.firedJokerIds).toContain("joker-stencil");
   });
 
-  test("does not multiply xMult at the hand-pre pass when Stencil is equipped (issue #131)", () => {
+  test("multiplies xMult by empty-slot count at the hand-level pass when Stencil is equipped (issue #225)", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
-    expect(result.xMult).toBe(1);
+    expect(result.xMult).toBe(MAX_JOKERS - 1);
   });
 
   test("does not report Business Card as fired at the hand level", () => {
@@ -182,9 +182,11 @@ describe("applyHandLevelJokers — per-joker steps", () => {
     ]);
   });
 
-  test("Joker Stencil emits no hand-level step (still post-hand)", () => {
+  test("Joker Stencil emits an xMultFactor step at the hand-level pass (issue #225)", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
-    expect(result.steps).toEqual([]);
+    expect(result.steps).toEqual([
+      { jokerId: "joker-stencil", xMultFactor: MAX_JOKERS - 1 },
+    ]);
   });
 });
 
