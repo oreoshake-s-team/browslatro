@@ -95,7 +95,6 @@ import {
   MAX_JOKERS,
   applyHandLevelJokers,
   applyPerCardJokers,
-  computeFinalScoreWithJokers,
   createJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
@@ -1310,17 +1309,22 @@ function App() {
     const preHandXMultNoSteel = handJokerResult.xMult * enhancementXMult * perCardXMult;
     const totalXMult = preHandXMultNoSteel * steelMult;
 
-    const finalScore = computeFinalScoreWithJokers(
-      handEntry.chips,
-      handEntry.multiplier,
-      cardChipsTotal,
-      {
-        additiveMult: handJokerResult.additiveMult + perCardAdditiveMult,
-        additiveChips: handJokerResult.additiveChips + perCardAdditiveChips,
-        xMult: totalXMult,
-        moneyEarned: 0,
-      },
-    );
+    // Inline the same arithmetic computeFinalScoreWithJokers does so we can
+    // fold the dev Apply Modifiers offsets in at the same place. Bumps that
+    // were displayed during the round now actually move the round score.
+    const scoringChipsTotal =
+      handEntry.chips +
+      cardChipsTotal +
+      handJokerResult.additiveChips +
+      perCardAdditiveChips;
+    const scoringMult =
+      (handEntry.multiplier +
+        handJokerResult.additiveMult +
+        perCardAdditiveMult) *
+      totalXMult;
+    const adjustedChips = scoringChipsTotal + devChipsBonus;
+    const adjustedMult = (scoringMult + devMultBonus) * devMultFactor;
+    const finalScore = Math.floor(adjustedChips * adjustedMult);
 
     // Steel ×1.5 animates per-card during the steel sequence; hand-level
     // jokers now animate after steel, so the starting live multiplier omits
