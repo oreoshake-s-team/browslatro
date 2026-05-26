@@ -9,6 +9,7 @@ interface BlindSelectScreenProps {
   currentBlind: Blind;
   boss: BossBlind;
   onPlay: () => void;
+  onSkip?: () => void;
 }
 
 const BLIND_NAMES: Readonly<Record<Blind, string>> = {
@@ -36,9 +37,11 @@ export default function BlindSelectScreen({
   currentBlind,
   boss,
   onPlay,
+  onSkip,
 }: BlindSelectScreenProps) {
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
+  const canSkip = currentBlind !== 3 && Boolean(onSkip);
 
   return createPortal(
     <div
@@ -97,15 +100,28 @@ export default function BlindSelectScreen({
             );
           })}
         </ul>
-        <button
-          type="button"
-          className="blind-select-play"
-          data-testid="blind-select-play"
-          onClick={onPlay}
-          autoFocus
-        >
-          Play {currentName} →
-        </button>
+        <div className="blind-select-actions">
+          <button
+            type="button"
+            className="blind-select-play"
+            data-testid="blind-select-play"
+            onClick={onPlay}
+            autoFocus
+          >
+            Play {currentName} →
+          </button>
+          {canSkip && (
+            <button
+              type="button"
+              className="blind-select-skip"
+              data-testid="blind-select-skip"
+              onClick={onSkip}
+              aria-label={`Skip ${currentName} (no reward, no penalty)`}
+            >
+              Skip
+            </button>
+          )}
+        </div>
       </div>
     </div>,
     document.body,

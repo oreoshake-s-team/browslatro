@@ -718,6 +718,12 @@ function App() {
     startNewRound();
   }
 
+  function skipBlind() {
+    if (blind === 3) return;
+    setBlind((prev) => (prev + 1) as Blind);
+    setRound((prev) => prev + 1);
+  }
+
   function buyCurrentAnteVoucher() {
     const voucher = currentAnteVoucher;
     if (!voucher) return;
@@ -1201,6 +1207,7 @@ function App() {
           currentBlind={blind}
           boss={currentBoss}
           onPlay={confirmBlindSelect}
+          onSkip={skipBlind}
         />
       )}
     </div>

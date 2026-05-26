@@ -2787,3 +2787,46 @@ describe("Hand size modifier (issue #210)", () => {
     expect(getHandCardButtons()).toHaveLength(1);
   });
 });
+
+describe("Blind-select skip (issue #251)", () => {
+  test("clicking Skip on Small Blind advances the current blind to Big", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getByTestId("blind-select-play")).toHaveTextContent(
+      "Play Big Blind",
+    );
+  });
+
+  test("clicking Skip on Big Blind advances to Boss", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getByTestId("blind-select-play")).toHaveTextContent("Play ");
+    expect(screen.queryByTestId("blind-select-skip")).not.toBeInTheDocument();
+  });
+
+  test("skipping does not change money", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = getStatValue("Money").textContent;
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money").textContent).toBe(before);
+  });
+
+  test("skipping increments the round counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    expect(getStatValue("Round")).toHaveTextContent("1");
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Round")).toHaveTextContent("2");
+  });
+
+  test("the blind-select screen stays open after a skip", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getByTestId("blind-select-play")).toBeInTheDocument();
+  });
+});
