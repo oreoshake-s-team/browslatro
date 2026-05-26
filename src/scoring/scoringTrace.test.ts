@@ -48,6 +48,32 @@ describe("cardLabel", () => {
 });
 
 describe("formatScoringEvent", () => {
+  test("formats a hand-base event with level", () => {
+    const event: ScoringEvent = {
+      kind: "hand-base",
+      chips: 10,
+      mult: 2,
+      handLabel: "Pair",
+      level: 2,
+    };
+    expect(formatScoringEvent(event)).toBe(
+      "+10 Chips, +2 Mult (Pair base, Lv 2)",
+    );
+  });
+
+  test("formats a hand-base event for a level-1 High Card", () => {
+    const event: ScoringEvent = {
+      kind: "hand-base",
+      chips: 5,
+      mult: 1,
+      handLabel: "High Card",
+      level: 1,
+    };
+    expect(formatScoringEvent(event)).toBe(
+      "+5 Chips, +1 Mult (High Card base, Lv 1)",
+    );
+  });
+
   test("formats a positive chips delta", () => {
     const event: ScoringEvent = {
       kind: "chips-delta",

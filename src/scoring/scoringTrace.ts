@@ -13,6 +13,13 @@ export function cardLabel(card: Card): string {
 }
 
 export type ScoringEvent =
+  | {
+      readonly kind: "hand-base";
+      readonly chips: number;
+      readonly mult: number;
+      readonly handLabel: string;
+      readonly level: number;
+    }
   | { readonly kind: "chips-delta"; readonly amount: number; readonly source: string }
   | { readonly kind: "mult-delta"; readonly amount: number; readonly source: string }
   | { readonly kind: "mult-times"; readonly factor: number; readonly source: string }
@@ -33,6 +40,8 @@ function formatMoney(amount: number): string {
 
 export function formatScoringEvent(event: ScoringEvent): string {
   switch (event.kind) {
+    case "hand-base":
+      return `+${event.chips} Chips, +${event.mult} Mult (${event.handLabel} base, Lv ${event.level})`;
     case "chips-delta":
       return `${formatSigned(event.amount)} Chips (${event.source})`;
     case "mult-delta":

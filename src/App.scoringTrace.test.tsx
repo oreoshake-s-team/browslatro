@@ -147,13 +147,22 @@ describe("Rank-chip events on slow speed", () => {
     expect(log).toHaveTextContent("+11 Chips (A♥ rank)");
   });
 
-  test("emits exactly one event per scored card on a Pair of Aces", async () => {
+  test("emits a hand-base event with the hand label and level as the first line", async () => {
+    setAnimationSpeed("slow");
+    await playPairOfAces();
+    const firstItem = screen
+      .getByRole("log", { name: /Scoring trace/i })
+      .querySelector("li");
+    expect(firstItem).toHaveTextContent("+10 Chips, +2 Mult (Pair base, Lv 1)");
+  });
+
+  test("emits one hand-base event plus one event per scored card on a Pair of Aces", async () => {
     setAnimationSpeed("slow");
     await playPairOfAces();
     const items = screen
       .getByRole("log", { name: /Scoring trace/i })
       .querySelectorAll("li");
-    expect(items).toHaveLength(2);
+    expect(items).toHaveLength(3);
   });
 
   test("emits no events on normal speed (recorder inactive)", async () => {
@@ -179,6 +188,6 @@ describe("Rank-chip events on slow speed", () => {
     const items = screen
       .getByRole("log", { name: /Scoring trace/i })
       .querySelectorAll("li");
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(2);
   });
 });

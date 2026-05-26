@@ -1058,7 +1058,19 @@ function App() {
       setSteelScoringIds(heldSteelIds);
       setSteelScoringIndex(0);
     };
-    setScoringEvents([]);
+    setScoringEvents(
+      isTraceActive(animationSpeed)
+        ? [
+            {
+              kind: "hand-base",
+              chips: handEntry.chips,
+              mult: handEntry.multiplier,
+              handLabel: label,
+              level: handEntry.level,
+            },
+          ]
+        : [],
+    );
     setScoringCards(scoring);
     setScoringIndex(0);
   }
