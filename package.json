@@ -15,6 +15,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test"
   },
@@ -48,6 +49,7 @@
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.0",
+    "@vitest/coverage-istanbul": "^4.1.7",
     "jsdom": "^29.0.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.0",
