@@ -124,6 +124,14 @@ function offerSubject(offer: ShopItem): {
   }
 }
 
+const OFFER_KIND_BADGE: Readonly<
+  Record<ShopItem["kind"], { readonly icon: string; readonly label: string }>
+> = {
+  joker: { icon: "🃏", label: "Joker" },
+  planet: { icon: "🪐", label: "Planet" },
+  tarot: { icon: "🔮", label: "Tarot" },
+};
+
 export default function Shop({
   money,
   equippedJokerCount,
@@ -218,6 +226,7 @@ export default function Shop({
             );
             const label = buyButtonLabel(state, effectivePrice);
             const subject = offerSubject(offer);
+            const badge = OFFER_KIND_BADGE[offer.kind];
             return (
               <li
                 key={`${offer.kind}-${subject.id}-${idx}`}
@@ -227,6 +236,15 @@ export default function Shop({
                 data-testid={`shop-offer-${idx}`}
                 data-offer-kind={offer.kind}
               >
+                <span
+                  className={`shop-offer-kind shop-offer-kind-${offer.kind}`}
+                  data-testid={`shop-kind-${idx}`}
+                >
+                  <span aria-hidden="true" className="shop-offer-kind-icon">
+                    {badge.icon}
+                  </span>
+                  <span className="shop-offer-kind-label">{badge.label}</span>
+                </span>
                 <span className="shop-offer-name">{subject.name}</span>
                 <span className="shop-offer-description">{subject.description}</span>
                 <span className="shop-offer-price">

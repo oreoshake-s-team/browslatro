@@ -8,6 +8,7 @@ import {
   createPlusFourMultJoker,
 } from "../../jokers";
 import { createPlanetCatalog } from "../../planets";
+import { createTarotCatalog } from "../../tarots";
 import type { Voucher, VoucherId } from "../../vouchers";
 
 const OVERSTOCK_VOUCHER: Voucher = {
@@ -41,6 +42,11 @@ function planetOffer(id: "pluto" | "mercury", sold = false): ShopItem {
     price: 3,
     sold,
   };
+}
+
+function tarotOffer(sold = false): ShopItem {
+  const tarot = createTarotCatalog()[0];
+  return { kind: "tarot", tarot, price: 4, sold };
 }
 
 function renderShop(
@@ -108,6 +114,54 @@ describe("Shop", () => {
       "data-offer-kind",
       "planet",
     );
+  });
+
+  test("the joker offer carries the shop-offer-joker modifier class", () => {
+    renderShop();
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-joker");
+  });
+
+  test("the planet offer carries the shop-offer-planet modifier class", () => {
+    renderShop();
+    expect(screen.getByTestId("shop-offer-1")).toHaveClass("shop-offer-planet");
+  });
+
+  test("the tarot offer carries the shop-offer-tarot modifier class", () => {
+    renderShop({ offers: [tarotOffer()] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-tarot");
+  });
+
+  test("the joker offer renders a 'Joker' kind label", () => {
+    renderShop();
+    expect(screen.getByTestId("shop-kind-0")).toHaveTextContent("Joker");
+  });
+
+  test("the planet offer renders a 'Planet' kind label", () => {
+    renderShop();
+    expect(screen.getByTestId("shop-kind-1")).toHaveTextContent("Planet");
+  });
+
+  test("the tarot offer renders a 'Tarot' kind label", () => {
+    renderShop({ offers: [tarotOffer()] });
+    expect(screen.getByTestId("shop-kind-0")).toHaveTextContent("Tarot");
+  });
+
+  test("does not render a 'Planet' label on a joker offer (negative)", () => {
+    renderShop({ offers: [jokerOffer("plus")] });
+    expect(screen.getByTestId("shop-kind-0")).not.toHaveTextContent(
+      "Planet",
+    );
+  });
+
+  test("a sold offer still carries its kind modifier class", () => {
+    renderShop({ offers: [jokerOffer("plus", true)] });
+    const offer = screen.getByTestId("shop-offer-0");
+    expect(offer).toHaveClass("shop-offer-joker");
+  });
+
+  test("a sold offer still carries the shop-offer-sold modifier", () => {
+    renderShop({ offers: [jokerOffer("plus", true)] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-sold");
   });
 
   test("clicking an affordable buy button invokes onBuy with the offer index", async () => {
