@@ -3,8 +3,10 @@ import userEvent from "@testing-library/user-event";
 import PackOpenModal from "./PackOpenModal";
 import type { PackOffer } from "../../items/packs";
 import { createPlanetCatalog } from "../../items/planets";
+import { createTarotCatalog } from "../../items/tarots";
 
 const PLANETS = createPlanetCatalog();
+const TAROTS = createTarotCatalog();
 
 function celestialPack(
   variant: "normal" | "jumbo" | "mega",
@@ -16,6 +18,20 @@ function celestialPack(
     options: PLANETS.slice(0, count).map((planet) => ({
       kind: "planet" as const,
       planet,
+    })),
+  };
+}
+
+function arcanaPack(
+  variant: "normal" | "jumbo" | "mega",
+  count: number,
+): PackOffer {
+  return {
+    pool: "arcana",
+    variant,
+    options: TAROTS.slice(0, count).map((tarot) => ({
+      kind: "tarot" as const,
+      tarot,
     })),
   };
 }
@@ -104,5 +120,91 @@ describe("PackOpenModal", () => {
     renderModal({ onClose });
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("PackOpenModal — Arcana pack rendering", () => {
+  test("renders the Arcana pack display name", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: /Arcana Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("renders one Pick button per tarot in an Arcana pack", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("jumbo", 5)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: /^Pick / })).toHaveLength(5);
+  });
+
+  test("Pick button label includes the tarot card's name", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const firstTarot = TAROTS[0];
+    expect(
+      screen.getByRole("button", { name: `Pick ${firstTarot.name}` }),
+    ).toBeInTheDocument();
+  });
+
+  test("Pick buttons disable when consumable slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        consumableSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("Pick buttons stay enabled in a Celestial pack even when consumable slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={celestialPack("normal", 3)}
+        picksRemaining={1}
+        consumableSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).not.toBeDisabled();
+  });
+
+  test("clicking Pick on a tarot invokes onPick with the option index", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        onPick={onPick}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-pick-2"));
+    expect(onPick).toHaveBeenCalledWith(2);
   });
 });

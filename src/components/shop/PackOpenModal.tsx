@@ -2,6 +2,7 @@ import "./PackOpenModal.css";
 import { createPortal } from "react-dom";
 import {
   type PackOffer,
+  type PackOption,
   packDisplayName,
   packPickLimit,
 } from "../../items/packs";
@@ -10,13 +11,45 @@ import { useEscapeToClose } from "../system/useEscapeToClose";
 interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
+  consumableSlotsFull?: boolean;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
+}
+
+interface OptionView {
+  readonly id: string;
+  readonly icon: string;
+  readonly name: string;
+  readonly description: string;
+  readonly needsConsumableSlot: boolean;
+}
+
+function describeOption(option: PackOption): OptionView | null {
+  if (option.kind === "planet") {
+    return {
+      id: option.planet.id,
+      icon: "🪐",
+      name: option.planet.name,
+      description: option.planet.description,
+      needsConsumableSlot: false,
+    };
+  }
+  if (option.kind === "tarot") {
+    return {
+      id: option.tarot.id,
+      icon: "🃏",
+      name: option.tarot.name,
+      description: option.tarot.description,
+      needsConsumableSlot: true,
+    };
+  }
+  return null;
 }
 
 export default function PackOpenModal({
   pack,
   picksRemaining,
+  consumableSlotsFull = false,
   onPick,
   onClose,
 }: PackOpenModalProps) {
@@ -45,15 +78,22 @@ export default function PackOpenModal({
         </p>
         <ul className="pack-open-options" aria-label="Pack options">
           {pack.options.map((option, idx) => {
-            if (option.kind !== "planet") return null;
-            const disabled = picksRemaining <= 0;
-            const tooltip = disabled ? "No picks remaining" : undefined;
+            const view = describeOption(option);
+            if (!view) return null;
+            const noPicksLeft = picksRemaining <= 0;
+            const slotsBlocked = view.needsConsumableSlot && consumableSlotsFull;
+            const disabled = noPicksLeft || slotsBlocked;
+            const tooltip = noPicksLeft
+              ? "No picks remaining"
+              : slotsBlocked
+                ? "Consumable slots are full"
+                : undefined;
             return (
-              <li key={`${option.planet.id}-${idx}`} className="pack-open-option">
-                <span className="pack-open-option-icon" aria-hidden="true">🪐</span>
-                <span className="pack-open-option-name">{option.planet.name}</span>
+              <li key={`${view.id}-${idx}`} className="pack-open-option">
+                <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
+                <span className="pack-open-option-name">{view.name}</span>
                 <span className="pack-open-option-description">
-                  {option.planet.description}
+                  {view.description}
                 </span>
                 <button
                   type="button"
@@ -61,7 +101,7 @@ export default function PackOpenModal({
                   data-testid={`pack-open-pick-${idx}`}
                   disabled={disabled}
                   title={tooltip}
-                  aria-label={`Pick ${option.planet.name}`}
+                  aria-label={`Pick ${view.name}`}
                   onClick={() => onPick(idx)}
                 >
                   Pick

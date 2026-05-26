@@ -13,6 +13,7 @@ import {
   rollPackVariant,
 } from "./packs";
 import { createPlanetCatalog } from "./planets";
+import { createTarotCatalog } from "./tarots";
 
 function seededRng(seed: number): () => number {
   let s = seed;
@@ -90,6 +91,7 @@ describe("rollPackOptions for Celestial", () => {
       pool: "celestial",
       variant: "normal",
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(1),
     });
     expect(opts).toHaveLength(3);
@@ -100,6 +102,7 @@ describe("rollPackOptions for Celestial", () => {
       pool: "celestial",
       variant: "jumbo",
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(2),
     });
     expect(opts).toHaveLength(5);
@@ -110,6 +113,7 @@ describe("rollPackOptions for Celestial", () => {
       pool: "celestial",
       variant: "mega",
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(3),
     });
     expect(opts).toHaveLength(5);
@@ -120,6 +124,7 @@ describe("rollPackOptions for Celestial", () => {
       pool: "celestial",
       variant: "jumbo",
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(4),
     });
     const ids = new Set(opts.map((o) => (o.kind === "planet" ? o.planet.id : "")));
@@ -132,6 +137,7 @@ describe("rollPackOptions for Celestial", () => {
       pool: "celestial",
       variant: "normal",
       planetCatalog: small,
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(5),
     });
     expect(opts).toHaveLength(small.length);
@@ -159,19 +165,123 @@ describe("rollPackVariant", () => {
 });
 
 describe("rollPack", () => {
-  test("produces a Celestial pack while celestial is the only registered pool", () => {
+  test("produces a pack from one of the registered pools", () => {
     const offer = rollPack({
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(7),
     });
-    expect(offer.pool).toBe("celestial");
+    expect(["celestial", "arcana"]).toContain(offer.pool);
   });
 
   test("rolled options length matches the variant's option count", () => {
     const offer = rollPack({
       planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
       rng: seededRng(11),
     });
     expect(offer.options).toHaveLength(packOptionsCount(offer.pool, offer.variant));
+  });
+});
+
+describe("Arcana pack", () => {
+  test("Normal has 3 options", () => {
+    expect(packOptionsCount("arcana", "normal")).toBe(3);
+  });
+
+  test("Jumbo has 5 options", () => {
+    expect(packOptionsCount("arcana", "jumbo")).toBe(5);
+  });
+
+  test("Mega has 5 options", () => {
+    expect(packOptionsCount("arcana", "mega")).toBe(5);
+  });
+
+  test("display name for Normal is 'Arcana Pack'", () => {
+    expect(
+      packDisplayName({ pool: "arcana", variant: "normal", options: [] }),
+    ).toBe("Arcana Pack");
+  });
+
+  test("display name for Jumbo prefixes Jumbo", () => {
+    expect(
+      packDisplayName({ pool: "arcana", variant: "jumbo", options: [] }),
+    ).toBe("Jumbo Arcana Pack");
+  });
+
+  test("display name for Mega prefixes Mega", () => {
+    expect(
+      packDisplayName({ pool: "arcana", variant: "mega", options: [] }),
+    ).toBe("Mega Arcana Pack");
+  });
+
+  test("rollPackOptions returns tarot options for arcana", () => {
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      rng: seededRng(31),
+    });
+    expect(opts.every((o) => o.kind === "tarot")).toBe(true);
+  });
+
+  test("Normal returns 3 tarot options", () => {
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      rng: seededRng(32),
+    });
+    expect(opts).toHaveLength(3);
+  });
+
+  test("Jumbo returns 5 tarot options", () => {
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "jumbo",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      rng: seededRng(33),
+    });
+    expect(opts).toHaveLength(5);
+  });
+
+  test("Mega returns 5 tarot options", () => {
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      rng: seededRng(34),
+    });
+    expect(opts).toHaveLength(5);
+  });
+
+  test("returned tarot ids are unique within a pack", () => {
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      rng: seededRng(35),
+    });
+    const ids = new Set(opts.map((o) => (o.kind === "tarot" ? o.tarot.id : "")));
+    expect(ids.size).toBe(opts.length);
+  });
+
+  test("arcana is more likely than celestial under uniform RNG", () => {
+    const counts: Record<string, number> = { celestial: 0, arcana: 0 };
+    const rng = seededRng(101);
+    for (let i = 0; i < 1000; i += 1) {
+      const offer = rollPack({
+        planetCatalog: createPlanetCatalog(),
+        tarotCatalog: createTarotCatalog(),
+        rng,
+      });
+      counts[offer.pool] += 1;
+    }
+    expect(counts.arcana).toBeGreaterThan(counts.celestial);
   });
 });

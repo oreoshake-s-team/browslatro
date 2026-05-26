@@ -285,7 +285,15 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
     }
   }
   for (let i = 0; i < SHOP_PACK_SLOTS; i += 1) {
-    slots.push(packShopOffer(rollPack({ planetCatalog: args.planetCatalog, rng })));
+    slots.push(
+      packShopOffer(
+        rollPack({
+          planetCatalog: args.planetCatalog,
+          tarotCatalog: args.tarotCatalog,
+          rng,
+        }),
+      ),
+    );
   }
   return slots;
 }
