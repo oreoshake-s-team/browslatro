@@ -60,7 +60,6 @@ export function createDeck(
         id: ++cardIdCounter,
         rank,
         suit,
-        enhancement: defaultEnhancementForRank(rank),
       });
     }
   }

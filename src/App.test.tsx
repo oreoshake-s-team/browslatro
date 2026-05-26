@@ -27,17 +27,27 @@ function resetHighVisibility(): void {
 // displays in rank-descending order as 9♠, 8♠, 7♠, 6♠, 5♠, 4♠, 3♠, 2♠.
 // Name must start with "mock" so vi.mock can reference it from its factory.
 const mockShuffleConfig = { useIdentity: false };
+const mockDeckConfig = { useDefaultEnhancements: false };
 vi.mock("./deck", async () => {
   const actual = await vi.importActual<typeof import("./deck")>("./deck");
   return {
     ...actual,
     shuffle: <T,>(items: ReadonlyArray<T>): T[] =>
       mockShuffleConfig.useIdentity ? items.slice() : actual.shuffle(items),
+    createDeck: (excluded?: ReadonlySet<string>) => {
+      const deck = actual.createDeck(excluded);
+      if (!mockDeckConfig.useDefaultEnhancements) return deck;
+      return deck.map((c) => ({
+        ...c,
+        enhancement: actual.defaultEnhancementForRank(c.rank),
+      }));
+    },
   };
 });
 
 beforeEach(() => {
   mockShuffleConfig.useIdentity = false;
+  mockDeckConfig.useDefaultEnhancements = false;
   playMock.mockClear();
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
@@ -607,6 +617,29 @@ describe("Submit Hand button integration", () => {
   });
 });
 
+describe("Fresh deck has no default enhancements (issue #176)", () => {
+  test("no card in the freshly-dealt hand carries an enhancement suffix", () => {
+    render(<App />);
+    const labels = getHandCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    const withEnhancement = labels.filter((l) => l !== null && /\(/.test(l));
+    expect(withEnhancement).toEqual([]);
+  });
+
+  test("no rank-K card in the freshly-dealt hand is marked Glass", () => {
+    render(<App />);
+    const labels = getHandCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    const glass = labels.filter((l) => l !== null && /\(Glass\)/.test(l));
+    expect(glass).toEqual([]);
+  });
+
+  test("no rank-A card in the freshly-dealt hand is marked Steel", () => {
+    render(<App />);
+    const labels = getHandCardButtons().map((btn) => btn.getAttribute("aria-label"));
+    const steel = labels.filter((l) => l !== null && /\(Steel\)/.test(l));
+    expect(steel).toEqual([]);
+  });
+});
+
 describe("Submit Hand win integration", () => {
   test("submitting a hand whose scoreHand value meets the required score advances the blind", async () => {
     // Identity shuffle deals Spades 2..9. Selecting the top 5 by rank (9,8,7,6,5 ♠)
@@ -900,6 +933,7 @@ describe("Round won modal", () => {
     // Identity shuffle deals Spades 2..9; selecting top 5 → Straight Flush
     // = 1080 score, above Ante 1 Small Blind required 300.
     mockShuffleConfig.useIdentity = true;
+    mockDeckConfig.useDefaultEnhancements = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = getHandCardButtons();
