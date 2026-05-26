@@ -8,9 +8,12 @@ import {
   bossStartingDiscards,
   bossStartingHands,
   createBossCatalog,
+  debuffedHandIds,
+  isCardDebuffedByBoss,
   pickBossForAnte,
   type BossBlind,
 } from "./bosses";
+import type { Card } from "../cards/types";
 
 describe("createBossCatalog", () => {
   test("includes the default Boss Blind entry", () => {
@@ -194,5 +197,91 @@ describe("bossMoneyPenaltyPerCard", () => {
 
   test("returns 0 for bosses without money-per-card-played", () => {
     expect(bossMoneyPenaltyPerCard(null)).toBe(0);
+  });
+});
+
+describe("Phase 2 debuff catalog entries (#245)", () => {
+  test.each([
+    ["the-club", "clubs"],
+    ["the-goad", "spades"],
+    ["the-window", "diamonds"],
+    ["the-head", "hearts"],
+  ] as const)("%s debuffs %s", (id, suit) => {
+    const boss = createBossCatalog().find((b) => b.id === id);
+    expect(boss?.effect).toEqual({ kind: "debuff-suit", suit });
+  });
+
+  test("the-plant debuffs face cards", () => {
+    expect(
+      createBossCatalog().find((b) => b.id === "the-plant")?.effect,
+    ).toEqual({ kind: "debuff-face" });
+  });
+
+  test("the-plant requires ante 4+", () => {
+    expect(
+      createBossCatalog().find((b) => b.id === "the-plant")?.anteMin,
+    ).toBe(4);
+  });
+});
+
+describe("isCardDebuffedByBoss", () => {
+  const club: Card = { id: 1, rank: "5", suit: "clubs" };
+  const heart: Card = { id: 2, rank: "Q", suit: "hearts" };
+  const spadeTwo: Card = { id: 3, rank: "2", suit: "spades" };
+
+  test("returns false when boss is null", () => {
+    expect(isCardDebuffedByBoss(null, club)).toBe(false);
+  });
+
+  test("debuffs a club card under The Club", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-club")!;
+    expect(isCardDebuffedByBoss(boss, club)).toBe(true);
+  });
+
+  test("does not debuff a non-club card under The Club", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-club")!;
+    expect(isCardDebuffedByBoss(boss, spadeTwo)).toBe(false);
+  });
+
+  test("debuffs a face card under The Plant", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-plant")!;
+    expect(isCardDebuffedByBoss(boss, heart)).toBe(true);
+  });
+
+  test("does not debuff a non-face card under The Plant", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-plant")!;
+    expect(isCardDebuffedByBoss(boss, spadeTwo)).toBe(false);
+  });
+
+  test("returns false for non-debuff bosses (The Wall)", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-wall")!;
+    expect(isCardDebuffedByBoss(boss, heart)).toBe(false);
+  });
+});
+
+describe("debuffedHandIds", () => {
+  const hand: ReadonlyArray<Card> = [
+    { id: 10, rank: "5", suit: "clubs" },
+    { id: 11, rank: "5", suit: "hearts" },
+    { id: 12, rank: "K", suit: "spades" },
+  ];
+
+  test("returns empty set when isBossRound is false", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-club")!;
+    expect(debuffedHandIds(hand, boss, false).size).toBe(0);
+  });
+
+  test("returns empty set when boss is null", () => {
+    expect(debuffedHandIds(hand, null, true).size).toBe(0);
+  });
+
+  test("returns the ids of debuffed cards under The Club", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-club")!;
+    expect(Array.from(debuffedHandIds(hand, boss, true))).toEqual([10]);
+  });
+
+  test("returns the face-card ids under The Plant", () => {
+    const boss = createBossCatalog().find((b) => b.id === "the-plant")!;
+    expect(Array.from(debuffedHandIds(hand, boss, true))).toEqual([12]);
   });
 });

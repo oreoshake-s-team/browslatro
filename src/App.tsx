@@ -11,6 +11,8 @@ import {
   bossRequiredCardCount,
   bossStartingDiscards,
   bossStartingHands,
+  debuffedHandIds,
+  isCardDebuffedByBoss,
   pickBossForAnte,
   type BossBlind,
 } from "./items/bosses";
@@ -890,7 +892,10 @@ function App() {
     const label = detectHandLabel(playedCards);
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
     const handEntry = handStats[label];
-    const scoring = expandRedSealRetriggers(getScoringCards(playedCards, label));
+    const isBossRound = blind === 3;
+    const scoring = expandRedSealRetriggers(
+      getScoringCards(playedCards, label),
+    ).filter((c) => !(isBossRound && isCardDebuffedByBoss(currentBoss, c)));
     const cardChipsTotal = scoring.reduce(
       (sum, card) => sum + getCardChips(card),
       0,
@@ -1144,6 +1149,7 @@ function App() {
         remaining={dealt.remaining}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
+        debuffedIds={debuffedHandIds(dealt.hand, currentBoss, blind === 3)}
         jokers={jokers}
         jokerPulseCounters={jokerPulseCounters}
         consumables={consumables}
