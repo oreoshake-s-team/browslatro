@@ -1,18 +1,11 @@
-import type { MockedFunction } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App, { getScoringStepMs } from "./App";
 import {
   getAnimationSpeed,
-  isHighVisibility,
   setAnimationSpeed,
-  toggleHighVisibility,
 } from "./components/system/preferences";
-import { play } from "./components/system/sounds";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
-import { bossPickerRngConfig } from "./items/bosses";
-import type { ShopItem } from "./items/shop";
-import { HANDS } from "./constants";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -21,35 +14,23 @@ import {
   createPlusFourMultJoker,
   initialJokersConfig,
 } from "./items/jokers";
+import {
+  dismissBlindSelect,
+  dragCardToGap,
+  findShopOfferIdxOfKind,
+  flushDiscardAnimation,
+  flushScoringSequence,
+  getHandCardButtons,
+  getStatValue,
+  mockDeckConfig,
+  mockShuffleConfig,
+  playMock,
+  resetHighVisibility,
+  setupAppTestEnvironment,
+} from "./App.test-helpers";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
-type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
-
-function findShopOfferIdxOfKind(kind: ShopOfferKind): number {
-  const offers = screen.queryAllByTestId(/^shop-offer-/);
-  for (let i = 0; i < offers.length; i += 1) {
-    if (offers[i].getAttribute("data-offer-kind") === kind) return i;
-  }
-  throw new Error(`No shop offer of kind '${kind}' found`);
-}
-
-const playMock = play as MockedFunction<typeof play>;
-
-function resetHighVisibility(): void {
-  if (isHighVisibility()) {
-    toggleHighVisibility();
-  }
-  window.localStorage.removeItem("browslatro:highVisibility");
-}
-
-// Controllable shuffle: by default delegates to the real Fisher–Yates shuffle,
-// but individual tests can opt into identity ordering to make the dealt hand
-// deterministic. With identity shuffle the dealt hand is Spades 2..9, which
-// displays in rank-descending order as 9♠, 8♠, 7♠, 6♠, 5♠, 4♠, 3♠, 2♠.
-// Name must start with "mock" so vi.mock can reference it from its factory.
-const mockShuffleConfig = { useIdentity: false, useReverse: false };
-const mockDeckConfig = { useDefaultEnhancements: false };
 vi.mock("./cards/deck", async () => {
   const actual = await vi.importActual<typeof import("./cards/deck")>("./cards/deck");
   return {
@@ -69,36 +50,7 @@ vi.mock("./cards/deck", async () => {
   };
 });
 
-beforeEach(() => {
-  mockShuffleConfig.useIdentity = false;
-  mockShuffleConfig.useReverse = false;
-  mockDeckConfig.useDefaultEnhancements = false;
-  bossPickerRngConfig.rng = () => 0;
-  playMock.mockClear();
-  vi.useFakeTimers({ shouldAdvanceTime: true });
-});
-
-afterEach(() => {
-  // Drain anything still scheduled before switching back, so React doesn't try
-  // to update unmounted state.
-  act(() => {
-    vi.runOnlyPendingTimers();
-  });
-  vi.useRealTimers();
-  shopPickerRngConfig.rng = Math.random;
-  bossPickerRngConfig.rng = Math.random;
-});
-
-function getStatValue(label: string): HTMLElement {
-  return screen.getByText(label).parentElement as HTMLElement;
-}
-
-async function dismissBlindSelect(
-  user: ReturnType<typeof userEvent.setup>,
-): Promise<void> {
-  const btn = screen.queryByTestId("blind-select-play");
-  if (btn) await user.click(btn);
-}
+setupAppTestEnvironment();
 
 describe("Winning a round resets the deck", () => {
   test("restores the remaining deck count to its full post-deal size after a win", async () => {
@@ -213,58 +165,6 @@ describe("Multiply Multiplier button integration", () => {
     expect(document.querySelector(".multiplier")).toHaveTextContent("2");
   });
 });
-
-function getHandCardButtons(): HTMLElement[] {
-  return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]")
-  );
-}
-
-function getHandGaps(): HTMLElement[] {
-  return Array.from(
-    screen
-      .getByLabelText("Your hand")
-      .querySelectorAll('[data-testid^="hand-gap-"]'),
-  );
-}
-
-function findHandSlotByCardLabel(label: string): HTMLElement {
-  const button = screen.getByRole("button", { name: label });
-  const slot = button.closest('[data-testid^="hand-slot-"]');
-  if (!slot) throw new Error(`Could not find hand slot for "${label}"`);
-  return slot as HTMLElement;
-}
-
-function dragCardToGap(cardLabel: string, gapIdx: number): void {
-  const source = findHandSlotByCardLabel(cardLabel);
-  const gap = getHandGaps()[gapIdx];
-  fireEvent.dragStart(source);
-  fireEvent.dragOver(gap);
-  fireEvent.drop(gap);
-  fireEvent.dragEnd(source);
-}
-
-function flushScoringSequence(): void {
-  // Each scoring step's setTimeout fires inside an act(), which only commits
-  // its state update on exit. The useEffect that schedules the *next* timeout
-  // runs after that commit, so a single runAllTimers can only fire one step.
-  // Loop until the queue truly drains (with a safety cap).
-  for (let i = 0; i < 20; i++) {
-    if (vi.getTimerCount() === 0) return;
-    act(() => {
-      vi.runOnlyPendingTimers();
-    });
-  }
-}
-
-function flushDiscardAnimation(): void {
-  // Cards only enter the discard animation after the scoring sequence
-  // finalizes, so we drain that first.
-  flushScoringSequence();
-  getHandCardButtons()
-    .filter((btn) => btn.classList.contains("card-discarding"))
-    .forEach((btn) => fireEvent.animationEnd(btn));
-}
 
 describe("Fresh round empty HandScore", () => {
   test("does not render the High Card label in the sidebar on a fresh round", () => {
@@ -2607,138 +2507,6 @@ describe("Joker drag and sell integration", () => {
     expect(
       screen.queryByTestId("joker-tile-filled-joker-stencil"),
     ).toBeNull();
-  });
-});
-
-describe("Celestial pack open + pick integration", () => {
-  async function openShopWithMoney(): Promise<ReturnType<typeof userEvent.setup>> {
-    mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByText(/Add \$10/));
-    const cards = getHandCardButtons();
-    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
-    await user.click(screen.getByText(/Submit Hand/));
-    flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
-    return user;
-  }
-
-  function findPackOfferIdx(): number {
-    const all = screen.getAllByTestId(/^shop-offer-/);
-    for (let i = 0; i < all.length; i += 1) {
-      if (all[i].getAttribute("data-offer-kind") === "pack") return i;
-    }
-    throw new Error("no pack offer in shop");
-  }
-
-  function moneyOf(): number {
-    return Number(
-      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
-    );
-  }
-
-  test("clicking Open on a pack offer opens the pack modal", async () => {
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
-  });
-
-  test("opening a pack deducts the pack price from money", async () => {
-    const user = await openShopWithMoney();
-    const before = moneyOf();
-    const idx = findPackOfferIdx();
-    const offer = screen.getByTestId(`shop-offer-${idx}`);
-    const priceText = offer.querySelector(".shop-offer-price")?.textContent ?? "";
-    const price = Number(priceText.replace(/[^0-9]/g, ""));
-    const open = offer.querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    expect(moneyOf()).toBe(before - price);
-  });
-
-  test("opening a pack marks the pack offer as Sold", async () => {
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await user.click(screen.getByTestId("pack-open-close"));
-    expect(
-      screen
-        .getByTestId(`shop-offer-${idx}`)
-        .querySelector("button.shop-offer-buy"),
-    ).toHaveTextContent("Sold");
-  });
-
-  test("picking a planet from a Celestial pack does NOT add it to the consumable tray (auto-applied)", async () => {
-    shopPickerRngConfig.rng = () => 0.45;
-    const user = await openShopWithMoney();
-    const consumablesBefore = screen.queryAllByTestId(
-      /^consumable-tile-filled-/,
-    ).length;
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await user.click(screen.getByTestId("pack-open-pick-0"));
-    expect(screen.queryAllByTestId(/^consumable-tile-filled-/)).toHaveLength(
-      consumablesBefore,
-    );
-  });
-
-  test("picking a planet from a Celestial pack upgrades the matching hand's level", async () => {
-    shopPickerRngConfig.rng = () => 0.45;
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await user.click(screen.getByTestId("pack-open-pick-0"));
-    await user.click(screen.getByRole("button", { name: "Run info" }));
-    const levels = HANDS.map((h) =>
-      Number(
-        screen.getByTestId(`run-info-level-${h.label}`).textContent ?? "1",
-      ),
-    );
-    expect(levels.some((lvl) => lvl > 1)).toBe(true);
-  });
-
-  test("picking the only allowed card closes the modal automatically", async () => {
-    // Pin the shop rng so the pack variant rolls Normal (pickLimit=1) instead
-    // of the 3%-weighted Mega (pickLimit=2). Without this, the test was flaky:
-    // 0.5 stays under Normal's 0.85 cumulative weight, so the pack always has
-    // a single pick and the modal closes after one click.
-    shopPickerRngConfig.rng = () => 0.5;
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await user.click(screen.getByTestId("pack-open-pick-0"));
-    expect(screen.queryByTestId("pack-open-subtitle")).not.toBeInTheDocument();
-  });
-
-  test("closing the modal without picking still leaves the pack Sold (player paid)", async () => {
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await user.click(screen.getByTestId("pack-open-close"));
-    expect(
-      screen
-        .getByTestId(`shop-offer-${idx}`)
-        .querySelector("button.shop-offer-buy"),
-    ).toHaveTextContent("Sold");
   });
 });
 
