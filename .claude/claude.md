@@ -37,6 +37,8 @@ When asked to complete a task, first create a new branch based on the issue numb
 
 Always merge main before pushing new code.
 
+After every push, wait for the CI status. If a test fails or a merge conflict exists, try to resolve it immediately.
+
 # Conversations outside of Claude code
 
 See docs/conversation_summary.md for more background
