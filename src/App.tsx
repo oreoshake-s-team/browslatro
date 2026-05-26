@@ -157,6 +157,12 @@ function App() {
   const [money, setMoney] = useState(4);
   const [chips, setChips] = useState(0);
   const [multiplier, setMultiplier] = useState(0);
+  // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
+  // so the displayed chips/multiplier reflect manual bumps until a New game
+  // resets them. See #265.
+  const [devChipsBonus, setDevChipsBonus] = useState(0);
+  const [devMultBonus, setDevMultBonus] = useState(0);
+  const [devMultFactor, setDevMultFactor] = useState(1);
   const [roundScore, setRoundScore] = useState(0);
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
   const [remainingHands, setRemainingHands] = useState(4);
@@ -971,6 +977,9 @@ function App() {
     setHandSizeModifier(0);
     setExtraPackSlots(0);
     setExtraVoucherSlots(0);
+    setDevChipsBonus(0);
+    setDevMultBonus(0);
+    setDevMultFactor(1);
     setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
@@ -997,17 +1006,17 @@ function App() {
 
   function addChips(amount: number) {
     play("pop");
-    setChips((prev) => prev + amount);
+    setDevChipsBonus((prev) => prev + amount);
   }
 
   function addMultiplier(amount: number) {
     play("pop");
-    setMultiplier((prev) => prev + amount);
+    setDevMultBonus((prev) => prev + amount);
   }
 
   function multiplyMultiplier(factor: number) {
     play("pop");
-    setMultiplier((prev) => prev * factor);
+    setDevMultFactor((prev) => prev * factor);
   }
 
   function loseGame() {
@@ -1389,8 +1398,8 @@ function App() {
         ante={ante}
         round={round}
         money={money}
-        chips={chips}
-        multiplier={multiplier}
+        chips={chips + devChipsBonus}
+        multiplier={(multiplier + devMultBonus) * devMultFactor}
         roundScore={roundScore}
         requiredScore={requiredScore}
         selectedHand={selectedHand}
