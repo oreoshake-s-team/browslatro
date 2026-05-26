@@ -20,16 +20,33 @@ const KIND_TO_RNG: Record<ShopOfferKind, number> = {
   joker: 0.05,
   planet: 0.4,
   tarot: 0.75,
+  spectral: 0,
 };
 
 function forceShopLayout(kinds: ReadonlyArray<ShopOfferKind>): () => number {
-  let i = 0;
+  let slotIdx = 0;
+  let callsConsumed = 0;
   return () => {
-    const slot = Math.floor(i / 2);
-    const isKindCall = i % 2 === 0;
-    i += 1;
-    const target = kinds[slot] ?? "joker";
-    if (isKindCall) return KIND_TO_RNG[target];
+    const target = kinds[slotIdx] ?? "joker";
+    if (target === "spectral") {
+      if (callsConsumed === 0) {
+        callsConsumed = 1;
+        return 0;
+      }
+      callsConsumed = 0;
+      slotIdx += 1;
+      return 0;
+    }
+    if (callsConsumed === 0) {
+      callsConsumed = 1;
+      return 0.99;
+    }
+    if (callsConsumed === 1) {
+      callsConsumed = 2;
+      return KIND_TO_RNG[target];
+    }
+    callsConsumed = 0;
+    slotIdx += 1;
     return 0;
   };
 }
@@ -2020,6 +2037,117 @@ describe("Voucher integration", () => {
     flushDiscardAnimation();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+  });
+});
+
+describe("Spectral purchase integration", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    shopPickerRngConfig.rng = forceShopLayout(["spectral", "joker"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  function spectralSlotTestId(): string {
+    return `shop-offer-${findShopOfferIdxOfKind("spectral")}`;
+  }
+
+  function moneyOf(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  test("a spectral offer renders with data-offer-kind=spectral", async () => {
+    await openShop();
+    expect(screen.getByTestId(spectralSlotTestId())).toHaveAttribute(
+      "data-offer-kind",
+      "spectral",
+    );
+  });
+
+  test("a spectral offer carries the shop-offer-spectral modifier class", async () => {
+    await openShop();
+    expect(screen.getByTestId(spectralSlotTestId())).toHaveClass(
+      "shop-offer-spectral",
+    );
+  });
+
+  test("a spectral offer renders a 'Spectral' kind label", async () => {
+    await openShop();
+    const idx = findShopOfferIdxOfKind("spectral");
+    expect(screen.getByTestId(`shop-kind-${idx}`)).toHaveTextContent("Spectral");
+  });
+
+  test("buying a spectral deducts the spectral base price from money", async () => {
+    const user = await openShop();
+    const before = moneyOf();
+    const buy = screen
+      .getByTestId(spectralSlotTestId())
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(moneyOf()).toBe(before - 4);
+  });
+
+  test("buying a spectral marks the offer Sold", async () => {
+    const user = await openShop();
+    const slotId = spectralSlotTestId();
+    const buy = screen
+      .getByTestId(slotId)
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(
+      screen.getByTestId(slotId).querySelector(".shop-offer-buy"),
+    ).toHaveTextContent(/Sold/);
+  });
+
+  test("buying a spectral enqueues it into a consumable slot tagged spectral", async () => {
+    const user = await openShop();
+    const buy = screen
+      .getByTestId(spectralSlotTestId())
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
+      "data-consumable-kind",
+      "spectral",
+    );
+  });
+
+  test("using the Spectre spectral adds +$10 to money", async () => {
+    const user = await openShop();
+    const name = screen
+      .getByTestId(spectralSlotTestId())
+      .querySelector(".shop-offer-name")?.textContent;
+    if (name !== "Spectre") return;
+    const buy = screen
+      .getByTestId(spectralSlotTestId())
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    const before = moneyOf();
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(moneyOf()).toBe(before + 10);
+  });
+
+  test("does not render a TarotPicker dialog after buying a spectral (negative)", async () => {
+    const user = await openShop();
+    const buy = screen
+      .getByTestId(spectralSlotTestId())
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    expect(screen.queryByRole("dialog", { name: /Apply/ })).not.toBeInTheDocument();
   });
 });
 

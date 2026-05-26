@@ -6,6 +6,7 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./planets";
+import { createSpectralCatalog, type SpectralEffect } from "./spectrals";
 import { createTarotCatalog, resolveHermitPayout } from "./tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -416,6 +417,7 @@ function App() {
         excludedJokerIds: jokers.map((j) => j.id),
         planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
         tarotCatalog: createTarotCatalog(),
+        spectralCatalog: createSpectralCatalog(),
         extraSlots: extraShopOfferSlots(ownedVoucherIds),
         rng: shopPickerRngConfig.rng,
       }),
@@ -450,11 +452,27 @@ function App() {
     const next: Consumable =
       offer.kind === "planet"
         ? { kind: "planet", card: offer.planet }
-        : { kind: "tarot", card: offer.tarot };
+        : offer.kind === "tarot"
+          ? { kind: "tarot", card: offer.tarot }
+          : { kind: "spectral", card: offer.spectral };
     play("pop");
     setMoney((prev) => prev - price);
     setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
     markOfferSold(idx);
+  }
+
+  function applySpectralEffect(effect: SpectralEffect) {
+    switch (effect.kind) {
+      case "add-money":
+        setMoney((prev) => prev + effect.amount);
+        return;
+      case "add-hands":
+        setRemainingHands((prev) => prev + effect.amount);
+        return;
+      case "add-discards":
+        setRemainingDiscards((prev) => prev + effect.amount);
+        return;
+    }
   }
 
   function useConsumable(consumableIdx: number) {
@@ -463,6 +481,12 @@ function App() {
     if (entry.kind === "planet") {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, entry.card));
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      return;
+    }
+    if (entry.kind === "spectral") {
+      play("pop");
+      applySpectralEffect(entry.card.effect);
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
@@ -522,6 +546,7 @@ function App() {
       excludedJokerIds,
       planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
       tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
       rng: shopPickerRngConfig.rng,
     };
     play("pop");

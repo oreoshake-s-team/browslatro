@@ -1,9 +1,13 @@
 import type { Joker, RandomSource } from "./jokers";
 import type { PlanetCard } from "./planets";
+import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
 import { JOKER_BASE_PRICE } from "./constants";
 import { PLANET_BASE_PRICE } from "./planets";
+import { SPECTRAL_BASE_PRICE } from "./spectrals";
 import { TAROT_BASE_PRICE } from "./tarots";
+
+export const SPECTRAL_OFFER_CHANCE = 0.15;
 
 export const SHOP_OFFER_SLOTS = 2;
 
@@ -27,6 +31,12 @@ export type ShopItem =
   | {
       readonly kind: "tarot";
       readonly tarot: TarotCard;
+      readonly price: number;
+      readonly sold: boolean;
+    }
+  | {
+      readonly kind: "spectral";
+      readonly spectral: SpectralCard;
       readonly price: number;
       readonly sold: boolean;
     };
@@ -83,26 +93,37 @@ function tarotOffer(tarot: TarotCard): ShopItem {
   return { kind: "tarot", tarot, price: TAROT_BASE_PRICE, sold: false };
 }
 
+function spectralOffer(spectral: SpectralCard): ShopItem {
+  return { kind: "spectral", spectral, price: SPECTRAL_BASE_PRICE, sold: false };
+}
+
 export interface PickShopOffersArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly excludedJokerIds: ReadonlyArray<string>;
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
+  readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly extraSlots?: number;
   readonly rng?: RandomSource;
 }
 
 type ShopOfferKind = ShopItem["kind"];
-const SHOP_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = ["joker", "planet", "tarot"];
+const COMMON_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = ["joker", "planet", "tarot"];
 
 interface PickedOfferIds {
   readonly joker: ReadonlySet<string>;
   readonly planet: ReadonlySet<string>;
   readonly tarot: ReadonlySet<string>;
+  readonly spectral: ReadonlySet<string>;
 }
 
 function emptyPickedIds(): PickedOfferIds {
-  return { joker: new Set(), planet: new Set(), tarot: new Set() };
+  return {
+    joker: new Set(),
+    planet: new Set(),
+    tarot: new Set(),
+    spectral: new Set(),
+  };
 }
 
 function pickOfferByKind(
@@ -125,6 +146,10 @@ function pickOfferByKind(
       const next = pickRandom(args.tarotCatalog, [...picked.tarot], rng);
       return next ? tarotOffer(next) : null;
     }
+    case "spectral": {
+      const next = pickRandom(args.spectralCatalog, [...picked.spectral], rng);
+      return next ? spectralOffer(next) : null;
+    }
   }
 }
 
@@ -139,6 +164,9 @@ function recordPicked(picked: PickedOfferIds, offer: ShopItem): void {
     case "tarot":
       (picked.tarot as Set<string>).add(offer.tarot.id);
       return;
+    case "spectral":
+      (picked.spectral as Set<string>).add(offer.spectral.id);
+      return;
   }
 }
 
@@ -147,9 +175,13 @@ function pickRandomKindOffer(
   rng: RandomSource,
   picked: PickedOfferIds,
 ): ShopItem | null {
-  const start = Math.floor(rng() * SHOP_OFFER_KINDS.length);
-  for (let i = 0; i < SHOP_OFFER_KINDS.length; i += 1) {
-    const kind = SHOP_OFFER_KINDS[(start + i) % SHOP_OFFER_KINDS.length];
+  if (rng() < SPECTRAL_OFFER_CHANCE) {
+    const spectral = pickOfferByKind("spectral", args, rng, picked);
+    if (spectral) return spectral;
+  }
+  const start = Math.floor(rng() * COMMON_OFFER_KINDS.length);
+  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
+    const kind = COMMON_OFFER_KINDS[(start + i) % COMMON_OFFER_KINDS.length];
     const offer = pickOfferByKind(kind, args, rng, picked);
     if (offer) return offer;
   }

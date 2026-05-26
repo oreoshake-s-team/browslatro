@@ -67,7 +67,9 @@ function resolveBuyState(
     return { kind: "slots-full" };
   }
   if (
-    (offer.kind === "planet" || offer.kind === "tarot") &&
+    (offer.kind === "planet" ||
+      offer.kind === "tarot" ||
+      offer.kind === "spectral") &&
     consumableCount >= consumableCapacity
   ) {
     return { kind: "consumable-slots-full" };
@@ -121,6 +123,8 @@ function offerSubject(offer: ShopItem): {
       return offer.planet;
     case "tarot":
       return offer.tarot;
+    case "spectral":
+      return offer.spectral;
   }
 }
 
@@ -130,6 +134,7 @@ const OFFER_KIND_BADGE: Readonly<
   joker: { icon: "🃏", label: "Joker" },
   planet: { icon: "🪐", label: "Planet" },
   tarot: { icon: "🔮", label: "Tarot" },
+  spectral: { icon: "👻", label: "Spectral" },
 };
 
 export default function Shop({

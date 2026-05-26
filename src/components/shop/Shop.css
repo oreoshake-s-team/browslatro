@@ -156,6 +156,12 @@
   background-color: #f3f0ff;
 }
 
+.shop-offer-spectral {
+  border-color: #63e6be;
+  border-left-color: #099268;
+  background-color: #e6fcf5;
+}
+
 .shop-offer-sold {
   opacity: 0.6;
   filter: grayscale(0.5);
@@ -194,6 +200,11 @@
 .shop-offer-kind-tarot {
   background-color: #e5dbff;
   color: #3b1f7a;
+}
+
+.shop-offer-kind-spectral {
+  background-color: #c3fae8;
+  color: #0b5d3b;
 }
 
 .shop-offer-name {
