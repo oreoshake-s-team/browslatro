@@ -15,8 +15,11 @@ import {
   MISPRINT_MAX_MULT,
   MISPRINT_MIN_MULT,
   ODD_TODD_CHIPS,
+  PHOTOGRAPH_X_MULT,
   RANK_PARITY,
+  SCARY_FACE_CHIPS,
   SLY_JOKER_CHIPS,
+  SMILEY_FACE_MULT,
   SUIT_MULT_AMOUNT,
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
@@ -41,9 +44,13 @@ import {
   createLustyJoker,
   createMadJoker,
   createMisprintJoker,
+  createJokerCatalog,
   createOddToddJoker,
+  createPhotographJoker,
   createPlusFourMultJoker,
+  createScaryFaceJoker,
   createSlyJoker,
+  createSmileyFaceJoker,
   createWilyJoker,
   createWrathfulJoker,
   createZanyJoker,
@@ -1054,3 +1061,127 @@ describe("Misprint joker", () => {
     expect(result.firedJokerIds).toContain("misprint");
   });
 });
+
+describe("Scary Face joker", () => {
+  test("adds SCARY_FACE_CHIPS chips per scored face card", () => {
+    const scored = [card("J"), card("Q"), card("5")];
+    const result = applyJokersToScoring([createScaryFaceJoker()], scored);
+    expect(result.additiveChips).toBe(SCARY_FACE_CHIPS * 2);
+  });
+
+  test("contributes no chips when no face cards are scored", () => {
+    const scored = [card("2"), card("5"), card("A")];
+    const result = applyJokersToScoring([createScaryFaceJoker()], scored);
+    expect(result.additiveChips).toBe(0);
+  });
+
+  test("does not change mult", () => {
+    const scored = [card("J")];
+    const result = applyJokersToScoring([createScaryFaceJoker()], scored);
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("fires once per scored face card in applyPerCardJokers", () => {
+    const result = applyPerCardJokers([createScaryFaceJoker()], card("K"));
+    expect(result.firedJokerIds).toEqual(["scary-face"]);
+  });
+
+  test("does not fire on a non-face card in applyPerCardJokers", () => {
+    const result = applyPerCardJokers([createScaryFaceJoker()], card("7"));
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("Smiley Face joker", () => {
+  test("adds SMILEY_FACE_MULT mult per scored face card", () => {
+    const scored = [card("J"), card("Q"), card("K")];
+    const result = applyJokersToScoring([createSmileyFaceJoker()], scored);
+    expect(result.additiveMult).toBe(SMILEY_FACE_MULT * 3);
+  });
+
+  test("contributes no mult when no face cards are scored", () => {
+    const scored = [card("2"), card("5"), card("A")];
+    const result = applyJokersToScoring([createSmileyFaceJoker()], scored);
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not change chips", () => {
+    const scored = [card("J")];
+    const result = applyJokersToScoring([createSmileyFaceJoker()], scored);
+    expect(result.additiveChips).toBe(0);
+  });
+
+  test("fires on a Jack in applyPerCardJokers", () => {
+    const result = applyPerCardJokers([createSmileyFaceJoker()], card("J"));
+    expect(result.firedJokerIds).toEqual(["smiley-face"]);
+  });
+
+  test("does not fire on an Ace in applyPerCardJokers", () => {
+    const result = applyPerCardJokers([createSmileyFaceJoker()], card("A"));
+    expect(result.firedJokerIds).toEqual([]);
+  });
+});
+
+describe("Photograph joker", () => {
+  test("multiplies xMult by PHOTOGRAPH_X_MULT when a face card is scored", () => {
+    const scored = [card("J"), card("5")];
+    const result = applyJokersToScoring([createPhotographJoker()], scored);
+    expect(result.xMult).toBe(PHOTOGRAPH_X_MULT);
+  });
+
+  test("does not multiply xMult when no face cards are scored", () => {
+    const scored = [card("2"), card("5"), card("A")];
+    const result = applyJokersToScoring([createPhotographJoker()], scored);
+    expect(result.xMult).toBe(1);
+  });
+
+  test("applies only once even when multiple face cards are scored", () => {
+    const scored = [card("J"), card("Q"), card("K")];
+    const result = applyJokersToScoring([createPhotographJoker()], scored);
+    expect(result.xMult).toBe(PHOTOGRAPH_X_MULT);
+  });
+
+  test("fires exactly once in firedJokerIds at the hand level", () => {
+    const result = applyHandLevelJokers([createPhotographJoker()], {
+      scoredCards: [card("J"), card("Q")],
+    });
+    expect(result.firedJokerIds).toEqual(["photograph"]);
+  });
+
+  test("does not fire when scoredCards omits face cards", () => {
+    const result = applyHandLevelJokers([createPhotographJoker()], {
+      scoredCards: [card("3"), card("9")],
+    });
+    expect(result.firedJokerIds).toEqual([]);
+  });
+
+  test("does not change additive mult", () => {
+    const scored = [card("J")];
+    const result = applyJokersToScoring([createPhotographJoker()], scored);
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("does not change additive chips", () => {
+    const scored = [card("J")];
+    const result = applyJokersToScoring([createPhotographJoker()], scored);
+    expect(result.additiveChips).toBe(0);
+  });
+});
+
+describe("Face joker catalog membership", () => {
+  test("Scary Face appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("scary-face");
+  });
+
+  test("Smiley Face appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("smiley-face");
+  });
+
+  test("Photograph appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("photograph");
+  });
+});
+

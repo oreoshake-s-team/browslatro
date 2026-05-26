@@ -622,6 +622,7 @@ function App() {
     const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
+      scoredCards: scoring,
     });
     pulseJokers(handJokerResult.firedJokerIds);
 
