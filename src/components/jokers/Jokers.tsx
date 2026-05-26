@@ -1,7 +1,7 @@
 import { Fragment, useRef, useState } from "react";
 import "./Jokers.css";
-import { MAX_JOKERS, type Joker } from "../../jokers";
-import { insertIdAtIndex, nearestGapIndex } from "../../reordering";
+import { MAX_JOKERS, type Joker } from "../../items/jokers";
+import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { useConsumableDropZone } from "../consumables/useConsumableDropZone";
 
 interface JokersProps {

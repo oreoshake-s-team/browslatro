@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
-import type { Card } from "../../types";
-import type { Joker } from "../../jokers";
-import type { Consumable } from "../../consumables";
+import type { Card } from "../../cards/types";
+import type { Joker } from "../../items/jokers";
+import type { Consumable } from "../../items/consumables";
 import HandComponent from "../cards/Hand";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";

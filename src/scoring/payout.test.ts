@@ -7,7 +7,7 @@ import {
   INTEREST_CAP,
   INTEREST_RATE_PER,
 } from "./payout";
-import type { Card } from "./types";
+import type { Card } from "../cards/types";
 
 function card(id: number, enhancement?: "gold"): Card {
   return enhancement

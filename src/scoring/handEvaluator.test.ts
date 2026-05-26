@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { detectHandLabel, evaluateHand, handContains } from "./handEvaluator";
-import type { Card, Enhancement, Rank, Suit } from "./types";
+import type { Card, Enhancement, Rank, Suit } from "../cards/types";
 
 let nextId = 0;
 function card(rank: Rank, suit: Suit, enhancement?: Enhancement): Card {

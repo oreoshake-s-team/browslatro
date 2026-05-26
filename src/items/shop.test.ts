@@ -7,8 +7,8 @@ import {
   type RandomSource,
 } from "./jokers";
 import { availablePlanets, createPlanetCatalog } from "./planets";
-import type { HandLabel } from "./handEvaluator";
-import { HANDS } from "./constants";
+import type { HandLabel } from "../scoring/handEvaluator";
+import { HANDS } from "../constants";
 import { createSpectralCatalog } from "./spectrals";
 import { createTarotCatalog } from "./tarots";
 import {

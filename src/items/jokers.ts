@@ -1,5 +1,5 @@
-import type { Card, Rank, Suit } from "./types";
-import { type HandLabel, handContains } from "./handEvaluator";
+import type { Card, Rank, Suit } from "../cards/types";
+import { type HandLabel, handContains } from "../scoring/handEvaluator";
 
 export const MAX_JOKERS = 5;
 export const BUSINESS_CARD_PROC_CHANCE = 0.5;

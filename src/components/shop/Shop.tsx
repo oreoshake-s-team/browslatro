@@ -1,13 +1,13 @@
 import "./Shop.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { MAX_JOKERS } from "../../jokers";
-import { rerollCostFor, type ShopItem } from "../../shop";
+import { MAX_JOKERS } from "../../items/jokers";
+import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
   applyShopDiscount,
   type Voucher,
   type VoucherId,
-} from "../../vouchers";
+} from "../../items/vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 interface ShopProps {

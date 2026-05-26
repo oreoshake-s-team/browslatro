@@ -2,7 +2,7 @@ import type { Joker, RandomSource } from "./jokers";
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
-import { JOKER_BASE_PRICE } from "./constants";
+import { JOKER_BASE_PRICE } from "../constants";
 import { PLANET_BASE_PRICE } from "./planets";
 import { SPECTRAL_BASE_PRICE } from "./spectrals";
 import { TAROT_BASE_PRICE } from "./tarots";

@@ -1,4 +1,4 @@
-import type { Hand } from "../../types";
+import type { Hand } from "../../cards/types";
 import "./HandScore.css";
 
 interface HandScoreProps {

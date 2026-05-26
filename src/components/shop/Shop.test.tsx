@@ -1,15 +1,15 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Shop from "./Shop";
-import type { ShopItem } from "../../shop";
+import type { ShopItem } from "../../items/shop";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
   createPlusFourMultJoker,
-} from "../../jokers";
-import { createPlanetCatalog } from "../../planets";
-import { createTarotCatalog } from "../../tarots";
-import type { Voucher, VoucherId } from "../../vouchers";
+} from "../../items/jokers";
+import { createPlanetCatalog } from "../../items/planets";
+import { createTarotCatalog } from "../../items/tarots";
+import type { Voucher, VoucherId } from "../../items/vouchers";
 
 const OVERSTOCK_VOUCHER: Voucher = {
   id: "overstock",

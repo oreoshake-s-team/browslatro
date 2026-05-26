@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Card from "./Card";
-import type { Card as CardType } from "../../types";
+import type { Card as CardType } from "../../cards/types";
 
 const plain: CardType = { id: 1, rank: "9", suit: "spades" };
 const stoneCard: CardType = { id: 2, rank: "2", suit: "hearts", enhancement: "stone" };

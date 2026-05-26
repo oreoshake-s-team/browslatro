@@ -1,5 +1,5 @@
-import type { Card, Enhancement, Suit } from "../../types";
-import { getRankChips } from "../../scoring";
+import type { Card, Enhancement, Suit } from "../../cards/types";
+import { getRankChips } from "../../scoring/scoring";
 import {
   BONUS_ENHANCEMENT_CHIPS,
   GLASS_ENHANCEMENT_DESTROY_CHANCE,
@@ -10,9 +10,9 @@ import {
   LUCKY_ENHANCEMENT_MULT_CHANCE,
   MULT_ENHANCEMENT_MULT_DELTA,
   STONE_ENHANCEMENT_CHIPS,
-} from "../../enhancements";
-import { GOLD_HELD_BONUS_PER_CARD } from "../../payout";
-import { STEEL_MULT_FACTOR } from "../../heldInHand";
+} from "../../cards/enhancements";
+import { GOLD_HELD_BONUS_PER_CARD } from "../../scoring/payout";
+import { STEEL_MULT_FACTOR } from "../../cards/heldInHand";
 
 const SUIT_LABELS: Record<Suit, string> = {
   spades: "Spades",

@@ -1,10 +1,10 @@
-import type { Card, Rank } from "./types";
+import type { Card, Rank } from "../cards/types";
 import { detectHandLabel, evaluateHand, type HandLabel } from "./handEvaluator";
 import {
   applyCardEnhancement,
   cardRankForEvaluation,
   isStoneCard,
-} from "./enhancements";
+} from "../cards/enhancements";
 
 /**
  * Per-rank chip contribution for "scoring" cards. Face cards (J, Q, K) are

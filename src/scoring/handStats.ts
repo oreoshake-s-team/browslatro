@@ -1,5 +1,5 @@
 import type { HandLabel } from "./handEvaluator";
-import { HANDS } from "./constants";
+import { HANDS } from "../constants";
 
 export interface HandStatsEntry {
   readonly chips: number;

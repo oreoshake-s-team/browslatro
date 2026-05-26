@@ -1,7 +1,7 @@
 // @vitest-environment node
-import { HANDS } from "./constants";
-import type { HandLabel } from "./handEvaluator";
-import { createDefaultHandStats } from "./handStats";
+import { HANDS } from "../constants";
+import type { HandLabel } from "../scoring/handEvaluator";
+import { createDefaultHandStats } from "../scoring/handStats";
 import {
   PLANET_BASE_PRICE,
   applyPlanetUpgrade,

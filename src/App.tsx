@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import type { Blind, Card, Hand } from "./types";
+import type { Blind, Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
-import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./planets";
-import { createSpectralCatalog, type SpectralEffect } from "./spectrals";
-import { createTarotCatalog, resolveHermitPayout } from "./tarots";
+import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
+import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
+import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -16,7 +16,7 @@ import {
   hasFreeConsumableSlot,
   removeConsumableAt,
   type Consumable,
-} from "./consumables";
+} from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
 import {
   emptyHandCounts,
@@ -30,14 +30,14 @@ import {
   isHighVisibility,
   type AnimationSpeed,
 } from "./components/system/preferences";
-import { detectHandLabel } from "./handEvaluator";
-import { createDefaultHandStats, type HandStats } from "./handStats";
+import { detectHandLabel } from "./scoring/handEvaluator";
+import { createDefaultHandStats, type HandStats } from "./scoring/handStats";
 import {
   getCardChips,
   getCardMultDelta,
   getScoringCards,
   getScoringStep,
-} from "./scoring";
+} from "./scoring/scoring";
 import {
   cardKey,
   createDeck,
@@ -46,19 +46,19 @@ import {
   HAND_SIZE,
   SUITS,
   type DealResult,
-} from "./deck";
+} from "./cards/deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
   GOLD_HELD_BONUS_PER_CARD,
   REMAINING_HAND_BONUS,
-} from "./payout";
-import { STEEL_MULT_FACTOR, steelHeldMultiplier } from "./heldInHand";
+} from "./scoring/payout";
+import { STEEL_MULT_FACTOR, steelHeldMultiplier } from "./cards/heldInHand";
 import {
   applyCardEnhancement,
   applyLuckyRolls,
   rollEnhancementChance,
-} from "./enhancements";
+} from "./cards/enhancements";
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
@@ -71,13 +71,13 @@ import {
   type Joker,
   type JokerHandLevelStep,
   type JokerPostHandStep,
-} from "./jokers";
+} from "./items/jokers";
 import {
   pickShopOffers,
   rerollShopOffer,
   shopPickerRngConfig,
   type ShopItem,
-} from "./shop";
+} from "./items/shop";
 import {
   applyShopDiscount,
   extraConsumableSlots,
@@ -86,7 +86,7 @@ import {
   VOUCHER_CATALOG,
   type Voucher,
   type VoucherId,
-} from "./vouchers";
+} from "./items/vouchers";
 
 export const SCORING_STEP_MS = 500;
 

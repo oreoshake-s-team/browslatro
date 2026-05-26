@@ -56,7 +56,7 @@ import {
   createZanyJoker,
   isFaceCard,
 } from "./jokers";
-import type { Card, Rank, Suit } from "./types";
+import type { Card, Rank, Suit } from "../cards/types";
 
 let nextId = 0;
 function card(rank: Rank, suit: Suit = "spades"): Card {

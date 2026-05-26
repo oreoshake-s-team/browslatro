@@ -1,5 +1,5 @@
-import type { HandLabel } from "./handEvaluator";
-import type { HandStats, HandStatsEntry } from "./handStats";
+import type { HandLabel } from "../scoring/handEvaluator";
+import type { HandStats, HandStatsEntry } from "../scoring/handStats";
 
 export const PLANET_BASE_PRICE = 3;
 

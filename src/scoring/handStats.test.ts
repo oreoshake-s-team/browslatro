@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { HANDS } from "./constants";
+import { HANDS } from "../constants";
 import type { HandLabel } from "./handEvaluator";
 import { createDefaultHandStats } from "./handStats";
 
