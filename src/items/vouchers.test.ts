@@ -190,58 +190,34 @@ describe("pickVouchersForAnte", () => {
 });
 
 describe("extraShopOfferSlots", () => {
-  test("returns 0 when no overstock voucher is owned", () => {
-    expect(extraShopOfferSlots(new Set<VoucherId>())).toBe(0);
-  });
-
-  test("returns 1 when only overstock is owned", () => {
-    expect(extraShopOfferSlots(new Set<VoucherId>(["overstock"]))).toBe(1);
-  });
-
-  test("returns 2 when both overstock and overstock-plus are owned", () => {
-    expect(
-      extraShopOfferSlots(new Set<VoucherId>(["overstock", "overstock-plus"])),
-    ).toBe(2);
-  });
-
-  test("does not count overstock-plus on its own", () => {
-    expect(extraShopOfferSlots(new Set<VoucherId>(["overstock-plus"]))).toBe(1);
+  test.each<{ owned: VoucherId[]; expected: number; label: string }>([
+    { owned: [], expected: 0, label: "no overstock voucher is owned" },
+    { owned: ["overstock"], expected: 1, label: "only overstock is owned" },
+    { owned: ["overstock", "overstock-plus"], expected: 2, label: "both overstock and overstock-plus are owned" },
+    { owned: ["overstock-plus"], expected: 1, label: "only overstock-plus is owned (does not stack on its own)" },
+  ])("returns $expected when $label", ({ owned, expected }) => {
+    expect(extraShopOfferSlots(new Set<VoucherId>(owned))).toBe(expected);
   });
 });
 
 describe("shopPriceDiscount", () => {
-  test("returns 0 when no discount voucher is owned", () => {
-    expect(shopPriceDiscount(new Set<VoucherId>())).toBe(0);
-  });
-
-  test("returns 0.25 for clearance-sale alone", () => {
-    expect(shopPriceDiscount(new Set<VoucherId>(["clearance-sale"]))).toBe(0.25);
-  });
-
-  test("returns 0.5 for liquidation (overrides clearance-sale, not stacked)", () => {
-    expect(
-      shopPriceDiscount(new Set<VoucherId>(["clearance-sale", "liquidation"])),
-    ).toBe(0.5);
+  test.each<{ owned: VoucherId[]; expected: number; label: string }>([
+    { owned: [], expected: 0, label: "no discount voucher is owned" },
+    { owned: ["clearance-sale"], expected: 0.25, label: "clearance-sale alone" },
+    { owned: ["clearance-sale", "liquidation"], expected: 0.5, label: "liquidation (overrides clearance-sale, not stacked)" },
+  ])("returns $expected for $label", ({ owned, expected }) => {
+    expect(shopPriceDiscount(new Set<VoucherId>(owned))).toBe(expected);
   });
 });
 
 describe("applyShopDiscount", () => {
-  test("returns the original price when no discount applies", () => {
-    expect(applyShopDiscount(5, new Set<VoucherId>())).toBe(5);
-  });
-
-  test("applies 25% off rounding up (clearance-sale, $5 → $4)", () => {
-    expect(applyShopDiscount(5, new Set<VoucherId>(["clearance-sale"]))).toBe(4);
-  });
-
-  test("applies 50% off rounding up (liquidation, $5 → $3)", () => {
-    expect(
-      applyShopDiscount(5, new Set<VoucherId>(["clearance-sale", "liquidation"])),
-    ).toBe(3);
-  });
-
-  test("never reduces a price below $1", () => {
-    expect(applyShopDiscount(1, new Set<VoucherId>(["clearance-sale", "liquidation"]))).toBe(1);
+  test.each<{ price: number; owned: VoucherId[]; expected: number; label: string }>([
+    { price: 5, owned: [], expected: 5, label: "returns the original price when no discount applies" },
+    { price: 5, owned: ["clearance-sale"], expected: 4, label: "applies 25% off rounding up (clearance-sale, $5 → $4)" },
+    { price: 5, owned: ["clearance-sale", "liquidation"], expected: 3, label: "applies 50% off rounding up (liquidation, $5 → $3)" },
+    { price: 1, owned: ["clearance-sale", "liquidation"], expected: 1, label: "never reduces a price below $1" },
+  ])("$label", ({ price, owned, expected }) => {
+    expect(applyShopDiscount(price, new Set<VoucherId>(owned))).toBe(expected);
   });
 });
 

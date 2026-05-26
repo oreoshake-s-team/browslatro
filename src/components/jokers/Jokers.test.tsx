@@ -32,34 +32,16 @@ describe("Jokers UI", () => {
     expect(screen.getByTestId("joker-tile-filled-plus-four-mult")).toBeInTheDocument();
   });
 
-  test("renders the Greedy Joker tile when equipped", () => {
-    render(<Jokers jokers={[createGreedyJoker()]} />);
-    expect(screen.getByTestId("joker-tile-filled-greedy-joker")).toBeInTheDocument();
-  });
-
-  test("renders the Lusty Joker tile when equipped", () => {
-    render(<Jokers jokers={[createLustyJoker()]} />);
-    expect(screen.getByTestId("joker-tile-filled-lusty-joker")).toBeInTheDocument();
-  });
-
-  test("renders the Wrathful Joker tile when equipped", () => {
-    render(<Jokers jokers={[createWrathfulJoker()]} />);
-    expect(screen.getByTestId("joker-tile-filled-wrathful-joker")).toBeInTheDocument();
-  });
-
-  test("renders the Gluttonous Joker tile when equipped", () => {
-    render(<Jokers jokers={[createGluttonousJoker()]} />);
-    expect(screen.getByTestId("joker-tile-filled-gluttonous-joker")).toBeInTheDocument();
-  });
-
-  test("renders the Business Card joker tile when equipped", () => {
-    render(<Jokers jokers={[createBusinessCardJoker()]} />);
-    expect(screen.getByTestId("joker-tile-filled-business-card")).toBeInTheDocument();
-  });
-
-  test("renders the Joker Stencil tile when equipped", () => {
-    render(<Jokers jokers={[createJokerStencilJoker()]} />);
-    expect(screen.getByTestId("joker-tile-filled-joker-stencil")).toBeInTheDocument();
+  test.each<{ name: string; testId: string; factory: () => Joker }>([
+    { name: "Greedy", testId: "joker-tile-filled-greedy-joker", factory: createGreedyJoker },
+    { name: "Lusty", testId: "joker-tile-filled-lusty-joker", factory: createLustyJoker },
+    { name: "Wrathful", testId: "joker-tile-filled-wrathful-joker", factory: createWrathfulJoker },
+    { name: "Gluttonous", testId: "joker-tile-filled-gluttonous-joker", factory: createGluttonousJoker },
+    { name: "Business Card", testId: "joker-tile-filled-business-card", factory: createBusinessCardJoker },
+    { name: "Joker Stencil", testId: "joker-tile-filled-joker-stencil", factory: createJokerStencilJoker },
+  ])("renders the $name Joker tile when equipped", ({ testId, factory }) => {
+    render(<Jokers jokers={[factory()]} />);
+    expect(screen.getByTestId(testId)).toBeInTheDocument();
   });
 
   test("renders the remaining empty slots when a partial set is equipped", () => {
