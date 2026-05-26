@@ -27,6 +27,7 @@ interface GameProps {
   remaining: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
+  debuffedIds?: ReadonlySet<number>;
   jokers: ReadonlyArray<Joker>;
   jokerPulseCounters?: Readonly<Record<string, number>>;
   consumables: ReadonlyArray<Consumable>;
@@ -72,6 +73,7 @@ export default function Game({
   remaining,
   selectedIds,
   discardingIds,
+  debuffedIds,
   jokers,
   jokerPulseCounters,
   consumables,
@@ -134,6 +136,7 @@ export default function Game({
         remaining={remaining}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
+        debuffedIds={debuffedIds}
         scoringId={scoringId}
         scoringPulseTick={scoringPulseTick}
         goldScoringId={goldScoringId}

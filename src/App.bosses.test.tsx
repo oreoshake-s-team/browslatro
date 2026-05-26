@@ -2,9 +2,19 @@ import type { MockedFunction } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
-import { bossPickerRngConfig } from "./items/bosses";
+import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
+
+const mockShuffleConfig = { useReverse: false };
+vi.mock("./cards/deck", async () => {
+  const actual = await vi.importActual<typeof import("./cards/deck")>("./cards/deck");
+  return {
+    ...actual,
+    shuffle: <T,>(items: ReadonlyArray<T>): T[] =>
+      mockShuffleConfig.useReverse ? items.slice().reverse() : actual.shuffle(items),
+  };
+});
 
 const playMock = play as MockedFunction<typeof play>;
 
@@ -13,6 +23,7 @@ import App from "./App";
 beforeEach(() => {
   playMock.mockClear();
   bossPickerRngConfig.rng = () => 0;
+  mockShuffleConfig.useReverse = false;
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
@@ -22,6 +33,7 @@ afterEach(() => {
   });
   vi.useRealTimers();
   bossPickerRngConfig.rng = Math.random;
+  mockShuffleConfig.useReverse = false;
 });
 
 function getStatValue(label: string): HTMLElement {
@@ -86,22 +98,22 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
 });
 
 describe("Boss Blinds — Phase 1 effects (#245)", () => {
-  function findBossById(id: string): () => number {
+  function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
+    let callIdx = 0;
+    const recent = new Set<string>();
     return () => {
-      const indexes: Record<string, number> = {
-        "boss-default": 0,
-        "the-wall": 1,
-        "the-needle": 2,
-        "the-water": 3,
-        "the-manacle": 4,
-        "the-psychic": 5,
-        "the-tooth": 6,
-      };
-      const idx = indexes[id];
-      const ante1Eligible = ["boss-default", "the-manacle", "the-psychic"];
-      const i = ante1Eligible.indexOf(id);
-      if (i >= 0) return i / ante1Eligible.length + 0.001;
-      return idx / 6;
+      const id = idsPerAnte[callIdx];
+      const ante = callIdx + 1;
+      const eligible = createBossCatalog().filter((b) => ante >= b.anteMin);
+      const fresh = eligible.filter((b) => !recent.has(b.id));
+      const pool = fresh.length > 0 ? fresh : eligible;
+      const idx = pool.findIndex((b) => b.id === id);
+      if (idx < 0) {
+        throw new Error(`${id} not in pool for ante ${ante}`);
+      }
+      callIdx += 1;
+      recent.add(id);
+      return idx / pool.length + 0.0001;
     };
   }
 
@@ -118,7 +130,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   }
 
   test("The Manacle on ante 1 deals only 7 cards on blind 3", async () => {
-    bossPickerRngConfig.rng = findBossById("the-manacle");
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToBossBlindAfterStartingTheRound(user);
@@ -129,7 +141,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   });
 
   test("The Psychic on ante 1 disables Submit Hand until 5 cards are selected", async () => {
-    bossPickerRngConfig.rng = findBossById("the-psychic");
+    bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToBossBlindAfterStartingTheRound(user);
@@ -160,7 +172,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   }
 
   test("The Needle on ante 2 starts the round with only 1 hand remaining", async () => {
-    bossPickerRngConfig.rng = () => 0.21;
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-needle"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToAnte2BossBlindStartedRound(user);
@@ -169,7 +181,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   });
 
   test("The Water on ante 2 starts the round with 0 discards remaining", async () => {
-    bossPickerRngConfig.rng = () => 0.61;
+    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-water"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToAnte2BossBlindStartedRound(user);
@@ -193,4 +205,68 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     await user.click(screen.getByText(/Win/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
   });
+});
+
+describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
+  function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
+    let callIdx = 0;
+    const recent = new Set<string>();
+    return () => {
+      const id = idsPerAnte[callIdx];
+      const ante = callIdx + 1;
+      const eligible = createBossCatalog().filter((b) => ante >= b.anteMin);
+      const fresh = eligible.filter((b) => !recent.has(b.id));
+      const pool = fresh.length > 0 ? fresh : eligible;
+      const idx = pool.findIndex((b) => b.id === id);
+      if (idx < 0) {
+        throw new Error(`${id} not in pool for ante ${ante}`);
+      }
+      callIdx += 1;
+      recent.add(id);
+      return idx / pool.length + 0.0001;
+    };
+  }
+
+  async function advanceToBossBlindAfterStartingTheRound(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
+  }
+
+  test("The Club applies the debuff class to club cards in hand", async () => {
+    mockShuffleConfig.useReverse = true;
+    bossPickerRngConfig.rng = mkBossRng(["the-club"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    expect(screen.getByText("The Club")).toBeInTheDocument();
+    expect(
+      document.querySelectorAll(".card-suit-clubs.card-debuffed").length,
+    ).toBeGreaterThan(0);
+  });
+
+  test("The Club does not debuff non-club cards in hand (negative)", async () => {
+    mockShuffleConfig.useReverse = true;
+    bossPickerRngConfig.rng = mkBossRng(["the-club"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const nonClubDebuffed = Array.from(
+      document.querySelectorAll(".card-debuffed"),
+    ).filter((el) => !el.classList.contains("card-suit-clubs"));
+    expect(nonClubDebuffed).toHaveLength(0);
+  });
+
+  test("debuffed cards are absent on blind 1 even when the round's boss is The Club", () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-club"]);
+    render(<App />);
+    expect(document.querySelectorAll(".card-debuffed")).toHaveLength(0);
+  });
+
 });

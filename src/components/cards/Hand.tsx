@@ -32,6 +32,7 @@ interface HandProps {
   remaining: ReadonlyArray<CardType>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
+  debuffedIds?: ReadonlySet<number>;
   scoringId?: number | null;
   scoringPulseTick?: number;
   goldScoringId?: number | null;
@@ -51,6 +52,7 @@ export default function Hand({
   remaining,
   selectedIds,
   discardingIds,
+  debuffedIds,
   scoringId = null,
   scoringPulseTick = 0,
   goldScoringId = null,
@@ -312,6 +314,7 @@ export default function Hand({
                     card={card}
                     selected={selectedIds.has(card.id)}
                     discarding={discardingIds.has(card.id)}
+                    debuffed={debuffedIds?.has(card.id) ?? false}
                     scoring={scoringId === card.id}
                     scoringPulseTick={scoringPulseTick}
                     goldScoring={goldScoringId === card.id}

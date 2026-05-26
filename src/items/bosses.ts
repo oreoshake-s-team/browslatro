@@ -1,10 +1,16 @@
+import type { Card, Rank, Suit } from "../cards/types";
+
+const FACE_RANKS: ReadonlySet<Rank> = new Set(["J", "Q", "K"]);
+
 export type BossEffect =
   | { readonly kind: "none" }
   | { readonly kind: "start-with-hands"; readonly value: number }
   | { readonly kind: "start-with-discards"; readonly value: number }
   | { readonly kind: "hand-size-delta"; readonly value: number }
   | { readonly kind: "force-card-count"; readonly value: number }
-  | { readonly kind: "money-per-card-played"; readonly value: number };
+  | { readonly kind: "money-per-card-played"; readonly value: number }
+  | { readonly kind: "debuff-suit"; readonly suit: Suit }
+  | { readonly kind: "debuff-face" };
 
 export interface BossBlind {
   readonly id: string;
@@ -71,6 +77,46 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     scoreMultiplier: 2,
     anteMin: 3,
     effect: { kind: "money-per-card-played", value: 1 },
+  },
+  {
+    id: "the-club",
+    name: "The Club",
+    description: "All Club cards are debuffed.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "debuff-suit", suit: "clubs" },
+  },
+  {
+    id: "the-goad",
+    name: "The Goad",
+    description: "All Spade cards are debuffed.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "debuff-suit", suit: "spades" },
+  },
+  {
+    id: "the-window",
+    name: "The Window",
+    description: "All Diamond cards are debuffed.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "debuff-suit", suit: "diamonds" },
+  },
+  {
+    id: "the-head",
+    name: "The Head",
+    description: "All Heart cards are debuffed.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "debuff-suit", suit: "hearts" },
+  },
+  {
+    id: "the-plant",
+    name: "The Plant",
+    description: "All face cards are debuffed.",
+    scoreMultiplier: 2,
+    anteMin: 4,
+    effect: { kind: "debuff-face" },
   },
 ];
 
@@ -159,4 +205,30 @@ export function bossRequiredCardCount(boss: BossBlind | null): number | null {
 export function bossMoneyPenaltyPerCard(boss: BossBlind | null): number {
   if (!boss || boss.effect.kind !== "money-per-card-played") return 0;
   return boss.effect.value;
+}
+
+export function isCardDebuffedByBoss(
+  boss: BossBlind | null,
+  card: Card,
+): boolean {
+  if (!boss) return false;
+  switch (boss.effect.kind) {
+    case "debuff-suit":
+      return card.suit === boss.effect.suit;
+    case "debuff-face":
+      return FACE_RANKS.has(card.rank);
+    default:
+      return false;
+  }
+}
+
+export function debuffedHandIds(
+  hand: ReadonlyArray<Card>,
+  boss: BossBlind | null,
+  isBossRound: boolean,
+): ReadonlySet<number> {
+  if (!isBossRound || !boss) return new Set();
+  return new Set(
+    hand.filter((c) => isCardDebuffedByBoss(boss, c)).map((c) => c.id),
+  );
 }
