@@ -36,7 +36,7 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 
 - When creating a new issue, in addition to using semantic naming, add GitHub tags for the issue type and feature space (e.g. shop).
 - When asked to complete a task, first create a new branch based on the issue number and title. Do not commit directly to main. Create a pull request when done.
-- Always merge/rebase main before pushing new code.
+- Always merge/rebase main before pushing new code, including every update to existing branches/PRs.
 - After every push, wait for the CI status. If a test fails or a merge conflict exists, try to resolve it immediately.
 - Never merge a PR unless all CI statuses are green.
 
