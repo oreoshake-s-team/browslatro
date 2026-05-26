@@ -32,15 +32,31 @@ export function createVoucherCatalog(): ReadonlyArray<Voucher> {
 export interface PickVoucherArgs {
   readonly ante: number;
   readonly ownedIds: ReadonlySet<VoucherId>;
+  // Voucher ids to exclude from being picked. Distinct from ownedIds
+  // because prerequisite satisfaction is checked against *owned* vouchers
+  // only — a voucher merely sitting unsold in the shop must not satisfy
+  // a prereq for its upgrade voucher. Defaults to ownedIds.
+  readonly excludeIds?: ReadonlySet<VoucherId>;
   readonly catalog?: ReadonlyArray<Voucher>;
   readonly rng?: RandomSource;
+}
+
+function isEligible(
+  voucher: Voucher,
+  ownedIds: ReadonlySet<VoucherId>,
+  excludeIds: ReadonlySet<VoucherId>,
+): boolean {
+  if (excludeIds.has(voucher.id)) return false;
+  if (voucher.requires && !ownedIds.has(voucher.requires)) return false;
+  return true;
 }
 
 export function pickVoucherForAnte(args: PickVoucherArgs): Voucher | null {
   const catalog = args.catalog ?? VOUCHER_CATALOG;
   const rng = args.rng ?? Math.random;
-  const eligible = catalog.filter(
-    (v) => !args.ownedIds.has(v.id) && (!v.requires || args.ownedIds.has(v.requires)),
+  const excludeIds = args.excludeIds ?? args.ownedIds;
+  const eligible = catalog.filter((v) =>
+    isEligible(v, args.ownedIds, excludeIds),
   );
   if (eligible.length === 0) return null;
   return eligible[Math.floor(rng() * eligible.length)];
@@ -54,14 +70,13 @@ export function pickVouchersForAnte(
   if (target === 0) return [];
   const catalog = args.catalog ?? VOUCHER_CATALOG;
   const rng = args.rng ?? Math.random;
+  const baseExclude = args.excludeIds ?? args.ownedIds;
   const picked: Voucher[] = [];
   const pickedIds = new Set<VoucherId>();
   for (let i = 0; i < target; i += 1) {
-    const eligible = catalog.filter(
-      (v) =>
-        !args.ownedIds.has(v.id) &&
-        !pickedIds.has(v.id) &&
-        (!v.requires || args.ownedIds.has(v.requires)),
+    const excludeIds = new Set<VoucherId>([...baseExclude, ...pickedIds]);
+    const eligible = catalog.filter((v) =>
+      isEligible(v, args.ownedIds, excludeIds),
     );
     if (eligible.length === 0) break;
     const next = eligible[Math.floor(rng() * eligible.length)];
