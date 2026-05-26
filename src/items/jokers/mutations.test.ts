@@ -41,20 +41,13 @@ describe("JOKER_RARITIES", () => {
 });
 
 describe("rarity tagging", () => {
-  test("+4 Mult is common", () => {
-    expect(createPlusFourMultJoker().rarity).toBe<JokerRarity>("common");
-  });
-
-  test("Joker Stencil is uncommon", () => {
-    expect(createJokerStencilJoker().rarity).toBe<JokerRarity>("uncommon");
-  });
-
-  test("Misprint is uncommon", () => {
-    expect(createMisprintJoker().rarity).toBe<JokerRarity>("uncommon");
-  });
-
-  test("Yorick is legendary", () => {
-    expect(createYorickJoker().rarity).toBe<JokerRarity>("legendary");
+  test.each<{ name: string; rarity: JokerRarity; factory: () => Joker }>([
+    { name: "+4 Mult", rarity: "common", factory: createPlusFourMultJoker },
+    { name: "Joker Stencil", rarity: "uncommon", factory: createJokerStencilJoker },
+    { name: "Misprint", rarity: "uncommon", factory: createMisprintJoker },
+    { name: "Yorick", rarity: "legendary", factory: createYorickJoker },
+  ])("$name is $rarity", ({ rarity, factory }) => {
+    expect(factory().rarity).toBe<JokerRarity>(rarity);
   });
 
   test("every catalog joker has a rarity", () => {
