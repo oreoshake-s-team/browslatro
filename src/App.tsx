@@ -351,22 +351,44 @@ function App() {
         scoringIndex,
       );
       setChips((prev) => prev + stepChips);
+      const stepCardLabel = cardLabel(stepCard);
       const evalRank = cardRankForEvaluation(stepCard);
       const rankChips = evalRank === null ? 0 : getRankChips(evalRank);
       if (rankChips > 0) {
         pushScoringEvent({
           kind: "chips-delta",
           amount: rankChips,
-          source: `${cardLabel(stepCard)} rank`,
+          source: `${stepCardLabel} rank`,
         });
       }
       play("pop");
       const enhancementEffect = applyCardEnhancement(stepCard);
+      if (enhancementEffect.chipsDelta > 0) {
+        const enhancementChipsSource =
+          stepCard.enhancement === "stone"
+            ? `Stone on ${stepCardLabel}`
+            : `Bonus on ${stepCardLabel}`;
+        pushScoringEvent({
+          kind: "chips-delta",
+          amount: enhancementEffect.chipsDelta,
+          source: enhancementChipsSource,
+        });
+      }
       if (enhancementEffect.multDelta > 0) {
         setMultiplier((prev) => prev + enhancementEffect.multDelta);
+        pushScoringEvent({
+          kind: "mult-delta",
+          amount: enhancementEffect.multDelta,
+          source: `Mult on ${stepCardLabel}`,
+        });
       }
       if (enhancementEffect.multTimes !== 1) {
         setMultiplier((prev) => prev * enhancementEffect.multTimes);
+        pushScoringEvent({
+          kind: "mult-times",
+          factor: enhancementEffect.multTimes,
+          source: `Glass on ${stepCardLabel}`,
+        });
       }
       if (rollEnhancementChance(enhancementEffect.destroyChance)) {
         const key = cardKey(stepCard);
@@ -376,13 +398,28 @@ function App() {
           next.add(key);
           return next;
         });
+        pushScoringEvent({
+          kind: "card-destroyed",
+          cardLabel: stepCardLabel,
+          source: "Glass roll",
+        });
       }
       const luckyResult = applyLuckyRolls(stepCard);
       if (luckyResult.multBonus > 0) {
         setMultiplier((prev) => prev + luckyResult.multBonus);
+        pushScoringEvent({
+          kind: "mult-delta",
+          amount: luckyResult.multBonus,
+          source: `Lucky proc on ${stepCardLabel}`,
+        });
       }
       if (luckyResult.moneyBonus > 0) {
         setMoney((prev) => prev + luckyResult.moneyBonus);
+        pushScoringEvent({
+          kind: "money-delta",
+          amount: luckyResult.moneyBonus,
+          source: `Lucky money proc on ${stepCardLabel}`,
+        });
       }
       const sealMoney = goldSealMoney(stepCard);
       if (sealMoney > 0) {
