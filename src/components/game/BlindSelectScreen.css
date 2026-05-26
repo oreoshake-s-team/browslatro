@@ -102,6 +102,21 @@
   font-weight: 700;
 }
 
+.blind-select-boss-override {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: inherit;
+  border: 1px solid #495057;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  cursor: pointer;
+}
+
+.blind-select-boss-override:hover,
+.blind-select-boss-override:focus-visible {
+  border-color: #748ffc;
+  outline: none;
+}
+
 .blind-select-row-boss-description {
   font-size: 1.3rem;
   color: #ced4da;

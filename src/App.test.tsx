@@ -110,7 +110,7 @@ describe("Winning a round resets the deck", () => {
     await user.click(getHandCardButtons()[1]);
     await user.click(screen.getByText(/^🗑️ Discard$/));
     flushDiscardAnimation();
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     // Dev Win now opens the post-round shop; skip through it and the
     // blind-select screen to reach the next-round deal.
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
@@ -123,7 +123,7 @@ describe("Winning a round resets the deck", () => {
   test("keeps the hand at 8 cards after a win resets the deck", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(getHandCardButtons()).toHaveLength(8);
   });
 
@@ -132,7 +132,7 @@ describe("Winning a round resets the deck", () => {
     render(<App />);
     await dismissBlindSelect(user);
     await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     const selectedCount = getHandCardButtons().filter(
@@ -148,7 +148,7 @@ describe("Winning a round resets the deck", () => {
     const before = getHandCardButtons().map((btn) =>
       btn.getAttribute("aria-label")
     );
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     const after = getHandCardButtons().map((btn) =>
@@ -168,17 +168,17 @@ describe("Win button integration", () => {
     expect(screen.getByText("Score at least: 300")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$4");
 
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 450")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$7");
     expect(getStatValue("Round")).toHaveTextContent("2");
 
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$12");
 
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
     expect(screen.getByText("Score at least: 800")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
@@ -908,8 +908,8 @@ describe("Options modal new game integration", () => {
     render(<App />);
     await dismissBlindSelect(user);
 
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$12");
 
@@ -2786,7 +2786,7 @@ describe("Hand size modifier (issue #210)", () => {
 
   test("after Hand −1 the next round deals 7 cards", async () => {
     const user = await clickShrink();
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(getHandCardButtons()).toHaveLength(7);
@@ -2794,10 +2794,10 @@ describe("Hand size modifier (issue #210)", () => {
 
   test("the −1 modifier persists across two round transitions", async () => {
     const user = await clickShrink();
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(getHandCardButtons()).toHaveLength(7);
@@ -2808,7 +2808,7 @@ describe("Hand size modifier (issue #210)", () => {
     render(<App />);
     await user.click(screen.getByRole("button", { name: /Hand −1/ }));
     await user.click(screen.getByRole("button", { name: /Hand −1/ }));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(getHandCardButtons()).toHaveLength(6);
@@ -2818,7 +2818,7 @@ describe("Hand size modifier (issue #210)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByRole("button", { name: /Hand \+1/ }));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(getHandCardButtons()).toHaveLength(9);
@@ -2838,7 +2838,7 @@ describe("Hand size modifier (issue #210)", () => {
     for (let i = 0; i < 15; i += 1) {
       await user.click(screen.getByRole("button", { name: /Hand −1/ }));
     }
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(getHandCardButtons()).toHaveLength(1);
@@ -2913,7 +2913,7 @@ describe("Investment tag (issue #252)", () => {
     const before = Number(
       getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
     );
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     const after = Number(
       getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
     );
@@ -2926,7 +2926,7 @@ describe("Investment tag (issue #252)", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByTestId("blind-select-play"));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(screen.queryByTestId("blind-select-tags")).not.toBeInTheDocument();
   });
@@ -2936,7 +2936,7 @@ describe("Investment tag (issue #252)", () => {
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByTestId("blind-select-play"));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(screen.getAllByTestId(/^blind-select-tag-/)).toHaveLength(1);
   });

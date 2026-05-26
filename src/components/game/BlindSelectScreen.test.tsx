@@ -218,4 +218,61 @@ describe("BlindSelectScreen", () => {
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toHaveAttribute("title", expect.stringContaining("$25"));
   });
+
+  test("boss override select renders when bossOptions + onSetBoss are provided", () => {
+    const second: BossBlind = {
+      ...TEST_BOSS,
+      id: "the-needle",
+      name: "The Needle",
+    };
+    renderScreen({
+      currentBlind: 3,
+      bossOptions: [TEST_BOSS, second],
+      onSetBoss: vi.fn(),
+    });
+    expect(screen.getByTestId("blind-select-boss-override")).toBeInTheDocument();
+  });
+
+  test("boss override select does NOT render when onSetBoss is omitted", () => {
+    renderScreen({ currentBlind: 3, bossOptions: [TEST_BOSS] });
+    expect(
+      screen.queryByTestId("blind-select-boss-override"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("boss override select lists one option per eligible boss", () => {
+    const second: BossBlind = {
+      ...TEST_BOSS,
+      id: "the-needle",
+      name: "The Needle",
+    };
+    renderScreen({
+      currentBlind: 3,
+      bossOptions: [TEST_BOSS, second],
+      onSetBoss: vi.fn(),
+    });
+    expect(
+      screen.getByTestId("blind-select-boss-override").querySelectorAll("option"),
+    ).toHaveLength(2);
+  });
+
+  test("changing the boss override select calls onSetBoss with the chosen id", async () => {
+    const user = userEvent.setup();
+    const onSetBoss = vi.fn();
+    const second: BossBlind = {
+      ...TEST_BOSS,
+      id: "the-needle",
+      name: "The Needle",
+    };
+    renderScreen({
+      currentBlind: 3,
+      bossOptions: [TEST_BOSS, second],
+      onSetBoss,
+    });
+    await user.selectOptions(
+      screen.getByTestId("blind-select-boss-override"),
+      "the-needle",
+    );
+    expect(onSetBoss).toHaveBeenCalledWith("the-needle");
+  });
 });

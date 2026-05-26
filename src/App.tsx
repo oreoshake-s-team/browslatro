@@ -7,12 +7,14 @@ import {
   DEFAULT_STARTING_HANDS,
   bossAdjustHandEntry,
   bossBlocksHandLabel,
+  availableBosses,
   bossHandSize,
   bossMoneyPenaltyPerCard,
   bossPickerRngConfig,
   bossRequiredCardCount,
   bossStartingDiscards,
   bossStartingHands,
+  createBossCatalog,
   debuffedHandIds,
   pickBossForAnte,
   type BossBlind,
@@ -1682,6 +1684,11 @@ function App() {
           onSkip={skipBlind}
           tags={pendingTags}
           skipReward="investment"
+          bossOptions={availableBosses(createBossCatalog(), ante)}
+          onSetBoss={(id) => {
+            const next = createBossCatalog().find((b) => b.id === id);
+            if (next) setCurrentBoss(next);
+          }}
         />
       )}
       <ScoringTrace events={scoringEvents} />
