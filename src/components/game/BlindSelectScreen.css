@@ -12,21 +12,22 @@
   background-color: #1a1f2e;
   color: #f8f9fa;
   border: 2px solid #748ffc;
-  border-radius: 10px;
-  padding: 2rem 2.4rem;
-  width: min(92vw, 60rem);
-  max-height: 90vh;
+  border-radius: 12px;
+  padding: 3rem 3.6rem;
+  width: 75vw;
+  height: 75vh;
   overflow-y: auto;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: 2rem;
+  box-sizing: border-box;
 }
 
 .blind-select-title {
   margin: 0;
-  font-size: 1.6rem;
-  letter-spacing: 0.06em;
+  font-size: 2.6rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #adb5bd;
 }
@@ -36,16 +37,17 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
+  gap: 1.6rem;
+  flex: 1;
 }
 
 .blind-select-row {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding: 1rem 1.2rem;
-  border-radius: 8px;
+  gap: 0.8rem;
+  padding: 1.6rem 1.8rem;
+  border-radius: 10px;
   border: 2px solid #495057;
   background-color: rgba(73, 80, 87, 0.25);
 }
@@ -53,7 +55,7 @@
 .blind-select-row-current {
   border-color: #ffe066;
   background-color: rgba(255, 224, 102, 0.12);
-  box-shadow: 0 0 0 2px rgba(255, 224, 102, 0.3);
+  box-shadow: 0 0 0 3px rgba(255, 224, 102, 0.3);
 }
 
 .blind-select-row-completed {
@@ -65,27 +67,28 @@
 }
 
 .blind-select-row-name {
-  font-size: 1.2rem;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .blind-select-row-boss-description {
-  font-size: 0.85rem;
+  font-size: 1.3rem;
   color: #ced4da;
   font-style: italic;
+  line-height: 1.4;
 }
 
 .blind-select-row-stats {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.5rem;
 }
 
 .blind-select-row-stat {
   display: flex;
   justify-content: space-between;
-  font-size: 0.9rem;
+  font-size: 1.4rem;
 }
 
 .blind-select-row-stat dt {
@@ -99,13 +102,13 @@
 
 .blind-select-play {
   align-self: center;
-  padding: 0.7rem 1.6rem;
-  border-radius: 8px;
+  padding: 1.2rem 2.8rem;
+  border-radius: 10px;
   background-color: #51cf66;
   color: #102b1c;
   border: none;
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.7rem;
   cursor: pointer;
 }
 
