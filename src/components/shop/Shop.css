@@ -129,33 +129,90 @@
   display: grid;
   grid-template-columns: 1fr auto auto;
   align-items: center;
-  gap: 0.6rem 0.8rem;
+  gap: 0.4rem 0.8rem;
   padding: 0.8rem 1rem;
-  border: 1px solid #dee2e6;
+  border: 2px solid #dee2e6;
+  border-left-width: 6px;
   border-radius: 8px;
   background-color: white;
   transition: opacity 120ms linear;
 }
 
+.shop-offer-joker {
+  border-color: #ffa8a8;
+  border-left-color: #e03131;
+  background-color: #fff5f5;
+}
+
+.shop-offer-planet {
+  border-color: #91a7ff;
+  border-left-color: #364fc7;
+  background-color: #edf2ff;
+}
+
+.shop-offer-tarot {
+  border-color: #b197fc;
+  border-left-color: #5f3dc4;
+  background-color: #f3f0ff;
+}
+
 .shop-offer-sold {
-  opacity: 0.45;
+  opacity: 0.6;
+  filter: grayscale(0.5);
+}
+
+.shop-offer-kind {
+  grid-column: 1 / 4;
+  grid-row: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  justify-self: start;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.shop-offer-kind-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.shop-offer-kind-joker {
+  background-color: #ffe3e3;
+  color: #862e2e;
+}
+
+.shop-offer-kind-planet {
+  background-color: #dbe4ff;
+  color: #1c3faa;
+}
+
+.shop-offer-kind-tarot {
+  background-color: #e5dbff;
+  color: #3b1f7a;
 }
 
 .shop-offer-name {
   grid-column: 1 / 2;
+  grid-row: 2;
   font-weight: 600;
-  color: #495057;
+  color: #343a40;
 }
 
 .shop-offer-description {
   grid-column: 1 / 4;
+  grid-row: 3;
   font-size: 0.9rem;
-  color: #6c757d;
+  color: #495057;
 }
 
 .shop-offer-price {
   grid-column: 2 / 3;
-  grid-row: 1;
+  grid-row: 2;
   font-weight: 700;
   color: #099268;
   display: flex;
@@ -176,7 +233,7 @@
 
 .shop-offer-buy {
   grid-column: 3 / 4;
-  grid-row: 1;
+  grid-row: 2;
   padding: 0.4rem 0.9rem;
   background-color: #339af0;
   color: white;
