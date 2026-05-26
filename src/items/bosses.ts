@@ -87,8 +87,23 @@ export function availableBosses(
 
 export type BossRandomSource = () => number;
 
+/**
+ * Test-only seam: when `localStorage["browslatro:deterministicBoss"]` is
+ * `"1"` at module-import time, the picker uses an rng that always returns
+ * 0 so Playwright tests can rely on a stable boss for each ante.
+ */
+const DETERMINISTIC_BOSS_KEY = "browslatro:deterministicBoss";
+
+function readDeterministicBossFlag(): boolean {
+  try {
+    return window.localStorage.getItem(DETERMINISTIC_BOSS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export const bossPickerRngConfig: { rng: BossRandomSource } = {
-  rng: Math.random,
+  rng: readDeterministicBossFlag() ? () => 0 : Math.random,
 };
 
 export interface PickBossArgs {
