@@ -199,6 +199,7 @@ export interface JokerScoringResult {
 
 export interface JokerHandLevelStep {
   readonly jokerId: string;
+  readonly jokerName: string;
   readonly additiveMult?: number;
   readonly additiveChips?: number;
   readonly xMultFactor?: number;
@@ -212,12 +213,22 @@ export interface JokerHandResult {
   readonly steps: ReadonlyArray<JokerHandLevelStep>;
 }
 
+export interface JokerCardStep {
+  readonly jokerId: string;
+  readonly jokerName: string;
+  readonly additiveMult?: number;
+  readonly additiveChips?: number;
+  readonly xMultFactor?: number;
+  readonly moneyEarned?: number;
+}
+
 export interface JokerCardResult {
   readonly moneyEarned: number;
   readonly additiveMult: number;
   readonly additiveChips: number;
   readonly xMult: number;
   readonly firedJokerIds: ReadonlyArray<string>;
+  readonly steps: ReadonlyArray<JokerCardStep>;
 }
 
 export interface PerCardContext {
@@ -612,7 +623,7 @@ export function applyHandLevelJokers(
       case "additive-mult": {
         additiveMult += effect.amount;
         fired.push(joker.id);
-        steps.push({ jokerId: joker.id, additiveMult: effect.amount });
+        steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: effect.amount });
         break;
       }
       case "on-hand-type-mult": {
@@ -622,7 +633,7 @@ export function applyHandLevelJokers(
         ) {
           additiveMult += effect.amount;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, additiveMult: effect.amount });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: effect.amount });
         }
         break;
       }
@@ -633,7 +644,7 @@ export function applyHandLevelJokers(
         ) {
           additiveChips += effect.amount;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, additiveChips: effect.amount });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: effect.amount });
         }
         break;
       }
@@ -644,7 +655,7 @@ export function applyHandLevelJokers(
         ) {
           additiveMult += effect.amount;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, additiveMult: effect.amount });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: effect.amount });
         }
         break;
       }
@@ -654,7 +665,7 @@ export function applyHandLevelJokers(
         const rolled = Math.floor(rng() * span) + effect.min;
         additiveMult += rolled;
         fired.push(joker.id);
-        steps.push({ jokerId: joker.id, additiveMult: rolled });
+        steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: rolled });
         break;
       }
       case "stencil": {
@@ -662,7 +673,7 @@ export function applyHandLevelJokers(
         if (emptySlots > 0) {
           xMult *= emptySlots;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, xMultFactor: emptySlots });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: emptySlots });
         }
         break;
       }
@@ -680,19 +691,19 @@ export function applyHandLevelJokers(
         case "foil": {
           additiveChips += FOIL_CHIPS;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, additiveChips: FOIL_CHIPS });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: FOIL_CHIPS });
           break;
         }
         case "holographic": {
           additiveMult += HOLOGRAPHIC_MULT;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, additiveMult: HOLOGRAPHIC_MULT });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: HOLOGRAPHIC_MULT });
           break;
         }
         case "polychrome": {
           xMult *= POLYCHROME_X_MULT;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, xMultFactor: POLYCHROME_X_MULT });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: POLYCHROME_X_MULT });
           break;
         }
       }
@@ -713,6 +724,7 @@ export function applyPerCardJokers(
   let additiveChips = 0;
   let xMult = 1;
   const fired: string[] = [];
+  const steps: JokerCardStep[] = [];
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
@@ -722,6 +734,11 @@ export function applyPerCardJokers(
         if (isFaceCard(card) && rng() < effect.chance) {
           moneyEarned += effect.payout;
           fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
         }
         break;
       }
@@ -729,6 +746,11 @@ export function applyPerCardJokers(
         if (card.suit === effect.suit) {
           additiveMult += effect.amount;
           fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: effect.amount,
+          });
         }
         break;
       }
@@ -736,8 +758,18 @@ export function applyPerCardJokers(
         if (RANK_PARITY[card.rank] === effect.parity) {
           if (effect.contribution.kind === "mult") {
             additiveMult += effect.contribution.amount;
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveMult: effect.contribution.amount,
+            });
           } else {
             additiveChips += effect.contribution.amount;
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveChips: effect.contribution.amount,
+            });
           }
           fired.push(joker.id);
         }
@@ -747,8 +779,18 @@ export function applyPerCardJokers(
         if (isFaceCard(card)) {
           if (effect.contribution.kind === "mult") {
             additiveMult += effect.contribution.amount;
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveMult: effect.contribution.amount,
+            });
           } else {
             additiveChips += effect.contribution.amount;
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveChips: effect.contribution.amount,
+            });
           }
           fired.push(joker.id);
         }
@@ -758,6 +800,11 @@ export function applyPerCardJokers(
         if (isFaceCard(card) && !context.firstFaceAlreadyScored) {
           xMult *= effect.amount;
           fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
         }
         break;
       }
@@ -773,7 +820,14 @@ export function applyPerCardJokers(
     }
   }
 
-  return { moneyEarned, additiveMult, additiveChips, xMult, firedJokerIds: fired };
+  return {
+    moneyEarned,
+    additiveMult,
+    additiveChips,
+    xMult,
+    firedJokerIds: fired,
+    steps,
+  };
 }
 
 export function applyJokersToScoring(

@@ -146,7 +146,7 @@ describe("applyHandLevelJokers — per-joker steps", () => {
   test("+4 Mult contributes a single additive-mult step (issue #192)", () => {
     const result = applyHandLevelJokers([createPlusFourMultJoker()]);
     expect(result.steps).toEqual([
-      { jokerId: "plus-four-mult", additiveMult: 4 },
+      { jokerId: "plus-four-mult", jokerName: "+4 Mult", additiveMult: 4 },
     ]);
   });
 
@@ -155,7 +155,7 @@ describe("applyHandLevelJokers — per-joker steps", () => {
       playedHandLabel: "Straight",
     });
     expect(result.steps).toEqual([
-      { jokerId: "devious-joker", additiveChips: 100 },
+      { jokerId: "devious-joker", jokerName: "Devious Joker", additiveChips: 100 },
     ]);
   });
 
@@ -187,7 +187,11 @@ describe("applyHandLevelJokers — per-joker steps", () => {
   test("Joker Stencil emits an xMultFactor step at the hand-level pass (issue #225)", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
     expect(result.steps).toEqual([
-      { jokerId: "joker-stencil", xMultFactor: MAX_JOKERS - 1 },
+      {
+        jokerId: "joker-stencil",
+        jokerName: "Joker Stencil",
+        xMultFactor: MAX_JOKERS - 1,
+      },
     ]);
   });
 });
