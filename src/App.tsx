@@ -141,8 +141,12 @@ export function getScoringStepMs(
 function initialDeal(
   excludedKeys: ReadonlySet<string> = new Set(),
   handSize: number = HAND_SIZE,
+  addedCards: ReadonlyArray<Card> = [],
 ): DealResult {
-  return deal(shuffle(createDeck(excludedKeys)), Math.max(1, handSize));
+  return deal(
+    shuffle([...createDeck(excludedKeys), ...addedCards]),
+    Math.max(1, handSize),
+  );
 }
 
 function App() {
@@ -194,6 +198,7 @@ function App() {
   function pushScoringEvent(event: ScoringEvent) {
     setScoringEvents((prev) => [...prev, event]);
   }
+  const [addedCards, setAddedCards] = useState<ReadonlyArray<Card>>(() => []);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -307,7 +312,7 @@ function App() {
     setRemainingHands(startingHands);
     setRemainingDiscards(startingDiscards);
     setHandHistoryThisRound([]);
-    setDealt(initialDeal(destroyedCardKeys, handSize));
+    setDealt(initialDeal(destroyedCardKeys, handSize, addedCards));
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -609,6 +614,9 @@ function App() {
       setConsumables((prev) =>
         addConsumable(prev, { kind: "spectral", card: option.spectral }, consumableCapacity),
       );
+    } else if (option.kind === "playing-card") {
+      play("pop");
+      setAddedCards((prev) => [...prev, option.card]);
     } else {
       return;
     }
@@ -860,6 +868,7 @@ function App() {
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
+    setAddedCards([]);
     setConsumables([]);
     const freshOwned = new Set<VoucherId>();
     setOwnedVoucherIds(freshOwned);

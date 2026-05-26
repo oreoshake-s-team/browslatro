@@ -67,6 +67,26 @@ function describeOption(option: PackOption): OptionView | null {
       needsJokerSlot: false,
     };
   }
+  if (option.kind === "playing-card") {
+    const c = option.card;
+    const suitGlyph: Record<string, string> = {
+      spades: "♠",
+      hearts: "♥",
+      diamonds: "♦",
+      clubs: "♣",
+    };
+    const tags: string[] = [];
+    if (c.enhancement) tags.push(c.enhancement);
+    if (c.seal) tags.push(`${c.seal} seal`);
+    return {
+      id: String(c.id),
+      icon: suitGlyph[c.suit] ?? "🂠",
+      name: `${c.rank}${suitGlyph[c.suit] ?? ""}`,
+      description: tags.length > 0 ? tags.join(", ") : "Add to your deck",
+      needsConsumableSlot: false,
+      needsJokerSlot: false,
+    };
+  }
   return null;
 }
 

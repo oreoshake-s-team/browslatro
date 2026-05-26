@@ -11,7 +11,9 @@ import {
   rollPack,
   rollPackOptions,
   rollPackVariant,
+  rollStandardCard,
 } from "./packs";
+import { RANKS, SUITS } from "../cards/deck";
 import { createPlanetCatalog } from "./planets";
 import { createTarotCatalog } from "./tarots";
 import { createJokerCatalog } from "./jokers";
@@ -185,7 +187,13 @@ describe("rollPack", () => {
       spectralCatalog: createSpectralCatalog(),
       rng: seededRng(7),
     });
-    expect(["celestial", "arcana"]).toContain(offer.pool);
+    expect([
+      "celestial",
+      "arcana",
+      "buffoon",
+      "spectral",
+      "standard",
+    ]).toContain(offer.pool);
   });
 
   test("rolled options length matches the variant's option count", () => {
@@ -564,5 +572,184 @@ describe("Spectral pack", () => {
       counts[offer.pool] += 1;
     }
     expect(counts.spectral).toBeLessThan(counts.buffoon);
+  });
+});
+
+describe("Standard pack", () => {
+  test("Normal has 3 options", () => {
+    expect(packOptionsCount("standard", "normal")).toBe(3);
+  });
+
+  test("Jumbo has 5 options", () => {
+    expect(packOptionsCount("standard", "jumbo")).toBe(5);
+  });
+
+  test("Mega has 5 options", () => {
+    expect(packOptionsCount("standard", "mega")).toBe(5);
+  });
+
+  test("display name for Normal is 'Standard Pack'", () => {
+    expect(
+      packDisplayName({ pool: "standard", variant: "normal", options: [] }),
+    ).toBe("Standard Pack");
+  });
+
+  test("display name for Jumbo prefixes Jumbo", () => {
+    expect(
+      packDisplayName({ pool: "standard", variant: "jumbo", options: [] }),
+    ).toBe("Jumbo Standard Pack");
+  });
+
+  test("display name for Mega prefixes Mega", () => {
+    expect(
+      packDisplayName({ pool: "standard", variant: "mega", options: [] }),
+    ).toBe("Mega Standard Pack");
+  });
+
+  test("rollPackOptions returns playing-card options for standard pool", () => {
+    const opts = rollPackOptions({
+      pool: "standard",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(60),
+    });
+    expect(opts.every((o) => o.kind === "playing-card")).toBe(true);
+  });
+
+  test("Normal returns 3 playing-card options", () => {
+    const opts = rollPackOptions({
+      pool: "standard",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(61),
+    });
+    expect(opts).toHaveLength(3);
+  });
+
+  test("Jumbo returns 5 playing-card options", () => {
+    const opts = rollPackOptions({
+      pool: "standard",
+      variant: "jumbo",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(62),
+    });
+    expect(opts).toHaveLength(5);
+  });
+
+  test("Mega returns 5 playing-card options", () => {
+    const opts = rollPackOptions({
+      pool: "standard",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(63),
+    });
+    expect(opts).toHaveLength(5);
+  });
+
+  test("every Standard option has a valid rank", () => {
+    const opts = rollPackOptions({
+      pool: "standard",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(64),
+    });
+    const validRanks = new Set<string>(RANKS);
+    expect(
+      opts.every(
+        (o) => o.kind === "playing-card" && validRanks.has(o.card.rank),
+      ),
+    ).toBe(true);
+  });
+
+  test("every Standard option has a valid suit", () => {
+    const opts = rollPackOptions({
+      pool: "standard",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(65),
+    });
+    const validSuits = new Set<string>(SUITS);
+    expect(
+      opts.every(
+        (o) => o.kind === "playing-card" && validSuits.has(o.card.suit),
+      ),
+    ).toBe(true);
+  });
+
+  test("rollStandardCard never produces a Stone enhancement", () => {
+    const rng = seededRng(66);
+    let stoneCount = 0;
+    for (let i = 0; i < 2000; i += 1) {
+      const c = rollStandardCard(rng);
+      if (c.enhancement === "stone") stoneCount += 1;
+    }
+    expect(stoneCount).toBe(0);
+  });
+
+  test("rollStandardCard produces some cards with no enhancement (most cards un-enhanced)", () => {
+    const rng = seededRng(67);
+    let plain = 0;
+    for (let i = 0; i < 1000; i += 1) {
+      const c = rollStandardCard(rng);
+      if (c.enhancement === undefined) plain += 1;
+    }
+    expect(plain).toBeGreaterThan(400);
+  });
+
+  test("rollStandardCard produces some cards with an enhancement", () => {
+    const rng = seededRng(68);
+    let enhanced = 0;
+    for (let i = 0; i < 1000; i += 1) {
+      const c = rollStandardCard(rng);
+      if (c.enhancement !== undefined) enhanced += 1;
+    }
+    expect(enhanced).toBeGreaterThan(0);
+  });
+
+  test("rollStandardCard produces some cards with a seal", () => {
+    const rng = seededRng(69);
+    let sealed = 0;
+    for (let i = 0; i < 1000; i += 1) {
+      const c = rollStandardCard(rng);
+      if (c.seal !== undefined) sealed += 1;
+    }
+    expect(sealed).toBeGreaterThan(0);
+  });
+
+  test("rollStandardCard usually leaves a card un-sealed", () => {
+    const rng = seededRng(70);
+    let unsealed = 0;
+    for (let i = 0; i < 1000; i += 1) {
+      const c = rollStandardCard(rng);
+      if (c.seal === undefined) unsealed += 1;
+    }
+    expect(unsealed).toBeGreaterThan(600);
+  });
+
+  test("rollStandardCard gives every card a unique id", () => {
+    const rng = seededRng(71);
+    const ids = new Set<number>();
+    for (let i = 0; i < 50; i += 1) {
+      ids.add(rollStandardCard(rng).id);
+    }
+    expect(ids.size).toBe(50);
   });
 });

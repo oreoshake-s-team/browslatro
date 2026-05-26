@@ -32,6 +32,10 @@ export function resetCardIds(): void {
   cardIdCounter = 0;
 }
 
+export function nextCardId(): number {
+  return ++cardIdCounter;
+}
+
 export const RANK_ENHANCEMENTS: Readonly<Partial<Record<Rank, Enhancement>>> = {
   A: "steel",
   "4": "mult",

@@ -2,8 +2,19 @@ import type { PlanetCard } from "./planets";
 import type { TarotCard } from "./tarots";
 import type { SpectralCard } from "./spectrals";
 import type { Joker, RandomSource } from "./jokers";
+import type { Card, Enhancement } from "../cards/types";
+import { ENHANCEMENT_KINDS } from "../cards/enhancements";
+import { SEAL_KINDS } from "../cards/seals";
+import { RANKS, SUITS, nextCardId } from "../cards/deck";
 
-export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral";
+export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral" | "standard";
+
+export const STANDARD_ENHANCEMENT_CHANCE = 0.4;
+export const STANDARD_SEAL_CHANCE = 0.2;
+
+const STANDARD_ENHANCEMENT_POOL: ReadonlyArray<Enhancement> = ENHANCEMENT_KINDS.filter(
+  (e) => e !== "stone",
+);
 
 export type PackVariant = "normal" | "jumbo" | "mega";
 
@@ -15,6 +26,7 @@ export const PACK_POOL_WEIGHTS: Readonly<Record<PackPool, number>> = {
   arcana: 4,
   celestial: 1,
   buffoon: 1,
+  standard: 4,
   spectral: 0.25,
 };
 
@@ -29,6 +41,7 @@ const PACK_BASE_OPTIONS: Readonly<Record<PackPool, number>> = {
   arcana: 3,
   buffoon: 2,
   spectral: 2,
+  standard: 3,
 };
 
 const PACK_PICK_LIMIT: Readonly<Record<PackVariant, number>> = {
@@ -42,13 +55,15 @@ const POOL_LABELS: Readonly<Record<PackPool, string>> = {
   arcana: "Arcana",
   buffoon: "Buffoon",
   spectral: "Spectral",
+  standard: "Standard",
 };
 
 export type PackOption =
   | { readonly kind: "planet"; readonly planet: PlanetCard }
   | { readonly kind: "tarot"; readonly tarot: TarotCard }
   | { readonly kind: "joker"; readonly joker: Joker }
-  | { readonly kind: "spectral"; readonly spectral: SpectralCard };
+  | { readonly kind: "spectral"; readonly spectral: SpectralCard }
+  | { readonly kind: "playing-card"; readonly card: Card };
 
 export interface PackOffer {
   readonly pool: PackPool;
@@ -139,7 +154,36 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
       spectral,
     }));
   }
+  if (args.pool === "standard") {
+    const out: PackOption[] = [];
+    for (let i = 0; i < want; i += 1) {
+      out.push({ kind: "playing-card", card: rollStandardCard(args.rng) });
+    }
+    return out;
+  }
   return [];
+}
+
+export function rollStandardCard(rng: RandomSource): Card {
+  const rank = RANKS[Math.floor(rng() * RANKS.length)];
+  const suit = SUITS[Math.floor(rng() * SUITS.length)];
+  const enhancement =
+    rng() < STANDARD_ENHANCEMENT_CHANCE
+      ? STANDARD_ENHANCEMENT_POOL[
+          Math.floor(rng() * STANDARD_ENHANCEMENT_POOL.length)
+        ]
+      : undefined;
+  const seal =
+    rng() < STANDARD_SEAL_CHANCE
+      ? SEAL_KINDS[Math.floor(rng() * SEAL_KINDS.length)]
+      : undefined;
+  return {
+    id: nextCardId(),
+    rank,
+    suit,
+    ...(enhancement !== undefined ? { enhancement } : {}),
+    ...(seal !== undefined ? { seal } : {}),
+  };
 }
 
 function drawWithoutReplacement<T>(
