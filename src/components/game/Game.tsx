@@ -43,6 +43,8 @@ interface GameProps {
   onJokerDragEnd?: () => void;
   onSellJoker?: (index: number) => void;
   onJokerDropOnDeck?: () => void;
+  onShrinkHandSize?: () => void;
+  onGrowHandSize?: () => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -85,6 +87,8 @@ export default function Game({
   onJokerDragEnd,
   onSellJoker,
   onJokerDropOnDeck,
+  onShrinkHandSize,
+  onGrowHandSize,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -171,6 +175,24 @@ export default function Game({
           >
             💸 Subtract $10
           </button>
+          {onShrinkHandSize && (
+            <button
+              type="button"
+              className="shrink-hand-button"
+              onClick={onShrinkHandSize}
+            >
+              🤏 Hand −1
+            </button>
+          )}
+          {onGrowHandSize && (
+            <button
+              type="button"
+              className="grow-hand-button"
+              onClick={onGrowHandSize}
+            >
+              ✋ Hand +1
+            </button>
+          )}
         </div>
       </details>
       <div className="submit-hand">

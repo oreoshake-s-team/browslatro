@@ -2681,3 +2681,75 @@ describe("Celestial pack open + pick integration", () => {
     ).toHaveTextContent("Sold");
   });
 });
+
+describe("Hand size modifier (issue #210)", () => {
+  async function clickShrink(): Promise<ReturnType<typeof userEvent.setup>> {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Hand −1/ }));
+    return user;
+  }
+
+  test("the fresh game still deals 8 cards before any modifier is applied", () => {
+    render(<App />);
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("clicking Hand −1 does not change the current round's hand size", async () => {
+    await clickShrink();
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("after Hand −1 the next round deals 7 cards", async () => {
+    const user = await clickShrink();
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(getHandCardButtons()).toHaveLength(7);
+  });
+
+  test("the −1 modifier persists across two round transitions", async () => {
+    const user = await clickShrink();
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(getHandCardButtons()).toHaveLength(7);
+  });
+
+  test("two Hand −1 clicks deal 6 cards next round", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Hand −1/ }));
+    await user.click(screen.getByRole("button", { name: /Hand −1/ }));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(getHandCardButtons()).toHaveLength(6);
+  });
+
+  test("Hand +1 grows the next round's hand to 9 cards", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Hand \+1/ }));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(getHandCardButtons()).toHaveLength(9);
+  });
+
+  test("starting a new game resets the hand-size modifier", async () => {
+    const user = await clickShrink();
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+
+  test("hand size never shrinks below 1 even when over-clicked", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 15; i += 1) {
+      await user.click(screen.getByRole("button", { name: /Hand −1/ }));
+    }
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(getHandCardButtons()).toHaveLength(1);
+  });
+});
