@@ -27,7 +27,11 @@ import { packPickLimit, type PackOffer } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
-import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
+import {
+  createSpectralCatalog,
+  transmuteHand,
+  type SpectralEffect,
+} from "./items/spectrals";
 import {
   createTarotCatalog,
   resolveHermitPayout,
@@ -892,6 +896,13 @@ function App() {
         const suit = suits[Math.floor(Math.random() * suits.length)];
         setDealt((prev) => ({
           hand: prev.hand.map((c) => ({ ...c, suit })),
+          remaining: prev.remaining,
+        }));
+        return;
+      }
+      case "transmute": {
+        setDealt((prev) => ({
+          hand: transmuteHand(prev.hand, effect.rankFilter, effect.addCount, Math.random),
           remaining: prev.remaining,
         }));
         return;
