@@ -154,4 +154,68 @@ describe("BlindSelectScreen", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(onSkip).toHaveBeenCalled();
   });
+
+  test("tag list is not rendered when no tags are held", () => {
+    renderScreen({ tags: [] });
+    expect(screen.queryByTestId("blind-select-tags")).not.toBeInTheDocument();
+  });
+
+  test("renders one chip per held Investment tag", () => {
+    renderScreen({ tags: ["investment", "investment"] });
+    expect(screen.getAllByTestId(/^blind-select-tag-/)).toHaveLength(2);
+  });
+
+  test("Investment chip shows the canonical tag name", () => {
+    renderScreen({ tags: ["investment"] });
+    expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent(
+      "Investment Tag",
+    );
+  });
+
+  test("Investment chip describes the $25 boss-defeat payout", () => {
+    renderScreen({ tags: ["investment"] });
+    expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent("$25");
+  });
+
+  test("skip-reward preview renders on Small Blind when skipReward is provided", () => {
+    renderScreen({ skipReward: "investment" });
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toBeInTheDocument();
+  });
+
+  test("skip-reward preview renders on Big Blind when skipReward is provided", () => {
+    renderScreen({ skipReward: "investment" });
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-2"),
+    ).toBeInTheDocument();
+  });
+
+  test("skip-reward preview does NOT render on Boss Blind even when skipReward is provided", () => {
+    renderScreen({ skipReward: "investment" });
+    expect(
+      screen.queryByTestId("blind-select-row-skip-reward-3"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("skip-reward preview does not render when skipReward is omitted", () => {
+    renderScreen({});
+    expect(
+      screen.queryByTestId("blind-select-row-skip-reward-1"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("skip-reward preview names the granted tag", () => {
+    renderScreen({ skipReward: "investment" });
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toHaveTextContent("Investment Tag");
+  });
+
+  test("skip-reward preview exposes the tag's effect via the title attribute (hover)", () => {
+    renderScreen({ skipReward: "investment" });
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toHaveAttribute("title", expect.stringContaining("$25"));
+  });
 });

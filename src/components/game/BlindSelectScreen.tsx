@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
+import { getTagSpec, type TagId } from "../../items/tags";
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -10,6 +11,8 @@ interface BlindSelectScreenProps {
   boss: BossBlind;
   onPlay: () => void;
   onSkip?: () => void;
+  tags?: ReadonlyArray<TagId>;
+  skipReward?: TagId;
 }
 
 const BLIND_NAMES: Readonly<Record<Blind, string>> = {
@@ -38,10 +41,13 @@ export default function BlindSelectScreen({
   boss,
   onPlay,
   onSkip,
+  tags = [],
+  skipReward,
 }: BlindSelectScreenProps) {
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
+  const skipRewardSpec = skipReward ? getTagSpec(skipReward) : null;
 
   return createPortal(
     <div
@@ -54,6 +60,31 @@ export default function BlindSelectScreen({
         <h2 id="blind-select-title" className="blind-select-title">
           Ante {ante}
         </h2>
+        {tags.length > 0 && (
+          <ul
+            className="blind-select-tags"
+            aria-label="Tags held"
+            data-testid="blind-select-tags"
+          >
+            {tags.map((id, idx) => {
+              const spec = getTagSpec(id);
+              return (
+                <li
+                  key={`${id}-${idx}`}
+                  className="blind-select-tag"
+                  data-testid={`blind-select-tag-${idx}`}
+                  data-tag-id={id}
+                  title={spec.description}
+                >
+                  <span className="blind-select-tag-name">{spec.name}</span>
+                  <span className="blind-select-tag-description">
+                    {spec.description}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         <ul className="blind-select-rows" aria-label="Blinds for this ante">
           {blinds.map((b) => {
             const isCurrent = b === currentBlind;
@@ -96,6 +127,20 @@ export default function BlindSelectScreen({
                     </dd>
                   </div>
                 </dl>
+                {b !== 3 && skipRewardSpec && (
+                  <div
+                    className="blind-select-row-skip-reward"
+                    data-testid={`blind-select-row-skip-reward-${b}`}
+                    title={skipRewardSpec.description}
+                  >
+                    <span className="blind-select-row-skip-reward-label">
+                      Skip reward
+                    </span>
+                    <span className="blind-select-row-skip-reward-name">
+                      + {skipRewardSpec.name}
+                    </span>
+                  </div>
+                )}
               </li>
             );
           })}
