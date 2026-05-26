@@ -29,20 +29,13 @@ describe("seals — constants", () => {
 });
 
 describe("seals — getSealInfo", () => {
-  test("returns the Gold Seal name", () => {
-    expect(getSealInfo("gold").name).toBe("Gold Seal");
-  });
-
-  test("returns the Red Seal name", () => {
-    expect(getSealInfo("red").name).toBe("Red Seal");
-  });
-
-  test("returns the Blue Seal name", () => {
-    expect(getSealInfo("blue").name).toBe("Blue Seal");
-  });
-
-  test("returns the Purple Seal name", () => {
-    expect(getSealInfo("purple").name).toBe("Purple Seal");
+  test.each<{ seal: "gold" | "red" | "blue" | "purple"; name: string }>([
+    { seal: "gold", name: "Gold Seal" },
+    { seal: "red", name: "Red Seal" },
+    { seal: "blue", name: "Blue Seal" },
+    { seal: "purple", name: "Purple Seal" },
+  ])("returns the $name name", ({ seal, name }) => {
+    expect(getSealInfo(seal).name).toBe(name);
   });
 });
 
@@ -110,20 +103,13 @@ describe("seals — purpleSealDiscarded", () => {
 });
 
 describe("seals — planetForHand", () => {
-  test("maps High Card to Pluto", () => {
-    expect(planetForHand("High Card")?.id).toBe("pluto");
-  });
-
-  test("maps Flush to Jupiter", () => {
-    expect(planetForHand("Flush")?.id).toBe("jupiter");
-  });
-
-  test("maps Straight Flush to Neptune", () => {
-    expect(planetForHand("Straight Flush")?.id).toBe("neptune");
-  });
-
-  test("maps Royal Flush to Neptune", () => {
-    expect(planetForHand("Royal Flush")?.id).toBe("neptune");
+  test.each<{ hand: "High Card" | "Flush" | "Straight Flush" | "Royal Flush"; planetId: string }>([
+    { hand: "High Card", planetId: "pluto" },
+    { hand: "Flush", planetId: "jupiter" },
+    { hand: "Straight Flush", planetId: "neptune" },
+    { hand: "Royal Flush", planetId: "neptune" },
+  ])("maps $hand to $planetId", ({ hand, planetId }) => {
+    expect(planetForHand(hand)?.id).toBe(planetId);
   });
 });
 

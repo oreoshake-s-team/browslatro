@@ -32,32 +32,16 @@ describe("createSpectralCatalog", () => {
     );
   });
 
-  test("includes Black Hole", () => {
-    expect(find("black-hole").name).toBe("Black Hole");
-  });
-
-  test("includes Immolate", () => {
-    expect(find("immolate").name).toBe("Immolate");
-  });
-
-  test("includes Sigil", () => {
-    expect(find("sigil").name).toBe("Sigil");
-  });
-
-  test("includes Talisman", () => {
-    expect(find("talisman").name).toBe("Talisman");
-  });
-
-  test("includes Deja Vu", () => {
-    expect(find("deja-vu").name).toBe("Deja Vu");
-  });
-
-  test("includes Trance", () => {
-    expect(find("trance").name).toBe("Trance");
-  });
-
-  test("includes Medium", () => {
-    expect(find("medium").name).toBe("Medium");
+  test.each<{ id: string; name: string }>([
+    { id: "black-hole", name: "Black Hole" },
+    { id: "immolate", name: "Immolate" },
+    { id: "sigil", name: "Sigil" },
+    { id: "talisman", name: "Talisman" },
+    { id: "deja-vu", name: "Deja Vu" },
+    { id: "trance", name: "Trance" },
+    { id: "medium", name: "Medium" },
+  ])("includes $name", ({ id, name }) => {
+    expect(find(id).name).toBe(name);
   });
 
   test("spans 4 distinct effect kinds", () => {
@@ -96,20 +80,13 @@ describe("Seal-applying spectrals", () => {
     },
   );
 
-  test("Talisman description names the Gold Seal", () => {
-    expect(find("talisman").description).toMatch(/Gold Seal/);
-  });
-
-  test("Deja Vu description names the Red Seal", () => {
-    expect(find("deja-vu").description).toMatch(/Red Seal/);
-  });
-
-  test("Trance description names the Blue Seal", () => {
-    expect(find("trance").description).toMatch(/Blue Seal/);
-  });
-
-  test("Medium description names the Purple Seal", () => {
-    expect(find("medium").description).toMatch(/Purple Seal/);
+  test.each<{ id: string; sealLabel: "Gold" | "Red" | "Blue" | "Purple" }>([
+    { id: "talisman", sealLabel: "Gold" },
+    { id: "deja-vu", sealLabel: "Red" },
+    { id: "trance", sealLabel: "Blue" },
+    { id: "medium", sealLabel: "Purple" },
+  ])("$id description names the $sealLabel Seal", ({ id, sealLabel }) => {
+    expect(find(id).description).toMatch(new RegExp(`${sealLabel} Seal`));
   });
 });
 
