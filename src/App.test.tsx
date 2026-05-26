@@ -3171,4 +3171,58 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       /×2 Mult \(Apply Modifiers \(dev\)\)/,
     );
   });
+
+  test("Add Multiplier bumps the final round score (folded into scoring, #265)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const userA = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { unmount } = render(<App />);
+    const cardsA = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await userA.click(cardsA[i]);
+    await userA.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const baseline = Number(
+      document.querySelector(".round-score-value")?.textContent ?? "0",
+    );
+    unmount();
+
+    mockShuffleConfig.useIdentity = true;
+    const userB = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await userB.click(screen.getByText(/Add Multiplier/));
+    const cardsB = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await userB.click(cardsB[i]);
+    await userB.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const withDev = Number(
+      document.querySelector(".round-score-value")?.textContent ?? "0",
+    );
+    expect(withDev).toBeGreaterThan(baseline);
+  });
+
+  test("Multiply Multiplier doubles the final round score (folded into scoring, #265)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const userA = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { unmount } = render(<App />);
+    const cardsA = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await userA.click(cardsA[i]);
+    await userA.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const baseline = Number(
+      document.querySelector(".round-score-value")?.textContent ?? "0",
+    );
+    unmount();
+
+    mockShuffleConfig.useIdentity = true;
+    const userB = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await userB.click(screen.getByText(/Multiply Multiplier/));
+    const cardsB = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await userB.click(cardsB[i]);
+    await userB.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const withDev = Number(
+      document.querySelector(".round-score-value")?.textContent ?? "0",
+    );
+    expect(withDev).toBe(baseline * 2);
+  });
 });
