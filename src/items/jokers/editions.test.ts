@@ -25,20 +25,13 @@ describe("JOKER_EDITION_KINDS", () => {
 });
 
 describe("JOKER_EDITION_INFO", () => {
-  test("Foil name", () => {
-    expect(JOKER_EDITION_INFO.foil.name).toBe("Foil");
-  });
-
-  test("Holographic name", () => {
-    expect(JOKER_EDITION_INFO.holographic.name).toBe("Holographic");
-  });
-
-  test("Polychrome name", () => {
-    expect(JOKER_EDITION_INFO.polychrome.name).toBe("Polychrome");
-  });
-
-  test("Negative name", () => {
-    expect(JOKER_EDITION_INFO.negative.name).toBe("Negative");
+  test.each<{ kind: "foil" | "holographic" | "polychrome" | "negative"; name: string }>([
+    { kind: "foil", name: "Foil" },
+    { kind: "holographic", name: "Holographic" },
+    { kind: "polychrome", name: "Polychrome" },
+    { kind: "negative", name: "Negative" },
+  ])("$name name", ({ kind, name }) => {
+    expect(JOKER_EDITION_INFO[kind].name).toBe(name);
   });
 });
 

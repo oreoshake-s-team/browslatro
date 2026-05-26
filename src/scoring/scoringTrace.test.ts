@@ -8,24 +8,13 @@ import {
 import type { Card } from "../cards/types";
 
 describe("cardLabel", () => {
-  test("renders rank and suit symbol for an Ace of Spades", () => {
-    const card: Card = { id: 1, rank: "A", suit: "spades" };
-    expect(cardLabel(card)).toBe("A♠");
-  });
-
-  test("renders for a 10 of Hearts", () => {
-    const card: Card = { id: 2, rank: "10", suit: "hearts" };
-    expect(cardLabel(card)).toBe("10♥");
-  });
-
-  test("renders for a Queen of Diamonds", () => {
-    const card: Card = { id: 3, rank: "Q", suit: "diamonds" };
-    expect(cardLabel(card)).toBe("Q♦");
-  });
-
-  test("renders for a 7 of Clubs", () => {
-    const card: Card = { id: 4, rank: "7", suit: "clubs" };
-    expect(cardLabel(card)).toBe("7♣");
+  test.each<{ card: Card; expected: string }>([
+    { card: { id: 1, rank: "A", suit: "spades" }, expected: "A♠" },
+    { card: { id: 2, rank: "10", suit: "hearts" }, expected: "10♥" },
+    { card: { id: 3, rank: "Q", suit: "diamonds" }, expected: "Q♦" },
+    { card: { id: 4, rank: "7", suit: "clubs" }, expected: "7♣" },
+  ])("renders $expected for the corresponding rank and suit", ({ card, expected }) => {
+    expect(cardLabel(card)).toBe(expected);
   });
 });
 
