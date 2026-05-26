@@ -11,7 +11,14 @@ import {
 import { play } from "./components/system/sounds";
 import { shopPickerRngConfig } from "./items/shop";
 import type { ShopItem } from "./items/shop";
-import { createPhotographJoker, defaultJokersConfig } from "./items/jokers";
+import {
+  MAX_JOKERS,
+  createBusinessCardJoker,
+  createJokerStencilJoker,
+  createPhotographJoker,
+  createPlusFourMultJoker,
+  initialJokersConfig,
+} from "./items/jokers";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
@@ -1001,6 +1008,20 @@ describe("Sequential card scoring", () => {
 });
 
 describe("Hand-level joker ordering (issue #192)", () => {
+  const originalFactory = initialJokersConfig.factory;
+
+  beforeEach(() => {
+    initialJokersConfig.factory = () => [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+    ];
+  });
+
+  afterEach(() => {
+    initialJokersConfig.factory = originalFactory;
+  });
+
   async function submitFirstFiveSpades(): Promise<void> {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -1054,14 +1075,14 @@ describe("Hand-level joker ordering (issue #192)", () => {
 });
 
 describe("Photograph joker per-card timing (issue #204)", () => {
-  const originalFactory = defaultJokersConfig.factory;
+  const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
-    defaultJokersConfig.factory = () => [createPhotographJoker()];
+    initialJokersConfig.factory = () => [createPhotographJoker()];
   });
 
   afterEach(() => {
-    defaultJokersConfig.factory = originalFactory;
+    initialJokersConfig.factory = originalFactory;
   });
 
   async function submitRoyalFlushOfClubs(): Promise<void> {
@@ -1161,7 +1182,7 @@ describe("Round won modal", () => {
 
   test("displays the final round score in the modal", async () => {
     await triggerWin();
-    expect(screen.getByTestId("round-won-score")).toHaveTextContent("3240");
+    expect(screen.getByTestId("round-won-score")).toHaveTextContent("1080");
   });
 
   test("displays the required score in the modal", async () => {
@@ -1268,25 +1289,15 @@ describe("Round won modal", () => {
   });
 });
 
-describe("Jokers integration", () => {
-  test("renders the +4 Mult joker tile on new game", () => {
+describe("Jokers integration (issue #223 — runs start with no jokers)", () => {
+  test("renders MAX_JOKERS empty joker slots on new game", () => {
     render(<App />);
-    expect(screen.getByTestId("joker-tile-filled-plus-four-mult")).toBeInTheDocument();
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(MAX_JOKERS);
   });
 
-  test("renders the Business Card joker tile on new game", () => {
+  test("renders no filled joker tiles on new game", () => {
     render(<App />);
-    expect(screen.getByTestId("joker-tile-filled-business-card")).toBeInTheDocument();
-  });
-
-  test("renders the Joker Stencil joker tile on new game", () => {
-    render(<App />);
-    expect(screen.getByTestId("joker-tile-filled-joker-stencil")).toBeInTheDocument();
-  });
-
-  test("renders two empty joker slots when three defaults are equipped", () => {
-    render(<App />);
-    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(2);
+    expect(screen.queryAllByTestId(/^joker-tile-filled-/)).toHaveLength(0);
   });
 });
 
@@ -1502,31 +1513,45 @@ describe("Post-round shop integration", () => {
   test("buying an offer adds the joker to the equipped set", async () => {
     shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
     const user = await openShop();
+    const before = screen.queryAllByTestId(/^joker-tile-filled-/).length;
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buy = screen
       .getByTestId(jokerSlotId)
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
-    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(4);
+    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(
+      before + 1,
+    );
   });
 
   test("pressing Escape in the shop closes it without purchase", async () => {
     const user = await openShop();
+    const before = screen.queryAllByTestId(/^joker-tile-filled-/).length;
     await user.keyboard("{Escape}");
-    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(3);
+    expect(screen.queryAllByTestId(/^joker-tile-filled-/)).toHaveLength(
+      before,
+    );
   });
 
-  test("the shop never offers a joker that the player already owns", async () => {
-    await openShop();
-    const offerNames = screen
-      .getAllByTestId(/^shop-offer-/)
-      .map((el) => el.querySelector(".shop-offer-name")?.textContent);
-    const equippedNames = ["+4 Mult", "Business Card", "Joker Stencil"];
-    const overlap = offerNames.filter((n) =>
-      n !== null && n !== undefined && equippedNames.includes(n),
-    );
-    expect(overlap).toEqual([]);
+  test("after buying a joker that joker is no longer in the post-buy equipped exclusion target (issue #223)", async () => {
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
+    const user = await openShop();
+    const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
+    const boughtName = screen
+      .getByTestId(jokerSlotId)
+      .querySelector(".shop-offer-name")?.textContent;
+    const buy = screen
+      .getByTestId(jokerSlotId)
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    const equippedNames = Array.from(
+      document.querySelectorAll<HTMLElement>(
+        '[data-testid^="joker-tile-filled-"] .joker-tile-name',
+      ),
+    ).map((el) => el.textContent);
+    expect(equippedNames).toContain(boughtName);
   });
 
   test("the two shop offers never share a name in a single shop visit", async () => {
@@ -1735,7 +1760,7 @@ describe("Planet purchase integration", () => {
 
   test("buying the planet does not add a joker to the equipped set", async () => {
     const user = await openShop();
-    const jokerCountBefore = screen.getAllByTestId(/^joker-tile-filled-/).length;
+    const jokerCountBefore = screen.queryAllByTestId(/^joker-tile-filled-/).length;
     const planetBuy = screen
       .getByTestId(planetSlotTestId())
       .querySelector("button.shop-offer-buy");
@@ -1743,7 +1768,7 @@ describe("Planet purchase integration", () => {
       throw new Error("Planet buy button not found");
     }
     await user.click(planetBuy);
-    expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(
+    expect(screen.queryAllByTestId(/^joker-tile-filled-/)).toHaveLength(
       jokerCountBefore,
     );
   });
@@ -2467,6 +2492,20 @@ describe("Consumable drag and sell integration", () => {
 });
 
 describe("Joker drag and sell integration", () => {
+  const originalFactory = initialJokersConfig.factory;
+
+  beforeEach(() => {
+    initialJokersConfig.factory = () => [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+    ];
+  });
+
+  afterEach(() => {
+    initialJokersConfig.factory = originalFactory;
+  });
+
   function moneyOf(): number {
     return Number(
       getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",

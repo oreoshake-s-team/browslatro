@@ -418,21 +418,9 @@ export function createPhotographJoker(): Joker {
   };
 }
 
-function defaultJokersFactory(): Joker[] {
-  return [
-    createPlusFourMultJoker(),
-    createBusinessCardJoker(),
-    createJokerStencilJoker(),
-  ];
-}
-
-export const defaultJokersConfig: { factory: () => Joker[] } = {
-  factory: defaultJokersFactory,
+export const initialJokersConfig: { factory: () => Joker[] } = {
+  factory: () => [],
 };
-
-export function createDefaultJokers(): Joker[] {
-  return defaultJokersConfig.factory();
-}
 
 export function createJokerCatalog(): Joker[] {
   return [
