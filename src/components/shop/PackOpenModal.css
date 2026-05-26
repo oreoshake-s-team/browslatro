@@ -14,7 +14,7 @@
   border: 2px solid #5c7cfa;
   border-radius: 10px;
   padding: 1.8rem 2rem;
-  width: min(90vw, 52rem);
+  width: min(95vw, 72rem);
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -110,13 +110,21 @@
 
 .pack-open-preview-hand {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-wrap: nowrap;
+  justify-content: safe center;
+  align-items: end;
   gap: 0.4rem;
-  padding: 0.6rem;
+  padding: 1.6rem 0.6rem 0.6rem;
   border: 2px dashed #adb5bd;
   border-radius: 8px;
   background-color: #f8f9fa;
+  overflow-x: clip;
+  min-height: calc(var(--card-height) + 1.6rem);
+}
+
+.pack-open-preview-hand > .card {
+  flex: 0 1 var(--card-width);
+  min-width: 0;
 }
 
 .pack-open-selection-actions {
