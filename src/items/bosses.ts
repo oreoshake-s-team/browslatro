@@ -78,7 +78,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
   {
     id: "the-psychic",
     name: "The Psychic",
-    description: "Must play exactly 5 cards.",
+    description: "Play 5 cards or score 0.",
     scoreMultiplier: 2,
     anteMin: 1,
     effect: { kind: "force-card-count", value: 5 },

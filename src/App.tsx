@@ -6,12 +6,12 @@ import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
   bossAdjustHandEntry,
+  bossRequiredCardCount,
   bossBlocksHandLabel,
   availableBosses,
   bossHandSize,
   bossMoneyPenaltyPerCard,
   bossPickerRngConfig,
-  bossRequiredCardCount,
   bossStartingDiscards,
   bossStartingHands,
   createBossCatalog,
@@ -1215,14 +1215,6 @@ function App() {
   function submitHand() {
     if (discardingIds.size > 0) return;
     if (isScoring) return;
-    const requiredCardCount =
-      blind === 3 ? bossRequiredCardCount(currentBoss) : null;
-    if (
-      requiredCardCount !== null &&
-      selectedIds.size !== requiredCardCount
-    ) {
-      return;
-    }
 
     const handById = new Map(dealt.hand.map((c) => [c.id, c]));
     const playedCards = handDisplayOrder
@@ -1263,9 +1255,17 @@ function App() {
       return next;
     });
     const baseHandEntry = handStats[label];
-    const handEntry = isBossRound
+    const adjustedHandEntry = isBossRound
       ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
       : baseHandEntry;
+    const forcedCount = isBossRound
+      ? bossRequiredCardCount(currentBoss)
+      : null;
+    const psychicZeroed =
+      forcedCount !== null && playedCards.length !== forcedCount;
+    const handEntry = psychicZeroed
+      ? { ...adjustedHandEntry, chips: 0, multiplier: 0 }
+      : adjustedHandEntry;
     const playedDebuffedIds = debuffedHandIds(
       playedCards,
       currentBoss,
@@ -1369,7 +1369,13 @@ function App() {
       level: handEntry.level,
     };
     const submitEvents: ScoringEvent[] = [baseEvent];
-    if (
+    if (psychicZeroed) {
+      submitEvents.push({
+        kind: "boss-adjustment",
+        description: `${label} zeroed to 0 × 0 (needs ${forcedCount} cards, played ${playedCards.length})`,
+        source: currentBoss.name,
+      });
+    } else if (
       isBossRound &&
       (handEntry.chips !== baseHandEntry.chips ||
         handEntry.multiplier !== baseHandEntry.multiplier ||
@@ -1575,9 +1581,6 @@ function App() {
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
         canSubmit={(() => {
-          const required =
-            blind === 3 ? bossRequiredCardCount(currentBoss) : null;
-          if (required !== null && selectedIds.size !== required) return false;
           if (
             blind === 3 &&
             selectedHand !== null &&
