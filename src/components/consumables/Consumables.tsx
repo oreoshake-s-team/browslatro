@@ -7,6 +7,7 @@ import {
 interface ConsumablesProps {
   consumables: ReadonlyArray<Consumable>;
   selectedCount: number;
+  capacity?: number;
   onUse: (index: number) => void;
 }
 
@@ -33,9 +34,10 @@ function selectionBlock(c: Consumable, selectedCount: number): string | null {
 export default function Consumables({
   consumables,
   selectedCount,
+  capacity = MAX_CONSUMABLE_SLOTS,
   onUse,
 }: ConsumablesProps) {
-  const emptyCount = Math.max(0, MAX_CONSUMABLE_SLOTS - consumables.length);
+  const emptyCount = Math.max(0, capacity - consumables.length);
 
   return (
     <section className="consumables" aria-label="Consumable slots">

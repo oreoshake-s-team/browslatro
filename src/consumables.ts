@@ -9,15 +9,17 @@ export type Consumable =
 
 export function hasFreeConsumableSlot(
   consumables: ReadonlyArray<Consumable>,
+  capacity: number = MAX_CONSUMABLE_SLOTS,
 ): boolean {
-  return consumables.length < MAX_CONSUMABLE_SLOTS;
+  return consumables.length < capacity;
 }
 
 export function addConsumable(
   consumables: ReadonlyArray<Consumable>,
   next: Consumable,
+  capacity: number = MAX_CONSUMABLE_SLOTS,
 ): ReadonlyArray<Consumable> {
-  if (!hasFreeConsumableSlot(consumables)) return consumables;
+  if (!hasFreeConsumableSlot(consumables, capacity)) return consumables;
   return [...consumables, next];
 }
 

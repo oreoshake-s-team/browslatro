@@ -8,6 +8,7 @@ import Shop from "./components/shop/Shop";
 import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
 import { createTarotCatalog, resolveHermitPayout } from "./tarots";
 import {
+  MAX_CONSUMABLE_SLOTS,
   addConsumable,
   hasFreeConsumableSlot,
   removeConsumableAt,
@@ -62,7 +63,14 @@ import {
   type JokerPostHandStep,
 } from "./jokers";
 import { pickShopOffers, rerollShopOffer, type ShopItem } from "./shop";
-import { pickVoucherForAnte, type Voucher, type VoucherId } from "./vouchers";
+import {
+  applyShopDiscount,
+  extraConsumableSlots,
+  extraShopOfferSlots,
+  pickVoucherForAnte,
+  type Voucher,
+  type VoucherId,
+} from "./vouchers";
 
 export const SCORING_STEP_MS = 500;
 
@@ -324,6 +332,7 @@ function App() {
         excludedJokerIds: jokers.map((j) => j.id),
         planetCatalog: createPlanetCatalog(),
         tarotCatalog: createTarotCatalog(),
+        extraSlots: extraShopOfferSlots(ownedVoucherIds),
       }),
     );
   }
@@ -336,26 +345,30 @@ function App() {
     );
   }
 
+  const consumableCapacity =
+    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+
   function buyShopOffer(idx: number) {
     const offer = shopOffers?.[idx];
     if (!offer || offer.sold) return;
-    if (money < offer.price) return;
+    const price = applyShopDiscount(offer.price, ownedVoucherIds);
+    if (money < price) return;
     if (offer.kind === "joker") {
       if (jokers.length >= MAX_JOKERS) return;
       play("pop");
-      setMoney((prev) => prev - offer.price);
+      setMoney((prev) => prev - price);
       setJokers((prev) => [...prev, offer.joker]);
       markOfferSold(idx);
       return;
     }
-    if (!hasFreeConsumableSlot(consumables)) return;
+    if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
     const next: Consumable =
       offer.kind === "planet"
         ? { kind: "planet", card: offer.planet }
         : { kind: "tarot", card: offer.tarot };
     play("pop");
-    setMoney((prev) => prev - offer.price);
-    setConsumables((prev) => addConsumable(prev, next));
+    setMoney((prev) => prev - price);
+    setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
     markOfferSold(idx);
   }
 
@@ -744,6 +757,7 @@ function App() {
         jokers={jokers}
         jokerPulseCounters={jokerPulseCounters}
         consumables={consumables}
+        consumableCapacity={consumableCapacity}
         onUseConsumable={useConsumable}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
@@ -758,6 +772,7 @@ function App() {
           money={money}
           equippedJokerCount={jokers.length}
           consumableCount={consumables.length}
+          consumableCapacity={consumableCapacity}
           offers={shopOffers}
           voucher={currentAnteVoucher}
           voucherSold={currentAnteVoucherSold}

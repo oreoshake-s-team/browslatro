@@ -51,6 +51,7 @@ function renderShop(
       money={10}
       equippedJokerCount={0}
       consumableCount={0}
+      consumableCapacity={2}
       offers={[jokerOffer("plus"), planetOffer("pluto")]}
       voucher={null}
       voucherSold={false}
@@ -370,6 +371,85 @@ describe("Shop", () => {
       renderShop({ voucher: OVERSTOCK_VOUCHER, money: 0, onBuyVoucher });
       await user.click(screen.getByTestId("shop-voucher-buy"));
       expect(onBuyVoucher).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("price discounts (Clearance Sale / Liquidation)", () => {
+    test("shows the original price unmodified when no discount voucher is owned", () => {
+      renderShop({ ownedVoucherIds: new Set<VoucherId>() });
+      const planet = screen
+        .getByTestId("shop-offer-1")
+        .querySelector(".shop-offer-price");
+      expect(planet).toHaveTextContent("$3");
+    });
+
+    test("applies a 25% discount with Clearance Sale ($5 joker → $4)", () => {
+      renderShop({ ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]) });
+      const joker = screen
+        .getByTestId("shop-offer-0")
+        .querySelector(".shop-offer-price-discounted");
+      expect(joker).toHaveTextContent("$4");
+    });
+
+    test("shows the original price struck through when discounted", () => {
+      renderShop({ ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]) });
+      const original = screen
+        .getByTestId("shop-offer-0")
+        .querySelector(".shop-offer-price-original");
+      expect(original).toHaveTextContent("$5");
+    });
+
+    test("applies a 50% discount with Liquidation ($5 joker → $3)", () => {
+      renderShop({
+        ownedVoucherIds: new Set<VoucherId>([
+          "clearance-sale",
+          "liquidation",
+        ]),
+      });
+      const joker = screen
+        .getByTestId("shop-offer-0")
+        .querySelector(".shop-offer-price-discounted");
+      expect(joker).toHaveTextContent("$3");
+    });
+
+    test("the buy button label reflects the discounted price", () => {
+      renderShop({ ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]) });
+      const buy = screen
+        .getByTestId("shop-offer-0")
+        .querySelector("button.shop-offer-buy");
+      expect(buy).toHaveTextContent("Buy ($4)");
+    });
+
+    test("the buy button is enabled when the player can afford the discounted price but not the original", () => {
+      renderShop({
+        money: 4,
+        ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]),
+      });
+      const buy = screen
+        .getByTestId("shop-offer-0")
+        .querySelector("button.shop-offer-buy");
+      expect(buy).not.toBeDisabled();
+    });
+  });
+
+  describe("Crystal Ball capacity", () => {
+    test("the planet buy button stays enabled when consumables fill the base cap but capacity has room", () => {
+      renderShop({ consumableCount: 2, consumableCapacity: 3 });
+      const planetBuy = screen
+        .getByTestId("shop-offer-1")
+        .querySelector("button.shop-offer-buy");
+      expect(planetBuy).not.toBeDisabled();
+    });
+
+    test("the full-tray tooltip reflects the elevated capacity", () => {
+      renderShop({ consumableCount: 3, consumableCapacity: 3 });
+      const planetBuy = screen
+        .getByTestId("shop-offer-1")
+        .querySelector("button.shop-offer-buy");
+      expect(planetBuy).toHaveAttribute(
+        "title",
+        "Consumable slots are full (max 3)",
+      );
     });
   });
 });

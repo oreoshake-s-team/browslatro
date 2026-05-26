@@ -61,4 +61,28 @@ describe("consumables", () => {
     const list = [planetConsumable];
     expect(removeConsumableAt(list, -1)).toBe(list);
   });
+
+  test("hasFreeConsumableSlot respects a custom capacity override", () => {
+    expect(
+      hasFreeConsumableSlot([planetConsumable, tarotConsumable], 3),
+    ).toBe(true);
+  });
+
+  test("hasFreeConsumableSlot returns false when at the custom capacity", () => {
+    expect(
+      hasFreeConsumableSlot([planetConsumable, tarotConsumable], 2),
+    ).toBe(false);
+  });
+
+  test("addConsumable respects a custom capacity that permits the add", () => {
+    const full = [planetConsumable, tarotConsumable];
+    const result = addConsumable(full, planetConsumable, 3);
+    expect(result).toHaveLength(3);
+  });
+
+  test("addConsumable still no-ops when at the custom capacity", () => {
+    const full = [planetConsumable, tarotConsumable];
+    const result = addConsumable(full, planetConsumable, 2);
+    expect(result).toBe(full);
+  });
 });
