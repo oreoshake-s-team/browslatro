@@ -3,6 +3,7 @@ import {
   cardLabel,
   formatScoringEvent,
   groupEventsByHand,
+  partitionByCategory,
   type ScoringEvent,
 } from "./scoringTrace";
 import type { Card } from "../cards/types";
@@ -161,5 +162,55 @@ describe("groupEventsByHand", () => {
     ];
     const groups = groupEventsByHand(events);
     expect(groups[0].base).toBeNull();
+  });
+});
+
+describe("partitionByCategory", () => {
+  test("returns empty scoring and money for an empty input", () => {
+    expect(partitionByCategory([])).toEqual({ scoring: [], money: [] });
+  });
+
+  test("routes money-delta events into the money bucket", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "money-delta", amount: 3, source: "Gold card" },
+      { kind: "money-delta", amount: 1, source: "Interest" },
+    ];
+    expect(partitionByCategory(events).money).toHaveLength(2);
+  });
+
+  test("routes chip/mult events into the scoring bucket", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+      { kind: "mult-times", factor: 2, source: "Glass" },
+    ];
+    expect(partitionByCategory(events).scoring).toHaveLength(2);
+  });
+
+  test("does not include money-delta events in the scoring bucket (negative)", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+      { kind: "money-delta", amount: 3, source: "Gold card" },
+    ];
+    expect(partitionByCategory(events).scoring).toHaveLength(1);
+  });
+
+  test("does not include scoring events in the money bucket (negative)", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+      { kind: "money-delta", amount: 3, source: "Gold card" },
+    ];
+    expect(partitionByCategory(events).money).toHaveLength(1);
+  });
+
+  test("preserves source order within the money bucket", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "money-delta", amount: 3, source: "Gold card" },
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+      { kind: "money-delta", amount: 1, source: "Interest" },
+    ];
+    expect(partitionByCategory(events).money.map((e) => e.source)).toEqual([
+      "Gold card",
+      "Interest",
+    ]);
   });
 });

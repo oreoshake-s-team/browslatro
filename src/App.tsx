@@ -71,7 +71,6 @@ import {
   getScoringStep,
 } from "./scoring/scoring";
 import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
-import ScoringTrace from "./components/hud/ScoringTrace";
 import {
   cardKey,
   createDeck,
@@ -1628,6 +1627,7 @@ function App() {
         handStats={handStats}
         ownedVouchers={VOUCHER_CATALOG.filter((v) => ownedVoucherIds.has(v.id))}
         currentBoss={currentBoss}
+        scoringEvents={scoringEvents}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
         onAnimationSpeedChange={setAnimationSpeedState}
@@ -1756,7 +1756,6 @@ function App() {
           }}
         />
       )}
-      <ScoringTrace events={scoringEvents} />
     </div>
   );
 }

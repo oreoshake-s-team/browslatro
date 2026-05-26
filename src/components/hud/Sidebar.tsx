@@ -6,12 +6,14 @@ import RunInfo, { type HandPlayCounts } from "./RunInfo";
 import Options from "../options/Options";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
+import ScoringTrace from "./ScoringTrace";
 import HandScore from "../game/HandScore";
 import type { Hand } from "../../cards/types";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
 import type { BossBlind } from "../../items/bosses";
 import type { Voucher } from "../../items/vouchers";
+import type { ScoringEvent } from "../../scoring/scoringTrace";
 import type { AnimationSpeed } from "../system/preferences";
 
 interface SidebarProps {
@@ -30,6 +32,7 @@ interface SidebarProps {
   handStats: HandStats;
   ownedVouchers: ReadonlyArray<Voucher>;
   currentBoss: BossBlind | null;
+  scoringEvents: ReadonlyArray<ScoringEvent>;
   onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
@@ -51,6 +54,7 @@ export default function Sidebar({
   handStats,
   ownedVouchers,
   currentBoss,
+  scoringEvents,
   onNewGame,
   onHighVisibilityChange,
   onAnimationSpeedChange,
@@ -92,6 +96,7 @@ export default function Sidebar({
           <RunProgress ante={ante} round={round} money={money} />
         </div>
       </div>
+      <ScoringTrace events={scoringEvents} />
     </div>
   );
 }
