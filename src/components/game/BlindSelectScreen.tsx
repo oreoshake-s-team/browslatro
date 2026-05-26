@@ -12,6 +12,7 @@ interface BlindSelectScreenProps {
   onPlay: () => void;
   onSkip?: () => void;
   tags?: ReadonlyArray<TagId>;
+  skipReward?: TagId;
 }
 
 const BLIND_NAMES: Readonly<Record<Blind, string>> = {
@@ -41,10 +42,12 @@ export default function BlindSelectScreen({
   onPlay,
   onSkip,
   tags = [],
+  skipReward,
 }: BlindSelectScreenProps) {
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
+  const skipRewardSpec = skipReward ? getTagSpec(skipReward) : null;
 
   return createPortal(
     <div
@@ -124,6 +127,20 @@ export default function BlindSelectScreen({
                     </dd>
                   </div>
                 </dl>
+                {b !== 3 && skipRewardSpec && (
+                  <div
+                    className="blind-select-row-skip-reward"
+                    data-testid={`blind-select-row-skip-reward-${b}`}
+                    title={skipRewardSpec.description}
+                  >
+                    <span className="blind-select-row-skip-reward-label">
+                      Skip reward
+                    </span>
+                    <span className="blind-select-row-skip-reward-name">
+                      + {skipRewardSpec.name}
+                    </span>
+                  </div>
+                )}
               </li>
             );
           })}

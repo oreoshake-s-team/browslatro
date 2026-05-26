@@ -116,6 +116,31 @@
   gap: 0.5rem;
 }
 
+.blind-select-row-skip-reward {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px dashed #51cf66;
+  background-color: rgba(81, 207, 102, 0.08);
+  cursor: help;
+}
+
+.blind-select-row-skip-reward-label {
+  font-size: 0.95rem;
+  color: #adb5bd;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.blind-select-row-skip-reward-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #b2f2bb;
+}
+
 .blind-select-row-stat {
   display: flex;
   justify-content: space-between;

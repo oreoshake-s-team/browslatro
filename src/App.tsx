@@ -1224,6 +1224,7 @@ function App() {
           onPlay={confirmBlindSelect}
           onSkip={skipBlind}
           tags={pendingTags}
+          skipReward="investment"
         />
       )}
     </div>
