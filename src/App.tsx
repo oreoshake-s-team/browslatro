@@ -107,6 +107,7 @@ import {
 import {
   SHOP_PACK_SLOTS,
   pickShopOffers,
+  pickSingleShopOffer,
   shopPickerRngConfig,
   type ShopItem,
 } from "./items/shop";
@@ -952,6 +953,29 @@ function App() {
       next.add(voucher.id);
       return next;
     });
+    if (voucher.id === "overstock" || voucher.id === "overstock-plus") {
+      setShopOffers((current) => {
+        if (!current) return current;
+        const extra = pickSingleShopOffer(
+          {
+            jokerCatalog: createJokerCatalog(),
+            excludedJokerIds: [
+              ...jokers.map((j) => j.id),
+              ...soldJokerIdsThisShopVisit,
+            ],
+            planetCatalog: availablePlanets(
+              createPlanetCatalog(),
+              handPlayCounts,
+            ),
+            tarotCatalog: createTarotCatalog(),
+            spectralCatalog: createSpectralCatalog(),
+            rng: shopPickerRngConfig.rng,
+          },
+          current,
+        );
+        return extra ? [...current, extra] : current;
+      });
+    }
   }
 
   function reorderJokers(orderedIds: ReadonlyArray<string>) {

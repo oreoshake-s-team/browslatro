@@ -2349,6 +2349,45 @@ describe("Voucher effects integration", () => {
     expect(items).toHaveLength(3);
   });
 
+  function itemOfferTiles(): HTMLElement[] {
+    return screen
+      .getAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
+  }
+
+  test("buying Overstock immediately expands the current shop from 2 to 3 items (#301)", async () => {
+    const user = await openShopWithVoucher(0);
+    expect(itemOfferTiles()).toHaveLength(2);
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(itemOfferTiles()).toHaveLength(3);
+  });
+
+  test("the newly-appended Overstock offer is not a duplicate of an existing item (#301)", async () => {
+    const user = await openShopWithVoucher(0);
+    const beforeNames = itemOfferTiles().map(
+      (tile) => tile.querySelector(".shop-offer-name")?.textContent ?? "",
+    );
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    const afterNames = itemOfferTiles().map(
+      (tile) => tile.querySelector(".shop-offer-name")?.textContent ?? "",
+    );
+    const newOffer = afterNames[afterNames.length - 1];
+    expect(beforeNames).not.toContain(newOffer);
+  });
+
+  test("Sold items survive an Overstock-driven expansion (#301)", async () => {
+    const user = await openShopWithVoucher(0);
+    const firstTile = itemOfferTiles()[0];
+    const buyButton = firstTile.querySelector("button.shop-offer-buy");
+    if (!(buyButton instanceof HTMLButtonElement)) throw new Error("missing buy");
+    const soldName = firstTile.querySelector(".shop-offer-name")?.textContent;
+    await user.click(buyButton);
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    const stillSoldName = itemOfferTiles()[0].querySelector(".shop-offer-name")
+      ?.textContent;
+    expect(stillSoldName).toBe(soldName);
+  });
+
   test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {
     const user = await openShopWithVoucher(0.4);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
