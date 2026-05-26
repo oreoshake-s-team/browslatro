@@ -26,7 +26,7 @@ import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
-import { createTarotCatalog, resolveHermitPayout, type TarotCard } from "./items/tarots";
+import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -281,10 +281,7 @@ function App() {
   const [packPreviewHand, setPackPreviewHand] = useState<ReadonlyArray<Card>>(
     [],
   );
-  const [pendingPackTarot, setPendingPackTarot] = useState<TarotCard | null>(
-    null,
-  );
-  const [pendingPackSelectedIds, setPendingPackSelectedIds] = useState<
+  const [packPreviewSelectedIds, setPackPreviewSelectedIds] = useState<
     ReadonlySet<number>
   >(() => new Set());
   const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
@@ -706,8 +703,7 @@ function App() {
     } else {
       setPackPreviewHand([]);
     }
-    setPendingPackTarot(null);
-    setPendingPackSelectedIds(new Set());
+    setPackPreviewSelectedIds(new Set());
     markOfferSold(idx);
   }
 
@@ -717,14 +713,32 @@ function App() {
       if (remaining <= 0) {
         setOpenedPack(null);
         setPackPreviewHand([]);
+        setPackPreviewSelectedIds(new Set());
       }
       return remaining;
     });
   }
 
+  function applyEnhancementToSelectedPreviewCards(enhancement: Enhancement) {
+    const selectedKeys = new Set<string>();
+    for (const c of packPreviewHand) {
+      if (packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+    }
+    setCardEnhancementsByKey((prev) => {
+      const next = new Map(prev);
+      for (const key of selectedKeys) next.set(key, enhancement);
+      return next;
+    });
+    setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        packPreviewSelectedIds.has(c.id) ? { ...c, enhancement } : c,
+      ),
+    );
+    setPackPreviewSelectedIds(new Set());
+  }
+
   function pickFromOpenedPack(optionIdx: number) {
     if (!openedPack || packPicksRemaining <= 0) return;
-    if (pendingPackTarot !== null) return;
     const option = openedPack.options[optionIdx];
     if (!option) return;
     if (option.kind === "planet") {
@@ -740,10 +754,14 @@ function App() {
             addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
           );
         } else {
+          if (
+            packPreviewSelectedIds.size === 0 ||
+            packPreviewSelectedIds.size > effect.maxTargets
+          ) {
+            return;
+          }
           play("pop");
-          setPendingPackTarot(option.tarot);
-          setPendingPackSelectedIds(new Set());
-          return;
+          applyEnhancementToSelectedPreviewCards(effect.enhancement);
         }
       } else {
         play("pop");
@@ -769,63 +787,23 @@ function App() {
   }
 
   function togglePackPreviewCard(cardId: number) {
-    if (!pendingPackTarot) return;
-    const effect = pendingPackTarot.effect;
-    if (effect.kind !== "apply-enhancement") return;
-    setPendingPackSelectedIds((prev) => {
+    if (packPreviewHand.length === 0) return;
+    setPackPreviewSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(cardId)) {
         next.delete(cardId);
-      } else if (next.size < effect.maxTargets) {
+      } else {
         next.add(cardId);
       }
       return next;
     });
   }
 
-  function confirmPendingPackTarot() {
-    if (!pendingPackTarot) return;
-    const effect = pendingPackTarot.effect;
-    if (effect.kind !== "apply-enhancement") return;
-    if (
-      pendingPackSelectedIds.size === 0 ||
-      pendingPackSelectedIds.size > effect.maxTargets
-    ) {
-      return;
-    }
-    const selectedKeys = new Set<string>();
-    for (const c of packPreviewHand) {
-      if (pendingPackSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
-    }
-    play("pop");
-    setCardEnhancementsByKey((prev) => {
-      const next = new Map(prev);
-      for (const key of selectedKeys) next.set(key, effect.enhancement);
-      return next;
-    });
-    setPackPreviewHand((prev) =>
-      prev.map((c) =>
-        pendingPackSelectedIds.has(c.id)
-          ? { ...c, enhancement: effect.enhancement }
-          : c,
-      ),
-    );
-    setPendingPackTarot(null);
-    setPendingPackSelectedIds(new Set());
-    decrementPackPicks();
-  }
-
-  function cancelPendingPackTarot() {
-    setPendingPackTarot(null);
-    setPendingPackSelectedIds(new Set());
-  }
-
   function closeOpenedPack() {
     setOpenedPack(null);
     setPackPicksRemaining(0);
     setPackPreviewHand([]);
-    setPendingPackTarot(null);
-    setPendingPackSelectedIds(new Set());
+    setPackPreviewSelectedIds(new Set());
   }
 
   function buyShopOffer(idx: number) {
@@ -1623,19 +1601,8 @@ function App() {
           consumableSlotsFull={!hasFreeConsumableSlot(consumables, consumableCapacity)}
           jokerSlotsFull={effectiveJokerCount(jokers) >= MAX_JOKERS}
           previewHand={packPreviewHand}
-          previewSelectedIds={pendingPackSelectedIds}
-          pendingTarot={
-            pendingPackTarot && pendingPackTarot.effect.kind === "apply-enhancement"
-              ? {
-                  name: pendingPackTarot.name,
-                  enhancement: pendingPackTarot.effect.enhancement,
-                  maxTargets: pendingPackTarot.effect.maxTargets,
-                }
-              : null
-          }
+          previewSelectedIds={packPreviewSelectedIds}
           onSelectPreviewCard={togglePackPreviewCard}
-          onConfirmPendingTarot={confirmPendingPackTarot}
-          onCancelPendingTarot={cancelPendingPackTarot}
           onPick={pickFromOpenedPack}
           onClose={closeOpenedPack}
         />

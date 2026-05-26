@@ -12,12 +12,6 @@ import { sortCards, type SortMode } from "../../cards/deck";
 import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
-export interface PendingPackTarotInfo {
-  readonly name: string;
-  readonly enhancement: string;
-  readonly maxTargets: 1 | 2;
-}
-
 interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
@@ -25,10 +19,7 @@ interface PackOpenModalProps {
   jokerSlotsFull?: boolean;
   previewHand?: ReadonlyArray<CardType>;
   previewSelectedIds?: ReadonlySet<number>;
-  pendingTarot?: PendingPackTarotInfo | null;
   onSelectPreviewCard?: (cardId: number) => void;
-  onConfirmPendingTarot?: () => void;
-  onCancelPendingTarot?: () => void;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
 }
@@ -40,6 +31,7 @@ interface OptionView {
   readonly description: string;
   readonly needsConsumableSlot: boolean;
   readonly needsJokerSlot: boolean;
+  readonly requiresPreviewSelection?: { readonly maxTargets: 1 | 2 };
 }
 
 function describeOption(option: PackOption): OptionView | null {
@@ -54,13 +46,18 @@ function describeOption(option: PackOption): OptionView | null {
     };
   }
   if (option.kind === "tarot") {
+    const effect = option.tarot.effect;
     return {
       id: option.tarot.id,
       icon: "🃏",
       name: option.tarot.name,
       description: option.tarot.description,
-      needsConsumableSlot: true,
+      needsConsumableSlot: false,
       needsJokerSlot: false,
+      requiresPreviewSelection:
+        effect.kind === "apply-enhancement"
+          ? { maxTargets: effect.maxTargets }
+          : undefined,
     };
   }
   if (option.kind === "joker") {
@@ -113,10 +110,7 @@ export default function PackOpenModal({
   jokerSlotsFull = false,
   previewHand = [],
   previewSelectedIds,
-  pendingTarot = null,
   onSelectPreviewCard,
-  onConfirmPendingTarot,
-  onCancelPendingTarot,
   onPick,
   onClose,
 }: PackOpenModalProps) {
@@ -128,15 +122,13 @@ export default function PackOpenModal({
   );
   const totalPicks = packPickLimit(pack.variant);
   const title = packDisplayName(pack);
-  const inSelection = pendingTarot !== null;
   const selectedCount = previewSelectedIds?.size ?? 0;
-  const subtitle = inSelection
-    ? pendingTarot.maxTargets === 1
-      ? `Select 1 card to receive a ${pendingTarot.enhancement} enhancement`
-      : `Select 1–${pendingTarot.maxTargets} cards to receive a ${pendingTarot.enhancement} enhancement (${selectedCount} selected)`
-    : totalPicks === 1
-      ? "Pick 1 card to keep"
-      : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
+  const subtitle =
+    previewHand.length > 0 && selectedCount > 0
+      ? `${selectedCount} preview card${selectedCount === 1 ? "" : "s"} selected — pick a tarot to apply`
+      : totalPicks === 1
+        ? "Pick 1 card to keep"
+        : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
   const closeLabel = picksRemaining < totalPicks ? "Done" : "Skip";
 
   return createPortal(
@@ -153,25 +145,35 @@ export default function PackOpenModal({
         <p className="pack-open-subtitle" data-testid="pack-open-subtitle">
           {subtitle}
         </p>
-        <ul
-          className={`pack-open-options${inSelection ? " pack-open-options-dimmed" : ""}`}
-          aria-label="Pack options"
-        >
+        <ul className="pack-open-options" aria-label="Pack options">
           {pack.options.map((option, idx) => {
             const view = describeOption(option);
             if (!view) return null;
             const noPicksLeft = picksRemaining <= 0;
             const consumableBlocked = view.needsConsumableSlot && consumableSlotsFull;
             const jokerBlocked = view.needsJokerSlot && jokerSlotsFull;
-            const disabled = noPicksLeft || consumableBlocked || jokerBlocked || inSelection;
-            const tooltip = inSelection
-              ? "Finish the current selection first"
-              : noPicksLeft
-                ? "No picks remaining"
-                : consumableBlocked
-                  ? "Consumable slots are full"
-                  : jokerBlocked
-                    ? "Joker slots are full"
+            const sel = view.requiresPreviewSelection;
+            const hasPreviewHand = previewHand.length > 0;
+            const selectionInvalid =
+              sel !== undefined &&
+              hasPreviewHand &&
+              (selectedCount === 0 || selectedCount > sel.maxTargets);
+            const disabled =
+              noPicksLeft || consumableBlocked || jokerBlocked || selectionInvalid;
+            const tooltip = noPicksLeft
+              ? "No picks remaining"
+              : consumableBlocked
+                ? "Consumable slots are full"
+                : jokerBlocked
+                  ? "Joker slots are full"
+                  : selectionInvalid
+                    ? sel.maxTargets === 1
+                      ? selectedCount === 0
+                        ? "Select 1 card in the preview hand first"
+                        : "Too many cards selected (max 1)"
+                      : selectedCount === 0
+                        ? `Select 1–${sel.maxTargets} cards in the preview hand first`
+                        : `Too many cards selected (max ${sel.maxTargets})`
                     : undefined;
             return (
               <li key={`${view.id}-${idx}`} className="pack-open-option">
@@ -241,7 +243,7 @@ export default function PackOpenModal({
                   card={card}
                   selected={previewSelectedIds?.has(card.id) ?? false}
                   onToggle={
-                    inSelection && onSelectPreviewCard
+                    onSelectPreviewCard
                       ? () => onSelectPreviewCard(card.id)
                       : undefined
                   }
@@ -249,27 +251,6 @@ export default function PackOpenModal({
               ))}
             </div>
           </>
-        )}
-        {inSelection && (
-          <div className="pack-open-selection-actions">
-            <button
-              type="button"
-              className="pack-open-confirm"
-              data-testid="pack-open-confirm"
-              disabled={selectedCount === 0}
-              onClick={() => onConfirmPendingTarot?.()}
-            >
-              Apply {pendingTarot.name}
-            </button>
-            <button
-              type="button"
-              className="pack-open-cancel"
-              data-testid="pack-open-cancel"
-              onClick={() => onCancelPendingTarot?.()}
-            >
-              Cancel
-            </button>
-          </div>
         )}
         <button
           type="button"

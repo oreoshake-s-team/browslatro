@@ -183,7 +183,7 @@ describe("PackOpenModal — Arcana pack rendering", () => {
     ).toBeInTheDocument();
   });
 
-  test("Pick buttons disable when consumable slots are full", () => {
+  test("Pick buttons stay enabled for an Arcana pack even when consumable slots are full", () => {
     render(
       <PackOpenModal
         pack={arcanaPack("normal", 3)}
@@ -194,7 +194,7 @@ describe("PackOpenModal — Arcana pack rendering", () => {
       />,
     );
     const picks = screen.getAllByRole("button", { name: /^Pick / });
-    for (const btn of picks) expect(btn).toBeDisabled();
+    for (const btn of picks) expect(btn).not.toBeDisabled();
   });
 
   test("Pick buttons stay enabled in a Celestial pack even when consumable slots are full", () => {
@@ -574,98 +574,49 @@ describe("PackOpenModal — Arcana preview hand and selection", () => {
     expect(screen.queryByTestId("pack-open-preview-hand")).not.toBeInTheDocument();
   });
 
-  test("renders Confirm and Cancel when a pending tarot is set", () => {
-    render(
-      <PackOpenModal
-        pack={arcanaPack("normal", 3)}
-        picksRemaining={1}
-        previewHand={previewCards}
-        previewSelectedIds={new Set()}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
-        onPick={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-    expect(screen.getByTestId("pack-open-confirm")).toBeInTheDocument();
-    expect(screen.getByTestId("pack-open-cancel")).toBeInTheDocument();
-  });
-
-  test("Confirm is disabled when no preview card is selected", () => {
-    render(
-      <PackOpenModal
-        pack={arcanaPack("normal", 3)}
-        picksRemaining={1}
-        previewHand={previewCards}
-        previewSelectedIds={new Set()}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
-        onPick={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-    expect(screen.getByTestId("pack-open-confirm")).toBeDisabled();
-  });
-
-  test("Confirm is enabled when at least one preview card is selected", () => {
-    render(
-      <PackOpenModal
-        pack={arcanaPack("normal", 3)}
-        picksRemaining={1}
-        previewHand={previewCards}
-        previewSelectedIds={new Set([1001])}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
-        onPick={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-    expect(screen.getByTestId("pack-open-confirm")).not.toBeDisabled();
-  });
-
-  test("clicking Confirm invokes onConfirmPendingTarot", async () => {
+  test("preview cards are clickable as long as onSelectPreviewCard is provided", async () => {
     const user = userEvent.setup();
-    const onConfirm = vi.fn();
-    render(
-      <PackOpenModal
-        pack={arcanaPack("normal", 3)}
-        picksRemaining={1}
-        previewHand={previewCards}
-        previewSelectedIds={new Set([1002])}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
-        onPick={vi.fn()}
-        onClose={vi.fn()}
-        onConfirmPendingTarot={onConfirm}
-      />,
-    );
-    await user.click(screen.getByTestId("pack-open-confirm"));
-    expect(onConfirm).toHaveBeenCalled();
-  });
-
-  test("clicking Cancel invokes onCancelPendingTarot", async () => {
-    const user = userEvent.setup();
-    const onCancel = vi.fn();
-    render(
-      <PackOpenModal
-        pack={arcanaPack("normal", 3)}
-        picksRemaining={1}
-        previewHand={previewCards}
-        previewSelectedIds={new Set([1002])}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
-        onPick={vi.fn()}
-        onClose={vi.fn()}
-        onCancelPendingTarot={onCancel}
-      />,
-    );
-    await user.click(screen.getByTestId("pack-open-cancel"));
-    expect(onCancel).toHaveBeenCalled();
-  });
-
-  test("Pick buttons disable while a tarot is pending", () => {
+    const onSelect = vi.fn();
     render(
       <PackOpenModal
         pack={arcanaPack("normal", 3)}
         picksRemaining={1}
         previewHand={previewCards}
         previewSelectedIds={new Set()}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onSelectPreviewCard={onSelect}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /^A of / }));
+    expect(onSelect).toHaveBeenCalledWith(1001);
+  });
+
+  test("subtitle reflects preview selection count when cards are selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001, 1002])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
+      /2 preview cards selected — pick a tarot to apply/,
+    );
+  });
+
+  test("tarot Pick button is disabled when no preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        onSelectPreviewCard={vi.fn()}
         onPick={vi.fn()}
         onClose={vi.fn()}
       />,
@@ -674,38 +625,58 @@ describe("PackOpenModal — Arcana preview hand and selection", () => {
     for (const btn of picks) expect(btn).toBeDisabled();
   });
 
-  test("subtitle reflects the pending tarot selection prompt for maxTargets=1", () => {
-    render(
-      <PackOpenModal
-        pack={arcanaPack("normal", 3)}
-        picksRemaining={1}
-        previewHand={previewCards}
-        previewSelectedIds={new Set()}
-        pendingTarot={{ name: "The Lovers", enhancement: "wild", maxTargets: 1 }}
-        onPick={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
-    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
-      /Select 1 card to receive a wild enhancement/,
-    );
-  });
-
-  test("subtitle shows running selection count for maxTargets=2", () => {
+  test("tarot Pick button enables once at least one preview card is selected", () => {
     render(
       <PackOpenModal
         pack={arcanaPack("normal", 3)}
         picksRemaining={1}
         previewHand={previewCards}
         previewSelectedIds={new Set([1001])}
-        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onSelectPreviewCard={vi.fn()}
         onPick={vi.fn()}
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
-      /Select 1–2 cards to receive a lucky enhancement \(1 selected\)/,
+    expect(
+      screen.getAllByRole("button", { name: /^Pick / }).every((b) => !(b as HTMLButtonElement).disabled),
+    ).toBe(true);
+  });
+
+  test("tarot Pick button disables when too many preview cards are selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={[
+          ...previewCards,
+          { id: 1004, rank: "J" as const, suit: "clubs" as const },
+        ]}
+        previewSelectedIds={new Set([1001, 1002, 1003])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
     );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("clicking a tarot Pick after selecting a card invokes onPick", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={onPick}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getAllByRole("button", { name: /^Pick / })[0]);
+    expect(onPick).toHaveBeenCalledWith(0);
   });
 });
 
@@ -823,7 +794,6 @@ describe("PackOpenModal — preview-hand sort toolbar", () => {
         picksRemaining={1}
         previewHand={mixedPreview}
         previewSelectedIds={new Set()}
-        pendingTarot={{ name: "The Lovers", enhancement: "wild", maxTargets: 1 }}
         onSelectPreviewCard={onSelect}
         onPick={vi.fn()}
         onClose={vi.fn()}
