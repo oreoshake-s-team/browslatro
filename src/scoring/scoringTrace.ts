@@ -41,6 +41,26 @@ export interface ScoringHandGroup {
   readonly events: ReadonlyArray<ScoringEvent>;
 }
 
+export interface PartitionedEvents {
+  readonly scoring: ReadonlyArray<ScoringEvent>;
+  readonly money: ReadonlyArray<Extract<ScoringEvent, { kind: "money-delta" }>>;
+}
+
+export function partitionByCategory(
+  events: ReadonlyArray<ScoringEvent>,
+): PartitionedEvents {
+  const scoring: ScoringEvent[] = [];
+  const money: Extract<ScoringEvent, { kind: "money-delta" }>[] = [];
+  for (const event of events) {
+    if (event.kind === "money-delta") {
+      money.push(event);
+    } else {
+      scoring.push(event);
+    }
+  }
+  return { scoring, money };
+}
+
 export function groupEventsByHand(
   events: ReadonlyArray<ScoringEvent>,
 ): ReadonlyArray<ScoringHandGroup> {
