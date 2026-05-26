@@ -519,9 +519,19 @@ function App() {
   function pickFromOpenedPack(optionIdx: number) {
     if (!openedPack || packPicksRemaining <= 0) return;
     const option = openedPack.options[optionIdx];
-    if (!option || option.kind !== "planet") return;
-    play("pop");
-    setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
+    if (!option) return;
+    if (option.kind === "planet") {
+      play("pop");
+      setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
+    } else if (option.kind === "tarot") {
+      if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+      play("pop");
+      setConsumables((prev) =>
+        addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
+      );
+    } else {
+      return;
+    }
     setPackPicksRemaining((prev) => {
       const remaining = prev - 1;
       if (remaining <= 0) setOpenedPack(null);
@@ -1212,6 +1222,7 @@ function App() {
         <PackOpenModal
           pack={openedPack}
           picksRemaining={packPicksRemaining}
+          consumableSlotsFull={!hasFreeConsumableSlot(consumables, consumableCapacity)}
           onPick={pickFromOpenedPack}
           onClose={closeOpenedPack}
         />

@@ -1,7 +1,8 @@
 import type { PlanetCard } from "./planets";
+import type { TarotCard } from "./tarots";
 import type { RandomSource } from "./jokers";
 
-export type PackPool = "celestial";
+export type PackPool = "celestial" | "arcana";
 
 export type PackVariant = "normal" | "jumbo" | "mega";
 
@@ -10,6 +11,7 @@ export const PACK_JUMBO_PRICE = 6;
 export const PACK_MEGA_PRICE = 8;
 
 export const PACK_POOL_WEIGHTS: Readonly<Record<PackPool, number>> = {
+  arcana: 4,
   celestial: 1,
 };
 
@@ -21,6 +23,7 @@ export const PACK_VARIANT_WEIGHTS: Readonly<Record<PackVariant, number>> = {
 
 const PACK_BASE_OPTIONS: Readonly<Record<PackPool, number>> = {
   celestial: 3,
+  arcana: 3,
 };
 
 const PACK_PICK_LIMIT: Readonly<Record<PackVariant, number>> = {
@@ -31,12 +34,12 @@ const PACK_PICK_LIMIT: Readonly<Record<PackVariant, number>> = {
 
 const POOL_LABELS: Readonly<Record<PackPool, string>> = {
   celestial: "Celestial",
+  arcana: "Arcana",
 };
 
-export interface PackOption {
-  readonly kind: "planet";
-  readonly planet: PlanetCard;
-}
+export type PackOption =
+  | { readonly kind: "planet"; readonly planet: PlanetCard }
+  | { readonly kind: "tarot"; readonly tarot: TarotCard };
 
 export interface PackOffer {
   readonly pool: PackPool;
@@ -92,27 +95,34 @@ export interface RollPackOptionsArgs {
   readonly pool: PackPool;
   readonly variant: PackVariant;
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
+  readonly tarotCatalog: ReadonlyArray<TarotCard>;
   readonly rng: RandomSource;
 }
 
 export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOption> {
   const want = packOptionsCount(args.pool, args.variant);
   if (args.pool === "celestial") {
-    return drawPlanets(args.planetCatalog, want, args.rng).map((planet) => ({
+    return drawWithoutReplacement(args.planetCatalog, want, args.rng).map((planet) => ({
       kind: "planet" as const,
       planet,
+    }));
+  }
+  if (args.pool === "arcana") {
+    return drawWithoutReplacement(args.tarotCatalog, want, args.rng).map((tarot) => ({
+      kind: "tarot" as const,
+      tarot,
     }));
   }
   return [];
 }
 
-function drawPlanets(
-  catalog: ReadonlyArray<PlanetCard>,
+function drawWithoutReplacement<T>(
+  catalog: ReadonlyArray<T>,
   count: number,
   rng: RandomSource,
-): PlanetCard[] {
+): T[] {
   const pool = [...catalog];
-  const out: PlanetCard[] = [];
+  const out: T[] = [];
   while (out.length < count && pool.length > 0) {
     const idx = Math.floor(rng() * pool.length);
     out.push(pool[idx]);
@@ -123,6 +133,7 @@ function drawPlanets(
 
 export interface RollPackArgs {
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
+  readonly tarotCatalog: ReadonlyArray<TarotCard>;
   readonly rng: RandomSource;
 }
 
@@ -133,6 +144,7 @@ export function rollPack(args: RollPackArgs): PackOffer {
     pool,
     variant,
     planetCatalog: args.planetCatalog,
+    tarotCatalog: args.tarotCatalog,
     rng: args.rng,
   });
   return { pool, variant, options };
