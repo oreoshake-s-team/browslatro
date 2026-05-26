@@ -62,7 +62,12 @@ import {
   type Joker,
   type JokerPostHandStep,
 } from "./jokers";
-import { pickShopOffers, rerollShopOffer, type ShopItem } from "./shop";
+import {
+  pickShopOffers,
+  rerollShopOffer,
+  shopPickerRngConfig,
+  type ShopItem,
+} from "./shop";
 import {
   applyShopDiscount,
   extraConsumableSlots,
@@ -363,6 +368,7 @@ function App() {
         planetCatalog: createPlanetCatalog(),
         tarotCatalog: createTarotCatalog(),
         extraSlots: extraShopOfferSlots(ownedVoucherIds),
+        rng: shopPickerRngConfig.rng,
       }),
     );
   }
@@ -445,6 +451,7 @@ function App() {
       excludedJokerIds,
       planetCatalog: createPlanetCatalog(),
       tarotCatalog: createTarotCatalog(),
+      rng: shopPickerRngConfig.rng,
     };
     play("pop");
     setMoney((prev) => prev - cost);

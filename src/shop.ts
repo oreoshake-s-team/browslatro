@@ -5,9 +5,11 @@ import { JOKER_BASE_PRICE } from "./constants";
 import { PLANET_BASE_PRICE } from "./planets";
 import { TAROT_BASE_PRICE } from "./tarots";
 
-export const SHOP_OFFER_SLOTS = 3;
+export const SHOP_OFFER_SLOTS = 2;
 
 export const BASE_REROLL_COST = 5;
+
+export const shopPickerRngConfig: { rng: RandomSource } = { rng: Math.random };
 
 export type ShopItem =
   | {
@@ -114,25 +116,33 @@ function pickOfferByKind(
   }
 }
 
+function pickRandomKindOffer(
+  args: PickShopOffersArgs,
+  rng: RandomSource,
+): ShopItem | null {
+  const start = Math.floor(rng() * SHOP_OFFER_KINDS.length);
+  for (let i = 0; i < SHOP_OFFER_KINDS.length; i += 1) {
+    const kind = SHOP_OFFER_KINDS[(start + i) % SHOP_OFFER_KINDS.length];
+    const offer = pickOfferByKind(kind, args, rng);
+    if (offer) return offer;
+  }
+  return null;
+}
+
 export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
   const rng = args.rng ?? Math.random;
+  const totalSlots = SHOP_OFFER_SLOTS + Math.max(0, args.extraSlots ?? 0);
   const slots: ShopItem[] = [];
-  for (const kind of SHOP_OFFER_KINDS) {
-    const offer = pickOfferByKind(kind, args, rng);
-    if (offer) slots.push(offer);
-  }
-  const extras = Math.max(0, args.extraSlots ?? 0);
-  for (let i = 0; i < extras; i += 1) {
-    const kind = SHOP_OFFER_KINDS[Math.floor(rng() * SHOP_OFFER_KINDS.length)];
-    const offer = pickOfferByKind(kind, args, rng);
+  for (let i = 0; i < totalSlots; i += 1) {
+    const offer = pickRandomKindOffer(args, rng);
     if (offer) slots.push(offer);
   }
   return slots;
 }
 
 export function rerollShopOffer(
-  current: ShopItem,
+  _current: ShopItem,
   args: PickShopOffersArgs,
 ): ShopItem | null {
-  return pickOfferByKind(current.kind, args, args.rng ?? Math.random);
+  return pickRandomKindOffer(args, args.rng ?? Math.random);
 }
