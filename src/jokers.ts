@@ -103,11 +103,19 @@ export interface JokerScoringResult {
   readonly moneyEarned: number;
 }
 
+export interface JokerHandLevelStep {
+  readonly jokerId: string;
+  readonly additiveMult?: number;
+  readonly additiveChips?: number;
+  readonly xMultFactor?: number;
+}
+
 export interface JokerHandResult {
   readonly additiveMult: number;
   readonly additiveChips: number;
   readonly xMult: number;
   readonly firedJokerIds: ReadonlyArray<string>;
+  readonly steps: ReadonlyArray<JokerHandLevelStep>;
 }
 
 export interface JokerCardResult {
@@ -471,6 +479,7 @@ export function applyHandLevelJokers(
   let additiveChips = 0;
   let xMult = 1;
   const fired: string[] = [];
+  const steps: JokerHandLevelStep[] = [];
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
@@ -479,6 +488,7 @@ export function applyHandLevelJokers(
       case "additive-mult": {
         additiveMult += effect.amount;
         fired.push(joker.id);
+        steps.push({ jokerId: joker.id, additiveMult: effect.amount });
         break;
       }
       case "on-hand-type-mult": {
@@ -488,6 +498,7 @@ export function applyHandLevelJokers(
         ) {
           additiveMult += effect.amount;
           fired.push(joker.id);
+          steps.push({ jokerId: joker.id, additiveMult: effect.amount });
         }
         break;
       }
@@ -498,6 +509,7 @@ export function applyHandLevelJokers(
         ) {
           additiveChips += effect.amount;
           fired.push(joker.id);
+          steps.push({ jokerId: joker.id, additiveChips: effect.amount });
         }
         break;
       }
@@ -508,14 +520,17 @@ export function applyHandLevelJokers(
         ) {
           additiveMult += effect.amount;
           fired.push(joker.id);
+          steps.push({ jokerId: joker.id, additiveMult: effect.amount });
         }
         break;
       }
       case "additive-mult-random": {
         const rng = context.rng ?? Math.random;
         const span = effect.max - effect.min + 1;
-        additiveMult += Math.floor(rng() * span) + effect.min;
+        const rolled = Math.floor(rng() * span) + effect.min;
+        additiveMult += rolled;
         fired.push(joker.id);
+        steps.push({ jokerId: joker.id, additiveMult: rolled });
         break;
       }
       case "x-mult-on-face-scored": {
@@ -525,6 +540,7 @@ export function applyHandLevelJokers(
         ) {
           xMult *= effect.amount;
           fired.push(joker.id);
+          steps.push({ jokerId: joker.id, xMultFactor: effect.amount });
         }
         break;
       }
@@ -539,7 +555,7 @@ export function applyHandLevelJokers(
     }
   }
 
-  return { additiveMult, additiveChips, xMult, firedJokerIds: fired };
+  return { additiveMult, additiveChips, xMult, firedJokerIds: fired, steps };
 }
 
 export function applyPostHandJokers(

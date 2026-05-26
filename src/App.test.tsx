@@ -959,6 +959,59 @@ describe("Sequential card scoring", () => {
   });
 });
 
+describe("Hand-level joker ordering (issue #192)", () => {
+  async function submitFirstFiveSpades(): Promise<void> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+  }
+
+  function tickScoring(times: number): void {
+    for (let i = 0; i < times; i += 1) {
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+    }
+  }
+
+  test("after all per-card steps the live multiplier does not yet include +4 Mult", async () => {
+    await submitFirstFiveSpades();
+    tickScoring(5);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("8");
+  });
+
+  test("one extra tick after per-card scoring applies the +4 Mult hand-level step", async () => {
+    await submitFirstFiveSpades();
+    tickScoring(6);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("12");
+  });
+
+  test("the live chips counter does not advance during the +4 Mult step", async () => {
+    await submitFirstFiveSpades();
+    tickScoring(6);
+    expect(document.querySelector(".chips")).toHaveTextContent("135");
+  });
+
+  test("post-hand Joker Stencil applies after the hand-level step (round score = 135 chips * 24 mult)", async () => {
+    await submitFirstFiveSpades();
+    tickScoring(7);
+    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+      "3240",
+    );
+  });
+
+  test("the final round score is unchanged from the prior ordering", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await submitFirstFiveSpades();
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+});
+
 describe("Round won modal", () => {
   async function triggerWin(): Promise<void> {
     // Identity shuffle deals Spades 2..9; selecting top 5 → Straight Flush

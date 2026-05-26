@@ -66,6 +66,7 @@ import {
   createDefaultJokers,
   createJokerCatalog,
   type Joker,
+  type JokerHandLevelStep,
   type JokerPostHandStep,
 } from "./jokers";
 import {
@@ -184,6 +185,12 @@ function App() {
       ? steelScoringIds[steelScoringIndex]
       : null;
 
+  const [handLevelSteps, setHandLevelSteps] = useState<
+    ReadonlyArray<JokerHandLevelStep>
+  >([]);
+  const [handLevelIndex, setHandLevelIndex] = useState<number>(0);
+  const handLevelFinalizeRef = useRef<(() => void) | null>(null);
+
   const [postHandSteps, setPostHandSteps] = useState<
     ReadonlyArray<JokerPostHandStep>
   >([]);
@@ -233,6 +240,9 @@ function App() {
     setSteelScoringIds([]);
     setSteelScoringIndex(0);
     steelFinalizeRef.current = null;
+    setHandLevelSteps([]);
+    setHandLevelIndex(0);
+    handLevelFinalizeRef.current = null;
     setPostHandSteps([]);
     setPostHandIndex(0);
     postHandFinalizeRef.current = null;
@@ -335,6 +345,35 @@ function App() {
     }, stepMs);
     return () => window.clearTimeout(timer);
   }, [steelScoringIds, steelScoringIndex, animationSpeed]);
+
+  useEffect(() => {
+    if (handLevelSteps.length === 0) return;
+    if (handLevelIndex >= handLevelSteps.length) {
+      const finalize = handLevelFinalizeRef.current;
+      handLevelFinalizeRef.current = null;
+      setHandLevelSteps([]);
+      setHandLevelIndex(0);
+      if (finalize) finalize();
+      return;
+    }
+    const stepMs = getScoringStepMs(animationSpeed);
+    const timer = window.setTimeout(() => {
+      const step = handLevelSteps[handLevelIndex];
+      if (step.additiveChips) {
+        setChips((prev) => prev + (step.additiveChips ?? 0));
+      }
+      if (step.additiveMult) {
+        setMultiplier((prev) => prev + (step.additiveMult ?? 0));
+      }
+      if (step.xMultFactor !== undefined && step.xMultFactor !== 1) {
+        setMultiplier((prev) => prev * (step.xMultFactor ?? 1));
+      }
+      play("pop");
+      pulseJokers([step.jokerId]);
+      setHandLevelIndex((prev) => prev + 1);
+    }, stepMs);
+    return () => window.clearTimeout(timer);
+  }, [handLevelSteps, handLevelIndex, animationSpeed]);
 
   useEffect(() => {
     if (postHandSteps.length === 0) return;
@@ -655,7 +694,6 @@ function App() {
       playedCardCount: playedCards.length,
       scoredCards: scoring,
     });
-    pulseJokers(handJokerResult.firedJokerIds);
 
     let perCardAdditiveMult = 0;
     let perCardAdditiveChips = 0;
@@ -691,11 +729,10 @@ function App() {
       },
     );
 
-    // Steel ×1.5 is now animated per-card during the steel sequence, so the
-    // starting live multiplier omits it. Each steel tick applies one factor
-    // until the visible multiplier reaches the same product as before.
-    const liveMultiplier =
-      (handEntry.multiplier + handJokerResult.additiveMult) * preHandXMultNoSteel;
+    // Steel ×1.5 animates per-card during the steel sequence; hand-level
+    // jokers now animate after steel, so the starting live multiplier omits
+    // both of those factors.
+    const liveMultiplier = handEntry.multiplier * enhancementXMult;
     setChips(handEntry.chips);
     setMultiplier(liveMultiplier);
 
@@ -710,12 +747,21 @@ function App() {
       setPostHandSteps(postHandResult.steps);
       setPostHandIndex(0);
     };
-    scoringFinalizeRef.current = () => {
-      if (heldSteelIds.length === 0) {
+    const runHandLevel = () => {
+      if (handJokerResult.steps.length === 0) {
         runPostHand();
         return;
       }
-      steelFinalizeRef.current = runPostHand;
+      handLevelFinalizeRef.current = runPostHand;
+      setHandLevelSteps(handJokerResult.steps);
+      setHandLevelIndex(0);
+    };
+    scoringFinalizeRef.current = () => {
+      if (heldSteelIds.length === 0) {
+        runHandLevel();
+        return;
+      }
+      steelFinalizeRef.current = runHandLevel;
       setSteelScoringIds(heldSteelIds);
       setSteelScoringIndex(0);
     };
