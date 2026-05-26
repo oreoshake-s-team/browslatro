@@ -107,7 +107,7 @@ import {
 import {
   SHOP_PACK_SLOTS,
   pickShopOffers,
-  rerollShopOffer,
+  pickSingleShopOffer,
   shopPickerRngConfig,
   type ShopItem,
 } from "./items/shop";
@@ -172,6 +172,12 @@ function App() {
   const [money, setMoney] = useState(4);
   const [chips, setChips] = useState(0);
   const [multiplier, setMultiplier] = useState(0);
+  // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
+  // so the displayed chips/multiplier reflect manual bumps until a New game
+  // resets them. See #265.
+  const [devChipsBonus, setDevChipsBonus] = useState(0);
+  const [devMultBonus, setDevMultBonus] = useState(0);
+  const [devMultFactor, setDevMultFactor] = useState(1);
   const [roundScore, setRoundScore] = useState(0);
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
   const [remainingHands, setRemainingHands] = useState(4);
@@ -266,6 +272,9 @@ function App() {
   const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
     null,
   );
+  const [soldJokerIdsThisShopVisit, setSoldJokerIdsThisShopVisit] = useState<
+    ReadonlyArray<string>
+  >([]);
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
   const currentHandSize = Math.max(1, HAND_SIZE + handSizeModifier);
@@ -658,6 +667,7 @@ function App() {
       );
       setPlayedCardKeysThisAnte(new Set());
     }
+    setSoldJokerIdsThisShopVisit([]);
     setShopOffers(
       pickShopOffers({
         jokerCatalog: createJokerCatalog(),
@@ -820,6 +830,7 @@ function App() {
       play("pop");
       setMoney((prev) => prev - price);
       setJokers((prev) => [...prev, offer.joker]);
+      setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
       markOfferSold(idx);
       return;
     }
@@ -965,32 +976,28 @@ function App() {
   function rerollShopOffers(cost: number) {
     if (!shopOffers) return;
     if (money < cost) return;
-    const soldJokerIds = shopOffers
-      .filter((o) => o.kind === "joker" && o.sold)
-      .map((o) => (o.kind === "joker" ? o.joker.id : ""));
-    const excludedJokerIds = [...jokers.map((j) => j.id), ...soldJokerIds];
-    const args = {
-      jokerCatalog: createJokerCatalog(),
-      excludedJokerIds,
-      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-      tarotCatalog: createTarotCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: shopPickerRngConfig.rng,
-    };
     play("pop");
     setMoney((prev) => prev - cost);
-    setShopOffers((current) => {
-      if (!current) return current;
-      return current.map((offer) => {
-        if (offer.sold) return offer;
-        const replacement = rerollShopOffer(offer, args);
-        return replacement ?? offer;
-      });
-    });
+    setShopOffers(
+      pickShopOffers({
+        jokerCatalog: createJokerCatalog(),
+        excludedJokerIds: [
+          ...jokers.map((j) => j.id),
+          ...soldJokerIdsThisShopVisit,
+        ],
+        planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+        tarotCatalog: createTarotCatalog(),
+        spectralCatalog: createSpectralCatalog(),
+        extraSlots: extraShopOfferSlots(ownedVoucherIds),
+        extraPackSlots,
+        rng: shopPickerRngConfig.rng,
+      }),
+    );
   }
 
   function closeShopAndStartNextRound() {
     setShopOffers(null);
+    setSoldJokerIdsThisShopVisit([]);
     setPendingBlindSelect(true);
   }
 
@@ -1045,6 +1052,29 @@ function App() {
       next.add(voucher.id);
       return next;
     });
+    if (voucher.id === "overstock" || voucher.id === "overstock-plus") {
+      setShopOffers((current) => {
+        if (!current) return current;
+        const extra = pickSingleShopOffer(
+          {
+            jokerCatalog: createJokerCatalog(),
+            excludedJokerIds: [
+              ...jokers.map((j) => j.id),
+              ...soldJokerIdsThisShopVisit,
+            ],
+            planetCatalog: availablePlanets(
+              createPlanetCatalog(),
+              handPlayCounts,
+            ),
+            tarotCatalog: createTarotCatalog(),
+            spectralCatalog: createSpectralCatalog(),
+            rng: shopPickerRngConfig.rng,
+          },
+          current,
+        );
+        return extra ? [...current, extra] : current;
+      });
+    }
   }
 
   function reorderJokers(orderedIds: ReadonlyArray<string>) {
@@ -1064,6 +1094,9 @@ function App() {
     setHandSizeModifier(0);
     setExtraPackSlots(0);
     setExtraVoucherSlots(0);
+    setDevChipsBonus(0);
+    setDevMultBonus(0);
+    setDevMultFactor(1);
     setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
@@ -1091,17 +1124,17 @@ function App() {
 
   function addChips(amount: number) {
     play("pop");
-    setChips((prev) => prev + amount);
+    setDevChipsBonus((prev) => prev + amount);
   }
 
   function addMultiplier(amount: number) {
     play("pop");
-    setMultiplier((prev) => prev + amount);
+    setDevMultBonus((prev) => prev + amount);
   }
 
   function multiplyMultiplier(factor: number) {
     play("pop");
-    setMultiplier((prev) => prev * factor);
+    setDevMultFactor((prev) => prev * factor);
   }
 
   function loseGame() {
@@ -1344,6 +1377,27 @@ function App() {
         source: `${currentBoss.name}: ${playedCards.length} cards played`,
       });
     }
+    if (devChipsBonus !== 0) {
+      submitEvents.push({
+        kind: "chips-delta",
+        amount: devChipsBonus,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    if (devMultBonus !== 0) {
+      submitEvents.push({
+        kind: "mult-delta",
+        amount: devMultBonus,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    if (devMultFactor !== 1) {
+      submitEvents.push({
+        kind: "mult-times",
+        factor: devMultFactor,
+        source: "Apply Modifiers (dev)",
+      });
+    }
     setScoringEvents((prev) => [...prev, ...submitEvents]);
     setScoringCards(scoring);
     setScoringIndex(0);
@@ -1358,6 +1412,9 @@ function App() {
     setRoundScore(newRoundScore);
     setChips(0);
     setMultiplier(0);
+    setDevChipsBonus(0);
+    setDevMultBonus(0);
+    setDevMultFactor(1);
     setSelectedHand(null);
     setScoringCards([]);
     setScoringIndex(0);
@@ -1483,8 +1540,8 @@ function App() {
         ante={ante}
         round={round}
         money={money}
-        chips={chips}
-        multiplier={multiplier}
+        chips={chips + devChipsBonus}
+        multiplier={(multiplier + devMultBonus) * devMultFactor}
         roundScore={roundScore}
         requiredScore={requiredScore}
         selectedHand={selectedHand}

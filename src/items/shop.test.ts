@@ -20,6 +20,7 @@ import {
   pickRandomPlanet,
   pickRandomTarot,
   pickShopOffers,
+  pickSingleShopOffer,
   rerollCostFor,
   rerollShopOffer,
   type ShopItem,
@@ -508,5 +509,55 @@ describe("pickShopOffers — pack slots", () => {
     const pack = offers.find((o) => o.kind === "pack");
     if (!pack || pack.kind !== "pack") throw new Error("expected a pack");
     expect(pack.pack.options.length).toBeGreaterThan(0);
+  });
+});
+
+describe("pickSingleShopOffer", () => {
+  test("returns a non-pack offer", () => {
+    const offer = pickSingleShopOffer(baseArgs(mulberry32(1)), []);
+    expect(offer && offer.kind !== "pack").toBe(true);
+  });
+
+  test("returns null when all joker/planet/tarot/spectral catalogs are exhausted (negative)", () => {
+    const offer = pickSingleShopOffer(
+      {
+        ...baseArgs(mulberry32(1)),
+        jokerCatalog: [],
+        planetCatalog: [],
+        tarotCatalog: [],
+        spectralCatalog: [],
+      },
+      [],
+    );
+    expect(offer).toBeNull();
+  });
+
+  test("does not return a joker already present in existing offers", () => {
+    const existing = pickShopOffers(baseArgs(mulberry32(1)));
+    const existingJokerIds = existing
+      .filter((o) => o.kind === "joker")
+      .map((o) => (o.kind === "joker" ? o.joker.id : ""));
+    for (let seed = 1; seed < 50; seed += 1) {
+      const next = pickSingleShopOffer(baseArgs(mulberry32(seed)), existing);
+      if (next && next.kind === "joker") {
+        expect(existingJokerIds).not.toContain(next.joker.id);
+      }
+    }
+  });
+
+  test("excludes jokers passed via excludedJokerIds", () => {
+    const args = baseArgs(mulberry32(7));
+    const allButOne = createJokerCatalog().slice(1).map((j) => j.id);
+    const first = createJokerCatalog()[0].id;
+    for (let seed = 1; seed < 30; seed += 1) {
+      const next = pickSingleShopOffer(
+        { ...baseArgs(mulberry32(seed)), excludedJokerIds: allButOne },
+        [],
+      );
+      if (next && next.kind === "joker") {
+        expect(next.joker.id).toBe(first);
+      }
+    }
+    expect(args).toBeTruthy();
   });
 });

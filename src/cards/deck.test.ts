@@ -42,41 +42,6 @@ describe("createDeck", () => {
     expect(deck.every((c) => c.enhancement === undefined)).toBe(true);
   });
 
-  test("does not assign Mult to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "mult")).toBe(true);
-  });
-
-  test("does not assign Wild to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "wild")).toBe(true);
-  });
-
-  test("does not assign Glass to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "glass")).toBe(true);
-  });
-
-  test("does not assign Stone to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "stone")).toBe(true);
-  });
-
-  test("does not assign Lucky to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "lucky")).toBe(true);
-  });
-
-  test("does not assign Steel to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "steel")).toBe(true);
-  });
-
-  test("does not assign Gold to any card", () => {
-    const deck = createDeck();
-    expect(deck.every((c) => c.enhancement !== "gold")).toBe(true);
-  });
-
   test("omits cards whose keys appear in the excludedKeys set", () => {
     const excluded = new Set(["K-hearts", "5-spades"]);
     const deck = createDeck(excluded);

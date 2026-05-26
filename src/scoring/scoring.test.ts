@@ -28,20 +28,13 @@ describe("getRankChips — rank to chip value mapping", () => {
     expect(getRankChips("5")).toBe(5);
   });
 
-  test("rank 10 is worth 10 chips", () => {
-    expect(getRankChips("10")).toBe(10);
-  });
-
-  test("jack is worth 10 chips", () => {
-    expect(getRankChips("J")).toBe(10);
-  });
-
-  test("queen is worth 10 chips", () => {
-    expect(getRankChips("Q")).toBe(10);
-  });
-
-  test("king is worth 10 chips", () => {
-    expect(getRankChips("K")).toBe(10);
+  test.each<{ rank: Rank }>([
+    { rank: "10" },
+    { rank: "J" },
+    { rank: "Q" },
+    { rank: "K" },
+  ])("rank $rank is worth 10 chips", ({ rank }) => {
+    expect(getRankChips(rank)).toBe(10);
   });
 
   test("ace is worth 11 chips", () => {

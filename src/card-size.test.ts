@@ -48,65 +48,31 @@ describe("Card-size design tokens (issue #214)", () => {
     expect(h / w).toBeCloseTo(7 / 5, 5);
   });
 
-  test(".card consumes var(--card-width)", () => {
-    expect(blockBody(cardCss, ".card")).toMatch(
-      /width:\s*var\(--card-width\)/,
-    );
-  });
+  const cardShapedMatrix: ReadonlyArray<{
+    source: string;
+    selector: string;
+    dimension: "width" | "height";
+  }> = [
+    { source: cardCss, selector: ".card", dimension: "width" },
+    { source: cardCss, selector: ".card", dimension: "height" },
+    { source: deckPileCss, selector: ".deck-pile", dimension: "width" },
+    { source: deckPileCss, selector: ".deck-pile", dimension: "height" },
+    { source: discardPileCss, selector: ".discard-pile", dimension: "width" },
+    { source: discardPileCss, selector: ".discard-pile", dimension: "height" },
+    { source: jokersCss, selector: ".joker-tile", dimension: "width" },
+    { source: jokersCss, selector: ".joker-tile", dimension: "height" },
+    { source: consumablesCss, selector: ".consumable-tile", dimension: "width" },
+    { source: consumablesCss, selector: ".consumable-tile", dimension: "height" },
+  ];
 
-  test(".card consumes var(--card-height)", () => {
-    expect(blockBody(cardCss, ".card")).toMatch(
-      /height:\s*var\(--card-height\)/,
-    );
-  });
-
-  test(".deck-pile consumes var(--card-width)", () => {
-    expect(blockBody(deckPileCss, ".deck-pile")).toMatch(
-      /width:\s*var\(--card-width\)/,
-    );
-  });
-
-  test(".deck-pile consumes var(--card-height)", () => {
-    expect(blockBody(deckPileCss, ".deck-pile")).toMatch(
-      /height:\s*var\(--card-height\)/,
-    );
-  });
-
-  test(".discard-pile consumes var(--card-width)", () => {
-    expect(blockBody(discardPileCss, ".discard-pile")).toMatch(
-      /width:\s*var\(--card-width\)/,
-    );
-  });
-
-  test(".discard-pile consumes var(--card-height)", () => {
-    expect(blockBody(discardPileCss, ".discard-pile")).toMatch(
-      /height:\s*var\(--card-height\)/,
-    );
-  });
-
-  test(".joker-tile consumes var(--card-width)", () => {
-    expect(blockBody(jokersCss, ".joker-tile")).toMatch(
-      /width:\s*var\(--card-width\)/,
-    );
-  });
-
-  test(".joker-tile consumes var(--card-height)", () => {
-    expect(blockBody(jokersCss, ".joker-tile")).toMatch(
-      /height:\s*var\(--card-height\)/,
-    );
-  });
-
-  test(".consumable-tile consumes var(--card-width)", () => {
-    expect(blockBody(consumablesCss, ".consumable-tile")).toMatch(
-      /width:\s*var\(--card-width\)/,
-    );
-  });
-
-  test(".consumable-tile consumes var(--card-height)", () => {
-    expect(blockBody(consumablesCss, ".consumable-tile")).toMatch(
-      /height:\s*var\(--card-height\)/,
-    );
-  });
+  test.each(cardShapedMatrix)(
+    "$selector consumes var(--card-$dimension)",
+    ({ source, selector, dimension }) => {
+      expect(blockBody(source, selector)).toMatch(
+        new RegExp(`${dimension}:\\s*var\\(--card-${dimension}\\)`),
+      );
+    },
+  );
 
   test("no card-shaped element still hard-codes the prior 4.5rem width", () => {
     const all = [

@@ -273,6 +273,22 @@ function pickRandomKindOffer(
   return null;
 }
 
+function pickedIdsFromOffers(
+  offers: ReadonlyArray<ShopItem>,
+): PickedOfferIds {
+  const picked = emptyPickedIds();
+  for (const offer of offers) recordPicked(picked, offer);
+  return picked;
+}
+
+export function pickSingleShopOffer(
+  args: PickShopOffersArgs,
+  existing: ReadonlyArray<ShopItem>,
+): ShopItem | null {
+  const rng = args.rng ?? Math.random;
+  return pickRandomKindOffer(args, rng, pickedIdsFromOffers(existing));
+}
+
 export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
   const rng = args.rng ?? Math.random;
   const totalSlots = SHOP_OFFER_SLOTS + Math.max(0, args.extraSlots ?? 0);

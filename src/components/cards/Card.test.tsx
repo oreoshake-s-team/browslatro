@@ -32,26 +32,14 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-black");
   });
 
-  test("applies the per-suit class for spades", () => {
-    render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-spades");
-  });
-
-  test("applies the per-suit class for hearts", () => {
-    render(<Card card={queenOfHearts} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-hearts");
-  });
-
-  test("applies the per-suit class for diamonds", () => {
-    const fiveOfDiamonds: CardType = { id: 3, rank: "5", suit: "diamonds" };
-    render(<Card card={fiveOfDiamonds} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-diamonds");
-  });
-
-  test("applies the per-suit class for clubs", () => {
-    const sevenOfClubs: CardType = { id: 4, rank: "7", suit: "clubs" };
-    render(<Card card={sevenOfClubs} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-clubs");
+  test.each<{ suit: "spades" | "hearts" | "diamonds" | "clubs"; card: CardType }>([
+    { suit: "spades", card: aceOfSpades },
+    { suit: "hearts", card: queenOfHearts },
+    { suit: "diamonds", card: { id: 3, rank: "5", suit: "diamonds" } },
+    { suit: "clubs", card: { id: 4, rank: "7", suit: "clubs" } },
+  ])("applies the per-suit class for $suit", ({ suit, card }) => {
+    render(<Card card={card} />);
+    expect(screen.getByRole("button")).toHaveClass(`card-suit-${suit}`);
   });
 
   test("does not apply an unrelated suit class", () => {
@@ -199,58 +187,27 @@ describe("Card", () => {
     expect(screen.queryByTestId("steel-scoring-23")).not.toBeInTheDocument();
   });
 
-  test("applies the steel enhancement class when the card is steel", () => {
-    const steel: CardType = { id: 10, rank: "A", suit: "hearts", enhancement: "steel" };
-    render(<Card card={steel} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-steel");
+  test.each<{ enhancement: "steel" | "bonus" | "mult" | "wild" | "glass" | "lucky"; card: CardType }>([
+    { enhancement: "steel", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
+    { enhancement: "bonus", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
+    { enhancement: "mult", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
+    { enhancement: "wild", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
+    { enhancement: "glass", card: { id: 14, rank: "4", suit: "spades", enhancement: "glass" } },
+    { enhancement: "lucky", card: { id: 16, rank: "3", suit: "hearts", enhancement: "lucky" } },
+  ])("applies the $enhancement enhancement class when the card is $enhancement", ({ enhancement, card }) => {
+    render(<Card card={card} />);
+    expect(screen.getByRole("button")).toHaveClass(`card-enhancement-${enhancement}`);
   });
 
-  test("appends the steel suffix to the accessible label", () => {
-    const steel: CardType = { id: 10, rank: "A", suit: "hearts", enhancement: "steel" };
-    render(<Card card={steel} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("A of Hearts (Steel)");
-  });
-
-  test("applies the bonus enhancement class when the card is bonus", () => {
-    const bonus: CardType = { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" };
-    render(<Card card={bonus} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-bonus");
-  });
-
-  test("appends the bonus suffix to the accessible label", () => {
-    const bonus: CardType = { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" };
-    render(<Card card={bonus} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("7 of Clubs (Bonus)");
-  });
-
-  test("applies the mult enhancement class when the card is mult", () => {
-    const mult: CardType = { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" };
-    render(<Card card={mult} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-mult");
-  });
-
-  test("appends the mult suffix to the accessible label", () => {
-    const mult: CardType = { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" };
-    render(<Card card={mult} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("9 of Diamonds (Mult)");
-  });
-
-  test("appends the wild suffix to the accessible label", () => {
-    const wild: CardType = { id: 13, rank: "K", suit: "hearts", enhancement: "wild" };
-    render(<Card card={wild} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("K of Hearts (Wild)");
-  });
-
-  test("applies the wild enhancement class when the card is wild", () => {
-    const wild: CardType = { id: 13, rank: "K", suit: "hearts", enhancement: "wild" };
-    render(<Card card={wild} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-wild");
-  });
-
-  test("applies the glass enhancement class when the card is glass", () => {
-    const glass: CardType = { id: 14, rank: "4", suit: "spades", enhancement: "glass" };
-    render(<Card card={glass} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-glass");
+  test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
+    { enhancement: "steel", accessibleName: "A of Hearts (Steel)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
+    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
+    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
+    { enhancement: "wild", accessibleName: "K of Hearts (Wild)", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
+    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
+  ])("appends the $enhancement suffix to the accessible label", ({ accessibleName, card }) => {
+    render(<Card card={card} />);
+    expect(screen.getByRole("button")).toHaveAccessibleName(accessibleName);
   });
 
   test("applies the stone enhancement class when the card is stone", () => {
@@ -277,53 +234,21 @@ describe("Card", () => {
     expect(container.querySelector(".card-suit")).toBeNull();
   });
 
-  test("applies the lucky enhancement class when the card is lucky", () => {
-    const lucky: CardType = { id: 16, rank: "3", suit: "hearts", enhancement: "lucky" };
-    render(<Card card={lucky} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
-  });
-
-  test("appends the lucky suffix to the accessible label", () => {
-    const lucky: CardType = { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" };
-    render(<Card card={lucky} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("Q of Hearts (Lucky)");
-  });
-
   test("renders a seal badge when the card has a Gold Seal", () => {
     const sealed: CardType = { id: 30, rank: "5", suit: "spades", seal: "gold" };
     render(<Card card={sealed} />);
     expect(screen.getByTestId("card-seal-30")).toBeInTheDocument();
   });
 
-  test("applies the gold seal class to the badge", () => {
-    const sealed: CardType = { id: 31, rank: "5", suit: "spades", seal: "gold" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-31")).toHaveClass(
-      "card-seal-badge-gold",
-    );
-  });
-
-  test("applies the red seal class to the badge", () => {
-    const sealed: CardType = { id: 32, rank: "6", suit: "hearts", seal: "red" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-32")).toHaveClass(
-      "card-seal-badge-red",
-    );
-  });
-
-  test("applies the blue seal class to the badge", () => {
-    const sealed: CardType = { id: 33, rank: "7", suit: "clubs", seal: "blue" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-33")).toHaveClass(
-      "card-seal-badge-blue",
-    );
-  });
-
-  test("applies the purple seal class to the badge", () => {
-    const sealed: CardType = { id: 34, rank: "8", suit: "diamonds", seal: "purple" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-34")).toHaveClass(
-      "card-seal-badge-purple",
+  test.each<{ seal: "gold" | "red" | "blue" | "purple"; card: CardType }>([
+    { seal: "gold", card: { id: 31, rank: "5", suit: "spades", seal: "gold" } },
+    { seal: "red", card: { id: 32, rank: "6", suit: "hearts", seal: "red" } },
+    { seal: "blue", card: { id: 33, rank: "7", suit: "clubs", seal: "blue" } },
+    { seal: "purple", card: { id: 34, rank: "8", suit: "diamonds", seal: "purple" } },
+  ])("applies the $seal seal class to the badge", ({ seal, card }) => {
+    render(<Card card={card} />);
+    expect(screen.getByTestId(`card-seal-${card.id}`)).toHaveClass(
+      `card-seal-badge-${seal}`,
     );
   });
 

@@ -28,29 +28,19 @@ describe("calculateInterest", () => {
     expect(calculateInterest(INTEREST_RATE_PER * 3)).toBe(3);
   });
 
-  test("earns $1 of interest at exactly $5 wallet", () => {
-    expect(calculateInterest(5)).toBe(1);
-  });
-
-  test("earns $2 of interest at exactly $10 wallet", () => {
-    expect(calculateInterest(10)).toBe(2);
-  });
-
-  test("earns $3 of interest at exactly $15 wallet", () => {
-    expect(calculateInterest(15)).toBe(3);
-  });
-
-  test("earns $4 of interest at exactly $20 wallet", () => {
-    expect(calculateInterest(20)).toBe(4);
-  });
-
-  test("earns $1 of interest at $9 wallet (rounds down, does not reach $10 tier)", () => {
-    expect(calculateInterest(9)).toBe(1);
-  });
-
-  test("earns $2 of interest at $14 wallet (rounds down, does not reach $15 tier)", () => {
-    expect(calculateInterest(14)).toBe(2);
-  });
+  test.each([
+    { wallet: 5, expected: 1 },
+    { wallet: 10, expected: 2 },
+    { wallet: 15, expected: 3 },
+    { wallet: 20, expected: 4 },
+    { wallet: 9, expected: 1 },
+    { wallet: 14, expected: 2 },
+  ])(
+    "earns $$$expected of interest at $$$wallet wallet",
+    ({ wallet, expected }) => {
+      expect(calculateInterest(wallet)).toBe(expected);
+    },
+  );
 
   test("pays exactly INTEREST_CAP when wallet equals the cap threshold", () => {
     expect(calculateInterest(INTEREST_RATE_PER * INTEREST_CAP)).toBe(
@@ -66,14 +56,6 @@ describe("calculateInterest", () => {
 
   test("treats a negative wallet as 0 interest", () => {
     expect(calculateInterest(-10)).toBe(0);
-  });
-
-  test("INTEREST_RATE_PER is defined as 5", () => {
-    expect(INTEREST_RATE_PER).toBe(5);
-  });
-
-  test("INTEREST_CAP is defined as 5", () => {
-    expect(INTEREST_CAP).toBe(5);
   });
 });
 
