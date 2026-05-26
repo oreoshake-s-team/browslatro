@@ -4,6 +4,7 @@ import {
   GOLD_HELD_BONUS_PER_CARD,
   INTEREST_CAP,
   INTEREST_RATE_PER,
+  REMAINING_HAND_BONUS,
 } from "../../payout";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
@@ -14,6 +15,7 @@ export interface RoundWonInfo {
   readonly walletAtPayout: number;
   readonly interest: number;
   readonly goldHeldCount: number;
+  readonly remainingHandsCount: number;
 }
 
 interface RoundWonModalProps {
@@ -29,12 +31,15 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     walletAtPayout,
     interest,
     goldHeldCount,
+    remainingHandsCount,
   } = info;
   const beatBy = roundScore - requiredScore;
   const goldBonus = goldHeldCount * GOLD_HELD_BONUS_PER_CARD;
-  const total = baseReward + interest + goldBonus;
+  const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
+  const total = baseReward + interest + goldBonus + remainingHandsBonus;
   const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${walletAtPayout}`;
   const goldLabel = `Gold cards (${goldHeldCount} × $${GOLD_HELD_BONUS_PER_CARD})`;
+  const handsLabel = `Remaining hands (${remainingHandsCount} × $${REMAINING_HAND_BONUS})`;
   useEscapeToClose(onContinue, true);
 
   return createPortal(
@@ -76,6 +81,12 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
               <div className="round-won-payout-row">
                 <dt data-testid="round-won-gold-label">{goldLabel}</dt>
                 <dd data-testid="round-won-gold">+${goldBonus}</dd>
+              </div>
+            )}
+            {remainingHandsCount > 0 && (
+              <div className="round-won-payout-row">
+                <dt data-testid="round-won-hands-label">{handsLabel}</dt>
+                <dd data-testid="round-won-hands">+${remainingHandsBonus}</dd>
               </div>
             )}
             <div className="round-won-payout-row">
