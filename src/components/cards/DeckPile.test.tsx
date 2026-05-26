@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DeckPile from "./DeckPile";
 import { createDeck as createGoldDeck } from "../../cards/deck";
@@ -155,11 +155,15 @@ describe("DeckPile consumable drop zone", () => {
     type: "dragover" | "drop",
     mimes: ReadonlyArray<string>,
   ): boolean {
-    const event = new Event(type, { bubbles: true, cancelable: true });
-    Object.defineProperty(event, "dataTransfer", {
-      value: { types: mimes, dropEffect: "" },
+    let result = false;
+    act(() => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "dataTransfer", {
+        value: { types: mimes, dropEffect: "" },
+      });
+      result = target.dispatchEvent(event);
     });
-    return target.dispatchEvent(event);
+    return result;
   }
 
   test("pile invokes onConsumableDrop when a consumable is dropped on it", () => {
@@ -238,11 +242,15 @@ describe("DeckPile joker drop zone", () => {
     type: "dragover" | "drop",
     mimes: ReadonlyArray<string>,
   ): boolean {
-    const event = new Event(type, { bubbles: true, cancelable: true });
-    Object.defineProperty(event, "dataTransfer", {
-      value: { types: mimes, dropEffect: "" },
+    let result = false;
+    act(() => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "dataTransfer", {
+        value: { types: mimes, dropEffect: "" },
+      });
+      result = target.dispatchEvent(event);
     });
-    return target.dispatchEvent(event);
+    return result;
   }
 
   test("pile invokes onJokerDrop when a joker is dropped on it", () => {

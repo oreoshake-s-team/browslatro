@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import Jokers from "./Jokers";
 import {
   MAX_JOKERS,
@@ -294,11 +294,15 @@ describe("Jokers consumable drop zone", () => {
     type: "dragover" | "drop",
     mimes: ReadonlyArray<string>,
   ): boolean {
-    const event = new Event(type, { bubbles: true, cancelable: true });
-    Object.defineProperty(event, "dataTransfer", {
-      value: { types: mimes, dropEffect: "" },
+    let result = false;
+    act(() => {
+      const event = new Event(type, { bubbles: true, cancelable: true });
+      Object.defineProperty(event, "dataTransfer", {
+        value: { types: mimes, dropEffect: "" },
+      });
+      result = target.dispatchEvent(event);
     });
-    return target.dispatchEvent(event);
+    return result;
   }
 
   test("section accepts a consumable drop and invokes onConsumableDrop", () => {
@@ -436,11 +440,13 @@ describe("Jokers sell", () => {
     const setData = vi.fn();
     render(<Jokers jokers={filled} onSell={() => {}} />);
     const tile = screen.getByTestId("joker-tile-filled-business-card");
-    const event = new Event("dragstart", { bubbles: true });
-    Object.defineProperty(event, "dataTransfer", {
-      value: { setData, effectAllowed: "" },
+    act(() => {
+      const event = new Event("dragstart", { bubbles: true });
+      Object.defineProperty(event, "dataTransfer", {
+        value: { setData, effectAllowed: "" },
+      });
+      tile.dispatchEvent(event);
     });
-    tile.dispatchEvent(event);
     expect(setData).toHaveBeenCalledWith(
       "application/x-browslatro-joker",
       "1",
@@ -451,11 +457,13 @@ describe("Jokers sell", () => {
     const onDragStart = vi.fn();
     render(<Jokers jokers={filled} onSell={() => {}} onDragStart={onDragStart} />);
     const tile = screen.getByTestId("joker-tile-filled-business-card");
-    const event = new Event("dragstart", { bubbles: true });
-    Object.defineProperty(event, "dataTransfer", {
-      value: { setData: vi.fn(), effectAllowed: "" },
+    act(() => {
+      const event = new Event("dragstart", { bubbles: true });
+      Object.defineProperty(event, "dataTransfer", {
+        value: { setData: vi.fn(), effectAllowed: "" },
+      });
+      tile.dispatchEvent(event);
     });
-    tile.dispatchEvent(event);
     expect(onDragStart).toHaveBeenCalledWith(1);
   });
 
