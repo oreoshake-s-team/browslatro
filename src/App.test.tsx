@@ -14,6 +14,7 @@ import {
   createPlusFourMultJoker,
   initialJokersConfig,
 } from "./items/jokers";
+import { chanceOverrideConfig } from "./dev/chanceOverride";
 import {
   dismissBlindSelect,
   dragCardToGap,
@@ -2971,5 +2972,55 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       document.querySelector(".round-score-value")?.textContent ?? "0",
     );
     expect(withDev).toBe(baseline * 2);
+  });
+});
+
+describe("Apply Modifiers — Force Probabilities toggle (#354)", () => {
+  test("renders a Force Probabilities button labelled 'On' by default", () => {
+    render(<App />);
+    expect(
+      screen.getByRole("button", { name: /Force Probabilities On/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("the button defaults to aria-pressed=false", () => {
+    render(<App />);
+    expect(
+      screen.getByRole("button", { name: /Force Probabilities/ }),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("clicking the button flips aria-pressed to true", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Force Probabilities/ }));
+    expect(
+      screen.getByRole("button", { name: /Force Probabilities/ }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("clicking the button updates the global chance override", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Force Probabilities/ }));
+    expect(chanceOverrideConfig.force100).toBe(true);
+  });
+
+  test("clicking the button twice toggles the override back off", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Force Probabilities/ }));
+    await user.click(screen.getByRole("button", { name: /Force Probabilities/ }));
+    expect(chanceOverrideConfig.force100).toBe(false);
+  });
+
+  test("starting a new game resets the toggle and the override", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Force Probabilities/ }));
+    expect(chanceOverrideConfig.force100).toBe(true);
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    expect(chanceOverrideConfig.force100).toBe(false);
   });
 });

@@ -19,6 +19,7 @@ import {
   isStoneCard,
   rollEnhancementChance,
 } from "./enhancements";
+import { chanceOverrideConfig } from "../dev/chanceOverride";
 import type { Card, Enhancement } from "./types";
 
 function makeCard(enhancement?: Enhancement | null): Card {
@@ -161,6 +162,52 @@ describe("rollEnhancementChance", () => {
   test("returns false when the rng exceeds the threshold", () => {
     enhancementRngConfig.rng = () => 0.5;
     expect(rollEnhancementChance(0.25)).toBe(false);
+  });
+
+  test("force100 override turns a missed in-range roll into a hit (#354)", () => {
+    enhancementRngConfig.rng = () => 0.99;
+    chanceOverrideConfig.force100 = true;
+    try {
+      expect(rollEnhancementChance(0.25)).toBe(true);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
+  });
+
+  test("force100 override still resolves chance=0 to false (#354)", () => {
+    enhancementRngConfig.rng = () => 0;
+    chanceOverrideConfig.force100 = true;
+    try {
+      expect(rollEnhancementChance(0)).toBe(false);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
+  });
+
+  test("force100 override makes applyLuckyRolls always award both bonuses on a Lucky card (#354)", () => {
+    enhancementRngConfig.rng = () => 0.999;
+    chanceOverrideConfig.force100 = true;
+    try {
+      const lucky: Card = { id: 99, rank: "Q", suit: "spades", enhancement: "lucky" };
+      const result = applyLuckyRolls(lucky);
+      expect(result.multBonus).toBe(LUCKY_ENHANCEMENT_MULT_AMOUNT);
+      expect(result.moneyBonus).toBe(LUCKY_ENHANCEMENT_MONEY_AMOUNT);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
+  });
+
+  test("force100 override does NOT fire applyLuckyRolls on a non-Lucky card (#354)", () => {
+    enhancementRngConfig.rng = () => 0;
+    chanceOverrideConfig.force100 = true;
+    try {
+      const plain: Card = { id: 100, rank: "Q", suit: "spades" };
+      const result = applyLuckyRolls(plain);
+      expect(result.multBonus).toBe(0);
+      expect(result.moneyBonus).toBe(0);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
   });
 });
 

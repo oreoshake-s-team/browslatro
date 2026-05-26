@@ -3,6 +3,7 @@ import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
 import { JOKER_BASE_PRICE } from "../constants";
+import { rollChance } from "../dev/chanceOverride";
 import { PLANET_BASE_PRICE } from "./planets";
 import { SPECTRAL_BASE_PRICE } from "./spectrals";
 import { TAROT_BASE_PRICE } from "./tarots";
@@ -260,7 +261,7 @@ function pickRandomKindOffer(
   rng: RandomSource,
   picked: PickedOfferIds,
 ): ShopItem | null {
-  if (rng() < SPECTRAL_OFFER_CHANCE) {
+  if (rollChance(SPECTRAL_OFFER_CHANCE, rng)) {
     const spectral = pickOfferByKind("spectral", args, rng, picked);
     if (spectral) return spectral;
   }

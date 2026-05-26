@@ -42,6 +42,7 @@ import {
   isFaceCard,
   type Joker,
 } from "./jokers";
+import { chanceOverrideConfig } from "../dev/chanceOverride";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { Card, Rank, Suit } from "../cards/types";
 
@@ -238,6 +239,34 @@ describe("applyPerCardJokers", () => {
   test("does not fire +4 Mult during a per-card pass", () => {
     const result = applyPerCardJokers([createPlusFourMultJoker()], card("J"));
     expect(result.firedJokerIds).toEqual([]);
+  });
+
+  test("force100 override fires Business Card on a face card even when the roll would miss (#354)", () => {
+    chanceOverrideConfig.force100 = true;
+    try {
+      const result = applyPerCardJokers(
+        [createBusinessCardJoker()],
+        card("K"),
+        () => 0.99,
+      );
+      expect(result.firedJokerIds).toEqual(["business-card"]);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
+  });
+
+  test("force100 override does NOT fire Business Card on a non-face card (#354)", () => {
+    chanceOverrideConfig.force100 = true;
+    try {
+      const result = applyPerCardJokers(
+        [createBusinessCardJoker()],
+        card("5"),
+        () => 0,
+      );
+      expect(result.firedJokerIds).toEqual([]);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
   });
 });
 

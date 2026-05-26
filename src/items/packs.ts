@@ -6,6 +6,7 @@ import type { Card, Enhancement } from "../cards/types";
 import { ENHANCEMENT_KINDS } from "../cards/enhancements";
 import { SEAL_KINDS } from "../cards/seals";
 import { RANKS, SUITS, nextCardId } from "../cards/deck";
+import { rollChance } from "../dev/chanceOverride";
 
 export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral" | "standard";
 
@@ -167,16 +168,14 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
 export function rollStandardCard(rng: RandomSource): Card {
   const rank = RANKS[Math.floor(rng() * RANKS.length)];
   const suit = SUITS[Math.floor(rng() * SUITS.length)];
-  const enhancement =
-    rng() < STANDARD_ENHANCEMENT_CHANCE
-      ? STANDARD_ENHANCEMENT_POOL[
-          Math.floor(rng() * STANDARD_ENHANCEMENT_POOL.length)
-        ]
-      : undefined;
-  const seal =
-    rng() < STANDARD_SEAL_CHANCE
-      ? SEAL_KINDS[Math.floor(rng() * SEAL_KINDS.length)]
-      : undefined;
+  const enhancement = rollChance(STANDARD_ENHANCEMENT_CHANCE, rng)
+    ? STANDARD_ENHANCEMENT_POOL[
+        Math.floor(rng() * STANDARD_ENHANCEMENT_POOL.length)
+      ]
+    : undefined;
+  const seal = rollChance(STANDARD_SEAL_CHANCE, rng)
+    ? SEAL_KINDS[Math.floor(rng() * SEAL_KINDS.length)]
+    : undefined;
   return {
     id: nextCardId(),
     rank,

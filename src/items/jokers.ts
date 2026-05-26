@@ -1,4 +1,5 @@
 import type { Card, Rank, Suit } from "../cards/types";
+import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
 import { JOKER_BASE_PRICE } from "../constants";
 
@@ -731,7 +732,7 @@ export function applyPerCardJokers(
     const effect = joker.effect;
     switch (effect.kind) {
       case "business-card": {
-        if (isFaceCard(card) && rng() < effect.chance) {
+        if (isFaceCard(card) && rollChance(effect.chance, rng)) {
           moneyEarned += effect.payout;
           fired.push(joker.id);
           steps.push({

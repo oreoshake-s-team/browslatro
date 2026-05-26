@@ -51,6 +51,8 @@ interface GameProps {
   onGrowPackSlots?: () => void;
   onShrinkVoucherSlots?: () => void;
   onGrowVoucherSlots?: () => void;
+  forceProbabilities?: boolean;
+  onToggleForceProbabilities?: () => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -101,6 +103,8 @@ export default function Game({
   onGrowPackSlots,
   onShrinkVoucherSlots,
   onGrowVoucherSlots,
+  forceProbabilities = false,
+  onToggleForceProbabilities,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -240,6 +244,16 @@ export default function Game({
               onClick={onGrowVoucherSlots}
             >
               🎫 Vouchers +1
+            </button>
+          )}
+          {onToggleForceProbabilities && (
+            <button
+              type="button"
+              className="force-probabilities-button"
+              onClick={onToggleForceProbabilities}
+              aria-pressed={forceProbabilities}
+            >
+              🎲 Force Probabilities {forceProbabilities ? "Off" : "On"}
             </button>
           )}
         </div>

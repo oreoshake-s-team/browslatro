@@ -10,6 +10,7 @@ import {
   rollWheelOfFortune,
   type TarotCard,
 } from "./tarots";
+import { chanceOverrideConfig } from "../dev/chanceOverride";
 import {
   JOKER_EDITION_KINDS,
   createBusinessCardJoker,
@@ -236,5 +237,15 @@ describe("rollWheelOfFortune", () => {
   test("edition picks the last kind when the edition-roll lands at 0.99", () => {
     const result = rollWheelOfFortune(jokers, 0.25, fixedRng([0, 0, 0.99]));
     expect(result.edition).toBe(JOKER_EDITION_KINDS[JOKER_EDITION_KINDS.length - 1]);
+  });
+
+  test("force100 override turns a missed roll into a hit (#354)", () => {
+    chanceOverrideConfig.force100 = true;
+    try {
+      const result = rollWheelOfFortune(jokers, 0.25, fixedRng([0.99, 0, 0]));
+      expect(result.hit).toBe(true);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
   });
 });
