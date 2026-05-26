@@ -95,35 +95,62 @@ export interface PickShopOffersArgs {
 type ShopOfferKind = ShopItem["kind"];
 const SHOP_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = ["joker", "planet", "tarot"];
 
+interface PickedOfferIds {
+  readonly joker: ReadonlySet<string>;
+  readonly planet: ReadonlySet<string>;
+  readonly tarot: ReadonlySet<string>;
+}
+
+function emptyPickedIds(): PickedOfferIds {
+  return { joker: new Set(), planet: new Set(), tarot: new Set() };
+}
+
 function pickOfferByKind(
   kind: ShopOfferKind,
   args: PickShopOffersArgs,
   rng: RandomSource,
+  picked: PickedOfferIds,
 ): ShopItem | null {
   switch (kind) {
     case "joker": {
-      const next = pickRandom(args.jokerCatalog, args.excludedJokerIds, rng);
+      const excluded = [...args.excludedJokerIds, ...picked.joker];
+      const next = pickRandom(args.jokerCatalog, excluded, rng);
       return next ? jokerOffer(next) : null;
     }
     case "planet": {
-      const next = pickRandom(args.planetCatalog, [], rng);
+      const next = pickRandom(args.planetCatalog, [...picked.planet], rng);
       return next ? planetOffer(next) : null;
     }
     case "tarot": {
-      const next = pickRandom(args.tarotCatalog, [], rng);
+      const next = pickRandom(args.tarotCatalog, [...picked.tarot], rng);
       return next ? tarotOffer(next) : null;
     }
+  }
+}
+
+function recordPicked(picked: PickedOfferIds, offer: ShopItem): void {
+  switch (offer.kind) {
+    case "joker":
+      (picked.joker as Set<string>).add(offer.joker.id);
+      return;
+    case "planet":
+      (picked.planet as Set<string>).add(offer.planet.id);
+      return;
+    case "tarot":
+      (picked.tarot as Set<string>).add(offer.tarot.id);
+      return;
   }
 }
 
 function pickRandomKindOffer(
   args: PickShopOffersArgs,
   rng: RandomSource,
+  picked: PickedOfferIds,
 ): ShopItem | null {
   const start = Math.floor(rng() * SHOP_OFFER_KINDS.length);
   for (let i = 0; i < SHOP_OFFER_KINDS.length; i += 1) {
     const kind = SHOP_OFFER_KINDS[(start + i) % SHOP_OFFER_KINDS.length];
-    const offer = pickOfferByKind(kind, args, rng);
+    const offer = pickOfferByKind(kind, args, rng, picked);
     if (offer) return offer;
   }
   return null;
@@ -133,16 +160,22 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
   const rng = args.rng ?? Math.random;
   const totalSlots = SHOP_OFFER_SLOTS + Math.max(0, args.extraSlots ?? 0);
   const slots: ShopItem[] = [];
+  const picked = emptyPickedIds();
   for (let i = 0; i < totalSlots; i += 1) {
-    const offer = pickRandomKindOffer(args, rng);
-    if (offer) slots.push(offer);
+    const offer = pickRandomKindOffer(args, rng, picked);
+    if (offer) {
+      recordPicked(picked, offer);
+      slots.push(offer);
+    }
   }
   return slots;
 }
 
 export function rerollShopOffer(
-  _current: ShopItem,
+  current: ShopItem,
   args: PickShopOffersArgs,
 ): ShopItem | null {
-  return pickRandomKindOffer(args, args.rng ?? Math.random);
+  const picked = emptyPickedIds();
+  recordPicked(picked, current);
+  return pickRandomKindOffer(args, args.rng ?? Math.random, picked);
 }
