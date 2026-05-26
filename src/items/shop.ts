@@ -296,6 +296,7 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
           planetCatalog: args.planetCatalog,
           tarotCatalog: args.tarotCatalog,
           jokerCatalog: args.jokerCatalog,
+          spectralCatalog: args.spectralCatalog,
           excludedJokerIds: args.excludedJokerIds,
           rng,
         }),

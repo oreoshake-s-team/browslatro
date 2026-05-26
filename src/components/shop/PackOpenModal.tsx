@@ -57,6 +57,16 @@ function describeOption(option: PackOption): OptionView | null {
       needsJokerSlot: true,
     };
   }
+  if (option.kind === "spectral") {
+    return {
+      id: option.spectral.id,
+      icon: "👻",
+      name: option.spectral.name,
+      description: option.spectral.description,
+      needsConsumableSlot: true,
+      needsJokerSlot: false,
+    };
+  }
   return null;
 }
 

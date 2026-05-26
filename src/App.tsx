@@ -603,6 +603,12 @@ function App() {
       if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
       play("pop");
       setJokers((prev) => [...prev, option.joker]);
+    } else if (option.kind === "spectral") {
+      if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+      play("pop");
+      setConsumables((prev) =>
+        addConsumable(prev, { kind: "spectral", card: option.spectral }, consumableCapacity),
+      );
     } else {
       return;
     }
