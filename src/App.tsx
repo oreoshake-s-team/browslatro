@@ -562,6 +562,10 @@ function App() {
       setConsumables((prev) =>
         addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
       );
+    } else if (option.kind === "joker") {
+      if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
+      play("pop");
+      setJokers((prev) => [...prev, option.joker]);
     } else {
       return;
     }
@@ -1312,6 +1316,7 @@ function App() {
           pack={openedPack}
           picksRemaining={packPicksRemaining}
           consumableSlotsFull={!hasFreeConsumableSlot(consumables, consumableCapacity)}
+          jokerSlotsFull={effectiveJokerCount(jokers) >= MAX_JOKERS}
           onPick={pickFromOpenedPack}
           onClose={closeOpenedPack}
         />
