@@ -40,7 +40,9 @@ import {
   createZanyJoker,
   initialJokersConfig,
   isFaceCard,
+  type Joker,
 } from "./jokers";
+import type { HandLabel } from "../scoring/handEvaluator";
 import type { Card, Rank, Suit } from "../cards/types";
 
 let nextId = 0;
@@ -337,43 +339,17 @@ describe("computeFinalScoreWithJokers", () => {
 });
 
 describe("Hand-type Mult joker factories", () => {
-  test("Jolly Joker requires a Pair and uses JOLLY_JOKER_MULT", () => {
-    expect(createJollyJoker().effect).toEqual({
+  test.each<{ name: string; requires: HandLabel; amount: number; factory: () => Joker }>([
+    { name: "Jolly", requires: "Pair", amount: JOLLY_JOKER_MULT, factory: createJollyJoker },
+    { name: "Zany", requires: "Three of a Kind", amount: ZANY_JOKER_MULT, factory: createZanyJoker },
+    { name: "Mad", requires: "Two Pair", amount: MAD_JOKER_MULT, factory: createMadJoker },
+    { name: "Crazy", requires: "Straight", amount: CRAZY_JOKER_MULT, factory: createCrazyJoker },
+    { name: "Droll", requires: "Flush", amount: DROLL_JOKER_MULT, factory: createDrollJoker },
+  ])("$name Joker requires $requires and uses the matching mult constant", ({ requires, amount, factory }) => {
+    expect(factory().effect).toEqual({
       kind: "on-hand-type-mult",
-      requires: "Pair",
-      amount: JOLLY_JOKER_MULT,
-    });
-  });
-
-  test("Zany Joker requires Three of a Kind and uses ZANY_JOKER_MULT", () => {
-    expect(createZanyJoker().effect).toEqual({
-      kind: "on-hand-type-mult",
-      requires: "Three of a Kind",
-      amount: ZANY_JOKER_MULT,
-    });
-  });
-
-  test("Mad Joker requires Two Pair and uses MAD_JOKER_MULT", () => {
-    expect(createMadJoker().effect).toEqual({
-      kind: "on-hand-type-mult",
-      requires: "Two Pair",
-      amount: MAD_JOKER_MULT,
-    });
-  });
-
-  test("Crazy Joker requires a Straight and uses CRAZY_JOKER_MULT", () => {
-    expect(createCrazyJoker().effect).toEqual({
-      kind: "on-hand-type-mult",
-      requires: "Straight",
-      amount: CRAZY_JOKER_MULT,
-    });
-  });
-
-  test("Droll Joker requires a Flush and uses DROLL_JOKER_MULT", () => {
-    expect(createDrollJoker().effect).toEqual({
-      kind: "on-hand-type-mult",
-      requires: "Flush",
-      amount: DROLL_JOKER_MULT,
+      requires,
+      amount,
     });
   });
 });
@@ -450,43 +426,17 @@ describe("Stencil composition with prior mult (issue #131)", () => {
 });
 
 describe("Hand-type Chips joker factories", () => {
-  test("Sly Joker requires a Pair and uses SLY_JOKER_CHIPS", () => {
-    expect(createSlyJoker().effect).toEqual({
+  test.each<{ name: string; requires: HandLabel; amount: number; factory: () => Joker }>([
+    { name: "Sly", requires: "Pair", amount: SLY_JOKER_CHIPS, factory: createSlyJoker },
+    { name: "Wily", requires: "Three of a Kind", amount: WILY_JOKER_CHIPS, factory: createWilyJoker },
+    { name: "Clever", requires: "Two Pair", amount: CLEVER_JOKER_CHIPS, factory: createCleverJoker },
+    { name: "Devious", requires: "Straight", amount: DEVIOUS_JOKER_CHIPS, factory: createDeviousJoker },
+    { name: "Crafty", requires: "Flush", amount: CRAFTY_JOKER_CHIPS, factory: createCraftyJoker },
+  ])("$name Joker requires $requires and uses the matching chips constant", ({ requires, amount, factory }) => {
+    expect(factory().effect).toEqual({
       kind: "on-hand-type-chips",
-      requires: "Pair",
-      amount: SLY_JOKER_CHIPS,
-    });
-  });
-
-  test("Wily Joker requires Three of a Kind and uses WILY_JOKER_CHIPS", () => {
-    expect(createWilyJoker().effect).toEqual({
-      kind: "on-hand-type-chips",
-      requires: "Three of a Kind",
-      amount: WILY_JOKER_CHIPS,
-    });
-  });
-
-  test("Clever Joker requires Two Pair and uses CLEVER_JOKER_CHIPS", () => {
-    expect(createCleverJoker().effect).toEqual({
-      kind: "on-hand-type-chips",
-      requires: "Two Pair",
-      amount: CLEVER_JOKER_CHIPS,
-    });
-  });
-
-  test("Devious Joker requires a Straight and uses DEVIOUS_JOKER_CHIPS", () => {
-    expect(createDeviousJoker().effect).toEqual({
-      kind: "on-hand-type-chips",
-      requires: "Straight",
-      amount: DEVIOUS_JOKER_CHIPS,
-    });
-  });
-
-  test("Crafty Joker requires a Flush and uses CRAFTY_JOKER_CHIPS", () => {
-    expect(createCraftyJoker().effect).toEqual({
-      kind: "on-hand-type-chips",
-      requires: "Flush",
-      amount: CRAFTY_JOKER_CHIPS,
+      requires,
+      amount,
     });
   });
 });
@@ -514,32 +464,22 @@ describe("computeFinalScoreWithJokers — additive chips applied before mult", (
 });
 
 describe("RANK_PARITY", () => {
-  test("classifies Ace as odd (Balatro canon)", () => {
-    expect(RANK_PARITY.A).toBe("odd");
-  });
-
-  test("classifies 4 as even", () => {
-    expect(RANK_PARITY["4"]).toBe("even");
-  });
-
-  test("classifies Jack as face (neither parity)", () => {
-    expect(RANK_PARITY.J).toBe("face");
+  test.each<{ rank: keyof typeof RANK_PARITY; parity: "odd" | "even" | "face" }>([
+    { rank: "A", parity: "odd" },
+    { rank: "4", parity: "even" },
+    { rank: "J", parity: "face" },
+  ])("classifies $rank as $parity", ({ rank, parity }) => {
+    expect(RANK_PARITY[rank]).toBe(parity);
   });
 });
 
 describe("Face joker catalog membership", () => {
-  test("Scary Face appears in the joker catalog", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Scary Face", id: "scary-face" },
+    { name: "Smiley Face", id: "smiley-face" },
+    { name: "Photograph", id: "photograph" },
+  ])("$name appears in the joker catalog", ({ id }) => {
     const ids = createJokerCatalog().map((j) => j.id);
-    expect(ids).toContain("scary-face");
-  });
-
-  test("Smiley Face appears in the joker catalog", () => {
-    const ids = createJokerCatalog().map((j) => j.id);
-    expect(ids).toContain("smiley-face");
-  });
-
-  test("Photograph appears in the joker catalog", () => {
-    const ids = createJokerCatalog().map((j) => j.id);
-    expect(ids).toContain("photograph");
+    expect(ids).toContain(id);
   });
 });
