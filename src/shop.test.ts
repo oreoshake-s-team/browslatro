@@ -6,7 +6,9 @@ import {
   type Joker,
   type RandomSource,
 } from "./jokers";
-import { createPlanetCatalog } from "./planets";
+import { availablePlanets, createPlanetCatalog } from "./planets";
+import type { HandLabel } from "./handEvaluator";
+import { HANDS } from "./constants";
 import { createTarotCatalog } from "./tarots";
 import {
   BASE_REROLL_COST,
@@ -317,5 +319,74 @@ describe("rerollShopOffer — never returns the same item", () => {
       }
     }
     expect(collidedAtSeed).toBeNull();
+  });
+});
+
+function emptyHandCounts(): Readonly<Record<HandLabel, number>> {
+  const counts = {} as Record<HandLabel, number>;
+  for (const hand of HANDS) {
+    counts[hand.label as HandLabel] = 0;
+  }
+  return counts;
+}
+
+const SECRET_PLANET_IDS: ReadonlyArray<string> = ["planet-x", "ceres", "eris"];
+
+describe("pickShopOffers — secret planet gating via availablePlanets", () => {
+  test("never offers Planet X / Ceres / Eris with empty handPlayCounts across many seeds", () => {
+    const counts = emptyHandCounts();
+    const filtered = availablePlanets(createPlanetCatalog(), counts);
+    for (let seed = 1; seed <= 50; seed += 1) {
+      const offers = pickShopOffers({
+        ...baseArgs(mulberry32(seed)),
+        planetCatalog: filtered,
+        extraSlots: 4,
+      });
+      for (const offer of offers) {
+        if (offer.kind === "planet") {
+          expect(SECRET_PLANET_IDS).not.toContain(offer.planet.id);
+        }
+      }
+    }
+  });
+
+  test("Planet X becomes reachable after Five of a Kind is unlocked", () => {
+    const filtered = availablePlanets(
+      createPlanetCatalog(),
+      { ...emptyHandCounts(), "Five of a Kind": 1 },
+    );
+    let saw = false;
+    for (let seed = 1; seed <= 200 && !saw; seed += 1) {
+      const offers = pickShopOffers({
+        ...baseArgs(mulberry32(seed)),
+        planetCatalog: filtered,
+        extraSlots: 4,
+      });
+      if (offers.some((o) => o.kind === "planet" && o.planet.id === "planet-x")) {
+        saw = true;
+      }
+    }
+    expect(saw).toBe(true);
+  });
+});
+
+describe("rerollShopOffer — secret planet gating via availablePlanets", () => {
+  test("never rerolls into Planet X / Ceres / Eris with empty handPlayCounts", () => {
+    const filtered = availablePlanets(createPlanetCatalog(), emptyHandCounts());
+    const original: ShopItem = {
+      kind: "joker",
+      joker: createPlusFourMultJoker(),
+      price: 5,
+      sold: false,
+    };
+    for (let seed = 1; seed <= 50; seed += 1) {
+      const next = rerollShopOffer(original, {
+        ...baseArgs(mulberry32(seed)),
+        planetCatalog: filtered,
+      });
+      if (next && next.kind === "planet") {
+        expect(SECRET_PLANET_IDS).not.toContain(next.planet.id);
+      }
+    }
   });
 });

@@ -10,6 +10,7 @@ export interface PlanetCard {
   readonly hands: ReadonlyArray<HandLabel>;
   readonly chipsDelta: number;
   readonly multDelta: number;
+  readonly hiddenUntilPlayed?: HandLabel;
 }
 
 type PlanetSpec = Omit<PlanetCard, "description">;
@@ -24,9 +25,30 @@ const PLANET_SPECS: ReadonlyArray<PlanetSpec> = [
   { id: "earth", name: "Earth", hands: ["Full House"], chipsDelta: 25, multDelta: 2 },
   { id: "mars", name: "Mars", hands: ["Four of a Kind"], chipsDelta: 30, multDelta: 3 },
   { id: "neptune", name: "Neptune", hands: ["Straight Flush", "Royal Flush"], chipsDelta: 40, multDelta: 4 },
-  { id: "planet-x", name: "Planet X", hands: ["Five of a Kind"], chipsDelta: 35, multDelta: 3 },
-  { id: "ceres", name: "Ceres", hands: ["Flush House"], chipsDelta: 40, multDelta: 4 },
-  { id: "eris", name: "Eris", hands: ["Flush Five"], chipsDelta: 50, multDelta: 3 },
+  {
+    id: "planet-x",
+    name: "Planet X",
+    hands: ["Five of a Kind"],
+    chipsDelta: 35,
+    multDelta: 3,
+    hiddenUntilPlayed: "Five of a Kind",
+  },
+  {
+    id: "ceres",
+    name: "Ceres",
+    hands: ["Flush House"],
+    chipsDelta: 40,
+    multDelta: 4,
+    hiddenUntilPlayed: "Flush House",
+  },
+  {
+    id: "eris",
+    name: "Eris",
+    hands: ["Flush Five"],
+    chipsDelta: 50,
+    multDelta: 3,
+    hiddenUntilPlayed: "Flush Five",
+  },
 ];
 
 function buildPlanet(spec: PlanetSpec): PlanetCard {
@@ -39,6 +61,16 @@ function buildPlanet(spec: PlanetSpec): PlanetCard {
 
 export function createPlanetCatalog(): PlanetCard[] {
   return PLANET_SPECS.map(buildPlanet);
+}
+
+export function availablePlanets(
+  catalog: ReadonlyArray<PlanetCard>,
+  handPlayCounts: Readonly<Record<HandLabel, number>>,
+): PlanetCard[] {
+  return catalog.filter((planet) => {
+    if (planet.hiddenUntilPlayed === undefined) return true;
+    return (handPlayCounts[planet.hiddenUntilPlayed] ?? 0) >= 1;
+  });
 }
 
 export function applyPlanetUpgrade(

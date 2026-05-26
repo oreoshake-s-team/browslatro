@@ -5,7 +5,7 @@ import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
-import { applyPlanetUpgrade, createPlanetCatalog } from "./planets";
+import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./planets";
 import { createTarotCatalog, resolveHermitPayout } from "./tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -375,7 +375,7 @@ function App() {
       pickShopOffers({
         jokerCatalog: createJokerCatalog(),
         excludedJokerIds: jokers.map((j) => j.id),
-        planetCatalog: createPlanetCatalog(),
+        planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
         tarotCatalog: createTarotCatalog(),
         extraSlots: extraShopOfferSlots(ownedVoucherIds),
         rng: shopPickerRngConfig.rng,
@@ -481,7 +481,7 @@ function App() {
     const args = {
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds,
-      planetCatalog: createPlanetCatalog(),
+      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
       tarotCatalog: createTarotCatalog(),
       rng: shopPickerRngConfig.rng,
     };
