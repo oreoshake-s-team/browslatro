@@ -2147,15 +2147,15 @@ describe("Voucher integration", () => {
   test("buying the voucher deducts its cost from money", async () => {
     const user = await openShop();
     const before = moneyValue();
-    const buy = screen.getByTestId("shop-voucher-buy");
+    const buy = screen.getByTestId("shop-voucher-buy-0");
     await user.click(buy);
     expect(moneyValue()).toBe(before - 10);
   });
 
   test("buying the voucher marks the voucher slot as Sold", async () => {
     const user = await openShop();
-    await user.click(screen.getByTestId("shop-voucher-buy"));
-    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
   });
 
   test("clicking Reroll does not change the voucher's name", async () => {
@@ -2171,14 +2171,14 @@ describe("Voucher integration", () => {
 
   test("clicking Reroll does not clear the voucher Sold state", async () => {
     const user = await openShop();
-    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+    expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
   });
 
   test("the voucher remains Sold across blinds within the same ante", async () => {
     const user = await openShop();
-    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await user.click(screen.getByText(/Add \$10/));
     const cards = getHandCardButtons();
@@ -2186,7 +2186,7 @@ describe("Voucher integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
+    expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
   });
 });
 
@@ -2344,7 +2344,7 @@ describe("Voucher effects integration", () => {
 
   test("buying Overstock raises the next shop's item offer count from 2 to 3", async () => {
     const user = await openShopWithVoucher(0);
-    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await winAndReopenShop(user);
     const items = screen
       .getAllByTestId(/^shop-offer-/)
@@ -2354,7 +2354,7 @@ describe("Voucher effects integration", () => {
 
   test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {
     const user = await openShopWithVoucher(0.4);
-    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
     const joker = screen
       .getByTestId(`shop-offer-${findShopOfferIdxOfKind("joker")}`)
       .querySelector(".shop-offer-price-discounted");
@@ -2369,13 +2369,13 @@ describe("Voucher effects integration", () => {
       .querySelector("button.shop-offer-buy");
     if (!(buyButton instanceof HTMLButtonElement)) throw new Error("missing joker buy");
     expect(buyButton).not.toBeDisabled();
-    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
     expect(buyButton).not.toBeDisabled();
   });
 
   test("buying Crystal Ball adds a third consumable slot to the tray", async () => {
     const user = await openShopWithVoucher(0.9);
-    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(screen.getAllByTestId("consumable-tile-empty")).toHaveLength(3);
   });
@@ -2987,5 +2987,80 @@ describe("Apply Modifiers — Packs +1 / Packs −1 dev controls", () => {
     await dismissBlindSelect(user);
     await advanceToShop(user);
     expect(packOfferCount()).toBe(2);
+  });
+});
+
+describe("Apply Modifiers — Vouchers +1 / Vouchers −1 dev controls", () => {
+  function voucherCount(): number {
+    return document.querySelectorAll("[data-voucher-id]").length;
+  }
+
+  async function advanceToShop(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+  }
+
+  test("the fresh game shows exactly one voucher slot by default", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToShop(user);
+    expect(voucherCount()).toBe(1);
+  });
+
+  test("clicking Vouchers +1 adds an extra voucher slot to the current shop", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Vouchers \+1/ }));
+    await advanceToShop(user);
+    expect(voucherCount()).toBe(2);
+  });
+
+  test("clicking Vouchers +1 twice adds two extra voucher slots", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Vouchers \+1/ }));
+    await user.click(screen.getByRole("button", { name: /Vouchers \+1/ }));
+    await advanceToShop(user);
+    expect(voucherCount()).toBe(3);
+  });
+
+  test("clicking Vouchers −1 from the default removes the voucher slot", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Vouchers −1/ }));
+    await advanceToShop(user);
+    expect(voucherCount()).toBe(0);
+  });
+
+  test("Vouchers −1 clamps at zero (never goes negative)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 5; i += 1) {
+      await user.click(screen.getByRole("button", { name: /Vouchers −1/ }));
+    }
+    await advanceToShop(user);
+    expect(voucherCount()).toBe(0);
+  });
+
+  test("starting a new game resets the voucher-slot modifier", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Vouchers \+1/ }));
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    await dismissBlindSelect(user);
+    await advanceToShop(user);
+    expect(voucherCount()).toBe(1);
   });
 });

@@ -115,11 +115,13 @@ import {
   applyShopDiscount,
   extraConsumableSlots,
   extraShopOfferSlots,
-  pickVoucherForAnte,
+  pickVouchersForAnte,
   VOUCHER_CATALOG,
   type Voucher,
   type VoucherId,
 } from "./items/vouchers";
+
+export const BASE_VOUCHER_SLOTS = 1;
 
 export const SCORING_STEP_MS = 500;
 
@@ -264,10 +266,18 @@ function App() {
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
-  const [currentAnteVoucher, setCurrentAnteVoucher] = useState<Voucher | null>(
-    () => pickVoucherForAnte({ ante: 1, ownedIds: new Set() }),
+  const [extraVoucherSlots, setExtraVoucherSlots] = useState(0);
+  const [currentAnteVouchers, setCurrentAnteVouchers] = useState<
+    ReadonlyArray<Voucher>
+  >(() =>
+    pickVouchersForAnte(
+      { ante: 1, ownedIds: new Set() },
+      BASE_VOUCHER_SLOTS,
+    ),
   );
-  const [currentAnteVoucherSold, setCurrentAnteVoucherSold] = useState(false);
+  const [soldVoucherIds, setSoldVoucherIds] = useState<ReadonlySet<VoucherId>>(
+    () => new Set(),
+  );
   const [currentBoss, setCurrentBoss] = useState<BossBlind>(() =>
     pickBossForAnte({ ante: 1 }),
   );
@@ -568,10 +578,13 @@ function App() {
       const nextAnte = ante + 1;
       setAnte(nextAnte);
       setBlind(1);
-      setCurrentAnteVoucher(
-        pickVoucherForAnte({ ante: nextAnte, ownedIds: ownedVoucherIds }),
+      setCurrentAnteVouchers(
+        pickVouchersForAnte(
+          { ante: nextAnte, ownedIds: ownedVoucherIds },
+          BASE_VOUCHER_SLOTS + extraVoucherSlots,
+        ),
       );
-      setCurrentAnteVoucherSold(false);
+      setSoldVoucherIds(new Set());
       const nextRecent = new Set(recentBossIds);
       nextRecent.add(currentBoss.id);
       setRecentBossIds(nextRecent);
@@ -862,10 +875,30 @@ function App() {
     setPendingTags((prev) => [...prev, "investment"]);
   }
 
-  function buyCurrentAnteVoucher() {
-    const voucher = currentAnteVoucher;
+  function adjustVoucherSlots(delta: number) {
+    const nextExtra = Math.max(-BASE_VOUCHER_SLOTS, extraVoucherSlots + delta);
+    if (nextExtra === extraVoucherSlots) return;
+    setExtraVoucherSlots(nextExtra);
+    const nextCount = BASE_VOUCHER_SLOTS + nextExtra;
+    setCurrentAnteVouchers((prev) => {
+      if (nextCount === 0) return [];
+      if (nextCount <= prev.length) return prev.slice(0, nextCount);
+      const existingIds = new Set(prev.map((v) => v.id));
+      const additional = pickVouchersForAnte(
+        {
+          ante,
+          ownedIds: new Set<VoucherId>([...ownedVoucherIds, ...existingIds]),
+        },
+        nextCount - prev.length,
+      );
+      return [...prev, ...additional];
+    });
+  }
+
+  function buyAnteVoucher(voucherIdx: number) {
+    const voucher = currentAnteVouchers[voucherIdx];
     if (!voucher) return;
-    if (currentAnteVoucherSold) return;
+    if (soldVoucherIds.has(voucher.id)) return;
     if (money < voucher.cost) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
     play("pop");
@@ -875,7 +908,11 @@ function App() {
       next.add(voucher.id);
       return next;
     });
-    setCurrentAnteVoucherSold(true);
+    setSoldVoucherIds((prev) => {
+      const next = new Set(prev);
+      next.add(voucher.id);
+      return next;
+    });
   }
 
   function reorderJokers(orderedIds: ReadonlyArray<string>) {
@@ -894,6 +931,7 @@ function App() {
     setMoney(4);
     setHandSizeModifier(0);
     setExtraPackSlots(0);
+    setExtraVoucherSlots(0);
     setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
@@ -902,8 +940,10 @@ function App() {
     setConsumables([]);
     const freshOwned = new Set<VoucherId>();
     setOwnedVoucherIds(freshOwned);
-    setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
-    setCurrentAnteVoucherSold(false);
+    setCurrentAnteVouchers(
+      pickVouchersForAnte({ ante: 1, ownedIds: freshOwned }, BASE_VOUCHER_SLOTS),
+    );
+    setSoldVoucherIds(new Set());
     setRecentBossIds(new Set());
     const freshBoss = pickBossForAnte({
       ante: 1,
@@ -1369,6 +1409,8 @@ function App() {
           setExtraPackSlots((prev) => Math.max(-SHOP_PACK_SLOTS, prev - 1))
         }
         onGrowPackSlots={() => setExtraPackSlots((prev) => prev + 1)}
+        onShrinkVoucherSlots={() => adjustVoucherSlots(-1)}
+        onGrowVoucherSlots={() => adjustVoucherSlots(1)}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
@@ -1384,11 +1426,11 @@ function App() {
           consumableCount={consumables.length}
           consumableCapacity={consumableCapacity}
           offers={shopOffers}
-          voucher={currentAnteVoucher}
-          voucherSold={currentAnteVoucherSold}
+          vouchers={currentAnteVouchers}
+          soldVoucherIds={soldVoucherIds}
           ownedVoucherIds={ownedVoucherIds}
           onBuy={buyShopOffer}
-          onBuyVoucher={buyCurrentAnteVoucher}
+          onBuyVoucher={buyAnteVoucher}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
         />
