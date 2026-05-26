@@ -20,6 +20,9 @@ export const HALF_JOKER_MULT = 20;
 export const HALF_JOKER_MAX_CARDS = 3;
 export const MISPRINT_MIN_MULT = 0;
 export const MISPRINT_MAX_MULT = 23;
+export const SCARY_FACE_CHIPS = 30;
+export const SMILEY_FACE_MULT = 5;
+export const PHOTOGRAPH_X_MULT = 2;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -74,6 +77,16 @@ export type JokerEffect =
       readonly kind: "additive-mult-random";
       readonly min: number;
       readonly max: number;
+    }
+  | {
+      readonly kind: "per-scored-face";
+      readonly contribution:
+        | { readonly kind: "mult"; readonly amount: number }
+        | { readonly kind: "chips"; readonly amount: number };
+    }
+  | {
+      readonly kind: "x-mult-on-face-scored";
+      readonly amount: number;
     };
 
 export interface Joker {
@@ -360,6 +373,42 @@ export function createMisprintJoker(): Joker {
   };
 }
 
+export function createScaryFaceJoker(): Joker {
+  return {
+    id: "scary-face",
+    name: "Scary Face",
+    description: `+${SCARY_FACE_CHIPS} Chips per scored face card (J, Q, K)`,
+    effect: {
+      kind: "per-scored-face",
+      contribution: { kind: "chips", amount: SCARY_FACE_CHIPS },
+    },
+  };
+}
+
+export function createSmileyFaceJoker(): Joker {
+  return {
+    id: "smiley-face",
+    name: "Smiley Face",
+    description: `+${SMILEY_FACE_MULT} Mult per scored face card (J, Q, K)`,
+    effect: {
+      kind: "per-scored-face",
+      contribution: { kind: "mult", amount: SMILEY_FACE_MULT },
+    },
+  };
+}
+
+export function createPhotographJoker(): Joker {
+  return {
+    id: "photograph",
+    name: "Photograph",
+    description: `X${PHOTOGRAPH_X_MULT} Mult when the first face card is scored in a hand`,
+    effect: {
+      kind: "x-mult-on-face-scored",
+      amount: PHOTOGRAPH_X_MULT,
+    },
+  };
+}
+
 export function createDefaultJokers(): Joker[] {
   return [
     createPlusFourMultJoker(),
@@ -391,6 +440,9 @@ export function createJokerCatalog(): Joker[] {
     createOddToddJoker(),
     createHalfJoker(),
     createMisprintJoker(),
+    createScaryFaceJoker(),
+    createSmileyFaceJoker(),
+    createPhotographJoker(),
   ];
 }
 
@@ -407,6 +459,7 @@ function assertNeverEffect(effect: never): never {
 export interface HandLevelContext {
   readonly playedHandLabel?: HandLabel;
   readonly playedCardCount?: number;
+  readonly scoredCards?: ReadonlyArray<Card>;
   readonly rng?: RandomSource;
 }
 
@@ -465,10 +518,21 @@ export function applyHandLevelJokers(
         fired.push(joker.id);
         break;
       }
+      case "x-mult-on-face-scored": {
+        if (
+          context.scoredCards !== undefined &&
+          context.scoredCards.some(isFaceCard)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+        }
+        break;
+      }
       case "stencil":
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
+      case "per-scored-face":
         break;
       default:
         assertNeverEffect(effect);
@@ -504,8 +568,10 @@ export function applyPostHandJokers(
       case "on-hand-type-mult":
       case "on-hand-type-chips":
       case "per-scored-rank-parity":
+      case "per-scored-face":
       case "additive-mult-when-hand-size":
       case "additive-mult-random":
+      case "x-mult-on-face-scored":
         break;
       default:
         assertNeverEffect(effect);
@@ -554,12 +620,24 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "per-scored-face": {
+        if (isFaceCard(card)) {
+          if (effect.contribution.kind === "mult") {
+            additiveMult += effect.contribution.amount;
+          } else {
+            additiveChips += effect.contribution.amount;
+          }
+          fired.push(joker.id);
+        }
+        break;
+      }
       case "additive-mult":
       case "stencil":
       case "on-hand-type-mult":
       case "on-hand-type-chips":
       case "additive-mult-when-hand-size":
       case "additive-mult-random":
+      case "x-mult-on-face-scored":
         break;
       default:
         assertNeverEffect(effect);
@@ -575,7 +653,10 @@ export function applyJokersToScoring(
   rng: RandomSource = Math.random,
   context: HandLevelContext = {},
 ): JokerScoringResult {
-  const handResult = applyHandLevelJokers(jokers, context);
+  const handResult = applyHandLevelJokers(jokers, {
+    ...context,
+    scoredCards: context.scoredCards ?? scoredCards,
+  });
   let moneyEarned = 0;
   let perCardAdditiveMult = 0;
   let perCardAdditiveChips = 0;
