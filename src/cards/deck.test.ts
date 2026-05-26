@@ -56,28 +56,15 @@ describe("createDeck", () => {
 });
 
 describe("defaultEnhancementForRank", () => {
-  test("returns steel for Aces", () => {
-    expect(defaultEnhancementForRank("A")).toBe("steel");
-  });
-
-  test("returns mult for 4s", () => {
-    expect(defaultEnhancementForRank("4")).toBe("mult");
-  });
-
-  test("returns wild for 9s", () => {
-    expect(defaultEnhancementForRank("9")).toBe("wild");
-  });
-
-  test("returns stone for 3s", () => {
-    expect(defaultEnhancementForRank("3")).toBe("stone");
-  });
-
-  test("returns glass for Ks", () => {
-    expect(defaultEnhancementForRank("K")).toBe("glass");
-  });
-
-  test("returns lucky for Qs", () => {
-    expect(defaultEnhancementForRank("Q")).toBe("lucky");
+  test.each<{ rank: "A" | "4" | "9" | "3" | "K" | "Q"; enhancement: string }>([
+    { rank: "A", enhancement: "steel" },
+    { rank: "4", enhancement: "mult" },
+    { rank: "9", enhancement: "wild" },
+    { rank: "3", enhancement: "stone" },
+    { rank: "K", enhancement: "glass" },
+    { rank: "Q", enhancement: "lucky" },
+  ])("returns $enhancement for $rank", ({ rank, enhancement }) => {
+    expect(defaultEnhancementForRank(rank)).toBe(enhancement);
   });
 
   test("returns gold for ranks without an explicit assignment", () => {

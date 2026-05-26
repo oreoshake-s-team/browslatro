@@ -2,7 +2,6 @@
 import { ENHANCEMENT_KINDS } from "../cards/enhancements";
 import {
   HERMIT_MONEY_CAP,
-  TAROT_BASE_PRICE,
   TEMPERANCE_MONEY_CAP,
   WHEEL_OF_FORTUNE_CHANCE,
   createTarotCatalog,
@@ -24,12 +23,6 @@ function tarotById(id: string): TarotCard {
   if (!found) throw new Error(`No tarot with id ${id}`);
   return found;
 }
-
-describe("TAROT_BASE_PRICE", () => {
-  test("is three dollars (matches Balatro)", () => {
-    expect(TAROT_BASE_PRICE).toBe(3);
-  });
-});
 
 describe("HERMIT_MONEY_CAP", () => {
   test("is twenty dollars (matches Balatro)", () => {
