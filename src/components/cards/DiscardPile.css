@@ -1,7 +1,7 @@
 .discard-pile {
   position: relative;
-  width: 4.5rem;
-  height: 9.5rem;
+  width: var(--card-width);
+  height: var(--card-height);
   border: 2px dashed #adb5bd;
   border-radius: 8px;
   background-color: #f1f3f5;

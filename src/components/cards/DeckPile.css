@@ -1,7 +1,7 @@
 .deck-pile {
   position: relative;
-  width: 4.5rem;
-  height: 9.5rem;
+  width: var(--card-width);
+  height: var(--card-height);
   border: 2px solid #1864ab;
   border-radius: 8px;
   background-color: #1971c2;

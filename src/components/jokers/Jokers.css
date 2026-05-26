@@ -34,19 +34,21 @@
 
 .joker-tile {
   display: flex;
-  flex: 0 0 4.5rem;
-  width: 4.5rem;
-  min-width: 4.5rem;
+  flex: 0 0 var(--card-width);
+  width: var(--card-width);
+  min-width: var(--card-width);
+  height: var(--card-height);
   flex-direction: column;
   align-items: center;
   justify-content: center;
   text-align: center;
   padding: 0.4rem 0.3rem;
-  min-height: 9.5rem;
   border-radius: 6px;
   border: 2px solid #f59f00;
   background-color: #ffe066;
   color: #5c3c00;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .joker-tile-inner {
@@ -155,14 +157,14 @@
 .joker-gap {
   flex: 0 0 2.5rem;
   align-self: stretch;
-  min-height: 9.5rem;
+  min-height: var(--card-height);
   border-radius: 4px;
   transition: flex-basis calc(120ms * var(--animation-speed, 1)) ease,
     background-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .joker-gap-active {
-  flex-basis: 4.5rem;
+  flex-basis: var(--card-width);
   background-color: rgba(245, 159, 0, 0.25);
   outline: 2px dashed #f59f00;
   outline-offset: -2px;
