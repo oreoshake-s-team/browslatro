@@ -12,7 +12,6 @@ import { HANDS } from "../constants";
 import { createSpectralCatalog } from "./spectrals";
 import { createTarotCatalog } from "./tarots";
 import {
-  BASE_REROLL_COST,
   SHOP_OFFER_SLOTS,
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
@@ -61,29 +60,13 @@ function baseArgs(rng: RandomSource): Parameters<typeof pickShopOffers>[0] {
   };
 }
 
-describe("SHOP_OFFER_SLOTS", () => {
-  test("is two (random-kind slots, Overstock vouchers add more)", () => {
-    expect(SHOP_OFFER_SLOTS).toBe(2);
-  });
-});
-
-describe("BASE_REROLL_COST", () => {
-  test("is five dollars", () => {
-    expect(BASE_REROLL_COST).toBe(5);
-  });
-});
-
 describe("rerollCostFor", () => {
-  test("returns 5 with zero prior rerolls", () => {
-    expect(rerollCostFor(0)).toBe(5);
-  });
-
-  test("returns 6 after the first reroll", () => {
-    expect(rerollCostFor(1)).toBe(6);
-  });
-
-  test("treats a negative reroll count as zero", () => {
-    expect(rerollCostFor(-3)).toBe(5);
+  test.each<{ count: number; expected: number; label: string }>([
+    { count: 0, expected: 5, label: "zero prior rerolls" },
+    { count: 1, expected: 6, label: "first reroll" },
+    { count: -3, expected: 5, label: "a negative reroll count" },
+  ])("returns $expected after $label", ({ count, expected }) => {
+    expect(rerollCostFor(count)).toBe(expected);
   });
 });
 
@@ -247,31 +230,17 @@ describe("rerollShopOffer — random-kind rerolls", () => {
 });
 
 describe("pickShopOffers — extraSlots (Overstock vouchers)", () => {
-  test("returns base SHOP_OFFER_SLOTS item offers when extraSlots is omitted", () => {
-    expect(itemOffers(pickShopOffers(baseArgs(mulberry32(1))))).toHaveLength(
-      SHOP_OFFER_SLOTS,
-    );
-  });
-
-  test("returns 3 item offers when extraSlots is 1 (Overstock)", () => {
-    const offers = itemOffers(
-      pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 1 }),
-    );
-    expect(offers).toHaveLength(3);
-  });
-
-  test("returns 4 item offers when extraSlots is 2 (Overstock + Plus)", () => {
-    const offers = itemOffers(
-      pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 2 }),
-    );
-    expect(offers).toHaveLength(4);
-  });
-
-  test("treats negative extraSlots as zero", () => {
-    const offers = itemOffers(
-      pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: -3 }),
-    );
-    expect(offers).toHaveLength(SHOP_OFFER_SLOTS);
+  test.each<{ extraSlots: number | undefined; expected: number; label: string }>([
+    { extraSlots: undefined, expected: SHOP_OFFER_SLOTS, label: "omitted" },
+    { extraSlots: 1, expected: 3, label: "1 (Overstock)" },
+    { extraSlots: 2, expected: 4, label: "2 (Overstock + Plus)" },
+    { extraSlots: -3, expected: SHOP_OFFER_SLOTS, label: "negative (treated as zero)" },
+  ])("extraSlots=$label produces $expected item offers", ({ extraSlots, expected }) => {
+    const args = extraSlots === undefined
+      ? baseArgs(mulberry32(1))
+      : { ...baseArgs(mulberry32(1)), extraSlots };
+    const offers = itemOffers(pickShopOffers(args));
+    expect(offers).toHaveLength(expected);
   });
 });
 
