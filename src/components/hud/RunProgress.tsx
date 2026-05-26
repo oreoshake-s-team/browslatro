@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import "./RunProgress.css";
 
 interface RunProgressProps {
@@ -7,10 +8,22 @@ interface RunProgressProps {
 }
 
 function RunProgress({ ante, round, money }: RunProgressProps) {
+  const hasMountedRef = useRef(false);
+  useEffect(() => {
+    hasMountedRef.current = true;
+  }, []);
   return (
     <div className="run-progress">
-      <div className="stat">
-        <span className="stat-value">${money}</span>
+      <div className="stat" aria-live="polite" aria-atomic="true">
+        <span
+          key={money}
+          className={
+            hasMountedRef.current ? "stat-value money-bounce" : "stat-value"
+          }
+          data-testid="money-value"
+        >
+          ${money}
+        </span>
         <span className="stat-label">Money</span>
       </div>
       <div className="run-progress-row">
