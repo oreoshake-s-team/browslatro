@@ -122,7 +122,12 @@ export interface JokerCardResult {
   readonly moneyEarned: number;
   readonly additiveMult: number;
   readonly additiveChips: number;
+  readonly xMult: number;
   readonly firedJokerIds: ReadonlyArray<string>;
+}
+
+export interface PerCardContext {
+  readonly firstFaceAlreadyScored?: boolean;
 }
 
 export interface JokerPostHandStep {
@@ -417,12 +422,20 @@ export function createPhotographJoker(): Joker {
   };
 }
 
-export function createDefaultJokers(): Joker[] {
+function defaultJokersFactory(): Joker[] {
   return [
     createPlusFourMultJoker(),
     createBusinessCardJoker(),
     createJokerStencilJoker(),
   ];
+}
+
+export const defaultJokersConfig: { factory: () => Joker[] } = {
+  factory: defaultJokersFactory,
+};
+
+export function createDefaultJokers(): Joker[] {
+  return defaultJokersConfig.factory();
 }
 
 export function createJokerCatalog(): Joker[] {
@@ -533,22 +546,12 @@ export function applyHandLevelJokers(
         steps.push({ jokerId: joker.id, additiveMult: rolled });
         break;
       }
-      case "x-mult-on-face-scored": {
-        if (
-          context.scoredCards !== undefined &&
-          context.scoredCards.some(isFaceCard)
-        ) {
-          xMult *= effect.amount;
-          fired.push(joker.id);
-          steps.push({ jokerId: joker.id, xMultFactor: effect.amount });
-        }
-        break;
-      }
       case "stencil":
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
       case "per-scored-face":
+      case "x-mult-on-face-scored":
         break;
       default:
         assertNeverEffect(effect);
@@ -601,10 +604,12 @@ export function applyPerCardJokers(
   jokers: ReadonlyArray<Joker>,
   card: Card,
   rng: RandomSource = Math.random,
+  context: PerCardContext = {},
 ): JokerCardResult {
   let moneyEarned = 0;
   let additiveMult = 0;
   let additiveChips = 0;
+  let xMult = 1;
   const fired: string[] = [];
 
   for (let i = 0; i < jokers.length; i += 1) {
@@ -647,20 +652,26 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "x-mult-on-face-scored": {
+        if (isFaceCard(card) && !context.firstFaceAlreadyScored) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+        }
+        break;
+      }
       case "additive-mult":
       case "stencil":
       case "on-hand-type-mult":
       case "on-hand-type-chips":
       case "additive-mult-when-hand-size":
       case "additive-mult-random":
-      case "x-mult-on-face-scored":
         break;
       default:
         assertNeverEffect(effect);
     }
   }
 
-  return { moneyEarned, additiveMult, additiveChips, firedJokerIds: fired };
+  return { moneyEarned, additiveMult, additiveChips, xMult, firedJokerIds: fired };
 }
 
 export function applyJokersToScoring(
@@ -676,17 +687,23 @@ export function applyJokersToScoring(
   let moneyEarned = 0;
   let perCardAdditiveMult = 0;
   let perCardAdditiveChips = 0;
+  let perCardXMult = 1;
+  let firstFaceAlreadyScored = false;
   for (let c = 0; c < scoredCards.length; c += 1) {
-    const cardResult = applyPerCardJokers(jokers, scoredCards[c], rng);
+    const cardResult = applyPerCardJokers(jokers, scoredCards[c], rng, {
+      firstFaceAlreadyScored,
+    });
     moneyEarned += cardResult.moneyEarned;
     perCardAdditiveMult += cardResult.additiveMult;
     perCardAdditiveChips += cardResult.additiveChips;
+    perCardXMult *= cardResult.xMult;
+    if (isFaceCard(scoredCards[c])) firstFaceAlreadyScored = true;
   }
   const postHandResult = applyPostHandJokers(jokers);
   return {
     additiveMult: handResult.additiveMult + perCardAdditiveMult,
     additiveChips: handResult.additiveChips + perCardAdditiveChips,
-    xMult: handResult.xMult * postHandResult.xMult,
+    xMult: handResult.xMult * perCardXMult * postHandResult.xMult,
     moneyEarned,
   };
 }

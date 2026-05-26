@@ -67,6 +67,7 @@ import {
   computeFinalScoreWithJokers,
   createDefaultJokers,
   createJokerCatalog,
+  isFaceCard,
   type Joker,
   type JokerHandLevelStep,
   type JokerPostHandStep,
@@ -294,7 +295,15 @@ function App() {
       if (luckyResult.moneyBonus > 0) {
         setMoney((prev) => prev + luckyResult.moneyBonus);
       }
-      const cardJokerResult = applyPerCardJokers(jokers, stepCard);
+      const firstFaceAlreadyScored = scoringCards
+        .slice(0, scoringIndex)
+        .some(isFaceCard);
+      const cardJokerResult = applyPerCardJokers(
+        jokers,
+        stepCard,
+        Math.random,
+        { firstFaceAlreadyScored },
+      );
       if (cardJokerResult.moneyEarned > 0) {
         setMoney((prev) => prev + cardJokerResult.moneyEarned);
       }
@@ -303,6 +312,9 @@ function App() {
       }
       if (cardJokerResult.additiveChips > 0) {
         setChips((prev) => prev + cardJokerResult.additiveChips);
+      }
+      if (cardJokerResult.xMult !== 1) {
+        setMultiplier((prev) => prev * cardJokerResult.xMult);
       }
       pulseJokers(cardJokerResult.firedJokerIds);
       setScoringIndex((prev) => prev + 1);
@@ -743,11 +755,17 @@ function App() {
 
     let perCardAdditiveMult = 0;
     let perCardAdditiveChips = 0;
+    let perCardXMult = 1;
+    let firstFaceAlreadyScoredUpfront = false;
     for (let i = 0; i < scoring.length; i += 1) {
-      const perCard = applyPerCardJokers(jokers, scoring[i]);
+      const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
+        firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
+      });
       perCardAdditiveMult += perCard.additiveMult;
       perCardAdditiveChips += perCard.additiveChips;
       perCardAdditiveMult += getCardMultDelta(scoring[i]);
+      perCardXMult *= perCard.xMult;
+      if (isFaceCard(scoring[i])) firstFaceAlreadyScoredUpfront = true;
     }
 
     const heldSteelIds = dealt.hand
@@ -758,7 +776,7 @@ function App() {
       (m, card) => m * applyCardEnhancement(card).multTimes,
       1,
     );
-    const preHandXMultNoSteel = handJokerResult.xMult * enhancementXMult;
+    const preHandXMultNoSteel = handJokerResult.xMult * enhancementXMult * perCardXMult;
     const preHandXMult = preHandXMultNoSteel * steelMult;
     const postHandResult = applyPostHandJokers(jokers);
     const totalXMult = preHandXMult * postHandResult.xMult;
