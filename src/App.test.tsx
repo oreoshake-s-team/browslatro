@@ -926,6 +926,20 @@ describe("Options modal new game integration", () => {
     expect(getStatValue("Ante")).toHaveTextContent("1");
     expect(getStatValue("Round")).toHaveTextContent("1");
   });
+
+  test("cancelling the New game confirm leaves the current run intact (issue #269)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/^💵 Add \$10$/));
+    expect(getStatValue("Money")).toHaveTextContent("$14");
+
+    vi.spyOn(window, "confirm").mockReturnValueOnce(false);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+
+    expect(getStatValue("Money")).toHaveTextContent("$14");
+  });
 });
 
 describe("Sequential card scoring", () => {
