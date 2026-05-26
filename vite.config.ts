@@ -20,5 +20,18 @@ export default defineConfig({
     setupFiles: ["./src/setupTests.ts"],
     css: true,
     include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    coverage: {
+      provider: "istanbul",
+      reporter: ["text", "html", "lcov"],
+      reportsDirectory: "./coverage",
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: [
+        "src/**/*.{test,spec}.{ts,tsx}",
+        "src/setupTests.ts",
+        "src/index.tsx",
+        "src/reportWebVitals.ts",
+        "src/**/*.d.ts",
+      ],
+    },
   },
 });
