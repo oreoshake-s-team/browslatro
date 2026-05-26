@@ -380,3 +380,84 @@ describe("Jokers consumable drop zone", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("Jokers sell", () => {
+  const filled: ReadonlyArray<Joker> = [
+    createPlusFourMultJoker(),
+    createBusinessCardJoker(),
+  ];
+
+  test("renders a Sell chip on each filled tile when onSell is provided", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    expect(screen.getAllByText(/^Sell \$/)).toHaveLength(filled.length);
+  });
+
+  test("does not render a Sell chip when onSell is not provided", () => {
+    render(<Jokers jokers={filled} />);
+    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
+  });
+
+  test("shift-clicking a tile invokes onSell with its index", () => {
+    const onSell = vi.fn();
+    render(<Jokers jokers={filled} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId("joker-tile-filled-business-card"), {
+      shiftKey: true,
+    });
+    expect(onSell).toHaveBeenCalledWith(1);
+  });
+
+  test("non-shift clicking a sellable tile does not invoke onSell", () => {
+    const onSell = vi.fn();
+    render(<Jokers jokers={filled} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(onSell).not.toHaveBeenCalled();
+  });
+
+  test("aria-label on a sellable tile names the sell shortcut", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    expect(
+      screen.getByTestId("joker-tile-filled-plus-four-mult"),
+    ).toHaveAttribute("aria-label", expect.stringContaining("Shift-click"));
+  });
+
+  test("tiles are draggable when only onSell is provided (no reorder)", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    expect(
+      screen.getByTestId("joker-tile-filled-plus-four-mult").getAttribute("draggable"),
+    ).toBe("true");
+  });
+
+  test("dragstart on a sellable tile writes the joker drag MIME and the index", () => {
+    const setData = vi.fn();
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    const tile = screen.getByTestId("joker-tile-filled-business-card");
+    const event = new Event("dragstart", { bubbles: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { setData, effectAllowed: "" },
+    });
+    tile.dispatchEvent(event);
+    expect(setData).toHaveBeenCalledWith(
+      "application/x-browslatro-joker",
+      "1",
+    );
+  });
+
+  test("dragstart invokes onDragStart with the tile's index", () => {
+    const onDragStart = vi.fn();
+    render(<Jokers jokers={filled} onSell={() => {}} onDragStart={onDragStart} />);
+    const tile = screen.getByTestId("joker-tile-filled-business-card");
+    const event = new Event("dragstart", { bubbles: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { setData: vi.fn(), effectAllowed: "" },
+    });
+    tile.dispatchEvent(event);
+    expect(onDragStart).toHaveBeenCalledWith(1);
+  });
+
+  test("dragend invokes onDragEnd", () => {
+    const onDragEnd = vi.fn();
+    render(<Jokers jokers={filled} onSell={() => {}} onDragEnd={onDragEnd} />);
+    fireEvent.dragEnd(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(onDragEnd).toHaveBeenCalled();
+  });
+});

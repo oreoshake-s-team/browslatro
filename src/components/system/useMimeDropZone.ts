@@ -1,8 +1,8 @@
 import { useState, type DragEventHandler } from "react";
-import { CONSUMABLE_DRAG_MIME } from "./Consumables";
 
 interface DropZoneOptions {
   readonly enabled: boolean;
+  readonly mime: string;
   readonly onDrop?: () => void;
 }
 
@@ -13,8 +13,9 @@ interface DropZoneHandlers {
   readonly onDrop: DragEventHandler<HTMLElement> | undefined;
 }
 
-export function useConsumableDropZone({
+export function useMimeDropZone({
   enabled,
+  mime,
   onDrop,
 }: DropZoneOptions): DropZoneHandlers {
   const [hover, setHover] = useState(false);
@@ -24,13 +25,13 @@ export function useConsumableDropZone({
     return { hover: false, onDragOver: undefined, onDragLeave: undefined, onDrop: undefined };
   }
 
-  const isConsumableDrag = (e: React.DragEvent<HTMLElement>) =>
-    e.dataTransfer.types.includes(CONSUMABLE_DRAG_MIME);
+  const matches = (e: React.DragEvent<HTMLElement>) =>
+    e.dataTransfer.types.includes(mime);
 
   return {
     hover,
     onDragOver: (e) => {
-      if (!isConsumableDrag(e)) return;
+      if (!matches(e)) return;
       e.preventDefault();
       e.dataTransfer.dropEffect = "move";
       if (!hover) setHover(true);
@@ -40,7 +41,7 @@ export function useConsumableDropZone({
       if (hover) setHover(false);
     },
     onDrop: (e) => {
-      if (!isConsumableDrag(e)) return;
+      if (!matches(e)) return;
       e.preventDefault();
       setHover(false);
       onDrop?.();

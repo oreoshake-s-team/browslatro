@@ -68,6 +68,7 @@ import {
   createDefaultJokers,
   createJokerCatalog,
   isFaceCard,
+  jokerSellValue,
   type Joker,
   type JokerHandLevelStep,
   type JokerPostHandStep,
@@ -211,6 +212,9 @@ function App() {
   const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
     number | null
   >(null);
+  const [draggingJokerIndex, setDraggingJokerIndex] = useState<number | null>(
+    null,
+  );
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -553,6 +557,14 @@ function App() {
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
   }
 
+  function sellJoker(jokerIdx: number) {
+    const entry = jokers[jokerIdx];
+    if (!entry) return;
+    play("pop");
+    setMoney((prev) => prev + jokerSellValue(entry));
+    setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
+  }
+
   const draggingConsumable =
     draggingConsumableIndex !== null
       ? consumables[draggingConsumableIndex] ?? null
@@ -564,6 +576,12 @@ function App() {
     const idx = draggingConsumableIndex;
     if (idx === null) return;
     setDraggingConsumableIndex(null);
+    action(idx);
+  };
+  const onJokerDrop = (action: (idx: number) => void) => () => {
+    const idx = draggingJokerIndex;
+    if (idx === null) return;
+    setDraggingJokerIndex(null);
     action(idx);
   };
 
@@ -972,6 +990,11 @@ function App() {
         canDropDraggedConsumableOnJokers={canDropDraggedConsumableOnJokers}
         onConsumableDropOnJokers={onConsumableDrop(useConsumable)}
         onConsumableDropOnDeck={onConsumableDrop(sellConsumable)}
+        draggingJokerIndex={draggingJokerIndex}
+        onJokerDragStart={setDraggingJokerIndex}
+        onJokerDragEnd={() => setDraggingJokerIndex(null)}
+        onSellJoker={sellJoker}
+        onJokerDropOnDeck={onJokerDrop(sellJoker)}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}

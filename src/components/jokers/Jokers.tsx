@@ -1,13 +1,19 @@
 import { Fragment, useRef, useState } from "react";
 import "./Jokers.css";
-import { MAX_JOKERS, type Joker } from "../../items/jokers";
+import { MAX_JOKERS, jokerSellValue, type Joker } from "../../items/jokers";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
-import { useConsumableDropZone } from "../consumables/useConsumableDropZone";
+import { useMimeDropZone } from "../system/useMimeDropZone";
+import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
+
+export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
 interface JokersProps {
   jokers: ReadonlyArray<Joker>;
   pulseCounters?: Readonly<Record<string, number>>;
   onReorder?: (orderedIds: ReadonlyArray<string>) => void;
+  onSell?: (index: number) => void;
+  onDragStart?: (index: number) => void;
+  onDragEnd?: () => void;
   consumableDropEnabled?: boolean;
   onConsumableDrop?: () => void;
 }
@@ -16,22 +22,29 @@ export default function Jokers({
   jokers,
   pulseCounters,
   onReorder,
+  onSell,
+  onDragStart,
+  onDragEnd,
   consumableDropEnabled = false,
   onConsumableDrop,
 }: JokersProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
-  const dropZone = useConsumableDropZone({
+  const dropZone = useMimeDropZone({
     enabled: consumableDropEnabled,
+    mime: CONSUMABLE_DRAG_MIME,
     onDrop: onConsumableDrop,
   });
   const listRef = useRef<HTMLUListElement | null>(null);
   const emptyCount = Math.max(0, MAX_JOKERS - jokers.length);
   const reorderable = Boolean(onReorder);
+  const sellable = Boolean(onSell);
+  const tileDraggable = reorderable || sellable;
 
   function endDrag() {
     setDraggingId(null);
     setActiveGapIndex(null);
+    onDragEnd?.();
   }
 
   function applyDrop(sourceId: string, gapIdx: number) {
@@ -121,29 +134,45 @@ export default function Jokers({
         {jokers.map((joker, idx) => {
           const pulse = pulseCounters?.[joker.id] ?? 0;
           const isDragging = draggingId === joker.id;
+          const sellValue = jokerSellValue(joker);
+          const ariaLabel = sellable
+            ? `${joker.name}. ${joker.description}. Shift-click or drag to deck to sell for $${sellValue}.`
+            : undefined;
           return (
             <Fragment key={joker.id}>
               {reorderable && renderGap(idx)}
               <li
-                className={`joker-tile${reorderable ? " joker-tile-draggable" : ""}${
+                className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
                 }`}
                 title={joker.description}
+                aria-label={ariaLabel}
                 data-testid={`joker-tile-filled-${joker.id}`}
-                draggable={reorderable || undefined}
+                draggable={tileDraggable || undefined}
                 aria-grabbed={isDragging || undefined}
                 onDragStart={
-                  reorderable
+                  tileDraggable
                     ? (e) => {
                         setDraggingId(joker.id);
                         if (e.dataTransfer) {
                           e.dataTransfer.effectAllowed = "move";
                           e.dataTransfer.setData("text/plain", joker.id);
+                          if (sellable) {
+                            e.dataTransfer.setData(JOKER_DRAG_MIME, String(idx));
+                          }
                         }
+                        onDragStart?.(idx);
                       }
                     : undefined
                 }
-                onDragEnd={reorderable ? endDrag : undefined}
+                onDragEnd={tileDraggable ? endDrag : undefined}
+                onClick={
+                  sellable
+                    ? (e) => {
+                        if (e.shiftKey) onSell?.(idx);
+                      }
+                    : undefined
+                }
               >
                 <div
                   key={`pulse-${pulse}`}
@@ -155,6 +184,11 @@ export default function Jokers({
                 >
                   <span className="joker-tile-name">{joker.name}</span>
                   <span className="joker-tile-description">{joker.description}</span>
+                  {sellable && (
+                    <span className="joker-tile-sell" aria-hidden="true">
+                      Sell ${sellValue}
+                    </span>
+                  )}
                 </div>
               </li>
             </Fragment>

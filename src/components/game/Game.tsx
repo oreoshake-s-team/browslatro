@@ -37,6 +37,11 @@ interface GameProps {
   canDropDraggedConsumableOnJokers?: boolean;
   onConsumableDropOnJokers?: () => void;
   onConsumableDropOnDeck?: () => void;
+  draggingJokerIndex?: number | null;
+  onJokerDragStart?: (index: number) => void;
+  onJokerDragEnd?: () => void;
+  onSellJoker?: (index: number) => void;
+  onJokerDropOnDeck?: () => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -73,12 +78,18 @@ export default function Game({
   canDropDraggedConsumableOnJokers = false,
   onConsumableDropOnJokers,
   onConsumableDropOnDeck,
+  draggingJokerIndex = null,
+  onJokerDragStart,
+  onJokerDragEnd,
+  onSellJoker,
+  onJokerDropOnDeck,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
   onReorderJokers,
 }: GameProps) {
   const dragging = draggingConsumableIndex !== null;
+  const draggingJoker = draggingJokerIndex !== null;
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
   }
@@ -94,6 +105,9 @@ export default function Game({
           jokers={jokers}
           pulseCounters={jokerPulseCounters}
           onReorder={onReorderJokers}
+          onSell={onSellJoker}
+          onDragStart={onJokerDragStart}
+          onDragEnd={onJokerDragEnd}
           consumableDropEnabled={dragging && canDropDraggedConsumableOnJokers}
           onConsumableDrop={onConsumableDropOnJokers}
         />
@@ -121,6 +135,8 @@ export default function Game({
         onDisplayOrderChange={onDisplayOrderChange}
         consumableDropEnabled={dragging}
         onConsumableSellDrop={onConsumableDropOnDeck}
+        jokerDropEnabled={draggingJoker}
+        onJokerSellDrop={onJokerDropOnDeck}
       />
       <details className="modifier-selection">
         <summary className="modifier-disclosure">Apply modifiers</summary>

@@ -1,7 +1,14 @@
 import type { Card, Rank, Suit } from "../cards/types";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
+import { JOKER_BASE_PRICE } from "../constants";
 
 export const MAX_JOKERS = 5;
+
+export const JOKER_SELL_VALUE = Math.floor(JOKER_BASE_PRICE / 2);
+
+export function jokerSellValue(_joker: Joker): number {
+  return JOKER_SELL_VALUE;
+}
 export const BUSINESS_CARD_PROC_CHANCE = 0.5;
 export const SUIT_MULT_AMOUNT = 3;
 export const JOLLY_JOKER_MULT = 8;

@@ -6,6 +6,7 @@ import {
   CRAZY_JOKER_MULT,
   DEVIOUS_JOKER_CHIPS,
   DROLL_JOKER_MULT,
+  JOKER_SELL_VALUE,
   JOLLY_JOKER_MULT,
   MAD_JOKER_MULT,
   MAX_JOKERS,
@@ -14,6 +15,7 @@ import {
   SUIT_MULT_AMOUNT,
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
+  jokerSellValue,
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
@@ -57,6 +59,16 @@ describe("Constants", () => {
 
   test("BUSINESS_CARD_PROC_CHANCE equals 0.5", () => {
     expect(BUSINESS_CARD_PROC_CHANCE).toBe(0.5);
+  });
+
+  test("JOKER_SELL_VALUE equals half the joker base price (floored)", () => {
+    expect(JOKER_SELL_VALUE).toBe(2);
+  });
+});
+
+describe("jokerSellValue", () => {
+  test("returns JOKER_SELL_VALUE for any joker", () => {
+    expect(jokerSellValue(createPlusFourMultJoker())).toBe(JOKER_SELL_VALUE);
   });
 });
 

@@ -2465,3 +2465,74 @@ describe("Consumable drag and sell integration", () => {
     expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
   });
 });
+
+describe("Joker drag and sell integration", () => {
+  function moneyOf(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  function fakeDataTransfer(): DataTransfer {
+    const store: Record<string, string> = {};
+    const types: string[] = [];
+    return {
+      types,
+      effectAllowed: "",
+      dropEffect: "",
+      setData(format: string, data: string) {
+        if (!(format in store)) types.push(format);
+        store[format] = data;
+      },
+      getData(format: string) {
+        return store[format] ?? "";
+      },
+    } as unknown as DataTransfer;
+  }
+
+  test("shift-clicking a filled joker tile sells it for $2", () => {
+    render(<App />);
+    const before = moneyOf();
+    fireEvent.click(screen.getByTestId("joker-tile-filled-plus-four-mult"), {
+      shiftKey: true,
+    });
+    expect(moneyOf()).toBe(before + 2);
+  });
+
+  test("shift-clicking sell removes the joker from the tray", () => {
+    render(<App />);
+    fireEvent.click(screen.getByTestId("joker-tile-filled-business-card"), {
+      shiftKey: true,
+    });
+    expect(
+      screen.queryByTestId("joker-tile-filled-business-card"),
+    ).toBeNull();
+  });
+
+  test("dragging a joker tile onto the deck pile sells it", () => {
+    render(<App />);
+    const before = moneyOf();
+    const tile = screen.getByTestId("joker-tile-filled-joker-stencil");
+    const deck = screen.getByRole("button", { name: /Deck/ });
+    const dt = fakeDataTransfer();
+    fireEvent.dragStart(tile, { dataTransfer: dt });
+    fireEvent.dragOver(deck, { dataTransfer: dt });
+    fireEvent.drop(deck, { dataTransfer: dt });
+    fireEvent.dragEnd(tile, { dataTransfer: dt });
+    expect(moneyOf()).toBe(before + 2);
+  });
+
+  test("drag-to-deck sell removes the joker from the tray", () => {
+    render(<App />);
+    const tile = screen.getByTestId("joker-tile-filled-joker-stencil");
+    const deck = screen.getByRole("button", { name: /Deck/ });
+    const dt = fakeDataTransfer();
+    fireEvent.dragStart(tile, { dataTransfer: dt });
+    fireEvent.dragOver(deck, { dataTransfer: dt });
+    fireEvent.drop(deck, { dataTransfer: dt });
+    fireEvent.dragEnd(tile, { dataTransfer: dt });
+    expect(
+      screen.queryByTestId("joker-tile-filled-joker-stencil"),
+    ).toBeNull();
+  });
+});

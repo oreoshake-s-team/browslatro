@@ -41,6 +41,8 @@ interface HandProps {
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
   consumableDropEnabled?: boolean;
   onConsumableSellDrop?: () => void;
+  jokerDropEnabled?: boolean;
+  onJokerSellDrop?: () => void;
 }
 
 export default function Hand({
@@ -57,6 +59,8 @@ export default function Hand({
   onDisplayOrderChange,
   consumableDropEnabled,
   onConsumableSellDrop,
+  jokerDropEnabled,
+  onJokerSellDrop,
 }: HandProps) {
   const [sortMode, setSortMode] = useState<SortMode>("rank");
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
@@ -323,6 +327,8 @@ export default function Hand({
             remaining={remaining}
             consumableDropEnabled={consumableDropEnabled}
             onConsumableDrop={onConsumableSellDrop}
+            jokerDropEnabled={jokerDropEnabled}
+            onJokerDrop={onJokerSellDrop}
           />
         </div>
       </div>

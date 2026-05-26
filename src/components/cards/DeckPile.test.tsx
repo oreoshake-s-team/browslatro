@@ -231,3 +231,86 @@ describe("DeckPile consumable drop zone", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("DeckPile joker drop zone", () => {
+  function dispatchDrag(
+    target: Element,
+    type: "dragover" | "drop",
+    mimes: ReadonlyArray<string>,
+  ): boolean {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { types: mimes, dropEffect: "" },
+    });
+    return target.dispatchEvent(event);
+  }
+
+  test("pile invokes onJokerDrop when a joker is dropped on it", () => {
+    const onJokerDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        jokerDropEnabled
+        onJokerDrop={onJokerDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "drop", ["application/x-browslatro-joker"]);
+    expect(onJokerDrop).toHaveBeenCalledTimes(1);
+  });
+
+  test("pile ignores a drop that is not a joker", () => {
+    const onJokerDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        jokerDropEnabled
+        onJokerDrop={onJokerDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "drop", ["text/plain"]);
+    expect(onJokerDrop).not.toHaveBeenCalled();
+  });
+
+  test("pile does not accept a joker drop when jokerDropEnabled is false", () => {
+    const onJokerDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        jokerDropEnabled={false}
+        onJokerDrop={onJokerDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "drop", ["application/x-browslatro-joker"]);
+    expect(onJokerDrop).not.toHaveBeenCalled();
+  });
+
+  test("renders the Sell overlay when jokerDropEnabled is true", () => {
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        jokerDropEnabled
+        onJokerDrop={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("consumable-drop-overlay-sell"),
+    ).toHaveTextContent("Sell");
+  });
+
+  test("a consumable drop on a joker-enabled pile does not fire onJokerDrop", () => {
+    const onJokerDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        jokerDropEnabled
+        onJokerDrop={onJokerDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "drop", ["application/x-browslatro-consumable"]);
+    expect(onJokerDrop).not.toHaveBeenCalled();
+  });
+});
