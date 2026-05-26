@@ -33,11 +33,10 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 
 # Work with feature branches
 
-When asked to complete a task, first create a new branch based on the issue number and title. Do not commit directly to main. Create a pull request when done.
-
-Always merge main before pushing new code.
-
-After every push, wait for the CI status. If a test fails or a merge conflict exists, try to resolve it immediately.
+- When asked to complete a task, first create a new branch based on the issue number and title. Do not commit directly to main. Create a pull request when done.
+- Always merge/rebase main before pushing new code.
+- After every push, wait for the CI status. If a test fails or a merge conflict exists, try to resolve it immediately.
+- Never merge a PR unless all CI statuses are green.
 
 # Conversations outside of Claude code
 
