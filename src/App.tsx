@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import type { Blind, Card, Hand } from "./cards/types";
+import type { Blind, Card, Enhancement, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
@@ -26,7 +26,7 @@ import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
-import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
+import { createTarotCatalog, resolveHermitPayout, type TarotCard } from "./items/tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -140,13 +140,27 @@ export function getScoringStepMs(
   return SCORING_STEP_MS;
 }
 
+function applyEnhancementOverrides(
+  cards: ReadonlyArray<Card>,
+  overrides: ReadonlyMap<string, Enhancement>,
+): Card[] {
+  return cards.map((c) => {
+    if (c.enhancement !== undefined) return c;
+    const override = overrides.get(cardKey(c));
+    return override === undefined ? c : { ...c, enhancement: override };
+  });
+}
+
 function initialDeal(
   excludedKeys: ReadonlySet<string> = new Set(),
   handSize: number = HAND_SIZE,
   addedCards: ReadonlyArray<Card> = [],
+  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
 ): DealResult {
+  const base = applyEnhancementOverrides(createDeck(excludedKeys), enhancementOverrides);
+  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
   return deal(
-    shuffle([...createDeck(excludedKeys), ...addedCards]),
+    shuffle([...base, ...extras]),
     Math.max(1, handSize),
   );
 }
@@ -201,6 +215,9 @@ function App() {
     setScoringEvents((prev) => [...prev, event]);
   }
   const [addedCards, setAddedCards] = useState<ReadonlyArray<Card>>(() => []);
+  const [cardEnhancementsByKey, setCardEnhancementsByKey] = useState<
+    ReadonlyMap<string, Enhancement>
+  >(() => new Map());
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -261,6 +278,15 @@ function App() {
   );
   const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
   const [packPicksRemaining, setPackPicksRemaining] = useState(0);
+  const [packPreviewHand, setPackPreviewHand] = useState<ReadonlyArray<Card>>(
+    [],
+  );
+  const [pendingPackTarot, setPendingPackTarot] = useState<TarotCard | null>(
+    null,
+  );
+  const [pendingPackSelectedIds, setPendingPackSelectedIds] = useState<
+    ReadonlySet<number>
+  >(() => new Set());
   const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
   const [pendingTags, setPendingTags] = useState<ReadonlyArray<TagId>>([]);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
@@ -322,7 +348,7 @@ function App() {
     setRemainingHands(startingHands);
     setRemainingDiscards(startingDiscards);
     setHandHistoryThisRound([]);
-    setDealt(initialDeal(destroyedCardKeys, handSize, addedCards));
+    setDealt(initialDeal(destroyedCardKeys, handSize, addedCards, cardEnhancementsByKey));
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -669,22 +695,60 @@ function App() {
     setMoney((prev) => prev - price);
     setOpenedPack(offer.pack);
     setPackPicksRemaining(packPickLimit(offer.pack.variant));
+    if (offer.pack.pool === "arcana") {
+      const baseDeck = applyEnhancementOverrides(
+        createDeck(destroyedCardKeys),
+        cardEnhancementsByKey,
+      );
+      const extras = applyEnhancementOverrides(addedCards, cardEnhancementsByKey);
+      const preview = shuffle([...baseDeck, ...extras]).slice(0, 5);
+      setPackPreviewHand(preview);
+    } else {
+      setPackPreviewHand([]);
+    }
+    setPendingPackTarot(null);
+    setPendingPackSelectedIds(new Set());
     markOfferSold(idx);
+  }
+
+  function decrementPackPicks() {
+    setPackPicksRemaining((prev) => {
+      const remaining = prev - 1;
+      if (remaining <= 0) {
+        setOpenedPack(null);
+        setPackPreviewHand([]);
+      }
+      return remaining;
+    });
   }
 
   function pickFromOpenedPack(optionIdx: number) {
     if (!openedPack || packPicksRemaining <= 0) return;
+    if (pendingPackTarot !== null) return;
     const option = openedPack.options[optionIdx];
     if (!option) return;
     if (option.kind === "planet") {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
     } else if (option.kind === "tarot") {
-      if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
-      play("pop");
-      setConsumables((prev) =>
-        addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
-      );
+      const effect = option.tarot.effect;
+      if (effect.kind === "apply-enhancement") {
+        if (packPreviewHand.length === 0) {
+          if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+          play("pop");
+          setConsumables((prev) =>
+            addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
+          );
+        } else {
+          play("pop");
+          setPendingPackTarot(option.tarot);
+          setPendingPackSelectedIds(new Set());
+          return;
+        }
+      } else {
+        play("pop");
+        setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      }
     } else if (option.kind === "joker") {
       if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
       play("pop");
@@ -701,16 +765,67 @@ function App() {
     } else {
       return;
     }
-    setPackPicksRemaining((prev) => {
-      const remaining = prev - 1;
-      if (remaining <= 0) setOpenedPack(null);
-      return remaining;
+    decrementPackPicks();
+  }
+
+  function togglePackPreviewCard(cardId: number) {
+    if (!pendingPackTarot) return;
+    const effect = pendingPackTarot.effect;
+    if (effect.kind !== "apply-enhancement") return;
+    setPendingPackSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(cardId)) {
+        next.delete(cardId);
+      } else if (next.size < effect.maxTargets) {
+        next.add(cardId);
+      }
+      return next;
     });
+  }
+
+  function confirmPendingPackTarot() {
+    if (!pendingPackTarot) return;
+    const effect = pendingPackTarot.effect;
+    if (effect.kind !== "apply-enhancement") return;
+    if (
+      pendingPackSelectedIds.size === 0 ||
+      pendingPackSelectedIds.size > effect.maxTargets
+    ) {
+      return;
+    }
+    const selectedKeys = new Set<string>();
+    for (const c of packPreviewHand) {
+      if (pendingPackSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+    }
+    play("pop");
+    setCardEnhancementsByKey((prev) => {
+      const next = new Map(prev);
+      for (const key of selectedKeys) next.set(key, effect.enhancement);
+      return next;
+    });
+    setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        pendingPackSelectedIds.has(c.id)
+          ? { ...c, enhancement: effect.enhancement }
+          : c,
+      ),
+    );
+    setPendingPackTarot(null);
+    setPendingPackSelectedIds(new Set());
+    decrementPackPicks();
+  }
+
+  function cancelPendingPackTarot() {
+    setPendingPackTarot(null);
+    setPendingPackSelectedIds(new Set());
   }
 
   function closeOpenedPack() {
     setOpenedPack(null);
     setPackPicksRemaining(0);
+    setPackPreviewHand([]);
+    setPendingPackTarot(null);
+    setPendingPackSelectedIds(new Set());
   }
 
   function buyShopOffer(idx: number) {
@@ -976,6 +1091,7 @@ function App() {
     setHandStats(createDefaultHandStats());
     setDestroyedCardKeys(new Set());
     setAddedCards([]);
+    setCardEnhancementsByKey(new Map());
     setConsumables([]);
     const freshOwned = new Set<VoucherId>();
     setOwnedVoucherIds(freshOwned);
@@ -1506,6 +1622,20 @@ function App() {
           picksRemaining={packPicksRemaining}
           consumableSlotsFull={!hasFreeConsumableSlot(consumables, consumableCapacity)}
           jokerSlotsFull={effectiveJokerCount(jokers) >= MAX_JOKERS}
+          previewHand={packPreviewHand}
+          previewSelectedIds={pendingPackSelectedIds}
+          pendingTarot={
+            pendingPackTarot && pendingPackTarot.effect.kind === "apply-enhancement"
+              ? {
+                  name: pendingPackTarot.name,
+                  enhancement: pendingPackTarot.effect.enhancement,
+                  maxTargets: pendingPackTarot.effect.maxTargets,
+                }
+              : null
+          }
+          onSelectPreviewCard={togglePackPreviewCard}
+          onConfirmPendingTarot={confirmPendingPackTarot}
+          onCancelPendingTarot={cancelPendingPackTarot}
           onPick={pickFromOpenedPack}
           onClose={closeOpenedPack}
         />

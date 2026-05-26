@@ -6,13 +6,27 @@ import {
   packDisplayName,
   packPickLimit,
 } from "../../items/packs";
+import type { Card as CardType } from "../../cards/types";
+import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+
+export interface PendingPackTarotInfo {
+  readonly name: string;
+  readonly enhancement: string;
+  readonly maxTargets: 1 | 2;
+}
 
 interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
   consumableSlotsFull?: boolean;
   jokerSlotsFull?: boolean;
+  previewHand?: ReadonlyArray<CardType>;
+  previewSelectedIds?: ReadonlySet<number>;
+  pendingTarot?: PendingPackTarotInfo | null;
+  onSelectPreviewCard?: (cardId: number) => void;
+  onConfirmPendingTarot?: () => void;
+  onCancelPendingTarot?: () => void;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
 }
@@ -95,14 +109,25 @@ export default function PackOpenModal({
   picksRemaining,
   consumableSlotsFull = false,
   jokerSlotsFull = false,
+  previewHand = [],
+  previewSelectedIds,
+  pendingTarot = null,
+  onSelectPreviewCard,
+  onConfirmPendingTarot,
+  onCancelPendingTarot,
   onPick,
   onClose,
 }: PackOpenModalProps) {
   useEscapeToClose(onClose, true);
   const totalPicks = packPickLimit(pack.variant);
   const title = packDisplayName(pack);
-  const subtitle =
-    totalPicks === 1
+  const inSelection = pendingTarot !== null;
+  const selectedCount = previewSelectedIds?.size ?? 0;
+  const subtitle = inSelection
+    ? pendingTarot.maxTargets === 1
+      ? `Select 1 card to receive a ${pendingTarot.enhancement} enhancement`
+      : `Select 1–${pendingTarot.maxTargets} cards to receive a ${pendingTarot.enhancement} enhancement (${selectedCount} selected)`
+    : totalPicks === 1
       ? "Pick 1 card to keep"
       : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
   const closeLabel = picksRemaining < totalPicks ? "Done" : "Skip";
@@ -121,21 +146,26 @@ export default function PackOpenModal({
         <p className="pack-open-subtitle" data-testid="pack-open-subtitle">
           {subtitle}
         </p>
-        <ul className="pack-open-options" aria-label="Pack options">
+        <ul
+          className={`pack-open-options${inSelection ? " pack-open-options-dimmed" : ""}`}
+          aria-label="Pack options"
+        >
           {pack.options.map((option, idx) => {
             const view = describeOption(option);
             if (!view) return null;
             const noPicksLeft = picksRemaining <= 0;
             const consumableBlocked = view.needsConsumableSlot && consumableSlotsFull;
             const jokerBlocked = view.needsJokerSlot && jokerSlotsFull;
-            const disabled = noPicksLeft || consumableBlocked || jokerBlocked;
-            const tooltip = noPicksLeft
-              ? "No picks remaining"
-              : consumableBlocked
-                ? "Consumable slots are full"
-                : jokerBlocked
-                  ? "Joker slots are full"
-                  : undefined;
+            const disabled = noPicksLeft || consumableBlocked || jokerBlocked || inSelection;
+            const tooltip = inSelection
+              ? "Finish the current selection first"
+              : noPicksLeft
+                ? "No picks remaining"
+                : consumableBlocked
+                  ? "Consumable slots are full"
+                  : jokerBlocked
+                    ? "Joker slots are full"
+                    : undefined;
             return (
               <li key={`${view.id}-${idx}`} className="pack-open-option">
                 <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
@@ -158,6 +188,47 @@ export default function PackOpenModal({
             );
           })}
         </ul>
+        {previewHand.length > 0 && (
+          <div
+            className="pack-open-preview-hand"
+            data-testid="pack-open-preview-hand"
+            aria-label="Preview hand"
+          >
+            {previewHand.map((card) => (
+              <Card
+                key={card.id}
+                card={card}
+                selected={previewSelectedIds?.has(card.id) ?? false}
+                onToggle={
+                  inSelection && onSelectPreviewCard
+                    ? () => onSelectPreviewCard(card.id)
+                    : undefined
+                }
+              />
+            ))}
+          </div>
+        )}
+        {inSelection && (
+          <div className="pack-open-selection-actions">
+            <button
+              type="button"
+              className="pack-open-confirm"
+              data-testid="pack-open-confirm"
+              disabled={selectedCount === 0}
+              onClick={() => onConfirmPendingTarot?.()}
+            >
+              Apply {pendingTarot.name}
+            </button>
+            <button
+              type="button"
+              className="pack-open-cancel"
+              data-testid="pack-open-cancel"
+              onClick={() => onCancelPendingTarot?.()}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
         <button
           type="button"
           className="pack-open-close"

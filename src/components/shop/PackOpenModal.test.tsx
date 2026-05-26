@@ -540,3 +540,171 @@ describe("PackOpenModal — Standard pack rendering", () => {
     expect(screen.getByText(/red seal/)).toBeInTheDocument();
   });
 });
+
+describe("PackOpenModal — Arcana preview hand and selection", () => {
+  const previewCards = [
+    { id: 1001, rank: "A" as const, suit: "spades" as const },
+    { id: 1002, rank: "K" as const, suit: "hearts" as const },
+    { id: 1003, rank: "Q" as const, suit: "diamonds" as const },
+  ];
+
+  test("renders the preview hand when previewHand is provided", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-preview-hand")).toBeInTheDocument();
+  });
+
+  test("does not render preview hand when previewHand is empty", () => {
+    render(
+      <PackOpenModal
+        pack={celestialPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={[]}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("pack-open-preview-hand")).not.toBeInTheDocument();
+  });
+
+  test("renders Confirm and Cancel when a pending tarot is set", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-confirm")).toBeInTheDocument();
+    expect(screen.getByTestId("pack-open-cancel")).toBeInTheDocument();
+  });
+
+  test("Confirm is disabled when no preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-confirm")).toBeDisabled();
+  });
+
+  test("Confirm is enabled when at least one preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001])}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-confirm")).not.toBeDisabled();
+  });
+
+  test("clicking Confirm invokes onConfirmPendingTarot", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1002])}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+        onConfirmPendingTarot={onConfirm}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-confirm"));
+    expect(onConfirm).toHaveBeenCalled();
+  });
+
+  test("clicking Cancel invokes onCancelPendingTarot", async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1002])}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+        onCancelPendingTarot={onCancel}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-cancel"));
+    expect(onCancel).toHaveBeenCalled();
+  });
+
+  test("Pick buttons disable while a tarot is pending", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("subtitle reflects the pending tarot selection prompt for maxTargets=1", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        pendingTarot={{ name: "The Lovers", enhancement: "wild", maxTargets: 1 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
+      /Select 1 card to receive a wild enhancement/,
+    );
+  });
+
+  test("subtitle shows running selection count for maxTargets=2", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001])}
+        pendingTarot={{ name: "The Magician", enhancement: "lucky", maxTargets: 2 }}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
+      /Select 1–2 cards to receive a lucky enhancement \(1 selected\)/,
+    );
+  });
+});

@@ -102,3 +102,58 @@
 .pack-open-close:hover {
   background-color: #6c757d;
 }
+
+.pack-open-options-dimmed {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.pack-open-preview-hand {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  border: 2px dashed #adb5bd;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+}
+
+.pack-open-selection-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+.pack-open-confirm {
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  background-color: #2f9e44;
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pack-open-confirm:hover:not(:disabled) {
+  background-color: #2b8a3e;
+}
+
+.pack-open-confirm:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pack-open-cancel {
+  padding: 0.5rem 1.2rem;
+  border-radius: 6px;
+  background-color: #fa5252;
+  color: #fff;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pack-open-cancel:hover {
+  background-color: #e03131;
+}
