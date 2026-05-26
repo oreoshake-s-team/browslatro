@@ -1,4 +1,8 @@
 import type { Card, Rank, Suit } from "../cards/types";
+import { cardKey } from "../cards/deck";
+import type { HandLabel } from "../scoring/handEvaluator";
+import type { HandStatsEntry } from "../scoring/handStats";
+import { createPlanetCatalog } from "./planets";
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set(["J", "Q", "K"]);
 
@@ -10,7 +14,16 @@ export type BossEffect =
   | { readonly kind: "force-card-count"; readonly value: number }
   | { readonly kind: "money-per-card-played"; readonly value: number }
   | { readonly kind: "debuff-suit"; readonly suit: Suit }
-  | { readonly kind: "debuff-face" };
+  | { readonly kind: "debuff-face" }
+  | { readonly kind: "single-hand-type" }
+  | { readonly kind: "no-repeat-hand-type" }
+  | { readonly kind: "debuff-played-this-ante" }
+  | { readonly kind: "hand-level-delta"; readonly value: number }
+  | {
+      readonly kind: "hand-stats-multiplier";
+      readonly chipsFactor: number;
+      readonly multFactor: number;
+    };
 
 export interface BossBlind {
   readonly id: string;
@@ -117,6 +130,46 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     scoreMultiplier: 2,
     anteMin: 4,
     effect: { kind: "debuff-face" },
+  },
+  {
+    id: "the-mouth",
+    name: "The Mouth",
+    description: "Only one hand type can be played this round.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "single-hand-type" },
+  },
+  {
+    id: "the-eye",
+    name: "The Eye",
+    description: "No repeated hand types this round.",
+    scoreMultiplier: 2,
+    anteMin: 3,
+    effect: { kind: "no-repeat-hand-type" },
+  },
+  {
+    id: "the-pillar",
+    name: "The Pillar",
+    description: "Cards played earlier this ante are debuffed.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "debuff-played-this-ante" },
+  },
+  {
+    id: "the-arm",
+    name: "The Arm",
+    description: "Played poker hand is treated as one level lower.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "hand-level-delta", value: -1 },
+  },
+  {
+    id: "the-flint",
+    name: "The Flint",
+    description: "Base Chips and Mult for played hands are halved.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "hand-stats-multiplier", chipsFactor: 0.5, multFactor: 0.5 },
   },
 ];
 
@@ -226,9 +279,62 @@ export function debuffedHandIds(
   hand: ReadonlyArray<Card>,
   boss: BossBlind | null,
   isBossRound: boolean,
+  playedCardKeysThisAnte: ReadonlySet<string> = new Set(),
 ): ReadonlySet<number> {
   if (!isBossRound || !boss) return new Set();
   return new Set(
-    hand.filter((c) => isCardDebuffedByBoss(boss, c)).map((c) => c.id),
+    hand
+      .filter(
+        (c) =>
+          isCardDebuffedByBoss(boss, c) ||
+          (boss.effect.kind === "debuff-played-this-ante" &&
+            playedCardKeysThisAnte.has(cardKey(c))),
+      )
+      .map((c) => c.id),
   );
+}
+
+export function bossBlocksHandLabel(
+  boss: BossBlind | null,
+  label: HandLabel,
+  history: ReadonlyArray<HandLabel>,
+): boolean {
+  if (!boss) return false;
+  if (boss.effect.kind === "single-hand-type") {
+    return history.length > 0 && history[0] !== label;
+  }
+  if (boss.effect.kind === "no-repeat-hand-type") {
+    return history.includes(label);
+  }
+  return false;
+}
+
+export function bossAdjustHandEntry(
+  boss: BossBlind | null,
+  label: HandLabel,
+  entry: HandStatsEntry,
+): HandStatsEntry {
+  if (!boss) return entry;
+  if (boss.effect.kind === "hand-stats-multiplier") {
+    return {
+      chips: Math.max(1, Math.floor(entry.chips * boss.effect.chipsFactor)),
+      multiplier: Math.max(
+        1,
+        Math.floor(entry.multiplier * boss.effect.multFactor),
+      ),
+      level: entry.level,
+    };
+  }
+  if (boss.effect.kind === "hand-level-delta") {
+    const delta = boss.effect.value;
+    if (delta >= 0 || entry.level <= 1) return entry;
+    const planet = createPlanetCatalog().find((p) => p.hands.includes(label));
+    if (!planet) return entry;
+    return {
+      chips: Math.max(1, entry.chips - planet.chipsDelta),
+      multiplier: Math.max(1, entry.multiplier - planet.multDelta),
+      level: entry.level + delta,
+    };
+  }
+  return entry;
 }

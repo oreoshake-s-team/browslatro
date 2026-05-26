@@ -5,6 +5,8 @@ import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
+  bossAdjustHandEntry,
+  bossBlocksHandLabel,
   bossHandSize,
   bossMoneyPenaltyPerCard,
   bossPickerRngConfig,
@@ -12,7 +14,6 @@ import {
   bossStartingDiscards,
   bossStartingHands,
   debuffedHandIds,
-  isCardDebuffedByBoss,
   pickBossForAnte,
   type BossBlind,
 } from "./items/bosses";
@@ -255,6 +256,12 @@ function App() {
   const [recentBossIds, setRecentBossIds] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [handHistoryThisRound, setHandHistoryThisRound] = useState<
+    ReadonlyArray<HandLabel>
+  >([]);
+  const [playedCardKeysThisAnte, setPlayedCardKeysThisAnte] = useState<
+    ReadonlySet<string>
+  >(() => new Set());
 
   const bossScoreMultiplier = currentBoss.scoreMultiplier;
   const requiredScore =
@@ -286,6 +293,7 @@ function App() {
     setRoundScore(0);
     setRemainingHands(startingHands);
     setRemainingDiscards(startingDiscards);
+    setHandHistoryThisRound([]);
     setDealt(initialDeal(destroyedCardKeys, handSize));
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
@@ -479,6 +487,7 @@ function App() {
           rng: bossPickerRngConfig.rng,
         }),
       );
+      setPlayedCardKeysThisAnte(new Set());
     }
     setShopOffers(
       pickShopOffers({
@@ -781,6 +790,8 @@ function App() {
     });
     setCurrentBoss(freshBoss);
     setPendingTags([]);
+    setPlayedCardKeysThisAnte(new Set());
+    setHandHistoryThisRound([]);
     setPendingBlindSelect(true);
   }
 
@@ -826,7 +837,10 @@ function App() {
     }
     const nextSelected = dealt.hand.filter((c) => nextIds.has(c.id));
     const label = detectHandLabel(nextSelected);
-    const entry = handStats[label];
+    const entry =
+      blind === 3
+        ? bossAdjustHandEntry(currentBoss, label, handStats[label])
+        : handStats[label];
     const hand: Hand = { label, chips: entry.chips, multiplier: entry.multiplier };
     setSelectedHand(hand);
     setChips(entry.chips);
@@ -902,15 +916,36 @@ function App() {
       setMoney((prev) => Math.max(0, prev - moneyPenalty));
     }
 
+    const label = detectHandLabel(playedCards);
+    const isBossRound = blind === 3;
+    if (
+      isBossRound &&
+      bossBlocksHandLabel(currentBoss, label, handHistoryThisRound)
+    ) {
+      return;
+    }
+
     pendingHandPlayResetRef.current = true;
 
-    const label = detectHandLabel(playedCards);
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
-    const handEntry = handStats[label];
-    const isBossRound = blind === 3;
+    setHandHistoryThisRound((prev) => [...prev, label]);
+    setPlayedCardKeysThisAnte((prev) => {
+      const next = new Set(prev);
+      for (const card of playedCards) next.add(cardKey(card));
+      return next;
+    });
+    const handEntry = isBossRound
+      ? bossAdjustHandEntry(currentBoss, label, handStats[label])
+      : handStats[label];
+    const playedDebuffedIds = debuffedHandIds(
+      playedCards,
+      currentBoss,
+      isBossRound,
+      playedCardKeysThisAnte,
+    );
     const scoring = expandRedSealRetriggers(
       getScoringCards(playedCards, label),
-    ).filter((c) => !(isBossRound && isCardDebuffedByBoss(currentBoss, c)));
+    ).filter((c) => !playedDebuffedIds.has(c.id));
     const cardChipsTotal = scoring.reduce(
       (sum, card) => sum + getCardChips(card),
       0,
@@ -1146,7 +1181,19 @@ function App() {
         canSubmit={(() => {
           const required =
             blind === 3 ? bossRequiredCardCount(currentBoss) : null;
-          return required === null || selectedIds.size === required;
+          if (required !== null && selectedIds.size !== required) return false;
+          if (
+            blind === 3 &&
+            selectedHand !== null &&
+            bossBlocksHandLabel(
+              currentBoss,
+              selectedHand.label as HandLabel,
+              handHistoryThisRound,
+            )
+          ) {
+            return false;
+          }
+          return true;
         })()}
         canDiscard={
           selectedIds.size > 0 &&
@@ -1164,7 +1211,12 @@ function App() {
         remaining={dealt.remaining}
         selectedIds={selectedIds}
         discardingIds={discardingIds}
-        debuffedIds={debuffedHandIds(dealt.hand, currentBoss, blind === 3)}
+        debuffedIds={debuffedHandIds(
+          dealt.hand,
+          currentBoss,
+          blind === 3,
+          playedCardKeysThisAnte,
+        )}
         jokers={jokers}
         jokerPulseCounters={jokerPulseCounters}
         consumables={consumables}

@@ -2,6 +2,8 @@ import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
   availableBosses,
+  bossAdjustHandEntry,
+  bossBlocksHandLabel,
   bossHandSize,
   bossMoneyPenaltyPerCard,
   bossRequiredCardCount,
@@ -283,5 +285,125 @@ describe("debuffedHandIds", () => {
   test("returns the face-card ids under The Plant", () => {
     const boss = createBossCatalog().find((b) => b.id === "the-plant")!;
     expect(Array.from(debuffedHandIds(hand, boss, true))).toEqual([12]);
+  });
+});
+
+describe("Phase 3 round-state catalog entries (#245)", () => {
+  test.each([
+    ["the-mouth", { kind: "single-hand-type" }, 2],
+    ["the-eye", { kind: "no-repeat-hand-type" }, 3],
+    ["the-pillar", { kind: "debuff-played-this-ante" }, 1],
+    ["the-arm", { kind: "hand-level-delta", value: -1 }, 2],
+    [
+      "the-flint",
+      { kind: "hand-stats-multiplier", chipsFactor: 0.5, multFactor: 0.5 },
+      2,
+    ],
+  ] as const)("%s has the expected effect and anteMin", (id, effect, anteMin) => {
+    const boss = createBossCatalog().find((b) => b.id === id);
+    expect(boss?.effect).toEqual(effect);
+    expect(boss?.anteMin).toBe(anteMin);
+  });
+});
+
+describe("bossBlocksHandLabel", () => {
+  const mouth = createBossCatalog().find((b) => b.id === "the-mouth")!;
+  const eye = createBossCatalog().find((b) => b.id === "the-eye")!;
+  const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+
+  test("Mouth allows the first played hand of any label", () => {
+    expect(bossBlocksHandLabel(mouth, "Pair", [])).toBe(false);
+  });
+
+  test("Mouth blocks a different label after the first play", () => {
+    expect(bossBlocksHandLabel(mouth, "Flush", ["Pair"])).toBe(true);
+  });
+
+  test("Mouth allows the same label after the first play", () => {
+    expect(bossBlocksHandLabel(mouth, "Pair", ["Pair"])).toBe(false);
+  });
+
+  test("Eye blocks a repeated label", () => {
+    expect(bossBlocksHandLabel(eye, "Pair", ["Pair"])).toBe(true);
+  });
+
+  test("Eye allows a fresh label after a different one was played", () => {
+    expect(bossBlocksHandLabel(eye, "Flush", ["Pair"])).toBe(false);
+  });
+
+  test("Non-restriction bosses never block", () => {
+    expect(bossBlocksHandLabel(wall, "Pair", ["Pair", "Pair"])).toBe(false);
+  });
+
+  test("null boss never blocks", () => {
+    expect(bossBlocksHandLabel(null, "Pair", ["Pair"])).toBe(false);
+  });
+});
+
+describe("debuffedHandIds — The Pillar (debuff-played-this-ante)", () => {
+  const pillar = createBossCatalog().find((b) => b.id === "the-pillar")!;
+  const hand: ReadonlyArray<Card> = [
+    { id: 100, rank: "5", suit: "clubs" },
+    { id: 101, rank: "5", suit: "hearts" },
+    { id: 102, rank: "7", suit: "spades" },
+  ];
+
+  test("debuffs cards whose key is in the ante-played set", () => {
+    expect(
+      Array.from(
+        debuffedHandIds(hand, pillar, true, new Set(["5-clubs", "7-spades"])),
+      ).sort(),
+    ).toEqual([100, 102]);
+  });
+
+  test("returns an empty set when the ante set is empty", () => {
+    expect(debuffedHandIds(hand, pillar, true, new Set()).size).toBe(0);
+  });
+
+  test("only applies on boss rounds", () => {
+    expect(
+      debuffedHandIds(hand, pillar, false, new Set(["5-clubs"])).size,
+    ).toBe(0);
+  });
+});
+
+describe("bossAdjustHandEntry (The Arm / The Flint)", () => {
+  const arm = createBossCatalog().find((b) => b.id === "the-arm")!;
+  const flint = createBossCatalog().find((b) => b.id === "the-flint")!;
+  const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+  const level1Pair = { chips: 10, multiplier: 2, level: 1 } as const;
+  const level2Pair = { chips: 25, multiplier: 3, level: 2 } as const;
+
+  test("Flint halves chips and mult (floored)", () => {
+    expect(bossAdjustHandEntry(flint, "Pair", level1Pair)).toEqual({
+      chips: 5,
+      multiplier: 1,
+      level: 1,
+    });
+  });
+
+  test("Flint never drops chips below 1", () => {
+    const tiny = { chips: 1, multiplier: 2, level: 1 } as const;
+    expect(bossAdjustHandEntry(flint, "Pair", tiny).chips).toBe(1);
+  });
+
+  test("Arm leaves level-1 entries unchanged", () => {
+    expect(bossAdjustHandEntry(arm, "Pair", level1Pair)).toEqual(level1Pair);
+  });
+
+  test("Arm subtracts the planet upgrade from a level-2 entry (Pair → Mercury)", () => {
+    expect(bossAdjustHandEntry(arm, "Pair", level2Pair)).toEqual({
+      chips: 10,
+      multiplier: 2,
+      level: 1,
+    });
+  });
+
+  test("non-adjusting bosses return the entry unchanged", () => {
+    expect(bossAdjustHandEntry(wall, "Pair", level2Pair)).toEqual(level2Pair);
+  });
+
+  test("null boss returns the entry unchanged", () => {
+    expect(bossAdjustHandEntry(null, "Pair", level2Pair)).toEqual(level2Pair);
   });
 });

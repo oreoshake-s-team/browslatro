@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { shopPickerRngConfig, type ShopItem } from "./items/shop";
+import { bossPickerRngConfig } from "./items/bosses";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
@@ -70,6 +71,7 @@ import App from "./App";
 
 beforeEach(() => {
   playMock.mockClear();
+  bossPickerRngConfig.rng = () => 0;
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
@@ -79,6 +81,7 @@ afterEach(() => {
   });
   vi.useRealTimers();
   shopPickerRngConfig.rng = Math.random;
+  bossPickerRngConfig.rng = Math.random;
 });
 
 function getHandCardButtons(): HTMLElement[] {
