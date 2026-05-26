@@ -1274,6 +1274,11 @@ function App() {
     const scoring = expandRedSealRetriggers(
       getScoringCards(playedCards, label),
     ).filter((c) => !playedDebuffedIds.has(c.id));
+    if (scoring.length === 0) {
+      const handOnlyScore = handEntry.chips * handEntry.multiplier;
+      finalizeHandSubmission(handOnlyScore, submittedSelection, label);
+      return;
+    }
     const cardChipsTotal = scoring.reduce(
       (sum, card) => sum + getCardChips(card),
       0,
