@@ -9,6 +9,7 @@ import {
   createLustyJoker,
   createPlusFourMultJoker,
   createWrathfulJoker,
+  withEdition,
   type Joker,
 } from "../../items/jokers";
 
@@ -481,5 +482,77 @@ describe("Jokers sell", () => {
     render(<Jokers jokers={filled} onSell={() => {}} onDragEnd={onDragEnd} />);
     fireEvent.dragEnd(screen.getByTestId("joker-tile-filled-plus-four-mult"));
     expect(onDragEnd).toHaveBeenCalled();
+  });
+});
+
+describe("Jokers edition rendering", () => {
+  test("a Foil joker tile carries the foil edition class", () => {
+    const j = withEdition(createPlusFourMultJoker(), "foil");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
+      "joker-tile-edition-foil",
+    );
+  });
+
+  test("a Holographic joker tile carries the holographic edition class", () => {
+    const j = withEdition(createPlusFourMultJoker(), "holographic");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
+      "joker-tile-edition-holographic",
+    );
+  });
+
+  test("a Polychrome joker tile carries the polychrome edition class", () => {
+    const j = withEdition(createPlusFourMultJoker(), "polychrome");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
+      "joker-tile-edition-polychrome",
+    );
+  });
+
+  test("a Negative joker tile carries the negative edition class", () => {
+    const j = withEdition(createPlusFourMultJoker(), "negative");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
+      "joker-tile-edition-negative",
+    );
+  });
+
+  test("an un-editioned joker tile does not carry the generic edition class", () => {
+    const j = createPlusFourMultJoker();
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).not.toHaveClass(
+      "joker-tile-edition",
+    );
+  });
+
+  test("an editioned tile exposes the edition via data-edition", () => {
+    const j = withEdition(createPlusFourMultJoker(), "polychrome");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveAttribute(
+      "data-edition",
+      "polychrome",
+    );
+  });
+
+  test("an editioned tile mentions the edition in its accessible name", () => {
+    const j = withEdition(createPlusFourMultJoker(), "foil");
+    render(<Jokers jokers={[j]} onSell={() => {}} />);
+    expect(
+      screen.getByTestId(`joker-tile-filled-${j.id}`),
+    ).toHaveAccessibleName(/Foil edition/);
+  });
+
+  test("a Negative joker frees a slot — MAX_JOKERS empty tiles still render alongside one Negative", () => {
+    const j = withEdition(createPlusFourMultJoker(), "negative");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(MAX_JOKERS);
+  });
+
+  test("a non-Negative joker still consumes one of the MAX_JOKERS slots", () => {
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(
+      MAX_JOKERS - 1,
+    );
   });
 });

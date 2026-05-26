@@ -191,3 +191,49 @@
 .jokers-consumable-hover .consumable-drop-overlay-use {
   background-color: rgba(47, 158, 68, 0.32);
 }
+
+.joker-tile-edition {
+  position: relative;
+}
+
+.joker-tile-edition-foil {
+  border-color: #4dabf7;
+  box-shadow: 0 0 12px rgba(77, 171, 247, 0.6);
+  background: linear-gradient(135deg, #d0ebff 0%, #ffe066 60%, #d0ebff 100%);
+}
+
+.joker-tile-edition-holographic {
+  border-color: #cc5de8;
+  box-shadow: 0 0 12px rgba(204, 93, 232, 0.6);
+  background: linear-gradient(135deg, #f3d9fa 0%, #ffe066 50%, #c5f6fa 100%);
+}
+
+.joker-tile-edition-polychrome {
+  border-color: #ff8787;
+  box-shadow: 0 0 14px rgba(255, 135, 135, 0.65);
+  background: linear-gradient(
+    135deg,
+    #ffd6a5 0%,
+    #fdffb6 25%,
+    #caffbf 50%,
+    #9bf6ff 75%,
+    #ffc6ff 100%
+  );
+}
+
+.joker-tile-edition-negative {
+  border-color: #495057;
+  box-shadow: 0 0 14px rgba(73, 80, 87, 0.7), inset 0 0 18px rgba(0, 0, 0, 0.45);
+  background-color: #212529;
+  color: #ffe066;
+}
+
+.joker-tile-edition-negative .joker-tile-description {
+  color: #f1f3f5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .joker-tile-edition {
+    box-shadow: none;
+  }
+}

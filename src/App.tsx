@@ -88,6 +88,7 @@ import {
   applyPerCardJokers,
   computeFinalScoreWithJokers,
   createJokerCatalog,
+  effectiveJokerCount,
   initialJokersConfig,
   isFaceCard,
   jokerSellValue,
@@ -532,7 +533,7 @@ function App() {
     const price = applyShopDiscount(offer.price, ownedVoucherIds);
     if (money < price) return;
     if (offer.kind === "joker") {
-      if (jokers.length >= MAX_JOKERS) return;
+      if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
       play("pop");
       setMoney((prev) => prev - price);
       setJokers((prev) => [...prev, offer.joker]);
@@ -1166,7 +1167,7 @@ function App() {
       {shopOffers && (
         <Shop
           money={money}
-          equippedJokerCount={jokers.length}
+          equippedJokerCount={effectiveJokerCount(jokers)}
           consumableCount={consumables.length}
           consumableCapacity={consumableCapacity}
           offers={shopOffers}
