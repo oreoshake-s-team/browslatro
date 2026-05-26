@@ -22,7 +22,7 @@ import {
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
-type ShopOfferKind = ShopItem["kind"];
+type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
 
 function findShopOfferIdxOfKind(kind: ShopOfferKind): number {
   const offers = screen.queryAllByTestId(/^shop-offer-/);
@@ -1447,9 +1447,20 @@ describe("Post-round shop integration", () => {
     ).toBeInTheDocument();
   });
 
-  test("shows exactly two offers in the shop by default", async () => {
+  test("shows exactly two item offers in the shop by default", async () => {
     await openShop();
-    expect(screen.getAllByTestId(/^shop-offer-/)).toHaveLength(2);
+    const items = screen
+      .getAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
+    expect(items).toHaveLength(2);
+  });
+
+  test("shows two pack offers in the shop by default", async () => {
+    await openShop();
+    const packs = screen
+      .getAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") === "pack");
+    expect(packs).toHaveLength(2);
   });
 
   test("clicking Next Round closes the shop and starts the next blind", async () => {
@@ -1519,10 +1530,11 @@ describe("Post-round shop integration", () => {
     expect(equippedNames).toContain(boughtName);
   });
 
-  test("the two shop offers never share a name in a single shop visit", async () => {
+  test("the two item offers never share a name in a single shop visit", async () => {
     await openShop();
     const offerNames = screen
       .getAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") !== "pack")
       .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
     expect(new Set(offerNames).size).toBe(offerNames.length);
   });
@@ -2288,11 +2300,14 @@ describe("Voucher effects integration", () => {
     ).toHaveTextContent("Overstock");
   });
 
-  test("buying Overstock raises the next shop's offer count from 2 to 3", async () => {
+  test("buying Overstock raises the next shop's item offer count from 2 to 3", async () => {
     const user = await openShopWithVoucher(0);
     await user.click(screen.getByTestId("shop-voucher-buy"));
     await winAndReopenShop(user);
-    expect(screen.getAllByTestId(/^shop-offer-/)).toHaveLength(3);
+    const items = screen
+      .getAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
+    expect(items).toHaveLength(3);
   });
 
   test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {

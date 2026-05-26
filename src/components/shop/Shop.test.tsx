@@ -507,3 +507,85 @@ describe("Shop", () => {
     });
   });
 });
+
+describe("Shop pack offers", () => {
+  function celestialPackOffer(
+    variant: "normal" | "jumbo" | "mega",
+    sold = false,
+  ): ShopItem {
+    return {
+      kind: "pack",
+      pack: {
+        pool: "celestial",
+        variant,
+        options: [{ kind: "planet", planet: PLUTO }],
+      },
+      price: variant === "normal" ? 4 : variant === "jumbo" ? 6 : 8,
+      sold,
+    };
+  }
+
+  test("renders a Celestial pack offer with its display name", () => {
+    renderShop({ offers: [celestialPackOffer("normal")] });
+    expect(
+      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-name"),
+    ).toHaveTextContent("Celestial Pack");
+  });
+
+  test("renders the Jumbo prefix on a Jumbo Celestial pack offer", () => {
+    renderShop({ offers: [celestialPackOffer("jumbo")] });
+    expect(
+      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-name"),
+    ).toHaveTextContent("Jumbo Celestial Pack");
+  });
+
+  test("describes the pick semantics for a Normal pack (pick 1 from 3)", () => {
+    renderShop({ offers: [celestialPackOffer("normal")] });
+    expect(
+      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-description"),
+    ).toHaveTextContent("Open to pick 1 card from 3 options");
+  });
+
+  test("describes the pick semantics for a Mega pack (pick 2 from 5)", () => {
+    renderShop({ offers: [celestialPackOffer("mega")] });
+    expect(
+      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-description"),
+    ).toHaveTextContent("Open to pick 2 cards from 5 options");
+  });
+
+  test("tags pack offers with data-offer-kind=pack", () => {
+    renderShop({ offers: [celestialPackOffer("normal")] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-offer-kind",
+      "pack",
+    );
+  });
+
+  test("the pack Open button is disabled (modal not yet implemented)", () => {
+    renderShop({ offers: [celestialPackOffer("normal")] });
+    const open = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(open).toBeDisabled();
+  });
+
+  test("the pack Open button shows the price", () => {
+    renderShop({ offers: [celestialPackOffer("normal")] });
+    const open = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(open).toHaveTextContent("Open ($4)");
+  });
+
+  test("clicking the disabled pack Open button does not call onBuy", async () => {
+    const user = userEvent.setup();
+    const onBuy = vi.fn();
+    renderShop({ offers: [celestialPackOffer("normal")], onBuy });
+    const open = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    if (!(open instanceof HTMLButtonElement)) throw new Error("missing button");
+    await user.click(open);
+    expect(onBuy).not.toHaveBeenCalled();
+  });
+});

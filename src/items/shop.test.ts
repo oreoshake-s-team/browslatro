@@ -14,6 +14,7 @@ import { createTarotCatalog } from "./tarots";
 import {
   BASE_REROLL_COST,
   SHOP_OFFER_SLOTS,
+  SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
   pickRandomJoker,
   pickRandomPlanet,
@@ -23,6 +24,10 @@ import {
   rerollShopOffer,
   type ShopItem,
 } from "./shop";
+
+function itemOffers(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
+  return offers.filter((o) => o.kind !== "pack");
+}
 
 function sequenceRng(values: ReadonlyArray<number>): RandomSource {
   let i = 0;
@@ -127,12 +132,14 @@ describe("pickRandomTarot", () => {
 });
 
 describe("pickShopOffers — random-kind happy path", () => {
-  test("returns SHOP_OFFER_SLOTS offers when all three pools are non-empty", () => {
-    expect(pickShopOffers(baseArgs(mulberry32(1)))).toHaveLength(SHOP_OFFER_SLOTS);
+  test("returns SHOP_OFFER_SLOTS item offers when all three pools are non-empty", () => {
+    expect(itemOffers(pickShopOffers(baseArgs(mulberry32(1))))).toHaveLength(
+      SHOP_OFFER_SLOTS,
+    );
   });
 
-  test("every offer's kind is one of joker/planet/tarot", () => {
-    const offers = pickShopOffers(baseArgs(mulberry32(1)));
+  test("every item offer's kind is one of joker/planet/tarot", () => {
+    const offers = itemOffers(pickShopOffers(baseArgs(mulberry32(1))));
     expect(offers.every((o) => ["joker", "planet", "tarot"].includes(o.kind))).toBe(true);
   });
 
@@ -152,35 +159,41 @@ describe("pickShopOffers — random-kind happy path", () => {
 });
 
 describe("pickShopOffers — empty-pool fallback", () => {
-  test("still fills slots with planet or tarot when the joker pool is empty", () => {
+  test("still fills item slots with planet or tarot when the joker pool is empty", () => {
     const catalog = createJokerCatalog();
-    const offers = pickShopOffers({
-      ...baseArgs(mulberry32(1)),
-      jokerCatalog: catalog,
-      excludedJokerIds: catalog.map((j) => j.id),
-    });
+    const offers = itemOffers(
+      pickShopOffers({
+        ...baseArgs(mulberry32(1)),
+        jokerCatalog: catalog,
+        excludedJokerIds: catalog.map((j) => j.id),
+      }),
+    );
     expect(offers.every((o) => o.kind === "planet" || o.kind === "tarot")).toBe(true);
   });
 
-  test("returns SHOP_OFFER_SLOTS offers even when only one pool has items", () => {
-    const offers = pickShopOffers({
-      ...baseArgs(mulberry32(1)),
-      planetCatalog: [],
-      tarotCatalog: [],
-    });
+  test("returns SHOP_OFFER_SLOTS item offers even when only one pool has items", () => {
+    const offers = itemOffers(
+      pickShopOffers({
+        ...baseArgs(mulberry32(1)),
+        planetCatalog: [],
+        tarotCatalog: [],
+      }),
+    );
     expect(offers).toHaveLength(SHOP_OFFER_SLOTS);
   });
 
-  test("returns an empty list when all pools are empty", () => {
+  test("emits no item offers when every item pool is empty", () => {
     const catalog = createJokerCatalog();
-    const offers = pickShopOffers({
-      jokerCatalog: catalog,
-      excludedJokerIds: catalog.map((j) => j.id),
-      planetCatalog: [],
-      tarotCatalog: [],
-      spectralCatalog: [],
-      rng: mulberry32(1),
-    });
+    const offers = itemOffers(
+      pickShopOffers({
+        jokerCatalog: catalog,
+        excludedJokerIds: catalog.map((j) => j.id),
+        planetCatalog: [],
+        tarotCatalog: [],
+        spectralCatalog: [],
+        rng: mulberry32(1),
+      }),
+    );
     expect(offers).toEqual([]);
   });
 });
@@ -233,22 +246,30 @@ describe("rerollShopOffer — random-kind rerolls", () => {
 });
 
 describe("pickShopOffers — extraSlots (Overstock vouchers)", () => {
-  test("returns base SHOP_OFFER_SLOTS when extraSlots is omitted", () => {
-    expect(pickShopOffers(baseArgs(mulberry32(1)))).toHaveLength(SHOP_OFFER_SLOTS);
+  test("returns base SHOP_OFFER_SLOTS item offers when extraSlots is omitted", () => {
+    expect(itemOffers(pickShopOffers(baseArgs(mulberry32(1))))).toHaveLength(
+      SHOP_OFFER_SLOTS,
+    );
   });
 
-  test("returns 3 offers when extraSlots is 1 (Overstock)", () => {
-    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 1 });
+  test("returns 3 item offers when extraSlots is 1 (Overstock)", () => {
+    const offers = itemOffers(
+      pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 1 }),
+    );
     expect(offers).toHaveLength(3);
   });
 
-  test("returns 4 offers when extraSlots is 2 (Overstock + Plus)", () => {
-    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 2 });
+  test("returns 4 item offers when extraSlots is 2 (Overstock + Plus)", () => {
+    const offers = itemOffers(
+      pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 2 }),
+    );
     expect(offers).toHaveLength(4);
   });
 
   test("treats negative extraSlots as zero", () => {
-    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: -3 });
+    const offers = itemOffers(
+      pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: -3 }),
+    );
     expect(offers).toHaveLength(SHOP_OFFER_SLOTS);
   });
 });
@@ -270,14 +291,16 @@ function offerSubjectId(offer: ShopItem): string {
       return offer.tarot.id;
     case "spectral":
       return offer.spectral.id;
+    case "pack":
+      return `pack-${offer.pack.pool}-${offer.pack.variant}`;
   }
 }
 
 describe("pickShopOffers — no duplicate offers within a single visit", () => {
-  test("two slots never share the same item across 200 seeds", () => {
+  test("two item slots never share the same item across 200 seeds", () => {
     let duplicateSeed: number | null = null;
     for (let seed = 1; seed <= 200; seed += 1) {
-      const offers = pickShopOffers(baseArgs(mulberry32(seed)));
+      const offers = itemOffers(pickShopOffers(baseArgs(mulberry32(seed))));
       const ids = offers.map(offerSubjectId);
       if (new Set(ids).size !== ids.length) {
         duplicateSeed = seed;
@@ -287,25 +310,29 @@ describe("pickShopOffers — no duplicate offers within a single visit", () => {
     expect(duplicateSeed).toBeNull();
   });
 
-  test("four slots (Overstock + Plus) still produce four distinct items", () => {
-    const offers = pickShopOffers({
-      ...baseArgs(mulberry32(1)),
-      extraSlots: 2,
-    });
+  test("four item slots (Overstock + Plus) still produce four distinct items", () => {
+    const offers = itemOffers(
+      pickShopOffers({
+        ...baseArgs(mulberry32(1)),
+        extraSlots: 2,
+      }),
+    );
     const ids = offers.map(offerSubjectId);
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test("when only one planet exists, two planet picks degrade to one offer instead of duplicating", () => {
+  test("when only one planet exists, two planet picks degrade to one item offer instead of duplicating", () => {
     const singlePlanetCatalog = createPlanetCatalog().slice(0, 1);
-    const offers = pickShopOffers({
-      jokerCatalog: [],
-      excludedJokerIds: [],
-      planetCatalog: singlePlanetCatalog,
-      tarotCatalog: [],
-      spectralCatalog: [],
-      rng: sequenceRng([0.4, 0.4]),
-    });
+    const offers = itemOffers(
+      pickShopOffers({
+        jokerCatalog: [],
+        excludedJokerIds: [],
+        planetCatalog: singlePlanetCatalog,
+        tarotCatalog: [],
+        spectralCatalog: [],
+        rng: sequenceRng([0.4, 0.4]),
+      }),
+    );
     expect(offers).toHaveLength(1);
   });
 });
@@ -396,7 +423,7 @@ describe("pickShopOffers — spectral offer rate", () => {
     let spectralCount = 0;
     let commonCount = 0;
     for (let seed = 1; seed <= 500; seed += 1) {
-      const offers = pickShopOffers(baseArgs(mulberry32(seed)));
+      const offers = itemOffers(pickShopOffers(baseArgs(mulberry32(seed))));
       for (const offer of offers) {
         if (offer.kind === "spectral") spectralCount += 1;
         else commonCount += 1;
@@ -436,5 +463,50 @@ describe("rerollShopOffer — secret planet gating via availablePlanets", () => 
         expect(SECRET_PLANET_IDS).not.toContain(next.planet.id);
       }
     }
+  });
+});
+
+describe("pickShopOffers — pack slots", () => {
+  function packOffers(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
+    return offers.filter((o) => o.kind === "pack");
+  }
+
+  test("emits SHOP_PACK_SLOTS pack offers per shop visit", () => {
+    expect(SHOP_PACK_SLOTS).toBe(2);
+    expect(packOffers(pickShopOffers(baseArgs(mulberry32(1))))).toHaveLength(
+      SHOP_PACK_SLOTS,
+    );
+  });
+
+  test("pack slots are emitted after the item slots", () => {
+    const offers = pickShopOffers(baseArgs(mulberry32(1)));
+    const firstPackIdx = offers.findIndex((o) => o.kind === "pack");
+    expect(firstPackIdx).toBeGreaterThanOrEqual(SHOP_OFFER_SLOTS);
+  });
+
+  test("pack slots still appear when item pools are empty", () => {
+    const offers = pickShopOffers({
+      jokerCatalog: [],
+      excludedJokerIds: [],
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: [],
+      spectralCatalog: [],
+      rng: mulberry32(1),
+    });
+    expect(packOffers(offers)).toHaveLength(SHOP_PACK_SLOTS);
+  });
+
+  test("rerollShopOffer returns null for a pack offer (packs are not rerollable)", () => {
+    const offers = pickShopOffers(baseArgs(mulberry32(1)));
+    const pack = offers.find((o) => o.kind === "pack");
+    if (!pack) throw new Error("expected a pack in shop offers");
+    expect(rerollShopOffer(pack, baseArgs(mulberry32(2)))).toBeNull();
+  });
+
+  test("a Celestial pack offer carries options drawn from the planet catalog", () => {
+    const offers = pickShopOffers(baseArgs(mulberry32(1)));
+    const pack = offers.find((o) => o.kind === "pack");
+    if (!pack || pack.kind !== "pack") throw new Error("expected a pack");
+    expect(pack.pack.options.length).toBeGreaterThan(0);
   });
 });

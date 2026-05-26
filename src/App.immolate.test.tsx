@@ -8,7 +8,7 @@ vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const playMock = play as MockedFunction<typeof play>;
 
-type ShopOfferKind = ShopItem["kind"];
+type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
 
 const KIND_TO_RNG: Record<ShopOfferKind, number> = {
   joker: 0.05,

@@ -77,7 +77,12 @@ test("the post-round shop appears after dismissing the round-won modal", async (
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
 
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
-  await expect(page.getByTestId(/^shop-offer-/)).toHaveCount(2);
+  await expect(
+    page.locator('[data-testid^="shop-offer-"]:not([data-offer-kind="pack"])'),
+  ).toHaveCount(2);
+  await expect(
+    page.locator('[data-testid^="shop-offer-"][data-offer-kind="pack"]'),
+  ).toHaveCount(2);
   await expect(
     page.getByRole("button", { name: NEXT_ROUND_BUTTON }),
   ).toBeVisible();
@@ -95,10 +100,12 @@ test("shop offers exclude already-equipped jokers and never duplicate within a s
   await selectAndSubmitStraightFlush(page);
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
-  await expect(page.getByTestId(/^shop-offer-/)).toHaveCount(2);
+  await expect(
+    page.locator('[data-testid^="shop-offer-"]:not([data-offer-kind="pack"])'),
+  ).toHaveCount(2);
 
   const offerNames = await page
-    .locator(".shop-offer .shop-offer-name")
+    .locator('.shop-offer:not([data-offer-kind="pack"]) .shop-offer-name')
     .allTextContents();
 
   const overlap = offerNames.filter((name) => equippedNames.includes(name));
