@@ -1,6 +1,12 @@
 import { Fragment, useRef, useState } from "react";
 import "./Jokers.css";
-import { MAX_JOKERS, jokerSellValue, type Joker } from "../../items/jokers";
+import {
+  JOKER_EDITION_INFO,
+  MAX_JOKERS,
+  effectiveJokerCount,
+  jokerSellValue,
+  type Joker,
+} from "../../items/jokers";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
@@ -36,7 +42,7 @@ export default function Jokers({
     onDrop: onConsumableDrop,
   });
   const listRef = useRef<HTMLUListElement | null>(null);
-  const emptyCount = Math.max(0, MAX_JOKERS - jokers.length);
+  const emptyCount = Math.max(0, MAX_JOKERS - effectiveJokerCount(jokers));
   const reorderable = Boolean(onReorder);
   const sellable = Boolean(onSell);
   const tileDraggable = reorderable || sellable;
@@ -135,19 +141,29 @@ export default function Jokers({
           const pulse = pulseCounters?.[joker.id] ?? 0;
           const isDragging = draggingId === joker.id;
           const sellValue = jokerSellValue(joker);
+          const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
+          const editionClass = joker.edition
+            ? ` joker-tile-edition joker-tile-edition-${joker.edition}`
+            : "";
+          const editionLabel = editionInfo
+            ? ` ${editionInfo.name} edition: ${editionInfo.description}.`
+            : "";
           const ariaLabel = sellable
-            ? `${joker.name}. ${joker.description}. Shift-click or drag to deck to sell for $${sellValue}.`
-            : undefined;
+            ? `${joker.name}. ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
+            : editionInfo
+              ? `${joker.name}. ${joker.description}.${editionLabel}`
+              : undefined;
           return (
             <Fragment key={joker.id}>
               {reorderable && renderGap(idx)}
               <li
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
-                }`}
+                }${editionClass}`}
                 title={joker.description}
                 aria-label={ariaLabel}
                 data-testid={`joker-tile-filled-${joker.id}`}
+                data-edition={joker.edition ?? undefined}
                 draggable={tileDraggable || undefined}
                 aria-grabbed={isDragging || undefined}
                 onDragStart={

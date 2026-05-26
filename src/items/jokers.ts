@@ -96,11 +96,53 @@ export type JokerEffect =
       readonly amount: number;
     };
 
+export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
+
+export const JOKER_EDITION_KINDS: ReadonlyArray<JokerEdition> = [
+  "foil",
+  "holographic",
+  "polychrome",
+  "negative",
+];
+
+export const FOIL_CHIPS = 50;
+export const HOLOGRAPHIC_MULT = 10;
+export const POLYCHROME_X_MULT = 1.5;
+
+export interface JokerEditionInfo {
+  readonly name: string;
+  readonly description: string;
+}
+
+export const JOKER_EDITION_INFO: Readonly<Record<JokerEdition, JokerEditionInfo>> = {
+  foil: { name: "Foil", description: `+${FOIL_CHIPS} chips when scored` },
+  holographic: {
+    name: "Holographic",
+    description: `+${HOLOGRAPHIC_MULT} Mult when scored`,
+  },
+  polychrome: {
+    name: "Polychrome",
+    description: `×${POLYCHROME_X_MULT} Mult when scored`,
+  },
+  negative: { name: "Negative", description: "+1 Joker slot" },
+};
+
 export interface Joker {
   readonly id: string;
   readonly name: string;
   readonly description: string;
   readonly effect: JokerEffect;
+  readonly edition?: JokerEdition;
+}
+
+export function withEdition(joker: Joker, edition: JokerEdition): Joker {
+  return { ...joker, edition };
+}
+
+export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
+  let count = 0;
+  for (const j of jokers) if (j.edition !== "negative") count += 1;
+  return count;
 }
 
 export interface JokerScoringResult {
@@ -531,7 +573,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "stencil": {
-        const emptySlots = MAX_JOKERS - jokers.length;
+        const emptySlots = MAX_JOKERS - effectiveJokerCount(jokers);
         if (emptySlots > 0) {
           xMult *= emptySlots;
           fired.push(joker.id);
@@ -547,6 +589,28 @@ export function applyHandLevelJokers(
         break;
       default:
         assertNeverEffect(effect);
+    }
+    if (joker.edition !== undefined && joker.edition !== "negative") {
+      switch (joker.edition) {
+        case "foil": {
+          additiveChips += FOIL_CHIPS;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, additiveChips: FOIL_CHIPS });
+          break;
+        }
+        case "holographic": {
+          additiveMult += HOLOGRAPHIC_MULT;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, additiveMult: HOLOGRAPHIC_MULT });
+          break;
+        }
+        case "polychrome": {
+          xMult *= POLYCHROME_X_MULT;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, xMultFactor: POLYCHROME_X_MULT });
+          break;
+        }
+      }
     }
   }
 
