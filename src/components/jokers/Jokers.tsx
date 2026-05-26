@@ -184,7 +184,7 @@ export default function Jokers({
                 >
                   <span className="joker-tile-name">{joker.name}</span>
                   <span className="joker-tile-description">{joker.description}</span>
-                  {sellable && (
+                  {sellable && isDragging && (
                     <span className="joker-tile-sell" aria-hidden="true">
                       Sell ${sellValue}
                     </span>

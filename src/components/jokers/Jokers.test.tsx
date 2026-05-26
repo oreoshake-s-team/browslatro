@@ -387,13 +387,28 @@ describe("Jokers sell", () => {
     createBusinessCardJoker(),
   ];
 
-  test("renders a Sell chip on each filled tile when onSell is provided", () => {
+  test("does not render a Sell chip at rest, even when onSell is provided", () => {
     render(<Jokers jokers={filled} onSell={() => {}} />);
-    expect(screen.getAllByText(/^Sell \$/)).toHaveLength(filled.length);
+    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
+  });
+
+  test("renders a Sell chip on the dragged tile only after dragstart", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    fireEvent.dragStart(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(screen.getAllByText(/^Sell \$/)).toHaveLength(1);
+  });
+
+  test("Sell chip disappears after dragend", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    const tile = screen.getByTestId("joker-tile-filled-business-card");
+    fireEvent.dragStart(tile);
+    fireEvent.dragEnd(tile);
+    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
   });
 
   test("does not render a Sell chip when onSell is not provided", () => {
     render(<Jokers jokers={filled} />);
+    fireEvent.dragStart(screen.getByTestId("joker-tile-filled-business-card"));
     expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
   });
 
