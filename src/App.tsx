@@ -105,6 +105,7 @@ import {
   type JokerHandLevelStep,
 } from "./items/jokers";
 import {
+  SHOP_PACK_SLOTS,
   pickShopOffers,
   rerollShopOffer,
   shopPickerRngConfig,
@@ -244,6 +245,7 @@ function App() {
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
   const currentHandSize = Math.max(1, HAND_SIZE + handSizeModifier);
+  const [extraPackSlots, setExtraPackSlots] = useState(0);
   const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
     number | null
   >(null);
@@ -518,6 +520,7 @@ function App() {
         tarotCatalog: createTarotCatalog(),
         spectralCatalog: createSpectralCatalog(),
         extraSlots: extraShopOfferSlots(ownedVoucherIds),
+        extraPackSlots,
         rng: shopPickerRngConfig.rng,
       }),
     );
@@ -805,6 +808,7 @@ function App() {
     setAnte(1);
     setMoney(4);
     setHandSizeModifier(0);
+    setExtraPackSlots(0);
     setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
@@ -1275,6 +1279,10 @@ function App() {
         onJokerDropOnDeck={onJokerDrop(sellJoker)}
         onShrinkHandSize={() => setHandSizeModifier((prev) => prev - 1)}
         onGrowHandSize={() => setHandSizeModifier((prev) => prev + 1)}
+        onShrinkPackSlots={() =>
+          setExtraPackSlots((prev) => Math.max(-SHOP_PACK_SLOTS, prev - 1))
+        }
+        onGrowPackSlots={() => setExtraPackSlots((prev) => prev + 1)}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
