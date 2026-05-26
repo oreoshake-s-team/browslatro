@@ -46,6 +46,31 @@ export function pickVoucherForAnte(args: PickVoucherArgs): Voucher | null {
   return eligible[Math.floor(rng() * eligible.length)];
 }
 
+export function pickVouchersForAnte(
+  args: PickVoucherArgs,
+  count: number,
+): ReadonlyArray<Voucher> {
+  const target = Math.max(0, Math.floor(count));
+  if (target === 0) return [];
+  const catalog = args.catalog ?? VOUCHER_CATALOG;
+  const rng = args.rng ?? Math.random;
+  const picked: Voucher[] = [];
+  const pickedIds = new Set<VoucherId>();
+  for (let i = 0; i < target; i += 1) {
+    const eligible = catalog.filter(
+      (v) =>
+        !args.ownedIds.has(v.id) &&
+        !pickedIds.has(v.id) &&
+        (!v.requires || args.ownedIds.has(v.requires)),
+    );
+    if (eligible.length === 0) break;
+    const next = eligible[Math.floor(rng() * eligible.length)];
+    picked.push(next);
+    pickedIds.add(next.id);
+  }
+  return picked;
+}
+
 export function extraShopOfferSlots(ownedIds: ReadonlySet<VoucherId>): number {
   let extra = 0;
   if (ownedIds.has("overstock")) extra += 1;

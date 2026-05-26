@@ -17,11 +17,11 @@ interface ShopProps {
   consumableCount: number;
   consumableCapacity: number;
   offers: ReadonlyArray<ShopItem>;
-  voucher: Voucher | null;
-  voucherSold: boolean;
+  vouchers: ReadonlyArray<Voucher>;
+  soldVoucherIds: ReadonlySet<VoucherId>;
   ownedVoucherIds: ReadonlySet<VoucherId>;
   onBuy: (offerIdx: number) => void;
-  onBuyVoucher: () => void;
+  onBuyVoucher: (voucherIdx: number) => void;
   onReroll: (cost: number) => void;
   onNext: () => void;
 }
@@ -160,8 +160,8 @@ export default function Shop({
   consumableCount,
   consumableCapacity,
   offers,
-  voucher,
-  voucherSold,
+  vouchers,
+  soldVoucherIds,
   ownedVoucherIds,
   onBuy,
   onBuyVoucher,
@@ -199,39 +199,48 @@ export default function Shop({
         <section
           className="shop-voucher"
           data-testid="shop-voucher"
-          aria-label="Voucher for this ante"
+          aria-label="Vouchers for this ante"
         >
-          <h3 className="shop-voucher-heading">Voucher</h3>
-          {voucher ? (() => {
-            const btn = resolveVoucherButton(voucher, voucherSold, money, ownedVoucherIds);
-            return (
-              <div
-                className={`shop-voucher-card${voucherSold ? " shop-voucher-sold" : ""}`}
-                data-voucher-id={voucher.id}
-              >
-                <span className="shop-voucher-name">{voucher.name}</span>
-                <span className="shop-voucher-description">{voucher.description}</span>
-                <span className="shop-voucher-price">${voucher.cost}</span>
-                <button
-                  type="button"
-                  className="shop-voucher-buy"
-                  data-testid="shop-voucher-buy"
-                  disabled={btn.disabled}
-                  title={btn.title}
-                  aria-label={`${btn.label}: ${voucher.name}`}
-                  onClick={onBuyVoucher}
-                >
-                  {btn.label}
-                </button>
-              </div>
-            );
-          })() : (
+          <h3 className="shop-voucher-heading">
+            {vouchers.length === 1 ? "Voucher" : "Vouchers"}
+          </h3>
+          {vouchers.length === 0 ? (
             <p
               className="shop-voucher-empty"
               data-testid="shop-voucher-empty"
             >
               No voucher available this ante.
             </p>
+          ) : (
+            <ul className="shop-voucher-list">
+              {vouchers.map((voucher, idx) => {
+                const sold = soldVoucherIds.has(voucher.id);
+                const btn = resolveVoucherButton(voucher, sold, money, ownedVoucherIds);
+                return (
+                  <li
+                    key={voucher.id}
+                    className={`shop-voucher-card${sold ? " shop-voucher-sold" : ""}`}
+                    data-voucher-id={voucher.id}
+                    data-testid={`shop-voucher-${idx}`}
+                  >
+                    <span className="shop-voucher-name">{voucher.name}</span>
+                    <span className="shop-voucher-description">{voucher.description}</span>
+                    <span className="shop-voucher-price">${voucher.cost}</span>
+                    <button
+                      type="button"
+                      className="shop-voucher-buy"
+                      data-testid={`shop-voucher-buy-${idx}`}
+                      disabled={btn.disabled}
+                      title={btn.title}
+                      aria-label={`${btn.label}: ${voucher.name}`}
+                      onClick={() => onBuyVoucher(idx)}
+                    >
+                      {btn.label}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </section>
         <ul className="shop-offers" aria-label="Items for sale">

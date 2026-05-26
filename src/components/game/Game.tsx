@@ -49,6 +49,8 @@ interface GameProps {
   onGrowHandSize?: () => void;
   onShrinkPackSlots?: () => void;
   onGrowPackSlots?: () => void;
+  onShrinkVoucherSlots?: () => void;
+  onGrowVoucherSlots?: () => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -97,6 +99,8 @@ export default function Game({
   onGrowHandSize,
   onShrinkPackSlots,
   onGrowPackSlots,
+  onShrinkVoucherSlots,
+  onGrowVoucherSlots,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -218,6 +222,24 @@ export default function Game({
               onClick={onGrowPackSlots}
             >
               🎁 Packs +1
+            </button>
+          )}
+          {onShrinkVoucherSlots && (
+            <button
+              type="button"
+              className="shrink-voucher-slots-button"
+              onClick={onShrinkVoucherSlots}
+            >
+              🎟️ Vouchers −1
+            </button>
+          )}
+          {onGrowVoucherSlots && (
+            <button
+              type="button"
+              className="grow-voucher-slots-button"
+              onClick={onGrowVoucherSlots}
+            >
+              🎫 Vouchers +1
             </button>
           )}
         </div>
