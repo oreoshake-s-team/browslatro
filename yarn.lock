@@ -321,6 +321,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@dragdroptouch/drag-drop-touch@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "@dragdroptouch/drag-drop-touch@npm:2.0.3"
+  checksum: 10c0/a2279e3a3cbad0402a43964ebca357c8ee909f5d6d16d4069b7ae5f7dd844a1aa1ba38f48d760c39b001d9ec6a359bac824f281bb4373d927e652f3f526dd5da
+  languageName: node
+  linkType: hard
+
 "@emnapi/core@npm:1.10.0":
   version: 1.10.0
   resolution: "@emnapi/core@npm:1.10.0"
@@ -931,6 +938,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "browslatro@workspace:."
   dependencies:
+    "@dragdroptouch/drag-drop-touch": "npm:^2.0.3"
     "@playwright/test": "npm:^1.55.0"
     "@testing-library/dom": "npm:^10.4.1"
     "@testing-library/jest-dom": "npm:^6.9.1"
