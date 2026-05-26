@@ -1,10 +1,11 @@
 .hand {
   width: 100%;
-  /* Generous max-width so 8 cards (4.5rem each) + 9 gaps (2.5rem at
-   * rest, ~3rem during drag with one active at 4.5rem) + the deck pile
-   * column (4.5rem + 1.2rem gap) all fit on one row at typical desktop
-   * widths without forcing flex-wrap mid-drag. */
-  max-width: 75rem;
+  /* Generous max-width so 8 cards (var(--card-width) each) + 9 gaps
+   * (2.5rem at rest, ~3rem during drag with one active at
+   * var(--card-width)) + the deck pile column (var(--card-width) + 1.2rem
+   * gap) all fit on one row at typical desktop widths without forcing
+   * flex-wrap mid-drag. */
+  max-width: 90rem;
   padding: 1.6rem;
   border: 2px solid #dee2e6;
   border-radius: 8px;
@@ -82,7 +83,7 @@
   scrollbar-width: thin;
   justify-content: safe center;
   align-items: end;
-  min-height: 11rem;
+  min-height: calc(var(--card-height) + 1.6rem);
   /* `overflow-x: auto` forces `overflow-y` to compute to `auto` per the CSS
    * spec, which would clip the hover (-4px) and selected (-1.4rem) card
    * lifts at the top. Reserve enough top padding to hold the lifted card
@@ -102,7 +103,7 @@
 .hand-card-gap {
   flex: 0 0 2.5rem;
   align-self: stretch;
-  min-height: 9.5rem;
+  min-height: var(--card-height);
   border-radius: 4px;
   transition: flex-basis calc(120ms * var(--animation-speed, 1)) ease,
     background-color calc(120ms * var(--animation-speed, 1)) ease;
@@ -111,9 +112,10 @@
 .hand-cards-dragging .hand-card-gap {
   /* During drag the resting 2.5rem gaps widen further so the cursor
    * has a generous landing area between cards. Math at max-width
-   * 75rem (inner ~66rem after the deck column and row gap):
-   * 8 cards × 4.5 + 8 non-active gaps × 3 + 1 active gap × 4.5
-   * = 64.5rem — fits with headroom so the row never wraps mid-drag.
+   * 90rem (inner ~79rem after the deck column and row gap):
+   * 8 cards × var(--card-width) + 8 non-active gaps × 3rem + 1 active
+   * gap × var(--card-width) — fits with headroom so the row never
+   * wraps mid-drag.
    *
    * Geometric "card-over-zone" detection in Hand.tsx widens this even
    * further in practice: when the cursor is hovering over a card slot
@@ -123,7 +125,7 @@
 }
 
 .hand-card-gap-active {
-  flex-basis: 4.5rem;
+  flex-basis: var(--card-width);
   background-color: rgba(51, 154, 240, 0.18);
   outline: 2px dashed #339af0;
   outline-offset: -2px;
@@ -147,10 +149,10 @@
 }
 
 .hand-card-slot-dragging {
-  /* Hide the source visually (opacity:0) but keep its 4.5rem slot in
-   * layout. `visibility:hidden` or `width:0` here cancels the drag in
-   * Chrome — the source element must remain trackable for the drag to
-   * stay alive — so opacity is the only safe knob. */
+  /* Hide the source visually (opacity:0) but keep its var(--card-width)
+   * slot in layout. `visibility:hidden` or `width:0` here cancels the
+   * drag in Chrome — the source element must remain trackable for the
+   * drag to stay alive — so opacity is the only safe knob. */
   opacity: 0;
   cursor: grabbing;
 }
