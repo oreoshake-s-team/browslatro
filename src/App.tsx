@@ -10,6 +10,8 @@ import { createTarotCatalog, resolveHermitPayout } from "./tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
+  consumableSellValue,
+  consumableUseBlock,
   hasFreeConsumableSlot,
   removeConsumableAt,
   type Consumable,
@@ -196,6 +198,9 @@ function App() {
     null,
   );
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
+  const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
+    number | null
+  >(null);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -443,6 +448,28 @@ function App() {
     setMultiplier(0);
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
   }
+
+  function sellConsumable(consumableIdx: number) {
+    const entry = consumables[consumableIdx];
+    if (!entry) return;
+    play("pop");
+    setMoney((prev) => prev + consumableSellValue(entry));
+    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+  }
+
+  const draggingConsumable =
+    draggingConsumableIndex !== null
+      ? consumables[draggingConsumableIndex] ?? null
+      : null;
+  const canDropDraggedConsumableOnJokers =
+    draggingConsumable !== null &&
+    consumableUseBlock(draggingConsumable, selectedIds.size) === null;
+  const onConsumableDrop = (action: (idx: number) => void) => () => {
+    const idx = draggingConsumableIndex;
+    if (idx === null) return;
+    setDraggingConsumableIndex(null);
+    action(idx);
+  };
 
   function rerollShopOffers(cost: number) {
     if (!shopOffers) return;
@@ -828,6 +855,13 @@ function App() {
         consumables={consumables}
         consumableCapacity={consumableCapacity}
         onUseConsumable={useConsumable}
+        onSellConsumable={sellConsumable}
+        onConsumableDragStart={setDraggingConsumableIndex}
+        onConsumableDragEnd={() => setDraggingConsumableIndex(null)}
+        draggingConsumableIndex={draggingConsumableIndex}
+        canDropDraggedConsumableOnJokers={canDropDraggedConsumableOnJokers}
+        onConsumableDropOnJokers={onConsumableDrop(useConsumable)}
+        onConsumableDropOnDeck={onConsumableDrop(sellConsumable)}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}

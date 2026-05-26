@@ -30,6 +30,13 @@ interface GameProps {
   consumables: ReadonlyArray<Consumable>;
   consumableCapacity?: number;
   onUseConsumable: (index: number) => void;
+  onSellConsumable?: (index: number) => void;
+  onConsumableDragStart?: (index: number) => void;
+  onConsumableDragEnd?: () => void;
+  draggingConsumableIndex?: number | null;
+  canDropDraggedConsumableOnJokers?: boolean;
+  onConsumableDropOnJokers?: () => void;
+  onConsumableDropOnDeck?: () => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -59,11 +66,19 @@ export default function Game({
   consumables,
   consumableCapacity,
   onUseConsumable,
+  onSellConsumable,
+  onConsumableDragStart,
+  onConsumableDragEnd,
+  draggingConsumableIndex = null,
+  canDropDraggedConsumableOnJokers = false,
+  onConsumableDropOnJokers,
+  onConsumableDropOnDeck,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
   onReorderJokers,
 }: GameProps) {
+  const dragging = draggingConsumableIndex !== null;
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
   }
@@ -79,12 +94,17 @@ export default function Game({
           jokers={jokers}
           pulseCounters={jokerPulseCounters}
           onReorder={onReorderJokers}
+          consumableDropEnabled={dragging && canDropDraggedConsumableOnJokers}
+          onConsumableDrop={onConsumableDropOnJokers}
         />
         <Consumables
           consumables={consumables}
           selectedCount={selectedIds.size}
           capacity={consumableCapacity}
           onUse={onUseConsumable}
+          onSell={onSellConsumable}
+          onDragStart={onConsumableDragStart}
+          onDragEnd={onConsumableDragEnd}
         />
       </div>
       <HandComponent
@@ -99,6 +119,8 @@ export default function Game({
         onToggleCard={onToggleCard}
         onCardDiscardEnd={onCardDiscardEnd}
         onDisplayOrderChange={onDisplayOrderChange}
+        consumableDropEnabled={dragging}
+        onConsumableSellDrop={onConsumableDropOnDeck}
       />
       <details className="modifier-selection">
         <summary className="modifier-disclosure">Apply modifiers</summary>

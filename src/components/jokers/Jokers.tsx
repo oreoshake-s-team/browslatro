@@ -2,16 +2,29 @@ import { Fragment, useRef, useState } from "react";
 import "./Jokers.css";
 import { MAX_JOKERS, type Joker } from "../../jokers";
 import { insertIdAtIndex, nearestGapIndex } from "../../reordering";
+import { useConsumableDropZone } from "../consumables/useConsumableDropZone";
 
 interface JokersProps {
   jokers: ReadonlyArray<Joker>;
   pulseCounters?: Readonly<Record<string, number>>;
   onReorder?: (orderedIds: ReadonlyArray<string>) => void;
+  consumableDropEnabled?: boolean;
+  onConsumableDrop?: () => void;
 }
 
-export default function Jokers({ jokers, pulseCounters, onReorder }: JokersProps) {
+export default function Jokers({
+  jokers,
+  pulseCounters,
+  onReorder,
+  consumableDropEnabled = false,
+  onConsumableDrop,
+}: JokersProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
+  const dropZone = useConsumableDropZone({
+    enabled: consumableDropEnabled,
+    onDrop: onConsumableDrop,
+  });
   const listRef = useRef<HTMLUListElement | null>(null);
   const emptyCount = Math.max(0, MAX_JOKERS - jokers.length);
   const reorderable = Boolean(onReorder);
@@ -85,8 +98,27 @@ export default function Jokers({ jokers, pulseCounters, onReorder }: JokersProps
     );
   }
 
+  const showDropZone = Boolean(dropZone.onDrop);
   return (
-    <section className="jokers" aria-label="Equipped jokers">
+    <section
+      className={`jokers${showDropZone ? " jokers-consumable-target" : ""}${
+        dropZone.hover ? " jokers-consumable-hover" : ""
+      }`}
+      aria-label="Equipped jokers"
+      data-consumable-drop-active={showDropZone || undefined}
+      onDragOver={dropZone.onDragOver}
+      onDragLeave={dropZone.onDragLeave}
+      onDrop={dropZone.onDrop}
+    >
+      {showDropZone && (
+        <div
+          className="consumable-drop-overlay consumable-drop-overlay-use"
+          data-testid="consumable-drop-overlay-use"
+          aria-hidden="true"
+        >
+          <span className="consumable-drop-overlay-label">Use</span>
+        </div>
+      )}
       <span className="jokers-label">Jokers</span>
       <ul
         ref={listRef}

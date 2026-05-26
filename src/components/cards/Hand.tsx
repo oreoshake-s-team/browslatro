@@ -50,6 +50,8 @@ interface HandProps {
   onToggleCard: (card: CardType) => void;
   onCardDiscardEnd: (card: CardType) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
+  consumableDropEnabled?: boolean;
+  onConsumableSellDrop?: () => void;
 }
 
 export default function Hand({
@@ -64,6 +66,8 @@ export default function Hand({
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
+  consumableDropEnabled,
+  onConsumableSellDrop,
 }: HandProps) {
   const [sortMode, setSortMode] = useState<SortMode>("rank");
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
@@ -370,7 +374,11 @@ export default function Hand({
           {renderGap(displayedHand.length)}
         </div>
         <div className="hand-deck">
-          <DeckPile remaining={remaining} />
+          <DeckPile
+            remaining={remaining}
+            consumableDropEnabled={consumableDropEnabled}
+            onConsumableDrop={onConsumableSellDrop}
+          />
         </div>
       </div>
     </div>

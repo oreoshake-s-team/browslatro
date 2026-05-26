@@ -93,3 +93,23 @@
   outline: 2px solid #5f3dc4;
   outline-offset: 2px;
 }
+
+.consumable-tile-sell {
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background-color: #fff3bf;
+  color: #5c3a00;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.consumable-tile[draggable="true"] {
+  cursor: grab;
+}
+
+.consumable-tile[draggable="true"]:active {
+  cursor: grabbing;
+}

@@ -148,3 +148,86 @@ describe("DeckPile", () => {
     ]);
   });
 });
+
+describe("DeckPile consumable drop zone", () => {
+  function dispatchDrag(
+    target: Element,
+    type: "dragover" | "drop",
+    mimes: ReadonlyArray<string>,
+  ): boolean {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { types: mimes, dropEffect: "" },
+    });
+    return target.dispatchEvent(event);
+  }
+
+  test("pile invokes onConsumableDrop when a consumable is dropped on it", () => {
+    const onConsumableDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        consumableDropEnabled
+        onConsumableDrop={onConsumableDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "dragover", ["application/x-browslatro-consumable"]);
+    dispatchDrag(pile, "drop", ["application/x-browslatro-consumable"]);
+    expect(onConsumableDrop).toHaveBeenCalledTimes(1);
+  });
+
+  test("pile ignores a drop that is not a consumable", () => {
+    const onConsumableDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        consumableDropEnabled
+        onConsumableDrop={onConsumableDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "drop", ["text/plain"]);
+    expect(onConsumableDrop).not.toHaveBeenCalled();
+  });
+
+  test("pile does not accept a drop when consumableDropEnabled is false", () => {
+    const onConsumableDrop = vi.fn();
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        consumableDropEnabled={false}
+        onConsumableDrop={onConsumableDrop}
+      />,
+    );
+    const pile = screen.getByRole("button", { name: /Deck/ });
+    dispatchDrag(pile, "drop", ["application/x-browslatro-consumable"]);
+    expect(onConsumableDrop).not.toHaveBeenCalled();
+  });
+
+  test("renders a Sell overlay label when consumableDropEnabled is true", () => {
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        consumableDropEnabled
+        onConsumableDrop={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("consumable-drop-overlay-sell"),
+    ).toHaveTextContent("Sell");
+  });
+
+  test("does not render a Sell overlay when consumableDropEnabled is false", () => {
+    render(
+      <DeckPile
+        remaining={createDeck()}
+        consumableDropEnabled={false}
+        onConsumableDrop={() => {}}
+      />,
+    );
+    expect(
+      screen.queryByTestId("consumable-drop-overlay-sell"),
+    ).not.toBeInTheDocument();
+  });
+});

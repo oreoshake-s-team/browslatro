@@ -1,34 +1,26 @@
 import "./Consumables.css";
 import {
   MAX_CONSUMABLE_SLOTS,
+  consumableSellValue,
+  consumableUseBlock,
   type Consumable,
 } from "../../consumables";
+
+export const CONSUMABLE_DRAG_MIME = "application/x-browslatro-consumable";
 
 interface ConsumablesProps {
   consumables: ReadonlyArray<Consumable>;
   selectedCount: number;
   capacity?: number;
   onUse: (index: number) => void;
+  onSell?: (index: number) => void;
+  onDragStart?: (index: number) => void;
+  onDragEnd?: () => void;
 }
 
-function tileLabel(c: Consumable): string {
+function tileLabel(c: Consumable, sellValue: number): string {
   const kindLabel = c.kind === "planet" ? "planet" : "tarot";
-  return `Use ${c.card.name} (${kindLabel})`;
-}
-
-function selectionBlock(c: Consumable, selectedCount: number): string | null {
-  if (c.kind !== "tarot") return null;
-  const effect = c.card.effect;
-  if (effect.kind !== "apply-enhancement") return null;
-  if (selectedCount === 0) {
-    return effect.maxTargets === 1
-      ? "Select 1 card in your hand first"
-      : `Select 1–${effect.maxTargets} cards in your hand first`;
-  }
-  if (selectedCount > effect.maxTargets) {
-    return `Too many cards selected (max ${effect.maxTargets})`;
-  }
-  return null;
+  return `Use ${c.card.name} (${kindLabel}). Shift-click or drag to deck to sell for $${sellValue}.`;
 }
 
 export default function Consumables({
@@ -36,6 +28,9 @@ export default function Consumables({
   selectedCount,
   capacity = MAX_CONSUMABLE_SLOTS,
   onUse,
+  onSell,
+  onDragStart,
+  onDragEnd,
 }: ConsumablesProps) {
   const emptyCount = Math.max(0, capacity - consumables.length);
 
@@ -44,7 +39,11 @@ export default function Consumables({
       <span className="consumables-label">Consumables</span>
       <ul className="consumables-list">
         {consumables.map((entry, idx) => {
-          const block = selectionBlock(entry, selectedCount);
+          const block = consumableUseBlock(entry, selectedCount);
+          const sellValue = consumableSellValue(entry);
+          const canSell = Boolean(onSell);
+          const useDisabled = block !== null;
+          const interactionDisabled = useDisabled && !canSell;
           return (
             <li key={`${entry.kind}-${entry.card.id}-${idx}`}>
               <button
@@ -52,15 +51,35 @@ export default function Consumables({
                 className={`consumable-tile consumable-tile-${entry.kind}`}
                 data-testid={`consumable-tile-filled-${idx}`}
                 data-consumable-kind={entry.kind}
+                data-use-disabled={useDisabled || undefined}
                 title={block ?? entry.card.description}
-                aria-label={tileLabel(entry)}
-                disabled={block !== null}
-                onClick={() => onUse(idx)}
+                aria-label={tileLabel(entry, sellValue)}
+                disabled={interactionDisabled}
+                draggable
+                onDragStart={(e) => {
+                  e.dataTransfer.effectAllowed = "move";
+                  e.dataTransfer.setData(CONSUMABLE_DRAG_MIME, String(idx));
+                  onDragStart?.(idx);
+                }}
+                onDragEnd={() => onDragEnd?.()}
+                onClick={(e) => {
+                  if (e.shiftKey && canSell) {
+                    onSell?.(idx);
+                    return;
+                  }
+                  if (useDisabled) return;
+                  onUse(idx);
+                }}
               >
                 <span className="consumable-tile-name">{entry.card.name}</span>
                 <span className="consumable-tile-description">
                   {entry.card.description}
                 </span>
+                {canSell && (
+                  <span className="consumable-tile-sell" aria-hidden="true">
+                    Sell ${sellValue}
+                  </span>
+                )}
               </button>
             </li>
           );
