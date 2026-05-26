@@ -3,9 +3,15 @@ import { test, expect, type Page } from "@playwright/test";
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     window.localStorage.setItem("browslatro:deterministicShuffle", "1");
+    window.localStorage.setItem("browslatro:deterministicBoss", "1");
     window.localStorage.setItem("browslatro:muted", "true");
   });
 });
+
+async function dismissBlindSelect(page: Page): Promise<void> {
+  const btn = page.getByTestId("blind-select-play");
+  if (await btn.isVisible().catch(() => false)) await btn.click();
+}
 
 async function boxOf(page: Page, selector: string) {
   const box = await page.locator(selector).first().boundingBox();
@@ -60,12 +66,14 @@ test("13 hand cards squish instead of producing a horizontal scrollbar (issue #2
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/");
-  await page.waitForSelector(".card");
+  await dismissBlindSelect(page);
+  await page.waitForSelector(".modifier-disclosure");
   await page.locator(".modifier-disclosure").click();
   const grow = page.getByRole("button", { name: /Hand \+1/ });
   for (let i = 0; i < 5; i += 1) await grow.click();
   await page.getByText(/Win/).click();
   await page.getByRole("button", { name: /Next Round/ }).click();
+  await dismissBlindSelect(page);
   await expect(
     page.locator('[aria-label="Your hand"] .card'),
   ).toHaveCount(13);
