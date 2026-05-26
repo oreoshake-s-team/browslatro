@@ -154,4 +154,26 @@ describe("BlindSelectScreen", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(onSkip).toHaveBeenCalled();
   });
+
+  test("tag list is not rendered when no tags are held", () => {
+    renderScreen({ tags: [] });
+    expect(screen.queryByTestId("blind-select-tags")).not.toBeInTheDocument();
+  });
+
+  test("renders one chip per held Investment tag", () => {
+    renderScreen({ tags: ["investment", "investment"] });
+    expect(screen.getAllByTestId(/^blind-select-tag-/)).toHaveLength(2);
+  });
+
+  test("Investment chip shows the canonical tag name", () => {
+    renderScreen({ tags: ["investment"] });
+    expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent(
+      "Investment Tag",
+    );
+  });
+
+  test("Investment chip describes the $25 boss-defeat payout", () => {
+    renderScreen({ tags: ["investment"] });
+    expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent("$25");
+  });
 });

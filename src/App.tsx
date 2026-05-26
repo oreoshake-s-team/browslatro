@@ -22,6 +22,7 @@ import Shop from "./components/shop/Shop";
 import PackOpenModal from "./components/shop/PackOpenModal";
 import { packPickLimit, type PackOffer } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
+import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
 import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
@@ -240,6 +241,7 @@ function App() {
   const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
   const [packPicksRemaining, setPackPicksRemaining] = useState(0);
   const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
+  const [pendingTags, setPendingTags] = useState<ReadonlyArray<TagId>>([]);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -455,6 +457,11 @@ function App() {
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
+      const tagPayout = totalTagPayout(pendingTags);
+      if (tagPayout > 0) {
+        setMoney((prev) => prev + tagPayout);
+        setPendingTags([]);
+      }
       const nextAnte = ante + 1;
       setAnte(nextAnte);
       setBlind(1);
@@ -724,6 +731,7 @@ function App() {
     if (blind === 3) return;
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
+    setPendingTags((prev) => [...prev, "investment"]);
   }
 
   function buyCurrentAnteVoucher() {
@@ -772,6 +780,7 @@ function App() {
       rng: bossPickerRngConfig.rng,
     });
     setCurrentBoss(freshBoss);
+    setPendingTags([]);
     setPendingBlindSelect(true);
   }
 
@@ -1214,6 +1223,7 @@ function App() {
           boss={currentBoss}
           onPlay={confirmBlindSelect}
           onSkip={skipBlind}
+          tags={pendingTags}
         />
       )}
     </div>

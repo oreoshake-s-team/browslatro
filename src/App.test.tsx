@@ -2835,3 +2835,66 @@ describe("Blind-select skip (issue #251)", () => {
     expect(screen.getByTestId("blind-select-play")).toBeInTheDocument();
   });
 });
+
+describe("Investment tag (issue #252)", () => {
+  test("skipping Small grants one Investment tag visible on the screen", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getAllByTestId(/^blind-select-tag-/)).toHaveLength(1);
+  });
+
+  test("skipping Small then Big grants two Investment tags", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getAllByTestId(/^blind-select-tag-/)).toHaveLength(2);
+  });
+
+  test("defeating the Boss while holding two Investment tags adds at least $50", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    const before = Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+    await user.click(screen.getByText(/Win/));
+    const after = Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+    expect(after - before).toBeGreaterThanOrEqual(50);
+  });
+
+  test("defeating the Boss consumes the held tags", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(screen.queryByTestId("blind-select-tags")).not.toBeInTheDocument();
+  });
+
+  test("winning a non-Boss round does NOT consume a held Investment tag", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(screen.getAllByTestId(/^blind-select-tag-/)).toHaveLength(1);
+  });
+
+  test("starting a new game clears held tags", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    expect(screen.queryByTestId("blind-select-tags")).not.toBeInTheDocument();
+  });
+});
