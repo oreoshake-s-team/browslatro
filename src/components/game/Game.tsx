@@ -47,6 +47,8 @@ interface GameProps {
   onJokerDropOnDeck?: () => void;
   onShrinkHandSize?: () => void;
   onGrowHandSize?: () => void;
+  onShrinkPackSlots?: () => void;
+  onGrowPackSlots?: () => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -93,6 +95,8 @@ export default function Game({
   onJokerDropOnDeck,
   onShrinkHandSize,
   onGrowHandSize,
+  onShrinkPackSlots,
+  onGrowPackSlots,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -196,6 +200,24 @@ export default function Game({
               onClick={onGrowHandSize}
             >
               ✋ Hand +1
+            </button>
+          )}
+          {onShrinkPackSlots && (
+            <button
+              type="button"
+              className="shrink-pack-slots-button"
+              onClick={onShrinkPackSlots}
+            >
+              📦 Packs −1
+            </button>
+          )}
+          {onGrowPackSlots && (
+            <button
+              type="button"
+              className="grow-pack-slots-button"
+              onClick={onGrowPackSlots}
+            >
+              🎁 Packs +1
             </button>
           )}
         </div>
