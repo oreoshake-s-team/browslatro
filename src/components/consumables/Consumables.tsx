@@ -6,6 +6,7 @@ import {
 
 interface ConsumablesProps {
   consumables: ReadonlyArray<Consumable>;
+  capacity?: number;
   onUse: (index: number) => void;
 }
 
@@ -14,8 +15,12 @@ function tileLabel(c: Consumable): string {
   return `Use ${c.card.name} (${kindLabel})`;
 }
 
-export default function Consumables({ consumables, onUse }: ConsumablesProps) {
-  const emptyCount = Math.max(0, MAX_CONSUMABLE_SLOTS - consumables.length);
+export default function Consumables({
+  consumables,
+  capacity = MAX_CONSUMABLE_SLOTS,
+  onUse,
+}: ConsumablesProps) {
+  const emptyCount = Math.max(0, capacity - consumables.length);
 
   return (
     <section className="consumables" aria-label="Consumable slots">

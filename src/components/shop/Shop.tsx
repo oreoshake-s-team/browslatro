@@ -2,15 +2,19 @@ import "./Shop.css";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { MAX_JOKERS } from "../../jokers";
-import { MAX_CONSUMABLE_SLOTS } from "../../consumables";
 import { rerollCostFor, type ShopItem } from "../../shop";
-import type { Voucher, VoucherId } from "../../vouchers";
+import {
+  applyShopDiscount,
+  type Voucher,
+  type VoucherId,
+} from "../../vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 interface ShopProps {
   money: number;
   equippedJokerCount: number;
   consumableCount: number;
+  consumableCapacity: number;
   offers: ReadonlyArray<ShopItem>;
   voucher: Voucher | null;
   voucherSold: boolean;
@@ -52,9 +56,11 @@ type BuyButtonState =
 
 function resolveBuyState(
   offer: ShopItem,
+  effectivePrice: number,
   money: number,
   equippedJokerCount: number,
   consumableCount: number,
+  consumableCapacity: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
   if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
@@ -62,11 +68,11 @@ function resolveBuyState(
   }
   if (
     (offer.kind === "planet" || offer.kind === "tarot") &&
-    consumableCount >= MAX_CONSUMABLE_SLOTS
+    consumableCount >= consumableCapacity
   ) {
     return { kind: "consumable-slots-full" };
   }
-  if (money < offer.price) return { kind: "unaffordable" };
+  if (money < effectivePrice) return { kind: "unaffordable" };
   return { kind: "available" };
 }
 
@@ -85,14 +91,17 @@ function buyButtonLabel(state: BuyButtonState, price: number): string {
   }
 }
 
-function buyButtonTooltip(state: BuyButtonState): string | undefined {
+function buyButtonTooltip(
+  state: BuyButtonState,
+  consumableCapacity: number,
+): string | undefined {
   switch (state.kind) {
     case "sold":
       return "Already purchased this round";
     case "slots-full":
       return `Joker slots are full (max ${MAX_JOKERS})`;
     case "consumable-slots-full":
-      return `Consumable slots are full (max ${MAX_CONSUMABLE_SLOTS})`;
+      return `Consumable slots are full (max ${consumableCapacity})`;
     case "unaffordable":
       return "Not enough money";
     case "available":
@@ -119,6 +128,7 @@ export default function Shop({
   money,
   equippedJokerCount,
   consumableCount,
+  consumableCapacity,
   offers,
   voucher,
   voucherSold,
@@ -196,13 +206,17 @@ export default function Shop({
         </section>
         <ul className="shop-offers" aria-label="Items for sale">
           {offers.map((offer, idx) => {
+            const effectivePrice = applyShopDiscount(offer.price, ownedVoucherIds);
+            const discounted = effectivePrice < offer.price;
             const state = resolveBuyState(
               offer,
+              effectivePrice,
               money,
               equippedJokerCount,
               consumableCount,
+              consumableCapacity,
             );
-            const label = buyButtonLabel(state, offer.price);
+            const label = buyButtonLabel(state, effectivePrice);
             const subject = offerSubject(offer);
             return (
               <li
@@ -215,12 +229,21 @@ export default function Shop({
               >
                 <span className="shop-offer-name">{subject.name}</span>
                 <span className="shop-offer-description">{subject.description}</span>
-                <span className="shop-offer-price">${offer.price}</span>
+                <span className="shop-offer-price">
+                  {discounted ? (
+                    <>
+                      <span className="shop-offer-price-original">${offer.price}</span>
+                      <span className="shop-offer-price-discounted">${effectivePrice}</span>
+                    </>
+                  ) : (
+                    `$${offer.price}`
+                  )}
+                </span>
                 <button
                   type="button"
                   className="shop-offer-buy"
                   disabled={state.kind !== "available"}
-                  title={buyButtonTooltip(state)}
+                  title={buyButtonTooltip(state, consumableCapacity)}
                   aria-label={`${label}: ${subject.name}`}
                   onClick={() => onBuy(idx)}
                 >

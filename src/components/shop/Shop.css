@@ -158,6 +158,20 @@
   grid-row: 1;
   font-weight: 700;
   color: #099268;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.shop-offer-price-original {
+  text-decoration: line-through;
+  color: #adb5bd;
+  font-size: 0.9rem;
+}
+
+.shop-offer-price-discounted {
+  color: #c92a2a;
+  font-weight: 700;
 }
 
 .shop-offer-buy {
