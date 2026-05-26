@@ -3,6 +3,7 @@ import {
   SUIT_DISPLAY_ORDER,
   createDeck,
   defaultEnhancementForRank,
+  drawCountForRefill,
   shuffle,
   deal,
   groupBySuit,
@@ -167,6 +168,32 @@ describe("deal", () => {
   test("respects an explicit count argument", () => {
     const result = deal(createDeck(), 5);
     expect(result.hand).toHaveLength(5);
+  });
+});
+
+describe("drawCountForRefill (#231)", () => {
+  test("draws exactly the just-discarded count when the hand was at hand size", () => {
+    expect(drawCountForRefill(8, 6, 44)).toBe(2);
+  });
+
+  test("refills the gap when the hand was already short (Immolate case)", () => {
+    expect(drawCountForRefill(8, 2, 44)).toBe(6);
+  });
+
+  test("caps the draw at the remaining deck size", () => {
+    expect(drawCountForRefill(8, 2, 3)).toBe(3);
+  });
+
+  test("draws 0 when the hand is already at hand size", () => {
+    expect(drawCountForRefill(8, 8, 44)).toBe(0);
+  });
+
+  test("draws 0 (never negative) when the hand exceeds hand size", () => {
+    expect(drawCountForRefill(8, 10, 44)).toBe(0);
+  });
+
+  test("draws 0 when the deck is empty", () => {
+    expect(drawCountForRefill(8, 3, 0)).toBe(0);
   });
 });
 

@@ -42,6 +42,7 @@ import {
   cardKey,
   createDeck,
   deal,
+  drawCountForRefill,
   shuffle,
   HAND_SIZE,
   SUITS,
@@ -694,7 +695,11 @@ function App() {
       skipDrawAfterDiscardRef.current = false;
       setDealt({ hand: kept, remaining: dealt.remaining });
     } else {
-      const drawCount = dealt.hand.length - kept.length;
+      const drawCount = drawCountForRefill(
+        HAND_SIZE,
+        kept.length,
+        dealt.remaining.length,
+      );
       const drawn = dealt.remaining.slice(0, drawCount);
       const newRemaining = dealt.remaining.slice(drawCount);
       setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
