@@ -1,4 +1,5 @@
 import "./PackOpenModal.css";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   type PackOffer,
@@ -7,6 +8,7 @@ import {
   packPickLimit,
 } from "../../items/packs";
 import type { Card as CardType } from "../../cards/types";
+import { sortCards, type SortMode } from "../../cards/deck";
 import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
@@ -119,6 +121,11 @@ export default function PackOpenModal({
   onClose,
 }: PackOpenModalProps) {
   useEscapeToClose(onClose, true);
+  const [previewSortMode, setPreviewSortMode] = useState<SortMode>("rank");
+  const sortedPreviewHand = useMemo(
+    () => sortCards(previewHand, previewSortMode),
+    [previewHand, previewSortMode],
+  );
   const totalPicks = packPickLimit(pack.variant);
   const title = packDisplayName(pack);
   const inSelection = pendingTarot !== null;
@@ -189,24 +196,59 @@ export default function PackOpenModal({
           })}
         </ul>
         {previewHand.length > 0 && (
-          <div
-            className="pack-open-preview-hand"
-            data-testid="pack-open-preview-hand"
-            aria-label="Preview hand"
-          >
-            {previewHand.map((card) => (
-              <Card
-                key={card.id}
-                card={card}
-                selected={previewSelectedIds?.has(card.id) ?? false}
-                onToggle={
-                  inSelection && onSelectPreviewCard
-                    ? () => onSelectPreviewCard(card.id)
-                    : undefined
-                }
-              />
-            ))}
-          </div>
+          <>
+            <div
+              className="pack-open-preview-sort"
+              role="group"
+              aria-label="Sort preview hand"
+            >
+              <span className="pack-open-preview-sort-label">Sort:</span>
+              <button
+                type="button"
+                className={`pack-open-preview-sort-button${
+                  previewSortMode === "rank"
+                    ? " pack-open-preview-sort-button-active"
+                    : ""
+                }`}
+                data-testid="pack-open-preview-sort-rank"
+                aria-pressed={previewSortMode === "rank"}
+                onClick={() => setPreviewSortMode("rank")}
+              >
+                Rank
+              </button>
+              <button
+                type="button"
+                className={`pack-open-preview-sort-button${
+                  previewSortMode === "suit"
+                    ? " pack-open-preview-sort-button-active"
+                    : ""
+                }`}
+                data-testid="pack-open-preview-sort-suit"
+                aria-pressed={previewSortMode === "suit"}
+                onClick={() => setPreviewSortMode("suit")}
+              >
+                Suit
+              </button>
+            </div>
+            <div
+              className="pack-open-preview-hand"
+              data-testid="pack-open-preview-hand"
+              aria-label="Preview hand"
+            >
+              {sortedPreviewHand.map((card) => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  selected={previewSelectedIds?.has(card.id) ?? false}
+                  onToggle={
+                    inSelection && onSelectPreviewCard
+                      ? () => onSelectPreviewCard(card.id)
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          </>
         )}
         {inSelection && (
           <div className="pack-open-selection-actions">
