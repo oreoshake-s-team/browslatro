@@ -52,8 +52,8 @@ describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
   });
 
@@ -61,8 +61,8 @@ describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Score at least: 600")).toBeInTheDocument();
   });
 });
@@ -72,13 +72,13 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
   }
 
   test("with rng=0 the ante 2 picker lands on The Wall (first fresh)", async () => {
@@ -121,10 +121,10 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
   }
@@ -165,7 +165,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   ): Promise<void> {
     await dismissBlindSelect(user);
     for (let i = 0; i < 5; i += 1) {
-      await user.click(screen.getByText(/Win/));
+      await user.click(screen.getByText(/^🏆 Win$/));
       await user.click(screen.getByRole("button", { name: /Next Round/ }));
       await dismissBlindSelect(user);
     }
@@ -193,16 +193,16 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
   });
 });
@@ -231,10 +231,10 @@ describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
   }
@@ -295,7 +295,7 @@ describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
   }
 

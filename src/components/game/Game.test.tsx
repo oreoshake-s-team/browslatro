@@ -40,7 +40,7 @@ describe("Game", () => {
     const onWin = vi.fn();
     renderGame({ onWin });
     await openModifiers(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(onWin).toHaveBeenCalledTimes(1);
   });
 
@@ -49,9 +49,9 @@ describe("Game", () => {
     const onWin = vi.fn();
     renderGame({ onWin });
     await openModifiers(user);
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(onWin).toHaveBeenCalledTimes(3);
   });
 

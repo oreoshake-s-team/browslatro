@@ -152,7 +152,7 @@ describe("Scoring trace — round payout events", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Win/));
+    await user.click(screen.getByText(/^🏆 Win$/));
     expect(logText()).toContain("+$3 (Small Blind reward)");
   });
 });

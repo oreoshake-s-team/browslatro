@@ -13,6 +13,10 @@ interface BlindSelectScreenProps {
   onSkip?: () => void;
   tags?: ReadonlyArray<TagId>;
   skipReward?: TagId;
+  // Dev override: when both are provided, the Boss row renders a
+  // <select> that swaps `boss` for the chosen entry.
+  bossOptions?: ReadonlyArray<BossBlind>;
+  onSetBoss?: (id: string) => void;
 }
 
 const BLIND_NAMES: Readonly<Record<Blind, string>> = {
@@ -43,11 +47,15 @@ export default function BlindSelectScreen({
   onSkip,
   tags = [],
   skipReward,
+  bossOptions,
+  onSetBoss,
 }: BlindSelectScreenProps) {
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
   const skipRewardSpec = skipReward ? getTagSpec(skipReward) : null;
+  const canOverrideBoss =
+    bossOptions !== undefined && bossOptions.length > 0 && Boolean(onSetBoss);
 
   return createPortal(
     <div
@@ -104,7 +112,23 @@ export default function BlindSelectScreen({
                   isCurrent ? "current" : isCompleted ? "completed" : "upcoming"
                 }
               >
-                <span className="blind-select-row-name">{name}</span>
+                {b === 3 && canOverrideBoss ? (
+                  <select
+                    className="blind-select-row-name blind-select-boss-override"
+                    data-testid="blind-select-boss-override"
+                    aria-label="Override boss for this ante (dev)"
+                    value={boss.id}
+                    onChange={(e) => onSetBoss?.(e.target.value)}
+                  >
+                    {bossOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="blind-select-row-name">{name}</span>
+                )}
                 {b === 3 && (
                   <span
                     className="blind-select-row-boss-description"
