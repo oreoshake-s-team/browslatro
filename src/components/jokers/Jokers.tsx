@@ -154,7 +154,7 @@ export default function Jokers({
               ? `${joker.name}. ${joker.description}.${editionLabel}`
               : undefined;
           return (
-            <Fragment key={joker.id}>
+            <Fragment key={`${joker.id}-${idx}`}>
               {reorderable && renderGap(idx)}
               <li
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
