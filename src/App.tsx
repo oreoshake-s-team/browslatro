@@ -54,9 +54,12 @@ import { createDefaultHandStats, type HandStats } from "./scoring/handStats";
 import {
   getCardChips,
   getCardMultDelta,
+  getRankChips,
   getScoringCards,
   getScoringStep,
 } from "./scoring/scoring";
+import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
+import ScoringTrace from "./components/hud/ScoringTrace";
 import {
   cardKey,
   createDeck,
@@ -77,6 +80,7 @@ import { STEEL_MULT_FACTOR, steelHeldMultiplier } from "./cards/heldInHand";
 import {
   applyCardEnhancement,
   applyLuckyRolls,
+  cardRankForEvaluation,
   rollEnhancementChance,
 } from "./cards/enhancements";
 import {
@@ -182,6 +186,13 @@ function App() {
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
+  const [scoringEvents, setScoringEvents] = useState<ReadonlyArray<ScoringEvent>>(
+    [],
+  );
+
+  function pushScoringEvent(event: ScoringEvent) {
+    setScoringEvents((prev) => [...prev, event]);
+  }
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -315,6 +326,7 @@ function App() {
     setHandLevelSteps([]);
     setHandLevelIndex(0);
     handLevelFinalizeRef.current = null;
+    setScoringEvents([]);
     setPendingWin(null);
   }
 
@@ -337,6 +349,15 @@ function App() {
         scoringIndex,
       );
       setChips((prev) => prev + stepChips);
+      const evalRank = cardRankForEvaluation(stepCard);
+      const rankChips = evalRank === null ? 0 : getRankChips(evalRank);
+      if (rankChips > 0) {
+        pushScoringEvent({
+          kind: "chips-delta",
+          amount: rankChips,
+          source: `${cardLabel(stepCard)} rank`,
+        });
+      }
       play("pop");
       const enhancementEffect = applyCardEnhancement(stepCard);
       if (enhancementEffect.multDelta > 0) {
@@ -1032,6 +1053,14 @@ function App() {
       setSteelScoringIds(heldSteelIds);
       setSteelScoringIndex(0);
     };
+    const baseEvent: ScoringEvent = {
+      kind: "hand-base",
+      chips: handEntry.chips,
+      mult: handEntry.multiplier,
+      handLabel: label,
+      level: handEntry.level,
+    };
+    setScoringEvents((prev) => [...prev, baseEvent]);
     setScoringCards(scoring);
     setScoringIndex(0);
   }
@@ -1290,6 +1319,7 @@ function App() {
           skipReward="investment"
         />
       )}
+      <ScoringTrace events={scoringEvents} />
     </div>
   );
 }
