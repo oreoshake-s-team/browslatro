@@ -1,6 +1,7 @@
 import "./Card.css";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Card as CardType, Enhancement, Rank, Suit } from "../../cards/types";
+import { getSealInfo } from "../../cards/seals";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 
@@ -102,11 +103,13 @@ export default function Card({
   const enhancementClass = card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
-  const ariaLabel = isStone
+  const sealClass = card.seal ? `card-seal-${card.seal}` : "";
+  const baseName = isStone
     ? "Stone card"
     : card.enhancement
       ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
       : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
+  const ariaLabel = card.seal ? `${baseName}, ${getSealInfo(card.seal).name}` : baseName;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
@@ -115,7 +118,7 @@ export default function Card({
     <button
       ref={buttonRef}
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${faceClass} ${enhancementClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${faceClass} ${enhancementClass} ${sealClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}
@@ -157,6 +160,13 @@ export default function Card({
             <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
           </span>
         </>
+      )}
+      {card.seal && (
+        <span
+          className={`card-seal card-seal-badge-${card.seal}`}
+          aria-hidden="true"
+          data-testid={`card-seal-${card.id}`}
+        />
       )}
       {tooltipRect && (
         <CardTooltip id={tooltipId} info={getCardInfo(card)} anchorRect={tooltipRect} />

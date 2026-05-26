@@ -38,6 +38,11 @@ export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) 
           <strong>{info.enhancement.name}</strong> — {info.enhancement.description}
         </p>
       )}
+      {info.seal && (
+        <p className="card-tooltip-seal">
+          <strong>{info.seal.name}</strong> — {info.seal.description}
+        </p>
+      )}
     </div>,
     document.body,
   );

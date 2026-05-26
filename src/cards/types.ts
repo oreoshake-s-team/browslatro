@@ -34,9 +34,12 @@ export type Enhancement =
   | "gold"
   | "lucky";
 
+export type Seal = "gold" | "red" | "blue" | "purple";
+
 export interface Card {
   readonly id: number;
   readonly rank: Rank;
   readonly suit: Suit;
   readonly enhancement?: Enhancement | null;
+  readonly seal?: Seal | null;
 }
