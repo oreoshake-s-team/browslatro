@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {
   SUIT_DISPLAY_ORDER,
   createDeck,

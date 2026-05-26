@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { ENHANCEMENT_KINDS } from "./enhancements";
 import {
   HERMIT_MONEY_CAP,
