@@ -45,7 +45,7 @@ import {
 } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
-import { steelHeldMultiplier } from "./heldInHand";
+import { STEEL_MULT_FACTOR, steelHeldMultiplier } from "./heldInHand";
 import {
   applyCardEnhancement,
   applyLuckyRolls,
@@ -164,6 +164,14 @@ function App() {
       ? goldScoringIds[goldScoringIndex]
       : null;
 
+  const [steelScoringIds, setSteelScoringIds] = useState<ReadonlyArray<number>>([]);
+  const [steelScoringIndex, setSteelScoringIndex] = useState<number>(0);
+  const steelFinalizeRef = useRef<(() => void) | null>(null);
+  const currentSteelScoringId =
+    steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length
+      ? steelScoringIds[steelScoringIndex]
+      : null;
+
   const [postHandSteps, setPostHandSteps] = useState<
     ReadonlyArray<JokerPostHandStep>
   >([]);
@@ -207,6 +215,9 @@ function App() {
     setGoldScoringIds([]);
     setGoldScoringIndex(0);
     goldFinalizeRef.current = null;
+    setSteelScoringIds([]);
+    setSteelScoringIndex(0);
+    steelFinalizeRef.current = null;
     setPostHandSteps([]);
     setPostHandIndex(0);
     postHandFinalizeRef.current = null;
@@ -290,6 +301,25 @@ function App() {
     }, stepMs);
     return () => window.clearTimeout(timer);
   }, [goldScoringIds, goldScoringIndex, animationSpeed]);
+
+  useEffect(() => {
+    if (steelScoringIds.length === 0) return;
+    if (steelScoringIndex >= steelScoringIds.length) {
+      const finalize = steelFinalizeRef.current;
+      steelFinalizeRef.current = null;
+      setSteelScoringIds([]);
+      setSteelScoringIndex(0);
+      if (finalize) finalize();
+      return;
+    }
+    const stepMs = getScoringStepMs(animationSpeed);
+    const timer = window.setTimeout(() => {
+      setMultiplier((prev) => prev * STEEL_MULT_FACTOR);
+      play("pop");
+      setSteelScoringIndex((prev) => prev + 1);
+    }, stepMs);
+    return () => window.clearTimeout(timer);
+  }, [steelScoringIds, steelScoringIndex, animationSpeed]);
 
   useEffect(() => {
     if (postHandSteps.length === 0) return;
@@ -596,12 +626,16 @@ function App() {
       perCardAdditiveMult += getCardMultDelta(scoring[i]);
     }
 
+    const heldSteelIds = dealt.hand
+      .filter((c) => c.enhancement === "steel" && !submittedSelection.has(c.id))
+      .map((c) => c.id);
     const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
     const enhancementXMult = scoring.reduce(
       (m, card) => m * applyCardEnhancement(card).multTimes,
       1,
     );
-    const preHandXMult = handJokerResult.xMult * steelMult * enhancementXMult;
+    const preHandXMultNoSteel = handJokerResult.xMult * enhancementXMult;
+    const preHandXMult = preHandXMultNoSteel * steelMult;
     const postHandResult = applyPostHandJokers(jokers);
     const totalXMult = preHandXMult * postHandResult.xMult;
 
@@ -617,11 +651,15 @@ function App() {
       },
     );
 
+    // Steel ×1.5 is now animated per-card during the steel sequence, so the
+    // starting live multiplier omits it. Each steel tick applies one factor
+    // until the visible multiplier reaches the same product as before.
     const liveMultiplier =
-      (handEntry.multiplier + handJokerResult.additiveMult) * preHandXMult;
+      (handEntry.multiplier + handJokerResult.additiveMult) * preHandXMultNoSteel;
     setChips(handEntry.chips);
     setMultiplier(liveMultiplier);
-    scoringFinalizeRef.current = () => {
+
+    const runPostHand = () => {
       if (postHandResult.steps.length === 0) {
         finalizeHandSubmission(finalScore, submittedSelection);
         return;
@@ -631,6 +669,15 @@ function App() {
       };
       setPostHandSteps(postHandResult.steps);
       setPostHandIndex(0);
+    };
+    scoringFinalizeRef.current = () => {
+      if (heldSteelIds.length === 0) {
+        runPostHand();
+        return;
+      }
+      steelFinalizeRef.current = runPostHand;
+      setSteelScoringIds(heldSteelIds);
+      setSteelScoringIndex(0);
     };
     setScoringCards(scoring);
     setScoringIndex(0);
@@ -749,6 +796,7 @@ function App() {
         isScoring={isScoring}
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
+        steelScoringId={currentSteelScoringId}
         handPlaySignal={handPlaySignal}
         hand={dealt.hand}
         remaining={dealt.remaining}

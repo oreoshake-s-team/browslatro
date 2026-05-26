@@ -353,6 +353,115 @@
   }
 }
 
+.card-steel-scoring {
+  position: relative;
+  animation: card-steel-pulse calc(380ms * var(--animation-speed, 1)) ease-out;
+  box-shadow: 0 0 28px rgba(173, 181, 189, 0.95),
+    0 0 12px rgba(222, 226, 230, 0.85),
+    0 0 4px rgba(255, 255, 255, 0.9);
+  z-index: 2;
+  overflow: hidden;
+}
+
+.card-steel-scoring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 35%,
+    rgba(255, 255, 255, 0.95) 50%,
+    transparent 65%,
+    transparent 100%
+  );
+  background-size: 250% 100%;
+  animation: card-steel-sheen calc(450ms * var(--animation-speed, 1)) ease-out;
+}
+
+.card-steel-scoring::after {
+  content: "×1.5";
+  position: absolute;
+  top: -1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #212529;
+  background-color: #dee2e6;
+  border: 2px solid #495057;
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-weight: 800;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 2px 6px rgba(73, 80, 87, 0.55);
+  animation: card-steel-mult-float calc(480ms * var(--animation-speed, 1)) ease-out;
+  z-index: 3;
+}
+
+@keyframes card-steel-pulse {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-0.6rem) scale(1.12) rotate(2deg);
+  }
+  60% {
+    transform: translateY(-0.2rem) scale(1.04) rotate(-1deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes card-steel-sheen {
+  0% {
+    background-position: 130% 0;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    background-position: -30% 0;
+    opacity: 0;
+  }
+}
+
+@keyframes card-steel-mult-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.4rem) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -0.2rem) scale(1.18);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -0.4rem) scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: translate(-50%, -1rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -1.6rem) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-steel-scoring,
+  .card-steel-scoring::before,
+  .card-steel-scoring::after {
+    animation: none;
+  }
+}
+
 .card-enhancement-steel {
   border-color: #495057;
   border-width: 3px;
