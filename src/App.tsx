@@ -490,6 +490,8 @@ function App() {
         }));
         return;
       }
+      case "apply-seal":
+        return;
     }
   }
 
@@ -503,8 +505,25 @@ function App() {
       return;
     }
     if (entry.kind === "spectral") {
+      const spectralEffect = entry.card.effect;
+      if (spectralEffect.kind === "apply-seal") {
+        if (selectedIds.size !== spectralEffect.maxTargets) return;
+        play("pop");
+        setDealt((prev) => ({
+          hand: prev.hand.map((c) =>
+            selectedIds.has(c.id) ? { ...c, seal: spectralEffect.seal } : c,
+          ),
+          remaining: prev.remaining,
+        }));
+        setSelectedIds(new Set());
+        setSelectedHand(null);
+        setChips(0);
+        setMultiplier(0);
+        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        return;
+      }
       play("pop");
-      applySpectralEffect(entry.card.effect);
+      applySpectralEffect(spectralEffect);
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }

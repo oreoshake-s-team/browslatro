@@ -1,3 +1,5 @@
+import type { Seal } from "../cards/types";
+
 export const SPECTRAL_BASE_PRICE = 4;
 
 export const IMMOLATE_DESTROY_COUNT = 5;
@@ -6,7 +8,8 @@ export const IMMOLATE_MONEY_GAIN = 20;
 export type SpectralEffect =
   | { readonly kind: "black-hole" }
   | { readonly kind: "immolate"; readonly destroyCount: number; readonly moneyGain: number }
-  | { readonly kind: "sigil" };
+  | { readonly kind: "sigil" }
+  | { readonly kind: "apply-seal"; readonly seal: Seal; readonly maxTargets: 1 };
 
 export interface SpectralCard {
   readonly id: string;
@@ -17,6 +20,13 @@ export interface SpectralCard {
 
 type SpectralSpec = Omit<SpectralCard, "description">;
 
+const SEAL_DISPLAY: Record<Seal, string> = {
+  gold: "Gold",
+  red: "Red",
+  blue: "Blue",
+  purple: "Purple",
+};
+
 function describe(spec: SpectralSpec): string {
   const effect = spec.effect;
   switch (effect.kind) {
@@ -26,6 +36,8 @@ function describe(spec: SpectralSpec): string {
       return `Destroys ${effect.destroyCount} random cards in hand, gain $${effect.moneyGain}`;
     case "sigil":
       return "Converts all cards in hand to a single random suit";
+    case "apply-seal":
+      return `Add a ${SEAL_DISPLAY[effect.seal]} Seal to 1 selected card in your hand`;
   }
 }
 
@@ -41,6 +53,26 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     },
   },
   { id: "sigil", name: "Sigil", effect: { kind: "sigil" } },
+  {
+    id: "talisman",
+    name: "Talisman",
+    effect: { kind: "apply-seal", seal: "gold", maxTargets: 1 },
+  },
+  {
+    id: "deja-vu",
+    name: "Deja Vu",
+    effect: { kind: "apply-seal", seal: "red", maxTargets: 1 },
+  },
+  {
+    id: "trance",
+    name: "Trance",
+    effect: { kind: "apply-seal", seal: "blue", maxTargets: 1 },
+  },
+  {
+    id: "medium",
+    name: "Medium",
+    effect: { kind: "apply-seal", seal: "purple", maxTargets: 1 },
+  },
 ];
 
 export function createSpectralCatalog(): SpectralCard[] {

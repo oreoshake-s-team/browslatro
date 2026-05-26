@@ -140,11 +140,38 @@ describe("consumables", () => {
     expect(consumableSellValue(spectralConsumable)).toBe(2);
   });
 
-  test("consumableUseBlock returns null for a spectral regardless of selection", () => {
+  test("consumableUseBlock returns null for a non-seal spectral with zero selection", () => {
     expect(consumableUseBlock(spectralConsumable, 0)).toBeNull();
   });
 
-  test("consumableUseBlock returns null for a spectral even with many cards selected", () => {
+  test("consumableUseBlock returns null for a non-seal spectral even with many cards selected", () => {
     expect(consumableUseBlock(spectralConsumable, 5)).toBeNull();
+  });
+
+  test("consumableUseBlock blocks an apply-seal spectral with zero selection", () => {
+    const sealSpectral = createSpectralCatalog().find(
+      (s) => s.effect.kind === "apply-seal",
+    );
+    if (!sealSpectral) throw new Error("no apply-seal spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: sealSpectral };
+    expect(consumableUseBlock(c, 0)).toMatch(/Select/);
+  });
+
+  test("consumableUseBlock blocks an apply-seal spectral when too many cards are selected", () => {
+    const sealSpectral = createSpectralCatalog().find(
+      (s) => s.effect.kind === "apply-seal",
+    );
+    if (!sealSpectral) throw new Error("no apply-seal spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: sealSpectral };
+    expect(consumableUseBlock(c, 2)).toMatch(/Too many/);
+  });
+
+  test("consumableUseBlock returns null for an apply-seal spectral with exactly 1 selected", () => {
+    const sealSpectral = createSpectralCatalog().find(
+      (s) => s.effect.kind === "apply-seal",
+    );
+    if (!sealSpectral) throw new Error("no apply-seal spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: sealSpectral };
+    expect(consumableUseBlock(c, 1)).toBeNull();
   });
 });
