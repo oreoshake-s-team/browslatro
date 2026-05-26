@@ -130,17 +130,6 @@ export interface PerCardContext {
   readonly firstFaceAlreadyScored?: boolean;
 }
 
-export interface JokerPostHandStep {
-  readonly jokerId: string;
-  readonly xMultFactor: number;
-}
-
-export interface JokerPostHandResult {
-  readonly steps: ReadonlyArray<JokerPostHandStep>;
-  readonly xMult: number;
-  readonly firedJokerIds: ReadonlyArray<string>;
-}
-
 export function createPlusFourMultJoker(): Joker {
   return {
     id: "plus-four-mult",
@@ -546,7 +535,15 @@ export function applyHandLevelJokers(
         steps.push({ jokerId: joker.id, additiveMult: rolled });
         break;
       }
-      case "stencil":
+      case "stencil": {
+        const emptySlots = MAX_JOKERS - jokers.length;
+        if (emptySlots > 0) {
+          xMult *= emptySlots;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, xMultFactor: emptySlots });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
@@ -559,45 +556,6 @@ export function applyHandLevelJokers(
   }
 
   return { additiveMult, additiveChips, xMult, firedJokerIds: fired, steps };
-}
-
-export function applyPostHandJokers(
-  jokers: ReadonlyArray<Joker>,
-): JokerPostHandResult {
-  const steps: JokerPostHandStep[] = [];
-  const fired: string[] = [];
-  let xMult = 1;
-
-  for (let i = 0; i < jokers.length; i += 1) {
-    const joker = jokers[i];
-    const effect = joker.effect;
-    switch (effect.kind) {
-      case "stencil": {
-        const emptySlots = MAX_JOKERS - jokers.length;
-        if (emptySlots > 0) {
-          xMult *= emptySlots;
-          steps.push({ jokerId: joker.id, xMultFactor: emptySlots });
-          fired.push(joker.id);
-        }
-        break;
-      }
-      case "additive-mult":
-      case "business-card":
-      case "per-suit-mult":
-      case "on-hand-type-mult":
-      case "on-hand-type-chips":
-      case "per-scored-rank-parity":
-      case "per-scored-face":
-      case "additive-mult-when-hand-size":
-      case "additive-mult-random":
-      case "x-mult-on-face-scored":
-        break;
-      default:
-        assertNeverEffect(effect);
-    }
-  }
-
-  return { steps, xMult, firedJokerIds: fired };
 }
 
 export function applyPerCardJokers(
@@ -699,11 +657,10 @@ export function applyJokersToScoring(
     perCardXMult *= cardResult.xMult;
     if (isFaceCard(scoredCards[c])) firstFaceAlreadyScored = true;
   }
-  const postHandResult = applyPostHandJokers(jokers);
   return {
     additiveMult: handResult.additiveMult + perCardAdditiveMult,
     additiveChips: handResult.additiveChips + perCardAdditiveChips,
-    xMult: handResult.xMult * perCardXMult * postHandResult.xMult,
+    xMult: handResult.xMult * perCardXMult,
     moneyEarned,
   };
 }
