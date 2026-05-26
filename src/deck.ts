@@ -82,10 +82,8 @@ function readDeterministicShuffleFlag(): boolean {
   }
 }
 
-const deterministicShuffle = readDeterministicShuffleFlag();
-
 export function shuffle<T>(items: ReadonlyArray<T>, rng: () => number = Math.random): T[] {
-  if (deterministicShuffle) {
+  if (readDeterministicShuffleFlag()) {
     return items.slice();
   }
   const arr = items.slice();
