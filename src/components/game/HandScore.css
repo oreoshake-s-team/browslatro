@@ -11,6 +11,25 @@
   margin: 0.2rem 0;
 }
 
+.hand-score h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.hand-score-level {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #495057;
+  background-color: #e9ecef;
+  border: 1px solid #ced4da;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  line-height: 1.2;
+}
+
 .hand-score p {
   display: flex;
   align-items: center;

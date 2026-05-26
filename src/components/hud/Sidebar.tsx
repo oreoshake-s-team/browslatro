@@ -8,6 +8,7 @@ import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import HandScore from "../game/HandScore";
 import type { Hand } from "../../cards/types";
+import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
 import type { AnimationSpeed } from "../system/preferences";
@@ -63,6 +64,11 @@ export default function Sidebar({
         chips={chips}
         multiplier={multiplier}
         selectedHand={selectedHand}
+        selectedHandLevel={
+          selectedHand
+            ? handStats[selectedHand.label as HandLabel]?.level ?? null
+            : null
+        }
       />
       <div className="sub-info-progress">
         <div className="sub-info">
