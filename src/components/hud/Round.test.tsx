@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import Round from "./Round";
 import type { BlindValuesMap } from "../../cards/types";
+import type { BossBlind } from "../../items/bosses";
 
 const BlindValues: BlindValuesMap = {
   1: "Small Blind",
@@ -31,4 +32,84 @@ describe("Round", () => {
       expect(screen.getByText(`to earn ${award}`)).toBeInTheDocument();
     },
   );
+});
+
+describe("Round — Boss Blind name (#245 phase 0)", () => {
+  const wall: BossBlind = {
+    id: "the-wall",
+    name: "The Wall",
+    description: "Extra large blind requirement.",
+    scoreMultiplier: 4,
+    anteMin: 2,
+  };
+
+  test("renders the boss name on blind 3 instead of the default label", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={1200}
+        boss={wall}
+      />,
+    );
+    expect(screen.getByText("The Wall")).toBeInTheDocument();
+  });
+
+  test("exposes the boss description on the heading as a tooltip", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={1200}
+        boss={wall}
+      />,
+    );
+    expect(screen.getByText("The Wall")).toHaveAttribute(
+      "title",
+      "Extra large blind requirement.",
+    );
+  });
+
+  test("does not render the boss name on blind 1", () => {
+    render(
+      <Round
+        blind={1}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={300}
+        boss={wall}
+      />,
+    );
+    expect(screen.queryByText("The Wall")).not.toBeInTheDocument();
+    expect(screen.getByText("Small Blind")).toBeInTheDocument();
+  });
+
+  test("does not render the boss name on blind 2", () => {
+    render(
+      <Round
+        blind={2}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={450}
+        boss={wall}
+      />,
+    );
+    expect(screen.queryByText("The Wall")).not.toBeInTheDocument();
+    expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+
+  test("falls back to BlindValues[3] when boss prop is null", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={600}
+        boss={null}
+      />,
+    );
+    expect(screen.getByText("Boss Blind")).toBeInTheDocument();
+  });
 });
