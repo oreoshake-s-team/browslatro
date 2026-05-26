@@ -23,7 +23,7 @@ function Round({
   return (
     <>
       <div className="round-info">
-        <h3>{blindLabel}</h3>
+        <h3 className="blind-label">{blindLabel}</h3>
         {blind === 3 && boss && (
           <p className="boss-effect">{boss.description}</p>
         )}

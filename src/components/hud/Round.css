@@ -8,14 +8,19 @@
   margin: 0.2rem 0;
 }
 
+.blind-label {
+  font-size: 1.8rem;
+  line-height: 1.15;
+}
+
 .boss-effect {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-style: italic;
   color: #c92a2a;
-  max-width: 14rem;
+  max-width: 16rem;
   margin-left: auto;
   margin-right: auto;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .round-score {
