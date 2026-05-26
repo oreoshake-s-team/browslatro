@@ -44,9 +44,72 @@ describe("createSpectralCatalog", () => {
     expect(find("sigil").name).toBe("Sigil");
   });
 
-  test("spans 3 distinct effect kinds", () => {
+  test("includes Talisman", () => {
+    expect(find("talisman").name).toBe("Talisman");
+  });
+
+  test("includes Deja Vu", () => {
+    expect(find("deja-vu").name).toBe("Deja Vu");
+  });
+
+  test("includes Trance", () => {
+    expect(find("trance").name).toBe("Trance");
+  });
+
+  test("includes Medium", () => {
+    expect(find("medium").name).toBe("Medium");
+  });
+
+  test("spans 4 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(3);
+    expect(kinds.size).toBe(4);
+  });
+});
+
+describe("Seal-applying spectrals", () => {
+  const SEAL_BY_ID: Record<string, "gold" | "red" | "blue" | "purple"> = {
+    talisman: "gold",
+    "deja-vu": "red",
+    trance: "blue",
+    medium: "purple",
+  };
+
+  test.each(Object.entries(SEAL_BY_ID))(
+    "%s targets seal %s",
+    (id, seal) => {
+      const card = find(id);
+      if (card.effect.kind !== "apply-seal") {
+        throw new Error(`${id} should be an apply-seal spectral`);
+      }
+      expect(card.effect.seal).toBe(seal);
+    },
+  );
+
+  test.each(Object.keys(SEAL_BY_ID))(
+    "%s has maxTargets 1",
+    (id) => {
+      const card = find(id);
+      if (card.effect.kind !== "apply-seal") {
+        throw new Error(`${id} should be an apply-seal spectral`);
+      }
+      expect(card.effect.maxTargets).toBe(1);
+    },
+  );
+
+  test("Talisman description names the Gold Seal", () => {
+    expect(find("talisman").description).toMatch(/Gold Seal/);
+  });
+
+  test("Deja Vu description names the Red Seal", () => {
+    expect(find("deja-vu").description).toMatch(/Red Seal/);
+  });
+
+  test("Trance description names the Blue Seal", () => {
+    expect(find("trance").description).toMatch(/Blue Seal/);
+  });
+
+  test("Medium description names the Purple Seal", () => {
+    expect(find("medium").description).toMatch(/Purple Seal/);
   });
 });
 

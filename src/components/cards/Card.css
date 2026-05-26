@@ -46,8 +46,15 @@
 }
 
 .card-scoring {
-  animation: card-scoring-pulse calc(200ms * var(--animation-speed, 1)) ease-out;
   box-shadow: 0 0 18px rgba(51, 154, 240, 0.7);
+}
+
+.card-scoring-tick-0 {
+  animation: card-scoring-pulse calc(200ms * var(--animation-speed, 1)) ease-out;
+}
+
+.card-scoring-tick-1 {
+  animation: card-scoring-pulse-alt calc(200ms * var(--animation-speed, 1)) ease-out;
 }
 
 @keyframes card-scoring-pulse {
@@ -62,8 +69,22 @@
   }
 }
 
+@keyframes card-scoring-pulse-alt {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-0.6rem) scale(1.08);
+  }
+  100% {
+    transform: translateY(-1.4rem) scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card-scoring {
+  .card-scoring,
+  .card-scoring-tick-0,
+  .card-scoring-tick-1 {
     animation: none;
   }
 }

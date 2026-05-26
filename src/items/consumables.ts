@@ -19,22 +19,34 @@ export function consumableSellValue(c: Consumable): number {
   return Math.floor(base / 2);
 }
 
+function checkSelection(
+  selectedCount: number,
+  maxTargets: number,
+): string | null {
+  if (selectedCount === 0) {
+    return maxTargets === 1
+      ? "Select 1 card in your hand first"
+      : `Select 1–${maxTargets} cards in your hand first`;
+  }
+  if (selectedCount > maxTargets) {
+    return `Too many cards selected (max ${maxTargets})`;
+  }
+  return null;
+}
+
 export function consumableUseBlock(
   c: Consumable,
   selectedCount: number,
 ): string | null {
-  if (c.kind !== "tarot") return null;
+  if (c.kind === "planet") return null;
+  if (c.kind === "tarot") {
+    const effect = c.card.effect;
+    if (effect.kind !== "apply-enhancement") return null;
+    return checkSelection(selectedCount, effect.maxTargets);
+  }
   const effect = c.card.effect;
-  if (effect.kind !== "apply-enhancement") return null;
-  if (selectedCount === 0) {
-    return effect.maxTargets === 1
-      ? "Select 1 card in your hand first"
-      : `Select 1–${effect.maxTargets} cards in your hand first`;
-  }
-  if (selectedCount > effect.maxTargets) {
-    return `Too many cards selected (max ${effect.maxTargets})`;
-  }
-  return null;
+  if (effect.kind !== "apply-seal") return null;
+  return checkSelection(selectedCount, effect.maxTargets);
 }
 
 export function hasFreeConsumableSlot(

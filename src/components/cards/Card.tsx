@@ -56,6 +56,7 @@ interface CardProps {
   selected?: boolean;
   discarding?: boolean;
   scoring?: boolean;
+  scoringPulseTick?: number;
   goldScoring?: boolean;
   steelScoring?: boolean;
   onToggle?: (card: CardType) => void;
@@ -67,6 +68,7 @@ export default function Card({
   selected = false,
   discarding = false,
   scoring = false,
+  scoringPulseTick = 0,
   goldScoring = false,
   steelScoring = false,
   onToggle,
@@ -97,7 +99,9 @@ export default function Card({
   const suitClass = `card-suit-${card.suit}`;
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
-  const scoringClass = scoring ? "card-scoring" : "";
+  const scoringClass = scoring
+    ? `card-scoring card-scoring-tick-${scoringPulseTick % 2}`
+    : "";
   const goldScoringClass = goldScoring ? "card-gold-scoring" : "";
   const steelScoringClass = steelScoring ? "card-steel-scoring" : "";
   const enhancementClass = card.enhancement
