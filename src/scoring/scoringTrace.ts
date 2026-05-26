@@ -23,7 +23,8 @@ export type ScoringEvent =
   | { readonly kind: "mult-delta"; readonly amount: number; readonly source: string }
   | { readonly kind: "mult-times"; readonly factor: number; readonly source: string }
   | { readonly kind: "money-delta"; readonly amount: number; readonly source: string }
-  | { readonly kind: "card-destroyed"; readonly cardLabel: string; readonly source: string };
+  | { readonly kind: "card-destroyed"; readonly cardLabel: string; readonly source: string }
+  | { readonly kind: "boss-adjustment"; readonly description: string; readonly source: string };
 
 function formatSigned(amount: number): string {
   return amount >= 0 ? `+${amount}` : `${amount}`;
@@ -74,5 +75,7 @@ export function formatScoringEvent(event: ScoringEvent): string {
       return `${formatMoney(event.amount)} (${event.source})`;
     case "card-destroyed":
       return `${event.cardLabel} destroyed (${event.source})`;
+    case "boss-adjustment":
+      return `${event.description} (${event.source})`;
   }
 }

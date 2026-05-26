@@ -109,6 +109,17 @@ describe("formatScoringEvent", () => {
     };
     expect(formatScoringEvent(event)).toBe("5♠ destroyed (Glass roll)");
   });
+
+  test("formats a boss-adjustment event", () => {
+    const event: ScoringEvent = {
+      kind: "boss-adjustment",
+      description: "Pair adjusted to 5 × 1 (Lv 1)",
+      source: "The Flint",
+    };
+    expect(formatScoringEvent(event)).toBe(
+      "Pair adjusted to 5 × 1 (Lv 1) (The Flint)",
+    );
+  });
 });
 
 describe("groupEventsByHand", () => {

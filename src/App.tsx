@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./cards/types";
-import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
+import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
@@ -429,6 +429,11 @@ function App() {
       const sealMoney = goldSealMoney(stepCard);
       if (sealMoney > 0) {
         setMoney((prev) => prev + sealMoney);
+        pushScoringEvent({
+          kind: "money-delta",
+          amount: sealMoney,
+          source: `Gold Seal on ${stepCardLabel}`,
+        });
       }
       const firstFaceAlreadyScored = scoringCards
         .slice(0, scoringIndex)
@@ -485,11 +490,20 @@ function App() {
     const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
       setMoney((prev) => prev + GOLD_HELD_BONUS_PER_CARD);
+      const goldId = goldScoringIds[goldScoringIndex];
+      const goldCard = dealt.hand.find((c) => c.id === goldId);
+      pushScoringEvent({
+        kind: "money-delta",
+        amount: GOLD_HELD_BONUS_PER_CARD,
+        source: goldCard
+          ? `Gold enhancement: ${cardLabel(goldCard)} held`
+          : "Gold enhancement held",
+      });
       play("gold");
       setGoldScoringIndex((prev) => prev + 1);
     }, stepMs);
     return () => window.clearTimeout(timer);
-  }, [goldScoringIds, goldScoringIndex, animationSpeed]);
+  }, [goldScoringIds, goldScoringIndex, animationSpeed, dealt.hand]);
 
   useEffect(() => {
     if (steelScoringIds.length === 0) return;
@@ -504,11 +518,20 @@ function App() {
     const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
       setMultiplier((prev) => prev * STEEL_MULT_FACTOR);
+      const steelId = steelScoringIds[steelScoringIndex];
+      const steelCard = dealt.hand.find((c) => c.id === steelId);
+      pushScoringEvent({
+        kind: "mult-times",
+        factor: STEEL_MULT_FACTOR,
+        source: steelCard
+          ? `Steel: ${cardLabel(steelCard)} held`
+          : "Steel held",
+      });
       play("pop");
       setSteelScoringIndex((prev) => prev + 1);
     }, stepMs);
     return () => window.clearTimeout(timer);
-  }, [steelScoringIds, steelScoringIndex, animationSpeed]);
+  }, [steelScoringIds, steelScoringIndex, animationSpeed, dealt.hand]);
 
   useEffect(() => {
     if (handLevelSteps.length === 0) return;
@@ -556,7 +579,22 @@ function App() {
 
   function handleWin() {
     setRound((prev) => prev + 1);
-    setMoney((prev) => prev + (blind + 2) + calculateInterest(prev));
+    const blindReward = blind + 2;
+    const interestBefore = money;
+    const interest = calculateInterest(interestBefore);
+    setMoney((prev) => prev + blindReward + calculateInterest(prev));
+    pushScoringEvent({
+      kind: "money-delta",
+      amount: blindReward,
+      source: `${BlindValues[blind]} reward`,
+    });
+    if (interest > 0) {
+      pushScoringEvent({
+        kind: "money-delta",
+        amount: interest,
+        source: `Interest on $${interestBefore}`,
+      });
+    }
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
@@ -1055,9 +1093,10 @@ function App() {
       for (const card of playedCards) next.add(cardKey(card));
       return next;
     });
+    const baseHandEntry = handStats[label];
     const handEntry = isBossRound
-      ? bossAdjustHandEntry(currentBoss, label, handStats[label])
-      : handStats[label];
+      ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
+      : baseHandEntry;
     const playedDebuffedIds = debuffedHandIds(
       playedCards,
       currentBoss,
@@ -1150,7 +1189,27 @@ function App() {
       handLabel: label,
       level: handEntry.level,
     };
-    setScoringEvents((prev) => [...prev, baseEvent]);
+    const submitEvents: ScoringEvent[] = [baseEvent];
+    if (
+      isBossRound &&
+      (handEntry.chips !== baseHandEntry.chips ||
+        handEntry.multiplier !== baseHandEntry.multiplier ||
+        handEntry.level !== baseHandEntry.level)
+    ) {
+      submitEvents.push({
+        kind: "boss-adjustment",
+        description: `${label} adjusted to ${handEntry.chips} × ${handEntry.multiplier} (Lv ${handEntry.level})`,
+        source: currentBoss.name,
+      });
+    }
+    if (moneyPenalty > 0) {
+      submitEvents.push({
+        kind: "money-delta",
+        amount: -moneyPenalty,
+        source: `${currentBoss.name}: ${playedCards.length} cards played`,
+      });
+    }
+    setScoringEvents((prev) => [...prev, ...submitEvents]);
     setScoringCards(scoring);
     setScoringIndex(0);
   }
@@ -1208,6 +1267,11 @@ function App() {
         play("win");
         if (remainingHandsBonus > 0) {
           setMoney((prev) => prev + remainingHandsBonus);
+          pushScoringEvent({
+            kind: "money-delta",
+            amount: remainingHandsBonus,
+            source: `Remaining hands × $${REMAINING_HAND_BONUS}`,
+          });
         }
         setPendingWin({
           roundScore: newRoundScore,
