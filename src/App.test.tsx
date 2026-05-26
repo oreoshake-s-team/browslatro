@@ -11,6 +11,7 @@ import {
 import { play } from "./components/system/sounds";
 import { shopPickerRngConfig } from "./shop";
 import type { ShopItem } from "./shop";
+import { createPhotographJoker, defaultJokersConfig } from "./jokers";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
@@ -73,14 +74,16 @@ function resetHighVisibility(): void {
 // deterministic. With identity shuffle the dealt hand is Spades 2..9, which
 // displays in rank-descending order as 9♠, 8♠, 7♠, 6♠, 5♠, 4♠, 3♠, 2♠.
 // Name must start with "mock" so vi.mock can reference it from its factory.
-const mockShuffleConfig = { useIdentity: false };
+const mockShuffleConfig = { useIdentity: false, useReverse: false };
 const mockDeckConfig = { useDefaultEnhancements: false };
 vi.mock("./deck", async () => {
   const actual = await vi.importActual<typeof import("./deck")>("./deck");
   return {
     ...actual,
-    shuffle: <T,>(items: ReadonlyArray<T>): T[] =>
-      mockShuffleConfig.useIdentity ? items.slice() : actual.shuffle(items),
+    shuffle: <T,>(items: ReadonlyArray<T>): T[] => {
+      if (mockShuffleConfig.useReverse) return items.slice().reverse();
+      return mockShuffleConfig.useIdentity ? items.slice() : actual.shuffle(items);
+    },
     createDeck: (excluded?: ReadonlySet<string>) => {
       const deck = actual.createDeck(excluded);
       if (!mockDeckConfig.useDefaultEnhancements) return deck;
@@ -94,6 +97,7 @@ vi.mock("./deck", async () => {
 
 beforeEach(() => {
   mockShuffleConfig.useIdentity = false;
+  mockShuffleConfig.useReverse = false;
   mockDeckConfig.useDefaultEnhancements = false;
   playMock.mockClear();
   vi.useFakeTimers({ shouldAdvanceTime: true });
@@ -1026,6 +1030,88 @@ describe("Hand-level joker ordering (issue #192)", () => {
     flushDiscardAnimation();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
+  });
+});
+
+describe("Photograph joker per-card timing (issue #204)", () => {
+  const originalFactory = defaultJokersConfig.factory;
+
+  beforeEach(() => {
+    defaultJokersConfig.factory = () => [createPhotographJoker()];
+  });
+
+  afterEach(() => {
+    defaultJokersConfig.factory = originalFactory;
+  });
+
+  async function submitRoyalFlushOfClubs(): Promise<void> {
+    mockShuffleConfig.useReverse = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+  }
+
+  function tickScoring(times: number): void {
+    for (let i = 0; i < times; i += 1) {
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+    }
+  }
+
+  test("the live multiplier does not include Photograph after the Ace step (Ace is not a face)", async () => {
+    await submitRoyalFlushOfClubs();
+    tickScoring(1);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("8");
+  });
+
+  test("the live multiplier multiplies by x2 on the King step (first face card)", async () => {
+    await submitRoyalFlushOfClubs();
+    tickScoring(2);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("16");
+  });
+
+  test("the live multiplier does not multiply again on the Queen step", async () => {
+    await submitRoyalFlushOfClubs();
+    tickScoring(3);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("16");
+  });
+
+  test("the live multiplier does not multiply again on the Jack step", async () => {
+    await submitRoyalFlushOfClubs();
+    tickScoring(4);
+    expect(document.querySelector(".multiplier")).toHaveTextContent("16");
+  });
+
+  test("the Photograph tile pulses on the King step (first face card)", async () => {
+    await submitRoyalFlushOfClubs();
+    tickScoring(2);
+    expect(
+      screen.getByTestId("joker-tile-inner-photograph"),
+    ).toHaveAttribute("data-pulse", "1");
+  });
+
+  test("the final round score is 151 chips * 16 mult = 2416", async () => {
+    await submitRoyalFlushOfClubs();
+    tickScoring(5);
+    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+      "2416",
+    );
+  });
+
+  test("playing a no-face hand never fires Photograph (round score = 135 * 8 = 1080)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    tickScoring(5);
+    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+      "1080",
+    );
   });
 });
 
