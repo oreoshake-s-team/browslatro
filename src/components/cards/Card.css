@@ -273,7 +273,7 @@
 }
 
 .card-gold-scoring::after {
-  content: "+$3";
+  content: attr(data-gold-bonus-label);
   position: absolute;
   top: -1.4rem;
   left: 50%;
