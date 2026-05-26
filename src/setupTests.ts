@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom";
 
+beforeEach(() => {
+  if (typeof window !== "undefined") {
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+  }
+});
+
 if (typeof globalThis.AnimationEvent === "undefined") {
   class AnimationEventPolyfill extends Event {
     animationName: string;

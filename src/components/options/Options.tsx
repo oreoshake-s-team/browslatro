@@ -107,6 +107,10 @@ function Options({
               <button
                 className="options-button options-button--destructive"
                 onClick={() => {
+                  const confirmed = window.confirm(
+                    "Start a new game? This will end your current run.",
+                  );
+                  if (!confirmed) return;
                   onNewGame();
                   handleClose();
                 }}
