@@ -10,6 +10,7 @@ import {
 } from "./components/system/preferences";
 import { play } from "./components/system/sounds";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
+import { bossPickerRngConfig } from "./items/bosses";
 import type { ShopItem } from "./items/shop";
 import { HANDS } from "./constants";
 import {
@@ -72,6 +73,7 @@ beforeEach(() => {
   mockShuffleConfig.useIdentity = false;
   mockShuffleConfig.useReverse = false;
   mockDeckConfig.useDefaultEnhancements = false;
+  bossPickerRngConfig.rng = () => 0;
   playMock.mockClear();
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
@@ -84,6 +86,7 @@ afterEach(() => {
   });
   vi.useRealTimers();
   shopPickerRngConfig.rng = Math.random;
+  bossPickerRngConfig.rng = Math.random;
 });
 
 function getStatValue(label: string): HTMLElement {

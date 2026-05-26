@@ -14,6 +14,7 @@ interface GameProps {
   onMultiplyMultiplier: (factor: number) => void;
   onSubmitHand: () => void;
   onDiscard: () => void;
+  canSubmit?: boolean;
   canDiscard: boolean;
   isScoring?: boolean;
   scoringId?: number | null;
@@ -58,6 +59,7 @@ export default function Game({
   onMultiplyMultiplier,
   onSubmitHand,
   onDiscard,
+  canSubmit = true,
   canDiscard,
   isScoring = false,
   scoringId = null,
@@ -200,7 +202,7 @@ export default function Game({
           <button
             className="submit-hand-button"
             onClick={onSubmitHand}
-            disabled={isScoring}
+            disabled={isScoring || !canSubmit}
           >
             🃏 Submit Hand
           </button>

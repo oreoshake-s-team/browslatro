@@ -41,6 +41,7 @@ describe("Round — Boss Blind name (#245 phase 0)", () => {
     description: "Extra large blind requirement.",
     scoreMultiplier: 4,
     anteMin: 2,
+    effect: { kind: "none" },
   };
 
   test("renders the boss name on blind 3 instead of the default label", () => {
