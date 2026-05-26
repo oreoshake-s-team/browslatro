@@ -2,9 +2,15 @@ import {
   applyShopDiscount,
   createVoucherCatalog,
   extraConsumableSlots,
+  extraHandSize,
+  extraJokerSlots,
   extraShopOfferSlots,
+  extraStartingDiscards,
+  extraStartingHands,
+  interestCapFor,
   pickVoucherForAnte,
   pickVouchersForAnte,
+  rerollCostReduction,
   shopPriceDiscount,
   VOUCHER_BASE_PRICE,
   type Voucher,
@@ -228,5 +234,87 @@ describe("extraConsumableSlots", () => {
 
   test("returns 1 when crystal-ball is owned", () => {
     expect(extraConsumableSlots(new Set<VoucherId>(["crystal-ball"]))).toBe(1);
+  });
+});
+
+describe("rerollCostReduction", () => {
+  test("returns 0 with no reroll vouchers", () => {
+    expect(rerollCostReduction(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("Reroll Surplus reduces reroll cost by $2", () => {
+    expect(rerollCostReduction(new Set<VoucherId>(["reroll-surplus"]))).toBe(2);
+  });
+
+  test("Reroll Surplus + Reroll Glut reduces reroll cost by $4", () => {
+    expect(
+      rerollCostReduction(new Set<VoucherId>(["reroll-surplus", "reroll-glut"])),
+    ).toBe(4);
+  });
+});
+
+describe("interestCapFor", () => {
+  test("defaults to $5", () => {
+    expect(interestCapFor(new Set<VoucherId>())).toBe(5);
+  });
+
+  test("Seed Money raises the cap to $10", () => {
+    expect(interestCapFor(new Set<VoucherId>(["seed-money"]))).toBe(10);
+  });
+
+  test("Money Tree raises the cap to $20", () => {
+    expect(
+      interestCapFor(new Set<VoucherId>(["seed-money", "money-tree"])),
+    ).toBe(20);
+  });
+});
+
+describe("extraStartingHands", () => {
+  test("returns 0 without Grabber or Nacho Tong", () => {
+    expect(extraStartingHands(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("Grabber alone grants +1 hand", () => {
+    expect(extraStartingHands(new Set<VoucherId>(["grabber"]))).toBe(1);
+  });
+
+  test("Grabber + Nacho Tong stack to +2 hands", () => {
+    expect(
+      extraStartingHands(new Set<VoucherId>(["grabber", "nacho-tong"])),
+    ).toBe(2);
+  });
+});
+
+describe("extraStartingDiscards", () => {
+  test("Wasteful + Recyclomancy stack to +2 discards", () => {
+    expect(
+      extraStartingDiscards(new Set<VoucherId>(["wasteful", "recyclomancy"])),
+    ).toBe(2);
+  });
+
+  test("returns 0 without Wasteful", () => {
+    expect(extraStartingDiscards(new Set<VoucherId>())).toBe(0);
+  });
+});
+
+describe("extraHandSize", () => {
+  test("Paint Brush + Palette stack to +2 hand size", () => {
+    expect(
+      extraHandSize(new Set<VoucherId>(["paint-brush", "palette"])),
+    ).toBe(2);
+  });
+
+  test("returns 0 without Paint Brush", () => {
+    expect(extraHandSize(new Set<VoucherId>())).toBe(0);
+  });
+});
+
+describe("extraJokerSlots", () => {
+  test("Antimatter grants +1 joker slot", () => {
+    expect(extraJokerSlots(new Set<VoucherId>(["antimatter"]))).toBe(1);
+  });
+
+  test("Blank alone grants 0 slots (it's a prereq with no effect)", () => {
+    expect(extraJokerSlots(new Set<VoucherId>(["blank"]))).toBe(0);
   });
 });

@@ -126,9 +126,12 @@ export type ShopItem =
       readonly sold: boolean;
     };
 
-export function rerollCostFor(rerollCount: number): number {
+export function rerollCostFor(
+  rerollCount: number,
+  reduction: number = 0,
+): number {
   const safe = rerollCount < 0 ? 0 : Math.floor(rerollCount);
-  return BASE_REROLL_COST + safe;
+  return Math.max(0, BASE_REROLL_COST + safe - Math.max(0, reduction));
 }
 
 function pickRandom<T extends { readonly id: string }>(

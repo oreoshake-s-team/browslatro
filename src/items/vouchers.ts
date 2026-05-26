@@ -7,7 +7,19 @@ export type VoucherId =
   | "overstock-plus"
   | "clearance-sale"
   | "liquidation"
-  | "crystal-ball";
+  | "crystal-ball"
+  | "reroll-surplus"
+  | "reroll-glut"
+  | "seed-money"
+  | "money-tree"
+  | "grabber"
+  | "nacho-tong"
+  | "wasteful"
+  | "recyclomancy"
+  | "paint-brush"
+  | "palette"
+  | "blank"
+  | "antimatter";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -23,6 +35,18 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "clearance-sale", name: "Clearance Sale", description: "All shop items 25% off.", cost: VOUCHER_BASE_PRICE },
   { id: "liquidation", name: "Liquidation", description: "All shop items 50% off.", cost: VOUCHER_BASE_PRICE, requires: "clearance-sale" },
   { id: "crystal-ball", name: "Crystal Ball", description: "+1 consumable slot.", cost: VOUCHER_BASE_PRICE },
+  { id: "reroll-surplus", name: "Reroll Surplus", description: "Rerolls cost $2 less.", cost: VOUCHER_BASE_PRICE },
+  { id: "reroll-glut", name: "Reroll Glut", description: "Rerolls cost an additional $2 less.", cost: VOUCHER_BASE_PRICE, requires: "reroll-surplus" },
+  { id: "seed-money", name: "Seed Money", description: "Raise the interest cap to $10.", cost: VOUCHER_BASE_PRICE },
+  { id: "money-tree", name: "Money Tree", description: "Raise the interest cap to $20.", cost: VOUCHER_BASE_PRICE, requires: "seed-money" },
+  { id: "grabber", name: "Grabber", description: "+1 hand per round.", cost: VOUCHER_BASE_PRICE },
+  { id: "nacho-tong", name: "Nacho Tong", description: "+1 additional hand per round.", cost: VOUCHER_BASE_PRICE, requires: "grabber" },
+  { id: "wasteful", name: "Wasteful", description: "+1 discard per round.", cost: VOUCHER_BASE_PRICE },
+  { id: "recyclomancy", name: "Recyclomancy", description: "+1 additional discard per round.", cost: VOUCHER_BASE_PRICE, requires: "wasteful" },
+  { id: "paint-brush", name: "Paint Brush", description: "+1 hand size.", cost: VOUCHER_BASE_PRICE },
+  { id: "palette", name: "Palette", description: "+1 additional hand size.", cost: VOUCHER_BASE_PRICE, requires: "paint-brush" },
+  { id: "blank", name: "Blank", description: "Does nothing… for now.", cost: VOUCHER_BASE_PRICE },
+  { id: "antimatter", name: "Antimatter", description: "+1 joker slot.", cost: VOUCHER_BASE_PRICE, requires: "blank" },
 ];
 
 export function createVoucherCatalog(): ReadonlyArray<Voucher> {
@@ -110,4 +134,42 @@ export function applyShopDiscount(
 
 export function extraConsumableSlots(ownedIds: ReadonlySet<VoucherId>): number {
   return ownedIds.has("crystal-ball") ? 1 : 0;
+}
+
+export function rerollCostReduction(ownedIds: ReadonlySet<VoucherId>): number {
+  let reduction = 0;
+  if (ownedIds.has("reroll-surplus")) reduction += 2;
+  if (ownedIds.has("reroll-glut")) reduction += 2;
+  return reduction;
+}
+
+export function interestCapFor(ownedIds: ReadonlySet<VoucherId>): number {
+  if (ownedIds.has("money-tree")) return 20;
+  if (ownedIds.has("seed-money")) return 10;
+  return 5;
+}
+
+export function extraStartingHands(ownedIds: ReadonlySet<VoucherId>): number {
+  let extra = 0;
+  if (ownedIds.has("grabber")) extra += 1;
+  if (ownedIds.has("nacho-tong")) extra += 1;
+  return extra;
+}
+
+export function extraStartingDiscards(ownedIds: ReadonlySet<VoucherId>): number {
+  let extra = 0;
+  if (ownedIds.has("wasteful")) extra += 1;
+  if (ownedIds.has("recyclomancy")) extra += 1;
+  return extra;
+}
+
+export function extraHandSize(ownedIds: ReadonlySet<VoucherId>): number {
+  let extra = 0;
+  if (ownedIds.has("paint-brush")) extra += 1;
+  if (ownedIds.has("palette")) extra += 1;
+  return extra;
+}
+
+export function extraJokerSlots(ownedIds: ReadonlySet<VoucherId>): number {
+  return ownedIds.has("antimatter") ? 1 : 0;
 }

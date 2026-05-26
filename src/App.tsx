@@ -128,7 +128,12 @@ import {
 import {
   applyShopDiscount,
   extraConsumableSlots,
+  extraHandSize,
+  extraJokerSlots,
   extraShopOfferSlots,
+  extraStartingDiscards,
+  extraStartingHands,
+  interestCapFor,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
   type Voucher,
@@ -305,7 +310,6 @@ function App() {
   >([]);
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
-  const currentHandSize = Math.max(1, HAND_SIZE + handSizeModifier);
   const [extraPackSlots, setExtraPackSlots] = useState(0);
   const [pendingForcedPacks, setPendingForcedPacks] = useState<
     ReadonlyArray<PackPool>
@@ -329,14 +333,15 @@ function App() {
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
+  const currentHandSize = Math.max(
+    1,
+    HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
+  );
   const [extraVoucherSlots, setExtraVoucherSlots] = useState(0);
   const [currentAnteVouchers, setCurrentAnteVouchers] = useState<
     ReadonlyArray<Voucher>
   >(() =>
-    pickVouchersForAnte(
-      { ante: 1, ownedIds: new Set() },
-      BASE_VOUCHER_SLOTS,
-    ),
+    pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
   );
   const [soldVoucherIds, setSoldVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
@@ -372,12 +377,14 @@ function App() {
       opts.boss !== undefined ? opts.boss : currentBoss;
     const isBossRound = effectiveBlind === 3;
     const baseHandSize = opts.handSizeOverride ?? currentHandSize;
-    const startingHands = isBossRound
-      ? bossStartingHands(effectiveBoss)
-      : DEFAULT_STARTING_HANDS;
-    const startingDiscards = isBossRound
-      ? bossStartingDiscards(effectiveBoss)
-      : DEFAULT_STARTING_DISCARDS;
+    const startingHands =
+      (isBossRound
+        ? bossStartingHands(effectiveBoss)
+        : DEFAULT_STARTING_HANDS) + extraStartingHands(ownedVoucherIds);
+    const startingDiscards =
+      (isBossRound
+        ? bossStartingDiscards(effectiveBoss)
+        : DEFAULT_STARTING_DISCARDS) + extraStartingDiscards(ownedVoucherIds);
     const handSize = isBossRound
       ? bossHandSize(effectiveBoss, baseHandSize)
       : baseHandSize;
@@ -668,7 +675,9 @@ function App() {
     setRound((prev) => prev + 1);
     const blindReward = blind + 2;
     const interestBefore = precomputed?.interestWallet ?? money;
-    const interest = precomputed?.interest ?? calculateInterest(interestBefore);
+    const interest =
+      precomputed?.interest ??
+      calculateInterest(interestBefore, interestCapFor(ownedVoucherIds));
     setMoney((prev) => prev + blindReward + interest);
     pushScoringEvent({
       kind: "money-delta",
@@ -890,7 +899,12 @@ function App() {
     const price = applyShopDiscount(offer.price, ownedVoucherIds);
     if (money < price) return;
     if (offer.kind === "joker") {
-      if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
+      if (
+        effectiveJokerCount(jokers) >=
+        MAX_JOKERS + extraJokerSlots(ownedVoucherIds)
+      ) {
+        return;
+      }
       play("pop");
       setMoney((prev) => prev - price);
       setJokers((prev) => [...prev, offer.joker]);
@@ -1597,7 +1611,10 @@ function App() {
           baseReward: blind + 2,
           walletAtPayout: postBonusesWallet,
           interestWallet: postGoldWallet,
-          interest: calculateInterest(postGoldWallet),
+          interest: calculateInterest(
+            postGoldWallet,
+            interestCapFor(ownedVoucherIds),
+          ),
           goldHeldCount: heldGoldIds.length,
           remainingHandsCount,
         });

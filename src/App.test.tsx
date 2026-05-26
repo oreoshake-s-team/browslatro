@@ -2319,7 +2319,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Clearance Sale lets the player afford a joker they couldn't at full price", async () => {
-    const user = await openShopWithVoucher(0.4);
+    const user = await openShopWithVoucher(0.15);
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buyButton = screen
       .getByTestId(jokerSlotId)
@@ -2334,6 +2334,7 @@ describe("Voucher effects integration", () => {
     const user = await openShopWithVoucher(0.9);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     expect(screen.getAllByTestId("consumable-tile-empty")).toHaveLength(3);
   });
 });
