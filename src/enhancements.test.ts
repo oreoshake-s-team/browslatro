@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {
   BONUS_ENHANCEMENT_CHIPS,
   ENHANCEMENT_KINDS,

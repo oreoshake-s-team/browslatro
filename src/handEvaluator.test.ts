@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { detectHandLabel, evaluateHand, handContains } from "./handEvaluator";
 import type { Card, Enhancement, Rank, Suit } from "./types";
 

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import {
   BUSINESS_CARD_PROC_CHANCE,
   CLEVER_JOKER_CHIPS,
