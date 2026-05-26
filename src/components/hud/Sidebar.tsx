@@ -10,6 +10,7 @@ import HandScore from "../game/HandScore";
 import type { Hand } from "../../cards/types";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
+import type { BossBlind } from "../../items/bosses";
 import type { Voucher } from "../../items/vouchers";
 import type { AnimationSpeed } from "../system/preferences";
 
@@ -28,6 +29,7 @@ interface SidebarProps {
   handPlayCounts: HandPlayCounts;
   handStats: HandStats;
   ownedVouchers: ReadonlyArray<Voucher>;
+  currentBoss: BossBlind | null;
   onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
@@ -48,6 +50,7 @@ export default function Sidebar({
   handPlayCounts,
   handStats,
   ownedVouchers,
+  currentBoss,
   onNewGame,
   onHighVisibilityChange,
   onAnimationSpeedChange,
@@ -59,6 +62,7 @@ export default function Sidebar({
         BlindValues={BlindValues}
         roundScore={roundScore}
         requiredScore={requiredScore}
+        boss={currentBoss}
       />
       <HandScore
         chips={chips}

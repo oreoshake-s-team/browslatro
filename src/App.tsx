@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import type { Blind, Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
+import {
+  bossPickerRngConfig,
+  pickBossForAnte,
+  type BossBlind,
+} from "./items/bosses";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
@@ -223,8 +228,18 @@ function App() {
     () => pickVoucherForAnte({ ante: 1, ownedIds: new Set() }),
   );
   const [currentAnteVoucherSold, setCurrentAnteVoucherSold] = useState(false);
+  const [currentBoss, setCurrentBoss] = useState<BossBlind>(() =>
+    pickBossForAnte({ ante: 1 }),
+  );
+  const [recentBossIds, setRecentBossIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
 
-  const requiredScore = BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
+  const bossScoreMultiplier = currentBoss.scoreMultiplier;
+  const requiredScore =
+    blind === 3
+      ? BASE_CHIPS[ante - 1] * bossScoreMultiplier
+      : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
 
   function startNewRound() {
     setRoundScore(0);
@@ -408,6 +423,16 @@ function App() {
         pickVoucherForAnte({ ante: nextAnte, ownedIds: ownedVoucherIds }),
       );
       setCurrentAnteVoucherSold(false);
+      const nextRecent = new Set(recentBossIds);
+      nextRecent.add(currentBoss.id);
+      setRecentBossIds(nextRecent);
+      setCurrentBoss(
+        pickBossForAnte({
+          ante: nextAnte,
+          recentIds: nextRecent,
+          rng: bossPickerRngConfig.rng,
+        }),
+      );
     }
     setShopOffers(
       pickShopOffers({
@@ -657,6 +682,8 @@ function App() {
     setOwnedVoucherIds(freshOwned);
     setCurrentAnteVoucher(pickVoucherForAnte({ ante: 1, ownedIds: freshOwned }));
     setCurrentAnteVoucherSold(false);
+    setRecentBossIds(new Set());
+    setCurrentBoss(pickBossForAnte({ ante: 1, rng: bossPickerRngConfig.rng }));
     startNewRound();
   }
 
@@ -985,6 +1012,7 @@ function App() {
         handPlayCounts={handPlayCounts}
         handStats={handStats}
         ownedVouchers={VOUCHER_CATALOG.filter((v) => ownedVoucherIds.has(v.id))}
+        currentBoss={currentBoss}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
         onAnimationSpeedChange={setAnimationSpeedState}
