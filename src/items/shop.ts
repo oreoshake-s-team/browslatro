@@ -186,6 +186,7 @@ export interface PickShopOffersArgs {
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
   readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly extraSlots?: number;
+  readonly extraPackSlots?: number;
   readonly rng?: RandomSource;
 }
 
@@ -284,7 +285,11 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
       slots.push(offer);
     }
   }
-  for (let i = 0; i < SHOP_PACK_SLOTS; i += 1) {
+  const packSlotCount = Math.max(
+    0,
+    SHOP_PACK_SLOTS + (args.extraPackSlots ?? 0),
+  );
+  for (let i = 0; i < packSlotCount; i += 1) {
     slots.push(
       packShopOffer(
         rollPack({

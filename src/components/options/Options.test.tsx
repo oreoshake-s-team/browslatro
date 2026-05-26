@@ -75,6 +75,39 @@ describe("Options", () => {
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
 
+  test("New game button prompts window.confirm before invoking onNewGame (issue #269)", async () => {
+    const user = userEvent.setup();
+    const confirmSpy = vi
+      .spyOn(window, "confirm")
+      .mockReturnValue(true);
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    confirmSpy.mockClear();
+    await user.click(screen.getByText("New game"));
+    expect(confirmSpy).toHaveBeenCalledTimes(1);
+  });
+
+  test("cancelling the confirm prompt skips onNewGame (issue #269)", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    const onNewGame = vi.fn();
+    render(<Options onNewGame={onNewGame} />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    expect(onNewGame).not.toHaveBeenCalled();
+  });
+
+  test("cancelling the confirm prompt leaves the Options modal open (issue #269)", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    expect(
+      screen.getByRole("heading", { name: "Options" }),
+    ).toBeInTheDocument();
+  });
+
   test("Escape closes the modal when open", async () => {
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);

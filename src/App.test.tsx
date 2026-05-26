@@ -926,6 +926,20 @@ describe("Options modal new game integration", () => {
     expect(getStatValue("Ante")).toHaveTextContent("1");
     expect(getStatValue("Round")).toHaveTextContent("1");
   });
+
+  test("cancelling the New game confirm leaves the current run intact (issue #269)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/^💵 Add \$10$/));
+    expect(getStatValue("Money")).toHaveTextContent("$14");
+
+    vi.spyOn(window, "confirm").mockReturnValueOnce(false);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+
+    expect(getStatValue("Money")).toHaveTextContent("$14");
+  });
 });
 
 describe("Sequential card scoring", () => {
@@ -2898,5 +2912,80 @@ describe("Investment tag (issue #252)", () => {
     await user.click(screen.getByRole("button", { name: /Options/ }));
     await user.click(screen.getByRole("button", { name: /New game/ }));
     expect(screen.queryByTestId("blind-select-tags")).not.toBeInTheDocument();
+  });
+});
+
+describe("Apply Modifiers — Packs +1 / Packs −1 dev controls", () => {
+  function packOfferCount(): number {
+    return document.querySelectorAll('[data-offer-kind="pack"]').length;
+  }
+
+  async function advanceToShop(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+  }
+
+  test("the fresh game still shows the default number of pack offers in the first shop", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToShop(user);
+    expect(packOfferCount()).toBe(2);
+  });
+
+  test("clicking Packs +1 adds one extra pack offer to the next shop", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Packs \+1/ }));
+    await advanceToShop(user);
+    expect(packOfferCount()).toBe(3);
+  });
+
+  test("clicking Packs +1 twice adds two extra pack offers to the next shop", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Packs \+1/ }));
+    await user.click(screen.getByRole("button", { name: /Packs \+1/ }));
+    await advanceToShop(user);
+    expect(packOfferCount()).toBe(4);
+  });
+
+  test("clicking Packs −1 from the default removes one pack offer from the next shop", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Packs −1/ }));
+    await advanceToShop(user);
+    expect(packOfferCount()).toBe(1);
+  });
+
+  test("Packs −1 clamps at zero pack offers (never goes negative)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    for (let i = 0; i < 10; i += 1) {
+      await user.click(screen.getByRole("button", { name: /Packs −1/ }));
+    }
+    await advanceToShop(user);
+    expect(packOfferCount()).toBe(0);
+  });
+
+  test("starting a new game resets the pack-slot modifier", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Packs \+1/ }));
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    await dismissBlindSelect(user);
+    await advanceToShop(user);
+    expect(packOfferCount()).toBe(2);
   });
 });
