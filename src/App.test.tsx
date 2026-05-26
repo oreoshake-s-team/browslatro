@@ -2683,6 +2683,11 @@ describe("Celestial pack open + pick integration", () => {
   });
 
   test("picking the only allowed card closes the modal automatically", async () => {
+    // Pin the shop rng so the pack variant rolls Normal (pickLimit=1) instead
+    // of the 3%-weighted Mega (pickLimit=2). Without this, the test was flaky:
+    // 0.5 stays under Normal's 0.85 cumulative weight, so the pack always has
+    // a single pick and the modal closes after one click.
+    shopPickerRngConfig.rng = () => 0.5;
     const user = await openShopWithMoney();
     const idx = findPackOfferIdx();
     const open = screen
