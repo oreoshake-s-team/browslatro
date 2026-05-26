@@ -1,3 +1,4 @@
+import { rollChance } from "../dev/chanceOverride";
 import type { Card, Enhancement, Rank, Suit } from "./types";
 
 export interface EnhancementEffect {
@@ -37,9 +38,7 @@ export const enhancementRngConfig: { rng: EnhancementRandomSource } = {
 };
 
 export function rollEnhancementChance(chance: number): boolean {
-  if (chance <= 0) return false;
-  if (chance >= 1) return true;
-  return enhancementRngConfig.rng() < chance;
+  return rollChance(chance, enhancementRngConfig.rng);
 }
 
 function assertNeverEnhancement(e: never): never {

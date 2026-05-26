@@ -24,6 +24,7 @@ import {
   rerollShopOffer,
   type ShopItem,
 } from "./shop";
+import { chanceOverrideConfig } from "../dev/chanceOverride";
 
 function itemOffers(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
   return offers.filter((o) => o.kind !== "pack");
@@ -412,6 +413,19 @@ describe("pickShopOffers — spectral offer rate", () => {
       if (offers.some((o) => o.kind === "spectral")) spectralSeen = true;
     }
     expect(spectralSeen).toBe(false);
+  });
+
+  test("force100 override guarantees at least one spectral in a multi-slot shop (#354)", () => {
+    chanceOverrideConfig.force100 = true;
+    try {
+      const offers = pickShopOffers({
+        ...baseArgs(mulberry32(7)),
+        extraSlots: 1,
+      });
+      expect(offers.some((o) => o.kind === "spectral")).toBe(true);
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
   });
 });
 

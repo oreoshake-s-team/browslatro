@@ -19,6 +19,7 @@ import {
   pickBossForAnte,
   type BossBlind,
 } from "./items/bosses";
+import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
@@ -189,6 +190,13 @@ function App() {
   const [devChipsBonus, setDevChipsBonus] = useState(0);
   const [devMultBonus, setDevMultBonus] = useState(0);
   const [devMultFactor, setDevMultFactor] = useState(1);
+  const [forceProbabilities, setForceProbabilities] = useState(false);
+  useEffect(() => {
+    chanceOverrideConfig.force100 = forceProbabilities;
+    return () => {
+      chanceOverrideConfig.force100 = false;
+    };
+  }, [forceProbabilities]);
   const [roundScore, setRoundScore] = useState(0);
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
   const [remainingHands, setRemainingHands] = useState(4);
@@ -1145,6 +1153,7 @@ function App() {
     setDevChipsBonus(0);
     setDevMultBonus(0);
     setDevMultFactor(1);
+    setForceProbabilities(false);
     setJokers(initialJokersConfig.factory());
     setHandPlayCounts(emptyHandCounts());
     setHandStats(createDefaultHandStats());
@@ -1692,6 +1701,8 @@ function App() {
         onGrowPackSlots={() => setExtraPackSlots((prev) => prev + 1)}
         onShrinkVoucherSlots={() => adjustVoucherSlots(-1)}
         onGrowVoucherSlots={() => adjustVoucherSlots(1)}
+        forceProbabilities={forceProbabilities}
+        onToggleForceProbabilities={() => setForceProbabilities((p) => !p)}
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}

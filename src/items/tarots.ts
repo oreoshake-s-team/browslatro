@@ -1,6 +1,7 @@
 import type { Enhancement } from "../cards/types";
 import type { Joker, JokerEdition, RandomSource } from "./jokers";
 import { JOKER_EDITION_KINDS, jokerSellValue } from "./jokers";
+import { rollChance } from "../dev/chanceOverride";
 
 export const TAROT_BASE_PRICE = 3;
 export const HERMIT_MONEY_CAP = 20;
@@ -100,7 +101,7 @@ export function rollWheelOfFortune(
   chance: number = WHEEL_OF_FORTUNE_CHANCE,
   rng: RandomSource = tarotRngConfig.rng,
 ): WheelOfFortuneResult {
-  const hit = rng() < chance;
+  const hit = rollChance(chance, rng);
   const targetIdx =
     jokers.length === 0 ? -1 : Math.floor(rng() * jokers.length);
   const edition =

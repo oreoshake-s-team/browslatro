@@ -18,6 +18,7 @@ import { createPlanetCatalog } from "./planets";
 import { createTarotCatalog } from "./tarots";
 import { createJokerCatalog } from "./jokers";
 import { createSpectralCatalog } from "./spectrals";
+import { chanceOverrideConfig } from "../dev/chanceOverride";
 
 function seededRng(seed: number): () => number {
   let s = seed;
@@ -573,5 +574,17 @@ describe("Standard pack", () => {
       ids.add(rollStandardCard(rng).id);
     }
     expect(ids.size).toBe(50);
+  });
+
+  test("force100 override always assigns both an enhancement and a seal (#354)", () => {
+    chanceOverrideConfig.force100 = true;
+    try {
+      const rng = seededRng(72);
+      const card = rollStandardCard(rng);
+      expect(card.enhancement).not.toBeUndefined();
+      expect(card.seal).not.toBeUndefined();
+    } finally {
+      chanceOverrideConfig.force100 = false;
+    }
   });
 });
