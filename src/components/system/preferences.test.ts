@@ -131,23 +131,19 @@ describe("preferences (animationSpeed)", () => {
     expect(second.getAnimationSpeed()).toBe("slow");
   });
 
-  test("getAnimationSpeedMultiplier returns 1 for normal", async () => {
+  test.each<{ speed: "normal" | "instant"; expected: number }>([
+    { speed: "normal", expected: 1 },
+    { speed: "instant", expected: 0 },
+  ])("getAnimationSpeedMultiplier returns $expected for $speed", async ({ speed, expected }) => {
     const { getAnimationSpeedMultiplier } = await loadPreferences();
-    expect(getAnimationSpeedMultiplier("normal")).toBe(1);
+    expect(getAnimationSpeedMultiplier(speed)).toBe(expected);
   });
 
-  test("getAnimationSpeedMultiplier returns 0 for instant", async () => {
-    const { getAnimationSpeedMultiplier } = await loadPreferences();
-    expect(getAnimationSpeedMultiplier("instant")).toBe(0);
-  });
-
-  test("hasUserOverriddenAnimationSpeed is false for normal", async () => {
+  test.each<{ speed: "normal" | "slow"; expected: boolean }>([
+    { speed: "normal", expected: false },
+    { speed: "slow", expected: true },
+  ])("hasUserOverriddenAnimationSpeed is $expected for $speed", async ({ speed, expected }) => {
     const { hasUserOverriddenAnimationSpeed } = await loadPreferences();
-    expect(hasUserOverriddenAnimationSpeed("normal")).toBe(false);
-  });
-
-  test("hasUserOverriddenAnimationSpeed is true for slow", async () => {
-    const { hasUserOverriddenAnimationSpeed } = await loadPreferences();
-    expect(hasUserOverriddenAnimationSpeed("slow")).toBe(true);
+    expect(hasUserOverriddenAnimationSpeed(speed)).toBe(expected);
   });
 });

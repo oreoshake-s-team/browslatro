@@ -1345,41 +1345,17 @@ describe("getScoringStepMs", () => {
     resetAnimationSpeed();
   });
 
-  test("returns 500 for normal when OS does not prefer reduced motion", () => {
-    mockPrefersReducedMotion(false);
-    expect(getScoringStepMs("normal")).toBe(500);
-  });
-
-  test("returns 1000 for slow", () => {
-    expect(getScoringStepMs("slow")).toBe(1000);
-  });
-
-  test("returns 250 for fast", () => {
-    expect(getScoringStepMs("fast")).toBe(250);
-  });
-
-  test("returns 0 for instant", () => {
-    expect(getScoringStepMs("instant")).toBe(0);
-  });
-
-  test("returns 0 for normal when OS prefers reduced motion", () => {
-    mockPrefersReducedMotion(true);
-    expect(getScoringStepMs("normal")).toBe(0);
-  });
-
-  test("returns 250 for fast even when OS prefers reduced motion", () => {
-    mockPrefersReducedMotion(true);
-    expect(getScoringStepMs("fast")).toBe(250);
-  });
-
-  test("returns 1000 for slow even when OS prefers reduced motion", () => {
-    mockPrefersReducedMotion(true);
-    expect(getScoringStepMs("slow")).toBe(1000);
-  });
-
-  test("returns 0 for instant even when OS does not prefer reduced motion", () => {
-    mockPrefersReducedMotion(false);
-    expect(getScoringStepMs("instant")).toBe(0);
+  test.each<{ speed: "normal" | "slow" | "fast" | "instant"; reducedMotion: boolean; expected: number }>([
+    { speed: "normal", reducedMotion: false, expected: 500 },
+    { speed: "slow", reducedMotion: false, expected: 1000 },
+    { speed: "fast", reducedMotion: false, expected: 250 },
+    { speed: "instant", reducedMotion: false, expected: 0 },
+    { speed: "normal", reducedMotion: true, expected: 0 },
+    { speed: "fast", reducedMotion: true, expected: 250 },
+    { speed: "slow", reducedMotion: true, expected: 1000 },
+  ])("returns $expected for $speed when reducedMotion=$reducedMotion", ({ speed, reducedMotion, expected }) => {
+    mockPrefersReducedMotion(reducedMotion);
+    expect(getScoringStepMs(speed)).toBe(expected);
   });
 
   test("reads from the persisted preference when no argument is passed", () => {

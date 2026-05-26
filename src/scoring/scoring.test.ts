@@ -514,16 +514,12 @@ describe("scoreHand — Glass enhancement", () => {
 });
 
 describe("getCardChips — Stone enhancement", () => {
-  test("returns 50 chips for a Stone card regardless of underlying rank", () => {
-    expect(getCardChips(card("3", "spades", "stone"))).toBe(50);
-  });
-
-  test("a Stone face card returns 50 chips (rank is invisible)", () => {
-    expect(getCardChips(card("K", "spades", "stone"))).toBe(50);
-  });
-
-  test("a Stone Ace returns 50 chips (rank is invisible)", () => {
-    expect(getCardChips(card("A", "spades", "stone"))).toBe(50);
+  test.each<{ rank: Rank }>([
+    { rank: "3" },
+    { rank: "K" },
+    { rank: "A" },
+  ])("returns 50 chips for a Stone card regardless of rank ($rank)", ({ rank }) => {
+    expect(getCardChips(card(rank, "spades", "stone"))).toBe(50);
   });
 });
 
