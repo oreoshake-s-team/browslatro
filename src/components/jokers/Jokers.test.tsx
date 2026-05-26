@@ -71,6 +71,37 @@ describe("Jokers UI", () => {
     expect(screen.queryAllByTestId("joker-tile-empty")).toHaveLength(0);
   });
 
+  test("renders a spacer between consecutive empty slots (issue #221)", () => {
+    render(<Jokers jokers={[]} />);
+    expect(screen.getAllByTestId(/^joker-gap-empty-/)).toHaveLength(
+      MAX_JOKERS - 1,
+    );
+  });
+
+  test("does not render a leading spacer before the first empty slot (issue #221)", () => {
+    render(<Jokers jokers={[]} />);
+    expect(screen.queryByTestId("joker-gap-empty-0")).not.toBeInTheDocument();
+  });
+
+  test("renders the right number of spacers when only some slots are empty (issue #221)", () => {
+    render(<Jokers jokers={createDefaultJokers()} />);
+    const emptyCount = MAX_JOKERS - createDefaultJokers().length;
+    expect(screen.getAllByTestId(/^joker-gap-empty-/)).toHaveLength(
+      emptyCount - 1,
+    );
+  });
+
+  test("renders no empty-slot spacer when there is only one empty slot (issue #221)", () => {
+    const four = [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+      createPlusFourMultJoker(),
+    ];
+    render(<Jokers jokers={four} />);
+    expect(screen.queryAllByTestId(/^joker-gap-empty-/)).toHaveLength(0);
+  });
+
   test("displays the joker name", () => {
     render(<Jokers jokers={[createPlusFourMultJoker()]} />);
     expect(screen.getByText("+4 Mult")).toBeInTheDocument();
@@ -161,12 +192,14 @@ describe("Jokers drag-and-drop reordering", () => {
 
   test("renders one more gap than filled tiles when reorderable", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
-    expect(screen.getAllByTestId(/^joker-gap-/)).toHaveLength(three.length + 1);
+    expect(screen.getAllByTestId(/^joker-gap-\d+$/)).toHaveLength(
+      three.length + 1,
+    );
   });
 
   test("renders no gap drop zones when onReorder is not provided", () => {
     render(<Jokers jokers={three} />);
-    expect(screen.queryAllByTestId(/^joker-gap-/)).toHaveLength(0);
+    expect(screen.queryAllByTestId(/^joker-gap-\d+$/)).toHaveLength(0);
   });
 
   test("empty slot tiles are not draggable", () => {
