@@ -6,6 +6,16 @@ import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
+const mockShuffleConfig = { useReverse: false };
+vi.mock("./cards/deck", async () => {
+  const actual = await vi.importActual<typeof import("./cards/deck")>("./cards/deck");
+  return {
+    ...actual,
+    shuffle: <T,>(items: ReadonlyArray<T>): T[] =>
+      mockShuffleConfig.useReverse ? items.slice().reverse() : actual.shuffle(items),
+  };
+});
+
 const playMock = play as MockedFunction<typeof play>;
 
 import App from "./App";
@@ -13,6 +23,7 @@ import App from "./App";
 beforeEach(() => {
   playMock.mockClear();
   bossPickerRngConfig.rng = () => 0;
+  mockShuffleConfig.useReverse = false;
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
@@ -22,6 +33,7 @@ afterEach(() => {
   });
   vi.useRealTimers();
   bossPickerRngConfig.rng = Math.random;
+  mockShuffleConfig.useReverse = false;
 });
 
 function getStatValue(label: string): HTMLElement {
@@ -228,6 +240,7 @@ describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
   }
 
   test("The Club applies the debuff class to club cards in hand", async () => {
+    mockShuffleConfig.useReverse = true;
     bossPickerRngConfig.rng = mkBossRng(["the-club"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -239,6 +252,7 @@ describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
   });
 
   test("The Club does not debuff non-club cards in hand (negative)", async () => {
+    mockShuffleConfig.useReverse = true;
     bossPickerRngConfig.rng = mkBossRng(["the-club"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
