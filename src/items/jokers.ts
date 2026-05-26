@@ -127,11 +127,21 @@ export const JOKER_EDITION_INFO: Readonly<Record<JokerEdition, JokerEditionInfo>
   negative: { name: "Negative", description: "+1 Joker slot" },
 };
 
+export type JokerRarity = "common" | "uncommon" | "rare" | "legendary";
+
+export const JOKER_RARITIES: ReadonlyArray<JokerRarity> = [
+  "common",
+  "uncommon",
+  "rare",
+  "legendary",
+];
+
 export interface Joker {
   readonly id: string;
   readonly name: string;
   readonly description: string;
   readonly effect: JokerEffect;
+  readonly rarity: JokerRarity;
   readonly edition?: JokerEdition;
 }
 
@@ -139,10 +149,45 @@ export function withEdition(joker: Joker, edition: JokerEdition): Joker {
   return { ...joker, edition };
 }
 
+export function withoutEdition(joker: Joker): Joker {
+  const { edition: _edition, ...rest } = joker;
+  return rest;
+}
+
+export function cloneJoker(joker: Joker): Joker {
+  return { ...joker };
+}
+
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
   let count = 0;
   for (const j of jokers) if (j.edition !== "negative") count += 1;
   return count;
+}
+
+export function pickRandomEquipped(
+  jokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): Joker | null {
+  if (jokers.length === 0) return null;
+  return jokers[Math.floor(rng() * jokers.length)];
+}
+
+export function pickRandomFromCatalog(
+  catalog: ReadonlyArray<Joker>,
+  filter: (j: Joker) => boolean,
+  rng: RandomSource = Math.random,
+): Joker | null {
+  const pool = catalog.filter(filter);
+  if (pool.length === 0) return null;
+  return pool[Math.floor(rng() * pool.length)];
+}
+
+export function replaceJokersExceptCopyOf(
+  jokers: ReadonlyArray<Joker>,
+  idx: number,
+): Joker[] {
+  if (idx < 0 || idx >= jokers.length) return [...jokers];
+  return [cloneJoker(jokers[idx])];
 }
 
 export interface JokerScoringResult {
@@ -182,6 +227,7 @@ export interface PerCardContext {
 export function createPlusFourMultJoker(): Joker {
   return {
     id: "plus-four-mult",
+    rarity: "common",
     name: "+4 Mult",
     description: "Adds +4 Mult to every played hand",
     effect: { kind: "additive-mult", amount: 4 },
@@ -191,6 +237,7 @@ export function createPlusFourMultJoker(): Joker {
 export function createBusinessCardJoker(): Joker {
   return {
     id: "business-card",
+    rarity: "common",
     name: "Business Card",
     description: "Each scored face card has a 50% chance to give +$1",
     effect: {
@@ -204,6 +251,7 @@ export function createBusinessCardJoker(): Joker {
 export function createJokerStencilJoker(): Joker {
   return {
     id: "joker-stencil",
+    rarity: "uncommon",
     name: "Joker Stencil",
     description: "X1 Mult per empty joker slot",
     effect: { kind: "stencil" },
@@ -213,6 +261,7 @@ export function createJokerStencilJoker(): Joker {
 export function createGreedyJoker(): Joker {
   return {
     id: "greedy-joker",
+    rarity: "common",
     name: "Greedy Joker",
     description: "+3 Mult per scored Diamond",
     effect: { kind: "per-suit-mult", suit: "diamonds", amount: SUIT_MULT_AMOUNT },
@@ -222,6 +271,7 @@ export function createGreedyJoker(): Joker {
 export function createLustyJoker(): Joker {
   return {
     id: "lusty-joker",
+    rarity: "common",
     name: "Lusty Joker",
     description: "+3 Mult per scored Heart",
     effect: { kind: "per-suit-mult", suit: "hearts", amount: SUIT_MULT_AMOUNT },
@@ -231,6 +281,7 @@ export function createLustyJoker(): Joker {
 export function createWrathfulJoker(): Joker {
   return {
     id: "wrathful-joker",
+    rarity: "common",
     name: "Wrathful Joker",
     description: "+3 Mult per scored Spade",
     effect: { kind: "per-suit-mult", suit: "spades", amount: SUIT_MULT_AMOUNT },
@@ -240,6 +291,7 @@ export function createWrathfulJoker(): Joker {
 export function createGluttonousJoker(): Joker {
   return {
     id: "gluttonous-joker",
+    rarity: "common",
     name: "Gluttonous Joker",
     description: "+3 Mult per scored Club",
     effect: { kind: "per-suit-mult", suit: "clubs", amount: SUIT_MULT_AMOUNT },
@@ -249,6 +301,7 @@ export function createGluttonousJoker(): Joker {
 export function createJollyJoker(): Joker {
   return {
     id: "jolly-joker",
+    rarity: "common",
     name: "Jolly Joker",
     description: "+8 Mult if played hand contains a Pair",
     effect: { kind: "on-hand-type-mult", requires: "Pair", amount: JOLLY_JOKER_MULT },
@@ -258,6 +311,7 @@ export function createJollyJoker(): Joker {
 export function createZanyJoker(): Joker {
   return {
     id: "zany-joker",
+    rarity: "common",
     name: "Zany Joker",
     description: "+12 Mult if played hand contains Three of a Kind",
     effect: {
@@ -271,6 +325,7 @@ export function createZanyJoker(): Joker {
 export function createMadJoker(): Joker {
   return {
     id: "mad-joker",
+    rarity: "common",
     name: "Mad Joker",
     description: "+10 Mult if played hand contains Two Pair",
     effect: {
@@ -284,6 +339,7 @@ export function createMadJoker(): Joker {
 export function createCrazyJoker(): Joker {
   return {
     id: "crazy-joker",
+    rarity: "common",
     name: "Crazy Joker",
     description: "+12 Mult if played hand contains a Straight",
     effect: {
@@ -297,6 +353,7 @@ export function createCrazyJoker(): Joker {
 export function createDrollJoker(): Joker {
   return {
     id: "droll-joker",
+    rarity: "common",
     name: "Droll Joker",
     description: "+10 Mult if played hand contains a Flush",
     effect: {
@@ -310,6 +367,7 @@ export function createDrollJoker(): Joker {
 export function createSlyJoker(): Joker {
   return {
     id: "sly-joker",
+    rarity: "common",
     name: "Sly Joker",
     description: "+50 Chips if played hand contains a Pair",
     effect: {
@@ -323,6 +381,7 @@ export function createSlyJoker(): Joker {
 export function createWilyJoker(): Joker {
   return {
     id: "wily-joker",
+    rarity: "common",
     name: "Wily Joker",
     description: "+100 Chips if played hand contains Three of a Kind",
     effect: {
@@ -336,6 +395,7 @@ export function createWilyJoker(): Joker {
 export function createCleverJoker(): Joker {
   return {
     id: "clever-joker",
+    rarity: "common",
     name: "Clever Joker",
     description: "+80 Chips if played hand contains Two Pair",
     effect: {
@@ -349,6 +409,7 @@ export function createCleverJoker(): Joker {
 export function createDeviousJoker(): Joker {
   return {
     id: "devious-joker",
+    rarity: "common",
     name: "Devious Joker",
     description: "+100 Chips if played hand contains a Straight",
     effect: {
@@ -362,6 +423,7 @@ export function createDeviousJoker(): Joker {
 export function createCraftyJoker(): Joker {
   return {
     id: "crafty-joker",
+    rarity: "common",
     name: "Crafty Joker",
     description: "+80 Chips if played hand contains a Flush",
     effect: {
@@ -375,6 +437,7 @@ export function createCraftyJoker(): Joker {
 export function createEvenStevenJoker(): Joker {
   return {
     id: "even-steven",
+    rarity: "common",
     name: "Even Steven",
     description: `+${EVEN_STEVEN_MULT} Mult per scored even-rank card (2, 4, 6, 8, 10)`,
     effect: {
@@ -388,6 +451,7 @@ export function createEvenStevenJoker(): Joker {
 export function createOddToddJoker(): Joker {
   return {
     id: "odd-todd",
+    rarity: "common",
     name: "Odd Todd",
     description: `+${ODD_TODD_CHIPS} Chips per scored odd-rank card (A, 3, 5, 7, 9)`,
     effect: {
@@ -401,6 +465,7 @@ export function createOddToddJoker(): Joker {
 export function createHalfJoker(): Joker {
   return {
     id: "half-joker",
+    rarity: "common",
     name: "Half Joker",
     description: `+${HALF_JOKER_MULT} Mult if the played hand has ${HALF_JOKER_MAX_CARDS} or fewer cards`,
     effect: {
@@ -414,6 +479,7 @@ export function createHalfJoker(): Joker {
 export function createMisprintJoker(): Joker {
   return {
     id: "misprint",
+    rarity: "uncommon",
     name: "Misprint",
     description: `+${MISPRINT_MIN_MULT}..+${MISPRINT_MAX_MULT} random Mult per played hand`,
     effect: {
@@ -427,6 +493,7 @@ export function createMisprintJoker(): Joker {
 export function createScaryFaceJoker(): Joker {
   return {
     id: "scary-face",
+    rarity: "common",
     name: "Scary Face",
     description: `+${SCARY_FACE_CHIPS} Chips per scored face card (J, Q, K)`,
     effect: {
@@ -439,6 +506,7 @@ export function createScaryFaceJoker(): Joker {
 export function createSmileyFaceJoker(): Joker {
   return {
     id: "smiley-face",
+    rarity: "common",
     name: "Smiley Face",
     description: `+${SMILEY_FACE_MULT} Mult per scored face card (J, Q, K)`,
     effect: {
@@ -451,6 +519,7 @@ export function createSmileyFaceJoker(): Joker {
 export function createPhotographJoker(): Joker {
   return {
     id: "photograph",
+    rarity: "common",
     name: "Photograph",
     description: `X${PHOTOGRAPH_X_MULT} Mult when the first face card is scored in a hand`,
     effect: {
@@ -460,9 +529,25 @@ export function createPhotographJoker(): Joker {
   };
 }
 
+export const YORICK_MULT = 30;
+
+export function createYorickJoker(): Joker {
+  return {
+    id: "yorick",
+    rarity: "legendary",
+    name: "Yorick",
+    description: `+${YORICK_MULT} Mult on every played hand`,
+    effect: { kind: "additive-mult", amount: YORICK_MULT },
+  };
+}
+
 export const initialJokersConfig: { factory: () => Joker[] } = {
   factory: () => [],
 };
+
+export function createLegendaryJokerCatalog(): Joker[] {
+  return [createYorickJoker()];
+}
 
 export function createJokerCatalog(): Joker[] {
   return [
