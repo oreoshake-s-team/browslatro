@@ -36,6 +36,59 @@
   font-weight: 600;
 }
 
+.shop-cards-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.8rem;
+}
+
+.shop-cards-row .shop-reroll {
+  flex: 0 0 auto;
+  align-self: stretch;
+}
+
+.shop-cards-row .shop-offers {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.shop-extras-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.8rem;
+  align-items: stretch;
+}
+
+@media (max-width: 720px) {
+  .shop-extras-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shop-packs {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 2px dashed #fab005;
+  border-radius: 8px;
+  background-color: #fff9db;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shop-packs-heading {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #5c3c00;
+}
+
+.shop-packs .shop-offers {
+  gap: 0.6rem;
+}
+
 .shop-voucher {
   margin: 0;
   padding: 0.8rem 1rem;

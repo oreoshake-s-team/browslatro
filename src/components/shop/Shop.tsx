@@ -182,6 +182,64 @@ export default function Shop({
     setRerollCount((prev) => prev + 1);
   }
 
+  function renderOffer(offer: ShopItem, idx: number) {
+    const effectivePrice = applyShopDiscount(offer.price, ownedVoucherIds);
+    const discounted = effectivePrice < offer.price;
+    const state = resolveBuyState(
+      offer,
+      effectivePrice,
+      money,
+      equippedJokerCount,
+      consumableCount,
+      consumableCapacity,
+    );
+    const label = buyButtonLabel(state, effectivePrice, offer.kind);
+    const subject = offerSubject(offer);
+    const badge = OFFER_KIND_BADGE[offer.kind];
+    return (
+      <li
+        key={`${offer.kind}-${subject.id}-${idx}`}
+        className={`shop-offer shop-offer-${offer.kind}${
+          offer.sold ? " shop-offer-sold" : ""
+        }`}
+        data-testid={`shop-offer-${idx}`}
+        data-offer-kind={offer.kind}
+      >
+        <span
+          className={`shop-offer-kind shop-offer-kind-${offer.kind}`}
+          data-testid={`shop-kind-${idx}`}
+        >
+          <span aria-hidden="true" className="shop-offer-kind-icon">
+            {badge.icon}
+          </span>
+          <span className="shop-offer-kind-label">{badge.label}</span>
+        </span>
+        <span className="shop-offer-name">{subject.name}</span>
+        <span className="shop-offer-description">{subject.description}</span>
+        <span className="shop-offer-price">
+          {discounted ? (
+            <>
+              <span className="shop-offer-price-original">${offer.price}</span>
+              <span className="shop-offer-price-discounted">${effectivePrice}</span>
+            </>
+          ) : (
+            `$${offer.price}`
+          )}
+        </span>
+        <button
+          type="button"
+          className="shop-offer-buy"
+          disabled={state.kind !== "available"}
+          title={buyButtonTooltip(state, consumableCapacity)}
+          aria-label={`${label}: ${subject.name}`}
+          onClick={() => onBuy(idx)}
+        >
+          {label}
+        </button>
+      </li>
+    );
+  }
+
   return createPortal(
     <div
       className="shop-overlay"
@@ -196,113 +254,7 @@ export default function Shop({
         <p className="shop-money" data-testid="shop-money">
           Money: ${money}
         </p>
-        <section
-          className="shop-voucher"
-          data-testid="shop-voucher"
-          aria-label="Vouchers for this ante"
-        >
-          <h3 className="shop-voucher-heading">
-            {vouchers.length === 1 ? "Voucher" : "Vouchers"}
-          </h3>
-          {vouchers.length === 0 ? (
-            <p
-              className="shop-voucher-empty"
-              data-testid="shop-voucher-empty"
-            >
-              No voucher available this ante.
-            </p>
-          ) : (
-            <ul className="shop-voucher-list">
-              {vouchers.map((voucher, idx) => {
-                const sold = soldVoucherIds.has(voucher.id);
-                const btn = resolveVoucherButton(voucher, sold, money, ownedVoucherIds);
-                return (
-                  <li
-                    key={voucher.id}
-                    className={`shop-voucher-card${sold ? " shop-voucher-sold" : ""}`}
-                    data-voucher-id={voucher.id}
-                    data-testid={`shop-voucher-${idx}`}
-                  >
-                    <span className="shop-voucher-name">{voucher.name}</span>
-                    <span className="shop-voucher-description">{voucher.description}</span>
-                    <span className="shop-voucher-price">${voucher.cost}</span>
-                    <button
-                      type="button"
-                      className="shop-voucher-buy"
-                      data-testid={`shop-voucher-buy-${idx}`}
-                      disabled={btn.disabled}
-                      title={btn.title}
-                      aria-label={`${btn.label}: ${voucher.name}`}
-                      onClick={() => onBuyVoucher(idx)}
-                    >
-                      {btn.label}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </section>
-        <ul className="shop-offers" aria-label="Items for sale">
-          {offers.map((offer, idx) => {
-            const effectivePrice = applyShopDiscount(offer.price, ownedVoucherIds);
-            const discounted = effectivePrice < offer.price;
-            const state = resolveBuyState(
-              offer,
-              effectivePrice,
-              money,
-              equippedJokerCount,
-              consumableCount,
-              consumableCapacity,
-            );
-            const label = buyButtonLabel(state, effectivePrice, offer.kind);
-            const subject = offerSubject(offer);
-            const badge = OFFER_KIND_BADGE[offer.kind];
-            return (
-              <li
-                key={`${offer.kind}-${subject.id}-${idx}`}
-                className={`shop-offer shop-offer-${offer.kind}${
-                  offer.sold ? " shop-offer-sold" : ""
-                }`}
-                data-testid={`shop-offer-${idx}`}
-                data-offer-kind={offer.kind}
-              >
-                <span
-                  className={`shop-offer-kind shop-offer-kind-${offer.kind}`}
-                  data-testid={`shop-kind-${idx}`}
-                >
-                  <span aria-hidden="true" className="shop-offer-kind-icon">
-                    {badge.icon}
-                  </span>
-                  <span className="shop-offer-kind-label">{badge.label}</span>
-                </span>
-                <span className="shop-offer-name">{subject.name}</span>
-                <span className="shop-offer-description">{subject.description}</span>
-                <span className="shop-offer-price">
-                  {discounted ? (
-                    <>
-                      <span className="shop-offer-price-original">${offer.price}</span>
-                      <span className="shop-offer-price-discounted">${effectivePrice}</span>
-                    </>
-                  ) : (
-                    `$${offer.price}`
-                  )}
-                </span>
-                <button
-                  type="button"
-                  className="shop-offer-buy"
-                  disabled={state.kind !== "available"}
-                  title={buyButtonTooltip(state, consumableCapacity)}
-                  aria-label={`${label}: ${subject.name}`}
-                  onClick={() => onBuy(idx)}
-                >
-                  {label}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        <div className="shop-actions">
+        <div className="shop-cards-row">
           <button
             type="button"
             className="shop-reroll"
@@ -313,6 +265,76 @@ export default function Shop({
           >
             Reroll (${currentRerollCost})
           </button>
+          <ul className="shop-offers shop-offers-cards" aria-label="Items for sale">
+            {offers.map((offer, idx) => {
+              if (offer.kind === "pack") return null;
+              return renderOffer(offer, idx);
+            })}
+          </ul>
+        </div>
+        <div className="shop-extras-row">
+          <section
+            className="shop-voucher"
+            data-testid="shop-voucher"
+            aria-label="Vouchers for this ante"
+          >
+            <h3 className="shop-voucher-heading">
+              {vouchers.length === 1 ? "Voucher" : "Vouchers"}
+            </h3>
+            {vouchers.length === 0 ? (
+              <p
+                className="shop-voucher-empty"
+                data-testid="shop-voucher-empty"
+              >
+                No voucher available this ante.
+              </p>
+            ) : (
+              <ul className="shop-voucher-list">
+                {vouchers.map((voucher, idx) => {
+                  const sold = soldVoucherIds.has(voucher.id);
+                  const btn = resolveVoucherButton(voucher, sold, money, ownedVoucherIds);
+                  return (
+                    <li
+                      key={voucher.id}
+                      className={`shop-voucher-card${sold ? " shop-voucher-sold" : ""}`}
+                      data-voucher-id={voucher.id}
+                      data-testid={`shop-voucher-${idx}`}
+                    >
+                      <span className="shop-voucher-name">{voucher.name}</span>
+                      <span className="shop-voucher-description">{voucher.description}</span>
+                      <span className="shop-voucher-price">${voucher.cost}</span>
+                      <button
+                        type="button"
+                        className="shop-voucher-buy"
+                        data-testid={`shop-voucher-buy-${idx}`}
+                        disabled={btn.disabled}
+                        title={btn.title}
+                        aria-label={`${btn.label}: ${voucher.name}`}
+                        onClick={() => onBuyVoucher(idx)}
+                      >
+                        {btn.label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </section>
+          <section
+            className="shop-packs"
+            data-testid="shop-packs"
+            aria-label="Booster packs for sale"
+          >
+            <h3 className="shop-packs-heading">Booster Packs</h3>
+            <ul className="shop-offers shop-offers-packs" aria-label="Packs for sale">
+              {offers.map((offer, idx) => {
+                if (offer.kind !== "pack") return null;
+                return renderOffer(offer, idx);
+              })}
+            </ul>
+          </section>
+        </div>
+        <div className="shop-actions">
           <button
             type="button"
             className="shop-next"
