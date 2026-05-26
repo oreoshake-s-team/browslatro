@@ -4,9 +4,11 @@ import PackOpenModal from "./PackOpenModal";
 import type { PackOffer } from "../../items/packs";
 import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
+import { createJokerCatalog } from "../../items/jokers";
 
 const PLANETS = createPlanetCatalog();
 const TAROTS = createTarotCatalog();
+const JOKERS = createJokerCatalog();
 
 function celestialPack(
   variant: "normal" | "jumbo" | "mega",
@@ -32,6 +34,20 @@ function arcanaPack(
     options: TAROTS.slice(0, count).map((tarot) => ({
       kind: "tarot" as const,
       tarot,
+    })),
+  };
+}
+
+function buffoonPack(
+  variant: "normal" | "jumbo" | "mega",
+  count: number,
+): PackOffer {
+  return {
+    pool: "buffoon",
+    variant,
+    options: JOKERS.slice(0, count).map((joker) => ({
+      kind: "joker" as const,
+      joker,
     })),
   };
 }
@@ -206,5 +222,105 @@ describe("PackOpenModal — Arcana pack rendering", () => {
     );
     await user.click(screen.getByTestId("pack-open-pick-2"));
     expect(onPick).toHaveBeenCalledWith(2);
+  });
+});
+
+describe("PackOpenModal — Buffoon pack rendering", () => {
+  test("renders the Buffoon pack display name", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("heading", { name: /Buffoon Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("renders one Pick button per joker in a Buffoon pack", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("jumbo", 4)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getAllByRole("button", { name: /^Pick / })).toHaveLength(4);
+  });
+
+  test("Pick button label includes the joker's name", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const firstJoker = JOKERS[0];
+    expect(
+      screen.getByRole("button", { name: `Pick ${firstJoker.name}` }),
+    ).toBeInTheDocument();
+  });
+
+  test("Pick buttons disable when joker slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("Pick buttons stay enabled in a Buffoon pack when only consumable slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        consumableSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).not.toBeDisabled();
+  });
+
+  test("Pick buttons stay enabled in an Arcana pack when only joker slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).not.toBeDisabled();
+  });
+
+  test("clicking Pick on a joker invokes onPick with the option index", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        onPick={onPick}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-pick-1"));
+    expect(onPick).toHaveBeenCalledWith(1);
   });
 });

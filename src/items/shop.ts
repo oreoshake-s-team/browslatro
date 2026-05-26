@@ -290,6 +290,8 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
         rollPack({
           planetCatalog: args.planetCatalog,
           tarotCatalog: args.tarotCatalog,
+          jokerCatalog: args.jokerCatalog,
+          excludedJokerIds: args.excludedJokerIds,
           rng,
         }),
       ),

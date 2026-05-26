@@ -1,8 +1,8 @@
 import type { PlanetCard } from "./planets";
 import type { TarotCard } from "./tarots";
-import type { RandomSource } from "./jokers";
+import type { Joker, RandomSource } from "./jokers";
 
-export type PackPool = "celestial" | "arcana";
+export type PackPool = "celestial" | "arcana" | "buffoon";
 
 export type PackVariant = "normal" | "jumbo" | "mega";
 
@@ -13,6 +13,7 @@ export const PACK_MEGA_PRICE = 8;
 export const PACK_POOL_WEIGHTS: Readonly<Record<PackPool, number>> = {
   arcana: 4,
   celestial: 1,
+  buffoon: 1,
 };
 
 export const PACK_VARIANT_WEIGHTS: Readonly<Record<PackVariant, number>> = {
@@ -24,6 +25,7 @@ export const PACK_VARIANT_WEIGHTS: Readonly<Record<PackVariant, number>> = {
 const PACK_BASE_OPTIONS: Readonly<Record<PackPool, number>> = {
   celestial: 3,
   arcana: 3,
+  buffoon: 2,
 };
 
 const PACK_PICK_LIMIT: Readonly<Record<PackVariant, number>> = {
@@ -35,11 +37,13 @@ const PACK_PICK_LIMIT: Readonly<Record<PackVariant, number>> = {
 const POOL_LABELS: Readonly<Record<PackPool, string>> = {
   celestial: "Celestial",
   arcana: "Arcana",
+  buffoon: "Buffoon",
 };
 
 export type PackOption =
   | { readonly kind: "planet"; readonly planet: PlanetCard }
-  | { readonly kind: "tarot"; readonly tarot: TarotCard };
+  | { readonly kind: "tarot"; readonly tarot: TarotCard }
+  | { readonly kind: "joker"; readonly joker: Joker };
 
 export interface PackOffer {
   readonly pool: PackPool;
@@ -96,6 +100,8 @@ export interface RollPackOptionsArgs {
   readonly variant: PackVariant;
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
+  readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly excludedJokerIds?: ReadonlyArray<string>;
   readonly rng: RandomSource;
 }
 
@@ -111,6 +117,14 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
     return drawWithoutReplacement(args.tarotCatalog, want, args.rng).map((tarot) => ({
       kind: "tarot" as const,
       tarot,
+    }));
+  }
+  if (args.pool === "buffoon") {
+    const excluded = new Set(args.excludedJokerIds ?? []);
+    const eligible = args.jokerCatalog.filter((j) => !excluded.has(j.id));
+    return drawWithoutReplacement(eligible, want, args.rng).map((joker) => ({
+      kind: "joker" as const,
+      joker,
     }));
   }
   return [];
@@ -134,6 +148,8 @@ function drawWithoutReplacement<T>(
 export interface RollPackArgs {
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
+  readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly excludedJokerIds?: ReadonlyArray<string>;
   readonly rng: RandomSource;
 }
 
@@ -145,6 +161,8 @@ export function rollPack(args: RollPackArgs): PackOffer {
     variant,
     planetCatalog: args.planetCatalog,
     tarotCatalog: args.tarotCatalog,
+    jokerCatalog: args.jokerCatalog,
+    excludedJokerIds: args.excludedJokerIds,
     rng: args.rng,
   });
   return { pool, variant, options };

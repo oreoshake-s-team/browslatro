@@ -2650,7 +2650,7 @@ describe("Celestial pack open + pick integration", () => {
   });
 
   test("picking a planet from a Celestial pack does NOT add it to the consumable tray (auto-applied)", async () => {
-    shopPickerRngConfig.rng = () => 0.99;
+    shopPickerRngConfig.rng = () => 0.75;
     const user = await openShopWithMoney();
     const consumablesBefore = screen.queryAllByTestId(
       /^consumable-tile-filled-/,
@@ -2667,7 +2667,7 @@ describe("Celestial pack open + pick integration", () => {
   });
 
   test("picking a planet from a Celestial pack upgrades the matching hand's level", async () => {
-    shopPickerRngConfig.rng = () => 0.99;
+    shopPickerRngConfig.rng = () => 0.75;
     const user = await openShopWithMoney();
     const idx = findPackOfferIdx();
     const open = screen

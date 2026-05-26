@@ -12,6 +12,7 @@ interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
   consumableSlotsFull?: boolean;
+  jokerSlotsFull?: boolean;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
 }
@@ -22,6 +23,7 @@ interface OptionView {
   readonly name: string;
   readonly description: string;
   readonly needsConsumableSlot: boolean;
+  readonly needsJokerSlot: boolean;
 }
 
 function describeOption(option: PackOption): OptionView | null {
@@ -32,6 +34,7 @@ function describeOption(option: PackOption): OptionView | null {
       name: option.planet.name,
       description: option.planet.description,
       needsConsumableSlot: false,
+      needsJokerSlot: false,
     };
   }
   if (option.kind === "tarot") {
@@ -41,6 +44,17 @@ function describeOption(option: PackOption): OptionView | null {
       name: option.tarot.name,
       description: option.tarot.description,
       needsConsumableSlot: true,
+      needsJokerSlot: false,
+    };
+  }
+  if (option.kind === "joker") {
+    return {
+      id: option.joker.id,
+      icon: "🎭",
+      name: option.joker.name,
+      description: option.joker.description,
+      needsConsumableSlot: false,
+      needsJokerSlot: true,
     };
   }
   return null;
@@ -50,6 +64,7 @@ export default function PackOpenModal({
   pack,
   picksRemaining,
   consumableSlotsFull = false,
+  jokerSlotsFull = false,
   onPick,
   onClose,
 }: PackOpenModalProps) {
@@ -81,13 +96,16 @@ export default function PackOpenModal({
             const view = describeOption(option);
             if (!view) return null;
             const noPicksLeft = picksRemaining <= 0;
-            const slotsBlocked = view.needsConsumableSlot && consumableSlotsFull;
-            const disabled = noPicksLeft || slotsBlocked;
+            const consumableBlocked = view.needsConsumableSlot && consumableSlotsFull;
+            const jokerBlocked = view.needsJokerSlot && jokerSlotsFull;
+            const disabled = noPicksLeft || consumableBlocked || jokerBlocked;
             const tooltip = noPicksLeft
               ? "No picks remaining"
-              : slotsBlocked
+              : consumableBlocked
                 ? "Consumable slots are full"
-                : undefined;
+                : jokerBlocked
+                  ? "Joker slots are full"
+                  : undefined;
             return (
               <li key={`${view.id}-${idx}`} className="pack-open-option">
                 <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
