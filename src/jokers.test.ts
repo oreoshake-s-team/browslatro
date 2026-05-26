@@ -247,6 +247,54 @@ describe("applyHandLevelJokers — fired ids", () => {
   });
 });
 
+describe("applyHandLevelJokers — per-joker steps", () => {
+  test("+4 Mult contributes a single additive-mult step (issue #192)", () => {
+    const result = applyHandLevelJokers([createPlusFourMultJoker()]);
+    expect(result.steps).toEqual([
+      { jokerId: "plus-four-mult", additiveMult: 4 },
+    ]);
+  });
+
+  test("Devious Joker emits an additive-chips step when a Straight is played (issue #192)", () => {
+    const result = applyHandLevelJokers([createDeviousJoker()], {
+      playedHandLabel: "Straight",
+    });
+    expect(result.steps).toEqual([
+      { jokerId: "devious-joker", additiveChips: 100 },
+    ]);
+  });
+
+  test("Devious Joker emits no step when no Straight is played", () => {
+    const result = applyHandLevelJokers([createDeviousJoker()], {
+      playedHandLabel: "High Card",
+    });
+    expect(result.steps).toEqual([]);
+  });
+
+  test("Jolly Joker emits no step when no Pair is played", () => {
+    const result = applyHandLevelJokers([createJollyJoker()], {
+      playedHandLabel: "High Card",
+    });
+    expect(result.steps).toEqual([]);
+  });
+
+  test("steps preserve left-to-right joker order", () => {
+    const result = applyHandLevelJokers(
+      [createDeviousJoker(), createPlusFourMultJoker()],
+      { playedHandLabel: "Straight" },
+    );
+    expect(result.steps.map((s) => s.jokerId)).toEqual([
+      "devious-joker",
+      "plus-four-mult",
+    ]);
+  });
+
+  test("Joker Stencil emits no hand-level step (still post-hand)", () => {
+    const result = applyHandLevelJokers([createJokerStencilJoker()]);
+    expect(result.steps).toEqual([]);
+  });
+});
+
 describe("applyPerCardJokers", () => {
   test("reports Business Card as fired when a face card procs", () => {
     const rng = (): number => 0;
