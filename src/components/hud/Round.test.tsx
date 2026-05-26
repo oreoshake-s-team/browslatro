@@ -57,7 +57,7 @@ describe("Round — Boss Blind name (#245 phase 0)", () => {
     expect(screen.getByText("The Wall")).toBeInTheDocument();
   });
 
-  test("exposes the boss description on the heading as a tooltip", () => {
+  test("renders the boss description as visible text below the name on blind 3", () => {
     render(
       <Round
         blind={3}
@@ -67,10 +67,50 @@ describe("Round — Boss Blind name (#245 phase 0)", () => {
         boss={wall}
       />,
     );
-    expect(screen.getByText("The Wall")).toHaveAttribute(
-      "title",
-      "Extra large blind requirement.",
+    expect(screen.getByText("Extra large blind requirement.")).toBeInTheDocument();
+  });
+
+  test("does not render the boss description on blind 1", () => {
+    render(
+      <Round
+        blind={1}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={300}
+        boss={wall}
+      />,
     );
+    expect(
+      screen.queryByText("Extra large blind requirement."),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not render the boss description on blind 2", () => {
+    render(
+      <Round
+        blind={2}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={450}
+        boss={wall}
+      />,
+    );
+    expect(
+      screen.queryByText("Extra large blind requirement."),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not render a boss description when boss is null", () => {
+    const { container } = render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={600}
+        boss={null}
+      />,
+    );
+    expect(container.querySelector(".boss-effect")).toBeNull();
   });
 
   test("does not render the boss name on blind 1", () => {

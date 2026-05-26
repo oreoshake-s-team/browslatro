@@ -23,9 +23,10 @@ function Round({
   return (
     <>
       <div className="round-info">
-        <h3 title={blind === 3 && boss ? boss.description : undefined}>
-          {blindLabel}
-        </h3>
+        <h3>{blindLabel}</h3>
+        {blind === 3 && boss && (
+          <p className="boss-effect">{boss.description}</p>
+        )}
         <h3>Score at least: {requiredScore}</h3>
         <h4>to earn {award}</h4>
       </div>

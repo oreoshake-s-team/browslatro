@@ -8,6 +8,16 @@
   margin: 0.2rem 0;
 }
 
+.boss-effect {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #c92a2a;
+  max-width: 14rem;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.25;
+}
+
 .round-score {
   display: flex;
   flex-direction: column;
