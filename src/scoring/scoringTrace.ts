@@ -1,4 +1,3 @@
-import type { AnimationSpeed } from "../components/system/preferences";
 import type { Card, Suit } from "../cards/types";
 
 const SUIT_SYMBOLS: Readonly<Record<Suit, string>> = {
@@ -25,10 +24,6 @@ export type ScoringEvent =
   | { readonly kind: "mult-times"; readonly factor: number; readonly source: string }
   | { readonly kind: "money-delta"; readonly amount: number; readonly source: string }
   | { readonly kind: "card-destroyed"; readonly cardLabel: string; readonly source: string };
-
-export function isTraceActive(speed: AnimationSpeed): boolean {
-  return speed === "slow";
-}
 
 function formatSigned(amount: number): string {
   return amount >= 0 ? `+${amount}` : `${amount}`;

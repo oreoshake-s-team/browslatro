@@ -106,33 +106,33 @@ async function playPairOfAces(): Promise<void> {
   flushScoringSequence();
 }
 
-describe("Scoring trace overlay on slow speed", () => {
-  test("renders the trace region only when animation speed is slow", () => {
+describe("Scoring trace overlay at every speed", () => {
+  test("renders the trace region on slow speed", () => {
     setAnimationSpeed("slow");
     render(<App />);
     expect(screen.getByRole("log", { name: /Scoring trace/i })).toBeInTheDocument();
   });
 
-  test("does not render the trace region on normal speed (negative)", () => {
+  test("renders the trace region on normal speed", () => {
     setAnimationSpeed("normal");
     render(<App />);
-    expect(screen.queryByRole("log", { name: /Scoring trace/i })).toBeNull();
+    expect(screen.getByRole("log", { name: /Scoring trace/i })).toBeInTheDocument();
   });
 
-  test("does not render the trace region on fast speed (negative)", () => {
+  test("renders the trace region on fast speed", () => {
     setAnimationSpeed("fast");
     render(<App />);
-    expect(screen.queryByRole("log", { name: /Scoring trace/i })).toBeNull();
+    expect(screen.getByRole("log", { name: /Scoring trace/i })).toBeInTheDocument();
   });
 
-  test("does not render the trace region on instant speed (negative)", () => {
+  test("renders the trace region on instant speed", () => {
     setAnimationSpeed("instant");
     render(<App />);
-    expect(screen.queryByRole("log", { name: /Scoring trace/i })).toBeNull();
+    expect(screen.getByRole("log", { name: /Scoring trace/i })).toBeInTheDocument();
   });
 });
 
-describe("Rank-chip events on slow speed", () => {
+describe("Rank-chip events at every speed", () => {
   test("emits a +11 Chips event for the Ace of Spades when scoring a Pair of Aces", async () => {
     setAnimationSpeed("slow");
     await playPairOfAces();
@@ -174,10 +174,11 @@ describe("Rank-chip events on slow speed", () => {
     expect(items).toHaveLength(2);
   });
 
-  test("emits no events on normal speed (recorder inactive)", async () => {
+  test("still emits events on normal speed", async () => {
     setAnimationSpeed("normal");
     await playPairOfAces();
-    expect(screen.queryByRole("log", { name: /Scoring trace/i })).toBeNull();
+    const log = screen.getByRole("log", { name: /Scoring trace/i });
+    expect(log).toHaveTextContent("+11 Chips (A♠ rank)");
   });
 
   test("keeps prior hand groups when a new hand is submitted within the same round", async () => {

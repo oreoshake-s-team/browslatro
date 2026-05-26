@@ -58,11 +58,7 @@ import {
   getScoringCards,
   getScoringStep,
 } from "./scoring/scoring";
-import {
-  cardLabel,
-  isTraceActive,
-  type ScoringEvent,
-} from "./scoring/scoringTrace";
+import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
 import ScoringTrace from "./components/hud/ScoringTrace";
 import {
   cardKey,
@@ -195,7 +191,6 @@ function App() {
   );
 
   function pushScoringEvent(event: ScoringEvent) {
-    if (!isTraceActive(animationSpeed)) return;
     setScoringEvents((prev) => [...prev, event]);
   }
 
@@ -1058,16 +1053,14 @@ function App() {
       setSteelScoringIds(heldSteelIds);
       setSteelScoringIndex(0);
     };
-    if (isTraceActive(animationSpeed)) {
-      const baseEvent: ScoringEvent = {
-        kind: "hand-base",
-        chips: handEntry.chips,
-        mult: handEntry.multiplier,
-        handLabel: label,
-        level: handEntry.level,
-      };
-      setScoringEvents((prev) => [...prev, baseEvent]);
-    }
+    const baseEvent: ScoringEvent = {
+      kind: "hand-base",
+      chips: handEntry.chips,
+      mult: handEntry.multiplier,
+      handLabel: label,
+      level: handEntry.level,
+    };
+    setScoringEvents((prev) => [...prev, baseEvent]);
     setScoringCards(scoring);
     setScoringIndex(0);
   }
@@ -1326,7 +1319,7 @@ function App() {
           skipReward="investment"
         />
       )}
-      {isTraceActive(animationSpeed) && <ScoringTrace events={scoringEvents} />}
+      <ScoringTrace events={scoringEvents} />
     </div>
   );
 }

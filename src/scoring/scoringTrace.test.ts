@@ -3,28 +3,9 @@ import {
   cardLabel,
   formatScoringEvent,
   groupEventsByHand,
-  isTraceActive,
   type ScoringEvent,
 } from "./scoringTrace";
 import type { Card } from "../cards/types";
-
-describe("isTraceActive", () => {
-  test("returns true when speed is slow", () => {
-    expect(isTraceActive("slow")).toBe(true);
-  });
-
-  test("returns false on normal speed (negative)", () => {
-    expect(isTraceActive("normal")).toBe(false);
-  });
-
-  test("returns false on fast speed (negative)", () => {
-    expect(isTraceActive("fast")).toBe(false);
-  });
-
-  test("returns false on instant speed (negative)", () => {
-    expect(isTraceActive("instant")).toBe(false);
-  });
-});
 
 describe("cardLabel", () => {
   test("renders rank and suit symbol for an Ace of Spades", () => {
