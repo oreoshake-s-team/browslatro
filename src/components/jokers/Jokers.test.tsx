@@ -1,5 +1,4 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import Jokers from "./Jokers";
 import {
   MAX_JOKERS,
@@ -264,68 +263,6 @@ describe("Jokers drag-and-drop reordering", () => {
     expect(actives).toHaveLength(0);
   });
 
-  test("renders a Move left button for every filled tile", () => {
-    render(<Jokers jokers={three} onReorder={() => {}} />);
-    expect(
-      screen.getAllByRole("button", { name: /^Move .* left$/ }),
-    ).toHaveLength(three.length);
-  });
-
-  test("renders a Move right button for every filled tile", () => {
-    render(<Jokers jokers={three} onReorder={() => {}} />);
-    expect(
-      screen.getAllByRole("button", { name: /^Move .* right$/ }),
-    ).toHaveLength(three.length);
-  });
-
-  test("disables Move left on the leftmost tile", () => {
-    render(<Jokers jokers={three} onReorder={() => {}} />);
-    expect(
-      screen.getByRole("button", { name: "Move +4 Mult left" }),
-    ).toBeDisabled();
-  });
-
-  test("disables Move right on the rightmost tile", () => {
-    render(<Jokers jokers={three} onReorder={() => {}} />);
-    expect(
-      screen.getByRole("button", { name: "Move Joker Stencil right" }),
-    ).toBeDisabled();
-  });
-
-  test("clicking Move right shifts the joker one position right", async () => {
-    const onReorder = vi.fn();
-    const user = userEvent.setup();
-    render(<Jokers jokers={three} onReorder={onReorder} />);
-    await user.click(
-      screen.getByRole("button", { name: "Move +4 Mult right" }),
-    );
-    expect(onReorder).toHaveBeenCalledWith([
-      "business-card",
-      "plus-four-mult",
-      "joker-stencil",
-    ]);
-  });
-
-  test("clicking Move left shifts the joker one position left", async () => {
-    const onReorder = vi.fn();
-    const user = userEvent.setup();
-    render(<Jokers jokers={three} onReorder={onReorder} />);
-    await user.click(
-      screen.getByRole("button", { name: "Move Joker Stencil left" }),
-    );
-    expect(onReorder).toHaveBeenCalledWith([
-      "plus-four-mult",
-      "joker-stencil",
-      "business-card",
-    ]);
-  });
-
-  test("Move buttons are not rendered when onReorder is not provided", () => {
-    render(<Jokers jokers={three} />);
-    expect(
-      screen.queryAllByRole("button", { name: /^Move .*/ }),
-    ).toHaveLength(0);
-  });
 });
 
 describe("Jokers consumable drop zone", () => {

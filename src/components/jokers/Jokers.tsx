@@ -41,14 +41,6 @@ export default function Jokers({
     if (next !== ids) onReorder(next);
   }
 
-  function moveJoker(jokerId: string, direction: -1 | 1) {
-    const idx = jokers.findIndex((j) => j.id === jokerId);
-    if (idx < 0) return;
-    const target = idx + direction;
-    if (target < 0 || target >= jokers.length) return;
-    applyDrop(jokerId, direction === -1 ? target : target + 1);
-  }
-
   function handleListDragOver(e: React.DragEvent<HTMLUListElement>) {
     if (draggingId === null) return;
     const target = e.target as HTMLElement | null;
@@ -164,22 +156,6 @@ export default function Jokers({
                   <span className="joker-tile-name">{joker.name}</span>
                   <span className="joker-tile-description">{joker.description}</span>
                 </div>
-                {reorderable && (
-                  <div className="joker-tile-reorder" role="group" aria-label={`Reorder ${joker.name}`}>
-                    {([-1, 1] as const).map((dir) => (
-                      <button
-                        key={dir}
-                        type="button"
-                        className="joker-tile-reorder-button"
-                        aria-label={`Move ${joker.name} ${dir === -1 ? "left" : "right"}`}
-                        disabled={dir === -1 ? idx === 0 : idx === jokers.length - 1}
-                        onClick={() => moveJoker(joker.id, dir)}
-                      >
-                        {dir === -1 ? "◀" : "▶"}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </li>
             </Fragment>
           );
