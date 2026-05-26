@@ -36,54 +36,44 @@ describe("createDeck", () => {
     expect(ids.size).toBe(deck.length);
   });
 
-  test("assigns the Mult enhancement to every rank-4 card", () => {
-    const fours = createDeck().filter((c) => c.rank === "4");
-    expect(fours.every((c) => c.enhancement === "mult")).toBe(true);
+  test("does not assign any enhancement to a fresh deck", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement === undefined)).toBe(true);
   });
 
-  test("does not assign Mult to any non-4 card", () => {
-    const nonFours = createDeck().filter((c) => c.rank !== "4");
-    expect(nonFours.every((c) => c.enhancement !== "mult")).toBe(true);
+  test("does not assign Mult to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "mult")).toBe(true);
   });
 
-  test("assigns the Wild enhancement to every rank-9 card", () => {
-    const nines = createDeck().filter((c) => c.rank === "9");
-    expect(nines.every((c) => c.enhancement === "wild")).toBe(true);
+  test("does not assign Wild to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "wild")).toBe(true);
   });
 
-  test("does not assign Wild to any non-9 card", () => {
-    const nonNines = createDeck().filter((c) => c.rank !== "9");
-    expect(nonNines.every((c) => c.enhancement !== "wild")).toBe(true);
+  test("does not assign Glass to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "glass")).toBe(true);
   });
 
-  test("assigns the Glass enhancement to every rank-K card", () => {
-    const kings = createDeck().filter((c) => c.rank === "K");
-    expect(kings.every((c) => c.enhancement === "glass")).toBe(true);
+  test("does not assign Stone to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "stone")).toBe(true);
   });
 
-  test("does not assign Glass to any non-K card", () => {
-    const nonKings = createDeck().filter((c) => c.rank !== "K");
-    expect(nonKings.every((c) => c.enhancement !== "glass")).toBe(true);
+  test("does not assign Lucky to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "lucky")).toBe(true);
   });
 
-  test("assigns the Stone enhancement to every rank-3 card", () => {
-    const threes = createDeck().filter((c) => c.rank === "3");
-    expect(threes.every((c) => c.enhancement === "stone")).toBe(true);
+  test("does not assign Steel to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "steel")).toBe(true);
   });
 
-  test("does not assign Stone to any non-3 card", () => {
-    const nonThrees = createDeck().filter((c) => c.rank !== "3");
-    expect(nonThrees.every((c) => c.enhancement !== "stone")).toBe(true);
-  });
-
-  test("assigns the Lucky enhancement to every rank-Q card", () => {
-    const queens = createDeck().filter((c) => c.rank === "Q");
-    expect(queens.every((c) => c.enhancement === "lucky")).toBe(true);
-  });
-
-  test("does not assign Lucky to any non-Q card", () => {
-    const nonQueens = createDeck().filter((c) => c.rank !== "Q");
-    expect(nonQueens.every((c) => c.enhancement !== "lucky")).toBe(true);
+  test("does not assign Gold to any card", () => {
+    const deck = createDeck();
+    expect(deck.every((c) => c.enhancement !== "gold")).toBe(true);
   });
 
   test("omits cards whose keys appear in the excludedKeys set", () => {
