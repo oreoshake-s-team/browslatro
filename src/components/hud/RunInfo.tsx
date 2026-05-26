@@ -124,67 +124,69 @@ function RunInfo({
                 <button {...tabButtonProps("hands")}>Hands</button>
                 <button {...tabButtonProps("vouchers")}>Vouchers</button>
               </div>
-              <div {...panelProps("hands")}>
-                <table className="run-info-table">
-                  <thead>
-                    <tr>
-                      <th scope="col">Hand</th>
-                      <th scope="col" aria-label="Level">Lvl</th>
-                      <th scope="col">Chips × Mult</th>
-                      <th scope="col">Played</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[...HANDS].reverse().map((hand) => {
-                      const label = hand.label as HandLabel;
-                      const stats = handStats[label];
-                      return (
-                        <tr key={label} data-testid={`run-info-row-${label}`}>
-                          <th scope="row">{label}</th>
-                          <td
-                            className="run-info-level"
-                            data-testid={`run-info-level-${label}`}
-                          >
-                            {stats.level}
-                          </td>
-                          <td data-testid={`run-info-stats-${label}`}>
-                            {stats.chips} × {stats.multiplier}
-                          </td>
-                          <td data-testid={`run-info-count-${label}`}>
-                            {handPlayCounts[label]}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              <div {...panelProps("vouchers")}>
-                {ownedVouchers.length === 0 ? (
-                  <p
-                    className="run-info-voucher-empty"
-                    data-testid="run-info-voucher-empty"
-                  >
-                    No vouchers purchased yet.
-                  </p>
-                ) : (
-                  <ul className="run-info-voucher-list">
-                    {ownedVouchers.map((voucher) => (
-                      <li
-                        key={voucher.id}
-                        className="run-info-voucher-row"
-                        data-testid={`run-info-voucher-row-${voucher.id}`}
-                      >
-                        <span className="run-info-voucher-name">
-                          {voucher.name}
-                        </span>
-                        <span className="run-info-voucher-description">
-                          {voucher.description}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+              <div className="run-info-panels">
+                <div {...panelProps("hands")}>
+                  <table className="run-info-table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Hand</th>
+                        <th scope="col" aria-label="Level">Lvl</th>
+                        <th scope="col">Chips × Mult</th>
+                        <th scope="col">Played</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[...HANDS].reverse().map((hand) => {
+                        const label = hand.label as HandLabel;
+                        const stats = handStats[label];
+                        return (
+                          <tr key={label} data-testid={`run-info-row-${label}`}>
+                            <th scope="row">{label}</th>
+                            <td
+                              className="run-info-level"
+                              data-testid={`run-info-level-${label}`}
+                            >
+                              {stats.level}
+                            </td>
+                            <td data-testid={`run-info-stats-${label}`}>
+                              {stats.chips} × {stats.multiplier}
+                            </td>
+                            <td data-testid={`run-info-count-${label}`}>
+                              {handPlayCounts[label]}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div {...panelProps("vouchers")}>
+                  {ownedVouchers.length === 0 ? (
+                    <p
+                      className="run-info-voucher-empty"
+                      data-testid="run-info-voucher-empty"
+                    >
+                      No vouchers purchased yet.
+                    </p>
+                  ) : (
+                    <ul className="run-info-voucher-list">
+                      {ownedVouchers.map((voucher) => (
+                        <li
+                          key={voucher.id}
+                          className="run-info-voucher-row"
+                          data-testid={`run-info-voucher-row-${voucher.id}`}
+                        >
+                          <span className="run-info-voucher-name">
+                            {voucher.name}
+                          </span>
+                          <span className="run-info-voucher-description">
+                            {voucher.description}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
               </div>
               <button
                 type="button"

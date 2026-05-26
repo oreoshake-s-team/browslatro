@@ -109,6 +109,21 @@
   border-bottom-color: #1c7ed6;
 }
 
+.run-info-panels {
+  display: grid;
+  grid-template-areas: "stack";
+}
+
+.run-info-panels > [role="tabpanel"] {
+  grid-area: stack;
+  min-width: 0;
+}
+
+.run-info-panels > [role="tabpanel"][hidden] {
+  display: block;
+  visibility: hidden;
+}
+
 .run-info-voucher-list {
   list-style: none;
   padding: 0;
