@@ -220,12 +220,16 @@ describe("availablePlanets", () => {
     expect(result).toHaveLength(9);
   });
 
-  test("unlocks Planet X after Five of a Kind is played", () => {
+  test.each<{ planetId: string; hand: "Five of a Kind" | "Flush House" | "Flush Five" }>([
+    { planetId: "planet-x", hand: "Five of a Kind" },
+    { planetId: "ceres", hand: "Flush House" },
+    { planetId: "eris", hand: "Flush Five" },
+  ])("unlocks $planetId after $hand is played", ({ planetId, hand }) => {
     const ids = availablePlanets(
       createPlanetCatalog(),
-      countsWith({ "Five of a Kind": 1 }),
+      countsWith({ [hand]: 1 }),
     ).map((p) => p.id);
-    expect(ids).toContain("planet-x");
+    expect(ids).toContain(planetId);
   });
 
   test("unlocking Five of a Kind does not unlock Ceres or Eris", () => {
@@ -235,22 +239,6 @@ describe("availablePlanets", () => {
     ).map((p) => p.id);
     expect(ids).not.toContain("ceres");
     expect(ids).not.toContain("eris");
-  });
-
-  test("unlocks Ceres after Flush House is played", () => {
-    const ids = availablePlanets(
-      createPlanetCatalog(),
-      countsWith({ "Flush House": 1 }),
-    ).map((p) => p.id);
-    expect(ids).toContain("ceres");
-  });
-
-  test("unlocks Eris after Flush Five is played", () => {
-    const ids = availablePlanets(
-      createPlanetCatalog(),
-      countsWith({ "Flush Five": 1 }),
-    ).map((p) => p.id);
-    expect(ids).toContain("eris");
   });
 
   test("returns the full catalog when all three secret hands are played", () => {

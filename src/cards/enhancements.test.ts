@@ -32,36 +32,17 @@ describe("ENHANCEMENT_KINDS", () => {
     expect(ENHANCEMENT_KINDS).toHaveLength(8);
   });
 
-  test("includes bonus", () => {
-    expect(ENHANCEMENT_KINDS).toContain("bonus");
-  });
-
-  test("includes mult", () => {
-    expect(ENHANCEMENT_KINDS).toContain("mult");
-  });
-
-  test("includes wild", () => {
-    expect(ENHANCEMENT_KINDS).toContain("wild");
-  });
-
-  test("includes glass", () => {
-    expect(ENHANCEMENT_KINDS).toContain("glass");
-  });
-
-  test("includes steel", () => {
-    expect(ENHANCEMENT_KINDS).toContain("steel");
-  });
-
-  test("includes stone", () => {
-    expect(ENHANCEMENT_KINDS).toContain("stone");
-  });
-
-  test("includes gold", () => {
-    expect(ENHANCEMENT_KINDS).toContain("gold");
-  });
-
-  test("includes lucky", () => {
-    expect(ENHANCEMENT_KINDS).toContain("lucky");
+  test.each<{ kind: string }>([
+    { kind: "bonus" },
+    { kind: "mult" },
+    { kind: "wild" },
+    { kind: "glass" },
+    { kind: "steel" },
+    { kind: "stone" },
+    { kind: "gold" },
+    { kind: "lucky" },
+  ])("includes $kind", ({ kind }) => {
+    expect(ENHANCEMENT_KINDS).toContain(kind);
   });
 });
 
@@ -224,24 +205,14 @@ describe("applyCardEnhancement — Bonus", () => {
 });
 
 describe("NO_ENHANCEMENT_EFFECT", () => {
-  test("has chipsDelta of 0", () => {
-    expect(NO_ENHANCEMENT_EFFECT.chipsDelta).toBe(0);
-  });
-
-  test("has multDelta of 0", () => {
-    expect(NO_ENHANCEMENT_EFFECT.multDelta).toBe(0);
-  });
-
-  test("has multTimes of 1 (identity for multiplication)", () => {
-    expect(NO_ENHANCEMENT_EFFECT.multTimes).toBe(1);
-  });
-
-  test("has moneyDelta of 0", () => {
-    expect(NO_ENHANCEMENT_EFFECT.moneyDelta).toBe(0);
-  });
-
-  test("has destroyChance of 0", () => {
-    expect(NO_ENHANCEMENT_EFFECT.destroyChance).toBe(0);
+  test.each<{ channel: keyof typeof NO_ENHANCEMENT_EFFECT; expected: number }>([
+    { channel: "chipsDelta", expected: 0 },
+    { channel: "multDelta", expected: 0 },
+    { channel: "multTimes", expected: 1 },
+    { channel: "moneyDelta", expected: 0 },
+    { channel: "destroyChance", expected: 0 },
+  ])("$channel is the multiplicative/additive identity", ({ channel, expected }) => {
+    expect(NO_ENHANCEMENT_EFFECT[channel]).toBe(expected);
   });
 });
 
