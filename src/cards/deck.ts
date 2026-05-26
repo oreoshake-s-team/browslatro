@@ -111,6 +111,14 @@ export function deal(deck: ReadonlyArray<Card>, count: number = HAND_SIZE): Deal
   };
 }
 
+export function drawCountForRefill(
+  handSize: number,
+  keptCount: number,
+  remainingCount: number,
+): number {
+  return Math.min(Math.max(0, handSize - keptCount), remainingCount);
+}
+
 export type SortMode = "rank" | "suit";
 
 export const SUIT_DISPLAY_ORDER: Record<Suit, number> = {
