@@ -28,105 +28,63 @@ function seededRng(seed: number): () => number {
 }
 
 describe("Pack option counts", () => {
-  test("Celestial Normal has 3 options", () => {
-    expect(packOptionsCount("celestial", "normal")).toBe(3);
-  });
-
-  test("Celestial Jumbo has 5 options", () => {
-    expect(packOptionsCount("celestial", "jumbo")).toBe(5);
-  });
-
-  test("Celestial Mega has 5 options", () => {
-    expect(packOptionsCount("celestial", "mega")).toBe(5);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; count: number }>([
+    { variant: "normal", count: 3 },
+    { variant: "jumbo", count: 5 },
+    { variant: "mega", count: 5 },
+  ])("Celestial $variant has $count options", ({ variant, count }) => {
+    expect(packOptionsCount("celestial", variant)).toBe(count);
   });
 });
 
 describe("Pack pick limits", () => {
-  test("Normal picks 1", () => {
-    expect(packPickLimit("normal")).toBe(1);
-  });
-
-  test("Jumbo picks 1", () => {
-    expect(packPickLimit("jumbo")).toBe(1);
-  });
-
-  test("Mega picks 2", () => {
-    expect(packPickLimit("mega")).toBe(2);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; picks: number }>([
+    { variant: "normal", picks: 1 },
+    { variant: "jumbo", picks: 1 },
+    { variant: "mega", picks: 2 },
+  ])("$variant picks $picks", ({ variant, picks }) => {
+    expect(packPickLimit(variant)).toBe(picks);
   });
 });
 
 describe("Pack prices", () => {
-  test("Normal pack costs $4", () => {
-    expect(packPrice("normal")).toBe(PACK_NORMAL_PRICE);
-  });
-
-  test("Jumbo pack costs $6", () => {
-    expect(packPrice("jumbo")).toBe(PACK_JUMBO_PRICE);
-  });
-
-  test("Mega pack costs $8", () => {
-    expect(packPrice("mega")).toBe(PACK_MEGA_PRICE);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; price: number }>([
+    { variant: "normal", price: PACK_NORMAL_PRICE },
+    { variant: "jumbo", price: PACK_JUMBO_PRICE },
+    { variant: "mega", price: PACK_MEGA_PRICE },
+  ])("$variant pack costs the $variant price", ({ variant, price }) => {
+    expect(packPrice(variant)).toBe(price);
   });
 });
 
 describe("Pack display name", () => {
-  test("Celestial Normal label drops the variant prefix", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; expected: string }>([
+    { variant: "normal", expected: "Celestial Pack" },
+    { variant: "jumbo", expected: "Jumbo Celestial Pack" },
+    { variant: "mega", expected: "Mega Celestial Pack" },
+  ])("Celestial $variant label is $expected", ({ variant, expected }) => {
     expect(
-      packDisplayName({ pool: "celestial", variant: "normal", options: [] }),
-    ).toBe("Celestial Pack");
-  });
-
-  test("Celestial Jumbo prefixes Jumbo", () => {
-    expect(
-      packDisplayName({ pool: "celestial", variant: "jumbo", options: [] }),
-    ).toBe("Jumbo Celestial Pack");
-  });
-
-  test("Celestial Mega prefixes Mega", () => {
-    expect(
-      packDisplayName({ pool: "celestial", variant: "mega", options: [] }),
-    ).toBe("Mega Celestial Pack");
+      packDisplayName({ pool: "celestial", variant, options: [] }),
+    ).toBe(expected);
   });
 });
 
 describe("rollPackOptions for Celestial", () => {
-  test("returns Normal-count distinct planets", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; length: number; rngSeed: number }>([
+    { variant: "normal", length: 3, rngSeed: 1 },
+    { variant: "jumbo", length: 5, rngSeed: 2 },
+    { variant: "mega", length: 5, rngSeed: 3 },
+  ])("returns $length distinct planets for $variant", ({ variant, length, rngSeed }) => {
     const opts = rollPackOptions({
       pool: "celestial",
-      variant: "normal",
+      variant,
       planetCatalog: createPlanetCatalog(),
       tarotCatalog: createTarotCatalog(),
       jokerCatalog: createJokerCatalog(),
       spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(1),
+      rng: seededRng(rngSeed),
     });
-    expect(opts).toHaveLength(3);
-  });
-
-  test("returns Jumbo-count distinct planets", () => {
-    const opts = rollPackOptions({
-      pool: "celestial",
-      variant: "jumbo",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(2),
-    });
-    expect(opts).toHaveLength(5);
-  });
-
-  test("returns Mega-count distinct planets", () => {
-    const opts = rollPackOptions({
-      pool: "celestial",
-      variant: "mega",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(3),
-    });
-    expect(opts).toHaveLength(5);
+    expect(opts).toHaveLength(length);
   });
 
   test("options contain no duplicate planet ids", () => {
@@ -209,34 +167,22 @@ describe("rollPack", () => {
 });
 
 describe("Arcana pack", () => {
-  test("Normal has 3 options", () => {
-    expect(packOptionsCount("arcana", "normal")).toBe(3);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; count: number }>([
+    { variant: "normal", count: 3 },
+    { variant: "jumbo", count: 5 },
+    { variant: "mega", count: 5 },
+  ])("$variant has $count options", ({ variant, count }) => {
+    expect(packOptionsCount("arcana", variant)).toBe(count);
   });
 
-  test("Jumbo has 5 options", () => {
-    expect(packOptionsCount("arcana", "jumbo")).toBe(5);
-  });
-
-  test("Mega has 5 options", () => {
-    expect(packOptionsCount("arcana", "mega")).toBe(5);
-  });
-
-  test("display name for Normal is 'Arcana Pack'", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; expected: string }>([
+    { variant: "normal", expected: "Arcana Pack" },
+    { variant: "jumbo", expected: "Jumbo Arcana Pack" },
+    { variant: "mega", expected: "Mega Arcana Pack" },
+  ])("display name for $variant is $expected", ({ variant, expected }) => {
     expect(
-      packDisplayName({ pool: "arcana", variant: "normal", options: [] }),
-    ).toBe("Arcana Pack");
-  });
-
-  test("display name for Jumbo prefixes Jumbo", () => {
-    expect(
-      packDisplayName({ pool: "arcana", variant: "jumbo", options: [] }),
-    ).toBe("Jumbo Arcana Pack");
-  });
-
-  test("display name for Mega prefixes Mega", () => {
-    expect(
-      packDisplayName({ pool: "arcana", variant: "mega", options: [] }),
-    ).toBe("Mega Arcana Pack");
+      packDisplayName({ pool: "arcana", variant, options: [] }),
+    ).toBe(expected);
   });
 
   test("rollPackOptions returns tarot options for arcana", () => {
@@ -252,43 +198,21 @@ describe("Arcana pack", () => {
     expect(opts.every((o) => o.kind === "tarot")).toBe(true);
   });
 
-  test("Normal returns 3 tarot options", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; length: number; rngSeed: number }>([
+    { variant: "normal", length: 3, rngSeed: 32 },
+    { variant: "jumbo", length: 5, rngSeed: 33 },
+    { variant: "mega", length: 5, rngSeed: 34 },
+  ])("$variant returns $length tarot options", ({ variant, length, rngSeed }) => {
     const opts = rollPackOptions({
       pool: "arcana",
-      variant: "normal",
+      variant,
       planetCatalog: createPlanetCatalog(),
       tarotCatalog: createTarotCatalog(),
       jokerCatalog: createJokerCatalog(),
       spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(32),
+      rng: seededRng(rngSeed),
     });
-    expect(opts).toHaveLength(3);
-  });
-
-  test("Jumbo returns 5 tarot options", () => {
-    const opts = rollPackOptions({
-      pool: "arcana",
-      variant: "jumbo",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(33),
-    });
-    expect(opts).toHaveLength(5);
-  });
-
-  test("Mega returns 5 tarot options", () => {
-    const opts = rollPackOptions({
-      pool: "arcana",
-      variant: "mega",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(34),
-    });
-    expect(opts).toHaveLength(5);
+    expect(opts).toHaveLength(length);
   });
 
   test("returned tarot ids are unique within a pack", () => {
@@ -323,34 +247,22 @@ describe("Arcana pack", () => {
 });
 
 describe("Buffoon pack", () => {
-  test("Normal has 2 options", () => {
-    expect(packOptionsCount("buffoon", "normal")).toBe(2);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; count: number }>([
+    { variant: "normal", count: 2 },
+    { variant: "jumbo", count: 4 },
+    { variant: "mega", count: 4 },
+  ])("$variant has $count options", ({ variant, count }) => {
+    expect(packOptionsCount("buffoon", variant)).toBe(count);
   });
 
-  test("Jumbo has 4 options", () => {
-    expect(packOptionsCount("buffoon", "jumbo")).toBe(4);
-  });
-
-  test("Mega has 4 options", () => {
-    expect(packOptionsCount("buffoon", "mega")).toBe(4);
-  });
-
-  test("display name for Normal is 'Buffoon Pack'", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; expected: string }>([
+    { variant: "normal", expected: "Buffoon Pack" },
+    { variant: "jumbo", expected: "Jumbo Buffoon Pack" },
+    { variant: "mega", expected: "Mega Buffoon Pack" },
+  ])("display name for $variant is $expected", ({ variant, expected }) => {
     expect(
-      packDisplayName({ pool: "buffoon", variant: "normal", options: [] }),
-    ).toBe("Buffoon Pack");
-  });
-
-  test("display name for Jumbo prefixes Jumbo", () => {
-    expect(
-      packDisplayName({ pool: "buffoon", variant: "jumbo", options: [] }),
-    ).toBe("Jumbo Buffoon Pack");
-  });
-
-  test("display name for Mega prefixes Mega", () => {
-    expect(
-      packDisplayName({ pool: "buffoon", variant: "mega", options: [] }),
-    ).toBe("Mega Buffoon Pack");
+      packDisplayName({ pool: "buffoon", variant, options: [] }),
+    ).toBe(expected);
   });
 
   test("rollPackOptions returns joker options for buffoon", () => {
@@ -366,43 +278,21 @@ describe("Buffoon pack", () => {
     expect(opts.every((o) => o.kind === "joker")).toBe(true);
   });
 
-  test("Normal returns 2 joker options", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; length: number; rngSeed: number }>([
+    { variant: "normal", length: 2, rngSeed: 41 },
+    { variant: "jumbo", length: 4, rngSeed: 42 },
+    { variant: "mega", length: 4, rngSeed: 43 },
+  ])("$variant returns $length joker options", ({ variant, length, rngSeed }) => {
     const opts = rollPackOptions({
       pool: "buffoon",
-      variant: "normal",
+      variant,
       planetCatalog: createPlanetCatalog(),
       tarotCatalog: createTarotCatalog(),
       jokerCatalog: createJokerCatalog(),
       spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(41),
+      rng: seededRng(rngSeed),
     });
-    expect(opts).toHaveLength(2);
-  });
-
-  test("Jumbo returns 4 joker options", () => {
-    const opts = rollPackOptions({
-      pool: "buffoon",
-      variant: "jumbo",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(42),
-    });
-    expect(opts).toHaveLength(4);
-  });
-
-  test("Mega returns 4 joker options", () => {
-    const opts = rollPackOptions({
-      pool: "buffoon",
-      variant: "mega",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(43),
-    });
-    expect(opts).toHaveLength(4);
+    expect(opts).toHaveLength(length);
   });
 
   test("excludes already-owned jokers from the option roll", () => {
@@ -455,34 +345,22 @@ describe("Buffoon pack", () => {
 });
 
 describe("Spectral pack", () => {
-  test("Normal has 2 options", () => {
-    expect(packOptionsCount("spectral", "normal")).toBe(2);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; count: number }>([
+    { variant: "normal", count: 2 },
+    { variant: "jumbo", count: 4 },
+    { variant: "mega", count: 4 },
+  ])("$variant has $count options", ({ variant, count }) => {
+    expect(packOptionsCount("spectral", variant)).toBe(count);
   });
 
-  test("Jumbo has 4 options", () => {
-    expect(packOptionsCount("spectral", "jumbo")).toBe(4);
-  });
-
-  test("Mega has 4 options", () => {
-    expect(packOptionsCount("spectral", "mega")).toBe(4);
-  });
-
-  test("display name for Normal is 'Spectral Pack'", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; expected: string }>([
+    { variant: "normal", expected: "Spectral Pack" },
+    { variant: "jumbo", expected: "Jumbo Spectral Pack" },
+    { variant: "mega", expected: "Mega Spectral Pack" },
+  ])("display name for $variant is $expected", ({ variant, expected }) => {
     expect(
-      packDisplayName({ pool: "spectral", variant: "normal", options: [] }),
-    ).toBe("Spectral Pack");
-  });
-
-  test("display name for Jumbo prefixes Jumbo", () => {
-    expect(
-      packDisplayName({ pool: "spectral", variant: "jumbo", options: [] }),
-    ).toBe("Jumbo Spectral Pack");
-  });
-
-  test("display name for Mega prefixes Mega", () => {
-    expect(
-      packDisplayName({ pool: "spectral", variant: "mega", options: [] }),
-    ).toBe("Mega Spectral Pack");
+      packDisplayName({ pool: "spectral", variant, options: [] }),
+    ).toBe(expected);
   });
 
   test("rollPackOptions returns spectral options for spectral pool", () => {
@@ -498,43 +376,21 @@ describe("Spectral pack", () => {
     expect(opts.every((o) => o.kind === "spectral")).toBe(true);
   });
 
-  test("Normal returns 2 spectral options", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; length: number; rngSeed: number }>([
+    { variant: "normal", length: 2, rngSeed: 51 },
+    { variant: "jumbo", length: 4, rngSeed: 52 },
+    { variant: "mega", length: 4, rngSeed: 53 },
+  ])("$variant returns $length spectral options", ({ variant, length, rngSeed }) => {
     const opts = rollPackOptions({
       pool: "spectral",
-      variant: "normal",
+      variant,
       planetCatalog: createPlanetCatalog(),
       tarotCatalog: createTarotCatalog(),
       jokerCatalog: createJokerCatalog(),
       spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(51),
+      rng: seededRng(rngSeed),
     });
-    expect(opts).toHaveLength(2);
-  });
-
-  test("Jumbo returns 4 spectral options", () => {
-    const opts = rollPackOptions({
-      pool: "spectral",
-      variant: "jumbo",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(52),
-    });
-    expect(opts).toHaveLength(4);
-  });
-
-  test("Mega returns 4 spectral options", () => {
-    const opts = rollPackOptions({
-      pool: "spectral",
-      variant: "mega",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(53),
-    });
-    expect(opts).toHaveLength(4);
+    expect(opts).toHaveLength(length);
   });
 
   test("returned spectral ids are unique within a pack", () => {
@@ -576,34 +432,22 @@ describe("Spectral pack", () => {
 });
 
 describe("Standard pack", () => {
-  test("Normal has 3 options", () => {
-    expect(packOptionsCount("standard", "normal")).toBe(3);
+  test.each<{ variant: "normal" | "jumbo" | "mega"; count: number }>([
+    { variant: "normal", count: 3 },
+    { variant: "jumbo", count: 5 },
+    { variant: "mega", count: 5 },
+  ])("$variant has $count options", ({ variant, count }) => {
+    expect(packOptionsCount("standard", variant)).toBe(count);
   });
 
-  test("Jumbo has 5 options", () => {
-    expect(packOptionsCount("standard", "jumbo")).toBe(5);
-  });
-
-  test("Mega has 5 options", () => {
-    expect(packOptionsCount("standard", "mega")).toBe(5);
-  });
-
-  test("display name for Normal is 'Standard Pack'", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; expected: string }>([
+    { variant: "normal", expected: "Standard Pack" },
+    { variant: "jumbo", expected: "Jumbo Standard Pack" },
+    { variant: "mega", expected: "Mega Standard Pack" },
+  ])("display name for $variant is $expected", ({ variant, expected }) => {
     expect(
-      packDisplayName({ pool: "standard", variant: "normal", options: [] }),
-    ).toBe("Standard Pack");
-  });
-
-  test("display name for Jumbo prefixes Jumbo", () => {
-    expect(
-      packDisplayName({ pool: "standard", variant: "jumbo", options: [] }),
-    ).toBe("Jumbo Standard Pack");
-  });
-
-  test("display name for Mega prefixes Mega", () => {
-    expect(
-      packDisplayName({ pool: "standard", variant: "mega", options: [] }),
-    ).toBe("Mega Standard Pack");
+      packDisplayName({ pool: "standard", variant, options: [] }),
+    ).toBe(expected);
   });
 
   test("rollPackOptions returns playing-card options for standard pool", () => {
@@ -619,43 +463,21 @@ describe("Standard pack", () => {
     expect(opts.every((o) => o.kind === "playing-card")).toBe(true);
   });
 
-  test("Normal returns 3 playing-card options", () => {
+  test.each<{ variant: "normal" | "jumbo" | "mega"; length: number; rngSeed: number }>([
+    { variant: "normal", length: 3, rngSeed: 61 },
+    { variant: "jumbo", length: 5, rngSeed: 62 },
+    { variant: "mega", length: 5, rngSeed: 63 },
+  ])("$variant returns $length playing-card options", ({ variant, length, rngSeed }) => {
     const opts = rollPackOptions({
       pool: "standard",
-      variant: "normal",
+      variant,
       planetCatalog: createPlanetCatalog(),
       tarotCatalog: createTarotCatalog(),
       jokerCatalog: createJokerCatalog(),
       spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(61),
+      rng: seededRng(rngSeed),
     });
-    expect(opts).toHaveLength(3);
-  });
-
-  test("Jumbo returns 5 playing-card options", () => {
-    const opts = rollPackOptions({
-      pool: "standard",
-      variant: "jumbo",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(62),
-    });
-    expect(opts).toHaveLength(5);
-  });
-
-  test("Mega returns 5 playing-card options", () => {
-    const opts = rollPackOptions({
-      pool: "standard",
-      variant: "mega",
-      planetCatalog: createPlanetCatalog(),
-      tarotCatalog: createTarotCatalog(),
-      jokerCatalog: createJokerCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: seededRng(63),
-    });
-    expect(opts).toHaveLength(5);
+    expect(opts).toHaveLength(length);
   });
 
   test("every Standard option has a valid rank", () => {
