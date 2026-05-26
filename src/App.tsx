@@ -28,7 +28,12 @@ import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
-import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
+import {
+  createTarotCatalog,
+  resolveHermitPayout,
+  resolveTemperancePayout,
+  rollWheelOfFortune,
+} from "./items/tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -102,6 +107,7 @@ import {
   initialJokersConfig,
   isFaceCard,
   jokerSellValue,
+  withEdition,
   type Joker,
   type JokerHandLevelStep,
 } from "./items/jokers";
@@ -774,9 +780,20 @@ function App() {
           play("pop");
           applyEnhancementToSelectedPreviewCards(effect.enhancement);
         }
-      } else {
+      } else if (effect.kind === "money-multiply") {
         play("pop");
         setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      } else if (effect.kind === "joker-sell-value-payout") {
+        play("pop");
+        setMoney((prev) => prev + resolveTemperancePayout(jokers, effect.cap));
+      } else if (effect.kind === "edition-roll") {
+        play("pop");
+        const result = rollWheelOfFortune(jokers, effect.chance);
+        if (result.hit && result.targetIdx >= 0) {
+          setJokers((prev) =>
+            prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
+          );
+        }
       }
     } else if (option.kind === "joker") {
       if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
@@ -920,6 +937,23 @@ function App() {
     if (effect.kind === "money-multiply") {
       play("pop");
       setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      return;
+    }
+    if (effect.kind === "joker-sell-value-payout") {
+      play("pop");
+      setMoney((prev) => prev + resolveTemperancePayout(jokers, effect.cap));
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      return;
+    }
+    if (effect.kind === "edition-roll") {
+      play("pop");
+      const result = rollWheelOfFortune(jokers, effect.chance);
+      if (result.hit && result.targetIdx >= 0) {
+        setJokers((prev) =>
+          prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
+        );
+      }
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
