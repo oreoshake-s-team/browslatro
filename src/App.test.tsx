@@ -9,7 +9,7 @@ import {
   toggleHighVisibility,
 } from "./components/system/preferences";
 import { play } from "./components/system/sounds";
-import { shopPickerRngConfig } from "./items/shop";
+import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import type { ShopItem } from "./items/shop";
 import {
   MAX_JOKERS,
@@ -23,41 +23,6 @@ import {
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 type ShopOfferKind = ShopItem["kind"];
-
-const KIND_TO_RNG: Record<ShopOfferKind, number> = {
-  joker: 0.05,
-  planet: 0.4,
-  tarot: 0.75,
-  spectral: 0,
-};
-
-function forceShopLayout(kinds: ReadonlyArray<ShopOfferKind>): () => number {
-  let slotIdx = 0;
-  let callsConsumed = 0;
-  return () => {
-    const target = kinds[slotIdx] ?? "joker";
-    if (target === "spectral") {
-      if (callsConsumed === 0) {
-        callsConsumed = 1;
-        return 0;
-      }
-      callsConsumed = 0;
-      slotIdx += 1;
-      return 0;
-    }
-    if (callsConsumed === 0) {
-      callsConsumed = 1;
-      return 0.99;
-    }
-    if (callsConsumed === 1) {
-      callsConsumed = 2;
-      return KIND_TO_RNG[target];
-    }
-    callsConsumed = 0;
-    slotIdx += 1;
-    return 0;
-  };
-}
 
 function findShopOfferIdxOfKind(kind: ShopOfferKind): number {
   const offers = screen.queryAllByTestId(/^shop-offer-/);
