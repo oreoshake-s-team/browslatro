@@ -561,14 +561,6 @@ describe("Shop pack offers", () => {
     );
   });
 
-  test("the pack Open button is disabled (modal not yet implemented)", () => {
-    renderShop({ offers: [celestialPackOffer("normal")] });
-    const open = screen
-      .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
-    expect(open).toBeDisabled();
-  });
-
   test("the pack Open button shows the price", () => {
     renderShop({ offers: [celestialPackOffer("normal")] });
     const open = screen
@@ -577,15 +569,31 @@ describe("Shop pack offers", () => {
     expect(open).toHaveTextContent("Open ($4)");
   });
 
-  test("clicking the disabled pack Open button does not call onBuy", async () => {
+  test("the pack Open button is enabled when the player can afford it", () => {
+    renderShop({ offers: [celestialPackOffer("normal")], money: 10 });
+    const open = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(open).toBeEnabled();
+  });
+
+  test("the pack Open button is disabled when the player cannot afford it", () => {
+    renderShop({ offers: [celestialPackOffer("normal")], money: 0 });
+    const open = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(open).toBeDisabled();
+  });
+
+  test("clicking an affordable pack Open button calls onBuy with the offer index", async () => {
     const user = userEvent.setup();
     const onBuy = vi.fn();
-    renderShop({ offers: [celestialPackOffer("normal")], onBuy });
+    renderShop({ offers: [celestialPackOffer("normal")], money: 10, onBuy });
     const open = screen
       .getByTestId("shop-offer-0")
       .querySelector("button.shop-offer-buy");
     if (!(open instanceof HTMLButtonElement)) throw new Error("missing button");
     await user.click(open);
-    expect(onBuy).not.toHaveBeenCalled();
+    expect(onBuy).toHaveBeenCalledWith(0);
   });
 });

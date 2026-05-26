@@ -10,6 +10,8 @@ import {
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import Shop from "./components/shop/Shop";
+import PackOpenModal from "./components/shop/PackOpenModal";
+import { packPickLimit, type PackOffer } from "./items/packs";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
 import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
@@ -221,6 +223,8 @@ function App() {
   const [draggingJokerIndex, setDraggingJokerIndex] = useState<number | null>(
     null,
   );
+  const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
+  const [packPicksRemaining, setPackPicksRemaining] = useState(0);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -458,10 +462,45 @@ function App() {
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
+  function openPack(idx: number) {
+    const offer = shopOffers?.[idx];
+    if (!offer || offer.sold || offer.kind !== "pack") return;
+    const price = applyShopDiscount(offer.price, ownedVoucherIds);
+    if (money < price) return;
+    play("pop");
+    setMoney((prev) => prev - price);
+    setOpenedPack(offer.pack);
+    setPackPicksRemaining(packPickLimit(offer.pack.variant));
+    markOfferSold(idx);
+  }
+
+  function pickFromOpenedPack(optionIdx: number) {
+    if (!openedPack || packPicksRemaining <= 0) return;
+    if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+    const option = openedPack.options[optionIdx];
+    if (!option || option.kind !== "planet") return;
+    play("pop");
+    const next: Consumable = { kind: "planet", card: option.planet };
+    setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
+    setPackPicksRemaining((prev) => {
+      const remaining = prev - 1;
+      if (remaining <= 0) setOpenedPack(null);
+      return remaining;
+    });
+  }
+
+  function closeOpenedPack() {
+    setOpenedPack(null);
+    setPackPicksRemaining(0);
+  }
+
   function buyShopOffer(idx: number) {
     const offer = shopOffers?.[idx];
     if (!offer || offer.sold) return;
-    if (offer.kind === "pack") return;
+    if (offer.kind === "pack") {
+      openPack(idx);
+      return;
+    }
     const price = applyShopDiscount(offer.price, ownedVoucherIds);
     if (money < price) return;
     if (offer.kind === "joker") {
@@ -1080,6 +1119,18 @@ function App() {
           onBuyVoucher={buyCurrentAnteVoucher}
           onReroll={rerollShopOffers}
           onNext={closeShopAndStartNextRound}
+        />
+      )}
+      {openedPack && (
+        <PackOpenModal
+          pack={openedPack}
+          picksRemaining={packPicksRemaining}
+          consumableSlotsFree={Math.max(
+            0,
+            consumableCapacity - consumables.length,
+          )}
+          onPick={pickFromOpenedPack}
+          onClose={closeOpenedPack}
         />
       )}
     </div>

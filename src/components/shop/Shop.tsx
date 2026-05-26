@@ -53,7 +53,6 @@ type BuyButtonState =
   | { kind: "slots-full" }
   | { kind: "consumable-slots-full" }
   | { kind: "unaffordable" }
-  | { kind: "pack-pending" }
   | { kind: "available" };
 
 function resolveBuyState(
@@ -65,7 +64,6 @@ function resolveBuyState(
   consumableCapacity: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
-  if (offer.kind === "pack") return { kind: "pack-pending" };
   if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
     return { kind: "slots-full" };
   }
@@ -81,7 +79,12 @@ function resolveBuyState(
   return { kind: "available" };
 }
 
-function buyButtonLabel(state: BuyButtonState, price: number): string {
+function buyButtonLabel(
+  state: BuyButtonState,
+  price: number,
+  kind: ShopItem["kind"],
+): string {
+  const verb = kind === "pack" ? "Open" : "Buy";
   switch (state.kind) {
     case "sold":
       return "Sold";
@@ -90,11 +93,9 @@ function buyButtonLabel(state: BuyButtonState, price: number): string {
     case "consumable-slots-full":
       return "Slots full";
     case "unaffordable":
-      return `Buy ($${price})`;
-    case "pack-pending":
-      return `Open ($${price})`;
+      return `${verb} ($${price})`;
     case "available":
-      return `Buy ($${price})`;
+      return `${verb} ($${price})`;
   }
 }
 
@@ -111,8 +112,6 @@ function buyButtonTooltip(
       return `Consumable slots are full (max ${consumableCapacity})`;
     case "unaffordable":
       return "Not enough money";
-    case "pack-pending":
-      return "Pack opening coming soon";
     case "available":
       return undefined;
   }
@@ -247,7 +246,7 @@ export default function Shop({
               consumableCount,
               consumableCapacity,
             );
-            const label = buyButtonLabel(state, effectivePrice);
+            const label = buyButtonLabel(state, effectivePrice, offer.kind);
             const subject = offerSubject(offer);
             const badge = OFFER_KIND_BADGE[offer.kind];
             return (
