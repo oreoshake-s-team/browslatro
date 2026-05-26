@@ -68,6 +68,7 @@ import {
   extraConsumableSlots,
   extraShopOfferSlots,
   pickVoucherForAnte,
+  VOUCHER_CATALOG,
   type Voucher,
   type VoucherId,
 } from "./vouchers";
@@ -775,6 +776,7 @@ function App() {
         remainingDiscards={remainingDiscards}
         handPlayCounts={handPlayCounts}
         handStats={handStats}
+        ownedVouchers={VOUCHER_CATALOG.filter((v) => ownedVoucherIds.has(v.id))}
         onNewGame={startNewGame}
         onHighVisibilityChange={setHighVisibility}
         onAnimationSpeedChange={setAnimationSpeedState}
