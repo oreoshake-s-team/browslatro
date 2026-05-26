@@ -27,7 +27,6 @@ function renderModal(
     <PackOpenModal
       pack={celestialPack("normal", 3)}
       picksRemaining={1}
-      consumableSlotsFree={2}
       onPick={vi.fn()}
       onClose={vi.fn()}
       {...overrides}
@@ -73,12 +72,6 @@ describe("PackOpenModal", () => {
     renderModal({ onPick });
     await user.click(screen.getByTestId("pack-open-pick-1"));
     expect(onPick).toHaveBeenCalledWith(1);
-  });
-
-  test("Pick buttons are disabled when consumable slots are full", () => {
-    renderModal({ consumableSlotsFree: 0 });
-    const picks = screen.getAllByRole("button", { name: /^Pick / });
-    for (const btn of picks) expect(btn).toBeDisabled();
   });
 
   test("Pick buttons are disabled when picks remaining hits zero", () => {

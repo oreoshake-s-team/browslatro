@@ -476,12 +476,10 @@ function App() {
 
   function pickFromOpenedPack(optionIdx: number) {
     if (!openedPack || packPicksRemaining <= 0) return;
-    if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
     const option = openedPack.options[optionIdx];
     if (!option || option.kind !== "planet") return;
     play("pop");
-    const next: Consumable = { kind: "planet", card: option.planet };
-    setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
+    setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
     setPackPicksRemaining((prev) => {
       const remaining = prev - 1;
       if (remaining <= 0) setOpenedPack(null);
@@ -1125,10 +1123,6 @@ function App() {
         <PackOpenModal
           pack={openedPack}
           picksRemaining={packPicksRemaining}
-          consumableSlotsFree={Math.max(
-            0,
-            consumableCapacity - consumables.length,
-          )}
           onPick={pickFromOpenedPack}
           onClose={closeOpenedPack}
         />

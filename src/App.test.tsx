@@ -11,6 +11,7 @@ import {
 import { play } from "./components/system/sounds";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import type { ShopItem } from "./items/shop";
+import { HANDS } from "./constants";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -2621,7 +2622,7 @@ describe("Celestial pack open + pick integration", () => {
     ).toHaveTextContent("Sold");
   });
 
-  test("picking a planet from a Normal pack adds it to the consumable tray", async () => {
+  test("picking a planet from a Celestial pack does NOT add it to the consumable tray (auto-applied)", async () => {
     const user = await openShopWithMoney();
     const consumablesBefore = screen.queryAllByTestId(
       /^consumable-tile-filled-/,
@@ -2633,8 +2634,25 @@ describe("Celestial pack open + pick integration", () => {
     await user.click(open);
     await user.click(screen.getByTestId("pack-open-pick-0"));
     expect(screen.queryAllByTestId(/^consumable-tile-filled-/)).toHaveLength(
-      consumablesBefore + 1,
+      consumablesBefore,
     );
+  });
+
+  test("picking a planet from a Celestial pack upgrades the matching hand's level", async () => {
+    const user = await openShopWithMoney();
+    const idx = findPackOfferIdx();
+    const open = screen
+      .getByTestId(`shop-offer-${idx}`)
+      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
+    await user.click(open);
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    const levels = HANDS.map((h) =>
+      Number(
+        screen.getByTestId(`run-info-level-${h.label}`).textContent ?? "1",
+      ),
+    );
+    expect(levels.some((lvl) => lvl > 1)).toBe(true);
   });
 
   test("picking the only allowed card closes the modal automatically", async () => {

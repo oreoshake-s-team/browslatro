@@ -10,7 +10,6 @@ import { useEscapeToClose } from "../system/useEscapeToClose";
 interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
-  consumableSlotsFree: number;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
 }
@@ -18,7 +17,6 @@ interface PackOpenModalProps {
 export default function PackOpenModal({
   pack,
   picksRemaining,
-  consumableSlotsFree,
   onPick,
   onClose,
 }: PackOpenModalProps) {
@@ -48,13 +46,8 @@ export default function PackOpenModal({
         <ul className="pack-open-options" aria-label="Pack options">
           {pack.options.map((option, idx) => {
             if (option.kind !== "planet") return null;
-            const noRoom = consumableSlotsFree <= 0;
-            const disabled = noRoom || picksRemaining <= 0;
-            const tooltip = noRoom
-              ? "Consumable slots are full"
-              : picksRemaining <= 0
-                ? "No picks remaining"
-                : undefined;
+            const disabled = picksRemaining <= 0;
+            const tooltip = disabled ? "No picks remaining" : undefined;
             return (
               <li key={`${option.planet.id}-${idx}`} className="pack-open-option">
                 <span className="pack-open-option-icon" aria-hidden="true">🪐</span>
