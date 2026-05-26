@@ -116,34 +116,22 @@ describe("Shop", () => {
     );
   });
 
-  test("the joker offer carries the shop-offer-joker modifier class", () => {
-    renderShop();
-    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-joker");
+  test.each<{ kind: "joker" | "planet" | "tarot"; idx: 0 | 1; overrides?: Partial<Parameters<typeof Shop>[0]> }>([
+    { kind: "joker", idx: 0 },
+    { kind: "planet", idx: 1 },
+    { kind: "tarot", idx: 0, overrides: { offers: [tarotOffer()] } },
+  ])("the $kind offer carries the shop-offer-$kind modifier class", ({ kind, idx, overrides }) => {
+    renderShop(overrides);
+    expect(screen.getByTestId(`shop-offer-${idx}`)).toHaveClass(`shop-offer-${kind}`);
   });
 
-  test("the planet offer carries the shop-offer-planet modifier class", () => {
-    renderShop();
-    expect(screen.getByTestId("shop-offer-1")).toHaveClass("shop-offer-planet");
-  });
-
-  test("the tarot offer carries the shop-offer-tarot modifier class", () => {
-    renderShop({ offers: [tarotOffer()] });
-    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-tarot");
-  });
-
-  test("the joker offer renders a 'Joker' kind label", () => {
-    renderShop();
-    expect(screen.getByTestId("shop-kind-0")).toHaveTextContent("Joker");
-  });
-
-  test("the planet offer renders a 'Planet' kind label", () => {
-    renderShop();
-    expect(screen.getByTestId("shop-kind-1")).toHaveTextContent("Planet");
-  });
-
-  test("the tarot offer renders a 'Tarot' kind label", () => {
-    renderShop({ offers: [tarotOffer()] });
-    expect(screen.getByTestId("shop-kind-0")).toHaveTextContent("Tarot");
+  test.each<{ kind: "joker" | "planet" | "tarot"; label: "Joker" | "Planet" | "Tarot"; idx: 0 | 1; overrides?: Partial<Parameters<typeof Shop>[0]> }>([
+    { kind: "joker", label: "Joker", idx: 0 },
+    { kind: "planet", label: "Planet", idx: 1 },
+    { kind: "tarot", label: "Tarot", idx: 0, overrides: { offers: [tarotOffer()] } },
+  ])("the $kind offer renders a '$label' kind label", ({ label, idx, overrides }) => {
+    renderShop(overrides);
+    expect(screen.getByTestId(`shop-kind-${idx}`)).toHaveTextContent(label);
   });
 
   test("does not render a 'Planet' label on a joker offer (negative)", () => {

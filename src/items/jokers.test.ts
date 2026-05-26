@@ -99,16 +99,12 @@ describe("Default jokers", () => {
 });
 
 describe("isFaceCard", () => {
-  test("recognizes a Jack as a face card", () => {
-    expect(isFaceCard(card("J"))).toBe(true);
-  });
-
-  test("recognizes a Queen as a face card", () => {
-    expect(isFaceCard(card("Q"))).toBe(true);
-  });
-
-  test("recognizes a King as a face card", () => {
-    expect(isFaceCard(card("K"))).toBe(true);
+  test.each<{ rank: "J" | "Q" | "K" }>([
+    { rank: "J" },
+    { rank: "Q" },
+    { rank: "K" },
+  ])("recognizes $rank as a face card", ({ rank }) => {
+    expect(isFaceCard(card(rank))).toBe(true);
   });
 
   test("does not recognize an Ace as a face card", () => {
@@ -248,34 +244,15 @@ describe("Suit-conditional Mult jokers", () => {
     expect(SUIT_MULT_AMOUNT).toBe(3);
   });
 
-  test("Greedy Joker carries a per-suit-mult effect targeting diamonds", () => {
-    expect(createGreedyJoker().effect).toEqual({
+  test.each<{ name: string; suit: Suit; factory: () => ReturnType<typeof createGreedyJoker> }>([
+    { name: "Greedy", suit: "diamonds", factory: createGreedyJoker },
+    { name: "Lusty", suit: "hearts", factory: createLustyJoker },
+    { name: "Wrathful", suit: "spades", factory: createWrathfulJoker },
+    { name: "Gluttonous", suit: "clubs", factory: createGluttonousJoker },
+  ])("$name Joker carries a per-suit-mult effect targeting $suit", ({ suit, factory }) => {
+    expect(factory().effect).toEqual({
       kind: "per-suit-mult",
-      suit: "diamonds",
-      amount: SUIT_MULT_AMOUNT,
-    });
-  });
-
-  test("Lusty Joker carries a per-suit-mult effect targeting hearts", () => {
-    expect(createLustyJoker().effect).toEqual({
-      kind: "per-suit-mult",
-      suit: "hearts",
-      amount: SUIT_MULT_AMOUNT,
-    });
-  });
-
-  test("Wrathful Joker carries a per-suit-mult effect targeting spades", () => {
-    expect(createWrathfulJoker().effect).toEqual({
-      kind: "per-suit-mult",
-      suit: "spades",
-      amount: SUIT_MULT_AMOUNT,
-    });
-  });
-
-  test("Gluttonous Joker carries a per-suit-mult effect targeting clubs", () => {
-    expect(createGluttonousJoker().effect).toEqual({
-      kind: "per-suit-mult",
-      suit: "clubs",
+      suit,
       amount: SUIT_MULT_AMOUNT,
     });
   });
