@@ -232,6 +232,33 @@ describe("rerollShopOffer — kind-preserving rerolls", () => {
   });
 });
 
+describe("pickShopOffers — extraSlots (Overstock vouchers)", () => {
+  test("ignores extraSlots when omitted (defaults to base 3 offers)", () => {
+    expect(pickShopOffers(baseArgs(mulberry32(1)))).toHaveLength(3);
+  });
+
+  test("appends one extra offer when extraSlots is 1", () => {
+    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 1 });
+    expect(offers).toHaveLength(4);
+  });
+
+  test("appends two extra offers when extraSlots is 2", () => {
+    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 2 });
+    expect(offers).toHaveLength(5);
+  });
+
+  test("each extra offer's kind is one of joker/planet/tarot", () => {
+    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: 2 });
+    const extras = offers.slice(3);
+    expect(extras.every((o) => ["joker", "planet", "tarot"].includes(o.kind))).toBe(true);
+  });
+
+  test("treats negative extraSlots as zero", () => {
+    const offers = pickShopOffers({ ...baseArgs(mulberry32(1)), extraSlots: -3 });
+    expect(offers).toHaveLength(3);
+  });
+});
+
 describe("joker catalog smoke", () => {
   test("catalog ids remain unique", () => {
     const ids = createJokerCatalog().map((j: Joker) => j.id);

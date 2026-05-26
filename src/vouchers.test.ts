@@ -1,6 +1,10 @@
 import {
+  applyShopDiscount,
   createVoucherCatalog,
+  extraConsumableSlots,
+  extraShopOfferSlots,
   pickVoucherForAnte,
+  shopPriceDiscount,
   VOUCHER_BASE_PRICE,
   type Voucher,
   type VoucherId,
@@ -93,5 +97,71 @@ describe("pickVoucherForAnte", () => {
     const owned = new Set<VoucherId>(createVoucherCatalog().map((v) => v.id));
     const picked = pickVoucherForAnte({ ante: 1, ownedIds: owned, rng: rngOf([0]) });
     expect(picked).toBeNull();
+  });
+});
+
+describe("extraShopOfferSlots", () => {
+  test("returns 0 when no overstock voucher is owned", () => {
+    expect(extraShopOfferSlots(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("returns 1 when only overstock is owned", () => {
+    expect(extraShopOfferSlots(new Set<VoucherId>(["overstock"]))).toBe(1);
+  });
+
+  test("returns 2 when both overstock and overstock-plus are owned", () => {
+    expect(
+      extraShopOfferSlots(new Set<VoucherId>(["overstock", "overstock-plus"])),
+    ).toBe(2);
+  });
+
+  test("does not count overstock-plus on its own", () => {
+    expect(extraShopOfferSlots(new Set<VoucherId>(["overstock-plus"]))).toBe(1);
+  });
+});
+
+describe("shopPriceDiscount", () => {
+  test("returns 0 when no discount voucher is owned", () => {
+    expect(shopPriceDiscount(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("returns 0.25 for clearance-sale alone", () => {
+    expect(shopPriceDiscount(new Set<VoucherId>(["clearance-sale"]))).toBe(0.25);
+  });
+
+  test("returns 0.5 for liquidation (overrides clearance-sale, not stacked)", () => {
+    expect(
+      shopPriceDiscount(new Set<VoucherId>(["clearance-sale", "liquidation"])),
+    ).toBe(0.5);
+  });
+});
+
+describe("applyShopDiscount", () => {
+  test("returns the original price when no discount applies", () => {
+    expect(applyShopDiscount(5, new Set<VoucherId>())).toBe(5);
+  });
+
+  test("applies 25% off rounding up (clearance-sale, $5 → $4)", () => {
+    expect(applyShopDiscount(5, new Set<VoucherId>(["clearance-sale"]))).toBe(4);
+  });
+
+  test("applies 50% off rounding up (liquidation, $5 → $3)", () => {
+    expect(
+      applyShopDiscount(5, new Set<VoucherId>(["clearance-sale", "liquidation"])),
+    ).toBe(3);
+  });
+
+  test("never reduces a price below $1", () => {
+    expect(applyShopDiscount(1, new Set<VoucherId>(["clearance-sale", "liquidation"]))).toBe(1);
+  });
+});
+
+describe("extraConsumableSlots", () => {
+  test("returns 0 when crystal-ball is not owned", () => {
+    expect(extraConsumableSlots(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("returns 1 when crystal-ball is owned", () => {
+    expect(extraConsumableSlots(new Set<VoucherId>(["crystal-ball"]))).toBe(1);
   });
 });

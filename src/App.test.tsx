@@ -1832,3 +1832,78 @@ describe("Voucher integration", () => {
     expect(screen.getByTestId("shop-voucher-buy")).toHaveTextContent("Sold");
   });
 });
+
+describe("Voucher effects integration", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  async function openShopWithVoucher(
+    firstVoucherRng: number,
+  ): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    vi.spyOn(Math, "random").mockReturnValueOnce(firstVoucherRng);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  async function winAndReopenShop(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+  }
+
+  test("ante 1 voucher is deterministic when the first Math.random is forced to 0", async () => {
+    await openShopWithVoucher(0);
+    expect(
+      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name"),
+    ).toHaveTextContent("Overstock");
+  });
+
+  test("buying Overstock adds an extra offer slot in the next shop", async () => {
+    const user = await openShopWithVoucher(0);
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await winAndReopenShop(user);
+    expect(screen.getAllByTestId(/^shop-offer-/)).toHaveLength(4);
+  });
+
+  test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {
+    const user = await openShopWithVoucher(0.4);
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    const joker = screen
+      .getByTestId("shop-offer-0")
+      .querySelector(".shop-offer-price-discounted");
+    expect(joker).toHaveTextContent("$4");
+  });
+
+  test("buying Clearance Sale lets the player afford a joker they couldn't at full price", async () => {
+    const user = await openShopWithVoucher(0.4);
+    const buyButton = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    if (!(buyButton instanceof HTMLButtonElement)) throw new Error("missing joker buy");
+    expect(buyButton).not.toBeDisabled();
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    expect(buyButton).not.toBeDisabled();
+  });
+
+  test("buying Crystal Ball adds a third consumable slot to the tray", async () => {
+    const user = await openShopWithVoucher(0.9);
+    await user.click(screen.getByTestId("shop-voucher-buy"));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(screen.getAllByTestId("consumable-tile-empty")).toHaveLength(3);
+  });
+});

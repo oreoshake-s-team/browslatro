@@ -86,27 +86,19 @@ export interface PickShopOffersArgs {
   readonly excludedJokerIds: ReadonlyArray<string>;
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
+  readonly extraSlots?: number;
   readonly rng?: RandomSource;
 }
 
-export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
-  const rng = args.rng ?? Math.random;
-  const slots: ShopItem[] = [];
-  const joker = pickRandom(args.jokerCatalog, args.excludedJokerIds, rng);
-  if (joker) slots.push(jokerOffer(joker));
-  const planet = pickRandom(args.planetCatalog, [], rng);
-  if (planet) slots.push(planetOffer(planet));
-  const tarot = pickRandom(args.tarotCatalog, [], rng);
-  if (tarot) slots.push(tarotOffer(tarot));
-  return slots;
-}
+type ShopOfferKind = ShopItem["kind"];
+const SHOP_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = ["joker", "planet", "tarot"];
 
-export function rerollShopOffer(
-  current: ShopItem,
+function pickOfferByKind(
+  kind: ShopOfferKind,
   args: PickShopOffersArgs,
+  rng: RandomSource,
 ): ShopItem | null {
-  const rng = args.rng ?? Math.random;
-  switch (current.kind) {
+  switch (kind) {
     case "joker": {
       const next = pickRandom(args.jokerCatalog, args.excludedJokerIds, rng);
       return next ? jokerOffer(next) : null;
@@ -120,4 +112,27 @@ export function rerollShopOffer(
       return next ? tarotOffer(next) : null;
     }
   }
+}
+
+export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
+  const rng = args.rng ?? Math.random;
+  const slots: ShopItem[] = [];
+  for (const kind of SHOP_OFFER_KINDS) {
+    const offer = pickOfferByKind(kind, args, rng);
+    if (offer) slots.push(offer);
+  }
+  const extras = Math.max(0, args.extraSlots ?? 0);
+  for (let i = 0; i < extras; i += 1) {
+    const kind = SHOP_OFFER_KINDS[Math.floor(rng() * SHOP_OFFER_KINDS.length)];
+    const offer = pickOfferByKind(kind, args, rng);
+    if (offer) slots.push(offer);
+  }
+  return slots;
+}
+
+export function rerollShopOffer(
+  current: ShopItem,
+  args: PickShopOffersArgs,
+): ShopItem | null {
+  return pickOfferByKind(current.kind, args, args.rng ?? Math.random);
 }

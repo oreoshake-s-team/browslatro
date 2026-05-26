@@ -27,6 +27,7 @@ interface GameProps {
   jokers: ReadonlyArray<Joker>;
   jokerPulseCounters?: Readonly<Record<string, number>>;
   consumables: ReadonlyArray<Consumable>;
+  consumableCapacity?: number;
   onUseConsumable: (index: number) => void;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
@@ -54,6 +55,7 @@ export default function Game({
   jokers,
   jokerPulseCounters,
   consumables,
+  consumableCapacity,
   onUseConsumable,
   onToggleCard,
   onCardDiscardEnd,
@@ -76,7 +78,11 @@ export default function Game({
           pulseCounters={jokerPulseCounters}
           onReorder={onReorderJokers}
         />
-        <Consumables consumables={consumables} onUse={onUseConsumable} />
+        <Consumables
+          consumables={consumables}
+          capacity={consumableCapacity}
+          onUse={onUseConsumable}
+        />
       </div>
       <HandComponent
         hand={hand}
