@@ -44,6 +44,7 @@ import {
   deal,
   shuffle,
   HAND_SIZE,
+  SUITS,
   type DealResult,
 } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
@@ -463,15 +464,35 @@ function App() {
 
   function applySpectralEffect(effect: SpectralEffect) {
     switch (effect.kind) {
-      case "add-money":
-        setMoney((prev) => prev + effect.amount);
+      case "black-hole":
+        setHandStats((prev) => {
+          let next = prev;
+          for (const planet of createPlanetCatalog()) {
+            next = applyPlanetUpgrade(next, planet);
+          }
+          return next;
+        });
         return;
-      case "add-hands":
-        setRemainingHands((prev) => prev + effect.amount);
+      case "immolate": {
+        const handIds = dealt.hand.map((c) => c.id);
+        const shuffled = [...handIds].sort(() => Math.random() - 0.5);
+        const destroyed = new Set(shuffled.slice(0, effect.destroyCount));
+        setDealt((prev) => ({
+          hand: prev.hand.filter((c) => !destroyed.has(c.id)),
+          remaining: prev.remaining,
+        }));
+        setMoney((prev) => prev + effect.moneyGain);
         return;
-      case "add-discards":
-        setRemainingDiscards((prev) => prev + effect.amount);
+      }
+      case "sigil": {
+        const suits = SUITS;
+        const suit = suits[Math.floor(Math.random() * suits.length)];
+        setDealt((prev) => ({
+          hand: prev.hand.map((c) => ({ ...c, suit })),
+          remaining: prev.remaining,
+        }));
         return;
+      }
     }
   }
 

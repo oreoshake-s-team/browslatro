@@ -2123,21 +2123,21 @@ describe("Spectral purchase integration", () => {
     );
   });
 
-  test("using the Spectre spectral adds +$10 to money", async () => {
+  test("using Black Hole upgrades High Card from level 1 to level 2", async () => {
     const user = await openShop();
     const name = screen
       .getByTestId(spectralSlotTestId())
       .querySelector(".shop-offer-name")?.textContent;
-    if (name !== "Spectre") return;
+    if (name !== "Black Hole") return;
     const buy = screen
       .getByTestId(spectralSlotTestId())
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    const before = moneyOf();
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(moneyOf()).toBe(before + 10);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("2");
   });
 
   test("does not render a TarotPicker dialog after buying a spectral (negative)", async () => {
