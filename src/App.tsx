@@ -701,7 +701,7 @@ function App() {
         cardEnhancementsByKey,
       );
       const extras = applyEnhancementOverrides(addedCards, cardEnhancementsByKey);
-      const preview = shuffle([...baseDeck, ...extras]).slice(0, 5);
+      const preview = shuffle([...baseDeck, ...extras]).slice(0, currentHandSize);
       setPackPreviewHand(preview);
     } else {
       setPackPreviewHand([]);
