@@ -19,6 +19,7 @@ import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModa
 import Shop from "./components/shop/Shop";
 import PackOpenModal from "./components/shop/PackOpenModal";
 import { packPickLimit, type PackOffer } from "./items/packs";
+import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import { createSpectralCatalog, type SpectralEffect } from "./items/spectrals";
 import { createTarotCatalog, resolveHermitPayout } from "./items/tarots";
@@ -236,6 +237,7 @@ function App() {
   );
   const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
   const [packPicksRemaining, setPackPicksRemaining] = useState(0);
+  const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -708,6 +710,11 @@ function App() {
 
   function closeShopAndStartNextRound() {
     setShopOffers(null);
+    setPendingBlindSelect(true);
+  }
+
+  function confirmBlindSelect() {
+    setPendingBlindSelect(false);
     startNewRound();
   }
 
@@ -757,7 +764,7 @@ function App() {
       rng: bossPickerRngConfig.rng,
     });
     setCurrentBoss(freshBoss);
-    startNewRound({ blind: 1, boss: freshBoss, handSizeOverride: HAND_SIZE });
+    setPendingBlindSelect(true);
   }
 
   function addChips(amount: number) {
@@ -1186,6 +1193,14 @@ function App() {
           picksRemaining={packPicksRemaining}
           onPick={pickFromOpenedPack}
           onClose={closeOpenedPack}
+        />
+      )}
+      {pendingBlindSelect && (
+        <BlindSelectScreen
+          ante={ante}
+          currentBlind={blind}
+          boss={currentBoss}
+          onPlay={confirmBlindSelect}
         />
       )}
     </div>

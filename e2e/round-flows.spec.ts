@@ -29,16 +29,22 @@ async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
 }
 
+async function dismissBlindSelect(page: Page): Promise<void> {
+  await page.getByTestId("blind-select-play").click();
+}
+
 async function playStraightFlushAndContinue(page: Page): Promise<void> {
   await selectAndSubmitStraightFlush(page);
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
   await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
+  await dismissBlindSelect(page);
 }
 
 test("always-win path: 4 consecutive Straight Flushes advance ante and money", async ({
   page,
 }) => {
   await page.goto("/");
+  await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
@@ -70,6 +76,7 @@ test("the post-round shop appears after dismissing the round-won modal", async (
   page,
 }) => {
   await page.goto("/");
+  await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   await selectAndSubmitStraightFlush(page);
@@ -93,6 +100,7 @@ test("shop offers exclude already-equipped jokers and never duplicate within a s
   page,
 }) => {
   await page.goto("/");
+  await dismissBlindSelect(page);
 
   const equippedNames = await page
     .locator('[data-testid^="joker-tile-filled-"] .joker-tile-name')
@@ -118,12 +126,14 @@ test("clicking Next Round in the shop closes it and starts the next blind", asyn
   page,
 }) => {
   await page.goto("/");
+  await dismissBlindSelect(page);
 
   await selectAndSubmitStraightFlush(page);
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 
   await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
+  await dismissBlindSelect(page);
 
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
@@ -134,12 +144,14 @@ test("losing 3 games in a row leaves exactly one chips/multiplier span in the si
 }) => {
   page.on("dialog", (dialog) => dialog.accept());
   await page.goto("/");
+  await dismissBlindSelect(page);
   const submit = page.getByRole("button", { name: SUBMIT_BUTTON });
 
   for (let cycle = 0; cycle < 3; cycle += 1) {
     for (let hand = 0; hand < 4; hand += 1) {
       await submit.click();
     }
+    await dismissBlindSelect(page);
     await expect(page.locator(".sidebar .chips")).toHaveCount(1);
     await expect(page.locator(".sidebar .multiplier")).toHaveCount(1);
   }
@@ -152,6 +164,7 @@ test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", as
   page.on("dialog", (dialog) => dialog.accept());
 
   await page.goto("/");
+  await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   await expect(statValue(page, "Hands")).toHaveText("4");
 
@@ -171,6 +184,7 @@ test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", as
 
   // 4th submit triggers loseGame() → alert + full game reset.
   await submit.click();
+  await dismissBlindSelect(page);
 
   // State resets: back to Ante 1 Small Blind, $4 money, 4 hands.
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
