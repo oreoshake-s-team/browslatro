@@ -107,7 +107,6 @@ import {
 import {
   SHOP_PACK_SLOTS,
   pickShopOffers,
-  rerollShopOffer,
   shopPickerRngConfig,
   type ShopItem,
 } from "./items/shop";
@@ -249,6 +248,9 @@ function App() {
   const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
     null,
   );
+  const [soldJokerIdsThisShopVisit, setSoldJokerIdsThisShopVisit] = useState<
+    ReadonlyArray<string>
+  >([]);
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
   const currentHandSize = Math.max(1, HAND_SIZE + handSizeModifier);
@@ -635,6 +637,7 @@ function App() {
       );
       setPlayedCardKeysThisAnte(new Set());
     }
+    setSoldJokerIdsThisShopVisit([]);
     setShopOffers(
       pickShopOffers({
         jokerCatalog: createJokerCatalog(),
@@ -727,6 +730,7 @@ function App() {
       play("pop");
       setMoney((prev) => prev - price);
       setJokers((prev) => [...prev, offer.joker]);
+      setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
       markOfferSold(idx);
       return;
     }
@@ -872,32 +876,28 @@ function App() {
   function rerollShopOffers(cost: number) {
     if (!shopOffers) return;
     if (money < cost) return;
-    const soldJokerIds = shopOffers
-      .filter((o) => o.kind === "joker" && o.sold)
-      .map((o) => (o.kind === "joker" ? o.joker.id : ""));
-    const excludedJokerIds = [...jokers.map((j) => j.id), ...soldJokerIds];
-    const args = {
-      jokerCatalog: createJokerCatalog(),
-      excludedJokerIds,
-      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-      tarotCatalog: createTarotCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      rng: shopPickerRngConfig.rng,
-    };
     play("pop");
     setMoney((prev) => prev - cost);
-    setShopOffers((current) => {
-      if (!current) return current;
-      return current.map((offer) => {
-        if (offer.sold) return offer;
-        const replacement = rerollShopOffer(offer, args);
-        return replacement ?? offer;
-      });
-    });
+    setShopOffers(
+      pickShopOffers({
+        jokerCatalog: createJokerCatalog(),
+        excludedJokerIds: [
+          ...jokers.map((j) => j.id),
+          ...soldJokerIdsThisShopVisit,
+        ],
+        planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+        tarotCatalog: createTarotCatalog(),
+        spectralCatalog: createSpectralCatalog(),
+        extraSlots: extraShopOfferSlots(ownedVoucherIds),
+        extraPackSlots,
+        rng: shopPickerRngConfig.rng,
+      }),
+    );
   }
 
   function closeShopAndStartNextRound() {
     setShopOffers(null);
+    setSoldJokerIdsThisShopVisit([]);
     setPendingBlindSelect(true);
   }
 

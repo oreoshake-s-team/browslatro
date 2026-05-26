@@ -137,3 +137,31 @@ test.describe("Shop purchases (issue #240)", () => {
   });
 
 });
+
+test.describe("Reroll refreshes sold offers (issue #267)", () => {
+  test("Reroll replaces a sold joker offer with a buyable one", async ({
+    page,
+  }) => {
+    await setForcedShopKinds(page, ["joker", "joker"]);
+    await openShopAfterRound1Win(page);
+    const firstOffer = page.locator(".shop-offer").first();
+    const buyName =
+      (await firstOffer.locator(".shop-offer-name").textContent()) ?? "";
+    await firstOffer.locator("button.shop-offer-buy").click();
+    await expect(
+      firstOffer.locator("button.shop-offer-buy"),
+    ).toHaveText(/Sold/);
+    await page.getByRole("button", { name: /Reroll/ }).click();
+    const offerButtons = page.locator(".shop-offer button.shop-offer-buy");
+    const count = await offerButtons.count();
+    for (let i = 0; i < count; i += 1) {
+      await expect(offerButtons.nth(i)).not.toHaveText(/Sold/);
+    }
+    const offerNames = page.locator(".shop-offer .shop-offer-name");
+    const namesCount = await offerNames.count();
+    for (let i = 0; i < namesCount; i += 1) {
+      const text = (await offerNames.nth(i).textContent()) ?? "";
+      expect(text).not.toBe(buyName);
+    }
+  });
+});

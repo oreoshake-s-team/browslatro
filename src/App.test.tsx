@@ -1620,21 +1620,18 @@ describe("Post-round shop integration", () => {
     expect(after).not.toEqual(before);
   });
 
-  test("Reroll preserves already-sold offers in place", async () => {
+  test("Reroll replaces already-sold offers with fresh Buy buttons (#267)", async () => {
     const user = await openShop();
     const buy = screen
       .getByTestId("shop-offer-0")
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
-    const soldNameBefore = screen
-      .getByTestId("shop-offer-0")
-      .querySelector(".shop-offer-name")?.textContent;
     await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    const soldNameAfter = screen
+    const afterButton = screen
       .getByTestId("shop-offer-0")
-      .querySelector(".shop-offer-name")?.textContent;
-    expect(soldNameAfter).toBe(soldNameBefore);
+      .querySelector("button.shop-offer-buy");
+    expect(afterButton?.textContent).not.toMatch(/Sold/);
   });
 
   test("Reroll is disabled when the player can't afford it", async () => {
