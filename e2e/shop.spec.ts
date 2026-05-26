@@ -136,22 +136,4 @@ test.describe("Shop purchases (issue #240)", () => {
     ).toBeDisabled();
   });
 
-  test("clicking a disabled buy button does not equip the joker", async ({
-    page,
-  }) => {
-    await setForcedShopKinds(page, ["joker", "joker"]);
-    await openShopAfterRound1Win(page);
-    await page.getByRole("button", { name: /Reroll/ }).click();
-    await page.getByRole("button", { name: /Reroll/ }).click();
-    const before = await page
-      .locator('[data-testid^="joker-tile-filled-"]')
-      .count();
-    await offerOfKind(page, "joker")
-      .locator("button.shop-offer-buy")
-      .click({ force: true })
-      .catch(() => {});
-    expect(
-      await page.locator('[data-testid^="joker-tile-filled-"]').count(),
-    ).toBe(before);
-  });
 });

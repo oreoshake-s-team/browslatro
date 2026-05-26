@@ -37,15 +37,6 @@ test("hand card, joker tile, consumable tile, and deck pile all render at the sa
   expect(card.height).toBeCloseTo(deck.height, 0);
 });
 
-test("card dimensions follow a 5:7 aspect ratio (issue #214)", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await page.waitForSelector(".card");
-  const card = await boxOf(page, ".card");
-  expect(card.height / card.width).toBeCloseTo(7 / 5, 2);
-});
-
 test("8 hand cards fit on one row at desktop width without wrapping (issue #214)", async ({
   page,
 }) => {

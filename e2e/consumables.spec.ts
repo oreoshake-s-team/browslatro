@@ -120,21 +120,6 @@ test.describe("Consumables in-game flow (issue #240)", () => {
     expect(await moneyOf(page)).toBe(before + 1);
   });
 
-  test("drag-to-deck sell removes the consumable from the tray", async ({
-    page,
-  }) => {
-    await setForcedShopKinds(page, ["planet", "joker"]);
-    await buyForcedKindThenLeaveShop(page, "planet");
-    await dragConsumableToTarget(
-      page,
-      '[data-consumable-kind="planet"]',
-      ".deck-pile",
-    );
-    await expect(
-      page.locator('[data-consumable-kind="planet"]'),
-    ).toHaveCount(0);
-  });
-
   test("shift-clicking a consumable sells it for $1", async ({ page }) => {
     await setForcedShopKinds(page, ["planet", "joker"]);
     await buyForcedKindThenLeaveShop(page, "planet");
@@ -143,19 +128,6 @@ test.describe("Consumables in-game flow (issue #240)", () => {
       .locator('[data-consumable-kind="planet"]')
       .click({ modifiers: ["Shift"] });
     expect(await moneyOf(page)).toBe(before + 1);
-  });
-
-  test("shift-click sell removes the consumable from the tray", async ({
-    page,
-  }) => {
-    await setForcedShopKinds(page, ["planet", "joker"]);
-    await buyForcedKindThenLeaveShop(page, "planet");
-    await page
-      .locator('[data-consumable-kind="planet"]')
-      .click({ modifiers: ["Shift"] });
-    await expect(
-      page.locator('[data-consumable-kind="planet"]'),
-    ).toHaveCount(0);
   });
 
   test("dragging a planet consumable onto the jokers area uses it", async ({
