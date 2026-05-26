@@ -32,26 +32,14 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-black");
   });
 
-  test("applies the per-suit class for spades", () => {
-    render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-spades");
-  });
-
-  test("applies the per-suit class for hearts", () => {
-    render(<Card card={queenOfHearts} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-hearts");
-  });
-
-  test("applies the per-suit class for diamonds", () => {
-    const fiveOfDiamonds: CardType = { id: 3, rank: "5", suit: "diamonds" };
-    render(<Card card={fiveOfDiamonds} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-diamonds");
-  });
-
-  test("applies the per-suit class for clubs", () => {
-    const sevenOfClubs: CardType = { id: 4, rank: "7", suit: "clubs" };
-    render(<Card card={sevenOfClubs} />);
-    expect(screen.getByRole("button")).toHaveClass("card-suit-clubs");
+  test.each<{ suit: "spades" | "hearts" | "diamonds" | "clubs"; card: CardType }>([
+    { suit: "spades", card: aceOfSpades },
+    { suit: "hearts", card: queenOfHearts },
+    { suit: "diamonds", card: { id: 3, rank: "5", suit: "diamonds" } },
+    { suit: "clubs", card: { id: 4, rank: "7", suit: "clubs" } },
+  ])("applies the per-suit class for $suit", ({ suit, card }) => {
+    render(<Card card={card} />);
+    expect(screen.getByRole("button")).toHaveClass(`card-suit-${suit}`);
   });
 
   test("does not apply an unrelated suit class", () => {
@@ -295,35 +283,15 @@ describe("Card", () => {
     expect(screen.getByTestId("card-seal-30")).toBeInTheDocument();
   });
 
-  test("applies the gold seal class to the badge", () => {
-    const sealed: CardType = { id: 31, rank: "5", suit: "spades", seal: "gold" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-31")).toHaveClass(
-      "card-seal-badge-gold",
-    );
-  });
-
-  test("applies the red seal class to the badge", () => {
-    const sealed: CardType = { id: 32, rank: "6", suit: "hearts", seal: "red" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-32")).toHaveClass(
-      "card-seal-badge-red",
-    );
-  });
-
-  test("applies the blue seal class to the badge", () => {
-    const sealed: CardType = { id: 33, rank: "7", suit: "clubs", seal: "blue" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-33")).toHaveClass(
-      "card-seal-badge-blue",
-    );
-  });
-
-  test("applies the purple seal class to the badge", () => {
-    const sealed: CardType = { id: 34, rank: "8", suit: "diamonds", seal: "purple" };
-    render(<Card card={sealed} />);
-    expect(screen.getByTestId("card-seal-34")).toHaveClass(
-      "card-seal-badge-purple",
+  test.each<{ seal: "gold" | "red" | "blue" | "purple"; card: CardType }>([
+    { seal: "gold", card: { id: 31, rank: "5", suit: "spades", seal: "gold" } },
+    { seal: "red", card: { id: 32, rank: "6", suit: "hearts", seal: "red" } },
+    { seal: "blue", card: { id: 33, rank: "7", suit: "clubs", seal: "blue" } },
+    { seal: "purple", card: { id: 34, rank: "8", suit: "diamonds", seal: "purple" } },
+  ])("applies the $seal seal class to the badge", ({ seal, card }) => {
+    render(<Card card={card} />);
+    expect(screen.getByTestId(`card-seal-${card.id}`)).toHaveClass(
+      `card-seal-badge-${seal}`,
     );
   });
 
