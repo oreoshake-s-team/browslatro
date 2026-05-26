@@ -51,17 +51,22 @@ export function cardKey(card: Pick<Card, "rank" | "suit">): string {
 
 export function createDeck(
   excludedKeys: ReadonlySet<string> = new Set(),
+  startingId?: number,
 ): Card[] {
   const deck: Card[] = [];
+  let nextId = startingId ?? cardIdCounter;
   for (const suit of SUITS) {
     for (const rank of RANKS) {
       if (excludedKeys.has(cardKey({ rank, suit }))) continue;
       deck.push({
-        id: ++cardIdCounter,
+        id: ++nextId,
         rank,
         suit,
       });
     }
+  }
+  if (startingId === undefined) {
+    cardIdCounter = nextId;
   }
   return deck;
 }
@@ -82,10 +87,8 @@ function readDeterministicShuffleFlag(): boolean {
   }
 }
 
-const deterministicShuffle = readDeterministicShuffleFlag();
-
 export function shuffle<T>(items: ReadonlyArray<T>, rng: () => number = Math.random): T[] {
-  if (deterministicShuffle) {
+  if (readDeterministicShuffleFlag()) {
     return items.slice();
   }
   const arr = items.slice();
