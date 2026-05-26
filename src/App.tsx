@@ -1058,19 +1058,16 @@ function App() {
       setSteelScoringIds(heldSteelIds);
       setSteelScoringIndex(0);
     };
-    setScoringEvents(
-      isTraceActive(animationSpeed)
-        ? [
-            {
-              kind: "hand-base",
-              chips: handEntry.chips,
-              mult: handEntry.multiplier,
-              handLabel: label,
-              level: handEntry.level,
-            },
-          ]
-        : [],
-    );
+    if (isTraceActive(animationSpeed)) {
+      const baseEvent: ScoringEvent = {
+        kind: "hand-base",
+        chips: handEntry.chips,
+        mult: handEntry.multiplier,
+        handLabel: label,
+        level: handEntry.level,
+      };
+      setScoringEvents((prev) => [...prev, baseEvent]);
+    }
     setScoringCards(scoring);
     setScoringIndex(0);
   }

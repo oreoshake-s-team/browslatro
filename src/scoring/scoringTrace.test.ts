@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   cardLabel,
   formatScoringEvent,
+  groupEventsByHand,
   isTraceActive,
   type ScoringEvent,
 } from "./scoringTrace";
@@ -126,5 +127,58 @@ describe("formatScoringEvent", () => {
       source: "Glass roll",
     };
     expect(formatScoringEvent(event)).toBe("5♠ destroyed (Glass roll)");
+  });
+});
+
+describe("groupEventsByHand", () => {
+  test("returns no groups for an empty event list", () => {
+    expect(groupEventsByHand([])).toEqual([]);
+  });
+
+  test("starts a new group at each hand-base event", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+      { kind: "hand-base", chips: 30, mult: 4, handLabel: "Three of a Kind", level: 1 },
+      { kind: "chips-delta", amount: 5, source: "5♣ rank" },
+    ];
+    expect(groupEventsByHand(events)).toHaveLength(2);
+  });
+
+  test("assigns 1-based handNumber to each group's base", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "hand-base", chips: 30, mult: 4, handLabel: "Three of a Kind", level: 1 },
+    ];
+    const groups = groupEventsByHand(events);
+    expect(groups[0].base?.handNumber).toBe(1);
+  });
+
+  test("assigns handNumber 2 to the second hand group (negative ordering check)", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "hand-base", chips: 30, mult: 4, handLabel: "Three of a Kind", level: 1 },
+    ];
+    const groups = groupEventsByHand(events);
+    expect(groups[1].base?.handNumber).toBe(2);
+  });
+
+  test("attaches non-hand-base events to the preceding group", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+      { kind: "chips-delta", amount: 11, source: "A♥ rank" },
+    ];
+    const groups = groupEventsByHand(events);
+    expect(groups[0].events).toHaveLength(2);
+  });
+
+  test("creates a base-less leading group when events arrive before any hand-base (negative)", () => {
+    const events: ReadonlyArray<ScoringEvent> = [
+      { kind: "chips-delta", amount: 5, source: "orphan" },
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+    ];
+    const groups = groupEventsByHand(events);
+    expect(groups[0].base).toBeNull();
   });
 });

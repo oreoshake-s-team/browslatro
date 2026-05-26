@@ -147,22 +147,31 @@ describe("Rank-chip events on slow speed", () => {
     expect(log).toHaveTextContent("+11 Chips (A♥ rank)");
   });
 
-  test("emits a hand-base event with the hand label and level as the first line", async () => {
+  test("renders a hand-group heading with the hand label and level", async () => {
     setAnimationSpeed("slow");
     await playPairOfAces();
-    const firstItem = screen
+    const heading = screen
       .getByRole("log", { name: /Scoring trace/i })
-      .querySelector("li");
-    expect(firstItem).toHaveTextContent("+10 Chips, +2 Mult (Pair base, Lv 1)");
+      .querySelector("h3");
+    expect(heading).toHaveTextContent("Hand 1: Pair (Lv 1)");
   });
 
-  test("emits one hand-base event plus one event per scored card on a Pair of Aces", async () => {
+  test("renders the hand-base chips/mult line inside the group heading", async () => {
+    setAnimationSpeed("slow");
+    await playPairOfAces();
+    const heading = screen
+      .getByRole("log", { name: /Scoring trace/i })
+      .querySelector("h3");
+    expect(heading).toHaveTextContent("+10 Chips, +2 Mult");
+  });
+
+  test("emits one list item per scored card on a Pair of Aces", async () => {
     setAnimationSpeed("slow");
     await playPairOfAces();
     const items = screen
       .getByRole("log", { name: /Scoring trace/i })
       .querySelectorAll("li");
-    expect(items).toHaveLength(3);
+    expect(items).toHaveLength(2);
   });
 
   test("emits no events on normal speed (recorder inactive)", async () => {
@@ -171,7 +180,7 @@ describe("Rank-chip events on slow speed", () => {
     expect(screen.queryByRole("log", { name: /Scoring trace/i })).toBeNull();
   });
 
-  test("clears prior events when a new hand is submitted", async () => {
+  test("keeps prior hand groups when a new hand is submitted within the same round", async () => {
     setAnimationSpeed("slow");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -185,9 +194,30 @@ describe("Rank-chip events on slow speed", () => {
     await user.click(cardsAgain[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    const items = screen
+    const sections = screen
       .getByRole("log", { name: /Scoring trace/i })
-      .querySelectorAll("li");
-    expect(items).toHaveLength(2);
+      .querySelectorAll("section");
+    expect(sections).toHaveLength(2);
+  });
+
+  test("labels each hand group with its 1-based ordinal", async () => {
+    setAnimationSpeed("slow");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    await user.click(cards[0]);
+    await user.click(cards[1]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const cardsAgain = getHandCardButtons();
+    await user.click(cardsAgain[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const headings = screen
+      .getByRole("log", { name: /Scoring trace/i })
+      .querySelectorAll("h3");
+    expect(headings[0]).toHaveTextContent(/Hand 1:/);
+    expect(headings[1]).toHaveTextContent(/Hand 2:/);
   });
 });

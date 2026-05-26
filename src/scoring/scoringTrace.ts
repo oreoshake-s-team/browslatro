@@ -38,6 +38,33 @@ function formatMoney(amount: number): string {
   return amount >= 0 ? `+$${amount}` : `-$${Math.abs(amount)}`;
 }
 
+export interface ScoringHandGroup {
+  readonly base:
+    | (Extract<ScoringEvent, { kind: "hand-base" }> & { readonly handNumber: number })
+    | null;
+  readonly events: ReadonlyArray<ScoringEvent>;
+}
+
+export function groupEventsByHand(
+  events: ReadonlyArray<ScoringEvent>,
+): ReadonlyArray<ScoringHandGroup> {
+  const groups: ScoringHandGroup[] = [];
+  let current: { base: ScoringHandGroup["base"]; events: ScoringEvent[] } | null = null;
+  let handNumber = 0;
+  for (const event of events) {
+    if (event.kind === "hand-base") {
+      if (current) groups.push({ base: current.base, events: current.events });
+      handNumber += 1;
+      current = { base: { ...event, handNumber }, events: [] };
+    } else {
+      if (!current) current = { base: null, events: [] };
+      current.events.push(event);
+    }
+  }
+  if (current) groups.push({ base: current.base, events: current.events });
+  return groups;
+}
+
 export function formatScoringEvent(event: ScoringEvent): string {
   switch (event.kind) {
     case "hand-base":
