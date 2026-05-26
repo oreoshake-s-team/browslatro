@@ -1119,15 +1119,17 @@ describe("Round won modal", () => {
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 
-  test("clicking Continue credits base + interest on top of the bonus-augmented wallet", async () => {
-    // Pre-win wallet = $4. Gold bonus = $3 (one held 2♠ gold default). Remaining
-    // hands bonus = 3 hands × $1 = $3 (won on hand 1 of 4). Modal wallet = $10.
-    // Interest = floor(10/5) capped at 5 = $2. Continue adds base ($3) + interest
-    // ($2). Final = $4 + $3 + $3 + $3 + $2 = $15.
+  test("clicking Continue credits base + interest on the interest wallet (#353)", async () => {
+    // Pre-win wallet = $4. Gold bonus = $3 (one held 2♠ gold default).
+    // Remaining hands bonus = 3 hands × $1 = $3 (won on hand 1 of 4).
+    // Visible wallet at modal = $10, but the interest wallet excludes the
+    // remaining-hands bonus, so interest is on $7 only.
+    // Interest = floor(7/5) = $1. Continue adds base ($3) + interest ($1).
+    // Final = $4 + $3 + $3 + $3 + $1 = $14.
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(getStatValue("Money")).toHaveTextContent("$15");
+    expect(getStatValue("Money")).toHaveTextContent("$14");
   });
 
   test("plays the win sound exactly once when the modal opens", async () => {
@@ -1151,15 +1153,16 @@ describe("Round won modal", () => {
     expect(getStatValue("Money")).toHaveTextContent("$10");
   });
 
-  test("modal interest is calculated on the bonus-augmented wallet (floor($10 / $5) = $2)", async () => {
+  test("modal interest is calculated on the gold-augmented wallet, excluding remaining-hands (#353)", async () => {
+    // $4 + $3 gold = $7 (no remaining-hands). floor($7/$5) = $1.
     await triggerWin();
-    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$2");
+    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
   });
 
-  test("modal interest label reflects the bonus-augmented wallet", async () => {
+  test("modal interest label reflects the interest wallet (excludes remaining-hands, #353)", async () => {
     await triggerWin();
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
-      "on $10",
+      "on $7",
     );
   });
 
@@ -1176,9 +1179,9 @@ describe("Round won modal", () => {
   });
 
   test("modal total equals base + gold + remaining-hands + interest", async () => {
-    // base $3 + gold $3 + hands $3 + interest $2 = $11.
+    // base $3 + gold $3 + hands $3 + interest $1 = $10.
     await triggerWin();
-    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$11");
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$10");
   });
 
   test("gold scoring plays the gold sound once per held gold card", async () => {

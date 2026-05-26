@@ -13,6 +13,10 @@ export interface RoundWonInfo {
   readonly requiredScore: number;
   readonly baseReward: number;
   readonly walletAtPayout: number;
+  // Wallet used to derive `interest`. Excludes the remaining-hands bonus —
+  // the player shouldn't earn interest on a tip they just received this
+  // round (see #353).
+  readonly interestWallet: number;
   readonly interest: number;
   readonly goldHeldCount: number;
   readonly remainingHandsCount: number;
@@ -28,7 +32,7 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     roundScore,
     requiredScore,
     baseReward,
-    walletAtPayout,
+    interestWallet,
     interest,
     goldHeldCount,
     remainingHandsCount,
@@ -37,7 +41,7 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
   const goldBonus = goldHeldCount * GOLD_HELD_BONUS_PER_CARD;
   const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
   const total = baseReward + interest + goldBonus + remainingHandsBonus;
-  const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${walletAtPayout}`;
+  const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${interestWallet}`;
   const goldLabel = `Gold cards (${goldHeldCount} × $${GOLD_HELD_BONUS_PER_CARD})`;
   const handsLabel = `Remaining hands (${remainingHandsCount} × $${REMAINING_HAND_BONUS})`;
   useEscapeToClose(onContinue, true);

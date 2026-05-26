@@ -8,6 +8,7 @@ function buildInfo(overrides: Partial<RoundWonInfo> = {}): RoundWonInfo {
     requiredScore: 300,
     baseReward: 3,
     walletAtPayout: 15,
+    interestWallet: 15,
     interest: 3,
     goldHeldCount: 0,
     remainingHandsCount: 0,
@@ -107,9 +108,14 @@ describe("RoundWonModal payout breakdown", () => {
     expect(screen.getByTestId("round-won-total")).toHaveTextContent("$6");
   });
 
-  test("shows the wallet balance in the interest row label", () => {
-    render(<RoundWonModal info={buildInfo({ walletAtPayout: 15 })} onContinue={() => {}} />);
-    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent("$15");
+  test("shows the interest-wallet balance in the interest row label", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({ interestWallet: 12 })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent("$12");
   });
 
   test("shows the per-interest rate in the interest row label", () => {
@@ -154,5 +160,23 @@ describe("RoundWonModal payout breakdown", () => {
     render(<RoundWonModal info={buildInfo()} onContinue={onContinue} />);
     fireEvent.keyDown(window, { key: "a" });
     expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  test("interest row uses interestWallet, not walletAtPayout (#353)", () => {
+    // walletAtPayout = $10 (visible total), interestWallet = $7 (excludes
+    // remaining-hands). Interest row label must say "on $7" and the value
+    // must reflect interest computed on $7.
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          walletAtPayout: 10,
+          interestWallet: 7,
+          interest: 1,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent("$7");
+    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
   });
 });
