@@ -1,11 +1,34 @@
-import type { PlanetCard } from "./planets";
-import type { TarotCard } from "./tarots";
+import { PLANET_BASE_PRICE, type PlanetCard } from "./planets";
+import { TAROT_BASE_PRICE, type TarotCard } from "./tarots";
 
 export const MAX_CONSUMABLE_SLOTS = 2;
 
 export type Consumable =
   | { readonly kind: "planet"; readonly card: PlanetCard }
   | { readonly kind: "tarot"; readonly card: TarotCard };
+
+export function consumableSellValue(c: Consumable): number {
+  const base = c.kind === "planet" ? PLANET_BASE_PRICE : TAROT_BASE_PRICE;
+  return Math.floor(base / 2);
+}
+
+export function consumableUseBlock(
+  c: Consumable,
+  selectedCount: number,
+): string | null {
+  if (c.kind !== "tarot") return null;
+  const effect = c.card.effect;
+  if (effect.kind !== "apply-enhancement") return null;
+  if (selectedCount === 0) {
+    return effect.maxTargets === 1
+      ? "Select 1 card in your hand first"
+      : `Select 1–${effect.maxTargets} cards in your hand first`;
+  }
+  if (selectedCount > effect.maxTargets) {
+    return `Too many cards selected (max ${effect.maxTargets})`;
+  }
+  return null;
+}
 
 export function hasFreeConsumableSlot(
   consumables: ReadonlyArray<Consumable>,

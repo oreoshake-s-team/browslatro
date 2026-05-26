@@ -68,7 +68,9 @@ describe("Consumables", () => {
     const filled: Consumable = { kind: "tarot", card: tarot };
     renderConsumables({ consumables: [filled] });
     expect(
-      screen.getByRole("button", { name: `Use ${tarot.name} (tarot)` }),
+      screen.getByRole("button", {
+        name: new RegExp(`^Use ${tarot.name} \\(tarot\\)`),
+      }),
     ).toBeInTheDocument();
   });
 
@@ -143,5 +145,82 @@ describe("Consumables", () => {
     renderConsumables({ onUse });
     await user.click(screen.getAllByTestId("consumable-tile-empty")[0]);
     expect(onUse).not.toHaveBeenCalled();
+  });
+
+  test("shift-click on a filled tile invokes onSell with that index", async () => {
+    const user = userEvent.setup();
+    const onSell = vi.fn();
+    const onUse = vi.fn();
+    const filled: ReadonlyArray<Consumable> = [{ kind: "planet", card: planet }];
+    renderConsumables({ consumables: filled, onUse, onSell });
+    await user.keyboard("{Shift>}");
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.keyboard("{/Shift}");
+    expect(onSell).toHaveBeenCalledWith(0);
+  });
+
+  test("shift-click on a filled tile does not also invoke onUse", async () => {
+    const user = userEvent.setup();
+    const onSell = vi.fn();
+    const onUse = vi.fn();
+    const filled: ReadonlyArray<Consumable> = [{ kind: "planet", card: planet }];
+    renderConsumables({ consumables: filled, onUse, onSell });
+    await user.keyboard("{Shift>}");
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.keyboard("{/Shift}");
+    expect(onUse).not.toHaveBeenCalled();
+  });
+
+  test("shift-click sells even when use is blocked by selection", async () => {
+    const user = userEvent.setup();
+    const onSell = vi.fn();
+    const onUse = vi.fn();
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: tarot }];
+    renderConsumables({
+      consumables: filled,
+      selectedCount: 0,
+      onUse,
+      onSell,
+    });
+    await user.keyboard("{Shift>}");
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.keyboard("{/Shift}");
+    expect(onSell).toHaveBeenCalledWith(0);
+  });
+
+  test("plain click does not use a tile when selection is invalid", async () => {
+    const user = userEvent.setup();
+    const onUse = vi.fn();
+    const filled: ReadonlyArray<Consumable> = [{ kind: "tarot", card: tarot }];
+    renderConsumables({
+      consumables: filled,
+      selectedCount: 0,
+      onUse,
+      onSell: vi.fn(),
+    });
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(onUse).not.toHaveBeenCalled();
+  });
+
+  test("dragstart invokes onDragStart with the tile's index", () => {
+    const onDragStart = vi.fn();
+    const filled: ReadonlyArray<Consumable> = [{ kind: "planet", card: planet }];
+    renderConsumables({ consumables: filled, onDragStart });
+    const tile = screen.getByTestId("consumable-tile-filled-0");
+    const event = new Event("dragstart", { bubbles: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { setData: vi.fn(), effectAllowed: "" },
+    });
+    tile.dispatchEvent(event);
+    expect(onDragStart).toHaveBeenCalledWith(0);
+  });
+
+  test("filled tiles are draggable", () => {
+    const filled: ReadonlyArray<Consumable> = [{ kind: "planet", card: planet }];
+    renderConsumables({ consumables: filled });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
+      "draggable",
+      "true",
+    );
   });
 });

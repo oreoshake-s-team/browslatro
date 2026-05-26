@@ -1808,7 +1808,7 @@ describe("Tarot purchase integration", () => {
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
   });
 
-  test("an enhancement-tarot consumable tile is disabled when no card is selected", async () => {
+  test("an enhancement-tarot consumable tile marks use as disabled when no card is selected", async () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId(tarotSlotTestId())
@@ -1820,7 +1820,10 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    expect(screen.getByTestId("consumable-tile-filled-0")).toBeDisabled();
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
+      "data-use-disabled",
+      "true",
+    );
   });
 
   test("selecting a hand card enables the enhancement-tarot consumable tile", async () => {
@@ -2041,5 +2044,137 @@ describe("Voucher effects integration", () => {
     await user.click(screen.getByTestId("shop-voucher-buy"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(screen.getAllByTestId("consumable-tile-empty")).toHaveLength(3);
+  });
+});
+
+describe("Consumable drag and sell integration", () => {
+  async function buyPlanetAndCloseShop(): Promise<
+    ReturnType<typeof userEvent.setup>
+  > {
+    mockShuffleConfig.useIdentity = true;
+    shopPickerRngConfig.rng = forceShopLayout(["planet", "joker"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    const planetIdx = findShopOfferIdxOfKind("planet");
+    const buy = screen
+      .getByTestId(`shop-offer-${planetIdx}`)
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    return user;
+  }
+
+  function moneyOf(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  function fakeDataTransfer(): DataTransfer {
+    const store: Record<string, string> = {};
+    const types: string[] = [];
+    return {
+      types,
+      effectAllowed: "",
+      dropEffect: "",
+      setData(format: string, data: string) {
+        if (!(format in store)) types.push(format);
+        store[format] = data;
+      },
+      getData(format: string) {
+        return store[format] ?? "";
+      },
+    } as unknown as DataTransfer;
+  }
+
+  test("shift-clicking a filled consumable tile sells it for $1", async () => {
+    const user = await buyPlanetAndCloseShop();
+    const before = moneyOf();
+    await user.keyboard("{Shift>}");
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.keyboard("{/Shift}");
+    expect(moneyOf()).toBe(before + 1);
+  });
+
+  test("shift-clicking sell empties the consumable slot", async () => {
+    const user = await buyPlanetAndCloseShop();
+    await user.keyboard("{Shift>}");
+    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    await user.keyboard("{/Shift}");
+    expect(screen.queryByTestId("consumable-tile-filled-0")).toBeNull();
+  });
+
+  test("dragging a consumable tile onto the deck pile sells it", async () => {
+    await buyPlanetAndCloseShop();
+    const before = moneyOf();
+    const tile = screen.getByTestId("consumable-tile-filled-0");
+    const deck = screen.getByRole("button", { name: /Deck/ });
+    const dt = fakeDataTransfer();
+    fireEvent.dragStart(tile, { dataTransfer: dt });
+    fireEvent.dragOver(deck, { dataTransfer: dt });
+    fireEvent.drop(deck, { dataTransfer: dt });
+    fireEvent.dragEnd(tile, { dataTransfer: dt });
+    expect(moneyOf()).toBe(before + 1);
+  });
+
+  test("dragging a planet consumable onto the jokers area uses it", async () => {
+    await buyPlanetAndCloseShop();
+    const tile = screen.getByTestId("consumable-tile-filled-0");
+    const jokersSection = screen.getByLabelText("Equipped jokers");
+    const dt = fakeDataTransfer();
+    fireEvent.dragStart(tile, { dataTransfer: dt });
+    fireEvent.dragOver(jokersSection, { dataTransfer: dt });
+    fireEvent.drop(jokersSection, { dataTransfer: dt });
+    fireEvent.dragEnd(tile, { dataTransfer: dt });
+    expect(screen.queryByTestId("consumable-tile-filled-0")).toBeNull();
+  });
+
+  test("dragend without a drop leaves the consumable in place", async () => {
+    await buyPlanetAndCloseShop();
+    const tile = screen.getByTestId("consumable-tile-filled-0");
+    const dt = fakeDataTransfer();
+    fireEvent.dragStart(tile, { dataTransfer: dt });
+    fireEvent.dragEnd(tile, { dataTransfer: dt });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
+  });
+
+  test("dragging an enhancement tarot onto jokers with no selection does not consume it", async () => {
+    mockShuffleConfig.useIdentity = true;
+    shopPickerRngConfig.rng = forceShopLayout(["tarot", "joker"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    const tarotIdx = findShopOfferIdxOfKind("tarot");
+    const tarotName = screen
+      .getByTestId(`shop-offer-${tarotIdx}`)
+      .querySelector(".shop-offer-name")?.textContent;
+    if (tarotName === "The Hermit") return;
+    const buy = screen
+      .getByTestId(`shop-offer-${tarotIdx}`)
+      .querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+
+    const tile = screen.getByTestId("consumable-tile-filled-0");
+    const jokersSection = screen.getByLabelText("Equipped jokers");
+    const dt = fakeDataTransfer();
+    fireEvent.dragStart(tile, { dataTransfer: dt });
+    fireEvent.dragOver(jokersSection, { dataTransfer: dt });
+    fireEvent.drop(jokersSection, { dataTransfer: dt });
+    fireEvent.dragEnd(tile, { dataTransfer: dt });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
   });
 });

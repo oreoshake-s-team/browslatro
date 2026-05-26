@@ -327,3 +327,86 @@ describe("Jokers drag-and-drop reordering", () => {
     ).toHaveLength(0);
   });
 });
+
+describe("Jokers consumable drop zone", () => {
+  function dispatchDrag(
+    target: Element,
+    type: "dragover" | "drop",
+    mimes: ReadonlyArray<string>,
+  ): boolean {
+    const event = new Event(type, { bubbles: true, cancelable: true });
+    Object.defineProperty(event, "dataTransfer", {
+      value: { types: mimes, dropEffect: "" },
+    });
+    return target.dispatchEvent(event);
+  }
+
+  test("section accepts a consumable drop and invokes onConsumableDrop", () => {
+    const onConsumableDrop = vi.fn();
+    render(
+      <Jokers
+        jokers={[]}
+        consumableDropEnabled
+        onConsumableDrop={onConsumableDrop}
+      />,
+    );
+    const section = screen.getByLabelText("Equipped jokers");
+    dispatchDrag(section, "dragover", ["application/x-browslatro-consumable"]);
+    dispatchDrag(section, "drop", ["application/x-browslatro-consumable"]);
+    expect(onConsumableDrop).toHaveBeenCalledTimes(1);
+  });
+
+  test("section ignores a drop whose data is not a consumable", () => {
+    const onConsumableDrop = vi.fn();
+    render(
+      <Jokers
+        jokers={[]}
+        consumableDropEnabled
+        onConsumableDrop={onConsumableDrop}
+      />,
+    );
+    const section = screen.getByLabelText("Equipped jokers");
+    dispatchDrag(section, "drop", ["text/plain"]);
+    expect(onConsumableDrop).not.toHaveBeenCalled();
+  });
+
+  test("section does not accept the drop when consumableDropEnabled is false", () => {
+    const onConsumableDrop = vi.fn();
+    render(
+      <Jokers
+        jokers={[]}
+        consumableDropEnabled={false}
+        onConsumableDrop={onConsumableDrop}
+      />,
+    );
+    const section = screen.getByLabelText("Equipped jokers");
+    dispatchDrag(section, "drop", ["application/x-browslatro-consumable"]);
+    expect(onConsumableDrop).not.toHaveBeenCalled();
+  });
+
+  test("renders a Use overlay label when consumableDropEnabled is true", () => {
+    render(
+      <Jokers
+        jokers={[]}
+        consumableDropEnabled
+        onConsumableDrop={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("consumable-drop-overlay-use")).toHaveTextContent(
+      "Use",
+    );
+  });
+
+  test("does not render a Use overlay when consumableDropEnabled is false", () => {
+    render(
+      <Jokers
+        jokers={[]}
+        consumableDropEnabled={false}
+        onConsumableDrop={() => {}}
+      />,
+    );
+    expect(
+      screen.queryByTestId("consumable-drop-overlay-use"),
+    ).not.toBeInTheDocument();
+  });
+});

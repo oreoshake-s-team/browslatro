@@ -1,6 +1,8 @@
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
+  consumableSellValue,
+  consumableUseBlock,
   hasFreeConsumableSlot,
   removeConsumableAt,
   type Consumable,
@@ -84,5 +86,46 @@ describe("consumables", () => {
     const full = [planetConsumable, tarotConsumable];
     const result = addConsumable(full, planetConsumable, 2);
     expect(result).toBe(full);
+  });
+
+  test("consumableSellValue returns half the planet base price, floored", () => {
+    expect(consumableSellValue(planetConsumable)).toBe(1);
+  });
+
+  test("consumableSellValue returns half the tarot base price, floored", () => {
+    expect(consumableSellValue(tarotConsumable)).toBe(1);
+  });
+
+  test("consumableUseBlock returns null for a planet regardless of selection", () => {
+    expect(consumableUseBlock(planetConsumable, 0)).toBeNull();
+  });
+
+  test("consumableUseBlock blocks an enhancement tarot with zero selection", () => {
+    const enhTarot = createTarotCatalog().find(
+      (t) => t.effect.kind === "apply-enhancement",
+    );
+    if (!enhTarot) throw new Error("no enhancement tarot in catalog");
+    const c: Consumable = { kind: "tarot", card: enhTarot };
+    expect(consumableUseBlock(c, 0)).toMatch(/Select/);
+  });
+
+  test("consumableUseBlock blocks an enhancement tarot when too many selected", () => {
+    const enhTarot = createTarotCatalog().find(
+      (t) => t.effect.kind === "apply-enhancement",
+    );
+    if (!enhTarot) throw new Error("no enhancement tarot in catalog");
+    const c: Consumable = { kind: "tarot", card: enhTarot };
+    const maxTargets =
+      enhTarot.effect.kind === "apply-enhancement"
+        ? enhTarot.effect.maxTargets
+        : 1;
+    expect(consumableUseBlock(c, maxTargets + 1)).toMatch(/Too many/);
+  });
+
+  test("consumableUseBlock returns null for a money-multiply tarot regardless of selection", () => {
+    const hermit = createTarotCatalog().find((t) => t.id === "the-hermit");
+    if (!hermit) throw new Error("missing hermit");
+    const c: Consumable = { kind: "tarot", card: hermit };
+    expect(consumableUseBlock(c, 0)).toBeNull();
   });
 });
