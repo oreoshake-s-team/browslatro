@@ -1,4 +1,5 @@
 import "./PackOpenModal.css";
+import { useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   type PackOffer,
@@ -6,6 +7,9 @@ import {
   packDisplayName,
   packPickLimit,
 } from "../../items/packs";
+import type { Card as CardType } from "../../cards/types";
+import { sortCards, type SortMode } from "../../cards/deck";
+import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 interface PackOpenModalProps {
@@ -13,6 +17,9 @@ interface PackOpenModalProps {
   picksRemaining: number;
   consumableSlotsFull?: boolean;
   jokerSlotsFull?: boolean;
+  previewHand?: ReadonlyArray<CardType>;
+  previewSelectedIds?: ReadonlySet<number>;
+  onSelectPreviewCard?: (cardId: number) => void;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
 }
@@ -24,6 +31,7 @@ interface OptionView {
   readonly description: string;
   readonly needsConsumableSlot: boolean;
   readonly needsJokerSlot: boolean;
+  readonly requiresPreviewSelection?: { readonly maxTargets: 1 | 2 };
 }
 
 function describeOption(option: PackOption): OptionView | null {
@@ -38,13 +46,18 @@ function describeOption(option: PackOption): OptionView | null {
     };
   }
   if (option.kind === "tarot") {
+    const effect = option.tarot.effect;
     return {
       id: option.tarot.id,
       icon: "🃏",
       name: option.tarot.name,
       description: option.tarot.description,
-      needsConsumableSlot: true,
+      needsConsumableSlot: false,
       needsJokerSlot: false,
+      requiresPreviewSelection:
+        effect.kind === "apply-enhancement"
+          ? { maxTargets: effect.maxTargets }
+          : undefined,
     };
   }
   if (option.kind === "joker") {
@@ -95,16 +108,27 @@ export default function PackOpenModal({
   picksRemaining,
   consumableSlotsFull = false,
   jokerSlotsFull = false,
+  previewHand = [],
+  previewSelectedIds,
+  onSelectPreviewCard,
   onPick,
   onClose,
 }: PackOpenModalProps) {
   useEscapeToClose(onClose, true);
+  const [previewSortMode, setPreviewSortMode] = useState<SortMode>("rank");
+  const sortedPreviewHand = useMemo(
+    () => sortCards(previewHand, previewSortMode),
+    [previewHand, previewSortMode],
+  );
   const totalPicks = packPickLimit(pack.variant);
   const title = packDisplayName(pack);
+  const selectedCount = previewSelectedIds?.size ?? 0;
   const subtitle =
-    totalPicks === 1
-      ? "Pick 1 card to keep"
-      : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
+    previewHand.length > 0 && selectedCount > 0
+      ? `${selectedCount} preview card${selectedCount === 1 ? "" : "s"} selected — pick a tarot to apply`
+      : totalPicks === 1
+        ? "Pick 1 card to keep"
+        : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
   const closeLabel = picksRemaining < totalPicks ? "Done" : "Skip";
 
   return createPortal(
@@ -128,14 +152,29 @@ export default function PackOpenModal({
             const noPicksLeft = picksRemaining <= 0;
             const consumableBlocked = view.needsConsumableSlot && consumableSlotsFull;
             const jokerBlocked = view.needsJokerSlot && jokerSlotsFull;
-            const disabled = noPicksLeft || consumableBlocked || jokerBlocked;
+            const sel = view.requiresPreviewSelection;
+            const hasPreviewHand = previewHand.length > 0;
+            const selectionInvalid =
+              sel !== undefined &&
+              hasPreviewHand &&
+              (selectedCount === 0 || selectedCount > sel.maxTargets);
+            const disabled =
+              noPicksLeft || consumableBlocked || jokerBlocked || selectionInvalid;
             const tooltip = noPicksLeft
               ? "No picks remaining"
               : consumableBlocked
                 ? "Consumable slots are full"
                 : jokerBlocked
                   ? "Joker slots are full"
-                  : undefined;
+                  : selectionInvalid
+                    ? sel.maxTargets === 1
+                      ? selectedCount === 0
+                        ? "Select 1 card in the preview hand first"
+                        : "Too many cards selected (max 1)"
+                      : selectedCount === 0
+                        ? `Select 1–${sel.maxTargets} cards in the preview hand first`
+                        : `Too many cards selected (max ${sel.maxTargets})`
+                    : undefined;
             return (
               <li key={`${view.id}-${idx}`} className="pack-open-option">
                 <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
@@ -158,6 +197,61 @@ export default function PackOpenModal({
             );
           })}
         </ul>
+        {previewHand.length > 0 && (
+          <>
+            <div
+              className="pack-open-preview-sort"
+              role="group"
+              aria-label="Sort preview hand"
+            >
+              <span className="pack-open-preview-sort-label">Sort:</span>
+              <button
+                type="button"
+                className={`pack-open-preview-sort-button${
+                  previewSortMode === "rank"
+                    ? " pack-open-preview-sort-button-active"
+                    : ""
+                }`}
+                data-testid="pack-open-preview-sort-rank"
+                aria-pressed={previewSortMode === "rank"}
+                onClick={() => setPreviewSortMode("rank")}
+              >
+                Rank
+              </button>
+              <button
+                type="button"
+                className={`pack-open-preview-sort-button${
+                  previewSortMode === "suit"
+                    ? " pack-open-preview-sort-button-active"
+                    : ""
+                }`}
+                data-testid="pack-open-preview-sort-suit"
+                aria-pressed={previewSortMode === "suit"}
+                onClick={() => setPreviewSortMode("suit")}
+              >
+                Suit
+              </button>
+            </div>
+            <div
+              className="pack-open-preview-hand"
+              data-testid="pack-open-preview-hand"
+              aria-label="Preview hand"
+            >
+              {sortedPreviewHand.map((card) => (
+                <Card
+                  key={card.id}
+                  card={card}
+                  selected={previewSelectedIds?.has(card.id) ?? false}
+                  onToggle={
+                    onSelectPreviewCard
+                      ? () => onSelectPreviewCard(card.id)
+                      : undefined
+                  }
+                />
+              ))}
+            </div>
+          </>
+        )}
         <button
           type="button"
           className="pack-open-close"

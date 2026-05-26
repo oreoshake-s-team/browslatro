@@ -183,7 +183,7 @@ describe("PackOpenModal — Arcana pack rendering", () => {
     ).toBeInTheDocument();
   });
 
-  test("Pick buttons disable when consumable slots are full", () => {
+  test("Pick buttons stay enabled for an Arcana pack even when consumable slots are full", () => {
     render(
       <PackOpenModal
         pack={arcanaPack("normal", 3)}
@@ -194,7 +194,7 @@ describe("PackOpenModal — Arcana pack rendering", () => {
       />,
     );
     const picks = screen.getAllByRole("button", { name: /^Pick / });
-    for (const btn of picks) expect(btn).toBeDisabled();
+    for (const btn of picks) expect(btn).not.toBeDisabled();
   });
 
   test("Pick buttons stay enabled in a Celestial pack even when consumable slots are full", () => {
@@ -538,5 +538,269 @@ describe("PackOpenModal — Standard pack rendering", () => {
       />,
     );
     expect(screen.getByText(/red seal/)).toBeInTheDocument();
+  });
+});
+
+describe("PackOpenModal — Arcana preview hand and selection", () => {
+  const previewCards = [
+    { id: 1001, rank: "A" as const, suit: "spades" as const },
+    { id: 1002, rank: "K" as const, suit: "hearts" as const },
+    { id: 1003, rank: "Q" as const, suit: "diamonds" as const },
+  ];
+
+  test("renders the preview hand when previewHand is provided", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-preview-hand")).toBeInTheDocument();
+  });
+
+  test("does not render preview hand when previewHand is empty", () => {
+    render(
+      <PackOpenModal
+        pack={celestialPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={[]}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("pack-open-preview-hand")).not.toBeInTheDocument();
+  });
+
+  test("preview cards are clickable as long as onSelectPreviewCard is provided", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        onSelectPreviewCard={onSelect}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /^A of / }));
+    expect(onSelect).toHaveBeenCalledWith(1001);
+  });
+
+  test("subtitle reflects preview selection count when cards are selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001, 1002])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
+      /2 preview cards selected — pick a tarot to apply/,
+    );
+  });
+
+  test("tarot Pick button is disabled when no preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set()}
+        onSelectPreviewCard={vi.fn()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("tarot Pick button enables once at least one preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button", { name: /^Pick / }).every((b) => !(b as HTMLButtonElement).disabled),
+    ).toBe(true);
+  });
+
+  test("tarot Pick button disables when too many preview cards are selected", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={[
+          ...previewCards,
+          { id: 1004, rank: "J" as const, suit: "clubs" as const },
+        ]}
+        previewSelectedIds={new Set([1001, 1002, 1003])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("clicking a tarot Pick after selecting a card invokes onPick", async () => {
+    const user = userEvent.setup();
+    const onPick = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={previewCards}
+        previewSelectedIds={new Set([1001])}
+        onSelectPreviewCard={vi.fn()}
+        onPick={onPick}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getAllByRole("button", { name: /^Pick / })[0]);
+    expect(onPick).toHaveBeenCalledWith(0);
+  });
+});
+
+describe("PackOpenModal — preview-hand sort toolbar", () => {
+  const mixedPreview = [
+    { id: 2001, rank: "5" as const, suit: "hearts" as const },
+    { id: 2002, rank: "K" as const, suit: "spades" as const },
+    { id: 2003, rank: "2" as const, suit: "clubs" as const },
+    { id: 2004, rank: "A" as const, suit: "diamonds" as const },
+  ];
+
+  function cardAriaLabels(): string[] {
+    return screen
+      .getAllByRole("button", { name: /^[A-Z0-9]+ of / })
+      .map((btn) => btn.getAttribute("aria-label") ?? "");
+  }
+
+  test("renders Rank and Suit sort buttons when previewHand is non-empty", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={mixedPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-preview-sort-rank")).toBeInTheDocument();
+    expect(screen.getByTestId("pack-open-preview-sort-suit")).toBeInTheDocument();
+  });
+
+  test("does not render sort buttons when preview hand is empty", () => {
+    render(
+      <PackOpenModal
+        pack={celestialPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={[]}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("pack-open-preview-sort-rank")).not.toBeInTheDocument();
+  });
+
+  test("Rank button is the default active sort", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={mixedPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-preview-sort-rank")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("default rank sort places the Ace first", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={mixedPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(cardAriaLabels()[0]).toMatch(/^A of /);
+  });
+
+  test("clicking Suit flips aria-pressed onto the Suit button", async () => {
+    const user = userEvent.setup();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={mixedPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-preview-sort-suit"));
+    expect(screen.getByTestId("pack-open-preview-sort-suit")).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
+  });
+
+  test("clicking Suit reorders the preview hand", async () => {
+    const user = userEvent.setup();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={mixedPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const beforeOrder = cardAriaLabels().join("|");
+    await user.click(screen.getByTestId("pack-open-preview-sort-suit"));
+    const afterOrder = cardAriaLabels().join("|");
+    expect(afterOrder).not.toBe(beforeOrder);
+  });
+
+  test("sorting does not change which underlying card id is passed to onSelectPreviewCard", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={mixedPreview}
+        previewSelectedIds={new Set()}
+        onSelectPreviewCard={onSelect}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    await user.click(screen.getByTestId("pack-open-preview-sort-suit"));
+    await user.click(screen.getByRole("button", { name: /^A of / }));
+    expect(onSelect).toHaveBeenCalledWith(2004);
   });
 });

@@ -14,7 +14,7 @@
   border: 2px solid #5c7cfa;
   border-radius: 10px;
   padding: 1.8rem 2rem;
-  width: min(90vw, 52rem);
+  width: min(95vw, 72rem);
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
@@ -102,3 +102,56 @@
 .pack-open-close:hover {
   background-color: #6c757d;
 }
+
+.pack-open-preview-sort {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.pack-open-preview-sort-label {
+  font-size: 0.85rem;
+  color: #adb5bd;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pack-open-preview-sort-button {
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #5c7cfa;
+  background-color: rgba(92, 124, 250, 0.12);
+  color: #f8f9fa;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pack-open-preview-sort-button:hover {
+  background-color: rgba(92, 124, 250, 0.25);
+}
+
+.pack-open-preview-sort-button-active {
+  background-color: #5c7cfa;
+  color: #fff;
+}
+
+.pack-open-preview-hand {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: safe center;
+  align-items: end;
+  gap: 0.4rem;
+  padding: 1.6rem 0.6rem 0.6rem;
+  border: 2px dashed #adb5bd;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  overflow-x: clip;
+  min-height: calc(var(--card-height) + 1.6rem);
+}
+
+.pack-open-preview-hand > .card {
+  flex: 0 1 var(--card-width);
+  min-width: 0;
+}
+
