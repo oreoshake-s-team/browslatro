@@ -40,30 +40,26 @@ test("always-win path: 4 consecutive Straight Flushes advance ante and money", a
   await page.goto("/");
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
-  // Round 1 — start $4, no held gold (fresh deck has no enhancements), interest on $4 = $0, +$3 base. End $7.
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$7");
+  await expect(statValue(page, "Money")).toHaveText("$11");
 
-  // Round 2 — interest on $7 = $1, +$4 base. End $12.
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$12");
+  await expect(statValue(page, "Money")).toHaveText("$20");
 
-  // Round 3 — interest on $12 = $2, +$5 base. End $19.
   await expect(page.getByRole("heading", { name: "Boss Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$19");
+  await expect(statValue(page, "Money")).toHaveText("$32");
 
-  // Round 4 — interest on $19 = $3, +$3 base. End $25.
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await expect(statValue(page, "Ante")).toHaveText("2");
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(statValue(page, "Money")).toHaveText("$25");
+  await expect(statValue(page, "Money")).toHaveText("$43");
 
   // End state: Ante 2 Big Blind, hand re-dealt. No Game Over alert fired.
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();

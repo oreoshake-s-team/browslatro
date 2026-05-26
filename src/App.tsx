@@ -44,7 +44,11 @@ import {
   type DealResult,
 } from "./deck";
 import { MAX_SELECTED } from "./components/cards/Hand";
-import { calculateInterest, GOLD_HELD_BONUS_PER_CARD } from "./payout";
+import {
+  calculateInterest,
+  GOLD_HELD_BONUS_PER_CARD,
+  REMAINING_HAND_BONUS,
+} from "./payout";
 import { STEEL_MULT_FACTOR, steelHeldMultiplier } from "./heldInHand";
 import {
   applyCardEnhancement,
@@ -715,16 +719,23 @@ function App() {
       const heldGoldIds = dealt.hand
         .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
         .map((c) => c.id);
+      const remainingHandsCount = Math.max(0, remainingHands - 1);
+      const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
       const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
+      const postBonusesWallet = postGoldWallet + remainingHandsBonus;
       const openModal = () => {
         play("win");
+        if (remainingHandsBonus > 0) {
+          setMoney((prev) => prev + remainingHandsBonus);
+        }
         setPendingWin({
           roundScore: newRoundScore,
           requiredScore,
           baseReward: blind + 2,
-          walletAtPayout: postGoldWallet,
-          interest: calculateInterest(postGoldWallet),
+          walletAtPayout: postBonusesWallet,
+          interest: calculateInterest(postBonusesWallet),
           goldHeldCount: heldGoldIds.length,
+          remainingHandsCount,
         });
       };
       if (heldGoldIds.length === 0) {

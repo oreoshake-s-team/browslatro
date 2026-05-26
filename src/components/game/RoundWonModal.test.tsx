@@ -10,6 +10,7 @@ function buildInfo(overrides: Partial<RoundWonInfo> = {}): RoundWonInfo {
     walletAtPayout: 15,
     interest: 3,
     goldHeldCount: 0,
+    remainingHandsCount: 0,
     ...overrides,
   };
 }
@@ -68,6 +69,42 @@ describe("RoundWonModal payout breakdown", () => {
       />,
     );
     expect(screen.getByTestId("round-won-total")).toHaveTextContent("$10");
+  });
+
+  test("renders the remaining-hands row when at least one hand was unused", () => {
+    render(
+      <RoundWonModal info={buildInfo({ remainingHandsCount: 2 })} onContinue={() => {}} />,
+    );
+    expect(screen.getByTestId("round-won-hands")).toHaveTextContent("+$2");
+  });
+
+  test("renders the remaining-hands row count in its label", () => {
+    render(
+      <RoundWonModal info={buildInfo({ remainingHandsCount: 3 })} onContinue={() => {}} />,
+    );
+    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent("3 × $1");
+  });
+
+  test("does not render the remaining-hands row when no hands were unused", () => {
+    render(
+      <RoundWonModal info={buildInfo({ remainingHandsCount: 0 })} onContinue={() => {}} />,
+    );
+    expect(screen.queryByTestId("round-won-hands")).not.toBeInTheDocument();
+  });
+
+  test("includes the remaining-hands bonus in the total", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 3,
+          interest: 1,
+          goldHeldCount: 0,
+          remainingHandsCount: 2,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$6");
   });
 
   test("shows the wallet balance in the interest row label", () => {

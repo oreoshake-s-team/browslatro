@@ -252,3 +252,70 @@ describe("joker catalog smoke", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 });
+
+function offerSubjectId(offer: ShopItem): string {
+  switch (offer.kind) {
+    case "joker":
+      return offer.joker.id;
+    case "planet":
+      return offer.planet.id;
+    case "tarot":
+      return offer.tarot.id;
+  }
+}
+
+describe("pickShopOffers — no duplicate offers within a single visit", () => {
+  test("two slots never share the same item across 200 seeds", () => {
+    let duplicateSeed: number | null = null;
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const offers = pickShopOffers(baseArgs(mulberry32(seed)));
+      const ids = offers.map(offerSubjectId);
+      if (new Set(ids).size !== ids.length) {
+        duplicateSeed = seed;
+        break;
+      }
+    }
+    expect(duplicateSeed).toBeNull();
+  });
+
+  test("four slots (Overstock + Plus) still produce four distinct items", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(1)),
+      extraSlots: 2,
+    });
+    const ids = offers.map(offerSubjectId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  test("when only one planet exists, two planet picks degrade to one offer instead of duplicating", () => {
+    const singlePlanetCatalog = createPlanetCatalog().slice(0, 1);
+    const offers = pickShopOffers({
+      jokerCatalog: [],
+      excludedJokerIds: [],
+      planetCatalog: singlePlanetCatalog,
+      tarotCatalog: [],
+      rng: sequenceRng([0.4, 0.4]),
+    });
+    expect(offers).toHaveLength(1);
+  });
+});
+
+describe("rerollShopOffer — never returns the same item", () => {
+  test("rerolling a joker never returns that same joker across many seeds", () => {
+    const original: ShopItem = {
+      kind: "joker",
+      joker: createPlusFourMultJoker(),
+      price: 5,
+      sold: false,
+    };
+    let collidedAtSeed: number | null = null;
+    for (let seed = 1; seed <= 50; seed += 1) {
+      const next = rerollShopOffer(original, baseArgs(mulberry32(seed)));
+      if (next && next.kind === "joker" && next.joker.id === original.joker.id) {
+        collidedAtSeed = seed;
+        break;
+      }
+    }
+    expect(collidedAtSeed).toBeNull();
+  });
+});
