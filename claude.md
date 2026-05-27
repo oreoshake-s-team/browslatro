@@ -2,6 +2,11 @@
 
 Browlatro is an educational journey meant to help the author brush up on their frontend skills. The author is still learning react and struggles with CSS.
 
+## Game Domain Context
+
+- This is a Balatro clone. Terms like 'tags', 'spectral cards', 'vouchers', 'boss blinds', etc. refer to **in-game Balatro mechanics**, not GitHub/repo concepts.
+- When implementing Balatro features (spectral cards, tarots, jokers, etc.), match the **authentic Balatro effects** - do not invent placeholder effects. Reference the Balatro wiki or ask the user if unsure.
+
 # Hard requirements
 
 - Squash all PRs into a single commit instead of merging/rebasing.
@@ -44,3 +49,14 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 # Conversations outside of Claude code
 
 See docs/conversation_summary.md for more background.
+
+## Project Environment
+
+- This project uses **Yarn Berry with PnP** (not npm/node_modules). Use `yarn` commands, not `npm`.
+- TypeScript is the primary language - all new code should be `.ts`/`.tsx`.
+- Run `yarn typecheck` and `yarn test` before opening PRs.
+  Add as a new ## Game Domain Context section near the top\n\n## Game Domain Context
+- This is a Balatro clone. Terms like 'tags', 'spectral cards', 'vouchers', 'boss blinds', etc. refer to **in-game Balatro mechanics**, not GitHub/repo concepts.
+- When implementing Balatro features (spectral cards, tarots, jokers, etc.), match the **authentic Balatro effects** - do not invent placeholder effects. Reference the Balatro wiki or ask the user if unsure.
+  Add under existing ## Code Style section or create one\n\n## Code Style
+- Keep app code files under 150 lines where reasonable; extract components/modules when they grow.
