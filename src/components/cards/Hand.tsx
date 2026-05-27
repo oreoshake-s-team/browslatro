@@ -37,6 +37,8 @@ interface HandProps {
   scoringPulseTick?: number;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
+  luckyMultProcIds?: ReadonlySet<number>;
+  luckyMoneyProcIds?: ReadonlySet<number>;
   handPlaySignal?: number;
   onToggleCard: (card: CardType) => void;
   onCardDiscardEnd: (card: CardType) => void;
@@ -57,6 +59,8 @@ export default function Hand({
   scoringPulseTick = 0,
   goldScoringId = null,
   steelScoringId = null,
+  luckyMultProcIds,
+  luckyMoneyProcIds,
   handPlaySignal = 0,
   onToggleCard,
   onCardDiscardEnd,
@@ -319,6 +323,8 @@ export default function Hand({
                     scoringPulseTick={scoringPulseTick}
                     goldScoring={goldScoringId === card.id}
                     steelScoring={steelScoringId === card.id}
+                    luckyMultScoring={luckyMultProcIds?.has(card.id) ?? false}
+                    luckyMoneyScoring={luckyMoneyProcIds?.has(card.id) ?? false}
                     onToggle={onToggleCard}
                     onDiscardEnd={onCardDiscardEnd}
                   />

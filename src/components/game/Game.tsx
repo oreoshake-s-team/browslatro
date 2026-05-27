@@ -22,6 +22,8 @@ interface GameProps {
   scoringPulseTick?: number;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
+  luckyMultProcIds?: ReadonlySet<number>;
+  luckyMoneyProcIds?: ReadonlySet<number>;
   handPlaySignal?: number;
   onSetMoney: Dispatch<SetStateAction<number>>;
   hand: ReadonlyArray<Card>;
@@ -75,6 +77,8 @@ export default function Game({
   scoringPulseTick = 0,
   goldScoringId = null,
   steelScoringId = null,
+  luckyMultProcIds,
+  luckyMoneyProcIds,
   handPlaySignal,
   onSetMoney,
   hand,
@@ -159,6 +163,8 @@ export default function Game({
           scoringPulseTick={scoringPulseTick}
           goldScoringId={goldScoringId}
           steelScoringId={steelScoringId}
+          luckyMultProcIds={luckyMultProcIds}
+          luckyMoneyProcIds={luckyMoneyProcIds}
           handPlaySignal={handPlaySignal}
           onToggleCard={onToggleCard}
           onCardDiscardEnd={onCardDiscardEnd}

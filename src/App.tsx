@@ -277,6 +277,13 @@ function App() {
       ? steelScoringIds[steelScoringIndex]
       : null;
 
+  const [luckyMultProcIds, setLuckyMultProcIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+  const [luckyMoneyProcIds, setLuckyMoneyProcIds] = useState<ReadonlySet<number>>(
+    () => new Set(),
+  );
+
   const [handLevelSteps, setHandLevelSteps] = useState<
     ReadonlyArray<JokerHandLevelStep>
   >([]);
@@ -390,6 +397,8 @@ function App() {
     setSteelScoringIds([]);
     setSteelScoringIndex(0);
     steelFinalizeRef.current = null;
+    setLuckyMultProcIds(new Set());
+    setLuckyMoneyProcIds(new Set());
     setHandLevelSteps([]);
     setHandLevelIndex(0);
     handLevelFinalizeRef.current = null;
@@ -477,6 +486,11 @@ function App() {
           amount: luckyResult.multBonus,
           source: `Lucky proc on ${stepCardLabel}`,
         });
+        setLuckyMultProcIds((prev) => {
+          const next = new Set(prev);
+          next.add(stepCard.id);
+          return next;
+        });
       }
       if (luckyResult.moneyBonus > 0) {
         setMoney((prev) => prev + luckyResult.moneyBonus);
@@ -484,6 +498,11 @@ function App() {
           kind: "money-delta",
           amount: luckyResult.moneyBonus,
           source: `Lucky money proc on ${stepCardLabel}`,
+        });
+        setLuckyMoneyProcIds((prev) => {
+          const next = new Set(prev);
+          next.add(stepCard.id);
+          return next;
         });
       }
       const sealMoney = goldSealMoney(stepCard);
@@ -1473,6 +1492,8 @@ function App() {
       });
     }
     setScoringEvents((prev) => [...prev, ...submitEvents]);
+    setLuckyMultProcIds(new Set());
+    setLuckyMoneyProcIds(new Set());
     setScoringCards(scoring);
     setScoringIndex(0);
   }
@@ -1667,6 +1688,8 @@ function App() {
         scoringPulseTick={scoringIndex}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
+        luckyMultProcIds={luckyMultProcIds}
+        luckyMoneyProcIds={luckyMoneyProcIds}
         handPlaySignal={handPlaySignal}
         hand={dealt.hand}
         remaining={dealt.remaining}
