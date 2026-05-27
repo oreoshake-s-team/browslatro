@@ -1516,6 +1516,45 @@ describe("Post-round shop integration", () => {
     expect(afterButton?.textContent).not.toMatch(/Sold/);
   });
 
+  function packNames(): ReadonlyArray<string> {
+    return Array.from(
+      document.querySelectorAll<HTMLElement>("[data-offer-kind='pack']"),
+    ).map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
+  }
+
+  test("Reroll does not change the pack offer names (#374)", async () => {
+    const user = await openShop();
+    const before = packNames();
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    expect(packNames()).toEqual(before);
+  });
+
+  test("Reroll preserves the number of pack offers (#374)", async () => {
+    const user = await openShop();
+    const beforeCount = packNames().length;
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    expect(packNames().length).toBe(beforeCount);
+  });
+
+  test("Reroll preserves the Sold state of a previously bought pack (#374)", async () => {
+    const user = await openShop();
+    const packOffer = document.querySelector<HTMLElement>(
+      "[data-offer-kind='pack']",
+    );
+    if (!packOffer) throw new Error("expected a pack offer");
+    const buy = packOffer.querySelector("button.shop-offer-buy");
+    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
+    await user.click(buy);
+    await user.click(screen.getByTestId("pack-open-close"));
+    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    const afterPack = document.querySelector<HTMLElement>(
+      "[data-offer-kind='pack']",
+    );
+    expect(
+      afterPack?.querySelector("button.shop-offer-buy")?.textContent,
+    ).toMatch(/Sold/);
+  });
+
   test("Reroll is disabled when the player can't afford it", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: /Reroll/ }));

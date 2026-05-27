@@ -18,6 +18,7 @@ import {
   pickRandomJoker,
   pickRandomPlanet,
   pickRandomTarot,
+  pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
   rerollCostFor,
@@ -542,5 +543,34 @@ describe("pickSingleShopOffer", () => {
       }
     }
     expect(args).toBeTruthy();
+  });
+});
+
+describe("pickShopItemOffers — item-only generation for reroll (#374)", () => {
+  test("returns SHOP_OFFER_SLOTS item offers", () => {
+    expect(pickShopItemOffers(baseArgs(mulberry32(1)))).toHaveLength(
+      SHOP_OFFER_SLOTS,
+    );
+  });
+
+  test("never returns a pack offer (packs are excluded by construction)", () => {
+    const offers = pickShopItemOffers(baseArgs(mulberry32(1)));
+    expect(offers.some((o) => o.kind === "pack")).toBe(false);
+  });
+
+  test("respects extraSlots like pickShopOffers does", () => {
+    const offers = pickShopItemOffers({
+      ...baseArgs(mulberry32(1)),
+      extraSlots: 2,
+    });
+    expect(offers).toHaveLength(SHOP_OFFER_SLOTS + 2);
+  });
+
+  test("does NOT emit any pack slots even when extraPackSlots is set", () => {
+    const offers = pickShopItemOffers({
+      ...baseArgs(mulberry32(1)),
+      extraPackSlots: 3,
+    });
+    expect(offers.some((o) => o.kind === "pack")).toBe(false);
   });
 });
