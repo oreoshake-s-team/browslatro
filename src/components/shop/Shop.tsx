@@ -1,6 +1,5 @@
 import "./Shop.css";
 import { useState } from "react";
-import { createPortal } from "react-dom";
 import { MAX_JOKERS } from "../../items/jokers";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
@@ -11,7 +10,7 @@ import {
 } from "../../items/vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
-interface ShopProps {
+export interface ShopProps {
   money: number;
   equippedJokerCount: number;
   consumableCount: number;
@@ -240,14 +239,13 @@ export default function Shop({
     );
   }
 
-  return createPortal(
-    <div
-      className="shop-overlay"
-      role="dialog"
-      aria-modal="true"
+  return (
+    <section
+      className="shop-panel"
+      role="region"
       aria-labelledby="shop-title"
     >
-      <div className="shop-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="shop-inner">
         <h2 id="shop-title" className="shop-title">
           🛒 Shop
         </h2>
@@ -345,7 +343,6 @@ export default function Shop({
           </button>
         </div>
       </div>
-    </div>,
-    document.body,
+    </section>
   );
 }

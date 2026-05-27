@@ -77,6 +77,8 @@ describe("Winning a round resets the deck", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     expect(getHandCardButtons()).toHaveLength(8);
   });
 
@@ -2972,6 +2974,55 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       document.querySelector(".round-score-value")?.textContent ?? "0",
     );
     expect(withDev).toBe(baseline * 2);
+  });
+});
+
+describe("Shop is rendered inline in the hand slot (#370)", () => {
+  async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    return user;
+  }
+
+  test("shop renders as an inline section (no .shop-overlay wrapper)", async () => {
+    await openShop();
+    expect(document.querySelector(".shop-overlay")).toBeNull();
+  });
+
+  test("shop does not carry aria-modal attribute", async () => {
+    await openShop();
+    expect(
+      screen.getByRole("region", { name: /Shop/ }),
+    ).not.toHaveAttribute("aria-modal");
+  });
+
+  test("the player's hand is NOT in the document while the shop is open", async () => {
+    await openShop();
+    expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
+  });
+
+  test("the Submit Hand button is NOT in the document while the shop is open", async () => {
+    await openShop();
+    expect(screen.queryByText(/Submit Hand/)).not.toBeInTheDocument();
+  });
+
+  test("the jokers row remains queryable while the shop is open", async () => {
+    await openShop();
+    expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
+  });
+
+  test("dismissing the shop re-mounts the hand", async () => {
+    const user = await openShop();
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
+    expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
   });
 });
 

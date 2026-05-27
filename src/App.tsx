@@ -22,7 +22,6 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
-import Shop from "./components/shop/Shop";
 import PackOpenModal from "./components/shop/PackOpenModal";
 import { packPickLimit, type PackOffer } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
@@ -1703,6 +1702,24 @@ function App() {
         onGrowVoucherSlots={() => adjustVoucherSlots(1)}
         forceProbabilities={forceProbabilities}
         onToggleForceProbabilities={() => setForceProbabilities((p) => !p)}
+        shop={
+          shopOffers
+            ? {
+                money,
+                equippedJokerCount: effectiveJokerCount(jokers),
+                consumableCount: consumables.length,
+                consumableCapacity,
+                offers: shopOffers,
+                vouchers: currentAnteVouchers,
+                soldVoucherIds,
+                ownedVoucherIds,
+                onBuy: buyShopOffer,
+                onBuyVoucher: buyAnteVoucher,
+                onReroll: rerollShopOffers,
+                onNext: closeShopAndStartNextRound,
+              }
+            : undefined
+        }
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
@@ -1710,22 +1727,6 @@ function App() {
       />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
-      )}
-      {shopOffers && (
-        <Shop
-          money={money}
-          equippedJokerCount={effectiveJokerCount(jokers)}
-          consumableCount={consumables.length}
-          consumableCapacity={consumableCapacity}
-          offers={shopOffers}
-          vouchers={currentAnteVouchers}
-          soldVoucherIds={soldVoucherIds}
-          ownedVoucherIds={ownedVoucherIds}
-          onBuy={buyShopOffer}
-          onBuyVoucher={buyAnteVoucher}
-          onReroll={rerollShopOffers}
-          onNext={closeShopAndStartNextRound}
-        />
       )}
       {openedPack && (
         <PackOpenModal
