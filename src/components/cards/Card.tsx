@@ -60,6 +60,8 @@ interface CardProps {
   scoringPulseTick?: number;
   goldScoring?: boolean;
   steelScoring?: boolean;
+  luckyMultScoring?: boolean;
+  luckyMoneyScoring?: boolean;
   onToggle?: (card: CardType) => void;
   onDiscardEnd?: (card: CardType) => void;
 }
@@ -73,6 +75,8 @@ export default function Card({
   scoringPulseTick = 0,
   goldScoring = false,
   steelScoring = false,
+  luckyMultScoring = false,
+  luckyMoneyScoring = false,
   onToggle,
   onDiscardEnd,
 }: CardProps) {
@@ -106,6 +110,10 @@ export default function Card({
     : "";
   const goldScoringClass = goldScoring ? "card-gold-scoring" : "";
   const steelScoringClass = steelScoring ? "card-steel-scoring" : "";
+  const luckyMultScoringClass = luckyMultScoring ? "card-lucky-mult-scoring" : "";
+  const luckyMoneyScoringClass = luckyMoneyScoring
+    ? "card-lucky-money-scoring"
+    : "";
   const enhancementClass = card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
@@ -126,7 +134,7 @@ export default function Card({
     <button
       ref={buttonRef}
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${debuffedClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${debuffedClass}`
         .replace(/\s+/g, " ")
         .trim()}
       aria-pressed={selected}
@@ -175,6 +183,24 @@ export default function Card({
           aria-hidden="true"
           data-testid={`card-seal-${card.id}`}
         />
+      )}
+      {luckyMultScoring && (
+        <span
+          className="card-lucky-mult-badge"
+          aria-hidden="true"
+          data-testid={`lucky-mult-scoring-${card.id}`}
+        >
+          +20
+        </span>
+      )}
+      {luckyMoneyScoring && (
+        <span
+          className="card-lucky-money-badge"
+          aria-hidden="true"
+          data-testid={`lucky-money-scoring-${card.id}`}
+        >
+          +$20
+        </span>
       )}
       {tooltipRect && (
         <CardTooltip id={tooltipId} info={getCardInfo(card)} anchorRect={tooltipRect} />

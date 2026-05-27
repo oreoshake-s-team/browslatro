@@ -483,6 +483,123 @@
   }
 }
 
+.card-lucky-mult-scoring,
+.card-lucky-money-scoring {
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 0 24px rgba(47, 158, 68, 0.85),
+    0 0 10px rgba(143, 240, 164, 0.8),
+    0 0 4px rgba(255, 255, 255, 0.9);
+  animation: card-lucky-pulse calc(420ms * var(--animation-speed, 1)) ease-out;
+}
+
+.card-lucky-mult-badge,
+.card-lucky-money-badge {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-weight: 800;
+  font-size: 0.85rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.card-lucky-mult-badge {
+  top: -1.4rem;
+  background-color: #d6336c;
+  border: 2px solid #a61e4d;
+  box-shadow: 0 2px 6px rgba(166, 30, 77, 0.55);
+  animation: card-lucky-mult-float calc(520ms * var(--animation-speed, 1)) ease-out;
+}
+
+.card-lucky-money-badge {
+  top: -1.4rem;
+  background-color: #ffd43b;
+  color: #5c3c00;
+  border: 2px solid #f59f00;
+  box-shadow: 0 2px 6px rgba(245, 159, 0, 0.55);
+  animation: card-lucky-money-float calc(520ms * var(--animation-speed, 1)) ease-out;
+}
+
+.card-lucky-mult-scoring .card-lucky-money-badge {
+  top: -2.65rem;
+}
+
+@keyframes card-lucky-pulse {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-0.55rem) scale(1.12) rotate(-2deg);
+  }
+  60% {
+    transform: translateY(-0.18rem) scale(1.04) rotate(2deg);
+  }
+  100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes card-lucky-mult-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.4rem) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -0.2rem) scale(1.2);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -0.4rem) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(-50%, -0.6rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -1.2rem) scale(1);
+  }
+}
+
+@keyframes card-lucky-money-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 0.4rem) scale(0.7);
+  }
+  15% {
+    opacity: 1;
+    transform: translate(-50%, -0.2rem) scale(1.2);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(-50%, -0.4rem) scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translate(-50%, -0.6rem) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -1.2rem) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-lucky-mult-scoring,
+  .card-lucky-money-scoring,
+  .card-lucky-mult-badge,
+  .card-lucky-money-badge {
+    animation: none;
+  }
+}
+
 .card-enhancement-steel {
   border-color: #495057;
   border-width: 3px;
