@@ -116,6 +116,7 @@ import {
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
+  pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
   shopPickerRngConfig,
@@ -1032,21 +1033,23 @@ function App() {
     if (money < cost) return;
     play("pop");
     setMoney((prev) => prev - cost);
-    setShopOffers(
-      pickShopOffers({
-        jokerCatalog: createJokerCatalog(),
-        excludedJokerIds: [
-          ...jokers.map((j) => j.id),
-          ...soldJokerIdsThisShopVisit,
-        ],
-        planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-        tarotCatalog: createTarotCatalog(),
-        spectralCatalog: createSpectralCatalog(),
-        extraSlots: extraShopOfferSlots(ownedVoucherIds),
-        extraPackSlots,
-        rng: shopPickerRngConfig.rng,
-      }),
-    );
+    const freshItems = pickShopItemOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: [
+        ...jokers.map((j) => j.id),
+        ...soldJokerIdsThisShopVisit,
+      ],
+      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      extraSlots: extraShopOfferSlots(ownedVoucherIds),
+      rng: shopPickerRngConfig.rng,
+    });
+    setShopOffers((current) => {
+      if (!current) return current;
+      const existingPacks = current.filter((o) => o.kind === "pack");
+      return [...freshItems, ...existingPacks];
+    });
   }
 
   function closeShopAndStartNextRound() {

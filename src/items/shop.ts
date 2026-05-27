@@ -290,7 +290,9 @@ export function pickSingleShopOffer(
   return pickRandomKindOffer(args, rng, pickedIdsFromOffers(existing));
 }
 
-export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
+export function pickShopItemOffers(
+  args: PickShopOffersArgs,
+): ReadonlyArray<ShopItem> {
   const rng = args.rng ?? Math.random;
   const totalSlots = SHOP_OFFER_SLOTS + Math.max(0, args.extraSlots ?? 0);
   const slots: ShopItem[] = [];
@@ -302,6 +304,12 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
       slots.push(offer);
     }
   }
+  return slots;
+}
+
+export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
+  const rng = args.rng ?? Math.random;
+  const slots: ShopItem[] = [...pickShopItemOffers(args)];
   const packSlotCount = Math.max(
     0,
     SHOP_PACK_SLOTS + (args.extraPackSlots ?? 0),
