@@ -6,6 +6,7 @@ import type { Consumable } from "../../items/consumables";
 import HandComponent from "../cards/Hand";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
+import Shop, { type ShopProps } from "../shop/Shop";
 
 interface GameProps {
   onWin: () => void;
@@ -53,6 +54,7 @@ interface GameProps {
   onGrowVoucherSlots?: () => void;
   forceProbabilities?: boolean;
   onToggleForceProbabilities?: () => void;
+  shop?: ShopProps;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -105,6 +107,7 @@ export default function Game({
   onGrowVoucherSlots,
   forceProbabilities = false,
   onToggleForceProbabilities,
+  shop,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -143,25 +146,29 @@ export default function Game({
           onDragEnd={onConsumableDragEnd}
         />
       </div>
-      <HandComponent
-        hand={hand}
-        remaining={remaining}
-        selectedIds={selectedIds}
-        discardingIds={discardingIds}
-        debuffedIds={debuffedIds}
-        scoringId={scoringId}
-        scoringPulseTick={scoringPulseTick}
-        goldScoringId={goldScoringId}
-        steelScoringId={steelScoringId}
-        handPlaySignal={handPlaySignal}
-        onToggleCard={onToggleCard}
-        onCardDiscardEnd={onCardDiscardEnd}
-        onDisplayOrderChange={onDisplayOrderChange}
-        consumableDropEnabled={dragging}
-        onConsumableSellDrop={onConsumableDropOnDeck}
-        jokerDropEnabled={draggingJoker}
-        onJokerSellDrop={onJokerDropOnDeck}
-      />
+      {shop ? (
+        <Shop {...shop} />
+      ) : (
+        <HandComponent
+          hand={hand}
+          remaining={remaining}
+          selectedIds={selectedIds}
+          discardingIds={discardingIds}
+          debuffedIds={debuffedIds}
+          scoringId={scoringId}
+          scoringPulseTick={scoringPulseTick}
+          goldScoringId={goldScoringId}
+          steelScoringId={steelScoringId}
+          handPlaySignal={handPlaySignal}
+          onToggleCard={onToggleCard}
+          onCardDiscardEnd={onCardDiscardEnd}
+          onDisplayOrderChange={onDisplayOrderChange}
+          consumableDropEnabled={dragging}
+          onConsumableSellDrop={onConsumableDropOnDeck}
+          jokerDropEnabled={draggingJoker}
+          onJokerSellDrop={onJokerDropOnDeck}
+        />
+      )}
       <details className="modifier-selection">
         <summary className="modifier-disclosure">Apply modifiers</summary>
         <div className="modifier-grid">
@@ -258,24 +265,26 @@ export default function Game({
           )}
         </div>
       </details>
-      <div className="submit-hand">
-        <div className="play-actions">
-          <button
-            className="submit-hand-button"
-            onClick={onSubmitHand}
-            disabled={isScoring || !canSubmit}
-          >
-            🃏 Submit Hand
-          </button>
-          <button
-            className="discard-button"
-            onClick={onDiscard}
-            disabled={!canDiscard}
-          >
-            🗑️ Discard
-          </button>
+      {!shop && (
+        <div className="submit-hand">
+          <div className="play-actions">
+            <button
+              className="submit-hand-button"
+              onClick={onSubmitHand}
+              disabled={isScoring || !canSubmit}
+            >
+              🃏 Submit Hand
+            </button>
+            <button
+              className="discard-button"
+              onClick={onDiscard}
+              disabled={!canDiscard}
+            >
+              🗑️ Discard
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
