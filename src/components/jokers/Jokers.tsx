@@ -1,4 +1,4 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useEffect, useId, useRef, useState } from "react";
 import "./Jokers.css";
 import {
   JOKER_EDITION_INFO,
@@ -10,6 +10,7 @@ import {
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
+import JokerTooltip from "./JokerTooltip";
 
 export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
@@ -36,6 +37,9 @@ export default function Jokers({
 }: JokersProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
+  const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
+  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const tooltipIdBase = useId();
   const dropZone = useMimeDropZone({
     enabled: consumableDropEnabled,
     mime: CONSUMABLE_DRAG_MIME,
@@ -46,6 +50,33 @@ export default function Jokers({
   const reorderable = Boolean(onReorder);
   const sellable = Boolean(onSell);
   const tileDraggable = reorderable || sellable;
+
+  useEffect(() => {
+    if (tooltipOpenId === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setTooltipOpenId(null);
+        setTooltipRect(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tooltipOpenId]);
+
+  function openTooltip(id: string, el: HTMLElement) {
+    setTooltipOpenId(id);
+    setTooltipRect(el.getBoundingClientRect());
+  }
+
+  function closeTooltip(id: string) {
+    setTooltipOpenId((prev) => {
+      if (prev === id) {
+        setTooltipRect(null);
+        return null;
+      }
+      return prev;
+    });
+  }
 
   function endDrag() {
     setDraggingId(null);
@@ -153,6 +184,8 @@ export default function Jokers({
             : editionInfo
               ? `${joker.name}. ${joker.description}.${editionLabel}`
               : undefined;
+          const tooltipId = `${tooltipIdBase}-${joker.id}`;
+          const tooltipOpen = tooltipOpenId === joker.id;
           return (
             <Fragment key={`${joker.id}-${idx}`}>
               {reorderable && renderGap(idx)}
@@ -162,10 +195,16 @@ export default function Jokers({
                 }${editionClass}`}
                 title={joker.description}
                 aria-label={ariaLabel}
+                aria-describedby={tooltipOpen ? tooltipId : undefined}
+                tabIndex={0}
                 data-testid={`joker-tile-filled-${joker.id}`}
                 data-edition={joker.edition ?? undefined}
                 draggable={tileDraggable || undefined}
                 aria-grabbed={isDragging || undefined}
+                onMouseEnter={(e) => openTooltip(joker.id, e.currentTarget)}
+                onMouseLeave={() => closeTooltip(joker.id)}
+                onFocus={(e) => openTooltip(joker.id, e.currentTarget)}
+                onBlur={() => closeTooltip(joker.id)}
                 onDragStart={
                   tileDraggable
                     ? (e) => {
@@ -206,6 +245,9 @@ export default function Jokers({
                     </span>
                   )}
                 </div>
+                {tooltipOpen && tooltipRect && (
+                  <JokerTooltip id={tooltipId} joker={joker} anchorRect={tooltipRect} />
+                )}
               </li>
             </Fragment>
           );
