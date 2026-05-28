@@ -1349,6 +1349,23 @@ function App() {
       const action = effect.action;
       if (action.kind === "open-pack") {
         openTagPack(action.pool, action.variant);
+      } else if (action.kind === "create-jokers") {
+        play("pop");
+        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        setJokers((prev) => {
+          let next = prev;
+          for (let i = 0; i < action.count; i += 1) {
+            const joker = createJokerByRarity(
+              next,
+              createJokerCatalog(),
+              action.rarity,
+              capacity,
+              shopPickerRngConfig.rng,
+            );
+            if (joker) next = [...next, joker];
+          }
+          return next;
+        });
       } else {
         setMoney(
           (prev) => prev + immediateMoneyGain(action, { stats: nextStats, money: prev }),

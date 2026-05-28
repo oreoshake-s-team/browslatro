@@ -211,6 +211,18 @@ describe("Voucher tag", () => {
   });
 });
 
+describe("Top-up tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("top-up");
+  });
+
+  test("resolves to an immediate create-jokers action for 2 Common Jokers", () => {
+    const effect = resolveTagEffect("top-up");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "create-jokers", rarity: "common", count: 2 });
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
