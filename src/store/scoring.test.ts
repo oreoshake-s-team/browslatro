@@ -38,4 +38,20 @@ describe("scoring store", () => {
     useScoring.getState().resetScoring();
     expect(useScoring.getState().roundScore).toBe(0);
   });
+
+  test("setScoringIndex accepts an updater function", () => {
+    useScoring.getState().setScoringIndex((prev) => prev + 1);
+    expect(useScoring.getState().scoringIndex).toBe(1);
+  });
+
+  test("setLuckyMultProcIds accepts a plain value", () => {
+    useScoring.getState().setLuckyMultProcIds(new Set([7]));
+    expect(useScoring.getState().luckyMultProcIds.has(7)).toBe(true);
+  });
+
+  test("resetScoring clears the gold scoring queue", () => {
+    useScoring.getState().setGoldScoringIds([1, 2]);
+    useScoring.getState().resetScoring();
+    expect(useScoring.getState().goldScoringIds).toHaveLength(0);
+  });
 });

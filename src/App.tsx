@@ -124,7 +124,6 @@ import {
   isFaceCard,
   jokerSellValue,
   withEdition,
-  type JokerHandLevelStep,
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
@@ -327,39 +326,43 @@ function App() {
   }
 
   // Sequential scoring state.
-  const [scoringCards, setScoringCards] = useState<ReadonlyArray<Card>>([]);
-  const [scoringIndex, setScoringIndex] = useState<number>(0);
+  const scoringCards = useScoring((state) => state.scoringCards);
+  const setScoringCards = useScoring((state) => state.setScoringCards);
+  const scoringIndex = useScoring((state) => state.scoringIndex);
+  const setScoringIndex = useScoring((state) => state.setScoringIndex);
   const scoringFinalizeRef = useRef<(() => void) | null>(null);
   const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
   const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
 
-  const [goldScoringIds, setGoldScoringIds] = useState<ReadonlyArray<number>>([]);
-  const [goldScoringIndex, setGoldScoringIndex] = useState<number>(0);
+  const goldScoringIds = useScoring((state) => state.goldScoringIds);
+  const setGoldScoringIds = useScoring((state) => state.setGoldScoringIds);
+  const goldScoringIndex = useScoring((state) => state.goldScoringIndex);
+  const setGoldScoringIndex = useScoring((state) => state.setGoldScoringIndex);
   const goldFinalizeRef = useRef<(() => void) | null>(null);
   const currentGoldScoringId =
     goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
       ? goldScoringIds[goldScoringIndex]
       : null;
 
-  const [steelScoringIds, setSteelScoringIds] = useState<ReadonlyArray<number>>([]);
-  const [steelScoringIndex, setSteelScoringIndex] = useState<number>(0);
+  const steelScoringIds = useScoring((state) => state.steelScoringIds);
+  const setSteelScoringIds = useScoring((state) => state.setSteelScoringIds);
+  const steelScoringIndex = useScoring((state) => state.steelScoringIndex);
+  const setSteelScoringIndex = useScoring((state) => state.setSteelScoringIndex);
   const steelFinalizeRef = useRef<(() => void) | null>(null);
   const currentSteelScoringId =
     steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length
       ? steelScoringIds[steelScoringIndex]
       : null;
 
-  const [luckyMultProcIds, setLuckyMultProcIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-  const [luckyMoneyProcIds, setLuckyMoneyProcIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
+  const luckyMultProcIds = useScoring((state) => state.luckyMultProcIds);
+  const setLuckyMultProcIds = useScoring((state) => state.setLuckyMultProcIds);
+  const luckyMoneyProcIds = useScoring((state) => state.luckyMoneyProcIds);
+  const setLuckyMoneyProcIds = useScoring((state) => state.setLuckyMoneyProcIds);
 
-  const [handLevelSteps, setHandLevelSteps] = useState<
-    ReadonlyArray<JokerHandLevelStep>
-  >([]);
-  const [handLevelIndex, setHandLevelIndex] = useState<number>(0);
+  const handLevelSteps = useScoring((state) => state.handLevelSteps);
+  const setHandLevelSteps = useScoring((state) => state.setHandLevelSteps);
+  const handLevelIndex = useScoring((state) => state.handLevelIndex);
+  const setHandLevelIndex = useScoring((state) => state.setHandLevelIndex);
   const handLevelFinalizeRef = useRef<(() => void) | null>(null);
 
   // Round-won modal: when non-null, the player has met the required score and
