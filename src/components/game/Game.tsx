@@ -1,4 +1,3 @@
-import type { Dispatch, SetStateAction } from "react";
 import "./Game.css";
 import type { Card } from "../../cards/types";
 import type { Joker } from "../../items/jokers";
@@ -58,7 +57,7 @@ interface GameProps {
   luckyMultProcIds?: ReadonlySet<number>;
   luckyMoneyProcIds?: ReadonlySet<number>;
   handPlaySignal?: number;
-  onSetMoney: Dispatch<SetStateAction<number>>;
+  onAdjustMoney: (delta: number) => void;
   hand: ReadonlyArray<Card>;
   remaining: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
@@ -117,7 +116,7 @@ export default function Game({
   luckyMultProcIds,
   luckyMoneyProcIds,
   handPlaySignal,
-  onSetMoney,
+  onAdjustMoney,
   hand,
   remaining,
   selectedIds,
@@ -167,11 +166,11 @@ export default function Game({
   const forcedPackCounts = countByPool(pendingForcedPacks ?? []);
   const totalPendingPacks = (pendingForcedPacks ?? []).length;
   function handleAddMoney(amount: number) {
-    onSetMoney((prev) => prev + amount);
+    onAdjustMoney(amount);
   }
 
   function handleSubtractMoney(amount: number) {
-    onSetMoney((prev) => prev - amount);
+    onAdjustMoney(-amount);
   }
 
   return (
