@@ -162,7 +162,7 @@ describe("pickRandomFromCatalog", () => {
   test("returns null when the filter matches nothing", () => {
     const result = pickRandomFromCatalog(
       createJokerCatalog(),
-      (j) => j.rarity === "rare",
+      (j) => j.rarity === "legendary",
       fixedRng([0]),
     );
     expect(result).toBeNull();

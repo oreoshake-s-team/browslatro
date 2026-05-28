@@ -626,3 +626,14 @@ describe("Hand-type X-Mult joker catalog membership", () => {
     expect(ids).toContain(id);
   });
 });
+
+describe("Held-in-hand joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Baron", id: "baron" },
+    { name: "Shoot the Moon", id: "shoot-the-moon" },
+    { name: "Raised Fist", id: "raised-fist" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});

@@ -1,6 +1,7 @@
 import type { Card, Rank, Suit } from "../cards/types";
 import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
+import { getRankChips } from "../scoring/scoring";
 import { JOKER_BASE_PRICE } from "../constants";
 
 export const MAX_JOKERS = 5;
@@ -47,6 +48,11 @@ export const THE_TRIO_X_MULT = 3;
 export const THE_FAMILY_X_MULT = 4;
 export const THE_ORDER_X_MULT = 3;
 export const THE_TRIBE_X_MULT = 2;
+export const BARON_X_MULT = 1.5;
+export const BARON_RANKS: ReadonlyArray<Rank> = ["K"];
+export const SHOOT_THE_MOON_MULT = 13;
+export const SHOOT_THE_MOON_RANKS: ReadonlyArray<Rank> = ["Q"];
+export const RAISED_FIST_MULTIPLIER = 2;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -125,7 +131,17 @@ export type JokerEffect =
     }
   | { readonly kind: "per-remaining-discard-chips"; readonly amount: number }
   | { readonly kind: "mult-when-no-discards"; readonly amount: number }
-  | { readonly kind: "per-dollar-chips"; readonly amount: number };
+  | { readonly kind: "per-dollar-chips"; readonly amount: number }
+  | {
+      readonly kind: "per-held-rank";
+      readonly ranks: ReadonlyArray<Rank>;
+      readonly mult?: number;
+      readonly xMult?: number;
+    }
+  | {
+      readonly kind: "held-lowest-rank-mult";
+      readonly multiplier: number;
+    };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -718,6 +734,48 @@ export function createBullJoker(): Joker {
   };
 }
 
+export function createBaronJoker(): Joker {
+  return {
+    id: "baron",
+    rarity: "rare",
+    name: "Baron",
+    description: `Each King held in hand gives X${BARON_X_MULT} Mult`,
+    effect: {
+      kind: "per-held-rank",
+      ranks: BARON_RANKS,
+      xMult: BARON_X_MULT,
+    },
+  };
+}
+
+export function createShootTheMoonJoker(): Joker {
+  return {
+    id: "shoot-the-moon",
+    rarity: "common",
+    name: "Shoot the Moon",
+    description: `Each Queen held in hand gives +${SHOOT_THE_MOON_MULT} Mult`,
+    effect: {
+      kind: "per-held-rank",
+      ranks: SHOOT_THE_MOON_RANKS,
+      mult: SHOOT_THE_MOON_MULT,
+    },
+  };
+}
+
+export function createRaisedFistJoker(): Joker {
+  return {
+    id: "raised-fist",
+    rarity: "common",
+    name: "Raised Fist",
+    description:
+      "Adds double the rank of the lowest-ranked card held in hand to Mult",
+    effect: {
+      kind: "held-lowest-rank-mult",
+      multiplier: RAISED_FIST_MULTIPLIER,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -775,6 +833,9 @@ export function createJokerCatalog(): Joker[] {
     createBannerJoker(),
     createMysticSummitJoker(),
     createBullJoker(),
+    createBaronJoker(),
+    createShootTheMoonJoker(),
+    createRaisedFistJoker(),
   ];
 }
 
@@ -792,6 +853,7 @@ export interface HandLevelContext {
   readonly playedHandLabel?: HandLabel;
   readonly playedCardCount?: number;
   readonly scoredCards?: ReadonlyArray<Card>;
+  readonly heldInHandCards?: ReadonlyArray<Card>;
   readonly rng?: RandomSource;
   readonly remainingDiscards?: number;
   readonly money?: number;
@@ -904,6 +966,42 @@ export function applyHandLevelJokers(
           additiveChips += chips;
           fired.push(joker.id);
           steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: chips });
+        }
+        break;
+      }
+      case "per-held-rank": {
+        const held = context.heldInHandCards ?? [];
+        let matched = 0;
+        for (const card of held) {
+          if (effect.ranks.includes(card.rank)) matched += 1;
+        }
+        if (matched > 0) {
+          fired.push(joker.id);
+          if (effect.mult !== undefined) {
+            const total = effect.mult * matched;
+            additiveMult += total;
+            steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: total });
+          }
+          if (effect.xMult !== undefined) {
+            const factor = effect.xMult ** matched;
+            xMult *= factor;
+            steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: factor });
+          }
+        }
+        break;
+      }
+      case "held-lowest-rank-mult": {
+        const held = context.heldInHandCards ?? [];
+        if (held.length > 0) {
+          let lowest = getRankChips(held[0].rank);
+          for (let h = 1; h < held.length; h += 1) {
+            const value = getRankChips(held[h].rank);
+            if (value < lowest) lowest = value;
+          }
+          const bonus = effect.multiplier * lowest;
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
         }
         break;
       }
@@ -1063,6 +1161,8 @@ export function applyPerCardJokers(
       case "per-remaining-discard-chips":
       case "mult-when-no-discards":
       case "per-dollar-chips":
+      case "per-held-rank":
+      case "held-lowest-rank-mult":
         break;
       default:
         assertNeverEffect(effect);
