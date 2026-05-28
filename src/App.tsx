@@ -396,6 +396,7 @@ function App() {
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
   const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
+  const [pendingDouble, setPendingDouble] = useState(false);
   const [extraPackSlots, setExtraPackSlots] = useState(0);
   const [pendingForcedPacks, setPendingForcedPacks] = useState<
     ReadonlyArray<PackPool>
@@ -1355,14 +1356,8 @@ function App() {
     startNewRound();
   }
 
-  function skipBlind() {
-    if (blind === 3) return;
-    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
-    const effect = resolveTagEffect(offered);
-    const nextStats = recordBlindSkipped(runStats);
-    setBlind((prev) => (prev + 1) as Blind);
-    setRound((prev) => prev + 1);
-    setRunStats(nextStats);
+  function applyGainedTag(tagId: TagId, nextStats: RunStats) {
+    const effect = resolveTagEffect(tagId);
     if (effect.category === "immediate") {
       const action = effect.action;
       if (action.kind === "open-pack") {
@@ -1411,12 +1406,30 @@ function App() {
       }
       return;
     }
-    setPendingTags((prev) => [...prev, offered]);
+    setPendingTags((prev) => [...prev, tagId]);
     if (effect.category === "next-shop") {
       setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
     } else if (effect.category === "next-round") {
       setPendingNextRoundHandSize((prev) => prev + effect.handSizeBonus);
     }
+  }
+
+  function skipBlind() {
+    if (blind === 3) return;
+    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
+    const effect = resolveTagEffect(offered);
+    const nextStats = recordBlindSkipped(runStats);
+    setBlind((prev) => (prev + 1) as Blind);
+    setRound((prev) => prev + 1);
+    setRunStats(nextStats);
+    if (effect.category === "duplicate-next") {
+      setPendingTags((prev) => [...prev, offered]);
+      setPendingDouble(true);
+      return;
+    }
+    const times = pendingDouble ? 2 : 1;
+    if (pendingDouble) setPendingDouble(false);
+    for (let i = 0; i < times; i += 1) applyGainedTag(offered, nextStats);
   }
 
   function adjustVoucherSlots(delta: number) {
@@ -1505,6 +1518,7 @@ function App() {
     setMoney(4);
     setHandSizeModifier(0);
     setPendingNextRoundHandSize(0);
+    setPendingDouble(false);
     setExtraPackSlots(0);
     setPendingForcedPacks([]);
     setExtraVoucherSlots(0);

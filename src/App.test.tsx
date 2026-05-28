@@ -3400,6 +3400,13 @@ function rngForTag(id: TagId): () => number {
   return () => (index + 0.5) / ids.length;
 }
 
+function rngSequenceForTags(sequence: ReadonlyArray<TagId>): () => number {
+  const ids = createTagCatalog().map((t) => t.id);
+  const fractions = sequence.map((id) => (ids.indexOf(id) + 0.5) / ids.length);
+  let call = 0;
+  return () => fractions[Math.min(call++, fractions.length - 1)];
+}
+
 describe("D6 tag next-shop queue", () => {
   test("gaining the D6 tag on skip makes the next shop's first reroll free", async () => {
     tagOfferRngConfig.rng = rngForTag("d6");
@@ -3721,5 +3728,34 @@ describe("Edition tags", () => {
     expect(
       screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
     ).toBe(0);
+  });
+});
+
+describe("Double tag", () => {
+  test("Double then Speed pays the Speed money twice", async () => {
+    tagOfferRngConfig.rng = rngSequenceForTags(["double", "speed"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$24");
+  });
+
+  test("without Double, Speed pays once (negative)", async () => {
+    tagOfferRngConfig.rng = rngSequenceForTags(["investment", "speed"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$14");
+  });
+
+  test("a second Double is not itself duplicated (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("double");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(document.querySelectorAll('[data-tag-id="double"]')).toHaveLength(2);
   });
 });
