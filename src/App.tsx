@@ -5,6 +5,7 @@ import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
+  applyBossFaceDown,
   bossAdjustHandEntry,
   bossRequiredCardCount,
   bossBlocksHandLabel,
@@ -439,15 +440,17 @@ function App() {
     setRemainingHands(startingHands);
     setRemainingDiscards(startingDiscards);
     setHandHistoryThisRound([]);
-    setDealt(
-      initialDeal(
-        destroyedCardKeys,
-        handSize,
-        addedCards,
-        cardEnhancementsByKey,
-        cardSealsByKey,
-      ),
+    const fresh = initialDeal(
+      destroyedCardKeys,
+      handSize,
+      addedCards,
+      cardEnhancementsByKey,
+      cardSealsByKey,
     );
+    setDealt({
+      hand: applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
+      remaining: fresh.remaining,
+    });
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -1404,7 +1407,13 @@ function App() {
       );
       const drawn = dealt.remaining.slice(0, drawCount);
       const newRemaining = dealt.remaining.slice(drawCount);
-      setDealt({ hand: [...kept, ...drawn], remaining: newRemaining });
+      const drawnWithFaceDown = applyBossFaceDown(
+        drawn,
+        currentBoss,
+        blind === 3,
+        "refill",
+      );
+      setDealt({ hand: [...kept, ...drawnWithFaceDown], remaining: newRemaining });
     }
     setSelectedIds(new Set());
     setDiscardingIds(new Set());

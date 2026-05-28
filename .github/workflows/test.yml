@@ -6,12 +6,33 @@ on:
   pull_request:
 
 jobs:
+  test-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.15.0
+          cache: yarn
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Run App tests
+        run: yarn test src/App.test.tsx
+
   test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -29,7 +50,7 @@ jobs:
         run: yarn install --immutable
 
       - name: Run tests
-        run: yarn test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: yarn test --exclude '**/App.test.tsx' --shard=${{ matrix.shard }}/${{ strategy.job-total }}
 
   coverage:
     runs-on: ubuntu-latest

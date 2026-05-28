@@ -796,3 +796,34 @@
   pointer-events: none;
   z-index: 4;
 }
+
+.card-face-down {
+  background-color: #1864ab;
+  background-image: repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.12) 0,
+      rgba(255, 255, 255, 0.12) 4px,
+      transparent 4px,
+      transparent 10px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 255, 255, 0.08) 0,
+      rgba(255, 255, 255, 0.08) 4px,
+      transparent 4px,
+      transparent 10px
+    );
+  border-color: #0b3d7a;
+  color: transparent;
+}
+
+.card-back-face {
+  align-self: stretch;
+  justify-self: stretch;
+  grid-row: 1 / -1;
+  grid-column: 1 / -1;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 4px;
+  margin: 0.3rem;
+  pointer-events: none;
+}
