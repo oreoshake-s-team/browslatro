@@ -12,6 +12,7 @@ import { useHand } from "./store/hand";
 import { useScoring } from "./store/scoring";
 import { useDevModifiers } from "./store/devModifiers";
 import { useDeck } from "./store/deck";
+import { useBoss } from "./store/boss";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -34,7 +35,7 @@ import {
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
-import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
+import RoundWonModal from "./components/game/RoundWonModal";
 import {
   packPickLimit,
   rollPackForPool,
@@ -398,7 +399,8 @@ function App() {
 
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
-  const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
+  const pendingWin = useBoss((state) => state.pendingWin);
+  const setPendingWin = useBoss((state) => state.setPendingWin);
 
   const shopOffers = useShop((state) => state.shopOffers);
   const setShopOffers = useShop((state) => state.setShopOffers);
@@ -410,7 +412,8 @@ function App() {
   );
   const consumables = useConsumables((state) => state.consumables);
   const setConsumables = useConsumables((state) => state.setConsumables);
-  const [handSizeModifier, setHandSizeModifier] = useState(0);
+  const handSizeModifier = useBoss((state) => state.handSizeModifier);
+  const setHandSizeModifier = useBoss((state) => state.setHandSizeModifier);
   const extraPackSlots = usePacks((state) => state.extraPackSlots);
   const setExtraPackSlots = usePacks((state) => state.setExtraPackSlots);
   const pendingForcedPacks = usePacks((state) => state.pendingForcedPacks);
@@ -462,18 +465,23 @@ function App() {
   );
   const soldVoucherIds = useVouchers((state) => state.soldVoucherIds);
   const setSoldVoucherIds = useVouchers((state) => state.setSoldVoucherIds);
-  const [currentBoss, setCurrentBoss] = useState<BossBlind>(() =>
-    pickBossForAnte({ ante: 1 }),
+  const currentBoss = useBoss((state) => state.currentBoss);
+  const setCurrentBoss = useBoss((state) => state.setCurrentBoss);
+  useEffect(() => {
+    setCurrentBoss(pickBossForAnte({ ante: 1 }));
+  }, [setCurrentBoss]);
+  const recentBossIds = useBoss((state) => state.recentBossIds);
+  const setRecentBossIds = useBoss((state) => state.setRecentBossIds);
+  const handHistoryThisRound = useBoss((state) => state.handHistoryThisRound);
+  const setHandHistoryThisRound = useBoss(
+    (state) => state.setHandHistoryThisRound,
   );
-  const [recentBossIds, setRecentBossIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
+  const playedCardKeysThisAnte = useBoss(
+    (state) => state.playedCardKeysThisAnte,
   );
-  const [handHistoryThisRound, setHandHistoryThisRound] = useState<
-    ReadonlyArray<HandLabel>
-  >([]);
-  const [playedCardKeysThisAnte, setPlayedCardKeysThisAnte] = useState<
-    ReadonlySet<string>
-  >(() => new Set());
+  const setPlayedCardKeysThisAnte = useBoss(
+    (state) => state.setPlayedCardKeysThisAnte,
+  );
 
   const bossScoreMultiplier = currentBoss.scoreMultiplier;
   const requiredScore =
