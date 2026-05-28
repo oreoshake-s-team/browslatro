@@ -8,6 +8,7 @@ import { useConsumables } from "./store/consumables";
 import { useJokers } from "./store/jokers";
 import { useShop } from "./store/shop";
 import { usePacks } from "./store/packs";
+import { useHand } from "./store/hand";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -255,21 +256,21 @@ function App() {
     };
   }, [forceProbabilities]);
   const [roundScore, setRoundScore] = useState(0);
-  const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
-  const [remainingHands, setRemainingHands] = useState(4);
-  const [remainingDiscards, setRemainingDiscards] = useState(3);
+  const selectedHand = useHand((state) => state.selectedHand);
+  const setSelectedHand = useHand((state) => state.setSelectedHand);
+  const remainingHands = useHand((state) => state.remainingHands);
+  const setRemainingHands = useHand((state) => state.setRemainingHands);
+  const remainingDiscards = useHand((state) => state.remainingDiscards);
+  const setRemainingDiscards = useHand((state) => state.setRemainingDiscards);
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
   const highVisibility = usePreferences((state) => state.highVisibility);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-  const [discardingIds, setDiscardingIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-  const [handDisplayOrder, setHandDisplayOrder] = useState<ReadonlyArray<number>>(
-    [],
-  );
+  const selectedIds = useHand((state) => state.selectedIds);
+  const setSelectedIds = useHand((state) => state.setSelectedIds);
+  const discardingIds = useHand((state) => state.discardingIds);
+  const setDiscardingIds = useHand((state) => state.setDiscardingIds);
+  const handDisplayOrder = useHand((state) => state.handDisplayOrder);
+  const setHandDisplayOrder = useHand((state) => state.setHandDisplayOrder);
   const jokers = useJokers((state) => state.jokers);
   const setJokers = useJokers((state) => state.setJokers);
   const jokerPulseCounters = useJokers((state) => state.jokerPulseCounters);
