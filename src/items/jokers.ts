@@ -39,6 +39,9 @@ export const SCHOLAR_RANKS: ReadonlyArray<Rank> = ["A"];
 export const WALKIE_TALKIE_CHIPS = 10;
 export const WALKIE_TALKIE_MULT = 4;
 export const WALKIE_TALKIE_RANKS: ReadonlyArray<Rank> = ["10", "4"];
+export const BANNER_CHIPS_PER_DISCARD = 30;
+export const MYSTIC_SUMMIT_MULT = 15;
+export const BULL_CHIPS_PER_DOLLAR = 2;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -109,7 +112,10 @@ export type JokerEffect =
       readonly ranks: ReadonlyArray<Rank>;
       readonly mult?: number;
       readonly chips?: number;
-    };
+    }
+  | { readonly kind: "per-remaining-discard-chips"; readonly amount: number }
+  | { readonly kind: "mult-when-no-discards"; readonly amount: number }
+  | { readonly kind: "per-dollar-chips"; readonly amount: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -599,6 +605,39 @@ export function createWalkieTalkieJoker(): Joker {
   };
 }
 
+export function createBannerJoker(): Joker {
+  return {
+    id: "banner",
+    rarity: "common",
+    name: "Banner",
+    description: `+${BANNER_CHIPS_PER_DISCARD} Chips for each remaining discard`,
+    effect: {
+      kind: "per-remaining-discard-chips",
+      amount: BANNER_CHIPS_PER_DISCARD,
+    },
+  };
+}
+
+export function createMysticSummitJoker(): Joker {
+  return {
+    id: "mystic-summit",
+    rarity: "common",
+    name: "Mystic Summit",
+    description: `+${MYSTIC_SUMMIT_MULT} Mult when you have 0 discards remaining`,
+    effect: { kind: "mult-when-no-discards", amount: MYSTIC_SUMMIT_MULT },
+  };
+}
+
+export function createBullJoker(): Joker {
+  return {
+    id: "bull",
+    rarity: "uncommon",
+    name: "Bull",
+    description: `+${BULL_CHIPS_PER_DOLLAR} Chips for each $1 you have`,
+    effect: { kind: "per-dollar-chips", amount: BULL_CHIPS_PER_DOLLAR },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -648,6 +687,9 @@ export function createJokerCatalog(): Joker[] {
     createFibonacciJoker(),
     createScholarJoker(),
     createWalkieTalkieJoker(),
+    createBannerJoker(),
+    createMysticSummitJoker(),
+    createBullJoker(),
   ];
 }
 
@@ -666,6 +708,8 @@ export interface HandLevelContext {
   readonly playedCardCount?: number;
   readonly scoredCards?: ReadonlyArray<Card>;
   readonly rng?: RandomSource;
+  readonly remainingDiscards?: number;
+  readonly money?: number;
 }
 
 export function applyHandLevelJokers(
@@ -736,6 +780,34 @@ export function applyHandLevelJokers(
           xMult *= emptySlots;
           fired.push(joker.id);
           steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: emptySlots });
+        }
+        break;
+      }
+      case "per-remaining-discard-chips": {
+        const discards = context.remainingDiscards ?? 0;
+        const chips = effect.amount * discards;
+        if (chips > 0) {
+          additiveChips += chips;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: chips });
+        }
+        break;
+      }
+      case "mult-when-no-discards": {
+        if (context.remainingDiscards === 0) {
+          additiveMult += effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: effect.amount });
+        }
+        break;
+      }
+      case "per-dollar-chips": {
+        const money = Math.max(0, context.money ?? 0);
+        const chips = effect.amount * money;
+        if (chips > 0) {
+          additiveChips += chips;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: chips });
         }
         break;
       }
@@ -891,6 +963,9 @@ export function applyPerCardJokers(
       case "on-hand-type-chips":
       case "additive-mult-when-hand-size":
       case "additive-mult-random":
+      case "per-remaining-discard-chips":
+      case "mult-when-no-discards":
+      case "per-dollar-chips":
         break;
       default:
         assertNeverEffect(effect);
