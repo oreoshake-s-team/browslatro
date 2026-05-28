@@ -1,6 +1,5 @@
 import "./PackOpenModal.css";
 import { useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import {
   type PackOffer,
   type PackOption,
@@ -12,7 +11,7 @@ import { sortCards, type SortMode } from "../../cards/deck";
 import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
-interface PackOpenModalProps {
+export interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
   consumableSlotsFull?: boolean;
@@ -132,14 +131,13 @@ export default function PackOpenModal({
         : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
   const closeLabel = picksRemaining < totalPicks ? "Done" : "Skip";
 
-  return createPortal(
-    <div
-      className="pack-open-overlay"
-      role="dialog"
-      aria-modal="true"
+  return (
+    <section
+      className="pack-open-panel"
+      role="region"
       aria-labelledby="pack-open-title"
     >
-      <div className="pack-open-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="pack-open-inner">
         <h2 id="pack-open-title" className="pack-open-title">
           🎁 {title}
         </h2>
@@ -262,7 +260,6 @@ export default function PackOpenModal({
           {closeLabel}
         </button>
       </div>
-    </div>,
-    document.body,
+    </section>
   );
 }

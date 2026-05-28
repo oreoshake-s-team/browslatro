@@ -351,6 +351,11 @@
   cursor: pointer;
 }
 
-.shop-next:hover {
+.shop-next:hover:not(:disabled) {
   background-color: #343a40;
+}
+
+.shop-next:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
 }

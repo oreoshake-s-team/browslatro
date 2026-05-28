@@ -23,7 +23,10 @@ export interface ShopProps {
   onBuyVoucher: (voucherIdx: number) => void;
   onReroll: (cost: number) => void;
   onNext: () => void;
+  disabled?: boolean;
 }
+
+const LOCK_TOOLTIP = "Finish picking from the pack first";
 
 interface VoucherButtonState {
   readonly disabled: boolean;
@@ -166,17 +169,20 @@ export default function Shop({
   onBuyVoucher,
   onReroll,
   onNext,
+  disabled = false,
 }: ShopProps) {
-  useEscapeToClose(onNext, true);
+  useEscapeToClose(onNext, !disabled);
   const [rerollCount, setRerollCount] = useState(0);
   const currentRerollCost = rerollCostFor(rerollCount);
   const canAffordReroll = money >= currentRerollCost;
-  const rerollTooltip = canAffordReroll
-    ? undefined
-    : "Not enough money to reroll";
+  const rerollTooltip = disabled
+    ? LOCK_TOOLTIP
+    : canAffordReroll
+      ? undefined
+      : "Not enough money to reroll";
 
   function handleReroll() {
-    if (!canAffordReroll) return;
+    if (disabled || !canAffordReroll) return;
     onReroll(currentRerollCost);
     setRerollCount((prev) => prev + 1);
   }
@@ -229,8 +235,10 @@ export default function Shop({
         <button
           type="button"
           className="shop-offer-buy"
-          disabled={state.kind !== "available"}
-          title={buyButtonTooltip(state, consumableCapacity)}
+          disabled={disabled || state.kind !== "available"}
+          title={
+            disabled ? LOCK_TOOLTIP : buyButtonTooltip(state, consumableCapacity)
+          }
           aria-label={`${label}: ${subject.name}`}
           onClick={() => onBuy(idx)}
         >
@@ -258,7 +266,7 @@ export default function Shop({
             type="button"
             className="shop-reroll"
             onClick={handleReroll}
-            disabled={!canAffordReroll}
+            disabled={disabled || !canAffordReroll}
             title={rerollTooltip}
             aria-label={`Reroll shop offers for $${currentRerollCost}`}
           >
@@ -306,8 +314,8 @@ export default function Shop({
                         type="button"
                         className="shop-voucher-buy"
                         data-testid={`shop-voucher-buy-${idx}`}
-                        disabled={btn.disabled}
-                        title={btn.title}
+                        disabled={disabled || btn.disabled}
+                        title={disabled ? LOCK_TOOLTIP : btn.title}
                         aria-label={`${btn.label}: ${voucher.name}`}
                         onClick={() => onBuyVoucher(idx)}
                       >
@@ -338,6 +346,8 @@ export default function Shop({
             type="button"
             className="shop-next"
             onClick={onNext}
+            disabled={disabled}
+            title={disabled ? LOCK_TOOLTIP : undefined}
             autoFocus
           >
             Next Round →

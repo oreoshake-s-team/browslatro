@@ -7,6 +7,9 @@ import HandComponent from "../cards/Hand";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
 import Shop, { type ShopProps } from "../shop/Shop";
+import PackOpenModal, {
+  type PackOpenModalProps,
+} from "../shop/PackOpenModal";
 import type { PackPool } from "../../items/packs";
 
 type QueueablePool = Extract<PackPool, "standard" | "celestial" | "arcana" | "spectral">;
@@ -89,6 +92,7 @@ interface GameProps {
   forceProbabilities?: boolean;
   onToggleForceProbabilities?: () => void;
   shop?: ShopProps;
+  packOpen?: PackOpenModalProps;
   onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
   onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
@@ -147,6 +151,7 @@ export default function Game({
   forceProbabilities = false,
   onToggleForceProbabilities,
   shop,
+  packOpen,
   onToggleCard,
   onCardDiscardEnd,
   onDisplayOrderChange,
@@ -187,9 +192,9 @@ export default function Game({
           onDragEnd={onConsumableDragEnd}
         />
       </div>
-      {shop ? (
-        <Shop {...shop} />
-      ) : (
+      {packOpen && <PackOpenModal {...packOpen} />}
+      {shop && <Shop {...shop} disabled={!!packOpen} />}
+      {!shop && !packOpen && (
         <HandComponent
           hand={hand}
           remaining={remaining}
@@ -334,7 +339,7 @@ export default function Game({
           )}
         </div>
       </details>
-      {!shop && (
+      {!shop && !packOpen && (
         <div className="submit-hand">
           <div className="play-actions">
             <button
