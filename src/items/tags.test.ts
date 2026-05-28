@@ -3,9 +3,18 @@ import {
   INVESTMENT_TAG_REWARD,
   createTagCatalog,
   getTagSpec,
-  tagPayout,
-  totalTagPayout,
+  resolveTagEffect,
+  rollAnteSkipOffers,
+  rollSkipTag,
+  totalDeferredBossPayout,
+  type TagEffect,
 } from "./tags";
+
+const KNOWN_CATEGORIES: ReadonlyArray<TagEffect["category"]> = [
+  "deferred-boss-payout",
+  "immediate",
+  "next-shop",
+];
 
 describe("INVESTMENT_TAG_REWARD", () => {
   test("equals $25", () => {
@@ -19,29 +28,290 @@ describe("Tag catalog", () => {
     expect(ids).toContain("investment");
   });
 
-  test("Investment tag has the canonical name and description", () => {
-    const spec = getTagSpec("investment");
-    expect(spec.name).toBe("Investment Tag");
-    expect(spec.description).toContain("$25");
+  test("Investment tag has the canonical name", () => {
+    expect(getTagSpec("investment").name).toBe("Investment Tag");
+  });
+
+  test("Investment tag description mentions the reward", () => {
+    expect(getTagSpec("investment").description).toContain("$25");
+  });
+
+  test("every tag declares a known effect category", () => {
+    const categories = createTagCatalog().map((t) => t.effect.category);
+    expect(categories.every((c) => KNOWN_CATEGORIES.includes(c))).toBe(true);
   });
 });
 
-describe("tagPayout", () => {
-  test("Investment pays $25", () => {
-    expect(tagPayout("investment")).toBe(25);
+describe("D6 tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("d6");
+  });
+
+  test("resolves to the next-shop category", () => {
+    expect(resolveTagEffect("d6").category).toBe("next-shop");
+  });
+
+  test("carries a free-rerolls next-shop modifier", () => {
+    const effect = resolveTagEffect("d6");
+    if (effect.category !== "next-shop") {
+      throw new Error("expected a next-shop effect");
+    }
+    expect(effect.modifiers).toEqual([{ kind: "free-rerolls" }]);
   });
 });
 
-describe("totalTagPayout", () => {
+describe("run-stat money tags", () => {
+  test("Handy is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("handy");
+  });
+
+  test("Garbage is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("garbage");
+  });
+
+  test("Speed is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("speed");
+  });
+
+  test("Handy resolves to an immediate $1-per-hand-played action", () => {
+    const effect = resolveTagEffect("handy");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({
+      kind: "money-per-stat",
+      stat: "handsPlayed",
+      perUnit: 1,
+    });
+  });
+
+  test("Garbage resolves to an immediate $1-per-unused-discard action", () => {
+    const effect = resolveTagEffect("garbage");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({
+      kind: "money-per-stat",
+      stat: "unusedDiscards",
+      perUnit: 1,
+    });
+  });
+
+  test("Speed resolves to an immediate $5-per-blind-skipped action", () => {
+    const effect = resolveTagEffect("speed");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({
+      kind: "money-per-stat",
+      stat: "blindsSkipped",
+      perUnit: 5,
+    });
+  });
+});
+
+describe("Economy tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("economy");
+  });
+
+  test("resolves to an immediate double-money action capped at $40", () => {
+    const effect = resolveTagEffect("economy");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "double-money", cap: 40 });
+  });
+});
+
+describe("Charm and Ethereal pack tags", () => {
+  test("Charm is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("charm");
+  });
+
+  test("Charm resolves to an immediate open-pack action for a Mega Arcana pack", () => {
+    const effect = resolveTagEffect("charm");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "arcana", variant: "mega" });
+  });
+
+  test("Ethereal is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("ethereal");
+  });
+
+  test("Ethereal resolves to an immediate open-pack action for a Spectral pack", () => {
+    const effect = resolveTagEffect("ethereal");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "spectral", variant: "normal" });
+  });
+});
+
+describe("Standard, Meteor, and Buffoon pack tags", () => {
+  test("Standard opens a Mega Standard pack", () => {
+    const effect = resolveTagEffect("standard");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "standard", variant: "mega" });
+  });
+
+  test("Meteor opens a Mega Celestial pack", () => {
+    const effect = resolveTagEffect("meteor");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "celestial", variant: "mega" });
+  });
+
+  test("Buffoon opens a Mega Buffoon pack", () => {
+    const effect = resolveTagEffect("buffoon");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "buffoon", variant: "mega" });
+  });
+
+  test("all three pack pools are present in the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(["standard", "meteor", "buffoon"].every((id) => ids.includes(id as never))).toBe(
+      true,
+    );
+  });
+});
+
+describe("Coupon tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("coupon");
+  });
+
+  test("resolves to a next-shop free-shop-items modifier", () => {
+    const effect = resolveTagEffect("coupon");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "free-shop-items" }]);
+  });
+});
+
+describe("Uncommon and Rare joker tags", () => {
+  test("Uncommon is in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("uncommon");
+  });
+
+  test("Uncommon resolves to a next-shop free Uncommon joker", () => {
+    const effect = resolveTagEffect("uncommon");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "free-joker", rarity: "uncommon" }]);
+  });
+
+  test("Rare is in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("rare");
+  });
+
+  test("Rare resolves to a next-shop free Rare joker", () => {
+    const effect = resolveTagEffect("rare");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "free-joker", rarity: "rare" }]);
+  });
+});
+
+describe("Voucher tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("voucher");
+  });
+
+  test("resolves to a next-shop extra-voucher modifier", () => {
+    const effect = resolveTagEffect("voucher");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "extra-voucher" }]);
+  });
+});
+
+describe("Top-up tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("top-up");
+  });
+
+  test("resolves to an immediate create-jokers action for 2 Common Jokers", () => {
+    const effect = resolveTagEffect("top-up");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "create-jokers", rarity: "common", count: 2 });
+  });
+});
+
+describe("Boss tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("boss");
+  });
+
+  test("resolves to an immediate reroll-boss action", () => {
+    const effect = resolveTagEffect("boss");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "reroll-boss" });
+  });
+});
+
+describe("Orbital tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("orbital");
+  });
+
+  test("resolves to an immediate upgrade-hand action for 3 levels", () => {
+    const effect = resolveTagEffect("orbital");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "upgrade-hand", levels: 3 });
+  });
+});
+
+describe("resolveTagEffect", () => {
+  test("Investment resolves to the deferred-boss-payout category", () => {
+    expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
+  });
+
+  test("Investment's deferred payout amount is $25", () => {
+    const effect = resolveTagEffect("investment");
+    if (effect.category !== "deferred-boss-payout") {
+      throw new Error("expected a deferred-boss-payout effect");
+    }
+    expect(effect.amount).toBe(25);
+  });
+});
+
+describe("totalDeferredBossPayout", () => {
   test("empty list sums to 0", () => {
-    expect(totalTagPayout([])).toBe(0);
+    expect(totalDeferredBossPayout([])).toBe(0);
   });
 
   test("single Investment sums to $25", () => {
-    expect(totalTagPayout(["investment"])).toBe(25);
+    expect(totalDeferredBossPayout(["investment"])).toBe(25);
   });
 
   test("two Investments sum to $50", () => {
-    expect(totalTagPayout(["investment", "investment"])).toBe(50);
+    expect(totalDeferredBossPayout(["investment", "investment"])).toBe(50);
+  });
+
+  test("a non-deferred effect category contributes $0 to the boss payout", () => {
+    const sumDeferred = (effects: ReadonlyArray<TagEffect>): number =>
+      effects.reduce(
+        (sum, e) => (e.category === "deferred-boss-payout" ? sum + e.amount : sum),
+        0,
+      );
+    expect(
+      sumDeferred([
+        {
+          category: "immediate",
+          action: { kind: "money-per-stat", stat: "handsPlayed", perUnit: 1 },
+        },
+        { category: "next-shop", modifiers: [] },
+      ]),
+    ).toBe(0);
+  });
+});
+
+describe("rollSkipTag", () => {
+  test("returns a tag that exists in the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollSkipTag(() => 0));
+  });
+
+  test("a roll at the top of the range stays within the catalog bounds", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollSkipTag(() => 0.999999));
+  });
+});
+
+describe("rollAnteSkipOffers", () => {
+  test("rolls a small-blind offer from the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollAnteSkipOffers(() => 0).small);
+  });
+
+  test("rolls a big-blind offer from the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollAnteSkipOffers(() => 0).big);
   });
 });

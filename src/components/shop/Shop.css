@@ -64,7 +64,7 @@
 .shop-packs {
   margin: 0;
   padding: 0.8rem 1rem;
-  border: 2px dashed #fab005;
+  border: 2px solid #fab005;
   border-radius: 8px;
   background-color: #fff9db;
   display: flex;
@@ -88,7 +88,7 @@
 .shop-voucher {
   margin: 0;
   padding: 0.8rem 1rem;
-  border: 2px dashed #b197fc;
+  border: 2px solid #b197fc;
   border-radius: 8px;
   background-color: #f3f0ff;
   display: flex;

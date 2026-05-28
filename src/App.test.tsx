@@ -6,6 +6,8 @@ import {
   setAnimationSpeed,
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
+import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
+import { createSpectralCatalog } from "./items/spectrals";
 import type { VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
@@ -3322,5 +3324,361 @@ describe("Apply Modifiers — Force Probabilities toggle (#354)", () => {
     await user.click(screen.getByRole("button", { name: /Options/ }));
     await user.click(screen.getByRole("button", { name: /New game/ }));
     expect(chanceOverrideConfig.force100).toBe(false);
+  });
+});
+
+describe("Per-run stat counters", () => {
+  const appRoot = (container: HTMLElement): HTMLElement =>
+    container.querySelector(".App") as HTMLElement;
+
+  test("the hands-played counter starts at zero before any hand is played (negative)", () => {
+    const { container } = render(<App />);
+    expect(appRoot(container)).toHaveAttribute("data-hands-played", "0");
+  });
+
+  test("playing a hand increments the per-run hands-played counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(appRoot(container)).toHaveAttribute("data-hands-played", "1");
+  });
+
+  test("skipping a blind increments the per-run blinds-skipped counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(appRoot(container)).toHaveAttribute("data-blinds-skipped", "1");
+  });
+
+  test("winning a blind accumulates the leftover discards into the per-run counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    const leftover = getStatValue("Discards").querySelector(".stat-value")?.textContent;
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(appRoot(container)).toHaveAttribute("data-unused-discards", leftover ?? "");
+  });
+
+  test("starting a new game resets the per-run counters to zero", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    expect(appRoot(container)).toHaveAttribute("data-unused-discards", "0");
+  });
+});
+
+describe("Skip tag offers", () => {
+  test("the blind-select shows a rolled skip-reward on the Small Blind row", () => {
+    render(<App />);
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toHaveTextContent("Investment Tag");
+  });
+
+  test("the blind-select shows a rolled skip-reward on the Big Blind row", () => {
+    render(<App />);
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-2"),
+    ).toHaveTextContent("Investment Tag");
+  });
+
+  test("skipping the Small Blind grants its offered tag", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent(
+      "Investment Tag",
+    );
+  });
+});
+
+function rngForTag(id: TagId): () => number {
+  const ids = createTagCatalog().map((t) => t.id);
+  const index = ids.indexOf(id);
+  return () => (index + 0.5) / ids.length;
+}
+
+describe("D6 tag next-shop queue", () => {
+  test("gaining the D6 tag on skip makes the next shop's first reroll free", async () => {
+    tagOfferRngConfig.rng = rngForTag("d6");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
+      "Reroll ($0)",
+    );
+  });
+
+  test("without a next-shop tag the next shop's first reroll costs the base $5 (negative)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
+      "Reroll ($5)",
+    );
+  });
+});
+
+describe("Run-stat money tags", () => {
+  test("skipping with the Speed tag grants $5 for the first blind skipped", async () => {
+    tagOfferRngConfig.rng = rngForTag("speed");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$9");
+  });
+
+  test("the Speed tag pays out per blind skipped, including the current skip", async () => {
+    tagOfferRngConfig.rng = rngForTag("speed");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$19");
+  });
+
+  test("an immediate tag is not retained as a held tag (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("speed");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.queryByTestId("blind-select-tag-0")).not.toBeInTheDocument();
+  });
+});
+
+describe("Economy tag", () => {
+  test("skipping with the Economy tag doubles the player's money", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$8");
+  });
+});
+
+describe("Charm and Ethereal pack tags", () => {
+  test("gaining the Charm tag immediately opens a Mega Arcana pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("charm");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Arcana Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("gaining the Ethereal tag immediately opens a Spectral pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Spectral Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("a target-needing spectral picked from the Ethereal pack is stashed as a consumable", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const talismanIdx = spectrals.findIndex((s) => s.id === "talisman");
+    shopPickerRngConfig.rng = () => talismanIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
+  });
+
+  test("a money tag does not open a pack (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.queryByTestId("pack-open-subtitle")).not.toBeInTheDocument();
+  });
+});
+
+describe("Standard, Meteor, and Buffoon pack tags", () => {
+  test("gaining the Standard tag opens a Mega Standard pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("standard");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Standard Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("gaining the Meteor tag opens a Mega Celestial pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("meteor");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Celestial Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("gaining the Buffoon tag opens a Mega Buffoon pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("buffoon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Buffoon Pack/ }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Coupon tag", () => {
+  test("gaining Coupon makes the next shop's offers free", async () => {
+    tagOfferRngConfig.rng = rngForTag("coupon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  test("a shop without the Coupon tag has no free offers (negative)", async () => {
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBe(0);
+  });
+});
+
+describe("Uncommon and Rare joker tags", () => {
+  test("gaining Uncommon adds a free joker offer to the next shop", async () => {
+    tagOfferRngConfig.rng = rngForTag("uncommon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  test("gaining Rare adds a free joker offer to the next shop", async () => {
+    tagOfferRngConfig.rng = rngForTag("rare");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("Voucher tag", () => {
+  test("gaining Voucher adds a second voucher to the next shop", async () => {
+    tagOfferRngConfig.rng = rngForTag("voucher");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.getByTestId("shop-voucher-1")).toBeInTheDocument();
+  });
+
+  test("a shop without the Voucher tag offers only one voucher (negative)", async () => {
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.queryByTestId("shop-voucher-1")).not.toBeInTheDocument();
+  });
+});
+
+describe("Top-up tag", () => {
+  const jokerCount = () => screen.queryAllByTestId(/^joker-tile-filled-/).length;
+
+  test("gaining Top-up creates two Common Jokers", async () => {
+    tagOfferRngConfig.rng = rngForTag("top-up");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = jokerCount();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(jokerCount() - before).toBe(2);
+  });
+
+  test("a non-Top-up tag creates no jokers (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = jokerCount();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(jokerCount() - before).toBe(0);
+  });
+});
+
+describe("Boss tag", () => {
+  const bossText = () =>
+    screen.getByTestId("blind-select-boss-description").textContent;
+
+  test("gaining the Boss tag rerolls the boss blind", async () => {
+    tagOfferRngConfig.rng = rngForTag("boss");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = bossText();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(bossText()).not.toBe(before);
+  });
+
+  test("a non-Boss tag leaves the boss blind unchanged (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = bossText();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(bossText()).toBe(before);
+  });
+});
+
+describe("Orbital tag", () => {
+  test("gaining Orbital upgrades a poker hand by 3 levels", async () => {
+    tagOfferRngConfig.rng = rngForTag("orbital");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("4");
+  });
+
+  test("a non-Orbital tag leaves hand levels unchanged (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("1");
   });
 });

@@ -7,6 +7,7 @@ import {
   shuffle,
   deal,
   groupBySuit,
+  summarizeDeck,
   resetCardIds,
   sortCards,
   SUITS,
@@ -347,5 +348,54 @@ describe("SUIT_DISPLAY_ORDER — alternation invariant (issue #114)", () => {
       }
     }
     expect(blacksAdjacent).toEqual([]);
+  });
+});
+
+describe("summarizeDeck", () => {
+  test("counts 13 cards for each suit in a full deck", () => {
+    const { suitCounts } = summarizeDeck(createDeck());
+    expect(suitCounts).toEqual({
+      spades: 13,
+      hearts: 13,
+      diamonds: 13,
+      clubs: 13,
+    });
+  });
+
+  test("counts 4 cards for each rank in a full deck", () => {
+    const { rankCounts } = summarizeDeck(createDeck());
+    expect(RANKS.every((rank) => rankCounts[rank] === 4)).toBe(true);
+  });
+
+  test("reports zero for a suit with no remaining cards", () => {
+    const onlySpades = createDeck().filter((c) => c.suit === "spades");
+    expect(summarizeDeck(onlySpades).suitCounts.hearts).toBe(0);
+  });
+
+  test("reports zero for a rank with no remaining cards", () => {
+    const noAces = createDeck().filter((c) => c.rank !== "A");
+    expect(summarizeDeck(noAces).rankCounts.A).toBe(0);
+  });
+
+  test("excludes a removed card from its suit count", () => {
+    const withoutAceSpades = createDeck().filter(
+      (c) => !(c.rank === "A" && c.suit === "spades"),
+    );
+    expect(summarizeDeck(withoutAceSpades).suitCounts.spades).toBe(12);
+  });
+
+  test("excludes a removed card from its rank count", () => {
+    const withoutAceSpades = createDeck().filter(
+      (c) => !(c.rank === "A" && c.suit === "spades"),
+    );
+    expect(summarizeDeck(withoutAceSpades).rankCounts.A).toBe(3);
+  });
+
+  test("returns all-zero counts for an empty deck", () => {
+    const { suitCounts, rankCounts } = summarizeDeck([]);
+    const allZero =
+      SUITS.every((suit) => suitCounts[suit] === 0) &&
+      RANKS.every((rank) => rankCounts[rank] === 0);
+    expect(allZero).toBe(true);
   });
 });

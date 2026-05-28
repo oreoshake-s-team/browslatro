@@ -34,9 +34,33 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
-import { packPickLimit } from "./items/packs";
+import {
+  packPickLimit,
+  rollPackForPool,
+  type PackOffer,
+  type PackPool,
+  type PackVariant,
+} from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
-import { totalTagPayout } from "./items/tags";
+import {
+  resolveTagEffect,
+  rollAnteSkipOffers,
+  tagOfferRngConfig,
+  totalDeferredBossPayout,
+  type AnteSkipOffers,
+} from "./items/tags";
+import { immediateMoneyGain } from "./run/immediateActions";
+import {
+  applyNextShopModifiers,
+  type NextShopModifier,
+} from "./run/nextShopMods";
+import {
+  initialRunStats,
+  recordBlindSkipped,
+  recordHandPlayed,
+  recordUnusedDiscards,
+  type RunStats,
+} from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
   createSpectralCatalog,
@@ -127,6 +151,7 @@ import {
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
+  buildFreeJokerOffers,
   pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
@@ -272,6 +297,7 @@ function App() {
   const setRemainingHands = useHand((state) => state.setRemainingHands);
   const remainingDiscards = useHand((state) => state.remainingDiscards);
   const setRemainingDiscards = useHand((state) => state.setRemainingDiscards);
+  const [runStats, setRunStats] = useState<RunStats>(initialRunStats());
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
   const highVisibility = usePreferences((state) => state.highVisibility);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
@@ -401,6 +427,12 @@ function App() {
   const packPreviewSelectedIds = usePacks(
     (state) => state.packPreviewSelectedIds,
   );
+  const [skipTagOffers, setSkipTagOffers] = useState<AnteSkipOffers>(() =>
+    rollAnteSkipOffers(tagOfferRngConfig.rng),
+  );
+  const [pendingShopMods, setPendingShopMods] = useState<
+    ReadonlyArray<NextShopModifier>
+  >([]);
   const setPackPreviewSelectedIds = usePacks(
     (state) => state.setPackPreviewSelectedIds,
   );
@@ -762,6 +794,7 @@ function App() {
     precomputed?: { readonly interest: number; readonly interestWallet: number },
   ) {
     setRound((prev) => prev + 1);
+    setRunStats((prev) => recordUnusedDiscards(prev, remainingDiscards));
     const blindReward = blind + 2;
     const interestBefore = precomputed?.interestWallet ?? money;
     const interest =
@@ -783,7 +816,7 @@ function App() {
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
-      const tagPayout = totalTagPayout(pendingTags);
+      const tagPayout = totalDeferredBossPayout(pendingTags);
       if (tagPayout > 0) {
         useEconomy.getState().earn(tagPayout);
         setPendingTags([]);
@@ -798,6 +831,7 @@ function App() {
         ),
       );
       setSoldVoucherIds(new Set());
+      setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
       const nextRecent = new Set(recentBossIds);
       nextRecent.add(currentBoss.id);
       setRecentBossIds(nextRecent);
@@ -811,19 +845,42 @@ function App() {
       setPlayedCardKeysThisAnte(new Set());
     }
     setSoldJokerIdsThisShopVisit([]);
-    setShopOffers(
-      pickShopOffers({
-        jokerCatalog: createJokerCatalog(),
-        excludedJokerIds: jokers.map((j) => j.id),
-        planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-        tarotCatalog: createTarotCatalog(),
-        spectralCatalog: createSpectralCatalog(),
-        extraSlots: extraShopOfferSlots(ownedVoucherIds),
-        extraPackSlots,
-        forcedPackPools: pendingForcedPacks,
-        rng: shopPickerRngConfig.rng,
-      }),
+    const baseOffers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: jokers.map((j) => j.id),
+      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      extraSlots: extraShopOfferSlots(ownedVoucherIds),
+      extraPackSlots,
+      forcedPackPools: pendingForcedPacks,
+      rng: shopPickerRngConfig.rng,
+    });
+    const shopAdjustments = applyNextShopModifiers(pendingShopMods);
+    const pricedOffers = shopAdjustments.freeShopItems
+      ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
+      : baseOffers;
+    const freeJokerOffers = buildFreeJokerOffers(
+      shopAdjustments.freeJokerRarities,
+      createJokerCatalog(),
+      new Set(jokers.map((j) => j.id)),
+      shopPickerRngConfig.rng,
     );
+    setShopOffers([...freeJokerOffers, ...pricedOffers]);
+    if (shopAdjustments.extraVouchers > 0) {
+      setCurrentAnteVouchers((prev) => {
+        const existing = new Set(prev.map((v) => v.id));
+        const extra = pickVouchersForAnte(
+          {
+            ante,
+            ownedIds: ownedVoucherIds,
+            excludeIds: new Set<VoucherId>([...ownedVoucherIds, ...existing]),
+          },
+          shopAdjustments.extraVouchers,
+        );
+        return [...prev, ...extra];
+      });
+    }
     setPendingForcedPacks([]);
     setDealt(
       fullDeckPile(
@@ -848,16 +905,10 @@ function App() {
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
-  function openPack(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold || offer.kind !== "pack") return;
-    const price = applyShopDiscount(offer.price, ownedVoucherIds);
-    if (money < price) return;
-    play("pop");
-    useEconomy.getState().spend(price);
-    setOpenedPack(offer.pack);
-    setPackPicksRemaining(packPickLimit(offer.pack.variant));
-    if (offer.pack.pool === "arcana" || offer.pack.pool === "spectral") {
+  function openPackOffer(pack: PackOffer) {
+    setOpenedPack(pack);
+    setPackPicksRemaining(packPickLimit(pack.variant));
+    if (pack.pool === "arcana" || pack.pool === "spectral") {
       const baseDeck = applySealOverrides(
         applyEnhancementOverrides(createDeck(destroyedCardKeys), cardEnhancementsByKey),
         cardSealsByKey,
@@ -872,6 +923,34 @@ function App() {
       setPackPreviewHand([]);
     }
     setPackPreviewSelectedIds(new Set());
+  }
+
+  function openTagPack(pool: PackPool, variant: PackVariant) {
+    play("pop");
+    openPackOffer(
+      rollPackForPool(
+        pool,
+        {
+          planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+          tarotCatalog: createTarotCatalog(),
+          jokerCatalog: createJokerCatalog(),
+          spectralCatalog: createSpectralCatalog(),
+          excludedJokerIds: jokers.map((j) => j.id),
+          rng: shopPickerRngConfig.rng,
+        },
+        variant,
+      ),
+    );
+  }
+
+  function openPack(idx: number) {
+    const offer = shopOffers?.[idx];
+    if (!offer || offer.sold || offer.kind !== "pack") return;
+    const price = applyShopDiscount(offer.price, ownedVoucherIds);
+    if (money < price) return;
+    play("pop");
+    useEconomy.getState().spend(price);
+    openPackOffer(offer.pack);
     markOfferSold(idx);
   }
 
@@ -1280,6 +1359,7 @@ function App() {
   function closeShopAndStartNextRound() {
     setShopOffers(null);
     setSoldJokerIdsThisShopVisit([]);
+    setPendingShopMods([]);
     setPendingBlindSelect(true);
   }
 
@@ -1290,9 +1370,65 @@ function App() {
 
   function skipBlind() {
     if (blind === 3) return;
+    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
+    const effect = resolveTagEffect(offered);
+    const nextStats = recordBlindSkipped(runStats);
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
-    setPendingTags((prev) => [...prev, "investment"]);
+    setRunStats(nextStats);
+    if (effect.category === "immediate") {
+      const action = effect.action;
+      if (action.kind === "open-pack") {
+        openTagPack(action.pool, action.variant);
+      } else if (action.kind === "create-jokers") {
+        play("pop");
+        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        setJokers((prev) => {
+          let next = prev;
+          for (let i = 0; i < action.count; i += 1) {
+            const joker = createJokerByRarity(
+              next,
+              createJokerCatalog(),
+              action.rarity,
+              capacity,
+              shopPickerRngConfig.rng,
+            );
+            if (joker) next = [...next, joker];
+          }
+          return next;
+        });
+      } else if (action.kind === "reroll-boss") {
+        play("pop");
+        setCurrentBoss(
+          pickBossForAnte({
+            ante,
+            recentIds: new Set<string>([...recentBossIds, currentBoss.id]),
+            rng: bossPickerRngConfig.rng,
+          }),
+        );
+      } else if (action.kind === "upgrade-hand") {
+        play("pop");
+        const planets = createPlanetCatalog();
+        const planet = planets[Math.floor(shopPickerRngConfig.rng() * planets.length)];
+        setHandStats((prev) => {
+          let next = prev;
+          for (let i = 0; i < action.levels; i += 1) {
+            next = applyPlanetUpgrade(next, planet);
+          }
+          return next;
+        });
+      } else {
+        const economy = useEconomy.getState();
+        economy.earn(
+          immediateMoneyGain(action, { stats: nextStats, money: economy.money }),
+        );
+      }
+      return;
+    }
+    setPendingTags((prev) => [...prev, offered]);
+    if (effect.category === "next-shop") {
+      setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
+    }
   }
 
   function adjustVoucherSlots(delta: number) {
@@ -1403,6 +1539,9 @@ function App() {
     });
     setCurrentBoss(freshBoss);
     setPendingTags([]);
+    setRunStats(initialRunStats());
+    setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+    setPendingShopMods([]);
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
     setPendingBlindSelect(true);
@@ -1539,6 +1678,7 @@ function App() {
     pendingHandPlayResetRef.current = true;
 
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
+    setRunStats(recordHandPlayed);
     setHandHistoryThisRound((prev) => [...prev, label]);
     setPlayedCardKeysThisAnte((prev) => {
       const next = new Set(prev);
@@ -1854,6 +1994,9 @@ function App() {
     <div
       className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}
       style={appStyle}
+      data-hands-played={runStats.handsPlayed}
+      data-unused-discards={runStats.unusedDiscards}
+      data-blinds-skipped={runStats.blindsSkipped}
     >
       <Sidebar
         blind={blind}
@@ -1970,6 +2113,8 @@ function App() {
                 onBuyVoucher: buyAnteVoucher,
                 onReroll: rerollShopOffers,
                 onNext: closeShopAndStartNextRound,
+                extraRerollReduction:
+                  applyNextShopModifiers(pendingShopMods).rerollReduction,
                 voucherOptions: VOUCHER_CATALOG,
                 onSetVoucher: (id) => {
                   const next = VOUCHER_CATALOG.find((v) => v.id === id);
@@ -2012,7 +2157,7 @@ function App() {
           onPlay={confirmBlindSelect}
           onSkip={skipBlind}
           tags={pendingTags}
-          skipReward="investment"
+          skipRewards={skipTagOffers}
           bossOptions={availableBosses(createBossCatalog(), ante)}
           onSetBoss={(id) => {
             const next = createBossCatalog().find((b) => b.id === id);

@@ -2,6 +2,7 @@ import { useCallback, useState, type DragEvent } from "react";
 import { createPortal } from "react-dom";
 import "./DeckPile.css";
 import Card from "./Card";
+import DeckSummary from "./DeckSummary";
 import type { Card as CardType, Suit } from "../../cards/types";
 import { SUITS, groupBySuit } from "../../cards/deck";
 import { useEscapeToClose } from "../system/useEscapeToClose";
@@ -93,19 +94,22 @@ export default function DeckPile({
               onClick={(e) => e.stopPropagation()}
             >
               <h3>Remaining Cards</h3>
-              <div className="deck-modal-groups">
-                {SUITS.map((suit) => (
-                  <section key={suit} className="deck-modal-group">
-                    <h4>
-                      {SUIT_LABELS[suit]} ({grouped[suit].length})
-                    </h4>
-                    <div className="deck-modal-cards">
-                      {grouped[suit].map((card) => (
-                        <Card key={card.id} card={card} />
-                      ))}
-                    </div>
-                  </section>
-                ))}
+              <div className="deck-modal-body">
+                <DeckSummary remaining={remaining} />
+                <div className="deck-modal-groups">
+                  {SUITS.map((suit) => (
+                    <section key={suit} className="deck-modal-group">
+                      <h4>
+                        {SUIT_LABELS[suit]} ({grouped[suit].length})
+                      </h4>
+                      <div className="deck-modal-cards">
+                        {grouped[suit].map((card) => (
+                          <Card key={card.id} card={card} />
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
               </div>
               <button className="modal-close" onClick={handleClose}>
                 Close
