@@ -235,6 +235,18 @@ describe("Boss tag", () => {
   });
 });
 
+describe("Orbital tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("orbital");
+  });
+
+  test("resolves to an immediate upgrade-hand action for 3 levels", () => {
+    const effect = resolveTagEffect("orbital");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "upgrade-hand", levels: 3 });
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");

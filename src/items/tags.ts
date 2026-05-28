@@ -18,7 +18,8 @@ export type TagId =
   | "rare"
   | "voucher"
   | "top-up"
-  | "boss";
+  | "boss"
+  | "orbital";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -183,6 +184,15 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "immediate",
       action: { kind: "reroll-boss" },
+    },
+  },
+  {
+    id: "orbital",
+    name: "Orbital Tag",
+    description: "Upgrade a random poker hand by 3 levels.",
+    effect: {
+      category: "immediate",
+      action: { kind: "upgrade-hand", levels: 3 },
     },
   },
 ];
