@@ -512,3 +512,14 @@ describe("Face joker catalog membership", () => {
     expect(ids).toContain(id);
   });
 });
+
+describe("Rank-based joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Fibonacci", id: "fibonacci" },
+    { name: "Scholar", id: "scholar" },
+    { name: "Walkie Talkie", id: "walkie-talkie" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
