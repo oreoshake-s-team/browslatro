@@ -4,6 +4,7 @@ import type { Card } from "../../cards/types";
 import type { Joker } from "../../items/jokers";
 import type { Consumable } from "../../items/consumables";
 import HandComponent from "../cards/Hand";
+import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
 import Shop, { type ShopProps } from "../shop/Shop";
@@ -191,6 +192,17 @@ export default function Game({
           onDragStart={onConsumableDragStart}
           onDragEnd={onConsumableDragEnd}
         />
+        {(shop || packOpen) && (
+          <div className="game-overlay-deck">
+            <DeckPile
+              remaining={remaining}
+              consumableDropEnabled={dragging}
+              onConsumableDrop={onConsumableDropOnDeck}
+              jokerDropEnabled={draggingJoker}
+              onJokerDrop={onJokerDropOnDeck}
+            />
+          </div>
+        )}
       </div>
       {packOpen && <PackOpenModal {...packOpen} />}
       {shop && <Shop {...shop} disabled={!!packOpen} />}
