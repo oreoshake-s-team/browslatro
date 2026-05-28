@@ -85,7 +85,11 @@ import {
   GOLD_HELD_BONUS_PER_CARD,
   REMAINING_HAND_BONUS,
 } from "./scoring/payout";
-import { STEEL_MULT_FACTOR, steelHeldMultiplier } from "./cards/heldInHand";
+import {
+  STEEL_MULT_FACTOR,
+  getHeldInHand,
+  steelHeldMultiplier,
+} from "./cards/heldInHand";
 import {
   applyCardEnhancement,
   applyLuckyRolls,
@@ -1390,6 +1394,7 @@ function App() {
       scoredCards: scoring,
       remainingDiscards,
       money,
+      heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
     });
 
     let perCardAdditiveMult = 0;
