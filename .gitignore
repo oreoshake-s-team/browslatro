@@ -3,9 +3,11 @@
 # dependencies
 /node_modules
 
-# yarn berry (PnP linker — commit .pnp.cjs, .pnp.loader.mjs, and .yarn/cache for zero-installs)
+# yarn berry (PnP linker). The .pnp.* files are machine-specific generated
+# artifacts (they embed paths to the out-of-project global cache), so they are
+# not committed — run `yarn install` to regenerate them after cloning.
+.pnp.*
 .yarn/*
-!.yarn/cache
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
