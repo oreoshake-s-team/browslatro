@@ -22,11 +22,13 @@ export function consumableSellValue(c: Consumable): number {
 function checkSelection(
   selectedCount: number,
   maxTargets: number,
+  source: "hand" | "preview" = "hand",
 ): string | null {
+  const noun = source === "preview" ? "preview card" : "card in your hand";
   if (selectedCount === 0) {
     return maxTargets === 1
-      ? "Select 1 card in your hand first"
-      : `Select 1–${maxTargets} cards in your hand first`;
+      ? `Select 1 ${noun} first`
+      : `Select 1–${maxTargets} ${noun}s first`;
   }
   if (selectedCount > maxTargets) {
     return `Too many cards selected (max ${maxTargets})`;
@@ -37,15 +39,17 @@ function checkSelection(
 export function consumableUseBlock(
   c: Consumable,
   selectedCount: number,
+  previewMode = false,
 ): string | null {
   if (c.kind === "planet") return null;
   if (c.kind === "tarot") {
     const effect = c.card.effect;
     if (effect.kind !== "apply-enhancement") return null;
-    return checkSelection(selectedCount, effect.maxTargets);
+    return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
   }
   const effect = c.card.effect;
   if (effect.kind !== "apply-seal") return null;
+  if (previewMode) return "Seals can't be applied during a pack pick yet";
   return checkSelection(selectedCount, effect.maxTargets);
 }
 
