@@ -260,6 +260,29 @@ describe("Juggle tag", () => {
   });
 });
 
+describe("edition tags", () => {
+  const cases = [
+    ["negative", "negative"],
+    ["foil", "foil"],
+    ["holographic", "holographic"],
+    ["polychrome", "polychrome"],
+  ] as const;
+
+  test("all four edition tags are in the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(cases.every(([id]) => ids.includes(id))).toBe(true);
+  });
+
+  test.each(cases)(
+    "%s resolves to a next-shop free-edition-joker modifier",
+    (id, edition) => {
+      const effect = resolveTagEffect(id);
+      if (effect.category !== "next-shop") throw new Error("expected next-shop");
+      expect(effect.modifiers).toEqual([{ kind: "free-edition-joker", edition }]);
+    },
+  );
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
