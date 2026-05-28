@@ -188,13 +188,22 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
   });
 
-  test("previewMode blocks an apply-seal spectral even with a valid selection", () => {
+  test("previewMode allows an apply-seal spectral with a valid preview selection", () => {
     const sealSpectral = createSpectralCatalog().find(
       (s) => s.effect.kind === "apply-seal",
     );
     if (!sealSpectral) throw new Error("no apply-seal spectral in catalog");
     const c: Consumable = { kind: "spectral", card: sealSpectral };
-    expect(consumableUseBlock(c, 1, true)).toMatch(/pack pick/);
+    expect(consumableUseBlock(c, 1, true)).toBeNull();
+  });
+
+  test("previewMode blocks an apply-seal spectral with zero preview selection", () => {
+    const sealSpectral = createSpectralCatalog().find(
+      (s) => s.effect.kind === "apply-seal",
+    );
+    if (!sealSpectral) throw new Error("no apply-seal spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: sealSpectral };
+    expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
   });
 
   test("previewMode returns null for a planet", () => {

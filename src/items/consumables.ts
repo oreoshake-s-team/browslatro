@@ -49,8 +49,7 @@ export function consumableUseBlock(
   }
   const effect = c.card.effect;
   if (effect.kind !== "apply-seal") return null;
-  if (previewMode) return "Seals can't be applied during a pack pick yet";
-  return checkSelection(selectedCount, effect.maxTargets);
+  return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
 }
 
 export function hasFreeConsumableSlot(
