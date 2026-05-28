@@ -23,7 +23,13 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
-import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
+import {
+  packPickLimit,
+  rollPackForPool,
+  type PackOffer,
+  type PackPool,
+  type PackVariant,
+} from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import {
   resolveTagEffect,
@@ -848,16 +854,10 @@ function App() {
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
-  function openPack(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold || offer.kind !== "pack") return;
-    const price = applyShopDiscount(offer.price, ownedVoucherIds);
-    if (money < price) return;
-    play("pop");
-    setMoney((prev) => prev - price);
-    setOpenedPack(offer.pack);
-    setPackPicksRemaining(packPickLimit(offer.pack.variant));
-    if (offer.pack.pool === "arcana" || offer.pack.pool === "spectral") {
+  function openPackOffer(pack: PackOffer) {
+    setOpenedPack(pack);
+    setPackPicksRemaining(packPickLimit(pack.variant));
+    if (pack.pool === "arcana" || pack.pool === "spectral") {
       const baseDeck = applySealOverrides(
         applyEnhancementOverrides(createDeck(destroyedCardKeys), cardEnhancementsByKey),
         cardSealsByKey,
@@ -872,6 +872,33 @@ function App() {
       setPackPreviewHand([]);
     }
     setPackPreviewSelectedIds(new Set());
+  }
+
+  function openTagPack(pool: PackPool, variant: PackVariant) {
+    play("pop");
+    openPackOffer(
+      rollPackForPool(
+        pool,
+        {
+          planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+          tarotCatalog: createTarotCatalog(),
+          jokerCatalog: createJokerCatalog(),
+          spectralCatalog: createSpectralCatalog(),
+          rng: shopPickerRngConfig.rng,
+        },
+        variant,
+      ),
+    );
+  }
+
+  function openPack(idx: number) {
+    const offer = shopOffers?.[idx];
+    if (!offer || offer.sold || offer.kind !== "pack") return;
+    const price = applyShopDiscount(offer.price, ownedVoucherIds);
+    if (money < price) return;
+    play("pop");
+    setMoney((prev) => prev - price);
+    openPackOffer(offer.pack);
     markOfferSold(idx);
   }
 
@@ -1294,9 +1321,14 @@ function App() {
     setRound((prev) => prev + 1);
     setRunStats(nextStats);
     if (effect.category === "immediate") {
-      setMoney(
-        (prev) => prev + immediateMoneyGain(effect.action, { stats: nextStats, money: prev }),
-      );
+      const action = effect.action;
+      if (action.kind === "open-pack") {
+        openTagPack(action.pool, action.variant);
+      } else {
+        setMoney(
+          (prev) => prev + immediateMoneyGain(action, { stats: nextStats, money: prev }),
+        );
+      }
       return;
     }
     setPendingTags((prev) => [...prev, offered]);

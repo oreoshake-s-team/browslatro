@@ -618,4 +618,13 @@ describe("rollPackForPool", () => {
     const offer = rollPackForPool("standard", rollArgs(83));
     expect(offer.options.every((o) => o.kind === "playing-card")).toBe(true);
   });
+
+  test("honors an explicit variant", () => {
+    expect(rollPackForPool("arcana", rollArgs(84), "mega").variant).toBe("mega");
+  });
+
+  test("a mega pack yields the mega option count", () => {
+    const offer = rollPackForPool("arcana", rollArgs(85), "mega");
+    expect(offer.options.length).toBe(packOptionsCount("arcana", "mega"));
+  });
 });

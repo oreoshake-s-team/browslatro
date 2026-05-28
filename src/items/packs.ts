@@ -225,8 +225,11 @@ export function rollPack(args: RollPackArgs): PackOffer {
   return { pool, variant, options };
 }
 
-export function rollPackForPool(pool: PackPool, args: RollPackArgs): PackOffer {
-  const variant: PackVariant = "normal";
+export function rollPackForPool(
+  pool: PackPool,
+  args: RollPackArgs,
+  variant: PackVariant = "normal",
+): PackOffer {
   const options = rollPackOptions({
     pool,
     variant,

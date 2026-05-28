@@ -7,7 +7,9 @@ export type TagId =
   | "handy"
   | "garbage"
   | "speed"
-  | "economy";
+  | "economy"
+  | "charm"
+  | "ethereal";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -73,6 +75,24 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "immediate",
       action: { kind: "double-money", cap: 40 },
+    },
+  },
+  {
+    id: "charm",
+    name: "Charm Tag",
+    description: "Immediately open a free Mega Arcana Pack.",
+    effect: {
+      category: "immediate",
+      action: { kind: "open-pack", pool: "arcana", variant: "mega" },
+    },
+  },
+  {
+    id: "ethereal",
+    name: "Ethereal Tag",
+    description: "Immediately open a free Spectral Pack.",
+    effect: {
+      category: "immediate",
+      action: { kind: "open-pack", pool: "spectral", variant: "normal" },
     },
   },
 ];

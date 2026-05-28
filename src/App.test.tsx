@@ -7,6 +7,7 @@ import {
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
+import { createSpectralCatalog } from "./items/spectrals";
 import type { VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
@@ -3456,5 +3457,49 @@ describe("Economy tag", () => {
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(getStatValue("Money")).toHaveTextContent("$8");
+  });
+});
+
+describe("Charm and Ethereal pack tags", () => {
+  test("gaining the Charm tag immediately opens a Mega Arcana pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("charm");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Arcana Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("gaining the Ethereal tag immediately opens a Spectral pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Spectral Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("a target-needing spectral picked from the Ethereal pack is stashed as a consumable", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const talismanIdx = spectrals.findIndex((s) => s.id === "talisman");
+    shopPickerRngConfig.rng = () => talismanIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();
+  });
+
+  test("a money tag does not open a pack (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.queryByTestId("pack-open-subtitle")).not.toBeInTheDocument();
   });
 });

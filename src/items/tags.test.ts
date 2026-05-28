@@ -116,6 +116,28 @@ describe("Economy tag", () => {
   });
 });
 
+describe("Charm and Ethereal pack tags", () => {
+  test("Charm is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("charm");
+  });
+
+  test("Charm resolves to an immediate open-pack action for a Mega Arcana pack", () => {
+    const effect = resolveTagEffect("charm");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "arcana", variant: "mega" });
+  });
+
+  test("Ethereal is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("ethereal");
+  });
+
+  test("Ethereal resolves to an immediate open-pack action for a Spectral pack", () => {
+    const effect = resolveTagEffect("ethereal");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "spectral", variant: "normal" });
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
