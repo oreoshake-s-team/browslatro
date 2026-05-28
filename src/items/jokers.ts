@@ -39,6 +39,11 @@ export const SCHOLAR_RANKS: ReadonlyArray<Rank> = ["A"];
 export const WALKIE_TALKIE_CHIPS = 10;
 export const WALKIE_TALKIE_MULT = 4;
 export const WALKIE_TALKIE_RANKS: ReadonlyArray<Rank> = ["10", "4"];
+export const THE_DUO_X_MULT = 2;
+export const THE_TRIO_X_MULT = 3;
+export const THE_FAMILY_X_MULT = 4;
+export const THE_ORDER_X_MULT = 3;
+export const THE_TRIBE_X_MULT = 2;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -74,6 +79,11 @@ export type JokerEffect =
     }
   | {
       readonly kind: "on-hand-type-chips";
+      readonly requires: HandLabel;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-hand-type-x-mult";
       readonly requires: HandLabel;
       readonly amount: number;
     }
@@ -460,6 +470,76 @@ export function createCraftyJoker(): Joker {
   };
 }
 
+export function createTheDuoJoker(): Joker {
+  return {
+    id: "the-duo",
+    rarity: "uncommon",
+    name: "The Duo",
+    description: `X${THE_DUO_X_MULT} Mult if played hand contains a Pair`,
+    effect: {
+      kind: "on-hand-type-x-mult",
+      requires: "Pair",
+      amount: THE_DUO_X_MULT,
+    },
+  };
+}
+
+export function createTheTrioJoker(): Joker {
+  return {
+    id: "the-trio",
+    rarity: "uncommon",
+    name: "The Trio",
+    description: `X${THE_TRIO_X_MULT} Mult if played hand contains Three of a Kind`,
+    effect: {
+      kind: "on-hand-type-x-mult",
+      requires: "Three of a Kind",
+      amount: THE_TRIO_X_MULT,
+    },
+  };
+}
+
+export function createTheFamilyJoker(): Joker {
+  return {
+    id: "the-family",
+    rarity: "uncommon",
+    name: "The Family",
+    description: `X${THE_FAMILY_X_MULT} Mult if played hand contains Four of a Kind`,
+    effect: {
+      kind: "on-hand-type-x-mult",
+      requires: "Four of a Kind",
+      amount: THE_FAMILY_X_MULT,
+    },
+  };
+}
+
+export function createTheOrderJoker(): Joker {
+  return {
+    id: "the-order",
+    rarity: "uncommon",
+    name: "The Order",
+    description: `X${THE_ORDER_X_MULT} Mult if played hand contains a Straight`,
+    effect: {
+      kind: "on-hand-type-x-mult",
+      requires: "Straight",
+      amount: THE_ORDER_X_MULT,
+    },
+  };
+}
+
+export function createTheTribeJoker(): Joker {
+  return {
+    id: "the-tribe",
+    rarity: "uncommon",
+    name: "The Tribe",
+    description: `X${THE_TRIBE_X_MULT} Mult if played hand contains a Flush`,
+    effect: {
+      kind: "on-hand-type-x-mult",
+      requires: "Flush",
+      amount: THE_TRIBE_X_MULT,
+    },
+  };
+}
+
 export function createEvenStevenJoker(): Joker {
   return {
     id: "even-steven",
@@ -638,6 +718,11 @@ export function createJokerCatalog(): Joker[] {
     createCleverJoker(),
     createDeviousJoker(),
     createCraftyJoker(),
+    createTheDuoJoker(),
+    createTheTrioJoker(),
+    createTheFamilyJoker(),
+    createTheOrderJoker(),
+    createTheTribeJoker(),
     createEvenStevenJoker(),
     createOddToddJoker(),
     createHalfJoker(),
@@ -707,6 +792,17 @@ export function applyHandLevelJokers(
           additiveChips += effect.amount;
           fired.push(joker.id);
           steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: effect.amount });
+        }
+        break;
+      }
+      case "on-hand-type-x-mult": {
+        if (
+          context.playedHandLabel !== undefined &&
+          handContains(context.playedHandLabel, effect.requires)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
         }
         break;
       }
@@ -889,6 +985,7 @@ export function applyPerCardJokers(
       case "stencil":
       case "on-hand-type-mult":
       case "on-hand-type-chips":
+      case "on-hand-type-x-mult":
       case "additive-mult-when-hand-size":
       case "additive-mult-random":
         break;
