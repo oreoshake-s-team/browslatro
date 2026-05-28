@@ -1375,6 +1375,8 @@ function App() {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
       scoredCards: scoring,
+      remainingDiscards,
+      money,
     });
 
     let perCardAdditiveMult = 0;

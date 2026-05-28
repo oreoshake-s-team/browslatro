@@ -603,6 +603,17 @@ describe("Rank-based joker catalog membership", () => {
   });
 });
 
+describe("Economy joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Banner", id: "banner" },
+    { name: "Mystic Summit", id: "mystic-summit" },
+    { name: "Bull", id: "bull" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("Hand-type X-Mult joker catalog membership", () => {
   test.each<{ name: string; id: string }>([
     { name: "The Duo", id: "the-duo" },
