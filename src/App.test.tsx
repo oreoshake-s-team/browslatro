@@ -6,6 +6,7 @@ import {
   setAnimationSpeed,
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
+import type { VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -2365,6 +2366,77 @@ describe("Voucher effects integration", () => {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(screen.getAllByTestId("consumable-tile-empty")).toHaveLength(3);
+  });
+
+  function handsValue(): number {
+    return Number(
+      getStatValue("Hands").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  function discardsValue(): number {
+    return Number(
+      getStatValue("Discards").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  async function overrideVoucher(
+    user: ReturnType<typeof userEvent.setup>,
+    id: VoucherId,
+  ): Promise<void> {
+    await user.selectOptions(screen.getByTestId("shop-voucher-override"), id);
+  }
+
+  test("buying Grabber immediately adds 1 to the remaining hands (#426)", async () => {
+    const user = await openShopWithVoucher(0);
+    await overrideVoucher(user, "grabber");
+    const before = handsValue();
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(handsValue()).toBe(before + 1);
+  });
+
+  test("buying Nacho Tong after Grabber raises remaining hands by 2 total (#426)", async () => {
+    const user = await openShopWithVoucher(0);
+    const before = handsValue();
+    await overrideVoucher(user, "grabber");
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    await overrideVoucher(user, "nacho-tong");
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(handsValue()).toBe(before + 2);
+  });
+
+  test("buying Wasteful immediately adds 1 to the remaining discards (#426)", async () => {
+    const user = await openShopWithVoucher(0);
+    await overrideVoucher(user, "wasteful");
+    const before = discardsValue();
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(discardsValue()).toBe(before + 1);
+  });
+
+  test("buying Recyclomancy after Wasteful raises remaining discards by 2 total (#426)", async () => {
+    const user = await openShopWithVoucher(0);
+    const before = discardsValue();
+    await overrideVoucher(user, "wasteful");
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    await overrideVoucher(user, "recyclomancy");
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(discardsValue()).toBe(before + 2);
+  });
+
+  test("buying a non-hand voucher leaves the remaining hands unchanged (#426)", async () => {
+    const user = await openShopWithVoucher(0);
+    await overrideVoucher(user, "clearance-sale");
+    const before = handsValue();
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(handsValue()).toBe(before);
+  });
+
+  test("buying a non-discard voucher leaves the remaining discards unchanged (#426)", async () => {
+    const user = await openShopWithVoucher(0);
+    await overrideVoucher(user, "clearance-sale");
+    const before = discardsValue();
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(discardsValue()).toBe(before);
   });
 });
 
