@@ -1,3 +1,5 @@
+import { create } from "zustand";
+
 const HIGH_VISIBILITY_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
 const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
@@ -57,46 +59,56 @@ function writeAnimationSpeed(value: AnimationSpeed): void {
   }
 }
 
-let highVisibility = readBoolean(HIGH_VISIBILITY_KEY);
-let muted = readBoolean(MUTED_KEY);
-let animationSpeed: AnimationSpeed = readAnimationSpeed();
+interface PreferencesState {
+  highVisibility: boolean;
+  muted: boolean;
+  animationSpeed: AnimationSpeed;
+}
+
+export const usePreferences = create<PreferencesState>()(() => ({
+  highVisibility: readBoolean(HIGH_VISIBILITY_KEY),
+  muted: readBoolean(MUTED_KEY),
+  animationSpeed: readAnimationSpeed(),
+}));
 
 export function isHighVisibility(): boolean {
-  return highVisibility;
+  return usePreferences.getState().highVisibility;
 }
 
 export function toggleHighVisibility(): void {
-  highVisibility = !highVisibility;
-  writeBoolean(HIGH_VISIBILITY_KEY, highVisibility);
+  const next = !usePreferences.getState().highVisibility;
+  usePreferences.setState({ highVisibility: next });
+  writeBoolean(HIGH_VISIBILITY_KEY, next);
 }
 
 export function isMuted(): boolean {
-  return muted;
+  return usePreferences.getState().muted;
 }
 
 export function toggleMute(): void {
-  muted = !muted;
-  writeBoolean(MUTED_KEY, muted);
+  const next = !usePreferences.getState().muted;
+  usePreferences.setState({ muted: next });
+  writeBoolean(MUTED_KEY, next);
 }
 
 export function getAnimationSpeed(): AnimationSpeed {
-  return animationSpeed;
+  return usePreferences.getState().animationSpeed;
 }
 
 export function setAnimationSpeed(value: AnimationSpeed): void {
-  if (!isAnimationSpeed(value)) {
-    animationSpeed = DEFAULT_ANIMATION_SPEED;
-    writeAnimationSpeed(DEFAULT_ANIMATION_SPEED);
-    return;
-  }
-  animationSpeed = value;
-  writeAnimationSpeed(value);
+  const next = isAnimationSpeed(value) ? value : DEFAULT_ANIMATION_SPEED;
+  usePreferences.setState({ animationSpeed: next });
+  writeAnimationSpeed(next);
 }
 
-export function getAnimationSpeedMultiplier(speed: AnimationSpeed = animationSpeed): number {
+export function getAnimationSpeedMultiplier(
+  speed: AnimationSpeed = usePreferences.getState().animationSpeed,
+): number {
   return ANIMATION_SPEED_MULTIPLIERS[speed];
 }
 
-export function hasUserOverriddenAnimationSpeed(speed: AnimationSpeed = animationSpeed): boolean {
+export function hasUserOverriddenAnimationSpeed(
+  speed: AnimationSpeed = usePreferences.getState().animationSpeed,
+): boolean {
   return speed !== DEFAULT_ANIMATION_SPEED;
 }
