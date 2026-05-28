@@ -3794,3 +3794,18 @@ describe("Ouija spectral", () => {
     expect(ranks.size).toBe(1);
   });
 });
+
+describe("The Soul spectral", () => {
+  test("picking The Soul from a Spectral pack creates a Legendary joker", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const soulIdx = spectrals.findIndex((s) => s.id === "soul");
+    shopPickerRngConfig.rng = () => soulIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = screen.queryAllByTestId(/^joker-tile-filled-/).length;
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.queryAllByTestId(/^joker-tile-filled-/).length - before).toBe(1);
+  });
+});
