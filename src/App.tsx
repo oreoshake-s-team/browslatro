@@ -135,6 +135,7 @@ import {
 } from "./cards/seals";
 import {
   MAX_JOKERS,
+  applyEditionToRandomJoker,
   applyHandLevelJokers,
   applyPerCardJokers,
   createJokerByRarity,
@@ -1162,6 +1163,11 @@ function App() {
         if (!created) return;
         setJokers((prev) => [...prev, created]);
         if (effect.setMoneyToZero) setMoney(0);
+        return;
+      }
+      case "ectoplasm": {
+        setJokers((prev) => applyEditionToRandomJoker(prev, "negative", Math.random));
+        setHandSizeModifier((prev) => prev + effect.handSizeDelta);
         return;
       }
       case "apply-seal":
