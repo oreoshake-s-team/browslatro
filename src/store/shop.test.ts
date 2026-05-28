@@ -1,29 +1,29 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { useShop } from "./shop";
+import { useGame } from "./game";
 
 describe("shop store", () => {
   beforeEach(() => {
-    useShop.getState().resetShop();
+    useGame.getState().resetShop();
   });
 
   test("starts with no shop offers", () => {
-    expect(useShop.getState().shopOffers).toBeNull();
+    expect(useGame.getState().shopOffers).toBeNull();
   });
 
   test("setShopOffers accepts a plain value", () => {
-    useShop.getState().setShopOffers([]);
-    expect(useShop.getState().shopOffers).toHaveLength(0);
+    useGame.getState().setShopOffers([]);
+    expect(useGame.getState().shopOffers).toHaveLength(0);
   });
 
   test("setShopOffers accepts an updater function", () => {
-    useShop.getState().setShopOffers([]);
-    useShop.getState().setShopOffers((prev) => (prev === null ? prev : [...prev]));
-    expect(useShop.getState().shopOffers).not.toBeNull();
+    useGame.getState().setShopOffers([]);
+    useGame.getState().setShopOffers((prev) => (prev === null ? prev : [...prev]));
+    expect(useGame.getState().shopOffers).not.toBeNull();
   });
 
   test("resetShop clears offers back to null", () => {
-    useShop.getState().setShopOffers([]);
-    useShop.getState().resetShop();
-    expect(useShop.getState().shopOffers).toBeNull();
+    useGame.getState().setShopOffers([]);
+    useGame.getState().resetShop();
+    expect(useGame.getState().shopOffers).toBeNull();
   });
 });

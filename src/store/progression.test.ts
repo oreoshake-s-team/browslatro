@@ -1,37 +1,37 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { useProgression } from "./progression";
+import { useGame } from "./game";
 
 describe("progression store", () => {
   beforeEach(() => {
-    useProgression.getState().resetProgression();
+    useGame.getState().resetProgression();
   });
 
   test("starts at blind 1", () => {
-    expect(useProgression.getState().blind).toBe(1);
+    expect(useGame.getState().blind).toBe(1);
   });
 
   test("starts with the blind-select screen pending", () => {
-    expect(useProgression.getState().pendingBlindSelect).toBe(true);
+    expect(useGame.getState().pendingBlindSelect).toBe(true);
   });
 
   test("setRound accepts an updater function", () => {
-    useProgression.getState().setRound((prev) => prev + 1);
-    expect(useProgression.getState().round).toBe(2);
+    useGame.getState().setRound((prev) => prev + 1);
+    expect(useGame.getState().round).toBe(2);
   });
 
   test("setPendingTags accepts an updater function", () => {
-    useProgression.getState().setPendingTags((prev) => [...prev, "investment"]);
-    expect(useProgression.getState().pendingTags).toContain("investment");
+    useGame.getState().setPendingTags((prev) => [...prev, "investment"]);
+    expect(useGame.getState().pendingTags).toContain("investment");
   });
 
   test("setPendingBlindSelect accepts a plain value", () => {
-    useProgression.getState().setPendingBlindSelect(false);
-    expect(useProgression.getState().pendingBlindSelect).toBe(false);
+    useGame.getState().setPendingBlindSelect(false);
+    expect(useGame.getState().pendingBlindSelect).toBe(false);
   });
 
   test("resetProgression restores the starting ante", () => {
-    useProgression.getState().setAnte(5);
-    useProgression.getState().resetProgression();
-    expect(useProgression.getState().ante).toBe(1);
+    useGame.getState().setAnte(5);
+    useGame.getState().resetProgression();
+    expect(useGame.getState().ante).toBe(1);
   });
 });

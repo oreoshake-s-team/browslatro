@@ -1,32 +1,32 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { useJokers } from "./jokers";
+import { useGame } from "./game";
 
 describe("jokers store", () => {
   beforeEach(() => {
-    useJokers.getState().resetJokers();
+    useGame.getState().resetJokers();
   });
 
   test("starts with no jokers", () => {
-    expect(useJokers.getState().jokers).toHaveLength(0);
+    expect(useGame.getState().jokers).toHaveLength(0);
   });
 
   test("starts with no dragging index", () => {
-    expect(useJokers.getState().draggingJokerIndex).toBeNull();
+    expect(useGame.getState().draggingJokerIndex).toBeNull();
   });
 
   test("setSoldJokerIdsThisShopVisit accepts an updater function", () => {
-    useJokers.getState().setSoldJokerIdsThisShopVisit((prev) => [...prev, "j1"]);
-    expect(useJokers.getState().soldJokerIdsThisShopVisit).toContain("j1");
+    useGame.getState().setSoldJokerIdsThisShopVisit((prev) => [...prev, "j1"]);
+    expect(useGame.getState().soldJokerIdsThisShopVisit).toContain("j1");
   });
 
   test("setJokerPulseCounters accepts an updater function", () => {
-    useJokers.getState().setJokerPulseCounters((prev) => ({ ...prev, j1: 1 }));
-    expect(useJokers.getState().jokerPulseCounters["j1"]).toBe(1);
+    useGame.getState().setJokerPulseCounters((prev) => ({ ...prev, j1: 1 }));
+    expect(useGame.getState().jokerPulseCounters["j1"]).toBe(1);
   });
 
   test("resetJokers clears sold joker ids", () => {
-    useJokers.getState().setSoldJokerIdsThisShopVisit(["j1"]);
-    useJokers.getState().resetJokers();
-    expect(useJokers.getState().soldJokerIdsThisShopVisit).toHaveLength(0);
+    useGame.getState().setSoldJokerIdsThisShopVisit(["j1"]);
+    useGame.getState().resetJokers();
+    expect(useGame.getState().soldJokerIdsThisShopVisit).toHaveLength(0);
   });
 });

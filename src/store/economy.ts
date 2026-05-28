@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 
 export const STARTING_MONEY = 4;
 
@@ -10,7 +11,7 @@ export interface EconomyState {
   resetEconomy: () => void;
 }
 
-export const useEconomy = create<EconomyState>()((set, get) => ({
+export const createEconomySlice: StateCreator<GameState, [], [], EconomyState> = (set, get) => ({
   money: STARTING_MONEY,
   earn: (amount) => set((state) => ({ money: state.money + amount })),
   spend: (amount) => {
@@ -20,4 +21,4 @@ export const useEconomy = create<EconomyState>()((set, get) => ({
   },
   setMoney: (amount) => set({ money: Math.max(0, amount) }),
   resetEconomy: () => set({ money: STARTING_MONEY }),
-}));
+});

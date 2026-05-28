@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import {
   rollAnteSkipOffers,
   tagOfferRngConfig,
@@ -29,7 +30,7 @@ export interface RunState {
   resetRun: () => void;
 }
 
-export const useRun = create<RunState>()((set) => ({
+export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) => ({
   runStats: initialRunStats(),
   skipTagOffers: freshSkipOffers(),
   pendingShopMods: [],
@@ -45,4 +46,4 @@ export const useRun = create<RunState>()((set) => ({
       skipTagOffers: freshSkipOffers(),
       pendingShopMods: [],
     }),
-}));
+});

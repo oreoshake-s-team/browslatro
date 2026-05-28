@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { ShopItem } from "../items/shop";
 
 type Updater<T> = T | ((prev: T) => T);
@@ -15,9 +16,9 @@ export interface ShopState {
   resetShop: () => void;
 }
 
-export const useShop = create<ShopState>()((set) => ({
+export const createShopSlice: StateCreator<GameState, [], [], ShopState> = (set) => ({
   shopOffers: null,
   setShopOffers: (update) =>
     set((state) => ({ shopOffers: resolve(update, state.shopOffers) })),
   resetShop: () => set({ shopOffers: null }),
-}));
+});

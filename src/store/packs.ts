@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { PackOffer, PackPool } from "../items/packs";
 import type { Card } from "../cards/types";
 
@@ -26,7 +27,7 @@ export interface PacksState {
   resetPacks: () => void;
 }
 
-export const usePacks = create<PacksState>()((set) => ({
+export const createPacksSlice: StateCreator<GameState, [], [], PacksState> = (set) => ({
   extraPackSlots: 0,
   pendingForcedPacks: [],
   openedPack: null,
@@ -60,4 +61,4 @@ export const usePacks = create<PacksState>()((set) => ({
       packPreviewHand: [],
       packPreviewSelectedIds: new Set(),
     }),
-}));
+});

@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { Consumable } from "../items/consumables";
 
 type Updater<T> = T | ((prev: T) => T);
@@ -17,7 +18,7 @@ export interface ConsumablesState {
   resetConsumables: () => void;
 }
 
-export const useConsumables = create<ConsumablesState>()((set) => ({
+export const createConsumablesSlice: StateCreator<GameState, [], [], ConsumablesState> = (set) => ({
   consumables: [],
   draggingConsumableIndex: null,
   setConsumables: (update) =>
@@ -27,4 +28,4 @@ export const useConsumables = create<ConsumablesState>()((set) => ({
       draggingConsumableIndex: resolve(update, state.draggingConsumableIndex),
     })),
   resetConsumables: () => set({ consumables: [], draggingConsumableIndex: null }),
-}));
+});

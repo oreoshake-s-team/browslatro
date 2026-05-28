@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import {
   pickVouchersForAnte,
   type Voucher,
@@ -31,7 +32,7 @@ export interface VouchersState {
   resetVouchers: () => void;
 }
 
-export const useVouchers = create<VouchersState>()((set) => ({
+export const createVouchersSlice: StateCreator<GameState, [], [], VouchersState> = (set) => ({
   ownedVoucherIds: new Set(),
   extraVoucherSlots: 0,
   soldVoucherIds: new Set(),
@@ -53,4 +54,4 @@ export const useVouchers = create<VouchersState>()((set) => ({
       soldVoucherIds: new Set(),
       currentAnteVouchers: initialAnteVouchers(),
     }),
-}));
+});
