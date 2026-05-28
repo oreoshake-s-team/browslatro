@@ -89,7 +89,26 @@ EOF
 )"
 ```
 
-### 7. Rebase loop
+### 7. Add Vercel preview URL
+
+After the PR is created, fetch the Vercel preview URL for the branch and add it to the PR body.
+
+Use the Vercel MCP tool `mcp__plugin_vercel_vercel__list_deployments` to find the deployment for this branch. Poll until the deployment state is `READY` (retry up to ~10 times with a short delay). Then edit the PR body to append:
+
+```
+## Preview
+[Vercel Preview](<url>)
+```
+
+Use `mcp__github__update_pull_request` to update the PR body, or fall back to:
+
+```bash
+gh pr edit <PR_NUMBER> --body "<updated body with preview URL appended>"
+```
+
+If Vercel is not connected to this repo or the deployment is not found after polling, skip silently — do not block on this step.
+
+### 8. Rebase loop
 
 ```bash
 git fetch origin main
