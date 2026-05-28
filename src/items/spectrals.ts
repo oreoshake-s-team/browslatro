@@ -11,6 +11,8 @@ export const FAMILIAR_ADD_COUNT = 3;
 export const GRIM_ADD_COUNT = 2;
 export const INCANTATION_ADD_COUNT = 4;
 
+export const CRYPTID_COPY_COUNT = 2;
+
 export type TransmuteRankFilter = "face" | "ace" | "numbered";
 
 export type SpectralEffect =
@@ -18,6 +20,7 @@ export type SpectralEffect =
   | { readonly kind: "immolate"; readonly destroyCount: number; readonly moneyGain: number }
   | { readonly kind: "sigil" }
   | { readonly kind: "apply-seal"; readonly seal: Seal; readonly maxTargets: 1 }
+  | { readonly kind: "duplicate-selected"; readonly copies: number; readonly maxTargets: 1 }
   | {
       readonly kind: "transmute";
       readonly rankFilter: TransmuteRankFilter;
@@ -28,6 +31,10 @@ export type SpectralEffect =
       readonly rarity: JokerRarity;
       readonly setMoneyToZero: boolean;
     };
+
+export function spectralNeedsTarget(effect: SpectralEffect): boolean {
+  return effect.kind === "apply-seal" || effect.kind === "duplicate-selected";
+}
 
 export interface SpectralCard {
   readonly id: string;
@@ -108,6 +115,21 @@ export function transmuteHand(
   return [...kept, ...additions];
 }
 
+export function duplicateSelectedInHand(
+  hand: ReadonlyArray<Card>,
+  selectedIds: ReadonlySet<number>,
+  copies: number,
+): ReadonlyArray<Card> {
+  const selected = hand.filter((c) => selectedIds.has(c.id));
+  if (selected.length !== 1) return hand;
+  const original = selected[0];
+  const additions: Card[] = [];
+  for (let i = 0; i < copies; i += 1) {
+    additions.push({ ...original, id: nextCardId() });
+  }
+  return [...hand, ...additions];
+}
+
 function describe(spec: SpectralSpec): string {
   const effect = spec.effect;
   switch (effect.kind) {
@@ -119,6 +141,8 @@ function describe(spec: SpectralSpec): string {
       return "Converts all cards in hand to a single random suit";
     case "apply-seal":
       return `Add a ${SEAL_DISPLAY[effect.seal]} Seal to 1 selected card in your hand`;
+    case "duplicate-selected":
+      return `Create ${effect.copies} copies of 1 selected card in your hand`;
     case "transmute":
       return `Destroy 1 random card in hand, add ${effect.addCount} random Enhanced ${TRANSMUTE_LABEL[effect.rankFilter]}`;
     case "create-joker-by-rarity": {
@@ -184,6 +208,11 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     id: "wraith",
     name: "Wraith",
     effect: { kind: "create-joker-by-rarity", rarity: "rare", setMoneyToZero: true },
+  },
+  {
+    id: "cryptid",
+    name: "Cryptid",
+    effect: { kind: "duplicate-selected", copies: CRYPTID_COPY_COUNT, maxTargets: 1 },
   },
 ];
 

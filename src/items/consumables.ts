@@ -48,8 +48,14 @@ export function consumableUseBlock(
     return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
   }
   const effect = c.card.effect;
-  if (effect.kind !== "apply-seal") return null;
-  return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
+  if (effect.kind === "apply-seal") {
+    return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
+  }
+  if (effect.kind === "duplicate-selected") {
+    if (previewMode) return "Cannot duplicate cards while opening a pack";
+    return checkSelection(selectedCount, effect.maxTargets);
+  }
+  return null;
 }
 
 export function hasFreeConsumableSlot(

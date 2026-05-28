@@ -29,6 +29,8 @@ import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
   createSpectralCatalog,
+  duplicateSelectedInHand,
+  spectralNeedsTarget,
   transmuteHand,
   type SpectralEffect,
 } from "./items/spectrals";
@@ -938,7 +940,7 @@ function App() {
       setJokers((prev) => [...prev, option.joker]);
     } else if (option.kind === "spectral") {
       const effect = option.spectral.effect;
-      if (effect.kind === "apply-seal") {
+      if (spectralNeedsTarget(effect)) {
         if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
         play("pop");
         setConsumables((prev) =>
@@ -1067,6 +1069,8 @@ function App() {
       }
       case "apply-seal":
         return;
+      case "duplicate-selected":
+        return;
     }
   }
 
@@ -1101,6 +1105,21 @@ function App() {
           hand: prev.hand.map((c) =>
             selectedIds.has(c.id) ? { ...c, seal: spectralEffect.seal } : c,
           ),
+          remaining: prev.remaining,
+        }));
+        setSelectedIds(new Set());
+        setSelectedHand(null);
+        setChips(0);
+        setMultiplier(0);
+        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        return;
+      }
+      if (spectralEffect.kind === "duplicate-selected") {
+        if (previewActive) return;
+        if (selectedIds.size !== spectralEffect.maxTargets) return;
+        play("pop");
+        setDealt((prev) => ({
+          hand: duplicateSelectedInHand(prev.hand, selectedIds, spectralEffect.copies),
           remaining: prev.remaining,
         }));
         setSelectedIds(new Set());

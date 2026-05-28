@@ -170,6 +170,42 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 1)).toBeNull();
   });
 
+  test("consumableUseBlock blocks a duplicate-selected spectral with zero selection", () => {
+    const cryptid = createSpectralCatalog().find(
+      (s) => s.effect.kind === "duplicate-selected",
+    );
+    if (!cryptid) throw new Error("no duplicate-selected spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: cryptid };
+    expect(consumableUseBlock(c, 0)).toMatch(/Select/);
+  });
+
+  test("consumableUseBlock blocks a duplicate-selected spectral when too many cards are selected", () => {
+    const cryptid = createSpectralCatalog().find(
+      (s) => s.effect.kind === "duplicate-selected",
+    );
+    if (!cryptid) throw new Error("no duplicate-selected spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: cryptid };
+    expect(consumableUseBlock(c, 2)).toMatch(/Too many/);
+  });
+
+  test("consumableUseBlock returns null for a duplicate-selected spectral with exactly 1 selected", () => {
+    const cryptid = createSpectralCatalog().find(
+      (s) => s.effect.kind === "duplicate-selected",
+    );
+    if (!cryptid) throw new Error("no duplicate-selected spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: cryptid };
+    expect(consumableUseBlock(c, 1)).toBeNull();
+  });
+
+  test("previewMode blocks a duplicate-selected spectral even with 1 selected", () => {
+    const cryptid = createSpectralCatalog().find(
+      (s) => s.effect.kind === "duplicate-selected",
+    );
+    if (!cryptid) throw new Error("no duplicate-selected spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: cryptid };
+    expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
+  });
+
   test("previewMode allows an enhancement tarot with a valid preview selection", () => {
     const enhTarot = createTarotCatalog().find(
       (t) => t.effect.kind === "apply-enhancement",
