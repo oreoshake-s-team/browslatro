@@ -12,6 +12,7 @@ import { useScoring } from "./store/scoring";
 import { useDevModifiers } from "./store/devModifiers";
 import { useDeck } from "./store/deck";
 import { useBoss } from "./store/boss";
+import { useRun } from "./store/run";
 
 beforeEach(() => {
   useEconomy.setState({ money: STARTING_MONEY });
@@ -28,6 +29,7 @@ beforeEach(() => {
   useDevModifiers.getState().resetDevModifiers();
   useDeck.getState().resetDeck();
   useBoss.getState().resetBoss();
+  useRun.getState().resetRun();
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }
