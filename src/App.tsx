@@ -148,6 +148,7 @@ import {
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
+  applyEditionToFirstJoker,
   buildFreeJokerOffers,
   pickShopItemOffers,
   pickShopOffers,
@@ -842,7 +843,11 @@ function App() {
       new Set(jokers.map((j) => j.id)),
       shopPickerRngConfig.rng,
     );
-    setShopOffers([...freeJokerOffers, ...pricedOffers]);
+    const editionedOffers = shopAdjustments.editionJokers.reduce(
+      (offers, edition) => applyEditionToFirstJoker(offers, edition),
+      [...freeJokerOffers, ...pricedOffers],
+    );
+    setShopOffers(editionedOffers);
     if (shopAdjustments.extraVouchers > 0) {
       setCurrentAnteVouchers((prev) => {
         const existing = new Set(prev.map((v) => v.id));

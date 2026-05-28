@@ -1,5 +1,5 @@
-import type { Joker, JokerRarity, RandomSource } from "./jokers";
-import { pickRandomFromCatalog } from "./jokers";
+import type { Joker, JokerEdition, JokerRarity, RandomSource } from "./jokers";
+import { pickRandomFromCatalog, withEdition } from "./jokers";
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
@@ -140,6 +140,20 @@ export function buildFreeJokerOffers(
       rng,
     );
     return joker ? [{ kind: "joker" as const, joker, price: 0, sold: false }] : [];
+  });
+}
+
+export function applyEditionToFirstJoker(
+  offers: ReadonlyArray<ShopItem>,
+  edition: JokerEdition,
+): ShopItem[] {
+  const targetIdx = offers.findIndex(
+    (offer) => offer.kind === "joker" && offer.joker.edition === undefined,
+  );
+  if (targetIdx === -1) return [...offers];
+  return offers.map((offer, idx) => {
+    if (idx !== targetIdx || offer.kind !== "joker") return offer;
+    return { ...offer, joker: withEdition(offer.joker, edition), price: 0 };
   });
 }
 

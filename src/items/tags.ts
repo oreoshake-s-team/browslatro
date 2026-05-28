@@ -20,7 +20,11 @@ export type TagId =
   | "top-up"
   | "boss"
   | "orbital"
-  | "juggle";
+  | "juggle"
+  | "negative"
+  | "foil"
+  | "holographic"
+  | "polychrome";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -202,6 +206,42 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     name: "Juggle Tag",
     description: "+3 hand size for the next round.",
     effect: { category: "next-round", handSizeBonus: 3 },
+  },
+  {
+    id: "negative",
+    name: "Negative Tag",
+    description: "The next base-edition shop Joker becomes Negative and free.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-edition-joker", edition: "negative" }],
+    },
+  },
+  {
+    id: "foil",
+    name: "Foil Tag",
+    description: "The next base-edition shop Joker becomes Foil and free.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-edition-joker", edition: "foil" }],
+    },
+  },
+  {
+    id: "holographic",
+    name: "Holographic Tag",
+    description: "The next base-edition shop Joker becomes Holographic and free.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-edition-joker", edition: "holographic" }],
+    },
+  },
+  {
+    id: "polychrome",
+    name: "Polychrome Tag",
+    description: "The next base-edition shop Joker becomes Polychrome and free.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-edition-joker", edition: "polychrome" }],
+    },
   },
 ];
 

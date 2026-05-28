@@ -3699,3 +3699,27 @@ describe("Juggle tag", () => {
     expect(getHandCardButtons()).toHaveLength(8);
   });
 });
+
+describe("Edition tags", () => {
+  test("gaining Foil makes the next shop's joker free and Foil when bought", async () => {
+    tagOfferRngConfig.rng = rngForTag("foil");
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Buy \(\$0\)/ }));
+    expect(document.querySelector('[data-edition="foil"]')).not.toBeNull();
+  });
+
+  test("a shop without an edition tag has no free joker offer (negative)", async () => {
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBe(0);
+  });
+});
