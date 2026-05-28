@@ -1,17 +1,22 @@
 import type { RunStats } from "./runStats";
 
-export type ImmediateAction = {
-  readonly kind: "money-per-stat";
-  readonly stat: keyof RunStats;
-  readonly perUnit: number;
-};
+export type ImmediateAction =
+  | { readonly kind: "money-per-stat"; readonly stat: keyof RunStats; readonly perUnit: number }
+  | { readonly kind: "double-money"; readonly cap: number };
+
+export interface ImmediateContext {
+  readonly stats: RunStats;
+  readonly money: number;
+}
 
 export function immediateMoneyGain(
   action: ImmediateAction,
-  stats: RunStats,
+  ctx: ImmediateContext,
 ): number {
   switch (action.kind) {
     case "money-per-stat":
-      return stats[action.stat] * action.perUnit;
+      return ctx.stats[action.stat] * action.perUnit;
+    case "double-money":
+      return Math.min(ctx.money, action.cap);
   }
 }

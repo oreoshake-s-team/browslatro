@@ -1,7 +1,13 @@
 import type { ImmediateAction } from "../run/immediateActions";
 import type { NextShopModifier } from "../run/nextShopMods";
 
-export type TagId = "investment" | "d6" | "handy" | "garbage" | "speed";
+export type TagId =
+  | "investment"
+  | "d6"
+  | "handy"
+  | "garbage"
+  | "speed"
+  | "economy";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -58,6 +64,15 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "immediate",
       action: { kind: "money-per-stat", stat: "blindsSkipped", perUnit: 5 },
+    },
+  },
+  {
+    id: "economy",
+    name: "Economy Tag",
+    description: "Double your money (max gain $40).",
+    effect: {
+      category: "immediate",
+      action: { kind: "double-money", cap: 40 },
     },
   },
 ];

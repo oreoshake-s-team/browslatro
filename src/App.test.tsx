@@ -3448,3 +3448,13 @@ describe("Run-stat money tags", () => {
     expect(screen.queryByTestId("blind-select-tag-0")).not.toBeInTheDocument();
   });
 });
+
+describe("Economy tag", () => {
+  test("skipping with the Economy tag doubles the player's money", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$8");
+  });
+});

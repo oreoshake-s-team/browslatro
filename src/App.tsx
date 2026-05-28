@@ -1294,7 +1294,9 @@ function App() {
     setRound((prev) => prev + 1);
     setRunStats(nextStats);
     if (effect.category === "immediate") {
-      setMoney((prev) => prev + immediateMoneyGain(effect.action, nextStats));
+      setMoney(
+        (prev) => prev + immediateMoneyGain(effect.action, { stats: nextStats, money: prev }),
+      );
       return;
     }
     setPendingTags((prev) => [...prev, offered]);
