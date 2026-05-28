@@ -7,7 +7,7 @@
 
 ## Project Context: Balatro Clone in React
 
-The primary ongoing project is a **Balatro-inspired card game clone** built with React 19 and **strict TypeScript**. The codebase has matured from a chat-only architecture into a working game with a shop, run loop, boss blinds, booster packs, editions/seals, scoring trace, and dev modifiers. Source is split into focused subfolders under `src/`: `cards/`, `scoring/`, `items/`, `components/`, `dev/`.
+The primary ongoing project is a **Balatro-inspired card game clone** built with React 24 and **strict TypeScript**. The codebase has matured from a chat-only architecture into a working game with a shop, run loop, boss blinds, booster packs, editions/seals, scoring trace, and dev modifiers. Source is split into focused subfolders under `src/`: `cards/`, `scoring/`, `items/`, `components/`, `dev/`.
 
 ---
 
