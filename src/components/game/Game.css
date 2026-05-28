@@ -1,4 +1,5 @@
 .game {
+  --game-row-width: 90rem;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -16,7 +17,7 @@
   flex-wrap: wrap;
   gap: 2rem;
   width: 100%;
-  max-width: 90rem;
+  max-width: var(--game-row-width);
   box-sizing: border-box;
   align-items: flex-start;
 }

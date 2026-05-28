@@ -10,7 +10,7 @@
   border-radius: 12px;
   padding: 1.4rem 1.8rem;
   width: 100%;
-  max-width: 36rem;
+  max-width: var(--game-row-width, 90rem);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
