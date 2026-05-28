@@ -73,6 +73,20 @@ describe("Winning a round resets the deck", () => {
     ).toBeInTheDocument();
   });
 
+  test("replenishes the full deck while the shop is displayed", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(getHandCardButtons()[1]);
+    await user.click(screen.getByText(/^🗑️ Discard$/));
+    flushDiscardAnimation();
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.getByRole("button", { name: /Deck \(52 cards remaining\)/ })
+    ).toBeInTheDocument();
+  });
+
   test("keeps the hand at 8 cards after a win resets the deck", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -1976,6 +1990,7 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(getHandCardButtons()[0]);
     expect(screen.getByTestId("consumable-tile-filled-0")).not.toBeDisabled();
   });
@@ -1992,6 +2007,7 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
@@ -2010,6 +2026,7 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     const pressedCount = getHandCardButtons().filter(
@@ -2031,6 +2048,7 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
