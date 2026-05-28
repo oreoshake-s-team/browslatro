@@ -1,6 +1,13 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from "vite";
+import { configDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
+
+const domTsTests = [
+  "src/cards/deck.deterministic.test.ts",
+  "src/components/system/preferences.test.ts",
+  "src/scoring/reordering.test.ts",
+];
 
 export default defineConfig({
   plugins: [react()],
@@ -16,10 +23,27 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: "jsdom",
     setupFiles: ["./src/setupTests.ts"],
     css: true,
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["src/**/*.{test,spec}.ts"],
+          exclude: [...configDefaults.exclude, ...domTsTests],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "jsdom",
+          environment: "jsdom",
+          include: ["src/**/*.{test,spec}.tsx", ...domTsTests],
+        },
+      },
+    ],
     coverage: {
       provider: "istanbul",
       reporter: ["text", "html", "lcov"],
