@@ -31,6 +31,7 @@ import {
   type PackVariant,
 } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
+import NopeAnimation from "./components/game/NopeAnimation";
 import {
   resolveTagEffect,
   rollAnteSkipOffers,
@@ -370,6 +371,11 @@ function App() {
   const [luckyMoneyProcIds, setLuckyMoneyProcIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
+
+  const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
+  function triggerNopeAnimation() {
+    setNopeTriggerKey((prev) => prev + 1);
+  }
 
   const [handLevelSteps, setHandLevelSteps] = useState<
     ReadonlyArray<JokerHandLevelStep>
@@ -1020,6 +1026,8 @@ function App() {
           setJokers((prev) =>
             prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
           );
+        } else {
+          triggerNopeAnimation();
         }
       }
     } else if (option.kind === "joker") {
@@ -1242,6 +1250,8 @@ function App() {
         setJokers((prev) =>
           prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
         );
+      } else {
+        triggerNopeAnimation();
       }
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
@@ -2128,6 +2138,7 @@ function App() {
         onDisplayOrderChange={setHandDisplayOrder}
         onReorderJokers={reorderJokers}
       />
+      <NopeAnimation triggerKey={nopeTriggerKey} />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
       )}

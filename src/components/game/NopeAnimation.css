@@ -1,0 +1,51 @@
+.nope-animation {
+  position: fixed;
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1200;
+}
+
+.nope-animation-pop {
+  display: inline-block;
+  padding: 0.4em 0.9em;
+  border-radius: 0.5rem;
+  background: rgba(20, 6, 10, 0.85);
+  border: 3px solid #ff4d5e;
+  color: #ff4d5e;
+  font-size: clamp(2rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  animation: nope-pop 700ms ease-out forwards;
+}
+
+@keyframes nope-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  25% {
+    opacity: 1;
+    transform: scale(1.15) rotate(6deg);
+  }
+  45% {
+    transform: scale(0.95) rotate(-4deg);
+  }
+  60% {
+    transform: scale(1.02) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nope-animation-pop {
+    animation: none;
+  }
+}
