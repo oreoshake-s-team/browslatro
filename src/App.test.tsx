@@ -1468,7 +1468,7 @@ describe("Post-round shop integration", () => {
     const moneyBefore = Number(
       getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
     );
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const moneyAfter = Number(
       getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
     );
@@ -1477,8 +1477,8 @@ describe("Post-round shop integration", () => {
 
   test("after one reroll the button shows $6", async () => {
     const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
       "Reroll ($6)",
     );
   });
@@ -1494,7 +1494,7 @@ describe("Post-round shop integration", () => {
     const before = screen
       .getAllByTestId(/^shop-offer-/)
       .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const after = screen
       .getAllByTestId(/^shop-offer-/)
       .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
@@ -1509,7 +1509,7 @@ describe("Post-round shop integration", () => {
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const afterButton = screen
       .getByTestId("shop-offer-0")
       .querySelector("button.shop-offer-buy");
@@ -1557,27 +1557,27 @@ describe("Post-round shop integration", () => {
 
   test("Reroll is disabled when the player can't afford it", async () => {
     const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    expect(screen.getByRole("button", { name: /Reroll/ })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toBeDisabled();
   });
 
   test("clicking Reroll when disabled is a no-op on money", async () => {
     const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const moneyBefore = getStatValue("Money").textContent;
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     expect(getStatValue("Money").textContent).toBe(moneyBefore);
   });
 
   test("opening a new shop after the next round resets the reroll cost to $5", async () => {
     const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await user.click(screen.getByText(/Add \$10/));
     const cards = getHandCardButtons();
@@ -1585,7 +1585,7 @@ describe("Post-round shop integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(screen.getByRole("button", { name: /Continue/ }));
-    expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
       "Reroll ($5)",
     );
   });
@@ -2080,7 +2080,7 @@ describe("Voucher integration", () => {
     const user = await openShop();
     const slot = screen.getByTestId("shop-voucher");
     const before = slot.querySelector(".shop-voucher-name")?.textContent ?? "";
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const after =
       screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name")
         ?.textContent ?? "";
@@ -2090,7 +2090,7 @@ describe("Voucher integration", () => {
   test("clicking Reroll does not clear the voucher Sold state", async () => {
     const user = await openShop();
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
   });
 
@@ -2310,7 +2310,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {
-    const user = await openShopWithVoucher(0.4);
+    const user = await openShopWithVoucher(0.15);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     const joker = screen
       .getByTestId(`shop-offer-${findShopOfferIdxOfKind("joker")}`)
@@ -2319,7 +2319,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Clearance Sale lets the player afford a joker they couldn't at full price", async () => {
-    const user = await openShopWithVoucher(0.4);
+    const user = await openShopWithVoucher(0.15);
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buyButton = screen
       .getByTestId(jokerSlotId)
@@ -2331,9 +2331,10 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Crystal Ball adds a third consumable slot to the tray", async () => {
-    const user = await openShopWithVoucher(0.9);
+    const user = await openShopWithVoucher(0.25);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     expect(screen.getAllByTestId("consumable-tile-empty")).toHaveLength(3);
   });
 });

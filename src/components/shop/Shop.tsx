@@ -5,6 +5,7 @@ import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/pa
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
   applyShopDiscount,
+  rerollCostReduction,
   type Voucher,
   type VoucherId,
 } from "../../items/vouchers";
@@ -173,7 +174,10 @@ export default function Shop({
 }: ShopProps) {
   useEscapeToClose(onNext, !disabled);
   const [rerollCount, setRerollCount] = useState(0);
-  const currentRerollCost = rerollCostFor(rerollCount);
+  const currentRerollCost = rerollCostFor(
+    rerollCount,
+    rerollCostReduction(ownedVoucherIds),
+  );
   const canAffordReroll = money >= currentRerollCost;
   const rerollTooltip = disabled
     ? LOCK_TOOLTIP
