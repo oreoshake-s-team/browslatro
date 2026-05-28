@@ -1,8 +1,10 @@
 import "@testing-library/jest-dom";
 import { STARTING_MONEY, useEconomy } from "./store/economy";
+import { useVouchers } from "./store/vouchers";
 
 beforeEach(() => {
   useEconomy.setState({ money: STARTING_MONEY });
+  useVouchers.getState().resetVouchers();
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }
