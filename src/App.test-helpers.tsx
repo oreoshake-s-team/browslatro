@@ -8,6 +8,7 @@ import {
 import { play } from "./components/system/sounds";
 import { shopPickerRngConfig } from "./items/shop";
 import { bossPickerRngConfig } from "./items/bosses";
+import { tagOfferRngConfig } from "./items/tags";
 import type { ShopItem } from "./items/shop";
 
 export type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
@@ -95,6 +96,7 @@ export function setupAppTestEnvironment(): void {
     mockShuffleConfig.useReverse = false;
     mockDeckConfig.useDefaultEnhancements = false;
     bossPickerRngConfig.rng = () => 0;
+    tagOfferRngConfig.rng = () => 0;
     playMock.mockClear();
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
@@ -106,5 +108,6 @@ export function setupAppTestEnvironment(): void {
     vi.useRealTimers();
     shopPickerRngConfig.rng = Math.random;
     bossPickerRngConfig.rng = Math.random;
+    tagOfferRngConfig.rng = Math.random;
   });
 }
