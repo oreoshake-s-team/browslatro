@@ -31,6 +31,14 @@ export const MISPRINT_MAX_MULT = 23;
 export const SCARY_FACE_CHIPS = 30;
 export const SMILEY_FACE_MULT = 5;
 export const PHOTOGRAPH_X_MULT = 2;
+export const FIBONACCI_MULT = 8;
+export const FIBONACCI_RANKS: ReadonlyArray<Rank> = ["A", "2", "3", "5", "8"];
+export const SCHOLAR_CHIPS = 20;
+export const SCHOLAR_MULT = 4;
+export const SCHOLAR_RANKS: ReadonlyArray<Rank> = ["A"];
+export const WALKIE_TALKIE_CHIPS = 10;
+export const WALKIE_TALKIE_MULT = 4;
+export const WALKIE_TALKIE_RANKS: ReadonlyArray<Rank> = ["10", "4"];
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -95,6 +103,12 @@ export type JokerEffect =
   | {
       readonly kind: "x-mult-on-face-scored";
       readonly amount: number;
+    }
+  | {
+      readonly kind: "per-scored-rank";
+      readonly ranks: ReadonlyArray<Rank>;
+      readonly mult?: number;
+      readonly chips?: number;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
@@ -541,6 +555,50 @@ export function createPhotographJoker(): Joker {
   };
 }
 
+export function createFibonacciJoker(): Joker {
+  return {
+    id: "fibonacci",
+    rarity: "uncommon",
+    name: "Fibonacci",
+    description: `+${FIBONACCI_MULT} Mult per scored Ace, 2, 3, 5, or 8`,
+    effect: {
+      kind: "per-scored-rank",
+      ranks: FIBONACCI_RANKS,
+      mult: FIBONACCI_MULT,
+    },
+  };
+}
+
+export function createScholarJoker(): Joker {
+  return {
+    id: "scholar",
+    rarity: "common",
+    name: "Scholar",
+    description: `+${SCHOLAR_CHIPS} Chips and +${SCHOLAR_MULT} Mult per scored Ace`,
+    effect: {
+      kind: "per-scored-rank",
+      ranks: SCHOLAR_RANKS,
+      chips: SCHOLAR_CHIPS,
+      mult: SCHOLAR_MULT,
+    },
+  };
+}
+
+export function createWalkieTalkieJoker(): Joker {
+  return {
+    id: "walkie-talkie",
+    rarity: "common",
+    name: "Walkie Talkie",
+    description: `+${WALKIE_TALKIE_CHIPS} Chips and +${WALKIE_TALKIE_MULT} Mult per scored 10 or 4`,
+    effect: {
+      kind: "per-scored-rank",
+      ranks: WALKIE_TALKIE_RANKS,
+      chips: WALKIE_TALKIE_CHIPS,
+      mult: WALKIE_TALKIE_MULT,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -587,6 +645,9 @@ export function createJokerCatalog(): Joker[] {
     createScaryFaceJoker(),
     createSmileyFaceJoker(),
     createPhotographJoker(),
+    createFibonacciJoker(),
+    createScholarJoker(),
+    createWalkieTalkieJoker(),
   ];
 }
 
@@ -683,6 +744,7 @@ export function applyHandLevelJokers(
       case "per-scored-rank-parity":
       case "per-scored-face":
       case "x-mult-on-face-scored":
+      case "per-scored-rank":
         break;
       default:
         assertNeverEffect(effect);
@@ -805,6 +867,20 @@ export function applyPerCardJokers(
             jokerId: joker.id,
             jokerName: joker.name,
             xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "per-scored-rank": {
+        if (effect.ranks.includes(card.rank)) {
+          if (effect.mult !== undefined) additiveMult += effect.mult;
+          if (effect.chips !== undefined) additiveChips += effect.chips;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            ...(effect.mult !== undefined ? { additiveMult: effect.mult } : {}),
+            ...(effect.chips !== undefined ? { additiveChips: effect.chips } : {}),
           });
         }
         break;
