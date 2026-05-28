@@ -13,17 +13,18 @@ export function insertIdAtIndex<T>(
   return next;
 }
 
+export interface GapRect {
+  readonly left: number;
+  readonly width: number;
+}
+
 export function nearestGapIndex(
-  container: Element | null,
+  rects: ReadonlyArray<GapRect>,
   clientX: number,
-  gapSelector: string,
 ): number | null {
-  if (!container) return null;
-  const gaps = container.querySelectorAll<HTMLElement>(gapSelector);
   let bestIdx: number | null = null;
   let bestDist = Number.POSITIVE_INFINITY;
-  gaps.forEach((gap, i) => {
-    const rect = gap.getBoundingClientRect();
+  rects.forEach((rect, i) => {
     if (rect.width === 0 && rect.left === 0) return;
     const center = rect.left + rect.width / 2;
     const dist = Math.abs(clientX - center);

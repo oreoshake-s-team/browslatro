@@ -50,41 +50,44 @@ describe("insertIdAtIndex", () => {
 });
 
 describe("nearestGapIndex", () => {
-  function makeContainer(rects: ReadonlyArray<{ left: number; width: number }>) {
-    const container = document.createElement("div");
-    rects.forEach((r) => {
-      const gap = document.createElement("span");
-      gap.className = "gap";
-      gap.getBoundingClientRect = () =>
-        ({ left: r.left, width: r.width, right: r.left + r.width, top: 0, bottom: 0, height: 0, x: r.left, y: 0, toJSON: () => ({}) }) as DOMRect;
-      container.appendChild(gap);
-    });
-    return container;
-  }
-
-  test("returns null when the container is null", () => {
-    expect(nearestGapIndex(null, 100, ".gap")).toBeNull();
+  test("returns null when there are no gap rects", () => {
+    expect(nearestGapIndex([], 50)).toBeNull();
   });
 
   test("picks the gap whose center is closest to the cursor", () => {
-    const container = makeContainer([
-      { left: 0, width: 10 },
-      { left: 100, width: 10 },
-      { left: 200, width: 10 },
-    ]);
-    expect(nearestGapIndex(container, 105, ".gap")).toBe(1);
+    expect(
+      nearestGapIndex(
+        [
+          { left: 0, width: 10 },
+          { left: 100, width: 10 },
+          { left: 200, width: 10 },
+        ],
+        105,
+      ),
+    ).toBe(1);
   });
 
-  test("skips gaps that report a zero-rect (jsdom non-laid-out elements)", () => {
-    const container = makeContainer([
-      { left: 0, width: 0 },
-      { left: 100, width: 10 },
-    ]);
-    expect(nearestGapIndex(container, 0, ".gap")).toBe(1);
+  test("skips gaps that report a zero-rect (non-laid-out elements)", () => {
+    expect(
+      nearestGapIndex(
+        [
+          { left: 0, width: 0 },
+          { left: 100, width: 10 },
+        ],
+        0,
+      ),
+    ).toBe(1);
   });
 
-  test("returns null when no gaps match the selector", () => {
-    const container = document.createElement("div");
-    expect(nearestGapIndex(container, 50, ".gap")).toBeNull();
+  test("returns null when every gap reports a zero-rect", () => {
+    expect(
+      nearestGapIndex(
+        [
+          { left: 0, width: 0 },
+          { left: 0, width: 0 },
+        ],
+        50,
+      ),
+    ).toBeNull();
   });
 });

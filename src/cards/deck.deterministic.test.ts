@@ -4,7 +4,7 @@
  * re-imports `./deck` to observe the desired initial state.
  */
 
-export {};
+import "../test/memoryLocalStorage";
 
 const STORAGE_KEY = "browslatro:deterministicShuffle";
 const INPUT = [1, 2, 3, 4];

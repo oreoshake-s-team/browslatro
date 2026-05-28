@@ -97,7 +97,11 @@ export default function Jokers({
     if (target?.classList?.contains("joker-gap")) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    const gap = nearestGapIndex(listRef.current, e.clientX, ".joker-gap");
+    const gaps = listRef.current?.querySelectorAll<HTMLElement>(".joker-gap");
+    const rects = gaps
+      ? Array.from(gaps, (gap) => gap.getBoundingClientRect())
+      : [];
+    const gap = nearestGapIndex(rects, e.clientX);
     if (gap !== null && activeGapIndex !== gap) setActiveGapIndex(gap);
   }
 
