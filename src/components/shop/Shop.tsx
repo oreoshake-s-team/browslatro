@@ -27,6 +27,7 @@ export interface ShopProps {
   voucherOptions?: ReadonlyArray<Voucher>;
   onSetVoucher?: (id: string) => void;
   disabled?: boolean;
+  extraRerollReduction?: number;
 }
 
 const LOCK_TOOLTIP = "Finish picking from the pack first";
@@ -175,6 +176,7 @@ export default function Shop({
   voucherOptions,
   onSetVoucher,
   disabled = false,
+  extraRerollReduction = 0,
 }: ShopProps) {
   useEscapeToClose(onNext, !disabled);
   const canOverrideVoucher =
@@ -184,7 +186,7 @@ export default function Shop({
   const [rerollCount, setRerollCount] = useState(0);
   const currentRerollCost = rerollCostFor(
     rerollCount,
-    rerollCostReduction(ownedVoucherIds),
+    rerollCostReduction(ownedVoucherIds) + extraRerollReduction,
   );
   const canAffordReroll = money >= currentRerollCost;
   const rerollTooltip = disabled

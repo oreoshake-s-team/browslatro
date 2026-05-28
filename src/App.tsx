@@ -26,12 +26,17 @@ import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModa
 import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import {
+  resolveTagEffect,
   rollAnteSkipOffers,
   tagOfferRngConfig,
   totalDeferredBossPayout,
   type AnteSkipOffers,
   type TagId,
 } from "./items/tags";
+import {
+  applyNextShopModifiers,
+  type NextShopModifier,
+} from "./run/nextShopMods";
 import {
   initialRunStats,
   recordBlindSkipped,
@@ -398,6 +403,9 @@ function App() {
   const [skipTagOffers, setSkipTagOffers] = useState<AnteSkipOffers>(() =>
     rollAnteSkipOffers(tagOfferRngConfig.rng),
   );
+  const [pendingShopMods, setPendingShopMods] = useState<
+    ReadonlyArray<NextShopModifier>
+  >([]);
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -1267,6 +1275,7 @@ function App() {
   function closeShopAndStartNextRound() {
     setShopOffers(null);
     setSoldJokerIdsThisShopVisit([]);
+    setPendingShopMods([]);
     setPendingBlindSelect(true);
   }
 
@@ -1278,10 +1287,14 @@ function App() {
   function skipBlind() {
     if (blind === 3) return;
     const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
+    const effect = resolveTagEffect(offered);
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
     setPendingTags((prev) => [...prev, offered]);
     setRunStats(recordBlindSkipped);
+    if (effect.category === "next-shop") {
+      setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
+    }
   }
 
   function adjustVoucherSlots(delta: number) {
@@ -1398,6 +1411,7 @@ function App() {
     setPendingTags([]);
     setRunStats(initialRunStats());
     setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+    setPendingShopMods([]);
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
     setPendingBlindSelect(true);
@@ -1968,6 +1982,8 @@ function App() {
                 onBuyVoucher: buyAnteVoucher,
                 onReroll: rerollShopOffers,
                 onNext: closeShopAndStartNextRound,
+                extraRerollReduction:
+                  applyNextShopModifiers(pendingShopMods).rerollReduction,
                 voucherOptions: VOUCHER_CATALOG,
                 onSetVoucher: (id) => {
                   const next = VOUCHER_CATALOG.find((v) => v.id === id);
