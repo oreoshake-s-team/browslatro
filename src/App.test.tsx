@@ -2278,6 +2278,17 @@ describe("Voucher effects integration", () => {
     ).toHaveTextContent("Overstock");
   });
 
+  test("the dev override picker replaces the offered voucher with the chosen one", async () => {
+    const user = await openShopWithVoucher(0);
+    await user.selectOptions(
+      screen.getByTestId("shop-voucher-override"),
+      "crystal-ball",
+    );
+    expect(
+      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name"),
+    ).toHaveTextContent("Crystal Ball");
+  });
+
   test("buying Overstock raises the next shop's item offer count from 2 to 3", async () => {
     const user = await openShopWithVoucher(0);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));

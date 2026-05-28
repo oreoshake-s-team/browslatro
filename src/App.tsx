@@ -1901,6 +1901,11 @@ function App() {
                 onBuyVoucher: buyAnteVoucher,
                 onReroll: rerollShopOffers,
                 onNext: closeShopAndStartNextRound,
+                voucherOptions: VOUCHER_CATALOG,
+                onSetVoucher: (id) => {
+                  const next = VOUCHER_CATALOG.find((v) => v.id === id);
+                  if (next) setCurrentAnteVouchers([next]);
+                },
               }
             : undefined
         }
