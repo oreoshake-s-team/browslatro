@@ -70,6 +70,22 @@ describe("rerollCostFor", () => {
   ])("returns $expected after $label", ({ count, expected }) => {
     expect(rerollCostFor(count)).toBe(expected);
   });
+
+  test("applies reduction to base cost when reduction parameter is provided", () => {
+    expect(rerollCostFor(0, 2)).toBe(3);
+  });
+
+  test("applies cumulative reduction with reroll count", () => {
+    expect(rerollCostFor(3, 4)).toBe(4);
+  });
+
+  test("never returns negative cost (uses Math.max(0, ...))", () => {
+    expect(rerollCostFor(0, 10)).toBe(0);
+  });
+
+  test("ignores negative reduction values (clamps with Math.max(0, reduction))", () => {
+    expect(rerollCostFor(2, -5)).toBe(7);
+  });
 });
 
 describe("pickRandomJoker", () => {
