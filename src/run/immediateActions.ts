@@ -1,8 +1,12 @@
+import type { PackPool, PackVariant } from "../items/packs";
 import type { RunStats } from "./runStats";
 
 export type ImmediateAction =
   | { readonly kind: "money-per-stat"; readonly stat: keyof RunStats; readonly perUnit: number }
-  | { readonly kind: "double-money"; readonly cap: number };
+  | { readonly kind: "double-money"; readonly cap: number }
+  | { readonly kind: "open-pack"; readonly pool: PackPool; readonly variant: PackVariant };
+
+export type MoneyImmediateAction = Exclude<ImmediateAction, { kind: "open-pack" }>;
 
 export interface ImmediateContext {
   readonly stats: RunStats;
@@ -10,7 +14,7 @@ export interface ImmediateContext {
 }
 
 export function immediateMoneyGain(
-  action: ImmediateAction,
+  action: MoneyImmediateAction,
   ctx: ImmediateContext,
 ): number {
   switch (action.kind) {
