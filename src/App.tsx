@@ -9,6 +9,7 @@ import { useJokers } from "./store/jokers";
 import { useShop } from "./store/shop";
 import { usePacks } from "./store/packs";
 import { useHand } from "./store/hand";
+import { useScoring } from "./store/scoring";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -240,8 +241,10 @@ function App() {
   const ante = useProgression((state) => state.ante);
   const setAnte = useProgression((state) => state.setAnte);
   const money = useEconomy((state) => state.money);
-  const [chips, setChips] = useState(0);
-  const [multiplier, setMultiplier] = useState(0);
+  const chips = useScoring((state) => state.chips);
+  const setChips = useScoring((state) => state.setChips);
+  const multiplier = useScoring((state) => state.multiplier);
+  const setMultiplier = useScoring((state) => state.setMultiplier);
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
   // so the displayed chips/multiplier reflect manual bumps until a New game
   // resets them. See #265.
@@ -255,7 +258,8 @@ function App() {
       chanceOverrideConfig.force100 = false;
     };
   }, [forceProbabilities]);
-  const [roundScore, setRoundScore] = useState(0);
+  const roundScore = useScoring((state) => state.roundScore);
+  const setRoundScore = useScoring((state) => state.setRoundScore);
   const selectedHand = useHand((state) => state.selectedHand);
   const setSelectedHand = useHand((state) => state.setSelectedHand);
   const remainingHands = useHand((state) => state.remainingHands);
@@ -290,9 +294,8 @@ function App() {
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
   );
-  const [scoringEvents, setScoringEvents] = useState<ReadonlyArray<ScoringEvent>>(
-    [],
-  );
+  const scoringEvents = useScoring((state) => state.scoringEvents);
+  const setScoringEvents = useScoring((state) => state.setScoringEvents);
 
   function pushScoringEvent(event: ScoringEvent) {
     setScoringEvents((prev) => [...prev, event]);

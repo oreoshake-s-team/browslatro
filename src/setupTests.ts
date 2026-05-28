@@ -8,6 +8,7 @@ import { useJokers } from "./store/jokers";
 import { useShop } from "./store/shop";
 import { usePacks } from "./store/packs";
 import { useHand } from "./store/hand";
+import { useScoring } from "./store/scoring";
 
 beforeEach(() => {
   useEconomy.setState({ money: STARTING_MONEY });
@@ -20,6 +21,7 @@ beforeEach(() => {
   useShop.getState().resetShop();
   usePacks.getState().resetPacks();
   useHand.getState().resetHand();
+  useScoring.getState().resetScoring();
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }
