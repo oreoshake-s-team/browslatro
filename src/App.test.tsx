@@ -3612,3 +3612,26 @@ describe("Voucher tag", () => {
     expect(screen.queryByTestId("shop-voucher-1")).not.toBeInTheDocument();
   });
 });
+
+describe("Top-up tag", () => {
+  const jokerCount = () => screen.queryAllByTestId(/^joker-tile-filled-/).length;
+
+  test("gaining Top-up creates two Common Jokers", async () => {
+    tagOfferRngConfig.rng = rngForTag("top-up");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = jokerCount();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(jokerCount() - before).toBe(2);
+  });
+
+  test("a non-Top-up tag creates no jokers (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = jokerCount();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(jokerCount() - before).toBe(0);
+  });
+});
