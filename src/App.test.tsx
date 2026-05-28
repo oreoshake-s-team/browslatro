@@ -3658,3 +3658,24 @@ describe("Boss tag", () => {
     expect(bossText()).toBe(before);
   });
 });
+
+describe("Orbital tag", () => {
+  test("gaining Orbital upgrades a poker hand by 3 levels", async () => {
+    tagOfferRngConfig.rng = rngForTag("orbital");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("4");
+  });
+
+  test("a non-Orbital tag leaves hand levels unchanged (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("1");
+  });
+});

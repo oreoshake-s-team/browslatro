@@ -1375,6 +1375,17 @@ function App() {
             rng: bossPickerRngConfig.rng,
           }),
         );
+      } else if (action.kind === "upgrade-hand") {
+        play("pop");
+        const planets = createPlanetCatalog();
+        const planet = planets[Math.floor(shopPickerRngConfig.rng() * planets.length)];
+        setHandStats((prev) => {
+          let next = prev;
+          for (let i = 0; i < action.levels; i += 1) {
+            next = applyPlanetUpgrade(next, planet);
+          }
+          return next;
+        });
       } else {
         setMoney(
           (prev) => prev + immediateMoneyGain(action, { stats: nextStats, money: prev }),
