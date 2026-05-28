@@ -1,4 +1,5 @@
-import type { Joker, RandomSource } from "./jokers";
+import type { Joker, JokerRarity, RandomSource } from "./jokers";
+import { pickRandomFromCatalog } from "./jokers";
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
@@ -125,6 +126,22 @@ export type ShopItem =
       readonly price: number;
       readonly sold: boolean;
     };
+
+export function buildFreeJokerOffers(
+  rarities: ReadonlyArray<JokerRarity>,
+  catalog: ReadonlyArray<Joker>,
+  ownedIds: ReadonlySet<string>,
+  rng: RandomSource = Math.random,
+): ShopItem[] {
+  return rarities.flatMap((rarity) => {
+    const joker = pickRandomFromCatalog(
+      catalog,
+      (j) => j.rarity === rarity && !ownedIds.has(j.id),
+      rng,
+    );
+    return joker ? [{ kind: "joker" as const, joker, price: 0, sold: false }] : [];
+  });
+}
 
 export function rerollCostFor(
   rerollCount: number,

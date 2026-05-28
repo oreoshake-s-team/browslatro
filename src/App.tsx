@@ -148,6 +148,7 @@ import {
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
+  buildFreeJokerOffers,
   pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
@@ -829,11 +830,16 @@ function App() {
       rng: shopPickerRngConfig.rng,
     });
     const shopAdjustments = applyNextShopModifiers(pendingShopMods);
-    setShopOffers(
-      shopAdjustments.freeShopItems
-        ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
-        : baseOffers,
+    const pricedOffers = shopAdjustments.freeShopItems
+      ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
+      : baseOffers;
+    const freeJokerOffers = buildFreeJokerOffers(
+      shopAdjustments.freeJokerRarities,
+      createJokerCatalog(),
+      new Set(jokers.map((j) => j.id)),
+      shopPickerRngConfig.rng,
     );
+    setShopOffers([...freeJokerOffers, ...pricedOffers]);
     setPendingForcedPacks([]);
     setDealt(
       fullDeckPile(
