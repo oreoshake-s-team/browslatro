@@ -181,13 +181,12 @@ function applySealOverrides(
   });
 }
 
-function initialDeal(
+function buildShuffledDeck(
   excludedKeys: ReadonlySet<string> = new Set(),
-  handSize: number = HAND_SIZE,
   addedCards: ReadonlyArray<Card> = [],
   enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
   sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): DealResult {
+): Card[] {
   const base = applySealOverrides(
     applyEnhancementOverrides(createDeck(excludedKeys), enhancementOverrides),
     sealOverrides,
@@ -196,10 +195,37 @@ function initialDeal(
     applyEnhancementOverrides(addedCards, enhancementOverrides),
     sealOverrides,
   );
+  return shuffle([...base, ...extras]);
+}
+
+function initialDeal(
+  excludedKeys: ReadonlySet<string> = new Set(),
+  handSize: number = HAND_SIZE,
+  addedCards: ReadonlyArray<Card> = [],
+  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
+  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
+): DealResult {
   return deal(
-    shuffle([...base, ...extras]),
+    buildShuffledDeck(excludedKeys, addedCards, enhancementOverrides, sealOverrides),
     Math.max(1, handSize),
   );
+}
+
+function fullDeckPile(
+  excludedKeys: ReadonlySet<string> = new Set(),
+  addedCards: ReadonlyArray<Card> = [],
+  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
+  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
+): DealResult {
+  return {
+    hand: [],
+    remaining: buildShuffledDeck(
+      excludedKeys,
+      addedCards,
+      enhancementOverrides,
+      sealOverrides,
+    ),
+  };
 }
 
 function App() {
@@ -765,6 +791,16 @@ function App() {
       }),
     );
     setPendingForcedPacks([]);
+    setDealt(
+      fullDeckPile(
+        destroyedCardKeys,
+        addedCards,
+        cardEnhancementsByKey,
+        cardSealsByKey,
+      ),
+    );
+    setSelectedIds(new Set());
+    setSelectedHand(null);
   }
 
   function markOfferSold(idx: number) {

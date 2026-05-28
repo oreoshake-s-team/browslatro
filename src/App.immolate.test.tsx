@@ -120,6 +120,8 @@ async function getImmolateInConsumables(
   if (!(buy instanceof HTMLButtonElement)) throw new Error("missing Immolate buy");
   await user.click(buy);
   await user.click(screen.getByRole("button", { name: /Next Round/ }));
+  const playBtn = screen.queryByTestId("blind-select-play");
+  if (playBtn) await user.click(playBtn);
 }
 
 describe("Immolate → discard refills hand to HAND_SIZE (#231)", () => {
