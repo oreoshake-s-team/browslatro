@@ -574,3 +574,74 @@ describe("pickShopItemOffers — item-only generation for reroll (#374)", () => 
     expect(offers.some((o) => o.kind === "pack")).toBe(false);
   });
 });
+
+describe("pickShopOffers — forcedPackPools (dev queue)", () => {
+  function packs(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
+    return offers.filter((o) => o.kind === "pack");
+  }
+
+  test("a single forced Arcana pack appears in the next shop", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(1)),
+      forcedPackPools: ["arcana"],
+    });
+    expect(
+      packs(offers).some((o) => o.kind === "pack" && o.pack.pool === "arcana"),
+    ).toBe(true);
+  });
+
+  test("two forced Spectral packs both appear in the next shop", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(2)),
+      forcedPackPools: ["spectral", "spectral"],
+    });
+    expect(
+      packs(offers).filter((o) => o.kind === "pack" && o.pack.pool === "spectral").length,
+    ).toBe(2);
+  });
+
+  test("forced pack count + rolled packs respects the base SHOP_PACK_SLOTS cap", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(3)),
+      forcedPackPools: ["celestial"],
+    });
+    expect(packs(offers).length).toBe(SHOP_PACK_SLOTS);
+  });
+
+  test("queueing more forced packs than the cap overflows to that count", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(4)),
+      forcedPackPools: ["arcana", "arcana", "arcana"],
+    });
+    expect(packs(offers).length).toBe(3);
+  });
+
+  test("forced packs are prepended before rolled packs", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(5)),
+      forcedPackPools: ["spectral"],
+    });
+    const first = packs(offers)[0];
+    expect(first?.kind === "pack" && first.pack.pool).toBe("spectral");
+  });
+
+  test("each forced pack is a normal variant", () => {
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(6)),
+      forcedPackPools: ["standard"],
+    });
+    const standard = packs(offers).find(
+      (o) => o.kind === "pack" && o.pack.pool === "standard",
+    );
+    expect(standard?.kind === "pack" && standard.pack.variant).toBe("normal");
+  });
+
+  test("an empty forcedPackPools array leaves the shop unchanged", () => {
+    const baseline = pickShopOffers(baseArgs(mulberry32(7)));
+    const withEmpty = pickShopOffers({
+      ...baseArgs(mulberry32(7)),
+      forcedPackPools: [],
+    });
+    expect(packs(withEmpty).length).toBe(packs(baseline).length);
+  });
+});

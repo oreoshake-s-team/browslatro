@@ -7,7 +7,13 @@ import { rollChance } from "../dev/chanceOverride";
 import { PLANET_BASE_PRICE } from "./planets";
 import { SPECTRAL_BASE_PRICE } from "./spectrals";
 import { TAROT_BASE_PRICE } from "./tarots";
-import { type PackOffer, packPrice, rollPack } from "./packs";
+import {
+  type PackOffer,
+  type PackPool,
+  packPrice,
+  rollPack,
+  rollPackForPool,
+} from "./packs";
 
 export const SPECTRAL_OFFER_CHANCE = 0.15;
 
@@ -188,6 +194,7 @@ export interface PickShopOffersArgs {
   readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly extraSlots?: number;
   readonly extraPackSlots?: number;
+  readonly forcedPackPools?: ReadonlyArray<PackPool>;
   readonly rng?: RandomSource;
 }
 
@@ -310,23 +317,25 @@ export function pickShopItemOffers(
 export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
   const rng = args.rng ?? Math.random;
   const slots: ShopItem[] = [...pickShopItemOffers(args)];
-  const packSlotCount = Math.max(
+  const forced = args.forcedPackPools ?? [];
+  const rollArgs = {
+    planetCatalog: args.planetCatalog,
+    tarotCatalog: args.tarotCatalog,
+    jokerCatalog: args.jokerCatalog,
+    spectralCatalog: args.spectralCatalog,
+    excludedJokerIds: args.excludedJokerIds,
+    rng,
+  };
+  for (const pool of forced) {
+    slots.push(packShopOffer(rollPackForPool(pool, rollArgs)));
+  }
+  const totalPackSlots = Math.max(
     0,
     SHOP_PACK_SLOTS + (args.extraPackSlots ?? 0),
   );
-  for (let i = 0; i < packSlotCount; i += 1) {
-    slots.push(
-      packShopOffer(
-        rollPack({
-          planetCatalog: args.planetCatalog,
-          tarotCatalog: args.tarotCatalog,
-          jokerCatalog: args.jokerCatalog,
-          spectralCatalog: args.spectralCatalog,
-          excludedJokerIds: args.excludedJokerIds,
-          rng,
-        }),
-      ),
-    );
+  const remainingPackSlots = Math.max(0, totalPackSlots - forced.length);
+  for (let i = 0; i < remainingPackSlots; i += 1) {
+    slots.push(packShopOffer(rollPack(rollArgs)));
   }
   return slots;
 }

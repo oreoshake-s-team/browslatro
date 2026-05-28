@@ -4,6 +4,7 @@ import App from "./App";
 import { HANDS } from "./constants";
 import { shopPickerRngConfig } from "./items/shop";
 import {
+  dismissBlindSelect,
   flushDiscardAnimation,
   getHandCardButtons,
   getStatValue,
@@ -160,5 +161,101 @@ describe("Celestial pack open + pick integration", () => {
         .getByTestId(`shop-offer-${idx}`)
         .querySelector("button.shop-offer-buy"),
     ).toHaveTextContent("Sold");
+  });
+});
+
+describe("Apply Modifiers — Add pack queue (Standard/Celestial/Arcana/Spectral)", () => {
+  function packsByPool(pool: string): NodeListOf<Element> {
+    return document.querySelectorAll(`[data-pack-pool="${pool}"]`);
+  }
+
+  async function advanceToShop(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+  }
+
+  test("clicking Add Arcana pack queues one forced Arcana pack in the next shop", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Add Arcana pack/ }));
+    await advanceToShop(user);
+    expect(packsByPool("arcana").length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("clicking Add Spectral pack twice queues two forced Spectral packs", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Add Spectral pack/ }));
+    await user.click(screen.getByRole("button", { name: /Add Spectral pack/ }));
+    await advanceToShop(user);
+    expect(packsByPool("spectral").length).toBe(2);
+  });
+
+  test("each pending pack increments the button label's count suffix", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const btn = screen.getByRole("button", { name: /Add Celestial pack/ });
+    await user.click(btn);
+    await user.click(btn);
+    expect(btn).toHaveTextContent(/Add Celestial pack \(2\)/);
+  });
+
+  test("Clear pending packs resets the button label to no count suffix", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Add Arcana pack/ }));
+    await user.click(screen.getByRole("button", { name: /Clear pending packs/ }));
+    expect(
+      screen.getByRole("button", { name: /Add Arcana pack$/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("Clear pending packs is disabled when nothing is queued", () => {
+    render(<App />);
+    expect(
+      screen.getByRole("button", { name: /Clear pending packs/ }),
+    ).toBeDisabled();
+  });
+
+  test("the queue drains once the shop is built (button suffix clears)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Add Standard pack/ }));
+    await advanceToShop(user);
+    expect(
+      screen.getByRole("button", { name: /Add Standard pack$/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("queueing a pack while the shop is open does not change the current shop's pack count", async () => {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToShop(user);
+    const before = document.querySelectorAll('[data-offer-kind="pack"]').length;
+    await user.click(screen.getByRole("button", { name: /Add Arcana pack/ }));
+    expect(document.querySelectorAll('[data-offer-kind="pack"]').length).toBe(
+      before,
+    );
+  });
+
+  test("starting a new game drains the pending pack queue", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /Add Arcana pack/ }));
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    await dismissBlindSelect(user);
+    expect(
+      screen.getByRole("button", { name: /Add Arcana pack$/ }),
+    ).toBeInTheDocument();
   });
 });

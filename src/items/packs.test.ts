@@ -9,6 +9,7 @@ import {
   packPickLimit,
   packPrice,
   rollPack,
+  rollPackForPool,
   rollPackOptions,
   rollPackVariant,
   rollStandardCard,
@@ -586,5 +587,35 @@ describe("Standard pack", () => {
     } finally {
       chanceOverrideConfig.force100 = false;
     }
+  });
+});
+
+describe("rollPackForPool", () => {
+  function rollArgs(seed: number) {
+    return {
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(seed),
+    };
+  }
+
+  test("returns an offer with the requested pool", () => {
+    expect(rollPackForPool("arcana", rollArgs(80)).pool).toBe("arcana");
+  });
+
+  test("returns a normal variant regardless of pool", () => {
+    expect(rollPackForPool("spectral", rollArgs(81)).variant).toBe("normal");
+  });
+
+  test("returns the normal option count for the chosen pool", () => {
+    const offer = rollPackForPool("celestial", rollArgs(82));
+    expect(offer.options.length).toBe(packOptionsCount("celestial", "normal"));
+  });
+
+  test("standard pool yields playing-card options", () => {
+    const offer = rollPackForPool("standard", rollArgs(83));
+    expect(offer.options.every((o) => o.kind === "playing-card")).toBe(true);
   });
 });
