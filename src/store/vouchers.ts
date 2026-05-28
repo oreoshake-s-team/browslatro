@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import type { VoucherId } from "../items/vouchers";
+import {
+  pickVouchersForAnte,
+  type Voucher,
+  type VoucherId,
+} from "../items/vouchers";
 
 export const BASE_VOUCHER_SLOTS = 1;
 
@@ -11,13 +15,19 @@ function resolve<T>(update: Updater<T>, prev: T): T {
     : update;
 }
 
+function initialAnteVouchers(): ReadonlyArray<Voucher> {
+  return pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS);
+}
+
 export interface VouchersState {
   ownedVoucherIds: ReadonlySet<VoucherId>;
   extraVoucherSlots: number;
   soldVoucherIds: ReadonlySet<VoucherId>;
+  currentAnteVouchers: ReadonlyArray<Voucher>;
   setOwnedVoucherIds: (update: Updater<ReadonlySet<VoucherId>>) => void;
   setExtraVoucherSlots: (update: Updater<number>) => void;
   setSoldVoucherIds: (update: Updater<ReadonlySet<VoucherId>>) => void;
+  setCurrentAnteVouchers: (update: Updater<ReadonlyArray<Voucher>>) => void;
   resetVouchers: () => void;
 }
 
@@ -25,16 +35,22 @@ export const useVouchers = create<VouchersState>()((set) => ({
   ownedVoucherIds: new Set(),
   extraVoucherSlots: 0,
   soldVoucherIds: new Set(),
+  currentAnteVouchers: initialAnteVouchers(),
   setOwnedVoucherIds: (update) =>
     set((state) => ({ ownedVoucherIds: resolve(update, state.ownedVoucherIds) })),
   setExtraVoucherSlots: (update) =>
     set((state) => ({ extraVoucherSlots: resolve(update, state.extraVoucherSlots) })),
   setSoldVoucherIds: (update) =>
     set((state) => ({ soldVoucherIds: resolve(update, state.soldVoucherIds) })),
+  setCurrentAnteVouchers: (update) =>
+    set((state) => ({
+      currentAnteVouchers: resolve(update, state.currentAnteVouchers),
+    })),
   resetVouchers: () =>
     set({
       ownedVoucherIds: new Set(),
       extraVoucherSlots: 0,
       soldVoucherIds: new Set(),
+      currentAnteVouchers: initialAnteVouchers(),
     }),
 }));

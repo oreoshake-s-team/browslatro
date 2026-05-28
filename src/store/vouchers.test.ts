@@ -11,6 +11,15 @@ describe("vouchers store", () => {
     expect(useVouchers.getState().ownedVoucherIds.size).toBe(0);
   });
 
+  test("seeds the current ante voucher offering", () => {
+    expect(useVouchers.getState().currentAnteVouchers.length).toBeGreaterThan(0);
+  });
+
+  test("setCurrentAnteVouchers accepts a plain value", () => {
+    useVouchers.getState().setCurrentAnteVouchers([]);
+    expect(useVouchers.getState().currentAnteVouchers).toHaveLength(0);
+  });
+
   test("setOwnedVoucherIds accepts a plain value", () => {
     useVouchers.getState().setOwnedVoucherIds(new Set<VoucherId>(["overstock"]));
     expect(useVouchers.getState().ownedVoucherIds.has("overstock")).toBe(true);

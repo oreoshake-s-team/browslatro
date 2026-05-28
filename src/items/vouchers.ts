@@ -2,6 +2,10 @@ import type { RandomSource } from "./jokers";
 
 export const VOUCHER_BASE_PRICE = 10;
 
+export const voucherPickerRngConfig: { rng: RandomSource } = {
+  rng: Math.random,
+};
+
 export type VoucherId =
   | "overstock"
   | "overstock-plus"
@@ -77,7 +81,7 @@ function isEligible(
 
 export function pickVoucherForAnte(args: PickVoucherArgs): Voucher | null {
   const catalog = args.catalog ?? VOUCHER_CATALOG;
-  const rng = args.rng ?? Math.random;
+  const rng = args.rng ?? voucherPickerRngConfig.rng;
   const excludeIds = args.excludeIds ?? args.ownedIds;
   const eligible = catalog.filter((v) =>
     isEligible(v, args.ownedIds, excludeIds),
@@ -93,7 +97,7 @@ export function pickVouchersForAnte(
   const target = Math.max(0, Math.floor(count));
   if (target === 0) return [];
   const catalog = args.catalog ?? VOUCHER_CATALOG;
-  const rng = args.rng ?? Math.random;
+  const rng = args.rng ?? voucherPickerRngConfig.rng;
   const baseExclude = args.excludeIds ?? args.ownedIds;
   const picked: Voucher[] = [];
   const pickedIds = new Set<VoucherId>();

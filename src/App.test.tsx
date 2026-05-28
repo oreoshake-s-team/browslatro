@@ -8,7 +8,7 @@ import {
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
 import { createSpectralCatalog } from "./items/spectrals";
-import type { VoucherId } from "./items/vouchers";
+import { voucherPickerRngConfig, type VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -2244,6 +2244,7 @@ describe("Spectral purchase integration", () => {
 describe("Voucher effects integration", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    voucherPickerRngConfig.rng = Math.random;
   });
 
   async function openShopWithVoucher(
@@ -2251,7 +2252,7 @@ describe("Voucher effects integration", () => {
   ): Promise<ReturnType<typeof userEvent.setup>> {
     mockShuffleConfig.useIdentity = true;
     shopPickerRngConfig.rng = forceShopLayout(["joker", "planet", "tarot", "joker"]);
-    vi.spyOn(Math, "random").mockReturnValueOnce(firstVoucherRng);
+    voucherPickerRngConfig.rng = () => firstVoucherRng;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
