@@ -147,6 +147,30 @@ describe("DeckPile", () => {
       "2 of Hearts",
     ]);
   });
+
+  test("modal renders the summary region", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    expect(screen.getByTestId("deck-summary")).toBeInTheDocument();
+  });
+
+  test("summary reflects the per-suit count of the remaining deck", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    const row = screen.getByTestId("deck-summary-suit-diamonds");
+    expect(within(row).getByText("13")).toBeInTheDocument();
+  });
+
+  test("summary shows zero for a suit absent from the remaining deck", async () => {
+    const user = userEvent.setup();
+    const onlySpades = createDeck().filter((c) => c.suit === "spades");
+    render(<DeckPile remaining={onlySpades} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    const row = screen.getByTestId("deck-summary-suit-hearts");
+    expect(within(row).getByText("0")).toBeInTheDocument();
+  });
 });
 
 describe("DeckPile consumable drop zone", () => {

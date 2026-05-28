@@ -1,0 +1,76 @@
+.deck-summary {
+  flex: 0 0 11rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  padding-right: 1rem;
+  border-right: 1px solid #dee2e6;
+}
+
+.deck-summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.deck-summary-heading {
+  margin: 0;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+}
+
+.deck-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.deck-summary-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.deck-summary-glyph {
+  width: 1rem;
+  text-align: center;
+  color: #212529;
+}
+
+.deck-summary-glyph-hearts,
+.deck-summary-glyph-diamonds {
+  color: #c92a2a;
+}
+
+.deck-summary-label {
+  flex: 1;
+}
+
+.deck-summary-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #212529;
+}
+
+@media (max-width: 640px) {
+  .deck-summary {
+    flex-basis: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding-right: 0;
+    padding-bottom: 1rem;
+    border-right: none;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  .deck-summary-section {
+    flex: 1;
+    min-width: 8rem;
+  }
+}

@@ -169,6 +169,32 @@ export function sortCards(
   return arr;
 }
 
+export interface DeckSummary {
+  readonly suitCounts: Record<Suit, number>;
+  readonly rankCounts: Record<Rank, number>;
+}
+
+export function summarizeDeck(cards: ReadonlyArray<Card>): DeckSummary {
+  const suitCounts: Record<Suit, number> = {
+    spades: 0,
+    hearts: 0,
+    diamonds: 0,
+    clubs: 0,
+  };
+  const rankCounts = RANKS.reduce(
+    (acc, rank) => {
+      acc[rank] = 0;
+      return acc;
+    },
+    {} as Record<Rank, number>,
+  );
+  for (const card of cards) {
+    suitCounts[card.suit] += 1;
+    rankCounts[card.rank] += 1;
+  }
+  return { suitCounts, rankCounts };
+}
+
 export function groupBySuit(cards: ReadonlyArray<Card>): Record<Suit, Card[]> {
   const grouped: Record<Suit, Card[]> = {
     spades: [],

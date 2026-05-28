@@ -1,0 +1,71 @@
+import "./DeckSummary.css";
+import type { Card, Suit } from "../../cards/types";
+import { RANKS, SUITS, summarizeDeck } from "../../cards/deck";
+
+const SUIT_LABELS: Record<Suit, string> = {
+  spades: "Spades",
+  hearts: "Hearts",
+  diamonds: "Diamonds",
+  clubs: "Clubs",
+};
+
+const SUIT_GLYPHS: Record<Suit, string> = {
+  spades: "♠",
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+};
+
+const RANKS_DESC = [...RANKS].reverse();
+
+interface DeckSummaryProps {
+  remaining: ReadonlyArray<Card>;
+}
+
+export default function DeckSummary({ remaining }: DeckSummaryProps) {
+  const { suitCounts, rankCounts } = summarizeDeck(remaining);
+  return (
+    <section
+      className="deck-summary"
+      aria-label="Remaining cards summary"
+      data-testid="deck-summary"
+    >
+      <div className="deck-summary-section">
+        <h4 className="deck-summary-heading">By suit</h4>
+        <ul className="deck-summary-list">
+          {SUITS.map((suit) => (
+            <li
+              key={suit}
+              className="deck-summary-row"
+              data-testid={`deck-summary-suit-${suit}`}
+            >
+              <span
+                className={`deck-summary-glyph deck-summary-glyph-${suit}`}
+                aria-hidden="true"
+              >
+                {SUIT_GLYPHS[suit]}
+              </span>
+              <span className="deck-summary-label">{SUIT_LABELS[suit]}</span>
+              <span className="deck-summary-count">{suitCounts[suit]}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="deck-summary-section">
+        <h4 className="deck-summary-heading">By rank</h4>
+        <ul className="deck-summary-list">
+          {RANKS_DESC.map((rank) => (
+            <li
+              key={rank}
+              className="deck-summary-row"
+              data-testid={`deck-summary-rank-${rank}`}
+            >
+              <span className="deck-summary-label">{rank}</span>
+              <span className="deck-summary-count">{rankCounts[rank]}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
