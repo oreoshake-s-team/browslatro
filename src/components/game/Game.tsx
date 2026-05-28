@@ -7,6 +7,35 @@ import HandComponent from "../cards/Hand";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
 import Shop, { type ShopProps } from "../shop/Shop";
+import type { PackPool } from "../../items/packs";
+
+type QueueablePool = Extract<PackPool, "standard" | "celestial" | "arcana" | "spectral">;
+
+const QUEUEABLE_PACK_POOLS: ReadonlyArray<{
+  readonly pool: QueueablePool;
+  readonly icon: string;
+  readonly label: string;
+}> = [
+  { pool: "standard", icon: "🃏", label: "Standard" },
+  { pool: "celestial", icon: "🌌", label: "Celestial" },
+  { pool: "arcana", icon: "🔮", label: "Arcana" },
+  { pool: "spectral", icon: "👻", label: "Spectral" },
+];
+
+function countByPool(
+  pools: ReadonlyArray<PackPool>,
+): Readonly<Record<QueueablePool, number>> {
+  const counts: Record<QueueablePool, number> = {
+    standard: 0,
+    celestial: 0,
+    arcana: 0,
+    spectral: 0,
+  };
+  for (const pool of pools) {
+    if (pool in counts) counts[pool as QueueablePool] += 1;
+  }
+  return counts;
+}
 
 interface GameProps {
   onWin: () => void;
@@ -54,6 +83,9 @@ interface GameProps {
   onGrowPackSlots?: () => void;
   onShrinkVoucherSlots?: () => void;
   onGrowVoucherSlots?: () => void;
+  onQueueForcedPack?: (pool: QueueablePool) => void;
+  onClearPendingPacks?: () => void;
+  pendingForcedPacks?: ReadonlyArray<PackPool>;
   forceProbabilities?: boolean;
   onToggleForceProbabilities?: () => void;
   shop?: ShopProps;
@@ -109,6 +141,9 @@ export default function Game({
   onGrowPackSlots,
   onShrinkVoucherSlots,
   onGrowVoucherSlots,
+  onQueueForcedPack,
+  onClearPendingPacks,
+  pendingForcedPacks,
   forceProbabilities = false,
   onToggleForceProbabilities,
   shop,
@@ -119,6 +154,8 @@ export default function Game({
 }: GameProps) {
   const dragging = draggingConsumableIndex !== null;
   const draggingJoker = draggingJokerIndex !== null;
+  const forcedPackCounts = countByPool(pendingForcedPacks ?? []);
+  const totalPendingPacks = (pendingForcedPacks ?? []).length;
   function handleAddMoney(amount: number) {
     onSetMoney((prev) => prev + amount);
   }
@@ -239,6 +276,32 @@ export default function Game({
               onClick={onGrowPackSlots}
             >
               🎁 Packs +1
+            </button>
+          )}
+          {onQueueForcedPack &&
+            QUEUEABLE_PACK_POOLS.map(({ pool, icon, label }) => {
+              const count = forcedPackCounts[pool];
+              const suffix = count > 0 ? ` (${count})` : "";
+              return (
+                <button
+                  key={pool}
+                  type="button"
+                  className={`add-pack-button add-pack-button-${pool}`}
+                  onClick={() => onQueueForcedPack(pool)}
+                >
+                  {icon} Add {label} pack{suffix}
+                </button>
+              );
+            })}
+          {onClearPendingPacks && (
+            <button
+              type="button"
+              className="clear-pending-packs-button"
+              onClick={onClearPendingPacks}
+              disabled={totalPendingPacks === 0}
+              aria-disabled={totalPendingPacks === 0}
+            >
+              ↩️ Clear pending packs
             </button>
           )}
           {onShrinkVoucherSlots && (

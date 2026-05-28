@@ -224,3 +224,18 @@ export function rollPack(args: RollPackArgs): PackOffer {
   });
   return { pool, variant, options };
 }
+
+export function rollPackForPool(pool: PackPool, args: RollPackArgs): PackOffer {
+  const variant: PackVariant = "normal";
+  const options = rollPackOptions({
+    pool,
+    variant,
+    planetCatalog: args.planetCatalog,
+    tarotCatalog: args.tarotCatalog,
+    jokerCatalog: args.jokerCatalog,
+    spectralCatalog: args.spectralCatalog,
+    excludedJokerIds: args.excludedJokerIds,
+    rng: args.rng,
+  });
+  return { pool, variant, options };
+}

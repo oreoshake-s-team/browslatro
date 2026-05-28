@@ -23,7 +23,7 @@ import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import PackOpenModal from "./components/shop/PackOpenModal";
-import { packPickLimit, type PackOffer } from "./items/packs";
+import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
@@ -304,6 +304,9 @@ function App() {
   const [handSizeModifier, setHandSizeModifier] = useState(0);
   const currentHandSize = Math.max(1, HAND_SIZE + handSizeModifier);
   const [extraPackSlots, setExtraPackSlots] = useState(0);
+  const [pendingForcedPacks, setPendingForcedPacks] = useState<
+    ReadonlyArray<PackPool>
+  >([]);
   const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
     number | null
   >(null);
@@ -716,9 +719,11 @@ function App() {
         spectralCatalog: createSpectralCatalog(),
         extraSlots: extraShopOfferSlots(ownedVoucherIds),
         extraPackSlots,
+        forcedPackPools: pendingForcedPacks,
         rng: shopPickerRngConfig.rng,
       }),
     );
+    setPendingForcedPacks([]);
   }
 
   function markOfferSold(idx: number) {
@@ -1175,6 +1180,7 @@ function App() {
     setMoney(4);
     setHandSizeModifier(0);
     setExtraPackSlots(0);
+    setPendingForcedPacks([]);
     setExtraVoucherSlots(0);
     setDevChipsBonus(0);
     setDevMultBonus(0);
@@ -1730,6 +1736,11 @@ function App() {
           setExtraPackSlots((prev) => Math.max(-SHOP_PACK_SLOTS, prev - 1))
         }
         onGrowPackSlots={() => setExtraPackSlots((prev) => prev + 1)}
+        onQueueForcedPack={(pool) =>
+          setPendingForcedPacks((prev) => [...prev, pool])
+        }
+        onClearPendingPacks={() => setPendingForcedPacks([])}
+        pendingForcedPacks={pendingForcedPacks}
         onShrinkVoucherSlots={() => adjustVoucherSlots(-1)}
         onGrowVoucherSlots={() => adjustVoucherSlots(1)}
         forceProbabilities={forceProbabilities}

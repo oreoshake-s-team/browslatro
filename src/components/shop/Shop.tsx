@@ -203,6 +203,7 @@ export default function Shop({
         }`}
         data-testid={`shop-offer-${idx}`}
         data-offer-kind={offer.kind}
+        data-pack-pool={offer.kind === "pack" ? offer.pack.pool : undefined}
       >
         <span
           className={`shop-offer-kind shop-offer-kind-${offer.kind}`}
