@@ -34,15 +34,15 @@
 }
 
 .deck-modal {
-  max-width: 56rem;
-  width: 90vw;
+  max-width: 80rem;
+  width: 94vw;
   max-height: 85vh;
   overflow-y: auto;
 }
 
 .deck-modal-body {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1.5rem;
   width: 100%;
 }
@@ -53,12 +53,6 @@
   gap: 1.2rem;
   flex: 1;
   min-width: 0;
-}
-
-@media (max-width: 640px) {
-  .deck-modal-body {
-    flex-direction: column;
-  }
 }
 
 .deck-modal-group h4 {

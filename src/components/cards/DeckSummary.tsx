@@ -30,7 +30,7 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
       aria-label="Remaining cards summary"
       data-testid="deck-summary"
     >
-      <div className="deck-summary-section">
+      <div className="deck-summary-section deck-summary-section-suits">
         <h4 className="deck-summary-heading">By suit</h4>
         <ul className="deck-summary-list">
           {SUITS.map((suit) => (
@@ -51,7 +51,7 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
           ))}
         </ul>
       </div>
-      <div className="deck-summary-section">
+      <div className="deck-summary-section deck-summary-section-ranks">
         <h4 className="deck-summary-heading">By rank</h4>
         <ul className="deck-summary-list">
           {RANKS_DESC.map((rank) => (
