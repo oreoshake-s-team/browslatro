@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import type { Blind, Card, Enhancement, Hand } from "./cards/types";
+import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
@@ -170,14 +170,32 @@ function applyEnhancementOverrides(
   });
 }
 
+function applySealOverrides(
+  cards: ReadonlyArray<Card>,
+  overrides: ReadonlyMap<string, Seal>,
+): Card[] {
+  return cards.map((c) => {
+    if (c.seal !== undefined && c.seal !== null) return c;
+    const override = overrides.get(cardKey(c));
+    return override === undefined ? c : { ...c, seal: override };
+  });
+}
+
 function initialDeal(
   excludedKeys: ReadonlySet<string> = new Set(),
   handSize: number = HAND_SIZE,
   addedCards: ReadonlyArray<Card> = [],
   enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
+  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
 ): DealResult {
-  const base = applyEnhancementOverrides(createDeck(excludedKeys), enhancementOverrides);
-  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
+  const base = applySealOverrides(
+    applyEnhancementOverrides(createDeck(excludedKeys), enhancementOverrides),
+    sealOverrides,
+  );
+  const extras = applySealOverrides(
+    applyEnhancementOverrides(addedCards, enhancementOverrides),
+    sealOverrides,
+  );
   return deal(
     shuffle([...base, ...extras]),
     Math.max(1, handSize),
@@ -249,6 +267,9 @@ function App() {
   const [addedCards, setAddedCards] = useState<ReadonlyArray<Card>>(() => []);
   const [cardEnhancementsByKey, setCardEnhancementsByKey] = useState<
     ReadonlyMap<string, Enhancement>
+  >(() => new Map());
+  const [cardSealsByKey, setCardSealsByKey] = useState<
+    ReadonlyMap<string, Seal>
   >(() => new Map());
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
@@ -392,7 +413,15 @@ function App() {
     setRemainingHands(startingHands);
     setRemainingDiscards(startingDiscards);
     setHandHistoryThisRound([]);
-    setDealt(initialDeal(destroyedCardKeys, handSize, addedCards, cardEnhancementsByKey));
+    setDealt(
+      initialDeal(
+        destroyedCardKeys,
+        handSize,
+        addedCards,
+        cardEnhancementsByKey,
+        cardSealsByKey,
+      ),
+    );
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
     setSelectedHand(null);
@@ -759,11 +788,14 @@ function App() {
     setOpenedPack(offer.pack);
     setPackPicksRemaining(packPickLimit(offer.pack.variant));
     if (offer.pack.pool === "arcana" || offer.pack.pool === "spectral") {
-      const baseDeck = applyEnhancementOverrides(
-        createDeck(destroyedCardKeys),
-        cardEnhancementsByKey,
+      const baseDeck = applySealOverrides(
+        applyEnhancementOverrides(createDeck(destroyedCardKeys), cardEnhancementsByKey),
+        cardSealsByKey,
       );
-      const extras = applyEnhancementOverrides(addedCards, cardEnhancementsByKey);
+      const extras = applySealOverrides(
+        applyEnhancementOverrides(addedCards, cardEnhancementsByKey),
+        cardSealsByKey,
+      );
       const preview = shuffle([...baseDeck, ...extras]).slice(0, currentHandSize);
       setPackPreviewHand(preview);
     } else {
@@ -799,6 +831,22 @@ function App() {
       prev.map((c) =>
         packPreviewSelectedIds.has(c.id) ? { ...c, enhancement } : c,
       ),
+    );
+    setPackPreviewSelectedIds(new Set());
+  }
+
+  function applySealToSelectedPreviewCards(seal: Seal) {
+    const selectedKeys = new Set<string>();
+    for (const c of packPreviewHand) {
+      if (packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+    }
+    setCardSealsByKey((prev) => {
+      const next = new Map(prev);
+      for (const key of selectedKeys) next.set(key, seal);
+      return next;
+    });
+    setPackPreviewHand((prev) =>
+      prev.map((c) => (packPreviewSelectedIds.has(c.id) ? { ...c, seal } : c)),
     );
     setPackPreviewSelectedIds(new Set());
   }
@@ -981,6 +1029,18 @@ function App() {
     if (entry.kind === "spectral") {
       const spectralEffect = entry.card.effect;
       if (spectralEffect.kind === "apply-seal") {
+        if (previewActive) {
+          if (
+            packPreviewSelectedIds.size === 0 ||
+            packPreviewSelectedIds.size > spectralEffect.maxTargets
+          ) {
+            return;
+          }
+          play("pop");
+          applySealToSelectedPreviewCards(spectralEffect.seal);
+          setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+          return;
+        }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
         setDealt((prev) => ({
