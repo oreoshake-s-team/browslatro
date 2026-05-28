@@ -28,6 +28,7 @@ Browlatro is an educational journey meant to help the author brush up on their f
 - Include "negative" test cases whenever possible.
 - Do not add comments to tests.
 - When a single test file approaches 1500 lines or more, create a follow up issue to see if it can be split into something smaller.
+- Whenever possible, visually verify your changes in a browser.
 
 # Style
 
