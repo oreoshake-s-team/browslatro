@@ -19,13 +19,13 @@ Sync the project's `docs/` folder with the most recently merged pull request on 
 
 ### 1. Identify the merged PR
 
-Run, in order, and stop at the first that yields a result:
+Prefer the GitHub MCP tool `mcp__github__list_pull_requests` (state: closed, base: main, limit: 1) to find the most recently merged PR. Fall back to the `gh` CLI only if the MCP is unavailable:
 
 ```bash
 gh pr list --state merged --base main --limit 1 --json number,title,mergedAt,headRefName,body,url
 ```
 
-If `gh` is not authenticated or the repo has no remote PRs, fall back to:
+If neither works, fall back to git:
 
 ```bash
 git log -1 --merges --first-parent main --pretty='%H%n%s%n%b'
@@ -35,9 +35,10 @@ Confirm the PR number and title with the user in one short sentence before proce
 
 ### 2. Inspect what actually changed
 
+Prefer `mcp__github__pull_request_read` to fetch the PR body, title, and labels. For the file diff, use the `gh` CLI (the MCP has no diff tool):
+
 ```bash
 gh pr diff <PR_NUMBER> --name-only
-gh pr view <PR_NUMBER> --json body,title,labels
 ```
 
 For each non-test, non-CSS, non-config source file in the diff, decide whether it represents:

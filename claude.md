@@ -47,6 +47,7 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 - After every push, wait for the CI status. If a test fails or a merge conflict exists, try to resolve it immediately.
 - Never merge a PR unless all CI statuses are green.
 - Always leave a comment on the issue to indicate work on an issue has started.
+- Drive each issue all the way to a green PR. Do not stop after pushing — confirm CI passes. Only pause if genuinely blocked; state the blocker explicitly.
 
 # Conversations outside of Claude code
 
@@ -54,11 +55,7 @@ See docs/conversation_summary.md for more background.
 
 ## Project Environment
 
-- This project uses **Yarn Berry with PnP** (not npm/node_modules). Use `yarn` commands, not `npm`.
+- This project uses **Yarn Berry with PnP** (not npm/node_modules). Use `yarn` commands, not `npm`. Never assume a `node_modules` directory exists.
 - TypeScript is the primary language - all new code should be `.ts`/`.tsx`.
 - Run `yarn typecheck` and `yarn test` before opening PRs.
-  Add as a new ## Game Domain Context section near the top\n\n## Game Domain Context
-- This is a Balatro clone. Terms like 'tags', 'spectral cards', 'vouchers', 'boss blinds', etc. refer to **in-game Balatro mechanics**, not GitHub/repo concepts.
-- When implementing Balatro features (spectral cards, tarots, jokers, etc.), match the **authentic Balatro effects** - do not invent placeholder effects. Reference the Balatro wiki or ask the user if unsure.
-  Add under existing ## Code Style section or create one\n\n## Code Style
-- Keep app code files under 150 lines where reasonable; extract components/modules when they grow.
+- Use `import`, not `require()` — this is an ESM project.
