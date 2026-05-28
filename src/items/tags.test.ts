@@ -138,6 +138,33 @@ describe("Charm and Ethereal pack tags", () => {
   });
 });
 
+describe("Standard, Meteor, and Buffoon pack tags", () => {
+  test("Standard opens a Mega Standard pack", () => {
+    const effect = resolveTagEffect("standard");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "standard", variant: "mega" });
+  });
+
+  test("Meteor opens a Mega Celestial pack", () => {
+    const effect = resolveTagEffect("meteor");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "celestial", variant: "mega" });
+  });
+
+  test("Buffoon opens a Mega Buffoon pack", () => {
+    const effect = resolveTagEffect("buffoon");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "open-pack", pool: "buffoon", variant: "mega" });
+  });
+
+  test("all three pack pools are present in the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(["standard", "meteor", "buffoon"].every((id) => ids.includes(id as never))).toBe(
+      true,
+    );
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");

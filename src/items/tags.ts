@@ -9,7 +9,10 @@ export type TagId =
   | "speed"
   | "economy"
   | "charm"
-  | "ethereal";
+  | "ethereal"
+  | "standard"
+  | "meteor"
+  | "buffoon";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -93,6 +96,33 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "immediate",
       action: { kind: "open-pack", pool: "spectral", variant: "normal" },
+    },
+  },
+  {
+    id: "standard",
+    name: "Standard Tag",
+    description: "Immediately open a free Mega Standard Pack.",
+    effect: {
+      category: "immediate",
+      action: { kind: "open-pack", pool: "standard", variant: "mega" },
+    },
+  },
+  {
+    id: "meteor",
+    name: "Meteor Tag",
+    description: "Immediately open a free Mega Celestial Pack.",
+    effect: {
+      category: "immediate",
+      action: { kind: "open-pack", pool: "celestial", variant: "mega" },
+    },
+  },
+  {
+    id: "buffoon",
+    name: "Buffoon Tag",
+    description: "Immediately open a free Mega Buffoon Pack.",
+    effect: {
+      category: "immediate",
+      action: { kind: "open-pack", pool: "buffoon", variant: "mega" },
     },
   },
 ];

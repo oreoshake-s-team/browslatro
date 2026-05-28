@@ -3503,3 +3503,38 @@ describe("Charm and Ethereal pack tags", () => {
     expect(screen.queryByTestId("pack-open-subtitle")).not.toBeInTheDocument();
   });
 });
+
+describe("Standard, Meteor, and Buffoon pack tags", () => {
+  test("gaining the Standard tag opens a Mega Standard pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("standard");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Standard Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("gaining the Meteor tag opens a Mega Celestial pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("meteor");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Celestial Pack/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("gaining the Buffoon tag opens a Mega Buffoon pack", async () => {
+    tagOfferRngConfig.rng = rngForTag("buffoon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(
+      screen.getByRole("heading", { name: /Mega Buffoon Pack/ }),
+    ).toBeInTheDocument();
+  });
+});
