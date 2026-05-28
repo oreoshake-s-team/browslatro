@@ -9,6 +9,7 @@ import { useShop } from "./store/shop";
 import { usePacks } from "./store/packs";
 import { useHand } from "./store/hand";
 import { useScoring } from "./store/scoring";
+import { useDevModifiers } from "./store/devModifiers";
 
 beforeEach(() => {
   useEconomy.setState({ money: STARTING_MONEY });
@@ -22,6 +23,7 @@ beforeEach(() => {
   usePacks.getState().resetPacks();
   useHand.getState().resetHand();
   useScoring.getState().resetScoring();
+  useDevModifiers.getState().resetDevModifiers();
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }
