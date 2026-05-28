@@ -24,7 +24,8 @@ export type TagId =
   | "negative"
   | "foil"
   | "holographic"
-  | "polychrome";
+  | "polychrome"
+  | "double";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -33,7 +34,8 @@ export type TagEffect =
       readonly category: "next-shop";
       readonly modifiers: ReadonlyArray<NextShopModifier>;
     }
-  | { readonly category: "next-round"; readonly handSizeBonus: number };
+  | { readonly category: "next-round"; readonly handSizeBonus: number }
+  | { readonly category: "duplicate-next" };
 
 export interface TagSpec {
   readonly id: TagId;
@@ -242,6 +244,12 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
       category: "next-shop",
       modifiers: [{ kind: "free-edition-joker", edition: "polychrome" }],
     },
+  },
+  {
+    id: "double",
+    name: "Double Tag",
+    description: "Duplicates the next selected tag (excluding another Double).",
+    effect: { category: "duplicate-next" },
   },
 ];
 

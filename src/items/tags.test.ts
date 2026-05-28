@@ -15,6 +15,7 @@ const KNOWN_CATEGORIES: ReadonlyArray<TagEffect["category"]> = [
   "immediate",
   "next-shop",
   "next-round",
+  "duplicate-next",
 ];
 
 describe("INVESTMENT_TAG_REWARD", () => {
@@ -281,6 +282,16 @@ describe("edition tags", () => {
       expect(effect.modifiers).toEqual([{ kind: "free-edition-joker", edition }]);
     },
   );
+});
+
+describe("Double tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("double");
+  });
+
+  test("resolves to the duplicate-next category", () => {
+    expect(resolveTagEffect("double").category).toBe("duplicate-next");
+  });
 });
 
 describe("resolveTagEffect", () => {
