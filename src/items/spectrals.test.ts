@@ -1,4 +1,5 @@
 import {
+  CRYPTID_COPY_COUNT,
   FAMILIAR_ADD_COUNT,
   GRIM_ADD_COUNT,
   INCANTATION_ADD_COUNT,
@@ -6,7 +7,9 @@ import {
   IMMOLATE_MONEY_GAIN,
   SPECTRAL_BASE_PRICE,
   createSpectralCatalog,
+  duplicateSelectedInHand,
   makeEnhancedCard,
+  spectralNeedsTarget,
   transmuteHand,
   type SpectralCard,
 } from "./spectrals";
@@ -50,13 +53,14 @@ describe("createSpectralCatalog", () => {
     { id: "familiar", name: "Familiar" },
     { id: "grim", name: "Grim" },
     { id: "incantation", name: "Incantation" },
+    { id: "cryptid", name: "Cryptid" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 6 distinct effect kinds", () => {
+  test("spans 7 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(6);
+    expect(kinds.size).toBe(7);
   });
 });
 
@@ -231,6 +235,110 @@ describe("transmuteHand", () => {
   test("on an empty hand, just adds the requested number of cards", () => {
     const next = transmuteHand([], "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
     expect(next).toHaveLength(FAMILIAR_ADD_COUNT);
+  });
+});
+
+describe("Cryptid", () => {
+  test("creates 2 copies (Balatro authentic)", () => {
+    expect(CRYPTID_COPY_COUNT).toBe(2);
+  });
+
+  test("targets a single card", () => {
+    const card = find("cryptid");
+    if (card.effect.kind !== "duplicate-selected") {
+      throw new Error("cryptid should be a duplicate-selected spectral");
+    }
+    expect(card.effect.maxTargets).toBe(1);
+  });
+
+  test("copies count matches CRYPTID_COPY_COUNT", () => {
+    const card = find("cryptid");
+    if (card.effect.kind !== "duplicate-selected") {
+      throw new Error("cryptid should be a duplicate-selected spectral");
+    }
+    expect(card.effect.copies).toBe(CRYPTID_COPY_COUNT);
+  });
+
+  test("description names the copy count", () => {
+    expect(find("cryptid").description).toContain(String(CRYPTID_COPY_COUNT));
+  });
+
+  test("is flagged as needing a target", () => {
+    expect(spectralNeedsTarget(find("cryptid").effect)).toBe(true);
+  });
+});
+
+describe("spectralNeedsTarget", () => {
+  test("is true for an apply-seal spectral", () => {
+    expect(spectralNeedsTarget(find("talisman").effect)).toBe(true);
+  });
+
+  test("is false for a non-targeted spectral", () => {
+    expect(spectralNeedsTarget(find("sigil").effect)).toBe(false);
+  });
+});
+
+describe("duplicateSelectedInHand", () => {
+  beforeEach(() => resetCardIds());
+
+  function fakeHand(count: number): ReadonlyArray<Card> {
+    const cards: Card[] = [];
+    for (let i = 0; i < count; i += 1) {
+      cards.push({ id: nextCardId(), rank: "2", suit: "spades" });
+    }
+    return cards;
+  }
+
+  test("appends CRYPTID_COPY_COUNT cards when exactly 1 is selected", () => {
+    const hand = fakeHand(3);
+    const next = duplicateSelectedInHand(
+      hand,
+      new Set([hand[0].id]),
+      CRYPTID_COPY_COUNT,
+    );
+    expect(next).toHaveLength(3 + CRYPTID_COPY_COUNT);
+  });
+
+  test("copies preserve rank, suit, enhancement, and seal", () => {
+    resetCardIds();
+    const original: Card = {
+      id: nextCardId(),
+      rank: "K",
+      suit: "hearts",
+      enhancement: "glass",
+      seal: "gold",
+    };
+    const next = duplicateSelectedInHand([original], new Set([original.id]), 2);
+    const copies = next.slice(1);
+    expect(copies).toEqual([
+      { id: copies[0].id, rank: "K", suit: "hearts", enhancement: "glass", seal: "gold" },
+      { id: copies[1].id, rank: "K", suit: "hearts", enhancement: "glass", seal: "gold" },
+    ]);
+  });
+
+  test("copies receive fresh ids not present in the source hand", () => {
+    const hand = fakeHand(2);
+    const sourceIds = new Set(hand.map((c) => c.id));
+    const next = duplicateSelectedInHand(hand, new Set([hand[1].id]), 2);
+    const copyIds = next.slice(2).map((c) => c.id);
+    for (const id of copyIds) {
+      expect(sourceIds.has(id)).toBe(false);
+    }
+  });
+
+  test("is a no-op when no card is selected", () => {
+    const hand = fakeHand(3);
+    expect(duplicateSelectedInHand(hand, new Set(), 2)).toBe(hand);
+  });
+
+  test("is a no-op when more than 1 card is selected", () => {
+    const hand = fakeHand(3);
+    const next = duplicateSelectedInHand(
+      hand,
+      new Set([hand[0].id, hand[1].id]),
+      2,
+    );
+    expect(next).toBe(hand);
   });
 });
 

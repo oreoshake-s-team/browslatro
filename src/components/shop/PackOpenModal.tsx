@@ -8,6 +8,7 @@ import {
 } from "../../items/packs";
 import type { Card as CardType } from "../../cards/types";
 import { sortCards, type SortMode } from "../../cards/deck";
+import { spectralNeedsTarget } from "../../items/spectrals";
 import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
@@ -76,7 +77,7 @@ function describeOption(option: PackOption): OptionView | null {
       icon: "👻",
       name: option.spectral.name,
       description: option.spectral.description,
-      needsConsumableSlot: effect.kind === "apply-seal",
+      needsConsumableSlot: spectralNeedsTarget(effect),
       needsJokerSlot: false,
     };
   }
