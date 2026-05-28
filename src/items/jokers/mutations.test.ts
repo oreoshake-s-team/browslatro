@@ -3,7 +3,9 @@ import {
   JOKER_RARITIES,
   YORICK_MULT,
   cloneJoker,
+  createBaronJoker,
   createBusinessCardJoker,
+  createJokerByRarity,
   createJokerCatalog,
   createJokerStencilJoker,
   createLegendaryJokerCatalog,
@@ -181,6 +183,39 @@ describe("pickRandomFromCatalog", () => {
     expect(
       pickRandomFromCatalog([] as ReadonlyArray<Joker>, () => true, fixedRng([0])),
     ).toBeNull();
+  });
+});
+
+function fakeRare(id: string): Joker {
+  return {
+    id,
+    name: id,
+    description: "",
+    effect: { kind: "additive-mult", amount: 1 },
+    rarity: "rare",
+  };
+}
+
+describe("createJokerByRarity", () => {
+  test("returns a joker of the requested rarity when there is room", () => {
+    const result = createJokerByRarity([], createJokerCatalog(), "rare", 5, fixedRng([0]));
+    expect(result?.rarity).toBe<JokerRarity>("rare");
+  });
+
+  test("excludes jokers already equipped", () => {
+    const catalog = [fakeRare("a"), fakeRare("b")];
+    const result = createJokerByRarity([fakeRare("a")], catalog, "rare", 5, fixedRng([0]));
+    expect(result?.id).toBe("b");
+  });
+
+  test("returns null when at capacity", () => {
+    const equipped = [createPlusFourMultJoker(), createBusinessCardJoker()];
+    expect(createJokerByRarity(equipped, createJokerCatalog(), "rare", 2, fixedRng([0]))).toBeNull();
+  });
+
+  test("returns null when no unowned joker of the rarity exists", () => {
+    const result = createJokerByRarity([createBaronJoker()], createJokerCatalog(), "rare", 5, fixedRng([0]));
+    expect(result).toBeNull();
   });
 });
 

@@ -109,6 +109,7 @@ import {
   MAX_JOKERS,
   applyHandLevelJokers,
   applyPerCardJokers,
+  createJokerByRarity,
   createJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
@@ -1048,6 +1049,20 @@ function App() {
           hand: transmuteHand(prev.hand, effect.rankFilter, effect.addCount, Math.random),
           remaining: prev.remaining,
         }));
+        return;
+      }
+      case "create-joker-by-rarity": {
+        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        const created = createJokerByRarity(
+          jokers,
+          createJokerCatalog(),
+          effect.rarity,
+          capacity,
+          Math.random,
+        );
+        if (!created) return;
+        setJokers((prev) => [...prev, created]);
+        if (effect.setMoneyToZero) setMoney(0);
         return;
       }
       case "apply-seal":
