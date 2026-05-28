@@ -1273,11 +1273,17 @@ function App() {
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
     play("pop");
     setMoney((prev) => prev - voucher.cost);
-    setOwnedVoucherIds((prev) => {
-      const next = new Set(prev);
-      next.add(voucher.id);
-      return next;
-    });
+    const nextOwnedVoucherIds = new Set(ownedVoucherIds);
+    nextOwnedVoucherIds.add(voucher.id);
+    const handGain =
+      extraStartingHands(nextOwnedVoucherIds) -
+      extraStartingHands(ownedVoucherIds);
+    const discardGain =
+      extraStartingDiscards(nextOwnedVoucherIds) -
+      extraStartingDiscards(ownedVoucherIds);
+    if (handGain > 0) setRemainingHands((prev) => prev + handGain);
+    if (discardGain > 0) setRemainingDiscards((prev) => prev + discardGain);
+    setOwnedVoucherIds(nextOwnedVoucherIds);
     setSoldVoucherIds((prev) => {
       const next = new Set(prev);
       next.add(voucher.id);
