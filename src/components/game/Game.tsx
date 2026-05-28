@@ -160,6 +160,10 @@ export default function Game({
 }: GameProps) {
   const dragging = draggingConsumableIndex !== null;
   const draggingJoker = draggingJokerIndex !== null;
+  const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
+  const consumableSelectedCount = previewActive
+    ? packOpen?.previewSelectedIds?.size ?? 0
+    : selectedIds.size;
   const forcedPackCounts = countByPool(pendingForcedPacks ?? []);
   const totalPendingPacks = (pendingForcedPacks ?? []).length;
   function handleAddMoney(amount: number) {
@@ -185,7 +189,8 @@ export default function Game({
         />
         <Consumables
           consumables={consumables}
-          selectedCount={selectedIds.size}
+          selectedCount={consumableSelectedCount}
+          previewMode={previewActive}
           capacity={consumableCapacity}
           onUse={onUseConsumable}
           onSell={onSellConsumable}

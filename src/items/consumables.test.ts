@@ -169,4 +169,39 @@ describe("consumables", () => {
     const c: Consumable = { kind: "spectral", card: sealSpectral };
     expect(consumableUseBlock(c, 1)).toBeNull();
   });
+
+  test("previewMode allows an enhancement tarot with a valid preview selection", () => {
+    const enhTarot = createTarotCatalog().find(
+      (t) => t.effect.kind === "apply-enhancement",
+    );
+    if (!enhTarot) throw new Error("no enhancement tarot in catalog");
+    const c: Consumable = { kind: "tarot", card: enhTarot };
+    expect(consumableUseBlock(c, 1, true)).toBeNull();
+  });
+
+  test("previewMode blocks an enhancement tarot with zero preview selection", () => {
+    const enhTarot = createTarotCatalog().find(
+      (t) => t.effect.kind === "apply-enhancement",
+    );
+    if (!enhTarot) throw new Error("no enhancement tarot in catalog");
+    const c: Consumable = { kind: "tarot", card: enhTarot };
+    expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
+  });
+
+  test("previewMode blocks an apply-seal spectral even with a valid selection", () => {
+    const sealSpectral = createSpectralCatalog().find(
+      (s) => s.effect.kind === "apply-seal",
+    );
+    if (!sealSpectral) throw new Error("no apply-seal spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: sealSpectral };
+    expect(consumableUseBlock(c, 1, true)).toMatch(/pack pick/);
+  });
+
+  test("previewMode returns null for a planet", () => {
+    expect(consumableUseBlock(planetConsumable, 0, true)).toBeNull();
+  });
+
+  test("previewMode returns null for a non-seal spectral", () => {
+    expect(consumableUseBlock(spectralConsumable, 0, true)).toBeNull();
+  });
 });

@@ -11,6 +11,7 @@ export const CONSUMABLE_DRAG_MIME = "application/x-browslatro-consumable";
 interface ConsumablesProps {
   consumables: ReadonlyArray<Consumable>;
   selectedCount: number;
+  previewMode?: boolean;
   capacity?: number;
   onUse: (index: number) => void;
   onSell?: (index: number) => void;
@@ -25,6 +26,7 @@ function tileLabel(c: Consumable, sellValue: number): string {
 export default function Consumables({
   consumables,
   selectedCount,
+  previewMode = false,
   capacity = MAX_CONSUMABLE_SLOTS,
   onUse,
   onSell,
@@ -38,7 +40,7 @@ export default function Consumables({
       <span className="consumables-label">Consumables</span>
       <ul className="consumables-list">
         {consumables.map((entry, idx) => {
-          const block = consumableUseBlock(entry, selectedCount);
+          const block = consumableUseBlock(entry, selectedCount, previewMode);
           const sellValue = consumableSellValue(entry);
           const canSell = Boolean(onSell);
           const useDisabled = block !== null;

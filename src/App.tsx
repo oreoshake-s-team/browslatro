@@ -745,7 +745,7 @@ function App() {
     setMoney((prev) => prev - price);
     setOpenedPack(offer.pack);
     setPackPicksRemaining(packPickLimit(offer.pack.variant));
-    if (offer.pack.pool === "arcana") {
+    if (offer.pack.pool === "arcana" || offer.pack.pool === "spectral") {
       const baseDeck = applyEnhancementOverrides(
         createDeck(destroyedCardKeys),
         cardEnhancementsByKey,
@@ -953,6 +953,7 @@ function App() {
   function useConsumable(consumableIdx: number) {
     const entry = consumables[consumableIdx];
     if (!entry) return;
+    const previewActive = openedPack !== null && packPreviewHand.length > 0;
     if (entry.kind === "planet") {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, entry.card));
@@ -1003,6 +1004,18 @@ function App() {
           prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
         );
       }
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      return;
+    }
+    if (previewActive) {
+      if (
+        packPreviewSelectedIds.size === 0 ||
+        packPreviewSelectedIds.size > effect.maxTargets
+      ) {
+        return;
+      }
+      play("pop");
+      applyEnhancementToSelectedPreviewCards(effect.enhancement);
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
