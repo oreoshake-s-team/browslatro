@@ -45,6 +45,7 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 - Always merge/rebase main before pushing new code, including every update to existing branches/PRs.
 - After every push, wait for the CI status. If a test fails or a merge conflict exists, try to resolve it immediately.
 - Never merge a PR unless all CI statuses are green.
+- Always leave a comment on the issue to indicate work on an issue has started.
 
 # Conversations outside of Claude code
 
