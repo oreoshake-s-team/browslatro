@@ -141,6 +141,7 @@ import {
   applyPerCardJokers,
   createJokerByRarity,
   createJokerCatalog,
+  createLegendaryJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
   isFaceCard,
@@ -1178,6 +1179,18 @@ function App() {
       case "ectoplasm": {
         setJokers((prev) => applyEditionToRandomJoker(prev, "negative", Math.random));
         setHandSizeModifier((prev) => prev + effect.handSizeDelta);
+        return;
+      }
+      case "create-legendary": {
+        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        const created = createJokerByRarity(
+          jokers,
+          createLegendaryJokerCatalog(),
+          "legendary",
+          capacity,
+          Math.random,
+        );
+        if (created) setJokers((prev) => [...prev, created]);
         return;
       }
       case "apply-seal":

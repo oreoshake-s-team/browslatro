@@ -56,13 +56,14 @@ describe("createSpectralCatalog", () => {
     { id: "cryptid", name: "Cryptid" },
     { id: "ectoplasm", name: "Ectoplasm" },
     { id: "ouija", name: "Ouija" },
+    { id: "soul", name: "The Soul" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 9 distinct effect kinds", () => {
+  test("spans 10 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(9);
+    expect(kinds.size).toBe(10);
   });
 });
 
@@ -413,5 +414,23 @@ describe("Ouija", () => {
 
   test("does not need a selected target (negative)", () => {
     expect(spectralNeedsTarget(find("ouija").effect)).toBe(false);
+  });
+});
+
+describe("The Soul", () => {
+  test("is included in the catalog", () => {
+    expect(find("soul").name).toBe("The Soul");
+  });
+
+  test("creates a Legendary joker", () => {
+    expect(find("soul").effect.kind).toBe("create-legendary");
+  });
+
+  test("describes creating a Legendary Joker", () => {
+    expect(find("soul").description).toContain("Legendary Joker");
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("soul").effect)).toBe(false);
   });
 });
