@@ -1,6 +1,8 @@
 import "@testing-library/jest-dom";
+import { STARTING_MONEY, useEconomy } from "./store/economy";
 
 beforeEach(() => {
+  useEconomy.setState({ money: STARTING_MONEY });
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }

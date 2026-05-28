@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import { useEconomy } from "./store/economy";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -236,7 +237,7 @@ function App() {
   const [blind, setBlind] = useState<Blind>(1);
   const [round, setRound] = useState(1);
   const [ante, setAnte] = useState(1);
-  const [money, setMoney] = useState(4);
+  const money = useEconomy((state) => state.money);
   const [chips, setChips] = useState(0);
   const [multiplier, setMultiplier] = useState(0);
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
@@ -567,7 +568,7 @@ function App() {
         });
       }
       if (luckyResult.moneyBonus > 0) {
-        setMoney((prev) => prev + luckyResult.moneyBonus);
+        useEconomy.getState().earn(luckyResult.moneyBonus);
         pushScoringEvent({
           kind: "money-delta",
           amount: luckyResult.moneyBonus,
@@ -581,7 +582,7 @@ function App() {
       }
       const sealMoney = goldSealMoney(stepCard);
       if (sealMoney > 0) {
-        setMoney((prev) => prev + sealMoney);
+        useEconomy.getState().earn(sealMoney);
         pushScoringEvent({
           kind: "money-delta",
           amount: sealMoney,
@@ -598,7 +599,7 @@ function App() {
         { firstFaceAlreadyScored },
       );
       if (cardJokerResult.moneyEarned > 0) {
-        setMoney((prev) => prev + cardJokerResult.moneyEarned);
+        useEconomy.getState().earn(cardJokerResult.moneyEarned);
       }
       if (cardJokerResult.additiveMult > 0) {
         setMultiplier((prev) => prev + cardJokerResult.additiveMult);
@@ -642,7 +643,7 @@ function App() {
     }
     const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
-      setMoney((prev) => prev + GOLD_HELD_BONUS_PER_CARD);
+      useEconomy.getState().earn(GOLD_HELD_BONUS_PER_CARD);
       const goldId = goldScoringIds[goldScoringIndex];
       const goldCard = dealt.hand.find((c) => c.id === goldId);
       pushScoringEvent({
@@ -739,7 +740,7 @@ function App() {
     const interest =
       precomputed?.interest ??
       calculateInterest(interestBefore, interestCapFor(ownedVoucherIds));
-    setMoney((prev) => prev + blindReward + interest);
+    useEconomy.getState().earn(blindReward + interest);
     pushScoringEvent({
       kind: "money-delta",
       amount: blindReward,
@@ -757,7 +758,7 @@ function App() {
     } else {
       const tagPayout = totalTagPayout(pendingTags);
       if (tagPayout > 0) {
-        setMoney((prev) => prev + tagPayout);
+        useEconomy.getState().earn(tagPayout);
         setPendingTags([]);
       }
       const nextAnte = ante + 1;
@@ -826,7 +827,7 @@ function App() {
     const price = applyShopDiscount(offer.price, ownedVoucherIds);
     if (money < price) return;
     play("pop");
-    setMoney((prev) => prev - price);
+    useEconomy.getState().spend(price);
     setOpenedPack(offer.pack);
     setPackPicksRemaining(packPickLimit(offer.pack.variant));
     if (offer.pack.pool === "arcana" || offer.pack.pool === "spectral") {
@@ -921,10 +922,12 @@ function App() {
         }
       } else if (effect.kind === "money-multiply") {
         play("pop");
-        setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+        useEconomy
+          .getState()
+          .earn(resolveHermitPayout(useEconomy.getState().money, effect.bonusCap));
       } else if (effect.kind === "joker-sell-value-payout") {
         play("pop");
-        setMoney((prev) => prev + resolveTemperancePayout(jokers, effect.cap));
+        useEconomy.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       } else if (effect.kind === "edition-roll") {
         play("pop");
         const result = rollWheelOfFortune(jokers, effect.chance);
@@ -996,7 +999,7 @@ function App() {
         return;
       }
       play("pop");
-      setMoney((prev) => prev - price);
+      useEconomy.getState().spend(price);
       setJokers((prev) => [...prev, offer.joker]);
       setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
       markOfferSold(idx);
@@ -1010,7 +1013,7 @@ function App() {
           ? { kind: "tarot", card: offer.tarot }
           : { kind: "spectral", card: offer.spectral };
     play("pop");
-    setMoney((prev) => prev - price);
+    useEconomy.getState().spend(price);
     setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
     markOfferSold(idx);
   }
@@ -1034,7 +1037,7 @@ function App() {
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
         }));
-        setMoney((prev) => prev + effect.moneyGain);
+        useEconomy.getState().earn(effect.moneyGain);
         return;
       }
       case "sigil": {
@@ -1064,7 +1067,7 @@ function App() {
         );
         if (!created) return;
         setJokers((prev) => [...prev, created]);
-        if (effect.setMoneyToZero) setMoney(0);
+        if (effect.setMoneyToZero) useEconomy.getState().setMoney(0);
         return;
       }
       case "apply-seal":
@@ -1137,13 +1140,15 @@ function App() {
     const effect = entry.card.effect;
     if (effect.kind === "money-multiply") {
       play("pop");
-      setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      useEconomy
+        .getState()
+        .earn(resolveHermitPayout(useEconomy.getState().money, effect.bonusCap));
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
     if (effect.kind === "joker-sell-value-payout") {
       play("pop");
-      setMoney((prev) => prev + resolveTemperancePayout(jokers, effect.cap));
+      useEconomy.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
@@ -1189,7 +1194,7 @@ function App() {
     const entry = consumables[consumableIdx];
     if (!entry) return;
     play("pop");
-    setMoney((prev) => prev + consumableSellValue(entry));
+    useEconomy.getState().earn(consumableSellValue(entry));
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
   }
 
@@ -1197,7 +1202,7 @@ function App() {
     const entry = jokers[jokerIdx];
     if (!entry) return;
     play("pop");
-    setMoney((prev) => prev + jokerSellValue(entry));
+    useEconomy.getState().earn(jokerSellValue(entry));
     setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
   }
 
@@ -1225,7 +1230,7 @@ function App() {
     if (!shopOffers) return;
     if (money < cost) return;
     play("pop");
-    setMoney((prev) => prev - cost);
+    useEconomy.getState().spend(cost);
     const freshItems = pickShopItemOffers({
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds: [
@@ -1291,7 +1296,7 @@ function App() {
     if (money < voucher.cost) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
     play("pop");
-    setMoney((prev) => prev - voucher.cost);
+    useEconomy.getState().spend(voucher.cost);
     const nextOwnedVoucherIds = new Set(ownedVoucherIds);
     nextOwnedVoucherIds.add(voucher.id);
     const handGain =
@@ -1346,7 +1351,7 @@ function App() {
     setBlind(1);
     setRound(1);
     setAnte(1);
-    setMoney(4);
+    useEconomy.getState().resetEconomy();
     setHandSizeModifier(0);
     setExtraPackSlots(0);
     setPendingForcedPacks([]);
@@ -1496,7 +1501,7 @@ function App() {
         ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
         : 0;
     if (moneyPenalty > 0) {
-      setMoney((prev) => Math.max(0, prev - moneyPenalty));
+      useEconomy.getState().setMoney(money - moneyPenalty);
     }
 
     const label = detectHandLabel(playedCards);
@@ -1743,7 +1748,7 @@ function App() {
       const openModal = () => {
         play("win");
         if (remainingHandsBonus > 0) {
-          setMoney((prev) => prev + remainingHandsBonus);
+          useEconomy.getState().earn(remainingHandsBonus);
           pushScoringEvent({
             kind: "money-delta",
             amount: remainingHandsBonus,
@@ -1853,7 +1858,10 @@ function App() {
         onAddChips={addChips}
         onAddMultiplier={addMultiplier}
         onMultiplyMultiplier={multiplyMultiplier}
-        onSetMoney={setMoney}
+        onAdjustMoney={(delta) => {
+          const economy = useEconomy.getState();
+          economy.setMoney(economy.money + delta);
+        }}
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
         canSubmit={(() => {
