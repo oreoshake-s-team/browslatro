@@ -884,6 +884,7 @@ function App() {
           tarotCatalog: createTarotCatalog(),
           jokerCatalog: createJokerCatalog(),
           spectralCatalog: createSpectralCatalog(),
+          excludedJokerIds: jokers.map((j) => j.id),
           rng: shopPickerRngConfig.rng,
         },
         variant,
