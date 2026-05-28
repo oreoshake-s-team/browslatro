@@ -39,14 +39,16 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
               className="deck-summary-row"
               data-testid={`deck-summary-suit-${suit}`}
             >
-              <span
-                className={`deck-summary-glyph deck-summary-glyph-${suit}`}
-                aria-hidden="true"
-              >
-                {SUIT_GLYPHS[suit]}
-              </span>
-              <span className="deck-summary-label">{SUIT_LABELS[suit]}</span>
               <span className="deck-summary-count">{suitCounts[suit]}</span>
+              <span className="deck-summary-name">
+                <span
+                  className={`deck-summary-glyph deck-summary-glyph-${suit}`}
+                  aria-hidden="true"
+                >
+                  {SUIT_GLYPHS[suit]}
+                </span>
+                <span className="deck-summary-label">{SUIT_LABELS[suit]}</span>
+              </span>
             </li>
           ))}
         </ul>
@@ -60,8 +62,8 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
               className="deck-summary-row"
               data-testid={`deck-summary-rank-${rank}`}
             >
-              <span className="deck-summary-label">{rank}</span>
               <span className="deck-summary-count">{rankCounts[rank]}</span>
+              <span className="deck-summary-label">{rank}</span>
             </li>
           ))}
         </ul>
