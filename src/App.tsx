@@ -6,6 +6,7 @@ import { useStats } from "./store/stats";
 import { useProgression } from "./store/progression";
 import { useConsumables } from "./store/consumables";
 import { useJokers } from "./store/jokers";
+import { useShop } from "./store/shop";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -127,7 +128,6 @@ import {
   pickShopOffers,
   pickSingleShopOffer,
   shopPickerRngConfig,
-  type ShopItem,
 } from "./items/shop";
 import {
   applyShopDiscount,
@@ -354,9 +354,8 @@ function App() {
   // the modal is showing. Dismissal triggers handleWin().
   const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
 
-  const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
-    null,
-  );
+  const shopOffers = useShop((state) => state.shopOffers);
+  const setShopOffers = useShop((state) => state.setShopOffers);
   const soldJokerIdsThisShopVisit = useJokers(
     (state) => state.soldJokerIdsThisShopVisit,
   );
