@@ -21,6 +21,7 @@ import {
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
   jokerSellValue,
+  applyEditionToRandomJoker,
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
@@ -635,5 +636,44 @@ describe("Held-in-hand joker catalog membership", () => {
   ])("$name appears in the joker catalog", ({ id }) => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain(id);
+  });
+});
+
+describe("applyEditionToRandomJoker", () => {
+  test("applies the edition to the joker chosen by the rng", () => {
+    const result = applyEditionToRandomJoker(
+      [createGreedyJoker(), createLustyJoker()],
+      "negative",
+      () => 0,
+    );
+    expect(result[0]?.edition).toBe("negative");
+  });
+
+  test("leaves the non-chosen joker untouched (negative)", () => {
+    const result = applyEditionToRandomJoker(
+      [createGreedyJoker(), createLustyJoker()],
+      "negative",
+      () => 0,
+    );
+    expect(result[1]?.edition).toBeUndefined();
+  });
+
+  test("editions a later joker when the rng points past the first", () => {
+    const result = applyEditionToRandomJoker(
+      [createGreedyJoker(), createLustyJoker()],
+      "negative",
+      () => 0.9,
+    );
+    expect(result[1]?.edition).toBe("negative");
+  });
+
+  test("returns no jokers when given none (negative)", () => {
+    expect(applyEditionToRandomJoker([], "negative", () => 0)).toHaveLength(0);
+  });
+
+  test("does not mutate the input jokers", () => {
+    const input = [createGreedyJoker()];
+    applyEditionToRandomJoker(input, "negative", () => 0);
+    expect(input[0]?.edition).toBeUndefined();
   });
 });

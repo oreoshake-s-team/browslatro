@@ -54,13 +54,14 @@ describe("createSpectralCatalog", () => {
     { id: "grim", name: "Grim" },
     { id: "incantation", name: "Incantation" },
     { id: "cryptid", name: "Cryptid" },
+    { id: "ectoplasm", name: "Ectoplasm" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 7 distinct effect kinds", () => {
+  test("spans 8 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(7);
+    expect(kinds.size).toBe(8);
   });
 });
 
@@ -371,5 +372,25 @@ describe("Wraith", () => {
 
   test("describes itself as setting money to $0", () => {
     expect(find("wraith").description).toContain("set money to $0");
+  });
+});
+
+describe("Ectoplasm", () => {
+  test("is included in the catalog", () => {
+    expect(find("ectoplasm").name).toBe("Ectoplasm");
+  });
+
+  test("carries a -1 hand-size delta", () => {
+    const effect = find("ectoplasm").effect;
+    if (effect.kind !== "ectoplasm") throw new Error("expected ectoplasm");
+    expect(effect.handSizeDelta).toBe(-1);
+  });
+
+  test("describes adding Negative to a random Joker", () => {
+    expect(find("ectoplasm").description).toContain("Negative");
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("ectoplasm").effect)).toBe(false);
   });
 });

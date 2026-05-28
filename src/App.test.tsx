@@ -12,6 +12,7 @@ import type { VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
+  createGreedyJoker,
   createJokerStencilJoker,
   createPhotographJoker,
   createPlusFourMultJoker,
@@ -3757,5 +3758,22 @@ describe("Double tag", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(document.querySelectorAll('[data-tag-id="double"]')).toHaveLength(2);
+  });
+});
+
+describe("Ectoplasm spectral", () => {
+  test("picking Ectoplasm from a Spectral pack adds Negative to a joker", async () => {
+    const originalFactory = initialJokersConfig.factory;
+    initialJokersConfig.factory = () => [createGreedyJoker()];
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const ectoplasmIdx = spectrals.findIndex((s) => s.id === "ectoplasm");
+    shopPickerRngConfig.rng = () => ectoplasmIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    initialJokersConfig.factory = originalFactory;
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(document.querySelector('[data-edition="negative"]')).not.toBeNull();
   });
 });
