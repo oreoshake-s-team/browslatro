@@ -104,6 +104,18 @@ describe("run-stat money tags", () => {
   });
 });
 
+describe("Economy tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("economy");
+  });
+
+  test("resolves to an immediate double-money action capped at $40", () => {
+    const effect = resolveTagEffect("economy");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "double-money", cap: 40 });
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
