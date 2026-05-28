@@ -840,6 +840,20 @@ function App() {
       shopPickerRngConfig.rng,
     );
     setShopOffers([...freeJokerOffers, ...pricedOffers]);
+    if (shopAdjustments.extraVouchers > 0) {
+      setCurrentAnteVouchers((prev) => {
+        const existing = new Set(prev.map((v) => v.id));
+        const extra = pickVouchersForAnte(
+          {
+            ante,
+            ownedIds: ownedVoucherIds,
+            excludeIds: new Set<VoucherId>([...ownedVoucherIds, ...existing]),
+          },
+          shopAdjustments.extraVouchers,
+        );
+        return [...prev, ...extra];
+      });
+    }
     setPendingForcedPacks([]);
     setDealt(
       fullDeckPile(

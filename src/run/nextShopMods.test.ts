@@ -37,4 +37,12 @@ describe("applyNextShopModifiers", () => {
   test("an empty queue requests no free jokers (negative)", () => {
     expect(applyNextShopModifiers([]).freeJokerRarities).toEqual([]);
   });
+
+  test("an extra-voucher modifier adds a voucher slot", () => {
+    expect(applyNextShopModifiers([{ kind: "extra-voucher" }]).extraVouchers).toBe(1);
+  });
+
+  test("an empty queue adds no extra vouchers (negative)", () => {
+    expect(applyNextShopModifiers([]).extraVouchers).toBe(0);
+  });
 });
