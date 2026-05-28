@@ -7,6 +7,7 @@ import { useProgression } from "./store/progression";
 import { useConsumables } from "./store/consumables";
 import { useJokers } from "./store/jokers";
 import { useShop } from "./store/shop";
+import { usePacks } from "./store/packs";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -30,7 +31,7 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
-import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
+import { packPickLimit } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
@@ -365,10 +366,10 @@ function App() {
   const consumables = useConsumables((state) => state.consumables);
   const setConsumables = useConsumables((state) => state.setConsumables);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
-  const [extraPackSlots, setExtraPackSlots] = useState(0);
-  const [pendingForcedPacks, setPendingForcedPacks] = useState<
-    ReadonlyArray<PackPool>
-  >([]);
+  const extraPackSlots = usePacks((state) => state.extraPackSlots);
+  const setExtraPackSlots = usePacks((state) => state.setExtraPackSlots);
+  const pendingForcedPacks = usePacks((state) => state.pendingForcedPacks);
+  const setPendingForcedPacks = usePacks((state) => state.setPendingForcedPacks);
   const draggingConsumableIndex = useConsumables(
     (state) => state.draggingConsumableIndex,
   );
@@ -377,14 +378,18 @@ function App() {
   );
   const draggingJokerIndex = useJokers((state) => state.draggingJokerIndex);
   const setDraggingJokerIndex = useJokers((state) => state.setDraggingJokerIndex);
-  const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
-  const [packPicksRemaining, setPackPicksRemaining] = useState(0);
-  const [packPreviewHand, setPackPreviewHand] = useState<ReadonlyArray<Card>>(
-    [],
+  const openedPack = usePacks((state) => state.openedPack);
+  const setOpenedPack = usePacks((state) => state.setOpenedPack);
+  const packPicksRemaining = usePacks((state) => state.packPicksRemaining);
+  const setPackPicksRemaining = usePacks((state) => state.setPackPicksRemaining);
+  const packPreviewHand = usePacks((state) => state.packPreviewHand);
+  const setPackPreviewHand = usePacks((state) => state.setPackPreviewHand);
+  const packPreviewSelectedIds = usePacks(
+    (state) => state.packPreviewSelectedIds,
   );
-  const [packPreviewSelectedIds, setPackPreviewSelectedIds] = useState<
-    ReadonlySet<number>
-  >(() => new Set());
+  const setPackPreviewSelectedIds = usePacks(
+    (state) => state.setPackPreviewSelectedIds,
+  );
   const pendingBlindSelect = useProgression((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useProgression(
     (state) => state.setPendingBlindSelect,
