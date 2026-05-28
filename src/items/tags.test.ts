@@ -199,6 +199,18 @@ describe("Uncommon and Rare joker tags", () => {
   });
 });
 
+describe("Voucher tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("voucher");
+  });
+
+  test("resolves to a next-shop extra-voucher modifier", () => {
+    const effect = resolveTagEffect("voucher");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "extra-voucher" }]);
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");

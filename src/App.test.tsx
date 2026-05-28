@@ -3591,3 +3591,24 @@ describe("Uncommon and Rare joker tags", () => {
     ).toBeGreaterThan(0);
   });
 });
+
+describe("Voucher tag", () => {
+  test("gaining Voucher adds a second voucher to the next shop", async () => {
+    tagOfferRngConfig.rng = rngForTag("voucher");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.getByTestId("shop-voucher-1")).toBeInTheDocument();
+  });
+
+  test("a shop without the Voucher tag offers only one voucher (negative)", async () => {
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.queryByTestId("shop-voucher-1")).not.toBeInTheDocument();
+  });
+});
