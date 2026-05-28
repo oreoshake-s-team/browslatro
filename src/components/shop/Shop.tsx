@@ -24,6 +24,8 @@ export interface ShopProps {
   onBuyVoucher: (voucherIdx: number) => void;
   onReroll: (cost: number) => void;
   onNext: () => void;
+  voucherOptions?: ReadonlyArray<Voucher>;
+  onSetVoucher?: (id: string) => void;
   disabled?: boolean;
 }
 
@@ -170,9 +172,15 @@ export default function Shop({
   onBuyVoucher,
   onReroll,
   onNext,
+  voucherOptions,
+  onSetVoucher,
   disabled = false,
 }: ShopProps) {
   useEscapeToClose(onNext, !disabled);
+  const canOverrideVoucher =
+    voucherOptions !== undefined &&
+    voucherOptions.length > 0 &&
+    Boolean(onSetVoucher);
   const [rerollCount, setRerollCount] = useState(0);
   const currentRerollCost = rerollCostFor(
     rerollCount,
@@ -292,6 +300,21 @@ export default function Shop({
             <h3 className="shop-voucher-heading">
               {vouchers.length === 1 ? "Voucher" : "Vouchers"}
             </h3>
+            {canOverrideVoucher && (
+              <select
+                className="shop-voucher-override"
+                data-testid="shop-voucher-override"
+                aria-label="Override offered voucher (dev)"
+                value={vouchers[0]?.id ?? voucherOptions[0].id}
+                onChange={(e) => onSetVoucher?.(e.target.value)}
+              >
+                {voucherOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.name}
+                  </option>
+                ))}
+              </select>
+            )}
             {vouchers.length === 0 ? (
               <p
                 className="shop-voucher-empty"

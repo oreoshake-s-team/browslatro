@@ -105,6 +105,23 @@
   color: #5f3dc4;
 }
 
+.shop-voucher-override {
+  align-self: flex-start;
+  background-color: #fff;
+  color: #5f3dc4;
+  border: 1px solid #b197fc;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.shop-voucher-override:hover,
+.shop-voucher-override:focus-visible {
+  border-color: #7048e8;
+  outline: none;
+}
+
 .shop-voucher-card {
   display: grid;
   grid-template-columns: 1fr auto auto;

@@ -585,3 +585,61 @@ describe("Shop pack offers", () => {
     expect(onBuy).toHaveBeenCalledWith(0);
   });
 });
+
+describe("Shop voucher override picker (dev)", () => {
+  const voucherOptions = [OVERSTOCK_VOUCHER, OVERSTOCK_PLUS_VOUCHER];
+
+  test("does not render the override select without picker props (negative)", () => {
+    renderShop();
+    expect(screen.queryByTestId("shop-voucher-override")).toBeNull();
+  });
+
+  test("does not render the override select when onSetVoucher is missing (negative)", () => {
+    renderShop({ voucherOptions });
+    expect(screen.queryByTestId("shop-voucher-override")).toBeNull();
+  });
+
+  test("does not render the override select when voucherOptions is empty (negative)", () => {
+    renderShop({ voucherOptions: [], onSetVoucher: vi.fn() });
+    expect(screen.queryByTestId("shop-voucher-override")).toBeNull();
+  });
+
+  test("renders the override select when both picker props are provided", () => {
+    renderShop({ voucherOptions, onSetVoucher: vi.fn() });
+    expect(screen.getByTestId("shop-voucher-override")).toBeInTheDocument();
+  });
+
+  test("lists every provided voucher as an option", () => {
+    renderShop({ voucherOptions, onSetVoucher: vi.fn() });
+    expect(
+      screen.getByTestId("shop-voucher-override").querySelectorAll("option"),
+    ).toHaveLength(voucherOptions.length);
+  });
+
+  test("reflects the currently offered voucher as the selected value", () => {
+    renderShop({
+      voucherOptions,
+      onSetVoucher: vi.fn(),
+      vouchers: [OVERSTOCK_PLUS_VOUCHER],
+    });
+    expect(screen.getByTestId("shop-voucher-override")).toHaveValue(
+      "overstock-plus",
+    );
+  });
+
+  test("defaults the selection to the first option when no voucher is offered", () => {
+    renderShop({ voucherOptions, onSetVoucher: vi.fn(), vouchers: [] });
+    expect(screen.getByTestId("shop-voucher-override")).toHaveValue("overstock");
+  });
+
+  test("choosing a different voucher calls onSetVoucher with its id", async () => {
+    const user = userEvent.setup();
+    const onSetVoucher = vi.fn();
+    renderShop({ voucherOptions, onSetVoucher, vouchers: [OVERSTOCK_VOUCHER] });
+    await user.selectOptions(
+      screen.getByTestId("shop-voucher-override"),
+      "overstock-plus",
+    );
+    expect(onSetVoucher).toHaveBeenCalledWith("overstock-plus");
+  });
+});
