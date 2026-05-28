@@ -286,6 +286,36 @@ describe("Jokers drag-and-drop reordering", () => {
     expect(actives).toHaveLength(0);
   });
 
+  test("dragging over the list activates the gap nearest the cursor", () => {
+    const { container } = render(<Jokers jokers={three} onReorder={() => {}} />);
+    const list = container.querySelector(".jokers-list");
+    if (!list) throw new Error("expected jokers list to render");
+    screen.getAllByTestId(/^joker-gap-\d+$/).forEach((gap, i) => {
+      gap.getBoundingClientRect = () =>
+        ({
+          left: i * 100,
+          width: 10,
+          right: i * 100 + 10,
+          top: 0,
+          bottom: 0,
+          height: 0,
+          x: i * 100,
+          y: 0,
+          toJSON: () => ({}),
+        }) as DOMRect;
+    });
+    fireEvent.dragStart(getTile("plus-four-mult"));
+    fireEvent(
+      list,
+      new MouseEvent("dragover", {
+        bubbles: true,
+        cancelable: true,
+        clientX: 205,
+      }),
+    );
+    expect(getGap(2)).toHaveClass("joker-gap-active");
+  });
+
 });
 
 describe("Jokers consumable drop zone", () => {

@@ -1,4 +1,4 @@
-export {};
+import "../../test/memoryLocalStorage";
 
 const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
