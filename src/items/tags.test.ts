@@ -165,6 +165,18 @@ describe("Standard, Meteor, and Buffoon pack tags", () => {
   });
 });
 
+describe("Coupon tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("coupon");
+  });
+
+  test("resolves to a next-shop free-shop-items modifier", () => {
+    const effect = resolveTagEffect("coupon");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "free-shop-items" }]);
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");

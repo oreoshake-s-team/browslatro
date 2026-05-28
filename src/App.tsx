@@ -817,18 +817,22 @@ function App() {
       setPlayedCardKeysThisAnte(new Set());
     }
     setSoldJokerIdsThisShopVisit([]);
+    const baseOffers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: jokers.map((j) => j.id),
+      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      extraSlots: extraShopOfferSlots(ownedVoucherIds),
+      extraPackSlots,
+      forcedPackPools: pendingForcedPacks,
+      rng: shopPickerRngConfig.rng,
+    });
+    const shopAdjustments = applyNextShopModifiers(pendingShopMods);
     setShopOffers(
-      pickShopOffers({
-        jokerCatalog: createJokerCatalog(),
-        excludedJokerIds: jokers.map((j) => j.id),
-        planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-        tarotCatalog: createTarotCatalog(),
-        spectralCatalog: createSpectralCatalog(),
-        extraSlots: extraShopOfferSlots(ownedVoucherIds),
-        extraPackSlots,
-        forcedPackPools: pendingForcedPacks,
-        rng: shopPickerRngConfig.rng,
-      }),
+      shopAdjustments.freeShopItems
+        ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
+        : baseOffers,
     );
     setPendingForcedPacks([]);
     setDealt(
