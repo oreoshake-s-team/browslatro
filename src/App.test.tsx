@@ -2310,7 +2310,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {
-    const user = await openShopWithVoucher(0.4);
+    const user = await openShopWithVoucher(0.15);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     const joker = screen
       .getByTestId(`shop-offer-${findShopOfferIdxOfKind("joker")}`)
@@ -2331,7 +2331,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Crystal Ball adds a third consumable slot to the tray", async () => {
-    const user = await openShopWithVoucher(0.9);
+    const user = await openShopWithVoucher(0.25);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
