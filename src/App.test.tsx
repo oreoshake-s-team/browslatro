@@ -3065,6 +3065,111 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
   });
 });
 
+describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
+  async function openShopThenPack(): Promise<ReturnType<typeof userEvent.setup>> {
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Add \$10/));
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    const offers = screen.getAllByTestId(/^shop-offer-/);
+    const packIdx = offers.findIndex(
+      (el) => el.getAttribute("data-offer-kind") === "pack",
+    );
+    const openBtn = offers[packIdx].querySelector(
+      "button.shop-offer-buy",
+    ) as HTMLButtonElement;
+    await user.click(openBtn);
+    return user;
+  }
+
+  function moneyValue(): number {
+    return Number(
+      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
+    );
+  }
+
+  function nonPackBuyButtons(): HTMLButtonElement[] {
+    const all = document.querySelectorAll<HTMLButtonElement>(
+      "button.shop-offer-buy",
+    );
+    return Array.from(all).filter((b) => !/Open/i.test(b.textContent ?? ""));
+  }
+
+  test("pack-pick renders without a .pack-open-overlay wrapper", async () => {
+    await openShopThenPack();
+    expect(document.querySelector(".pack-open-overlay")).toBeNull();
+  });
+
+  test("pack-pick does not carry aria-modal", async () => {
+    await openShopThenPack();
+    const region = document
+      .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
+    expect(region).not.toHaveAttribute("aria-modal");
+  });
+
+  test("the player's hand is NOT in the document while a pack-pick is open", async () => {
+    await openShopThenPack();
+    expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
+  });
+
+  test("the jokers row remains queryable while a pack-pick is open", async () => {
+    await openShopThenPack();
+    expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
+  });
+
+  test("the consumables tray remains queryable while a pack-pick is open", async () => {
+    await openShopThenPack();
+    expect(screen.getByLabelText("Consumable slots")).toBeInTheDocument();
+  });
+
+  test("non-pack shop offer Buy buttons are disabled while a pack-pick is open", async () => {
+    await openShopThenPack();
+    const buys = nonPackBuyButtons();
+    expect(buys.every((b) => b.disabled)).toBe(true);
+  });
+
+  test("shop Reroll button is disabled while a pack-pick is open", async () => {
+    await openShopThenPack();
+    expect(
+      screen.getByRole("button", { name: /Reroll shop offers/i }),
+    ).toBeDisabled();
+  });
+
+  test("shop Next Round button is disabled while a pack-pick is open", async () => {
+    await openShopThenPack();
+    expect(
+      screen.getByRole("button", { name: /Next Round/i }),
+    ).toBeDisabled();
+  });
+
+  test("shop Voucher Buy button is disabled while a pack-pick is open", async () => {
+    await openShopThenPack();
+    expect(screen.getByTestId("shop-voucher-buy-0")).toBeDisabled();
+  });
+
+  test("clicking a locked shop Buy button while pack-pick is open does NOT change money", async () => {
+    const user = await openShopThenPack();
+    const before = moneyValue();
+    const buys = nonPackBuyButtons();
+    if (buys[0]) await user.click(buys[0]);
+    expect(moneyValue()).toBe(before);
+  });
+
+  test("closing the pack-pick re-enables the Next Round button", async () => {
+    const user = await openShopThenPack();
+    await user.click(screen.getByTestId("pack-open-close"));
+    expect(
+      screen.getByRole("button", { name: /Next Round/i }),
+    ).not.toBeDisabled();
+  });
+});
+
 describe("Apply Modifiers — Force Probabilities toggle (#354)", () => {
   test("renders a Force Probabilities button labelled 'On' by default", () => {
     render(<App />);

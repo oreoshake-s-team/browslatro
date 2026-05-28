@@ -22,7 +22,6 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
-import PackOpenModal from "./components/shop/PackOpenModal";
 import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalTagPayout, type TagId } from "./items/tags";
@@ -1763,6 +1762,24 @@ function App() {
               }
             : undefined
         }
+        packOpen={
+          openedPack
+            ? {
+                pack: openedPack,
+                picksRemaining: packPicksRemaining,
+                consumableSlotsFull: !hasFreeConsumableSlot(
+                  consumables,
+                  consumableCapacity,
+                ),
+                jokerSlotsFull: effectiveJokerCount(jokers) >= MAX_JOKERS,
+                previewHand: packPreviewHand,
+                previewSelectedIds: packPreviewSelectedIds,
+                onSelectPreviewCard: togglePackPreviewCard,
+                onPick: pickFromOpenedPack,
+                onClose: closeOpenedPack,
+              }
+            : undefined
+        }
         onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
         onDisplayOrderChange={setHandDisplayOrder}
@@ -1770,19 +1787,6 @@ function App() {
       />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
-      )}
-      {openedPack && (
-        <PackOpenModal
-          pack={openedPack}
-          picksRemaining={packPicksRemaining}
-          consumableSlotsFull={!hasFreeConsumableSlot(consumables, consumableCapacity)}
-          jokerSlotsFull={effectiveJokerCount(jokers) >= MAX_JOKERS}
-          previewHand={packPreviewHand}
-          previewSelectedIds={packPreviewSelectedIds}
-          onSelectPreviewCard={togglePackPreviewCard}
-          onPick={pickFromOpenedPack}
-          onClose={closeOpenedPack}
-        />
       )}
       {pendingBlindSelect && (
         <BlindSelectScreen
