@@ -223,6 +223,18 @@ describe("Top-up tag", () => {
   });
 });
 
+describe("Boss tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("boss");
+  });
+
+  test("resolves to an immediate reroll-boss action", () => {
+    const effect = resolveTagEffect("boss");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({ kind: "reroll-boss" });
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");

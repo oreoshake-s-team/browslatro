@@ -1366,6 +1366,15 @@ function App() {
           }
           return next;
         });
+      } else if (action.kind === "reroll-boss") {
+        play("pop");
+        setCurrentBoss(
+          pickBossForAnte({
+            ante,
+            recentIds: new Set<string>([...recentBossIds, currentBoss.id]),
+            rng: bossPickerRngConfig.rng,
+          }),
+        );
       } else {
         setMoney(
           (prev) => prev + immediateMoneyGain(action, { stats: nextStats, money: prev }),

@@ -3635,3 +3635,26 @@ describe("Top-up tag", () => {
     expect(jokerCount() - before).toBe(0);
   });
 });
+
+describe("Boss tag", () => {
+  const bossText = () =>
+    screen.getByTestId("blind-select-boss-description").textContent;
+
+  test("gaining the Boss tag rerolls the boss blind", async () => {
+    tagOfferRngConfig.rng = rngForTag("boss");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = bossText();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(bossText()).not.toBe(before);
+  });
+
+  test("a non-Boss tag leaves the boss blind unchanged (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = bossText();
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(bossText()).toBe(before);
+  });
+});

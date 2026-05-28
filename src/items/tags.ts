@@ -17,7 +17,8 @@ export type TagId =
   | "uncommon"
   | "rare"
   | "voucher"
-  | "top-up";
+  | "top-up"
+  | "boss";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -173,6 +174,15 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "immediate",
       action: { kind: "create-jokers", rarity: "common", count: 2 },
+    },
+  },
+  {
+    id: "boss",
+    name: "Boss Tag",
+    description: "Reroll the Boss Blind.",
+    effect: {
+      category: "immediate",
+      action: { kind: "reroll-boss" },
     },
   },
 ];
