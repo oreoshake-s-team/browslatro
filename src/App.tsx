@@ -60,7 +60,7 @@ import {
   getAnimationSpeed,
   getAnimationSpeedMultiplier,
   hasUserOverriddenAnimationSpeed,
-  isHighVisibility,
+  usePreferences,
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
@@ -258,10 +258,8 @@ function App() {
   const [remainingHands, setRemainingHands] = useState(4);
   const [remainingDiscards, setRemainingDiscards] = useState(3);
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
-  const [highVisibility, setHighVisibility] = useState<boolean>(isHighVisibility);
-  const [animationSpeed, setAnimationSpeedState] = useState<AnimationSpeed>(
-    getAnimationSpeed,
-  );
+  const highVisibility = usePreferences((state) => state.highVisibility);
+  const animationSpeed = usePreferences((state) => state.animationSpeed);
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
     () => new Set(),
   );
@@ -1850,8 +1848,6 @@ function App() {
         currentBoss={currentBoss}
         scoringEvents={scoringEvents}
         onNewGame={startNewGame}
-        onHighVisibilityChange={setHighVisibility}
-        onAnimationSpeedChange={setAnimationSpeedState}
       />
       <Game
         onWin={handleWin}
