@@ -3563,3 +3563,31 @@ describe("Coupon tag", () => {
     ).toBe(0);
   });
 });
+
+describe("Uncommon and Rare joker tags", () => {
+  test("gaining Uncommon adds a free joker offer to the next shop", async () => {
+    tagOfferRngConfig.rng = rngForTag("uncommon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  test("gaining Rare adds a free joker offer to the next shop", async () => {
+    tagOfferRngConfig.rng = rngForTag("rare");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBeGreaterThan(0);
+  });
+});

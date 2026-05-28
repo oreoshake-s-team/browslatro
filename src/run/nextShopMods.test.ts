@@ -27,4 +27,14 @@ describe("applyNextShopModifiers", () => {
   test("an empty queue leaves shop items paid (negative)", () => {
     expect(applyNextShopModifiers([]).freeShopItems).toBe(false);
   });
+
+  test("a free-joker modifier collects its rarity", () => {
+    expect(
+      applyNextShopModifiers([{ kind: "free-joker", rarity: "uncommon" }]).freeJokerRarities,
+    ).toEqual(["uncommon"]);
+  });
+
+  test("an empty queue requests no free jokers (negative)", () => {
+    expect(applyNextShopModifiers([]).freeJokerRarities).toEqual([]);
+  });
 });

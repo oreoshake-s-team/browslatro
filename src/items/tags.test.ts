@@ -177,6 +177,28 @@ describe("Coupon tag", () => {
   });
 });
 
+describe("Uncommon and Rare joker tags", () => {
+  test("Uncommon is in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("uncommon");
+  });
+
+  test("Uncommon resolves to a next-shop free Uncommon joker", () => {
+    const effect = resolveTagEffect("uncommon");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "free-joker", rarity: "uncommon" }]);
+  });
+
+  test("Rare is in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("rare");
+  });
+
+  test("Rare resolves to a next-shop free Rare joker", () => {
+    const effect = resolveTagEffect("rare");
+    if (effect.category !== "next-shop") throw new Error("expected next-shop");
+    expect(effect.modifiers).toEqual([{ kind: "free-joker", rarity: "rare" }]);
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");

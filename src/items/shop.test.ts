@@ -15,6 +15,7 @@ import {
   SHOP_OFFER_SLOTS,
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
+  buildFreeJokerOffers,
   pickRandomJoker,
   pickRandomPlanet,
   pickRandomTarot,
@@ -659,5 +660,36 @@ describe("pickShopOffers — forcedPackPools (dev queue)", () => {
       forcedPackPools: [],
     });
     expect(packs(withEmpty).length).toBe(packs(baseline).length);
+  });
+});
+
+describe("buildFreeJokerOffers", () => {
+  const catalog = createJokerCatalog();
+
+  test("returns one offer per requested rarity", () => {
+    const offers = buildFreeJokerOffers(["uncommon"], catalog, new Set(), () => 0);
+    expect(offers).toHaveLength(1);
+  });
+
+  test("the injected joker offer is priced at $0", () => {
+    const offers = buildFreeJokerOffers(["rare"], catalog, new Set(), () => 0);
+    expect(offers[0]?.price).toBe(0);
+  });
+
+  test("the injected joker matches the requested rarity", () => {
+    const offer = buildFreeJokerOffers(["uncommon"], catalog, new Set(), () => 0)[0];
+    if (offer?.kind !== "joker") throw new Error("expected a joker offer");
+    expect(offer.joker.rarity).toBe("uncommon");
+  });
+
+  test("no rarities requested yields no offers (negative)", () => {
+    expect(buildFreeJokerOffers([], catalog, new Set(), () => 0)).toHaveLength(0);
+  });
+
+  test("excludes jokers the player already owns (negative)", () => {
+    const ownedIds = new Set(
+      catalog.filter((j) => j.rarity === "uncommon").map((j) => j.id),
+    );
+    expect(buildFreeJokerOffers(["uncommon"], catalog, ownedIds, () => 0)).toHaveLength(0);
   });
 });

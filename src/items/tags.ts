@@ -13,7 +13,9 @@ export type TagId =
   | "standard"
   | "meteor"
   | "buffoon"
-  | "coupon";
+  | "coupon"
+  | "uncommon"
+  | "rare";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -133,6 +135,24 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "next-shop",
       modifiers: [{ kind: "free-shop-items" }],
+    },
+  },
+  {
+    id: "uncommon",
+    name: "Uncommon Tag",
+    description: "The next shop has a free Uncommon Joker.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-joker", rarity: "uncommon" }],
+    },
+  },
+  {
+    id: "rare",
+    name: "Rare Tag",
+    description: "The next shop has a free Rare Joker.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-joker", rarity: "rare" }],
     },
   },
 ];
