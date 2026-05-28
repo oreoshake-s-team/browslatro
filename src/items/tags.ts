@@ -12,7 +12,8 @@ export type TagId =
   | "ethereal"
   | "standard"
   | "meteor"
-  | "buffoon";
+  | "buffoon"
+  | "coupon";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -123,6 +124,15 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     effect: {
       category: "immediate",
       action: { kind: "open-pack", pool: "buffoon", variant: "mega" },
+    },
+  },
+  {
+    id: "coupon",
+    name: "Coupon Tag",
+    description: "Cards and booster packs in the next shop are free.",
+    effect: {
+      category: "next-shop",
+      modifiers: [{ kind: "free-shop-items" }],
     },
   },
 ];

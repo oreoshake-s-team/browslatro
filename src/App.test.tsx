@@ -3538,3 +3538,28 @@ describe("Standard, Meteor, and Buffoon pack tags", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Coupon tag", () => {
+  test("gaining Coupon makes the next shop's offers free", async () => {
+    tagOfferRngConfig.rng = rngForTag("coupon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBeGreaterThan(0);
+  });
+
+  test("a shop without the Coupon tag has no free offers (negative)", async () => {
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBe(0);
+  });
+});

@@ -19,4 +19,12 @@ describe("applyNextShopModifiers", () => {
         .rerollReduction,
     ).toBe(BASE_REROLL_COST * 2);
   });
+
+  test("a free-shop-items modifier marks the next shop's items free", () => {
+    expect(applyNextShopModifiers([{ kind: "free-shop-items" }]).freeShopItems).toBe(true);
+  });
+
+  test("an empty queue leaves shop items paid (negative)", () => {
+    expect(applyNextShopModifiers([]).freeShopItems).toBe(false);
+  });
 });
