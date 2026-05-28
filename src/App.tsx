@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useEconomy } from "./store/economy";
 import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
+import { useStats } from "./store/stats";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -52,10 +53,6 @@ import {
   type Consumable,
 } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
-import {
-  emptyHandCounts,
-  type HandPlayCounts,
-} from "./components/hud/RunInfo";
 import { play } from "./components/system/sounds";
 import {
   getAnimationSpeed,
@@ -65,7 +62,6 @@ import {
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
-import { createDefaultHandStats, type HandStats } from "./scoring/handStats";
 import {
   getCardChips,
   getCardMultDelta,
@@ -274,13 +270,14 @@ function App() {
   const [jokerPulseCounters, setJokerPulseCounters] = useState<
     Readonly<Record<string, number>>
   >({});
-  const [handPlayCounts, setHandPlayCounts] = useState<HandPlayCounts>(
-    emptyHandCounts,
-  );
-  const [handStats, setHandStats] = useState<HandStats>(createDefaultHandStats);
+  const handPlayCounts = useStats((state) => state.handPlayCounts);
+  const setHandPlayCounts = useStats((state) => state.setHandPlayCounts);
+  const handStats = useStats((state) => state.handStats);
+  const setHandStats = useStats((state) => state.setHandStats);
   const pendingDiscardCountRef = useRef(0);
   const pendingHandPlayResetRef = useRef(false);
-  const [handPlaySignal, setHandPlaySignal] = useState(0);
+  const handPlaySignal = useStats((state) => state.handPlaySignal);
+  const setHandPlaySignal = useStats((state) => state.setHandPlaySignal);
   const skipDrawAfterDiscardRef = useRef(false);
   const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
     () => new Set(),
@@ -1356,8 +1353,7 @@ function App() {
     setDevMultFactor(1);
     setForceProbabilities(false);
     setJokers(initialJokersConfig.factory());
-    setHandPlayCounts(emptyHandCounts());
-    setHandStats(createDefaultHandStats());
+    useStats.getState().resetStats();
     setDestroyedCardKeys(new Set());
     setAddedCards([]);
     setCardEnhancementsByKey(new Map());
