@@ -11,6 +11,7 @@ import { usePacks } from "./store/packs";
 import { useHand } from "./store/hand";
 import { useScoring } from "./store/scoring";
 import { useDevModifiers } from "./store/devModifiers";
+import { useDeck } from "./store/deck";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -298,7 +299,11 @@ function App() {
   const remainingDiscards = useHand((state) => state.remainingDiscards);
   const setRemainingDiscards = useHand((state) => state.setRemainingDiscards);
   const [runStats, setRunStats] = useState<RunStats>(initialRunStats());
-  const [dealt, setDealt] = useState<DealResult>(initialDeal);
+  const dealt = useDeck((state) => state.dealt);
+  const setDealt = useDeck((state) => state.setDealt);
+  useEffect(() => {
+    setDealt(initialDeal());
+  }, [setDealt]);
   const highVisibility = usePreferences((state) => state.highVisibility);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useHand((state) => state.selectedIds);
@@ -323,22 +328,22 @@ function App() {
   const handPlaySignal = useStats((state) => state.handPlaySignal);
   const setHandPlaySignal = useStats((state) => state.setHandPlaySignal);
   const skipDrawAfterDiscardRef = useRef(false);
-  const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
+  const destroyedCardKeys = useDeck((state) => state.destroyedCardKeys);
+  const setDestroyedCardKeys = useDeck((state) => state.setDestroyedCardKeys);
   const scoringEvents = useScoring((state) => state.scoringEvents);
   const setScoringEvents = useScoring((state) => state.setScoringEvents);
 
   function pushScoringEvent(event: ScoringEvent) {
     setScoringEvents((prev) => [...prev, event]);
   }
-  const [addedCards, setAddedCards] = useState<ReadonlyArray<Card>>(() => []);
-  const [cardEnhancementsByKey, setCardEnhancementsByKey] = useState<
-    ReadonlyMap<string, Enhancement>
-  >(() => new Map());
-  const [cardSealsByKey, setCardSealsByKey] = useState<
-    ReadonlyMap<string, Seal>
-  >(() => new Map());
+  const addedCards = useDeck((state) => state.addedCards);
+  const setAddedCards = useDeck((state) => state.setAddedCards);
+  const cardEnhancementsByKey = useDeck((state) => state.cardEnhancementsByKey);
+  const setCardEnhancementsByKey = useDeck(
+    (state) => state.setCardEnhancementsByKey,
+  );
+  const cardSealsByKey = useDeck((state) => state.cardSealsByKey);
+  const setCardSealsByKey = useDeck((state) => state.setCardSealsByKey);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
