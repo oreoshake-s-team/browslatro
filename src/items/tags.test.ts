@@ -4,6 +4,8 @@ import {
   createTagCatalog,
   getTagSpec,
   resolveTagEffect,
+  rollAnteSkipOffers,
+  rollSkipTag,
   totalDeferredBossPayout,
   type TagEffect,
 } from "./tags";
@@ -74,5 +76,29 @@ describe("totalDeferredBossPayout", () => {
         0,
       );
     expect(sumDeferred([{ category: "immediate" }, { category: "next-shop" }])).toBe(0);
+  });
+});
+
+describe("rollSkipTag", () => {
+  test("returns a tag that exists in the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollSkipTag(() => 0));
+  });
+
+  test("a roll at the top of the range stays within the catalog bounds", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollSkipTag(() => 0.999999));
+  });
+});
+
+describe("rollAnteSkipOffers", () => {
+  test("rolls a small-blind offer from the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollAnteSkipOffers(() => 0).small);
+  });
+
+  test("rolls a big-blind offer from the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(ids).toContain(rollAnteSkipOffers(() => 0).big);
   });
 });

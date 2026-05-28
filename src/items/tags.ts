@@ -43,3 +43,20 @@ export function totalDeferredBossPayout(ids: ReadonlyArray<TagId>): number {
     return effect.category === "deferred-boss-payout" ? sum + effect.amount : sum;
   }, 0);
 }
+
+export interface AnteSkipOffers {
+  readonly small: TagId;
+  readonly big: TagId;
+}
+
+export const tagOfferRngConfig: { rng: () => number } = { rng: Math.random };
+
+export function rollSkipTag(rng: () => number = Math.random): TagId {
+  const ids = TAG_SPECS.map((spec) => spec.id);
+  const index = Math.min(ids.length - 1, Math.floor(rng() * ids.length));
+  return ids[index];
+}
+
+export function rollAnteSkipOffers(rng: () => number = Math.random): AnteSkipOffers {
+  return { small: rollSkipTag(rng), big: rollSkipTag(rng) };
+}

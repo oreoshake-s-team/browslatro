@@ -177,43 +177,57 @@ describe("BlindSelectScreen", () => {
     expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent("$25");
   });
 
-  test("skip-reward preview renders on Small Blind when skipReward is provided", () => {
-    renderScreen({ skipReward: "investment" });
+  test("skip-reward preview renders on Small Blind from the small offer", () => {
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toBeInTheDocument();
   });
 
-  test("skip-reward preview renders on Big Blind when skipReward is provided", () => {
-    renderScreen({ skipReward: "investment" });
+  test("skip-reward preview renders on Big Blind from the big offer", () => {
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-2"),
     ).toBeInTheDocument();
   });
 
-  test("skip-reward preview does NOT render on Boss Blind even when skipReward is provided", () => {
-    renderScreen({ skipReward: "investment" });
+  test("skip-reward preview does NOT render on Boss Blind even when offers are provided", () => {
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
     expect(
       screen.queryByTestId("blind-select-row-skip-reward-3"),
     ).not.toBeInTheDocument();
   });
 
-  test("skip-reward preview does not render when skipReward is omitted", () => {
+  test("skip-reward preview does not render when no offers are provided", () => {
     renderScreen({});
     expect(
       screen.queryByTestId("blind-select-row-skip-reward-1"),
     ).not.toBeInTheDocument();
   });
 
+  test("a blind without its own offer shows no skip reward (negative)", () => {
+    renderScreen({ skipRewards: { small: "investment" } });
+    expect(
+      screen.queryByTestId("blind-select-row-skip-reward-2"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("the blind with an offer still shows its skip reward when the other is absent", () => {
+    renderScreen({ skipRewards: { small: "investment" } });
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toBeInTheDocument();
+  });
+
   test("skip-reward preview names the granted tag", () => {
-    renderScreen({ skipReward: "investment" });
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toHaveTextContent("Investment Tag");
   });
 
   test("skip-reward preview exposes the tag's effect via the title attribute (hover)", () => {
-    renderScreen({ skipReward: "investment" });
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toHaveAttribute("title", expect.stringContaining("$25"));

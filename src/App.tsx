@@ -25,7 +25,13 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
-import { totalDeferredBossPayout, type TagId } from "./items/tags";
+import {
+  rollAnteSkipOffers,
+  tagOfferRngConfig,
+  totalDeferredBossPayout,
+  type AnteSkipOffers,
+  type TagId,
+} from "./items/tags";
 import {
   initialRunStats,
   recordBlindSkipped,
@@ -389,6 +395,9 @@ function App() {
   >(() => new Set());
   const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
   const [pendingTags, setPendingTags] = useState<ReadonlyArray<TagId>>([]);
+  const [skipTagOffers, setSkipTagOffers] = useState<AnteSkipOffers>(() =>
+    rollAnteSkipOffers(tagOfferRngConfig.rng),
+  );
   const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
     () => new Set(),
   );
@@ -779,6 +788,7 @@ function App() {
         ),
       );
       setSoldVoucherIds(new Set());
+      setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
       const nextRecent = new Set(recentBossIds);
       nextRecent.add(currentBoss.id);
       setRecentBossIds(nextRecent);
@@ -1267,9 +1277,10 @@ function App() {
 
   function skipBlind() {
     if (blind === 3) return;
+    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
-    setPendingTags((prev) => [...prev, "investment"]);
+    setPendingTags((prev) => [...prev, offered]);
     setRunStats(recordBlindSkipped);
   }
 
@@ -1386,6 +1397,7 @@ function App() {
     setCurrentBoss(freshBoss);
     setPendingTags([]);
     setRunStats(initialRunStats());
+    setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
     setPendingBlindSelect(true);
@@ -1998,7 +2010,7 @@ function App() {
           onPlay={confirmBlindSelect}
           onSkip={skipBlind}
           tags={pendingTags}
-          skipReward="investment"
+          skipRewards={skipTagOffers}
           bossOptions={availableBosses(createBossCatalog(), ante)}
           onSetBoss={(id) => {
             const next = createBossCatalog().find((b) => b.id === id);

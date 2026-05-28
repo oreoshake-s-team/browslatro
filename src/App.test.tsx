@@ -3366,3 +3366,28 @@ describe("Per-run stat counters", () => {
     expect(appRoot(container)).toHaveAttribute("data-unused-discards", "0");
   });
 });
+
+describe("Skip tag offers", () => {
+  test("the blind-select shows a rolled skip-reward on the Small Blind row", () => {
+    render(<App />);
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toHaveTextContent("Investment Tag");
+  });
+
+  test("the blind-select shows a rolled skip-reward on the Big Blind row", () => {
+    render(<App />);
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-2"),
+    ).toHaveTextContent("Investment Tag");
+  });
+
+  test("skipping the Small Blind grants its offered tag", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent(
+      "Investment Tag",
+    );
+  });
+});

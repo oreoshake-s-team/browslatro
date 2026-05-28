@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
-import { getTagSpec, type TagId } from "../../items/tags";
+import { getTagSpec, type AnteSkipOffers, type TagId } from "../../items/tags";
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -12,7 +12,7 @@ interface BlindSelectScreenProps {
   onPlay: () => void;
   onSkip?: () => void;
   tags?: ReadonlyArray<TagId>;
-  skipReward?: TagId;
+  skipRewards?: Partial<AnteSkipOffers>;
   // Dev override: when both are provided, the Boss row renders a
   // <select> that swaps `boss` for the chosen entry.
   bossOptions?: ReadonlyArray<BossBlind>;
@@ -46,14 +46,15 @@ export default function BlindSelectScreen({
   onPlay,
   onSkip,
   tags = [],
-  skipReward,
+  skipRewards,
   bossOptions,
   onSetBoss,
 }: BlindSelectScreenProps) {
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
-  const skipRewardSpec = skipReward ? getTagSpec(skipReward) : null;
+  const skipTagForBlind = (blind: Blind): TagId | undefined =>
+    blind === 1 ? skipRewards?.small : blind === 2 ? skipRewards?.big : undefined;
   const canOverrideBoss =
     bossOptions !== undefined && bossOptions.length > 0 && Boolean(onSetBoss);
 
@@ -98,6 +99,8 @@ export default function BlindSelectScreen({
             const isCurrent = b === currentBlind;
             const isCompleted = b < currentBlind;
             const name = b === 3 ? boss.name : BLIND_NAMES[b];
+            const rowSkipTag = skipTagForBlind(b);
+            const rowSkipSpec = rowSkipTag ? getTagSpec(rowSkipTag) : null;
             const stateClass = isCurrent
               ? " blind-select-row-current"
               : isCompleted
@@ -151,17 +154,17 @@ export default function BlindSelectScreen({
                     </dd>
                   </div>
                 </dl>
-                {b !== 3 && skipRewardSpec && (
+                {b !== 3 && rowSkipSpec && (
                   <div
                     className="blind-select-row-skip-reward"
                     data-testid={`blind-select-row-skip-reward-${b}`}
-                    title={skipRewardSpec.description}
+                    title={rowSkipSpec.description}
                   >
                     <span className="blind-select-row-skip-reward-label">
                       Skip reward
                     </span>
                     <span className="blind-select-row-skip-reward-name">
-                      + {skipRewardSpec.name}
+                      + {rowSkipSpec.name}
                     </span>
                   </div>
                 )}
