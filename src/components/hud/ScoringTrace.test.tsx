@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import ScoringTrace from "./ScoringTrace";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 
@@ -97,5 +98,46 @@ describe("ScoringTrace", () => {
     render(<ScoringTrace events={[]} />);
     const region = screen.getByRole("log");
     expect(region).toHaveAttribute("tabindex", "0");
+  });
+});
+
+describe("ScoringTrace expand affordance", () => {
+  test("renders an Expand button", () => {
+    render(<ScoringTrace events={[]} />);
+    expect(
+      screen.getByRole("button", { name: /expand scoring trace/i }),
+    ).toBeInTheDocument();
+  });
+
+  test("does not render the dialog before the Expand button is pressed (negative)", () => {
+    render(<ScoringTrace events={[]} />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  test("pressing Expand opens the full-screen dialog", async () => {
+    const user = userEvent.setup();
+    render(<ScoringTrace events={[]} />);
+    await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  test("the expanded dialog shows the same scoring content", async () => {
+    const user = userEvent.setup();
+    const events = group(
+      { chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+    );
+    render(<ScoringTrace events={events} />);
+    await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("+11 Chips (A♠ rank)")).toBeInTheDocument();
+  });
+
+  test("closing the dialog returns to the sidebar trace", async () => {
+    const user = userEvent.setup();
+    render(<ScoringTrace events={[]} />);
+    await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
