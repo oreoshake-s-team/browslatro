@@ -60,6 +60,50 @@ describe("D6 tag", () => {
   });
 });
 
+describe("run-stat money tags", () => {
+  test("Handy is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("handy");
+  });
+
+  test("Garbage is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("garbage");
+  });
+
+  test("Speed is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("speed");
+  });
+
+  test("Handy resolves to an immediate $1-per-hand-played action", () => {
+    const effect = resolveTagEffect("handy");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({
+      kind: "money-per-stat",
+      stat: "handsPlayed",
+      perUnit: 1,
+    });
+  });
+
+  test("Garbage resolves to an immediate $1-per-unused-discard action", () => {
+    const effect = resolveTagEffect("garbage");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({
+      kind: "money-per-stat",
+      stat: "unusedDiscards",
+      perUnit: 1,
+    });
+  });
+
+  test("Speed resolves to an immediate $5-per-blind-skipped action", () => {
+    const effect = resolveTagEffect("speed");
+    if (effect.category !== "immediate") throw new Error("expected immediate");
+    expect(effect.action).toEqual({
+      kind: "money-per-stat",
+      stat: "blindsSkipped",
+      perUnit: 5,
+    });
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
@@ -94,7 +138,13 @@ describe("totalDeferredBossPayout", () => {
         0,
       );
     expect(
-      sumDeferred([{ category: "immediate" }, { category: "next-shop", modifiers: [] }]),
+      sumDeferred([
+        {
+          category: "immediate",
+          action: { kind: "money-per-stat", stat: "handsPlayed", perUnit: 1 },
+        },
+        { category: "next-shop", modifiers: [] },
+      ]),
     ).toBe(0);
   });
 });
