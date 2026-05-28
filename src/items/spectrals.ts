@@ -15,6 +15,8 @@ export const CRYPTID_COPY_COUNT = 2;
 
 export const ECTOPLASM_HAND_SIZE_DELTA = -1;
 
+export const OUIJA_HAND_SIZE_DELTA = -1;
+
 export type TransmuteRankFilter = "face" | "ace" | "numbered";
 
 export type SpectralEffect =
@@ -33,7 +35,8 @@ export type SpectralEffect =
       readonly rarity: JokerRarity;
       readonly setMoneyToZero: boolean;
     }
-  | { readonly kind: "ectoplasm"; readonly handSizeDelta: number };
+  | { readonly kind: "ectoplasm"; readonly handSizeDelta: number }
+  | { readonly kind: "ouija"; readonly handSizeDelta: number };
 
 export function spectralNeedsTarget(effect: SpectralEffect): boolean {
   return effect.kind === "apply-seal" || effect.kind === "duplicate-selected";
@@ -155,6 +158,8 @@ function describe(spec: SpectralSpec): string {
     }
     case "ectoplasm":
       return `Add Negative to a random Joker, ${effect.handSizeDelta} hand size`;
+    case "ouija":
+      return `Convert all cards in hand to a single random rank, ${effect.handSizeDelta} hand size`;
   }
 }
 
@@ -223,6 +228,11 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     id: "ectoplasm",
     name: "Ectoplasm",
     effect: { kind: "ectoplasm", handSizeDelta: ECTOPLASM_HAND_SIZE_DELTA },
+  },
+  {
+    id: "ouija",
+    name: "Ouija",
+    effect: { kind: "ouija", handSizeDelta: OUIJA_HAND_SIZE_DELTA },
   },
 ];
 
