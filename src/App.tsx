@@ -3,6 +3,7 @@ import "./App.css";
 import { useEconomy } from "./store/economy";
 import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
 import { useStats } from "./store/stats";
+import { useProgression } from "./store/progression";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -28,7 +29,7 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
-import { totalTagPayout, type TagId } from "./items/tags";
+import { totalTagPayout } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
   createSpectralCatalog,
@@ -229,9 +230,12 @@ function fullDeckPile(
 }
 
 function App() {
-  const [blind, setBlind] = useState<Blind>(1);
-  const [round, setRound] = useState(1);
-  const [ante, setAnte] = useState(1);
+  const blind = useProgression((state) => state.blind);
+  const setBlind = useProgression((state) => state.setBlind);
+  const round = useProgression((state) => state.round);
+  const setRound = useProgression((state) => state.setRound);
+  const ante = useProgression((state) => state.ante);
+  const setAnte = useProgression((state) => state.setAnte);
   const money = useEconomy((state) => state.money);
   const [chips, setChips] = useState(0);
   const [multiplier, setMultiplier] = useState(0);
@@ -374,8 +378,12 @@ function App() {
   const [packPreviewSelectedIds, setPackPreviewSelectedIds] = useState<
     ReadonlySet<number>
   >(() => new Set());
-  const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
-  const [pendingTags, setPendingTags] = useState<ReadonlyArray<TagId>>([]);
+  const pendingBlindSelect = useProgression((state) => state.pendingBlindSelect);
+  const setPendingBlindSelect = useProgression(
+    (state) => state.setPendingBlindSelect,
+  );
+  const pendingTags = useProgression((state) => state.pendingTags);
+  const setPendingTags = useProgression((state) => state.setPendingTags);
   const ownedVoucherIds = useVouchers((state) => state.ownedVoucherIds);
   const setOwnedVoucherIds = useVouchers((state) => state.setOwnedVoucherIds);
   const currentHandSize = Math.max(
