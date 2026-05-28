@@ -14,6 +14,8 @@ const KNOWN_CATEGORIES: ReadonlyArray<TagEffect["category"]> = [
   "deferred-boss-payout",
   "immediate",
   "next-shop",
+  "next-round",
+  "duplicate-next",
 ];
 
 describe("INVESTMENT_TAG_REWARD", () => {
@@ -244,6 +246,51 @@ describe("Orbital tag", () => {
     const effect = resolveTagEffect("orbital");
     if (effect.category !== "immediate") throw new Error("expected immediate");
     expect(effect.action).toEqual({ kind: "upgrade-hand", levels: 3 });
+  });
+});
+
+describe("Juggle tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("juggle");
+  });
+
+  test("resolves to a next-round +3 hand-size effect", () => {
+    const effect = resolveTagEffect("juggle");
+    if (effect.category !== "next-round") throw new Error("expected next-round");
+    expect(effect.handSizeBonus).toBe(3);
+  });
+});
+
+describe("edition tags", () => {
+  const cases = [
+    ["negative", "negative"],
+    ["foil", "foil"],
+    ["holographic", "holographic"],
+    ["polychrome", "polychrome"],
+  ] as const;
+
+  test("all four edition tags are in the catalog", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    expect(cases.every(([id]) => ids.includes(id))).toBe(true);
+  });
+
+  test.each(cases)(
+    "%s resolves to a next-shop free-edition-joker modifier",
+    (id, edition) => {
+      const effect = resolveTagEffect(id);
+      if (effect.category !== "next-shop") throw new Error("expected next-shop");
+      expect(effect.modifiers).toEqual([{ kind: "free-edition-joker", edition }]);
+    },
+  );
+});
+
+describe("Double tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("double");
+  });
+
+  test("resolves to the duplicate-next category", () => {
+    expect(resolveTagEffect("double").category).toBe("duplicate-next");
   });
 });
 

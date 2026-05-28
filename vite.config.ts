@@ -16,10 +16,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: "jsdom",
-    setupFiles: ["./src/setupTests.ts"],
     css: true,
-    include: ["src/**/*.{test,spec}.{ts,tsx}"],
     coverage: {
       provider: "istanbul",
       reporter: ["text", "html", "lcov"],
@@ -28,10 +25,30 @@ export default defineConfig({
       exclude: [
         "src/**/*.{test,spec}.{ts,tsx}",
         "src/setupTests.ts",
+        "src/test/**",
         "src/index.tsx",
         "src/reportWebVitals.ts",
         "src/**/*.d.ts",
       ],
     },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "node",
+          environment: "node",
+          include: ["src/**/*.{test,spec}.ts"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "jsdom",
+          environment: "jsdom",
+          setupFiles: ["./src/setupTests.ts"],
+          include: ["src/**/*.{test,spec}.tsx"],
+        },
+      },
+    ],
   },
 });

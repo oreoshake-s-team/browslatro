@@ -15,6 +15,7 @@ import {
   SHOP_OFFER_SLOTS,
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
+  applyEditionToFirstJoker,
   buildFreeJokerOffers,
   pickRandomJoker,
   pickRandomPlanet,
@@ -691,5 +692,59 @@ describe("buildFreeJokerOffers", () => {
       catalog.filter((j) => j.rarity === "uncommon").map((j) => j.id),
     );
     expect(buildFreeJokerOffers(["uncommon"], catalog, ownedIds, () => 0)).toHaveLength(0);
+  });
+});
+
+describe("applyEditionToFirstJoker", () => {
+  const catalog = createJokerCatalog();
+  const jokerOffer = (joker = catalog[0]): ShopItem => ({
+    kind: "joker",
+    joker,
+    price: 5,
+    sold: false,
+  });
+
+  test("applies the edition to the first base-edition joker offer", () => {
+    const result = applyEditionToFirstJoker([jokerOffer()], "foil")[0];
+    if (result?.kind !== "joker") throw new Error("expected a joker offer");
+    expect(result.joker.edition).toBe("foil");
+  });
+
+  test("makes the editioned joker free", () => {
+    const result = applyEditionToFirstJoker([jokerOffer()], "polychrome")[0];
+    expect(result?.price).toBe(0);
+  });
+
+  test("skips a joker offer that already has an edition", () => {
+    const editioned = { ...catalog[0], edition: "negative" as const };
+    const base = catalog[1];
+    const result = applyEditionToFirstJoker(
+      [jokerOffer(editioned), jokerOffer(base)],
+      "foil",
+    );
+    const second = result[1];
+    if (second?.kind !== "joker") throw new Error("expected a joker offer");
+    expect(second.joker.edition).toBe("foil");
+  });
+
+  test("leaves an already-editioned offer untouched when it is skipped (negative)", () => {
+    const editioned = { ...catalog[0], edition: "negative" as const };
+    const result = applyEditionToFirstJoker(
+      [jokerOffer(editioned), jokerOffer(catalog[1])],
+      "foil",
+    );
+    const first = result[0];
+    if (first?.kind !== "joker") throw new Error("expected a joker offer");
+    expect(first.joker.edition).toBe("negative");
+  });
+
+  test("is a no-op when there are no joker offers (negative)", () => {
+    const planetOffer: ShopItem = {
+      kind: "planet",
+      planet: createPlanetCatalog()[0],
+      price: 3,
+      sold: false,
+    };
+    expect(applyEditionToFirstJoker([planetOffer], "foil")[0]).toEqual(planetOffer);
   });
 });

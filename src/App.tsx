@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useEconomy } from "./store/economy";
 import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
@@ -45,11 +45,13 @@ import {
   type PackVariant,
 } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
+import NopeAnimation from "./components/game/NopeAnimation";
 import {
   resolveTagEffect,
   rollAnteSkipOffers,
   tagOfferRngConfig,
   totalDeferredBossPayout,
+  type TagId,
 } from "./items/tags";
 import { immediateMoneyGain } from "./run/immediateActions";
 import { applyNextShopModifiers } from "./run/nextShopMods";
@@ -58,6 +60,7 @@ import {
   recordBlindSkipped,
   recordHandPlayed,
   recordUnusedDiscards,
+  type RunStats,
 } from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
@@ -107,6 +110,7 @@ import {
   drawCountForRefill,
   shuffle,
   HAND_SIZE,
+  RANKS,
   SUITS,
   type DealResult,
 } from "./cards/deck";
@@ -137,10 +141,12 @@ import {
 } from "./cards/seals";
 import {
   MAX_JOKERS,
+  applyEditionToRandomJoker,
   applyHandLevelJokers,
   applyPerCardJokers,
   createJokerByRarity,
   createJokerCatalog,
+  createLegendaryJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
   isFaceCard,
@@ -149,6 +155,7 @@ import {
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
+  applyEditionToFirstJoker,
   buildFreeJokerOffers,
   pickShopItemOffers,
   pickShopOffers,
@@ -387,6 +394,11 @@ function App() {
   const luckyMoneyProcIds = useScoring((state) => state.luckyMoneyProcIds);
   const setLuckyMoneyProcIds = useScoring((state) => state.setLuckyMoneyProcIds);
 
+  const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
+  function triggerNopeAnimation() {
+    setNopeTriggerKey((prev) => prev + 1);
+  }
+
   const handLevelSteps = useScoring((state) => state.handLevelSteps);
   const setHandLevelSteps = useScoring((state) => state.setHandLevelSteps);
   const handLevelIndex = useScoring((state) => state.handLevelIndex);
@@ -406,6 +418,8 @@ function App() {
   const setSoldJokerIdsThisShopVisit = useJokers(
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
+  const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
+  const [pendingDouble, setPendingDouble] = useState(false);
   const consumables = useConsumables((state) => state.consumables);
   const setConsumables = useConsumables((state) => state.setConsumables);
   const handSizeModifier = useBoss((state) => state.handSizeModifier);
@@ -501,7 +515,9 @@ function App() {
     const effectiveBoss =
       opts.boss !== undefined ? opts.boss : currentBoss;
     const isBossRound = effectiveBlind === 3;
-    const baseHandSize = opts.handSizeOverride ?? currentHandSize;
+    const baseHandSize =
+      (opts.handSizeOverride ?? currentHandSize) + pendingNextRoundHandSize;
+    if (pendingNextRoundHandSize !== 0) setPendingNextRoundHandSize(0);
     const startingHands =
       (isBossRound
         ? bossStartingHands(effectiveBoss)
@@ -880,7 +896,11 @@ function App() {
       new Set(jokers.map((j) => j.id)),
       shopPickerRngConfig.rng,
     );
-    setShopOffers([...freeJokerOffers, ...pricedOffers]);
+    const editionedOffers = shopAdjustments.editionJokers.reduce(
+      (offers, edition) => applyEditionToFirstJoker(offers, edition),
+      [...freeJokerOffers, ...pricedOffers],
+    );
+    setShopOffers(editionedOffers);
     if (shopAdjustments.extraVouchers > 0) {
       setCurrentAnteVouchers((prev) => {
         const existing = new Set(prev.map((v) => v.id));
@@ -1055,6 +1075,8 @@ function App() {
           setJokers((prev) =>
             prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
           );
+        } else {
+          triggerNopeAnimation();
         }
       }
     } else if (option.kind === "joker") {
@@ -1169,6 +1191,15 @@ function App() {
         }));
         return;
       }
+      case "ouija": {
+        const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+        setDealt((prev) => ({
+          hand: prev.hand.map((c) => ({ ...c, rank })),
+          remaining: prev.remaining,
+        }));
+        setHandSizeModifier((prev) => prev + effect.handSizeDelta);
+        return;
+      }
       case "transmute": {
         setDealt((prev) => ({
           hand: transmuteHand(prev.hand, effect.rankFilter, effect.addCount, Math.random),
@@ -1188,6 +1219,23 @@ function App() {
         if (!created) return;
         setJokers((prev) => [...prev, created]);
         if (effect.setMoneyToZero) useEconomy.getState().setMoney(0);
+        return;
+      }
+      case "ectoplasm": {
+        setJokers((prev) => applyEditionToRandomJoker(prev, "negative", Math.random));
+        setHandSizeModifier((prev) => prev + effect.handSizeDelta);
+        return;
+      }
+      case "create-legendary": {
+        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        const created = createJokerByRarity(
+          jokers,
+          createLegendaryJokerCatalog(),
+          "legendary",
+          capacity,
+          Math.random,
+        );
+        if (created) setJokers((prev) => [...prev, created]);
         return;
       }
       case "apply-seal":
@@ -1279,6 +1327,8 @@ function App() {
         setJokers((prev) =>
           prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
         );
+      } else {
+        triggerNopeAnimation();
       }
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
@@ -1382,14 +1432,8 @@ function App() {
     startNewRound();
   }
 
-  function skipBlind() {
-    if (blind === 3) return;
-    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
-    const effect = resolveTagEffect(offered);
-    const nextStats = recordBlindSkipped(runStats);
-    setBlind((prev) => (prev + 1) as Blind);
-    setRound((prev) => prev + 1);
-    setRunStats(nextStats);
+  function applyGainedTag(tagId: TagId, nextStats: RunStats) {
+    const effect = resolveTagEffect(tagId);
     if (effect.category === "immediate") {
       const action = effect.action;
       if (action.kind === "open-pack") {
@@ -1439,10 +1483,30 @@ function App() {
       }
       return;
     }
-    setPendingTags((prev) => [...prev, offered]);
+    setPendingTags((prev) => [...prev, tagId]);
     if (effect.category === "next-shop") {
       setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
+    } else if (effect.category === "next-round") {
+      setPendingNextRoundHandSize((prev) => prev + effect.handSizeBonus);
     }
+  }
+
+  function skipBlind() {
+    if (blind === 3) return;
+    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
+    const effect = resolveTagEffect(offered);
+    const nextStats = recordBlindSkipped(runStats);
+    setBlind((prev) => (prev + 1) as Blind);
+    setRound((prev) => prev + 1);
+    setRunStats(nextStats);
+    if (effect.category === "duplicate-next") {
+      setPendingTags((prev) => [...prev, offered]);
+      setPendingDouble(true);
+      return;
+    }
+    const times = pendingDouble ? 2 : 1;
+    if (pendingDouble) setPendingDouble(false);
+    for (let i = 0; i < times; i += 1) applyGainedTag(offered, nextStats);
   }
 
   function adjustVoucherSlots(delta: number) {
@@ -1530,6 +1594,8 @@ function App() {
     setAnte(1);
     useEconomy.getState().resetEconomy();
     setHandSizeModifier(0);
+    setPendingNextRoundHandSize(0);
+    setPendingDouble(false);
     setExtraPackSlots(0);
     setPendingForcedPacks([]);
     setDevChipsBonus(0);
@@ -2160,6 +2226,7 @@ function App() {
         onDisplayOrderChange={setHandDisplayOrder}
         onReorderJokers={reorderJokers}
       />
+      <NopeAnimation triggerKey={nopeTriggerKey} />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
       )}

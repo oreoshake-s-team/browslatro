@@ -45,4 +45,14 @@ describe("applyNextShopModifiers", () => {
   test("an empty queue adds no extra vouchers (negative)", () => {
     expect(applyNextShopModifiers([]).extraVouchers).toBe(0);
   });
+
+  test("a free-edition-joker modifier collects its edition", () => {
+    expect(
+      applyNextShopModifiers([{ kind: "free-edition-joker", edition: "foil" }]).editionJokers,
+    ).toEqual(["foil"]);
+  });
+
+  test("an empty queue requests no edition jokers (negative)", () => {
+    expect(applyNextShopModifiers([]).editionJokers).toEqual([]);
+  });
 });

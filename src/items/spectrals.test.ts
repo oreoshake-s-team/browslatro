@@ -54,13 +54,16 @@ describe("createSpectralCatalog", () => {
     { id: "grim", name: "Grim" },
     { id: "incantation", name: "Incantation" },
     { id: "cryptid", name: "Cryptid" },
+    { id: "ectoplasm", name: "Ectoplasm" },
+    { id: "ouija", name: "Ouija" },
+    { id: "soul", name: "The Soul" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 7 distinct effect kinds", () => {
+  test("spans 10 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(7);
+    expect(kinds.size).toBe(10);
   });
 });
 
@@ -371,5 +374,63 @@ describe("Wraith", () => {
 
   test("describes itself as setting money to $0", () => {
     expect(find("wraith").description).toContain("set money to $0");
+  });
+});
+
+describe("Ectoplasm", () => {
+  test("is included in the catalog", () => {
+    expect(find("ectoplasm").name).toBe("Ectoplasm");
+  });
+
+  test("carries a -1 hand-size delta", () => {
+    const effect = find("ectoplasm").effect;
+    if (effect.kind !== "ectoplasm") throw new Error("expected ectoplasm");
+    expect(effect.handSizeDelta).toBe(-1);
+  });
+
+  test("describes adding Negative to a random Joker", () => {
+    expect(find("ectoplasm").description).toContain("Negative");
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("ectoplasm").effect)).toBe(false);
+  });
+});
+
+describe("Ouija", () => {
+  test("is included in the catalog", () => {
+    expect(find("ouija").name).toBe("Ouija");
+  });
+
+  test("carries a -1 hand-size delta", () => {
+    const effect = find("ouija").effect;
+    if (effect.kind !== "ouija") throw new Error("expected ouija");
+    expect(effect.handSizeDelta).toBe(-1);
+  });
+
+  test("describes converting the hand to a single random rank", () => {
+    expect(find("ouija").description).toMatch(/single random rank/i);
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("ouija").effect)).toBe(false);
+  });
+});
+
+describe("The Soul", () => {
+  test("is included in the catalog", () => {
+    expect(find("soul").name).toBe("The Soul");
+  });
+
+  test("creates a Legendary joker", () => {
+    expect(find("soul").effect.kind).toBe("create-legendary");
+  });
+
+  test("describes creating a Legendary Joker", () => {
+    expect(find("soul").description).toContain("Legendary Joker");
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("soul").effect)).toBe(false);
   });
 });

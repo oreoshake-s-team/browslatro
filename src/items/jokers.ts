@@ -196,6 +196,16 @@ export function withEdition(joker: Joker, edition: JokerEdition): Joker {
   return { ...joker, edition };
 }
 
+export function applyEditionToRandomJoker(
+  jokers: ReadonlyArray<Joker>,
+  edition: JokerEdition,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  if (jokers.length === 0) return [...jokers];
+  const idx = Math.floor(rng() * jokers.length);
+  return jokers.map((joker, i) => (i === idx ? withEdition(joker, edition) : joker));
+}
+
 export function withoutEdition(joker: Joker): Joker {
   const { edition: _edition, ...rest } = joker;
   return rest;

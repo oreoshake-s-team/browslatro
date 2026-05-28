@@ -12,6 +12,7 @@ import { voucherPickerRngConfig, type VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
+  createGreedyJoker,
   createJokerStencilJoker,
   createPhotographJoker,
   createPlusFourMultJoker,
@@ -3404,6 +3405,13 @@ function rngForTag(id: TagId): () => number {
   return () => (index + 0.5) / ids.length;
 }
 
+function rngSequenceForTags(sequence: ReadonlyArray<TagId>): () => number {
+  const ids = createTagCatalog().map((t) => t.id);
+  const fractions = sequence.map((id) => (ids.indexOf(id) + 0.5) / ids.length);
+  let call = 0;
+  return () => fractions[Math.min(call++, fractions.length - 1)];
+}
+
 describe("D6 tag next-shop queue", () => {
   test("gaining the D6 tag on skip makes the next shop's first reroll free", async () => {
     tagOfferRngConfig.rng = rngForTag("d6");
@@ -3681,5 +3689,127 @@ describe("Orbital tag", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("1");
+  });
+});
+
+describe("Juggle tag", () => {
+  test("gaining Juggle deals 3 extra cards in the next round", async () => {
+    tagOfferRngConfig.rng = rngForTag("juggle");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(getHandCardButtons()).toHaveLength(11);
+  });
+
+  test("a non-Juggle tag deals the normal hand size (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+});
+
+describe("Edition tags", () => {
+  test("gaining Foil makes the next shop's joker free and Foil when bought", async () => {
+    tagOfferRngConfig.rng = rngForTag("foil");
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Buy \(\$0\)/ }));
+    expect(document.querySelector('[data-edition="foil"]')).not.toBeNull();
+  });
+
+  test("a shop without an edition tag has no free joker offer (negative)", async () => {
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(
+      screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
+    ).toBe(0);
+  });
+});
+
+describe("Double tag", () => {
+  test("Double then Speed pays the Speed money twice", async () => {
+    tagOfferRngConfig.rng = rngSequenceForTags(["double", "speed"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$24");
+  });
+
+  test("without Double, Speed pays once (negative)", async () => {
+    tagOfferRngConfig.rng = rngSequenceForTags(["investment", "speed"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$14");
+  });
+
+  test("a second Double is not itself duplicated (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("double");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(document.querySelectorAll('[data-tag-id="double"]')).toHaveLength(2);
+  });
+});
+
+describe("Ectoplasm spectral", () => {
+  test("picking Ectoplasm from a Spectral pack adds Negative to a joker", async () => {
+    const originalFactory = initialJokersConfig.factory;
+    initialJokersConfig.factory = () => [createGreedyJoker()];
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const ectoplasmIdx = spectrals.findIndex((s) => s.id === "ectoplasm");
+    shopPickerRngConfig.rng = () => ectoplasmIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    initialJokersConfig.factory = originalFactory;
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(document.querySelector('[data-edition="negative"]')).not.toBeNull();
+  });
+});
+
+describe("Ouija spectral", () => {
+  test("picking Ouija from a Spectral pack converts the hand to one rank", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const ouijaIdx = spectrals.findIndex((s) => s.id === "ouija");
+    shopPickerRngConfig.rng = () => ouijaIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    const ranks = new Set(
+      getHandCardButtons().map((b) => b.getAttribute("aria-label")?.split(" of ")[0]),
+    );
+    expect(ranks.size).toBe(1);
+  });
+});
+
+describe("The Soul spectral", () => {
+  test("picking The Soul from a Spectral pack creates a Legendary joker", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const soulIdx = spectrals.findIndex((s) => s.id === "soul");
+    shopPickerRngConfig.rng = () => soulIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    const before = screen.queryAllByTestId(/^joker-tile-filled-/).length;
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.queryAllByTestId(/^joker-tile-filled-/).length - before).toBe(1);
   });
 });
