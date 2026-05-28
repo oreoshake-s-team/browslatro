@@ -3321,3 +3321,48 @@ describe("Apply Modifiers — Force Probabilities toggle (#354)", () => {
     expect(chanceOverrideConfig.force100).toBe(false);
   });
 });
+
+describe("Per-run stat counters", () => {
+  const appRoot = (container: HTMLElement): HTMLElement =>
+    container.querySelector(".App") as HTMLElement;
+
+  test("the hands-played counter starts at zero before any hand is played (negative)", () => {
+    const { container } = render(<App />);
+    expect(appRoot(container)).toHaveAttribute("data-hands-played", "0");
+  });
+
+  test("playing a hand increments the per-run hands-played counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    expect(appRoot(container)).toHaveAttribute("data-hands-played", "1");
+  });
+
+  test("skipping a blind increments the per-run blinds-skipped counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(appRoot(container)).toHaveAttribute("data-blinds-skipped", "1");
+  });
+
+  test("winning a blind accumulates the leftover discards into the per-run counter", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    const leftover = getStatValue("Discards").querySelector(".stat-value")?.textContent;
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(appRoot(container)).toHaveAttribute("data-unused-discards", leftover ?? "");
+  });
+
+  test("starting a new game resets the per-run counters to zero", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Options/ }));
+    await user.click(screen.getByRole("button", { name: /New game/ }));
+    expect(appRoot(container)).toHaveAttribute("data-unused-discards", "0");
+  });
+});
