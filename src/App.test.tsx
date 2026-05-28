@@ -3777,3 +3777,20 @@ describe("Ectoplasm spectral", () => {
     expect(document.querySelector('[data-edition="negative"]')).not.toBeNull();
   });
 });
+
+describe("Ouija spectral", () => {
+  test("picking Ouija from a Spectral pack converts the hand to one rank", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    const spectrals = createSpectralCatalog();
+    const ouijaIdx = spectrals.findIndex((s) => s.id === "ouija");
+    shopPickerRngConfig.rng = () => ouijaIdx / spectrals.length + 1e-9;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    const ranks = new Set(
+      getHandCardButtons().map((b) => b.getAttribute("aria-label")?.split(" of ")[0]),
+    );
+    expect(ranks.size).toBe(1);
+  });
+});

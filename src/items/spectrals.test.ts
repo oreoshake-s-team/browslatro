@@ -55,13 +55,14 @@ describe("createSpectralCatalog", () => {
     { id: "incantation", name: "Incantation" },
     { id: "cryptid", name: "Cryptid" },
     { id: "ectoplasm", name: "Ectoplasm" },
+    { id: "ouija", name: "Ouija" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 8 distinct effect kinds", () => {
+  test("spans 9 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(8);
+    expect(kinds.size).toBe(9);
   });
 });
 
@@ -392,5 +393,25 @@ describe("Ectoplasm", () => {
 
   test("does not need a selected target (negative)", () => {
     expect(spectralNeedsTarget(find("ectoplasm").effect)).toBe(false);
+  });
+});
+
+describe("Ouija", () => {
+  test("is included in the catalog", () => {
+    expect(find("ouija").name).toBe("Ouija");
+  });
+
+  test("carries a -1 hand-size delta", () => {
+    const effect = find("ouija").effect;
+    if (effect.kind !== "ouija") throw new Error("expected ouija");
+    expect(effect.handSizeDelta).toBe(-1);
+  });
+
+  test("describes converting the hand to a single random rank", () => {
+    expect(find("ouija").description).toMatch(/single random rank/i);
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("ouija").effect)).toBe(false);
   });
 });

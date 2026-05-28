@@ -105,6 +105,7 @@ import {
   drawCountForRefill,
   shuffle,
   HAND_SIZE,
+  RANKS,
   SUITS,
   type DealResult,
 } from "./cards/deck";
@@ -1142,6 +1143,15 @@ function App() {
           hand: prev.hand.map((c) => ({ ...c, suit })),
           remaining: prev.remaining,
         }));
+        return;
+      }
+      case "ouija": {
+        const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+        setDealt((prev) => ({
+          hand: prev.hand.map((c) => ({ ...c, rank })),
+          remaining: prev.remaining,
+        }));
+        setHandSizeModifier((prev) => prev + effect.handSizeDelta);
         return;
       }
       case "transmute": {
