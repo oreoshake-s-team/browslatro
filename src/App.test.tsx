@@ -3407,7 +3407,7 @@ describe("D6 tag next-shop queue", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByTestId("blind-select-play"));
     await user.click(screen.getByText(/^🏆 Win$/));
-    expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
       "Reroll ($0)",
     );
   });
@@ -3416,7 +3416,7 @@ describe("D6 tag next-shop queue", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/^🏆 Win$/));
-    expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
       "Reroll ($5)",
     );
   });
