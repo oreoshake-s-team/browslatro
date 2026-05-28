@@ -5,6 +5,7 @@ import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
 import { useStats } from "./store/stats";
 import { useProgression } from "./store/progression";
 import { useConsumables } from "./store/consumables";
+import { useJokers } from "./store/jokers";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -118,7 +119,6 @@ import {
   isFaceCard,
   jokerSellValue,
   withEdition,
-  type Joker,
   type JokerHandLevelStep,
 } from "./items/jokers";
 import {
@@ -269,12 +269,13 @@ function App() {
   const [handDisplayOrder, setHandDisplayOrder] = useState<ReadonlyArray<number>>(
     [],
   );
-  const [jokers, setJokers] = useState<ReadonlyArray<Joker>>(() =>
-    initialJokersConfig.factory(),
-  );
-  const [jokerPulseCounters, setJokerPulseCounters] = useState<
-    Readonly<Record<string, number>>
-  >({});
+  const jokers = useJokers((state) => state.jokers);
+  const setJokers = useJokers((state) => state.setJokers);
+  const jokerPulseCounters = useJokers((state) => state.jokerPulseCounters);
+  const setJokerPulseCounters = useJokers((state) => state.setJokerPulseCounters);
+  useEffect(() => {
+    setJokers(initialJokersConfig.factory());
+  }, [setJokers]);
   const handPlayCounts = useStats((state) => state.handPlayCounts);
   const setHandPlayCounts = useStats((state) => state.setHandPlayCounts);
   const handStats = useStats((state) => state.handStats);
@@ -356,9 +357,12 @@ function App() {
   const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
     null,
   );
-  const [soldJokerIdsThisShopVisit, setSoldJokerIdsThisShopVisit] = useState<
-    ReadonlyArray<string>
-  >([]);
+  const soldJokerIdsThisShopVisit = useJokers(
+    (state) => state.soldJokerIdsThisShopVisit,
+  );
+  const setSoldJokerIdsThisShopVisit = useJokers(
+    (state) => state.setSoldJokerIdsThisShopVisit,
+  );
   const consumables = useConsumables((state) => state.consumables);
   const setConsumables = useConsumables((state) => state.setConsumables);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
@@ -372,9 +376,8 @@ function App() {
   const setDraggingConsumableIndex = useConsumables(
     (state) => state.setDraggingConsumableIndex,
   );
-  const [draggingJokerIndex, setDraggingJokerIndex] = useState<number | null>(
-    null,
-  );
+  const draggingJokerIndex = useJokers((state) => state.draggingJokerIndex);
+  const setDraggingJokerIndex = useJokers((state) => state.setDraggingJokerIndex);
   const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
   const [packPicksRemaining, setPackPicksRemaining] = useState(0);
   const [packPreviewHand, setPackPreviewHand] = useState<ReadonlyArray<Card>>(
