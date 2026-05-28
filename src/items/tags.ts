@@ -1,9 +1,14 @@
-export type TagId = "investment";
+import type { NextShopModifier } from "../run/nextShopMods";
+
+export type TagId = "investment" | "d6";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
   | { readonly category: "immediate" }
-  | { readonly category: "next-shop" };
+  | {
+      readonly category: "next-shop";
+      readonly modifiers: ReadonlyArray<NextShopModifier>;
+    };
 
 export interface TagSpec {
   readonly id: TagId;
@@ -20,6 +25,12 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     name: "Investment Tag",
     description: `After defeating the next Boss Blind, gain $${INVESTMENT_TAG_REWARD}.`,
     effect: { category: "deferred-boss-payout", amount: INVESTMENT_TAG_REWARD },
+  },
+  {
+    id: "d6",
+    name: "D6 Tag",
+    description: "Rerolls in the next shop start at $0.",
+    effect: { category: "next-shop", modifiers: [{ kind: "free-rerolls" }] },
   },
 ];
 

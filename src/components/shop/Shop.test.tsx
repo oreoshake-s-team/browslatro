@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Shop from "./Shop";
-import type { ShopItem } from "../../items/shop";
+import { BASE_REROLL_COST, type ShopItem } from "../../items/shop";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -329,6 +329,22 @@ describe("Shop", () => {
       await user.click(screen.getByRole("button", { name: /Reroll/ }));
       expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
         "Reroll ($5)",
+      );
+    });
+
+    test("a free-rerolls reduction makes the first reroll cost $0", () => {
+      renderShop({ extraRerollReduction: BASE_REROLL_COST });
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+        "Reroll ($0)",
+      );
+    });
+
+    test("the reroll cost still escalates from $0 under a free-rerolls reduction", async () => {
+      const user = userEvent.setup();
+      renderShop({ money: 20, extraRerollReduction: BASE_REROLL_COST });
+      await user.click(screen.getByRole("button", { name: /Reroll/ }));
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+        "Reroll ($1)",
       );
     });
   });

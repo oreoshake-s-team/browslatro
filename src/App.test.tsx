@@ -6,6 +6,7 @@ import {
   setAnimationSpeed,
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
+import { tagOfferRngConfig } from "./items/tags";
 import type { VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
@@ -3388,6 +3389,29 @@ describe("Skip tag offers", () => {
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(screen.getByTestId("blind-select-tag-0")).toHaveTextContent(
       "Investment Tag",
+    );
+  });
+});
+
+describe("D6 tag next-shop queue", () => {
+  test("gaining the D6 tag on skip makes the next shop's first reroll free", async () => {
+    tagOfferRngConfig.rng = () => 0.5;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+      "Reroll ($0)",
+    );
+  });
+
+  test("without a next-shop tag the next shop's first reroll costs the base $5 (negative)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/^🏆 Win$/));
+    expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
+      "Reroll ($5)",
     );
   });
 });

@@ -42,6 +42,24 @@ describe("Tag catalog", () => {
   });
 });
 
+describe("D6 tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("d6");
+  });
+
+  test("resolves to the next-shop category", () => {
+    expect(resolveTagEffect("d6").category).toBe("next-shop");
+  });
+
+  test("carries a free-rerolls next-shop modifier", () => {
+    const effect = resolveTagEffect("d6");
+    if (effect.category !== "next-shop") {
+      throw new Error("expected a next-shop effect");
+    }
+    expect(effect.modifiers).toEqual([{ kind: "free-rerolls" }]);
+  });
+});
+
 describe("resolveTagEffect", () => {
   test("Investment resolves to the deferred-boss-payout category", () => {
     expect(resolveTagEffect("investment").category).toBe("deferred-boss-payout");
@@ -75,7 +93,9 @@ describe("totalDeferredBossPayout", () => {
         (sum, e) => (e.category === "deferred-boss-payout" ? sum + e.amount : sum),
         0,
       );
-    expect(sumDeferred([{ category: "immediate" }, { category: "next-shop" }])).toBe(0);
+    expect(
+      sumDeferred([{ category: "immediate" }, { category: "next-shop", modifiers: [] }]),
+    ).toBe(0);
   });
 });
 
