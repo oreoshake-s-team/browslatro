@@ -22,6 +22,12 @@
   align-items: flex-start;
 }
 
+.game-overlay-deck {
+  display: flex;
+  align-items: flex-start;
+  margin-left: auto;
+}
+
 .modifier-grid button,
 .submit-hand-button {
   padding: 10px 20px;
