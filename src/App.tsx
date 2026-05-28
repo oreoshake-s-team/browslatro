@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useEconomy } from "./store/economy";
+import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -144,8 +145,6 @@ import {
   type Voucher,
   type VoucherId,
 } from "./items/vouchers";
-
-export const BASE_VOUCHER_SLOTS = 1;
 
 export const SCORING_STEP_MS = 500;
 
@@ -380,22 +379,21 @@ function App() {
   >(() => new Set());
   const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
   const [pendingTags, setPendingTags] = useState<ReadonlyArray<TagId>>([]);
-  const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
-    () => new Set(),
-  );
+  const ownedVoucherIds = useVouchers((state) => state.ownedVoucherIds);
+  const setOwnedVoucherIds = useVouchers((state) => state.setOwnedVoucherIds);
   const currentHandSize = Math.max(
     1,
     HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
   );
-  const [extraVoucherSlots, setExtraVoucherSlots] = useState(0);
+  const extraVoucherSlots = useVouchers((state) => state.extraVoucherSlots);
+  const setExtraVoucherSlots = useVouchers((state) => state.setExtraVoucherSlots);
   const [currentAnteVouchers, setCurrentAnteVouchers] = useState<
     ReadonlyArray<Voucher>
   >(() =>
     pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
   );
-  const [soldVoucherIds, setSoldVoucherIds] = useState<ReadonlySet<VoucherId>>(
-    () => new Set(),
-  );
+  const soldVoucherIds = useVouchers((state) => state.soldVoucherIds);
+  const setSoldVoucherIds = useVouchers((state) => state.setSoldVoucherIds);
   const [currentBoss, setCurrentBoss] = useState<BossBlind>(() =>
     pickBossForAnte({ ante: 1 }),
   );
@@ -1353,7 +1351,6 @@ function App() {
     setHandSizeModifier(0);
     setExtraPackSlots(0);
     setPendingForcedPacks([]);
-    setExtraVoucherSlots(0);
     setDevChipsBonus(0);
     setDevMultBonus(0);
     setDevMultFactor(1);
@@ -1365,12 +1362,10 @@ function App() {
     setAddedCards([]);
     setCardEnhancementsByKey(new Map());
     setConsumables([]);
-    const freshOwned = new Set<VoucherId>();
-    setOwnedVoucherIds(freshOwned);
+    useVouchers.getState().resetVouchers();
     setCurrentAnteVouchers(
-      pickVouchersForAnte({ ante: 1, ownedIds: freshOwned }, BASE_VOUCHER_SLOTS),
+      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
     );
-    setSoldVoucherIds(new Set());
     setRecentBossIds(new Set());
     const freshBoss = pickBossForAnte({
       ante: 1,
