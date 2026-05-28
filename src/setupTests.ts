@@ -3,6 +3,7 @@ import { STARTING_MONEY, useEconomy } from "./store/economy";
 import { useVouchers } from "./store/vouchers";
 import { useStats } from "./store/stats";
 import { useProgression } from "./store/progression";
+import { useConsumables } from "./store/consumables";
 
 beforeEach(() => {
   useEconomy.setState({ money: STARTING_MONEY });
@@ -10,6 +11,7 @@ beforeEach(() => {
   useStats.getState().resetStats();
   useStats.getState().setHandPlaySignal(0);
   useProgression.getState().resetProgression();
+  useConsumables.getState().resetConsumables();
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }

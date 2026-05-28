@@ -4,6 +4,7 @@ import { useEconomy } from "./store/economy";
 import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
 import { useStats } from "./store/stats";
 import { useProgression } from "./store/progression";
+import { useConsumables } from "./store/consumables";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -358,15 +359,19 @@ function App() {
   const [soldJokerIdsThisShopVisit, setSoldJokerIdsThisShopVisit] = useState<
     ReadonlyArray<string>
   >([]);
-  const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
+  const consumables = useConsumables((state) => state.consumables);
+  const setConsumables = useConsumables((state) => state.setConsumables);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
   const [extraPackSlots, setExtraPackSlots] = useState(0);
   const [pendingForcedPacks, setPendingForcedPacks] = useState<
     ReadonlyArray<PackPool>
   >([]);
-  const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
-    number | null
-  >(null);
+  const draggingConsumableIndex = useConsumables(
+    (state) => state.draggingConsumableIndex,
+  );
+  const setDraggingConsumableIndex = useConsumables(
+    (state) => state.setDraggingConsumableIndex,
+  );
   const [draggingJokerIndex, setDraggingJokerIndex] = useState<number | null>(
     null,
   );
