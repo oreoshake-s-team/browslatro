@@ -1539,14 +1539,14 @@ describe("Post-round shop integration", () => {
   test("Reroll does not change the pack offer names (#374)", async () => {
     const user = await openShop();
     const before = packNames();
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     expect(packNames()).toEqual(before);
   });
 
   test("Reroll preserves the number of pack offers (#374)", async () => {
     const user = await openShop();
     const beforeCount = packNames().length;
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     expect(packNames().length).toBe(beforeCount);
   });
 
@@ -1560,7 +1560,7 @@ describe("Post-round shop integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByTestId("pack-open-close"));
-    await user.click(screen.getByRole("button", { name: /Reroll/ }));
+    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const afterPack = document.querySelector<HTMLElement>(
       "[data-offer-kind='pack']",
     );
