@@ -1,10 +1,13 @@
 import "@testing-library/jest-dom";
 import { STARTING_MONEY, useEconomy } from "./store/economy";
 import { useVouchers } from "./store/vouchers";
+import { useStats } from "./store/stats";
 
 beforeEach(() => {
   useEconomy.setState({ money: STARTING_MONEY });
   useVouchers.getState().resetVouchers();
+  useStats.getState().resetStats();
+  useStats.getState().setHandPlaySignal(0);
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }
