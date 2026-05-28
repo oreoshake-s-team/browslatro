@@ -26,6 +26,13 @@ import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModa
 import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import { totalDeferredBossPayout, type TagId } from "./items/tags";
+import {
+  initialRunStats,
+  recordBlindSkipped,
+  recordHandPlayed,
+  recordUnusedDiscards,
+  type RunStats,
+} from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
   createSpectralCatalog,
@@ -256,6 +263,7 @@ function App() {
   const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
   const [remainingHands, setRemainingHands] = useState(4);
   const [remainingDiscards, setRemainingDiscards] = useState(3);
+  const [runStats, setRunStats] = useState<RunStats>(initialRunStats());
   const [dealt, setDealt] = useState<DealResult>(initialDeal);
   const [highVisibility, setHighVisibility] = useState<boolean>(isHighVisibility);
   const [animationSpeed, setAnimationSpeedState] = useState<AnimationSpeed>(
@@ -734,6 +742,7 @@ function App() {
     precomputed?: { readonly interest: number; readonly interestWallet: number },
   ) {
     setRound((prev) => prev + 1);
+    setRunStats((prev) => recordUnusedDiscards(prev, remainingDiscards));
     const blindReward = blind + 2;
     const interestBefore = precomputed?.interestWallet ?? money;
     const interest =
@@ -1261,6 +1270,7 @@ function App() {
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
     setPendingTags((prev) => [...prev, "investment"]);
+    setRunStats(recordBlindSkipped);
   }
 
   function adjustVoucherSlots(delta: number) {
@@ -1375,6 +1385,7 @@ function App() {
     });
     setCurrentBoss(freshBoss);
     setPendingTags([]);
+    setRunStats(initialRunStats());
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
     setPendingBlindSelect(true);
@@ -1511,6 +1522,7 @@ function App() {
     pendingHandPlayResetRef.current = true;
 
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
+    setRunStats(recordHandPlayed);
     setHandHistoryThisRound((prev) => [...prev, label]);
     setPlayedCardKeysThisAnte((prev) => {
       const next = new Set(prev);
@@ -1826,6 +1838,9 @@ function App() {
     <div
       className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}
       style={appStyle}
+      data-hands-played={runStats.handsPlayed}
+      data-unused-discards={runStats.unusedDiscards}
+      data-blinds-skipped={runStats.blindsSkipped}
     >
       <Sidebar
         blind={blind}
