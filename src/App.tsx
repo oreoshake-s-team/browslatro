@@ -10,6 +10,7 @@ import { useShop } from "./store/shop";
 import { usePacks } from "./store/packs";
 import { useHand } from "./store/hand";
 import { useScoring } from "./store/scoring";
+import { useDevModifiers } from "./store/devModifiers";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -248,10 +249,16 @@ function App() {
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
   // so the displayed chips/multiplier reflect manual bumps until a New game
   // resets them. See #265.
-  const [devChipsBonus, setDevChipsBonus] = useState(0);
-  const [devMultBonus, setDevMultBonus] = useState(0);
-  const [devMultFactor, setDevMultFactor] = useState(1);
-  const [forceProbabilities, setForceProbabilities] = useState(false);
+  const devChipsBonus = useDevModifiers((state) => state.devChipsBonus);
+  const setDevChipsBonus = useDevModifiers((state) => state.setDevChipsBonus);
+  const devMultBonus = useDevModifiers((state) => state.devMultBonus);
+  const setDevMultBonus = useDevModifiers((state) => state.setDevMultBonus);
+  const devMultFactor = useDevModifiers((state) => state.devMultFactor);
+  const setDevMultFactor = useDevModifiers((state) => state.setDevMultFactor);
+  const forceProbabilities = useDevModifiers((state) => state.forceProbabilities);
+  const setForceProbabilities = useDevModifiers(
+    (state) => state.setForceProbabilities,
+  );
   useEffect(() => {
     chanceOverrideConfig.force100 = forceProbabilities;
     return () => {
