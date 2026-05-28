@@ -14,6 +14,7 @@ const KNOWN_CATEGORIES: ReadonlyArray<TagEffect["category"]> = [
   "deferred-boss-payout",
   "immediate",
   "next-shop",
+  "next-round",
 ];
 
 describe("INVESTMENT_TAG_REWARD", () => {
@@ -244,6 +245,18 @@ describe("Orbital tag", () => {
     const effect = resolveTagEffect("orbital");
     if (effect.category !== "immediate") throw new Error("expected immediate");
     expect(effect.action).toEqual({ kind: "upgrade-hand", levels: 3 });
+  });
+});
+
+describe("Juggle tag", () => {
+  test("is included in the catalog", () => {
+    expect(createTagCatalog().map((t) => t.id)).toContain("juggle");
+  });
+
+  test("resolves to a next-round +3 hand-size effect", () => {
+    const effect = resolveTagEffect("juggle");
+    if (effect.category !== "next-round") throw new Error("expected next-round");
+    expect(effect.handSizeBonus).toBe(3);
   });
 });
 

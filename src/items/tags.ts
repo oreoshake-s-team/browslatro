@@ -19,7 +19,8 @@ export type TagId =
   | "voucher"
   | "top-up"
   | "boss"
-  | "orbital";
+  | "orbital"
+  | "juggle";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
@@ -27,7 +28,8 @@ export type TagEffect =
   | {
       readonly category: "next-shop";
       readonly modifiers: ReadonlyArray<NextShopModifier>;
-    };
+    }
+  | { readonly category: "next-round"; readonly handSizeBonus: number };
 
 export interface TagSpec {
   readonly id: TagId;
@@ -194,6 +196,12 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
       category: "immediate",
       action: { kind: "upgrade-hand", levels: 3 },
     },
+  },
+  {
+    id: "juggle",
+    name: "Juggle Tag",
+    description: "+3 hand size for the next round.",
+    effect: { category: "next-round", handSizeBonus: 3 },
   },
 ];
 
