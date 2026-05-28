@@ -40,7 +40,7 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 
 # Work with feature branches
 
-- When creating a new issue, in addition to using semantic naming, add GitHub tags for the issue type and feature space (e.g. shop).
+- When creating a new issue, in addition to using semantic naming, set GitHub's native issue type (one of: `Bug`, `Feature`, `Task`, `Refactor`, `Chore`) and add a label for the feature space (e.g. shop). Do not use labels for the issue type.
 - When asked to complete a task, first create a new branch based on the issue number and title. Do not commit directly to main. Create a pull request when done.
 - Don't escape backtick literals (\`) in PR descriptions
 - Always merge/rebase main before pushing new code, including every update to existing branches/PRs.
