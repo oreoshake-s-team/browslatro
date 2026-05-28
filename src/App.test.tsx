@@ -3679,3 +3679,23 @@ describe("Orbital tag", () => {
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("1");
   });
 });
+
+describe("Juggle tag", () => {
+  test("gaining Juggle deals 3 extra cards in the next round", async () => {
+    tagOfferRngConfig.rng = rngForTag("juggle");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(getHandCardButtons()).toHaveLength(11);
+  });
+
+  test("a non-Juggle tag deals the normal hand size (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(getHandCardButtons()).toHaveLength(8);
+  });
+});

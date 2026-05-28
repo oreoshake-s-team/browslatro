@@ -388,6 +388,7 @@ function App() {
   >([]);
   const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
   const [handSizeModifier, setHandSizeModifier] = useState(0);
+  const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
   const [extraPackSlots, setExtraPackSlots] = useState(0);
   const [pendingForcedPacks, setPendingForcedPacks] = useState<
     ReadonlyArray<PackPool>
@@ -460,7 +461,9 @@ function App() {
     const effectiveBoss =
       opts.boss !== undefined ? opts.boss : currentBoss;
     const isBossRound = effectiveBlind === 3;
-    const baseHandSize = opts.handSizeOverride ?? currentHandSize;
+    const baseHandSize =
+      (opts.handSizeOverride ?? currentHandSize) + pendingNextRoundHandSize;
+    if (pendingNextRoundHandSize !== 0) setPendingNextRoundHandSize(0);
     const startingHands =
       (isBossRound
         ? bossStartingHands(effectiveBoss)
@@ -1396,6 +1399,8 @@ function App() {
     setPendingTags((prev) => [...prev, offered]);
     if (effect.category === "next-shop") {
       setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
+    } else if (effect.category === "next-round") {
+      setPendingNextRoundHandSize((prev) => prev + effect.handSizeBonus);
     }
   }
 
@@ -1484,6 +1489,7 @@ function App() {
     setAnte(1);
     setMoney(4);
     setHandSizeModifier(0);
+    setPendingNextRoundHandSize(0);
     setExtraPackSlots(0);
     setPendingForcedPacks([]);
     setExtraVoucherSlots(0);
