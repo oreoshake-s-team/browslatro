@@ -25,7 +25,7 @@ import Game from "./components/game/Game";
 import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
 import { packPickLimit, type PackOffer, type PackPool } from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
-import { totalTagPayout, type TagId } from "./items/tags";
+import { totalDeferredBossPayout, type TagId } from "./items/tags";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
   createSpectralCatalog,
@@ -755,7 +755,7 @@ function App() {
     if (blind < 3) {
       setBlind((prev) => (prev + 1) as Blind);
     } else {
-      const tagPayout = totalTagPayout(pendingTags);
+      const tagPayout = totalDeferredBossPayout(pendingTags);
       if (tagPayout > 0) {
         setMoney((prev) => prev + tagPayout);
         setPendingTags([]);
