@@ -1,9 +1,15 @@
 export type TagId = "investment";
 
+export type TagEffect =
+  | { readonly category: "deferred-boss-payout"; readonly amount: number }
+  | { readonly category: "immediate" }
+  | { readonly category: "next-shop" };
+
 export interface TagSpec {
   readonly id: TagId;
   readonly name: string;
   readonly description: string;
+  readonly effect: TagEffect;
 }
 
 export const INVESTMENT_TAG_REWARD = 25;
@@ -13,6 +19,7 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     id: "investment",
     name: "Investment Tag",
     description: `After defeating the next Boss Blind, gain $${INVESTMENT_TAG_REWARD}.`,
+    effect: { category: "deferred-boss-payout", amount: INVESTMENT_TAG_REWARD },
   },
 ];
 
@@ -26,11 +33,13 @@ export function getTagSpec(id: TagId): TagSpec {
   return spec;
 }
 
-export function tagPayout(id: TagId): number {
-  if (id === "investment") return INVESTMENT_TAG_REWARD;
-  return 0;
+export function resolveTagEffect(id: TagId): TagEffect {
+  return getTagSpec(id).effect;
 }
 
-export function totalTagPayout(ids: ReadonlyArray<TagId>): number {
-  return ids.reduce((sum, id) => sum + tagPayout(id), 0);
+export function totalDeferredBossPayout(ids: ReadonlyArray<TagId>): number {
+  return ids.reduce((sum, id) => {
+    const effect = resolveTagEffect(id);
+    return effect.category === "deferred-boss-payout" ? sum + effect.amount : sum;
+  }, 0);
 }
