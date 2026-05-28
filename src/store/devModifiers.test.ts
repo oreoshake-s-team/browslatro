@@ -1,37 +1,37 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { useDevModifiers } from "./devModifiers";
+import { useGame } from "./game";
 
 describe("dev modifiers store", () => {
   beforeEach(() => {
-    useDevModifiers.getState().resetDevModifiers();
+    useGame.getState().resetDevModifiers();
   });
 
   test("starts with no chip bonus", () => {
-    expect(useDevModifiers.getState().devChipsBonus).toBe(0);
+    expect(useGame.getState().devChipsBonus).toBe(0);
   });
 
   test("starts with a neutral mult factor", () => {
-    expect(useDevModifiers.getState().devMultFactor).toBe(1);
+    expect(useGame.getState().devMultFactor).toBe(1);
   });
 
   test("setDevChipsBonus accepts an updater function", () => {
-    useDevModifiers.getState().setDevChipsBonus((prev) => prev + 10);
-    expect(useDevModifiers.getState().devChipsBonus).toBe(10);
+    useGame.getState().setDevChipsBonus((prev) => prev + 10);
+    expect(useGame.getState().devChipsBonus).toBe(10);
   });
 
   test("setDevMultFactor accepts an updater function", () => {
-    useDevModifiers.getState().setDevMultFactor((prev) => prev * 2);
-    expect(useDevModifiers.getState().devMultFactor).toBe(2);
+    useGame.getState().setDevMultFactor((prev) => prev * 2);
+    expect(useGame.getState().devMultFactor).toBe(2);
   });
 
   test("setForceProbabilities accepts an updater function", () => {
-    useDevModifiers.getState().setForceProbabilities((prev) => !prev);
-    expect(useDevModifiers.getState().forceProbabilities).toBe(true);
+    useGame.getState().setForceProbabilities((prev) => !prev);
+    expect(useGame.getState().forceProbabilities).toBe(true);
   });
 
   test("resetDevModifiers restores the neutral mult factor", () => {
-    useDevModifiers.getState().setDevMultFactor(5);
-    useDevModifiers.getState().resetDevModifiers();
-    expect(useDevModifiers.getState().devMultFactor).toBe(1);
+    useGame.getState().setDevMultFactor(5);
+    useGame.getState().resetDevModifiers();
+    expect(useGame.getState().devMultFactor).toBe(1);
   });
 });

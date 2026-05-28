@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import { pickBossForAnte, type BossBlind } from "../items/bosses";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { RoundWonInfo } from "../components/game/RoundWonModal";
@@ -31,7 +32,7 @@ export interface BossState {
   resetBoss: () => void;
 }
 
-export const useBoss = create<BossState>()((set) => ({
+export const createBossSlice: StateCreator<GameState, [], [], BossState> = (set) => ({
   currentBoss: freshBoss(),
   recentBossIds: new Set(),
   handHistoryThisRound: [],
@@ -63,4 +64,4 @@ export const useBoss = create<BossState>()((set) => ({
       pendingWin: null,
       handSizeModifier: 0,
     }),
-}));
+});

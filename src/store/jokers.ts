@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import { initialJokersConfig, type Joker } from "../items/jokers";
 
 type Updater<T> = T | ((prev: T) => T);
@@ -23,7 +24,7 @@ export interface JokersState {
   resetJokers: () => void;
 }
 
-export const useJokers = create<JokersState>()((set) => ({
+export const createJokersSlice: StateCreator<GameState, [], [], JokersState> = (set) => ({
   jokers: initialJokersConfig.factory(),
   jokerPulseCounters: {},
   draggingJokerIndex: null,
@@ -48,4 +49,4 @@ export const useJokers = create<JokersState>()((set) => ({
       draggingJokerIndex: null,
       soldJokerIdsThisShopVisit: [],
     }),
-}));
+});

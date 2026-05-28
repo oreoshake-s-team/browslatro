@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import { emptyHandCounts, type HandPlayCounts } from "../components/hud/RunInfo";
 import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
 
@@ -20,7 +21,7 @@ export interface StatsState {
   resetStats: () => void;
 }
 
-export const useStats = create<StatsState>()((set) => ({
+export const createStatsSlice: StateCreator<GameState, [], [], StatsState> = (set) => ({
   handPlayCounts: emptyHandCounts(),
   handStats: createDefaultHandStats(),
   handPlaySignal: 0,
@@ -35,4 +36,4 @@ export const useStats = create<StatsState>()((set) => ({
       handPlayCounts: emptyHandCounts(),
       handStats: createDefaultHandStats(),
     }),
-}));
+});

@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -20,7 +21,7 @@ export interface DevModifiersState {
   resetDevModifiers: () => void;
 }
 
-export const useDevModifiers = create<DevModifiersState>()((set) => ({
+export const createDevModifiersSlice: StateCreator<GameState, [], [], DevModifiersState> = (set) => ({
   devChipsBonus: 0,
   devMultBonus: 0,
   devMultFactor: 1,
@@ -42,4 +43,4 @@ export const useDevModifiers = create<DevModifiersState>()((set) => ({
       devMultFactor: 1,
       forceProbabilities: false,
     }),
-}));
+});

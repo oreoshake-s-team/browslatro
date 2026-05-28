@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { ScoringEvent } from "../scoring/scoringTrace";
 import type { Card } from "../cards/types";
 import type { JokerHandLevelStep } from "../items/jokers";
@@ -58,7 +59,7 @@ function createInitialAnimation() {
   };
 }
 
-export const useScoring = create<ScoringState>()((set) => ({
+export const createScoringSlice: StateCreator<GameState, [], [], ScoringState> = (set) => ({
   chips: 0,
   multiplier: 0,
   roundScore: 0,
@@ -107,4 +108,4 @@ export const useScoring = create<ScoringState>()((set) => ({
       scoringEvents: [],
       ...createInitialAnimation(),
     }),
-}));
+});

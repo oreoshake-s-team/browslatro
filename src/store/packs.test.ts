@@ -1,33 +1,33 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { usePacks } from "./packs";
+import { useGame } from "./game";
 
 describe("packs store", () => {
   beforeEach(() => {
-    usePacks.getState().resetPacks();
+    useGame.getState().resetPacks();
   });
 
   test("starts with no opened pack", () => {
-    expect(usePacks.getState().openedPack).toBeNull();
+    expect(useGame.getState().openedPack).toBeNull();
   });
 
   test("starts with zero pack picks remaining", () => {
-    expect(usePacks.getState().packPicksRemaining).toBe(0);
+    expect(useGame.getState().packPicksRemaining).toBe(0);
   });
 
   test("setPackPicksRemaining accepts an updater function", () => {
-    usePacks.getState().setPackPicksRemaining(3);
-    usePacks.getState().setPackPicksRemaining((prev) => prev - 1);
-    expect(usePacks.getState().packPicksRemaining).toBe(2);
+    useGame.getState().setPackPicksRemaining(3);
+    useGame.getState().setPackPicksRemaining((prev) => prev - 1);
+    expect(useGame.getState().packPicksRemaining).toBe(2);
   });
 
   test("setPendingForcedPacks accepts an updater function", () => {
-    usePacks.getState().setPendingForcedPacks((prev) => [...prev, "arcana"]);
-    expect(usePacks.getState().pendingForcedPacks).toContain("arcana");
+    useGame.getState().setPendingForcedPacks((prev) => [...prev, "arcana"]);
+    expect(useGame.getState().pendingForcedPacks).toContain("arcana");
   });
 
   test("resetPacks clears pending forced packs", () => {
-    usePacks.getState().setPendingForcedPacks(["arcana", "spectral"]);
-    usePacks.getState().resetPacks();
-    expect(usePacks.getState().pendingForcedPacks).toHaveLength(0);
+    useGame.getState().setPendingForcedPacks(["arcana", "spectral"]);
+    useGame.getState().resetPacks();
+    expect(useGame.getState().pendingForcedPacks).toHaveLength(0);
   });
 });

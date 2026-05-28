@@ -19,7 +19,7 @@ import {
   initialJokersConfig,
 } from "./items/jokers";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
-import { useScoring } from "./store/scoring";
+import { useGame } from "./store/game";
 import {
   dismissBlindSelect,
   dragCardToGap,
@@ -3080,7 +3080,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       document.querySelector(".round-score-value")?.textContent ?? "0",
     );
     unmount();
-    useScoring.getState().resetScoring();
+    useGame.getState().resetScoring();
 
     mockShuffleConfig.useIdentity = true;
     const userB = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3108,7 +3108,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       document.querySelector(".round-score-value")?.textContent ?? "0",
     );
     unmount();
-    useScoring.getState().resetScoring();
+    useGame.getState().resetScoring();
 
     mockShuffleConfig.useIdentity = true;
     const userB = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });

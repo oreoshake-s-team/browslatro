@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { Blind } from "../cards/types";
 import type { TagId } from "../items/tags";
 
@@ -24,7 +25,7 @@ export interface ProgressionState {
   resetProgression: () => void;
 }
 
-export const useProgression = create<ProgressionState>()((set) => ({
+export const createProgressionSlice: StateCreator<GameState, [], [], ProgressionState> = (set) => ({
   blind: 1,
   round: 1,
   ante: 1,
@@ -47,4 +48,4 @@ export const useProgression = create<ProgressionState>()((set) => ({
       pendingBlindSelect: true,
       pendingTags: [],
     }),
-}));
+});

@@ -1,19 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
-import { useEconomy } from "./store/economy";
-import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
-import { useStats } from "./store/stats";
-import { useProgression } from "./store/progression";
-import { useConsumables } from "./store/consumables";
-import { useJokers } from "./store/jokers";
-import { useShop } from "./store/shop";
-import { usePacks } from "./store/packs";
-import { useHand } from "./store/hand";
-import { useScoring } from "./store/scoring";
-import { useDevModifiers } from "./store/devModifiers";
-import { useDeck } from "./store/deck";
-import { useBoss } from "./store/boss";
-import { useRun } from "./store/run";
+import { useGame } from "./store/game";
+import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -263,28 +251,28 @@ function fullDeckPile(
 }
 
 function App() {
-  const blind = useProgression((state) => state.blind);
-  const setBlind = useProgression((state) => state.setBlind);
-  const round = useProgression((state) => state.round);
-  const setRound = useProgression((state) => state.setRound);
-  const ante = useProgression((state) => state.ante);
-  const setAnte = useProgression((state) => state.setAnte);
-  const money = useEconomy((state) => state.money);
-  const chips = useScoring((state) => state.chips);
-  const setChips = useScoring((state) => state.setChips);
-  const multiplier = useScoring((state) => state.multiplier);
-  const setMultiplier = useScoring((state) => state.setMultiplier);
+  const blind = useGame((state) => state.blind);
+  const setBlind = useGame((state) => state.setBlind);
+  const round = useGame((state) => state.round);
+  const setRound = useGame((state) => state.setRound);
+  const ante = useGame((state) => state.ante);
+  const setAnte = useGame((state) => state.setAnte);
+  const money = useGame((state) => state.money);
+  const chips = useGame((state) => state.chips);
+  const setChips = useGame((state) => state.setChips);
+  const multiplier = useGame((state) => state.multiplier);
+  const setMultiplier = useGame((state) => state.setMultiplier);
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
   // so the displayed chips/multiplier reflect manual bumps until a New game
   // resets them. See #265.
-  const devChipsBonus = useDevModifiers((state) => state.devChipsBonus);
-  const setDevChipsBonus = useDevModifiers((state) => state.setDevChipsBonus);
-  const devMultBonus = useDevModifiers((state) => state.devMultBonus);
-  const setDevMultBonus = useDevModifiers((state) => state.setDevMultBonus);
-  const devMultFactor = useDevModifiers((state) => state.devMultFactor);
-  const setDevMultFactor = useDevModifiers((state) => state.setDevMultFactor);
-  const forceProbabilities = useDevModifiers((state) => state.forceProbabilities);
-  const setForceProbabilities = useDevModifiers(
+  const devChipsBonus = useGame((state) => state.devChipsBonus);
+  const setDevChipsBonus = useGame((state) => state.setDevChipsBonus);
+  const devMultBonus = useGame((state) => state.devMultBonus);
+  const setDevMultBonus = useGame((state) => state.setDevMultBonus);
+  const devMultFactor = useGame((state) => state.devMultFactor);
+  const setDevMultFactor = useGame((state) => state.setDevMultFactor);
+  const forceProbabilities = useGame((state) => state.forceProbabilities);
+  const setForceProbabilities = useGame(
     (state) => state.setForceProbabilities,
   );
   useEffect(() => {
@@ -293,61 +281,61 @@ function App() {
       chanceOverrideConfig.force100 = false;
     };
   }, [forceProbabilities]);
-  const roundScore = useScoring((state) => state.roundScore);
-  const setRoundScore = useScoring((state) => state.setRoundScore);
-  const selectedHand = useHand((state) => state.selectedHand);
-  const setSelectedHand = useHand((state) => state.setSelectedHand);
-  const remainingHands = useHand((state) => state.remainingHands);
-  const setRemainingHands = useHand((state) => state.setRemainingHands);
-  const remainingDiscards = useHand((state) => state.remainingDiscards);
-  const setRemainingDiscards = useHand((state) => state.setRemainingDiscards);
-  const runStats = useRun((state) => state.runStats);
-  const setRunStats = useRun((state) => state.setRunStats);
-  const dealt = useDeck((state) => state.dealt);
-  const setDealt = useDeck((state) => state.setDealt);
+  const roundScore = useGame((state) => state.roundScore);
+  const setRoundScore = useGame((state) => state.setRoundScore);
+  const selectedHand = useGame((state) => state.selectedHand);
+  const setSelectedHand = useGame((state) => state.setSelectedHand);
+  const remainingHands = useGame((state) => state.remainingHands);
+  const setRemainingHands = useGame((state) => state.setRemainingHands);
+  const remainingDiscards = useGame((state) => state.remainingDiscards);
+  const setRemainingDiscards = useGame((state) => state.setRemainingDiscards);
+  const runStats = useGame((state) => state.runStats);
+  const setRunStats = useGame((state) => state.setRunStats);
+  const dealt = useGame((state) => state.dealt);
+  const setDealt = useGame((state) => state.setDealt);
   useEffect(() => {
     setDealt(initialDeal());
   }, [setDealt]);
   const highVisibility = usePreferences((state) => state.highVisibility);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
-  const selectedIds = useHand((state) => state.selectedIds);
-  const setSelectedIds = useHand((state) => state.setSelectedIds);
-  const discardingIds = useHand((state) => state.discardingIds);
-  const setDiscardingIds = useHand((state) => state.setDiscardingIds);
-  const handDisplayOrder = useHand((state) => state.handDisplayOrder);
-  const setHandDisplayOrder = useHand((state) => state.setHandDisplayOrder);
-  const jokers = useJokers((state) => state.jokers);
-  const setJokers = useJokers((state) => state.setJokers);
-  const jokerPulseCounters = useJokers((state) => state.jokerPulseCounters);
-  const setJokerPulseCounters = useJokers((state) => state.setJokerPulseCounters);
+  const selectedIds = useGame((state) => state.selectedIds);
+  const setSelectedIds = useGame((state) => state.setSelectedIds);
+  const discardingIds = useGame((state) => state.discardingIds);
+  const setDiscardingIds = useGame((state) => state.setDiscardingIds);
+  const handDisplayOrder = useGame((state) => state.handDisplayOrder);
+  const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
+  const jokers = useGame((state) => state.jokers);
+  const setJokers = useGame((state) => state.setJokers);
+  const jokerPulseCounters = useGame((state) => state.jokerPulseCounters);
+  const setJokerPulseCounters = useGame((state) => state.setJokerPulseCounters);
   useEffect(() => {
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
-  const handPlayCounts = useStats((state) => state.handPlayCounts);
-  const setHandPlayCounts = useStats((state) => state.setHandPlayCounts);
-  const handStats = useStats((state) => state.handStats);
-  const setHandStats = useStats((state) => state.setHandStats);
+  const handPlayCounts = useGame((state) => state.handPlayCounts);
+  const setHandPlayCounts = useGame((state) => state.setHandPlayCounts);
+  const handStats = useGame((state) => state.handStats);
+  const setHandStats = useGame((state) => state.setHandStats);
   const pendingDiscardCountRef = useRef(0);
   const pendingHandPlayResetRef = useRef(false);
-  const handPlaySignal = useStats((state) => state.handPlaySignal);
-  const setHandPlaySignal = useStats((state) => state.setHandPlaySignal);
+  const handPlaySignal = useGame((state) => state.handPlaySignal);
+  const setHandPlaySignal = useGame((state) => state.setHandPlaySignal);
   const skipDrawAfterDiscardRef = useRef(false);
-  const destroyedCardKeys = useDeck((state) => state.destroyedCardKeys);
-  const setDestroyedCardKeys = useDeck((state) => state.setDestroyedCardKeys);
-  const scoringEvents = useScoring((state) => state.scoringEvents);
-  const setScoringEvents = useScoring((state) => state.setScoringEvents);
+  const destroyedCardKeys = useGame((state) => state.destroyedCardKeys);
+  const setDestroyedCardKeys = useGame((state) => state.setDestroyedCardKeys);
+  const scoringEvents = useGame((state) => state.scoringEvents);
+  const setScoringEvents = useGame((state) => state.setScoringEvents);
 
   function pushScoringEvent(event: ScoringEvent) {
     setScoringEvents((prev) => [...prev, event]);
   }
-  const addedCards = useDeck((state) => state.addedCards);
-  const setAddedCards = useDeck((state) => state.setAddedCards);
-  const cardEnhancementsByKey = useDeck((state) => state.cardEnhancementsByKey);
-  const setCardEnhancementsByKey = useDeck(
+  const addedCards = useGame((state) => state.addedCards);
+  const setAddedCards = useGame((state) => state.setAddedCards);
+  const cardEnhancementsByKey = useGame((state) => state.cardEnhancementsByKey);
+  const setCardEnhancementsByKey = useGame(
     (state) => state.setCardEnhancementsByKey,
   );
-  const cardSealsByKey = useDeck((state) => state.cardSealsByKey);
-  const setCardSealsByKey = useDeck((state) => state.setCardSealsByKey);
+  const cardSealsByKey = useGame((state) => state.cardSealsByKey);
+  const setCardSealsByKey = useGame((state) => state.setCardSealsByKey);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -361,116 +349,116 @@ function App() {
   }
 
   // Sequential scoring state.
-  const scoringCards = useScoring((state) => state.scoringCards);
-  const setScoringCards = useScoring((state) => state.setScoringCards);
-  const scoringIndex = useScoring((state) => state.scoringIndex);
-  const setScoringIndex = useScoring((state) => state.setScoringIndex);
+  const scoringCards = useGame((state) => state.scoringCards);
+  const setScoringCards = useGame((state) => state.setScoringCards);
+  const scoringIndex = useGame((state) => state.scoringIndex);
+  const setScoringIndex = useGame((state) => state.setScoringIndex);
   const scoringFinalizeRef = useRef<(() => void) | null>(null);
   const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
   const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
 
-  const goldScoringIds = useScoring((state) => state.goldScoringIds);
-  const setGoldScoringIds = useScoring((state) => state.setGoldScoringIds);
-  const goldScoringIndex = useScoring((state) => state.goldScoringIndex);
-  const setGoldScoringIndex = useScoring((state) => state.setGoldScoringIndex);
+  const goldScoringIds = useGame((state) => state.goldScoringIds);
+  const setGoldScoringIds = useGame((state) => state.setGoldScoringIds);
+  const goldScoringIndex = useGame((state) => state.goldScoringIndex);
+  const setGoldScoringIndex = useGame((state) => state.setGoldScoringIndex);
   const goldFinalizeRef = useRef<(() => void) | null>(null);
   const currentGoldScoringId =
     goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
       ? goldScoringIds[goldScoringIndex]
       : null;
 
-  const steelScoringIds = useScoring((state) => state.steelScoringIds);
-  const setSteelScoringIds = useScoring((state) => state.setSteelScoringIds);
-  const steelScoringIndex = useScoring((state) => state.steelScoringIndex);
-  const setSteelScoringIndex = useScoring((state) => state.setSteelScoringIndex);
+  const steelScoringIds = useGame((state) => state.steelScoringIds);
+  const setSteelScoringIds = useGame((state) => state.setSteelScoringIds);
+  const steelScoringIndex = useGame((state) => state.steelScoringIndex);
+  const setSteelScoringIndex = useGame((state) => state.setSteelScoringIndex);
   const steelFinalizeRef = useRef<(() => void) | null>(null);
   const currentSteelScoringId =
     steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length
       ? steelScoringIds[steelScoringIndex]
       : null;
 
-  const luckyMultProcIds = useScoring((state) => state.luckyMultProcIds);
-  const setLuckyMultProcIds = useScoring((state) => state.setLuckyMultProcIds);
-  const luckyMoneyProcIds = useScoring((state) => state.luckyMoneyProcIds);
-  const setLuckyMoneyProcIds = useScoring((state) => state.setLuckyMoneyProcIds);
+  const luckyMultProcIds = useGame((state) => state.luckyMultProcIds);
+  const setLuckyMultProcIds = useGame((state) => state.setLuckyMultProcIds);
+  const luckyMoneyProcIds = useGame((state) => state.luckyMoneyProcIds);
+  const setLuckyMoneyProcIds = useGame((state) => state.setLuckyMoneyProcIds);
 
   const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
   function triggerNopeAnimation() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
-  const handLevelSteps = useScoring((state) => state.handLevelSteps);
-  const setHandLevelSteps = useScoring((state) => state.setHandLevelSteps);
-  const handLevelIndex = useScoring((state) => state.handLevelIndex);
-  const setHandLevelIndex = useScoring((state) => state.setHandLevelIndex);
+  const handLevelSteps = useGame((state) => state.handLevelSteps);
+  const setHandLevelSteps = useGame((state) => state.setHandLevelSteps);
+  const handLevelIndex = useGame((state) => state.handLevelIndex);
+  const setHandLevelIndex = useGame((state) => state.setHandLevelIndex);
   const handLevelFinalizeRef = useRef<(() => void) | null>(null);
 
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
-  const pendingWin = useBoss((state) => state.pendingWin);
-  const setPendingWin = useBoss((state) => state.setPendingWin);
+  const pendingWin = useGame((state) => state.pendingWin);
+  const setPendingWin = useGame((state) => state.setPendingWin);
 
-  const shopOffers = useShop((state) => state.shopOffers);
-  const setShopOffers = useShop((state) => state.setShopOffers);
-  const soldJokerIdsThisShopVisit = useJokers(
+  const shopOffers = useGame((state) => state.shopOffers);
+  const setShopOffers = useGame((state) => state.setShopOffers);
+  const soldJokerIdsThisShopVisit = useGame(
     (state) => state.soldJokerIdsThisShopVisit,
   );
-  const setSoldJokerIdsThisShopVisit = useJokers(
+  const setSoldJokerIdsThisShopVisit = useGame(
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
   const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
   const [pendingDouble, setPendingDouble] = useState(false);
-  const consumables = useConsumables((state) => state.consumables);
-  const setConsumables = useConsumables((state) => state.setConsumables);
-  const handSizeModifier = useBoss((state) => state.handSizeModifier);
-  const setHandSizeModifier = useBoss((state) => state.setHandSizeModifier);
-  const extraPackSlots = usePacks((state) => state.extraPackSlots);
-  const setExtraPackSlots = usePacks((state) => state.setExtraPackSlots);
-  const pendingForcedPacks = usePacks((state) => state.pendingForcedPacks);
-  const setPendingForcedPacks = usePacks((state) => state.setPendingForcedPacks);
-  const draggingConsumableIndex = useConsumables(
+  const consumables = useGame((state) => state.consumables);
+  const setConsumables = useGame((state) => state.setConsumables);
+  const handSizeModifier = useGame((state) => state.handSizeModifier);
+  const setHandSizeModifier = useGame((state) => state.setHandSizeModifier);
+  const extraPackSlots = useGame((state) => state.extraPackSlots);
+  const setExtraPackSlots = useGame((state) => state.setExtraPackSlots);
+  const pendingForcedPacks = useGame((state) => state.pendingForcedPacks);
+  const setPendingForcedPacks = useGame((state) => state.setPendingForcedPacks);
+  const draggingConsumableIndex = useGame(
     (state) => state.draggingConsumableIndex,
   );
-  const setDraggingConsumableIndex = useConsumables(
+  const setDraggingConsumableIndex = useGame(
     (state) => state.setDraggingConsumableIndex,
   );
-  const draggingJokerIndex = useJokers((state) => state.draggingJokerIndex);
-  const setDraggingJokerIndex = useJokers((state) => state.setDraggingJokerIndex);
-  const openedPack = usePacks((state) => state.openedPack);
-  const setOpenedPack = usePacks((state) => state.setOpenedPack);
-  const packPicksRemaining = usePacks((state) => state.packPicksRemaining);
-  const setPackPicksRemaining = usePacks((state) => state.setPackPicksRemaining);
-  const packPreviewHand = usePacks((state) => state.packPreviewHand);
-  const setPackPreviewHand = usePacks((state) => state.setPackPreviewHand);
-  const packPreviewSelectedIds = usePacks(
+  const draggingJokerIndex = useGame((state) => state.draggingJokerIndex);
+  const setDraggingJokerIndex = useGame((state) => state.setDraggingJokerIndex);
+  const openedPack = useGame((state) => state.openedPack);
+  const setOpenedPack = useGame((state) => state.setOpenedPack);
+  const packPicksRemaining = useGame((state) => state.packPicksRemaining);
+  const setPackPicksRemaining = useGame((state) => state.setPackPicksRemaining);
+  const packPreviewHand = useGame((state) => state.packPreviewHand);
+  const setPackPreviewHand = useGame((state) => state.setPackPreviewHand);
+  const packPreviewSelectedIds = useGame(
     (state) => state.packPreviewSelectedIds,
   );
-  const skipTagOffers = useRun((state) => state.skipTagOffers);
-  const setSkipTagOffers = useRun((state) => state.setSkipTagOffers);
+  const skipTagOffers = useGame((state) => state.skipTagOffers);
+  const setSkipTagOffers = useGame((state) => state.setSkipTagOffers);
   useEffect(() => {
     setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
   }, [setSkipTagOffers]);
-  const pendingShopMods = useRun((state) => state.pendingShopMods);
-  const setPendingShopMods = useRun((state) => state.setPendingShopMods);
-  const setPackPreviewSelectedIds = usePacks(
+  const pendingShopMods = useGame((state) => state.pendingShopMods);
+  const setPendingShopMods = useGame((state) => state.setPendingShopMods);
+  const setPackPreviewSelectedIds = useGame(
     (state) => state.setPackPreviewSelectedIds,
   );
-  const pendingBlindSelect = useProgression((state) => state.pendingBlindSelect);
-  const setPendingBlindSelect = useProgression(
+  const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
+  const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
   );
-  const pendingTags = useProgression((state) => state.pendingTags);
-  const setPendingTags = useProgression((state) => state.setPendingTags);
-  const ownedVoucherIds = useVouchers((state) => state.ownedVoucherIds);
-  const setOwnedVoucherIds = useVouchers((state) => state.setOwnedVoucherIds);
+  const pendingTags = useGame((state) => state.pendingTags);
+  const setPendingTags = useGame((state) => state.setPendingTags);
+  const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
+  const setOwnedVoucherIds = useGame((state) => state.setOwnedVoucherIds);
   const currentHandSize = Math.max(
     1,
     HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
   );
-  const extraVoucherSlots = useVouchers((state) => state.extraVoucherSlots);
-  const setExtraVoucherSlots = useVouchers((state) => state.setExtraVoucherSlots);
-  const currentAnteVouchers = useVouchers((state) => state.currentAnteVouchers);
-  const setCurrentAnteVouchers = useVouchers(
+  const extraVoucherSlots = useGame((state) => state.extraVoucherSlots);
+  const setExtraVoucherSlots = useGame((state) => state.setExtraVoucherSlots);
+  const currentAnteVouchers = useGame((state) => state.currentAnteVouchers);
+  const setCurrentAnteVouchers = useGame(
     (state) => state.setCurrentAnteVouchers,
   );
   useEffect(() => {
@@ -478,23 +466,23 @@ function App() {
       pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
     );
   }, [setCurrentAnteVouchers]);
-  const soldVoucherIds = useVouchers((state) => state.soldVoucherIds);
-  const setSoldVoucherIds = useVouchers((state) => state.setSoldVoucherIds);
-  const currentBoss = useBoss((state) => state.currentBoss);
-  const setCurrentBoss = useBoss((state) => state.setCurrentBoss);
+  const soldVoucherIds = useGame((state) => state.soldVoucherIds);
+  const setSoldVoucherIds = useGame((state) => state.setSoldVoucherIds);
+  const currentBoss = useGame((state) => state.currentBoss);
+  const setCurrentBoss = useGame((state) => state.setCurrentBoss);
   useEffect(() => {
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
   }, [setCurrentBoss]);
-  const recentBossIds = useBoss((state) => state.recentBossIds);
-  const setRecentBossIds = useBoss((state) => state.setRecentBossIds);
-  const handHistoryThisRound = useBoss((state) => state.handHistoryThisRound);
-  const setHandHistoryThisRound = useBoss(
+  const recentBossIds = useGame((state) => state.recentBossIds);
+  const setRecentBossIds = useGame((state) => state.setRecentBossIds);
+  const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
+  const setHandHistoryThisRound = useGame(
     (state) => state.setHandHistoryThisRound,
   );
-  const playedCardKeysThisAnte = useBoss(
+  const playedCardKeysThisAnte = useGame(
     (state) => state.playedCardKeysThisAnte,
   );
-  const setPlayedCardKeysThisAnte = useBoss(
+  const setPlayedCardKeysThisAnte = useGame(
     (state) => state.setPlayedCardKeysThisAnte,
   );
 
@@ -657,7 +645,7 @@ function App() {
         });
       }
       if (luckyResult.moneyBonus > 0) {
-        useEconomy.getState().earn(luckyResult.moneyBonus);
+        useGame.getState().earn(luckyResult.moneyBonus);
         pushScoringEvent({
           kind: "money-delta",
           amount: luckyResult.moneyBonus,
@@ -671,7 +659,7 @@ function App() {
       }
       const sealMoney = goldSealMoney(stepCard);
       if (sealMoney > 0) {
-        useEconomy.getState().earn(sealMoney);
+        useGame.getState().earn(sealMoney);
         pushScoringEvent({
           kind: "money-delta",
           amount: sealMoney,
@@ -688,7 +676,7 @@ function App() {
         { firstFaceAlreadyScored },
       );
       if (cardJokerResult.moneyEarned > 0) {
-        useEconomy.getState().earn(cardJokerResult.moneyEarned);
+        useGame.getState().earn(cardJokerResult.moneyEarned);
       }
       if (cardJokerResult.additiveMult > 0) {
         setMultiplier((prev) => prev + cardJokerResult.additiveMult);
@@ -732,7 +720,7 @@ function App() {
     }
     const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
-      useEconomy.getState().earn(GOLD_HELD_BONUS_PER_CARD);
+      useGame.getState().earn(GOLD_HELD_BONUS_PER_CARD);
       const goldId = goldScoringIds[goldScoringIndex];
       const goldCard = dealt.hand.find((c) => c.id === goldId);
       pushScoringEvent({
@@ -830,7 +818,7 @@ function App() {
     const interest =
       precomputed?.interest ??
       calculateInterest(interestBefore, interestCapFor(ownedVoucherIds));
-    useEconomy.getState().earn(blindReward + interest);
+    useGame.getState().earn(blindReward + interest);
     pushScoringEvent({
       kind: "money-delta",
       amount: blindReward,
@@ -848,7 +836,7 @@ function App() {
     } else {
       const tagPayout = totalDeferredBossPayout(pendingTags);
       if (tagPayout > 0) {
-        useEconomy.getState().earn(tagPayout);
+        useGame.getState().earn(tagPayout);
         setPendingTags([]);
       }
       const nextAnte = ante + 1;
@@ -983,7 +971,7 @@ function App() {
     const price = applyShopDiscount(offer.price, ownedVoucherIds);
     if (money < price) return;
     play("pop");
-    useEconomy.getState().spend(price);
+    useGame.getState().spend(price);
     openPackOffer(offer.pack);
     markOfferSold(idx);
   }
@@ -1062,12 +1050,12 @@ function App() {
         }
       } else if (effect.kind === "money-multiply") {
         play("pop");
-        useEconomy
+        useGame
           .getState()
-          .earn(resolveHermitPayout(useEconomy.getState().money, effect.bonusCap));
+          .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
       } else if (effect.kind === "joker-sell-value-payout") {
         play("pop");
-        useEconomy.getState().earn(resolveTemperancePayout(jokers, effect.cap));
+        useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       } else if (effect.kind === "edition-roll") {
         play("pop");
         const result = rollWheelOfFortune(jokers, effect.chance);
@@ -1141,7 +1129,7 @@ function App() {
         return;
       }
       play("pop");
-      useEconomy.getState().spend(price);
+      useGame.getState().spend(price);
       setJokers((prev) => [...prev, offer.joker]);
       setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
       markOfferSold(idx);
@@ -1155,7 +1143,7 @@ function App() {
           ? { kind: "tarot", card: offer.tarot }
           : { kind: "spectral", card: offer.spectral };
     play("pop");
-    useEconomy.getState().spend(price);
+    useGame.getState().spend(price);
     setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
     markOfferSold(idx);
   }
@@ -1179,7 +1167,7 @@ function App() {
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
         }));
-        useEconomy.getState().earn(effect.moneyGain);
+        useGame.getState().earn(effect.moneyGain);
         return;
       }
       case "sigil": {
@@ -1218,7 +1206,7 @@ function App() {
         );
         if (!created) return;
         setJokers((prev) => [...prev, created]);
-        if (effect.setMoneyToZero) useEconomy.getState().setMoney(0);
+        if (effect.setMoneyToZero) useGame.getState().setMoney(0);
         return;
       }
       case "ectoplasm": {
@@ -1308,15 +1296,15 @@ function App() {
     const effect = entry.card.effect;
     if (effect.kind === "money-multiply") {
       play("pop");
-      useEconomy
+      useGame
         .getState()
-        .earn(resolveHermitPayout(useEconomy.getState().money, effect.bonusCap));
+        .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
     if (effect.kind === "joker-sell-value-payout") {
       play("pop");
-      useEconomy.getState().earn(resolveTemperancePayout(jokers, effect.cap));
+      useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
@@ -1364,7 +1352,7 @@ function App() {
     const entry = consumables[consumableIdx];
     if (!entry) return;
     play("pop");
-    useEconomy.getState().earn(consumableSellValue(entry));
+    useGame.getState().earn(consumableSellValue(entry));
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
   }
 
@@ -1372,7 +1360,7 @@ function App() {
     const entry = jokers[jokerIdx];
     if (!entry) return;
     play("pop");
-    useEconomy.getState().earn(jokerSellValue(entry));
+    useGame.getState().earn(jokerSellValue(entry));
     setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
   }
 
@@ -1400,7 +1388,7 @@ function App() {
     if (!shopOffers) return;
     if (money < cost) return;
     play("pop");
-    useEconomy.getState().spend(cost);
+    useGame.getState().spend(cost);
     const freshItems = pickShopItemOffers({
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds: [
@@ -1476,7 +1464,7 @@ function App() {
           return next;
         });
       } else {
-        const economy = useEconomy.getState();
+        const economy = useGame.getState();
         economy.earn(
           immediateMoneyGain(action, { stats: nextStats, money: economy.money }),
         );
@@ -1537,7 +1525,7 @@ function App() {
     if (money < voucher.cost) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
     play("pop");
-    useEconomy.getState().spend(voucher.cost);
+    useGame.getState().spend(voucher.cost);
     const nextOwnedVoucherIds = new Set(ownedVoucherIds);
     nextOwnedVoucherIds.add(voucher.id);
     const handGain =
@@ -1592,7 +1580,7 @@ function App() {
     setBlind(1);
     setRound(1);
     setAnte(1);
-    useEconomy.getState().resetEconomy();
+    useGame.getState().resetEconomy();
     setHandSizeModifier(0);
     setPendingNextRoundHandSize(0);
     setPendingDouble(false);
@@ -1603,12 +1591,12 @@ function App() {
     setDevMultFactor(1);
     setForceProbabilities(false);
     setJokers(initialJokersConfig.factory());
-    useStats.getState().resetStats();
+    useGame.getState().resetStats();
     setDestroyedCardKeys(new Set());
     setAddedCards([]);
     setCardEnhancementsByKey(new Map());
     setConsumables([]);
-    useVouchers.getState().resetVouchers();
+    useGame.getState().resetVouchers();
     setCurrentAnteVouchers(
       pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
     );
@@ -1743,7 +1731,7 @@ function App() {
         ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
         : 0;
     if (moneyPenalty > 0) {
-      useEconomy.getState().setMoney(money - moneyPenalty);
+      useGame.getState().setMoney(money - moneyPenalty);
     }
 
     const label = detectHandLabel(playedCards);
@@ -1991,7 +1979,7 @@ function App() {
       const openModal = () => {
         play("win");
         if (remainingHandsBonus > 0) {
-          useEconomy.getState().earn(remainingHandsBonus);
+          useGame.getState().earn(remainingHandsBonus);
           pushScoringEvent({
             kind: "money-delta",
             amount: remainingHandsBonus,
@@ -2103,7 +2091,7 @@ function App() {
         onAddMultiplier={addMultiplier}
         onMultiplyMultiplier={multiplyMultiplier}
         onAdjustMoney={(delta) => {
-          const economy = useEconomy.getState();
+          const economy = useGame.getState();
           economy.setMoney(economy.money + delta);
         }}
         onSubmitHand={submitHand}

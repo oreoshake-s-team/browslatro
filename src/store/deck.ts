@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { DealResult } from "../cards/deck";
 import type { Card, Enhancement, Seal } from "../cards/types";
 
@@ -39,7 +40,7 @@ export interface DeckState {
   resetDeck: () => void;
 }
 
-export const useDeck = create<DeckState>()((set) => ({
+export const createDeckSlice: StateCreator<GameState, [], [], DeckState> = (set) => ({
   ...emptyDeck(),
   setDealt: (update) => set((state) => ({ dealt: resolve(update, state.dealt) })),
   setDestroyedCardKeys: (update) =>
@@ -55,4 +56,4 @@ export const useDeck = create<DeckState>()((set) => ({
   setCardSealsByKey: (update) =>
     set((state) => ({ cardSealsByKey: resolve(update, state.cardSealsByKey) })),
   resetDeck: () => set(emptyDeck()),
-}));
+});

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { useConsumables } from "./consumables";
+import { useGame } from "./game";
 import { createPlanetCatalog } from "../items/planets";
 import type { Consumable } from "../items/consumables";
 
@@ -10,30 +10,30 @@ const samplePlanet: Consumable = {
 
 describe("consumables store", () => {
   beforeEach(() => {
-    useConsumables.getState().resetConsumables();
+    useGame.getState().resetConsumables();
   });
 
   test("starts with no consumables", () => {
-    expect(useConsumables.getState().consumables).toHaveLength(0);
+    expect(useGame.getState().consumables).toHaveLength(0);
   });
 
   test("starts with no dragging index", () => {
-    expect(useConsumables.getState().draggingConsumableIndex).toBeNull();
+    expect(useGame.getState().draggingConsumableIndex).toBeNull();
   });
 
   test("setDraggingConsumableIndex accepts a plain value", () => {
-    useConsumables.getState().setDraggingConsumableIndex(2);
-    expect(useConsumables.getState().draggingConsumableIndex).toBe(2);
+    useGame.getState().setDraggingConsumableIndex(2);
+    expect(useGame.getState().draggingConsumableIndex).toBe(2);
   });
 
   test("setConsumables accepts an updater function", () => {
-    useConsumables.getState().setConsumables((prev) => [...prev, samplePlanet]);
-    expect(useConsumables.getState().consumables).toHaveLength(1);
+    useGame.getState().setConsumables((prev) => [...prev, samplePlanet]);
+    expect(useGame.getState().consumables).toHaveLength(1);
   });
 
   test("resetConsumables clears the dragging index", () => {
-    useConsumables.getState().setDraggingConsumableIndex(1);
-    useConsumables.getState().resetConsumables();
-    expect(useConsumables.getState().draggingConsumableIndex).toBeNull();
+    useGame.getState().setDraggingConsumableIndex(1);
+    useGame.getState().resetConsumables();
+    expect(useGame.getState().draggingConsumableIndex).toBeNull();
   });
 });

@@ -1,4 +1,5 @@
-import { create } from "zustand";
+import type { StateCreator } from "zustand";
+import type { GameState } from "./game";
 import type { Hand } from "../cards/types";
 
 export const STARTING_HANDS = 4;
@@ -28,7 +29,7 @@ export interface HandState {
   resetHand: () => void;
 }
 
-export const useHand = create<HandState>()((set) => ({
+export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set) => ({
   selectedHand: null,
   selectedIds: new Set(),
   discardingIds: new Set(),
@@ -60,4 +61,4 @@ export const useHand = create<HandState>()((set) => ({
       remainingHands: STARTING_HANDS,
       remainingDiscards: STARTING_DISCARDS,
     }),
-}));
+});
