@@ -33,6 +33,7 @@ import {
   type AnteSkipOffers,
   type TagId,
 } from "./items/tags";
+import { immediateMoneyGain } from "./run/immediateActions";
 import {
   applyNextShopModifiers,
   type NextShopModifier,
@@ -1288,10 +1289,15 @@ function App() {
     if (blind === 3) return;
     const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
     const effect = resolveTagEffect(offered);
+    const nextStats = recordBlindSkipped(runStats);
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
+    setRunStats(nextStats);
+    if (effect.category === "immediate") {
+      setMoney((prev) => prev + immediateMoneyGain(effect.action, nextStats));
+      return;
+    }
     setPendingTags((prev) => [...prev, offered]);
-    setRunStats(recordBlindSkipped);
     if (effect.category === "next-shop") {
       setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
     }

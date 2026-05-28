@@ -1,10 +1,11 @@
+import type { ImmediateAction } from "../run/immediateActions";
 import type { NextShopModifier } from "../run/nextShopMods";
 
-export type TagId = "investment" | "d6";
+export type TagId = "investment" | "d6" | "handy" | "garbage" | "speed";
 
 export type TagEffect =
   | { readonly category: "deferred-boss-payout"; readonly amount: number }
-  | { readonly category: "immediate" }
+  | { readonly category: "immediate"; readonly action: ImmediateAction }
   | {
       readonly category: "next-shop";
       readonly modifiers: ReadonlyArray<NextShopModifier>;
@@ -31,6 +32,33 @@ const TAG_SPECS: ReadonlyArray<TagSpec> = [
     name: "D6 Tag",
     description: "Rerolls in the next shop start at $0.",
     effect: { category: "next-shop", modifiers: [{ kind: "free-rerolls" }] },
+  },
+  {
+    id: "handy",
+    name: "Handy Tag",
+    description: "Gain $1 for each hand played this run.",
+    effect: {
+      category: "immediate",
+      action: { kind: "money-per-stat", stat: "handsPlayed", perUnit: 1 },
+    },
+  },
+  {
+    id: "garbage",
+    name: "Garbage Tag",
+    description: "Gain $1 for each unused discard this run.",
+    effect: {
+      category: "immediate",
+      action: { kind: "money-per-stat", stat: "unusedDiscards", perUnit: 1 },
+    },
+  },
+  {
+    id: "speed",
+    name: "Speed Tag",
+    description: "Gain $5 for each blind skipped this run.",
+    effect: {
+      category: "immediate",
+      action: { kind: "money-per-stat", stat: "blindsSkipped", perUnit: 5 },
+    },
   },
 ];
 

@@ -6,7 +6,7 @@ import {
   setAnimationSpeed,
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
-import { tagOfferRngConfig } from "./items/tags";
+import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
 import type { VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
@@ -3393,9 +3393,15 @@ describe("Skip tag offers", () => {
   });
 });
 
+function rngForTag(id: TagId): () => number {
+  const ids = createTagCatalog().map((t) => t.id);
+  const index = ids.indexOf(id);
+  return () => (index + 0.5) / ids.length;
+}
+
 describe("D6 tag next-shop queue", () => {
   test("gaining the D6 tag on skip makes the next shop's first reroll free", async () => {
-    tagOfferRngConfig.rng = () => 0.5;
+    tagOfferRngConfig.rng = rngForTag("d6");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
@@ -3413,5 +3419,32 @@ describe("D6 tag next-shop queue", () => {
     expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
       "Reroll ($5)",
     );
+  });
+});
+
+describe("Run-stat money tags", () => {
+  test("skipping with the Speed tag grants $5 for the first blind skipped", async () => {
+    tagOfferRngConfig.rng = rngForTag("speed");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$9");
+  });
+
+  test("the Speed tag pays out per blind skipped, including the current skip", async () => {
+    tagOfferRngConfig.rng = rngForTag("speed");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(getStatValue("Money")).toHaveTextContent("$19");
+  });
+
+  test("an immediate tag is not retained as a held tag (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("speed");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.queryByTestId("blind-select-tag-0")).not.toBeInTheDocument();
   });
 });
