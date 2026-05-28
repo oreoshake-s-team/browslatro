@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import "./App.css";
 import { useEconomy } from "./store/economy";
 import { BASE_VOUCHER_SLOTS, useVouchers } from "./store/vouchers";
@@ -13,6 +13,7 @@ import { useScoring } from "./store/scoring";
 import { useDevModifiers } from "./store/devModifiers";
 import { useDeck } from "./store/deck";
 import { useBoss } from "./store/boss";
+import { useRun } from "./store/run";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -49,19 +50,14 @@ import {
   rollAnteSkipOffers,
   tagOfferRngConfig,
   totalDeferredBossPayout,
-  type AnteSkipOffers,
 } from "./items/tags";
 import { immediateMoneyGain } from "./run/immediateActions";
-import {
-  applyNextShopModifiers,
-  type NextShopModifier,
-} from "./run/nextShopMods";
+import { applyNextShopModifiers } from "./run/nextShopMods";
 import {
   initialRunStats,
   recordBlindSkipped,
   recordHandPlayed,
   recordUnusedDiscards,
-  type RunStats,
 } from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
@@ -298,7 +294,8 @@ function App() {
   const setRemainingHands = useHand((state) => state.setRemainingHands);
   const remainingDiscards = useHand((state) => state.remainingDiscards);
   const setRemainingDiscards = useHand((state) => state.setRemainingDiscards);
-  const [runStats, setRunStats] = useState<RunStats>(initialRunStats());
+  const runStats = useRun((state) => state.runStats);
+  const setRunStats = useRun((state) => state.setRunStats);
   const dealt = useDeck((state) => state.dealt);
   const setDealt = useDeck((state) => state.setDealt);
   useEffect(() => {
@@ -434,12 +431,13 @@ function App() {
   const packPreviewSelectedIds = usePacks(
     (state) => state.packPreviewSelectedIds,
   );
-  const [skipTagOffers, setSkipTagOffers] = useState<AnteSkipOffers>(() =>
-    rollAnteSkipOffers(tagOfferRngConfig.rng),
-  );
-  const [pendingShopMods, setPendingShopMods] = useState<
-    ReadonlyArray<NextShopModifier>
-  >([]);
+  const skipTagOffers = useRun((state) => state.skipTagOffers);
+  const setSkipTagOffers = useRun((state) => state.setSkipTagOffers);
+  useEffect(() => {
+    setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+  }, [setSkipTagOffers]);
+  const pendingShopMods = useRun((state) => state.pendingShopMods);
+  const setPendingShopMods = useRun((state) => state.setPendingShopMods);
   const setPackPreviewSelectedIds = usePacks(
     (state) => state.setPackPreviewSelectedIds,
   );
