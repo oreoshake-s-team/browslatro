@@ -170,7 +170,6 @@ import {
   interestCapFor,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
-  type Voucher,
   type VoucherId,
 } from "./items/vouchers";
 
@@ -458,11 +457,15 @@ function App() {
   );
   const extraVoucherSlots = useVouchers((state) => state.extraVoucherSlots);
   const setExtraVoucherSlots = useVouchers((state) => state.setExtraVoucherSlots);
-  const [currentAnteVouchers, setCurrentAnteVouchers] = useState<
-    ReadonlyArray<Voucher>
-  >(() =>
-    pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
+  const currentAnteVouchers = useVouchers((state) => state.currentAnteVouchers);
+  const setCurrentAnteVouchers = useVouchers(
+    (state) => state.setCurrentAnteVouchers,
   );
+  useEffect(() => {
+    setCurrentAnteVouchers(
+      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
+    );
+  }, [setCurrentAnteVouchers]);
   const soldVoucherIds = useVouchers((state) => state.soldVoucherIds);
   const setSoldVoucherIds = useVouchers((state) => state.setSoldVoucherIds);
   const currentBoss = useBoss((state) => state.currentBoss);
