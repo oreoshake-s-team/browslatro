@@ -832,11 +832,17 @@ function App() {
       play("pop");
       setJokers((prev) => [...prev, option.joker]);
     } else if (option.kind === "spectral") {
-      if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
-      play("pop");
-      setConsumables((prev) =>
-        addConsumable(prev, { kind: "spectral", card: option.spectral }, consumableCapacity),
-      );
+      const effect = option.spectral.effect;
+      if (effect.kind === "apply-seal") {
+        if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+        play("pop");
+        setConsumables((prev) =>
+          addConsumable(prev, { kind: "spectral", card: option.spectral }, consumableCapacity),
+        );
+      } else {
+        play("pop");
+        applySpectralEffect(effect);
+      }
     } else if (option.kind === "playing-card") {
       play("pop");
       setAddedCards((prev) => [...prev, option.card]);

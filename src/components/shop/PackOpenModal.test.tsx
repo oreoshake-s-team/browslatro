@@ -341,6 +341,18 @@ function spectralPack(
   };
 }
 
+function sealSpectralPack(variant: "normal" | "jumbo" | "mega"): PackOffer {
+  const seals = SPECTRALS.filter((s) => s.effect.kind === "apply-seal");
+  return {
+    pool: "spectral",
+    variant,
+    options: seals.slice(0, 2).map((spectral) => ({
+      kind: "spectral" as const,
+      spectral,
+    })),
+  };
+}
+
 describe("PackOpenModal — Spectral pack rendering", () => {
   test("renders the Spectral pack display name", () => {
     render(
@@ -383,7 +395,21 @@ describe("PackOpenModal — Spectral pack rendering", () => {
     ).toBeInTheDocument();
   });
 
-  test("Pick buttons disable when consumable slots are full", () => {
+  test("apply-seal Pick buttons disable when consumable slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={sealSpectralPack("normal")}
+        picksRemaining={1}
+        consumableSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const picks = screen.getAllByRole("button", { name: /^Pick / });
+    for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("non-targeting Pick buttons stay enabled when consumable slots are full", () => {
     render(
       <PackOpenModal
         pack={spectralPack("normal", 2)}
@@ -394,7 +420,7 @@ describe("PackOpenModal — Spectral pack rendering", () => {
       />,
     );
     const picks = screen.getAllByRole("button", { name: /^Pick / });
-    for (const btn of picks) expect(btn).toBeDisabled();
+    for (const btn of picks) expect(btn).not.toBeDisabled();
   });
 
   test("Pick buttons stay enabled in a Spectral pack when only joker slots are full", () => {

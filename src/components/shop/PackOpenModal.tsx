@@ -71,12 +71,13 @@ function describeOption(option: PackOption): OptionView | null {
     };
   }
   if (option.kind === "spectral") {
+    const effect = option.spectral.effect;
     return {
       id: option.spectral.id,
       icon: "👻",
       name: option.spectral.name,
       description: option.spectral.description,
-      needsConsumableSlot: true,
+      needsConsumableSlot: effect.kind === "apply-seal",
       needsJokerSlot: false,
     };
   }
