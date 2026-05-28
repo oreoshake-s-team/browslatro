@@ -1,5 +1,6 @@
 import type { Card, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import { SUITS, nextCardId } from "../cards/deck";
+import type { JokerRarity } from "./jokers";
 
 export const SPECTRAL_BASE_PRICE = 4;
 
@@ -21,6 +22,11 @@ export type SpectralEffect =
       readonly kind: "transmute";
       readonly rankFilter: TransmuteRankFilter;
       readonly addCount: number;
+    }
+  | {
+      readonly kind: "create-joker-by-rarity";
+      readonly rarity: JokerRarity;
+      readonly setMoneyToZero: boolean;
     };
 
 export interface SpectralCard {
@@ -115,6 +121,11 @@ function describe(spec: SpectralSpec): string {
       return `Add a ${SEAL_DISPLAY[effect.seal]} Seal to 1 selected card in your hand`;
     case "transmute":
       return `Destroy 1 random card in hand, add ${effect.addCount} random Enhanced ${TRANSMUTE_LABEL[effect.rankFilter]}`;
+    case "create-joker-by-rarity": {
+      const rarity = effect.rarity.charAt(0).toUpperCase() + effect.rarity.slice(1);
+      const money = effect.setMoneyToZero ? ", set money to $0" : "";
+      return `Create a random ${rarity} Joker${money}`;
+    }
   }
 }
 
@@ -168,6 +179,11 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
       rankFilter: "numbered",
       addCount: INCANTATION_ADD_COUNT,
     },
+  },
+  {
+    id: "wraith",
+    name: "Wraith",
+    effect: { kind: "create-joker-by-rarity", rarity: "rare", setMoneyToZero: true },
   },
 ];
 

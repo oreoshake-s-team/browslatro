@@ -54,9 +54,9 @@ describe("createSpectralCatalog", () => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 5 distinct effect kinds", () => {
+  test("spans 6 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(5);
+    expect(kinds.size).toBe(6);
   });
 });
 
@@ -241,5 +241,27 @@ describe("SPECTRAL_BASE_PRICE", () => {
 
   test("is more expensive than a tarot card", () => {
     expect(SPECTRAL_BASE_PRICE).toBeGreaterThan(3);
+  });
+});
+
+describe("Wraith", () => {
+  test("appears in the spectral catalog", () => {
+    expect(find("wraith").name).toBe("Wraith");
+  });
+
+  test("creates a Rare joker and zeroes money", () => {
+    expect(find("wraith").effect).toEqual({
+      kind: "create-joker-by-rarity",
+      rarity: "rare",
+      setMoneyToZero: true,
+    });
+  });
+
+  test("describes itself as creating a random Rare Joker", () => {
+    expect(find("wraith").description).toContain("Rare Joker");
+  });
+
+  test("describes itself as setting money to $0", () => {
+    expect(find("wraith").description).toContain("set money to $0");
   });
 });

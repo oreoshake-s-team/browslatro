@@ -229,6 +229,22 @@ export function pickRandomFromCatalog(
   return pool[Math.floor(rng() * pool.length)];
 }
 
+export function createJokerByRarity(
+  jokers: ReadonlyArray<Joker>,
+  catalog: ReadonlyArray<Joker>,
+  rarity: JokerRarity,
+  capacity: number,
+  rng: RandomSource = Math.random,
+): Joker | null {
+  if (effectiveJokerCount(jokers) >= capacity) return null;
+  const ownedIds = new Set(jokers.map((j) => j.id));
+  return pickRandomFromCatalog(
+    catalog,
+    (j) => j.rarity === rarity && !ownedIds.has(j.id),
+    rng,
+  );
+}
+
 export function replaceJokersExceptCopyOf(
   jokers: ReadonlyArray<Joker>,
   idx: number,
