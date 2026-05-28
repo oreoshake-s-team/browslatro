@@ -13,6 +13,11 @@ import {
   RANK_PARITY,
   SLY_JOKER_CHIPS,
   SUIT_MULT_AMOUNT,
+  THE_DUO_X_MULT,
+  THE_FAMILY_X_MULT,
+  THE_ORDER_X_MULT,
+  THE_TRIBE_X_MULT,
+  THE_TRIO_X_MULT,
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
   jokerSellValue,
@@ -35,6 +40,11 @@ import {
   createJokerCatalog,
   createPlusFourMultJoker,
   createSlyJoker,
+  createTheDuoJoker,
+  createTheFamilyJoker,
+  createTheOrderJoker,
+  createTheTribeJoker,
+  createTheTrioJoker,
   createWilyJoker,
   createWrathfulJoker,
   createZanyJoker,
@@ -480,6 +490,75 @@ describe("applyHandLevelJokers — hand-type Chips containment composition", () 
   });
 });
 
+describe("Hand-type X-Mult joker factories", () => {
+  test.each<{ name: string; requires: HandLabel; amount: number; factory: () => Joker }>([
+    { name: "The Duo", requires: "Pair", amount: THE_DUO_X_MULT, factory: createTheDuoJoker },
+    { name: "The Trio", requires: "Three of a Kind", amount: THE_TRIO_X_MULT, factory: createTheTrioJoker },
+    { name: "The Family", requires: "Four of a Kind", amount: THE_FAMILY_X_MULT, factory: createTheFamilyJoker },
+    { name: "The Order", requires: "Straight", amount: THE_ORDER_X_MULT, factory: createTheOrderJoker },
+    { name: "The Tribe", requires: "Flush", amount: THE_TRIBE_X_MULT, factory: createTheTribeJoker },
+  ])("$name requires $requires and uses the matching x-mult constant", ({ requires, amount, factory }) => {
+    expect(factory().effect).toEqual({
+      kind: "on-hand-type-x-mult",
+      requires,
+      amount,
+    });
+  });
+
+  test.each([
+    createTheDuoJoker,
+    createTheTrioJoker,
+    createTheFamilyJoker,
+    createTheOrderJoker,
+    createTheTribeJoker,
+  ])("%o is Uncommon", (factory) => {
+    expect(factory().rarity).toBe("uncommon");
+  });
+});
+
+describe("applyHandLevelJokers — hand-type X-Mult containment composition", () => {
+  test("Full House triggers The Duo (Pair) and The Trio (3oaK) with multiplied xMult", () => {
+    const result = applyHandLevelJokers(
+      [createTheDuoJoker(), createTheTrioJoker()],
+      { playedHandLabel: "Full House" },
+    );
+    expect(result.xMult).toBe(THE_DUO_X_MULT * THE_TRIO_X_MULT);
+  });
+
+  test("Straight Flush triggers The Order (Straight) and The Tribe (Flush)", () => {
+    const result = applyHandLevelJokers(
+      [createTheOrderJoker(), createTheTribeJoker()],
+      { playedHandLabel: "Straight Flush" },
+    );
+    expect(result.firedJokerIds).toEqual(["the-order", "the-tribe"]);
+  });
+
+  test("High Card triggers none of the X-Mult jokers", () => {
+    const result = applyHandLevelJokers(
+      [createTheDuoJoker(), createTheTrioJoker(), createTheFamilyJoker()],
+      { playedHandLabel: "High Card" },
+    );
+    expect(result.xMult).toBe(1);
+  });
+});
+
+describe("applyJokersToScoring — hand-type X-Mult threading", () => {
+  test("threads playedHandLabel context into hand-level xMult", () => {
+    const result = applyJokersToScoring(
+      [createTheTribeJoker()],
+      [],
+      Math.random,
+      { playedHandLabel: "Flush" },
+    );
+    expect(result.xMult).toBe(THE_TRIBE_X_MULT);
+  });
+
+  test("does not multiply xMult when context is omitted", () => {
+    const result = applyJokersToScoring([createTheTribeJoker()], []);
+    expect(result.xMult).toBe(1);
+  });
+});
+
 describe("computeFinalScoreWithJokers — additive chips applied before mult", () => {
   test("folds jokerResult.additiveChips into chips total before multiplying", () => {
     const finalScore = computeFinalScoreWithJokers(10, 2, 5, {
@@ -529,6 +608,19 @@ describe("Economy joker catalog membership", () => {
     { name: "Banner", id: "banner" },
     { name: "Mystic Summit", id: "mystic-summit" },
     { name: "Bull", id: "bull" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
+describe("Hand-type X-Mult joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "The Duo", id: "the-duo" },
+    { name: "The Trio", id: "the-trio" },
+    { name: "The Family", id: "the-family" },
+    { name: "The Order", id: "the-order" },
+    { name: "The Tribe", id: "the-tribe" },
   ])("$name appears in the joker catalog", ({ id }) => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain(id);
