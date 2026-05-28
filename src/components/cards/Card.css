@@ -178,12 +178,6 @@
   font-size: 2.6rem;
 }
 
-/* Shared face-card frame: an inner border + warm background so J/Q/K read
-   as a special class of card at a glance. */
-.card-face {
-  background-color: #fffaf0;
-}
-
 .card-face::before {
   content: "";
   position: absolute;
