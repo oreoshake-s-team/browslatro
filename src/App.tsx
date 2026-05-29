@@ -85,6 +85,7 @@ import {
 import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
 import { cardKey, drawCountForRefill, HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
+import { useScoringStepSequence } from "./hooks/useScoringStepSequence";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
@@ -449,23 +450,17 @@ function App() {
     setPendingWin(null);
   }
 
-  useEffect(() => {
-    if (scoringCards.length === 0) return;
+  const scoringStepMs = getScoringStepMs(animationSpeed);
 
-    if (scoringIndex >= scoringCards.length) {
-      const finalize = scoringFinalizeRef.current;
-      if (finalize) {
-        scoringFinalizeRef.current = null;
-        finalize();
-      }
-      return;
-    }
-
-    const stepMs = getScoringStepMs(animationSpeed);
-    const timer = window.setTimeout(() => {
+  useScoringStepSequence({
+    items: scoringCards,
+    index: scoringIndex,
+    setIndex: setScoringIndex,
+    stepMs: scoringStepMs,
+    onStep: (_card, stepIdx) => {
       const { card: stepCard, chips: stepChips } = getScoringStep(
         scoringCards,
-        scoringIndex,
+        stepIdx,
       );
       setChips((prev) => prev + stepChips);
       const stepCardLabel = cardLabel(stepCard);
@@ -558,7 +553,7 @@ function App() {
         });
       }
       const firstFaceAlreadyScored = scoringCards
-        .slice(0, scoringIndex)
+        .slice(0, stepIdx)
         .some(isFaceCard);
       const cardJokerResult = applyPerCardJokers(
         jokers,
@@ -594,25 +589,23 @@ function App() {
         }
       }
       pulseJokers(cardJokerResult.firedJokerIds);
-      setScoringIndex((prev) => prev + 1);
-    }, stepMs);
-    return () => window.clearTimeout(timer);
-  }, [scoringCards, scoringIndex, jokers, animationSpeed]);
+    },
+    onFinish: () => {
+      const finalize = scoringFinalizeRef.current;
+      if (finalize) {
+        scoringFinalizeRef.current = null;
+        finalize();
+      }
+    },
+  });
 
-  useEffect(() => {
-    if (goldScoringIds.length === 0) return;
-    if (goldScoringIndex >= goldScoringIds.length) {
-      const finalize = goldFinalizeRef.current;
-      goldFinalizeRef.current = null;
-      setGoldScoringIds([]);
-      setGoldScoringIndex(0);
-      if (finalize) finalize();
-      return;
-    }
-    const stepMs = getScoringStepMs(animationSpeed);
-    const timer = window.setTimeout(() => {
+  useScoringStepSequence({
+    items: goldScoringIds,
+    index: goldScoringIndex,
+    setIndex: setGoldScoringIndex,
+    stepMs: scoringStepMs,
+    onStep: (goldId) => {
       useGame.getState().earn(GOLD_HELD_BONUS_PER_CARD);
-      const goldId = goldScoringIds[goldScoringIndex];
       const goldCard = dealt.hand.find((c) => c.id === goldId);
       pushScoringEvent({
         kind: "money-delta",
@@ -622,25 +615,23 @@ function App() {
           : "Gold enhancement held",
       });
       play("gold");
-      setGoldScoringIndex((prev) => prev + 1);
-    }, stepMs);
-    return () => window.clearTimeout(timer);
-  }, [goldScoringIds, goldScoringIndex, animationSpeed, dealt.hand]);
-
-  useEffect(() => {
-    if (steelScoringIds.length === 0) return;
-    if (steelScoringIndex >= steelScoringIds.length) {
-      const finalize = steelFinalizeRef.current;
-      steelFinalizeRef.current = null;
-      setSteelScoringIds([]);
-      setSteelScoringIndex(0);
+    },
+    onFinish: () => {
+      const finalize = goldFinalizeRef.current;
+      goldFinalizeRef.current = null;
+      setGoldScoringIds([]);
+      setGoldScoringIndex(0);
       if (finalize) finalize();
-      return;
-    }
-    const stepMs = getScoringStepMs(animationSpeed);
-    const timer = window.setTimeout(() => {
+    },
+  });
+
+  useScoringStepSequence({
+    items: steelScoringIds,
+    index: steelScoringIndex,
+    setIndex: setSteelScoringIndex,
+    stepMs: scoringStepMs,
+    onStep: (steelId) => {
       setMultiplier((prev) => prev * STEEL_MULT_FACTOR);
-      const steelId = steelScoringIds[steelScoringIndex];
       const steelCard = dealt.hand.find((c) => c.id === steelId);
       pushScoringEvent({
         kind: "mult-times",
@@ -650,24 +641,22 @@ function App() {
           : "Steel held",
       });
       play("pop");
-      setSteelScoringIndex((prev) => prev + 1);
-    }, stepMs);
-    return () => window.clearTimeout(timer);
-  }, [steelScoringIds, steelScoringIndex, animationSpeed, dealt.hand]);
-
-  useEffect(() => {
-    if (handLevelSteps.length === 0) return;
-    if (handLevelIndex >= handLevelSteps.length) {
-      const finalize = handLevelFinalizeRef.current;
-      handLevelFinalizeRef.current = null;
-      setHandLevelSteps([]);
-      setHandLevelIndex(0);
+    },
+    onFinish: () => {
+      const finalize = steelFinalizeRef.current;
+      steelFinalizeRef.current = null;
+      setSteelScoringIds([]);
+      setSteelScoringIndex(0);
       if (finalize) finalize();
-      return;
-    }
-    const stepMs = getScoringStepMs(animationSpeed);
-    const timer = window.setTimeout(() => {
-      const step = handLevelSteps[handLevelIndex];
+    },
+  });
+
+  useScoringStepSequence({
+    items: handLevelSteps,
+    index: handLevelIndex,
+    setIndex: setHandLevelIndex,
+    stepMs: scoringStepMs,
+    onStep: (step) => {
       if (step.additiveChips) {
         setChips((prev) => prev + (step.additiveChips ?? 0));
         pushScoringEvent({
@@ -694,10 +683,15 @@ function App() {
       }
       play("pop");
       pulseJokers([step.jokerId]);
-      setHandLevelIndex((prev) => prev + 1);
-    }, stepMs);
-    return () => window.clearTimeout(timer);
-  }, [handLevelSteps, handLevelIndex, animationSpeed]);
+    },
+    onFinish: () => {
+      const finalize = handLevelFinalizeRef.current;
+      handLevelFinalizeRef.current = null;
+      setHandLevelSteps([]);
+      setHandLevelIndex(0);
+      if (finalize) finalize();
+    },
+  });
 
   const handleWin = useGame((s) => s.handleWin);
 
