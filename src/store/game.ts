@@ -13,11 +13,13 @@ import { createDevModifiersSlice, type DevModifiersState } from "./devModifiers"
 import { createDeckSlice, type DeckState } from "./deck";
 import { createBossSlice, type BossState } from "./boss";
 import { createRunSlice, type RunState } from "./run";
+import { createActionsSlice, type ActionsState } from "./actions";
 
 export interface GameState
   extends EconomyState, VouchersState, StatsState, ProgressionState,
     ConsumablesState, JokersState, ShopState, PacksState, HandState,
-    ScoringState, DevModifiersState, DeckState, BossState, RunState {
+    ScoringState, DevModifiersState, DeckState, BossState, RunState,
+    ActionsState {
   resetGame: () => void;
 }
 
@@ -36,6 +38,7 @@ export const useGame = create<GameState>()((set, get, store) => ({
   ...createDeckSlice(set, get, store),
   ...createBossSlice(set, get, store),
   ...createRunSlice(set, get, store),
+  ...createActionsSlice(set, get, store),
   resetGame: () => {
     const s = get();
     s.resetEconomy();
