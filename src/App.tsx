@@ -26,9 +26,7 @@ import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
 import {
-  packPickLimit,
   rollPackForPool,
-  type PackOffer,
   type PackPool,
   type PackVariant,
 } from "./items/packs";
@@ -70,7 +68,6 @@ import {
   consumableUseBlock,
   hasFreeConsumableSlot,
   removeConsumableAt,
-  type Consumable,
 } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
@@ -92,19 +89,12 @@ import {
 import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
 import {
   cardKey,
-  createDeck,
   drawCountForRefill,
-  shuffle,
   HAND_SIZE,
   RANKS,
   SUITS,
 } from "./cards/deck";
-import {
-  applyEnhancementOverrides,
-  applySealOverrides,
-  fullDeckPile,
-  initialDeal,
-} from "./cards/deckBuild";
+import { fullDeckPile, initialDeal } from "./cards/deckBuild";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
@@ -151,7 +141,6 @@ import {
   shopPickerRngConfig,
 } from "./items/shop";
 import {
-  applyShopDiscount,
   extraConsumableSlots,
   extraHandSize,
   extraJokerSlots,
@@ -353,9 +342,7 @@ function App() {
   const draggingJokerIndex = useGame((state) => state.draggingJokerIndex);
   const setDraggingJokerIndex = useGame((state) => state.setDraggingJokerIndex);
   const openedPack = useGame((state) => state.openedPack);
-  const setOpenedPack = useGame((state) => state.setOpenedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
-  const setPackPicksRemaining = useGame((state) => state.setPackPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);
   const setPackPreviewHand = useGame((state) => state.setPackPreviewHand);
   const packPreviewSelectedIds = useGame(
@@ -843,36 +830,11 @@ function App() {
     setSelectedHand(null);
   }
 
-  function markOfferSold(idx: number) {
-    setShopOffers((current) =>
-      current
-        ? current.map((o, i) => (i === idx ? { ...o, sold: true } : o))
-        : current,
-    );
-  }
-
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
-  function openPackOffer(pack: PackOffer) {
-    setOpenedPack(pack);
-    setPackPicksRemaining(packPickLimit(pack.variant));
-    if (pack.pool === "arcana" || pack.pool === "spectral") {
-      const baseDeck = applySealOverrides(
-        applyEnhancementOverrides(createDeck(destroyedCardKeys), cardEnhancementsByKey),
-        cardSealsByKey,
-      );
-      const extras = applySealOverrides(
-        applyEnhancementOverrides(addedCards, cardEnhancementsByKey),
-        cardSealsByKey,
-      );
-      const preview = shuffle([...baseDeck, ...extras]).slice(0, currentHandSize);
-      setPackPreviewHand(preview);
-    } else {
-      setPackPreviewHand([]);
-    }
-    setPackPreviewSelectedIds(new Set());
-  }
+  const openPackOffer = useGame((s) => s.openPackOffer);
+  const decrementPackPicks = useGame((s) => s.decrementPackPicks);
 
   function openTagPack(pool: PackPool, variant: PackVariant) {
     play("pop");
@@ -890,29 +852,6 @@ function App() {
         variant,
       ),
     );
-  }
-
-  function openPack(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold || offer.kind !== "pack") return;
-    const price = applyShopDiscount(offer.price, ownedVoucherIds);
-    if (money < price) return;
-    play("pop");
-    useGame.getState().spend(price);
-    openPackOffer(offer.pack);
-    markOfferSold(idx);
-  }
-
-  function decrementPackPicks() {
-    setPackPicksRemaining((prev) => {
-      const remaining = prev - 1;
-      if (remaining <= 0) {
-        setOpenedPack(null);
-        setPackPreviewHand([]);
-        setPackPreviewSelectedIds(new Set());
-      }
-      return remaining;
-    });
   }
 
   function applyEnhancementToSelectedPreviewCards(enhancement: Enhancement) {
@@ -1032,48 +971,12 @@ function App() {
     });
   }
 
-  function closeOpenedPack() {
-    setOpenedPack(null);
-    setPackPicksRemaining(0);
-    setPackPreviewHand([]);
-    setPackPreviewSelectedIds(new Set());
-  }
+  const closeOpenedPack = useGame((s) => s.closeOpenedPack);
 
-  function buyShopOffer(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold) return;
-    if (offer.kind === "pack") {
-      openPack(idx);
-      return;
-    }
-    const price = applyShopDiscount(offer.price, ownedVoucherIds);
-    if (money < price) return;
-    if (offer.kind === "joker") {
-      if (
-        effectiveJokerCount(jokers) >=
-        MAX_JOKERS + extraJokerSlots(ownedVoucherIds)
-      ) {
-        return;
-      }
-      play("pop");
-      useGame.getState().spend(price);
-      setJokers((prev) => [...prev, offer.joker]);
-      setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
-      markOfferSold(idx);
-      return;
-    }
-    if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
-    const next: Consumable =
-      offer.kind === "planet"
-        ? { kind: "planet", card: offer.planet }
-        : offer.kind === "tarot"
-          ? { kind: "tarot", card: offer.tarot }
-          : { kind: "spectral", card: offer.spectral };
-    play("pop");
-    useGame.getState().spend(price);
-    setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
-    markOfferSold(idx);
-  }
+  const buyShopOfferAction = useGame((s) => s.buyShopOffer);
+  const buyShopOffer = (idx: number) => {
+    if (buyShopOfferAction(idx)) play("pop");
+  };
 
   function applySpectralEffect(effect: SpectralEffect) {
     switch (effect.kind) {
