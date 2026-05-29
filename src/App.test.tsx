@@ -8,7 +8,7 @@ import {
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
 import { createSpectralCatalog } from "./items/spectrals";
-import type { VoucherId } from "./items/vouchers";
+import { voucherPickerRngConfig, type VoucherId } from "./items/vouchers";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -19,6 +19,7 @@ import {
   initialJokersConfig,
 } from "./items/jokers";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
+import { useGame } from "./store/game";
 import {
   dismissBlindSelect,
   dragCardToGap,
@@ -2244,6 +2245,7 @@ describe("Spectral purchase integration", () => {
 describe("Voucher effects integration", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    voucherPickerRngConfig.rng = Math.random;
   });
 
   async function openShopWithVoucher(
@@ -2251,7 +2253,7 @@ describe("Voucher effects integration", () => {
   ): Promise<ReturnType<typeof userEvent.setup>> {
     mockShuffleConfig.useIdentity = true;
     shopPickerRngConfig.rng = forceShopLayout(["joker", "planet", "tarot", "joker"]);
-    vi.spyOn(Math, "random").mockReturnValueOnce(firstVoucherRng);
+    voucherPickerRngConfig.rng = () => firstVoucherRng;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
@@ -3078,6 +3080,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       document.querySelector(".round-score-value")?.textContent ?? "0",
     );
     unmount();
+    useGame.getState().resetScoring();
 
     mockShuffleConfig.useIdentity = true;
     const userB = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3105,6 +3108,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
       document.querySelector(".round-score-value")?.textContent ?? "0",
     );
     unmount();
+    useGame.getState().resetScoring();
 
     mockShuffleConfig.useIdentity = true;
     const userB = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });

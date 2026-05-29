@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import { useGame } from "./store/game";
+import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
 import {
@@ -22,11 +24,9 @@ import {
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
-import RoundWonModal, { type RoundWonInfo } from "./components/game/RoundWonModal";
+import RoundWonModal from "./components/game/RoundWonModal";
 import {
-  packPickLimit,
   rollPackForPool,
-  type PackOffer,
   type PackPool,
   type PackVariant,
 } from "./items/packs";
@@ -37,14 +37,10 @@ import {
   rollAnteSkipOffers,
   tagOfferRngConfig,
   totalDeferredBossPayout,
-  type AnteSkipOffers,
   type TagId,
 } from "./items/tags";
 import { immediateMoneyGain } from "./run/immediateActions";
-import {
-  applyNextShopModifiers,
-  type NextShopModifier,
-} from "./run/nextShopMods";
+import { applyNextShopModifiers } from "./run/nextShopMods";
 import {
   initialRunStats,
   recordBlindSkipped,
@@ -69,27 +65,20 @@ import {
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
-  consumableSellValue,
   consumableUseBlock,
   hasFreeConsumableSlot,
   removeConsumableAt,
-  type Consumable,
 } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
-import {
-  emptyHandCounts,
-  type HandPlayCounts,
-} from "./components/hud/RunInfo";
 import { play } from "./components/system/sounds";
 import {
   getAnimationSpeed,
   getAnimationSpeedMultiplier,
   hasUserOverriddenAnimationSpeed,
-  isHighVisibility,
+  usePreferences,
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
-import { createDefaultHandStats, type HandStats } from "./scoring/handStats";
 import {
   getCardChips,
   getCardMultDelta,
@@ -100,15 +89,12 @@ import {
 import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
 import {
   cardKey,
-  createDeck,
-  deal,
   drawCountForRefill,
-  shuffle,
   HAND_SIZE,
   RANKS,
   SUITS,
-  type DealResult,
 } from "./cards/deck";
+import { fullDeckPile, initialDeal } from "./cards/deckBuild";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
@@ -145,23 +131,16 @@ import {
   effectiveJokerCount,
   initialJokersConfig,
   isFaceCard,
-  jokerSellValue,
   withEdition,
-  type Joker,
-  type JokerHandLevelStep,
 } from "./items/jokers";
 import {
   SHOP_PACK_SLOTS,
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
-  pickShopItemOffers,
   pickShopOffers,
-  pickSingleShopOffer,
   shopPickerRngConfig,
-  type ShopItem,
 } from "./items/shop";
 import {
-  applyShopDiscount,
   extraConsumableSlots,
   extraHandSize,
   extraJokerSlots,
@@ -171,11 +150,8 @@ import {
   interestCapFor,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
-  type Voucher,
   type VoucherId,
 } from "./items/vouchers";
-
-export const BASE_VOUCHER_SLOTS = 1;
 
 export const SCORING_STEP_MS = 500;
 
@@ -194,145 +170,92 @@ export function getScoringStepMs(
   return SCORING_STEP_MS;
 }
 
-function applyEnhancementOverrides(
-  cards: ReadonlyArray<Card>,
-  overrides: ReadonlyMap<string, Enhancement>,
-): Card[] {
-  return cards.map((c) => {
-    if (c.enhancement !== undefined) return c;
-    const override = overrides.get(cardKey(c));
-    return override === undefined ? c : { ...c, enhancement: override };
-  });
-}
-
-function applySealOverrides(
-  cards: ReadonlyArray<Card>,
-  overrides: ReadonlyMap<string, Seal>,
-): Card[] {
-  return cards.map((c) => {
-    if (c.seal !== undefined && c.seal !== null) return c;
-    const override = overrides.get(cardKey(c));
-    return override === undefined ? c : { ...c, seal: override };
-  });
-}
-
-function buildShuffledDeck(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
-  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): Card[] {
-  const base = applySealOverrides(
-    applyEnhancementOverrides(createDeck(excludedKeys), enhancementOverrides),
-    sealOverrides,
-  );
-  const extras = applySealOverrides(
-    applyEnhancementOverrides(addedCards, enhancementOverrides),
-    sealOverrides,
-  );
-  return shuffle([...base, ...extras]);
-}
-
-function initialDeal(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  handSize: number = HAND_SIZE,
-  addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
-  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): DealResult {
-  return deal(
-    buildShuffledDeck(excludedKeys, addedCards, enhancementOverrides, sealOverrides),
-    Math.max(1, handSize),
-  );
-}
-
-function fullDeckPile(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
-  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): DealResult {
-  return {
-    hand: [],
-    remaining: buildShuffledDeck(
-      excludedKeys,
-      addedCards,
-      enhancementOverrides,
-      sealOverrides,
-    ),
-  };
-}
-
 function App() {
-  const [blind, setBlind] = useState<Blind>(1);
-  const [round, setRound] = useState(1);
-  const [ante, setAnte] = useState(1);
-  const [money, setMoney] = useState(4);
-  const [chips, setChips] = useState(0);
-  const [multiplier, setMultiplier] = useState(0);
+  const blind = useGame((state) => state.blind);
+  const setBlind = useGame((state) => state.setBlind);
+  const round = useGame((state) => state.round);
+  const setRound = useGame((state) => state.setRound);
+  const ante = useGame((state) => state.ante);
+  const setAnte = useGame((state) => state.setAnte);
+  const money = useGame((state) => state.money);
+  const chips = useGame((state) => state.chips);
+  const setChips = useGame((state) => state.setChips);
+  const multiplier = useGame((state) => state.multiplier);
+  const setMultiplier = useGame((state) => state.setMultiplier);
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
   // so the displayed chips/multiplier reflect manual bumps until a New game
   // resets them. See #265.
-  const [devChipsBonus, setDevChipsBonus] = useState(0);
-  const [devMultBonus, setDevMultBonus] = useState(0);
-  const [devMultFactor, setDevMultFactor] = useState(1);
-  const [forceProbabilities, setForceProbabilities] = useState(false);
+  const devChipsBonus = useGame((state) => state.devChipsBonus);
+  const setDevChipsBonus = useGame((state) => state.setDevChipsBonus);
+  const devMultBonus = useGame((state) => state.devMultBonus);
+  const setDevMultBonus = useGame((state) => state.setDevMultBonus);
+  const devMultFactor = useGame((state) => state.devMultFactor);
+  const setDevMultFactor = useGame((state) => state.setDevMultFactor);
+  const forceProbabilities = useGame((state) => state.forceProbabilities);
+  const setForceProbabilities = useGame(
+    (state) => state.setForceProbabilities,
+  );
   useEffect(() => {
     chanceOverrideConfig.force100 = forceProbabilities;
     return () => {
       chanceOverrideConfig.force100 = false;
     };
   }, [forceProbabilities]);
-  const [roundScore, setRoundScore] = useState(0);
-  const [selectedHand, setSelectedHand] = useState<Hand | null>(null);
-  const [remainingHands, setRemainingHands] = useState(4);
-  const [remainingDiscards, setRemainingDiscards] = useState(3);
-  const [runStats, setRunStats] = useState<RunStats>(initialRunStats());
-  const [dealt, setDealt] = useState<DealResult>(initialDeal);
-  const [highVisibility, setHighVisibility] = useState<boolean>(isHighVisibility);
-  const [animationSpeed, setAnimationSpeedState] = useState<AnimationSpeed>(
-    getAnimationSpeed,
-  );
-  const [selectedIds, setSelectedIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-  const [discardingIds, setDiscardingIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-  const [handDisplayOrder, setHandDisplayOrder] = useState<ReadonlyArray<number>>(
-    [],
-  );
-  const [jokers, setJokers] = useState<ReadonlyArray<Joker>>(() =>
-    initialJokersConfig.factory(),
-  );
-  const [jokerPulseCounters, setJokerPulseCounters] = useState<
-    Readonly<Record<string, number>>
-  >({});
-  const [handPlayCounts, setHandPlayCounts] = useState<HandPlayCounts>(
-    emptyHandCounts,
-  );
-  const [handStats, setHandStats] = useState<HandStats>(createDefaultHandStats);
+  const roundScore = useGame((state) => state.roundScore);
+  const setRoundScore = useGame((state) => state.setRoundScore);
+  const selectedHand = useGame((state) => state.selectedHand);
+  const setSelectedHand = useGame((state) => state.setSelectedHand);
+  const remainingHands = useGame((state) => state.remainingHands);
+  const setRemainingHands = useGame((state) => state.setRemainingHands);
+  const remainingDiscards = useGame((state) => state.remainingDiscards);
+  const setRemainingDiscards = useGame((state) => state.setRemainingDiscards);
+  const runStats = useGame((state) => state.runStats);
+  const setRunStats = useGame((state) => state.setRunStats);
+  const dealt = useGame((state) => state.dealt);
+  const setDealt = useGame((state) => state.setDealt);
+  useEffect(() => {
+    setDealt(initialDeal());
+  }, [setDealt]);
+  const highVisibility = usePreferences((state) => state.highVisibility);
+  const animationSpeed = usePreferences((state) => state.animationSpeed);
+  const selectedIds = useGame((state) => state.selectedIds);
+  const setSelectedIds = useGame((state) => state.setSelectedIds);
+  const discardingIds = useGame((state) => state.discardingIds);
+  const setDiscardingIds = useGame((state) => state.setDiscardingIds);
+  const handDisplayOrder = useGame((state) => state.handDisplayOrder);
+  const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
+  const jokers = useGame((state) => state.jokers);
+  const setJokers = useGame((state) => state.setJokers);
+  const jokerPulseCounters = useGame((state) => state.jokerPulseCounters);
+  const setJokerPulseCounters = useGame((state) => state.setJokerPulseCounters);
+  useEffect(() => {
+    setJokers(initialJokersConfig.factory());
+  }, [setJokers]);
+  const handPlayCounts = useGame((state) => state.handPlayCounts);
+  const setHandPlayCounts = useGame((state) => state.setHandPlayCounts);
+  const handStats = useGame((state) => state.handStats);
+  const setHandStats = useGame((state) => state.setHandStats);
   const pendingDiscardCountRef = useRef(0);
   const pendingHandPlayResetRef = useRef(false);
-  const [handPlaySignal, setHandPlaySignal] = useState(0);
+  const handPlaySignal = useGame((state) => state.handPlaySignal);
+  const setHandPlaySignal = useGame((state) => state.setHandPlaySignal);
   const skipDrawAfterDiscardRef = useRef(false);
-  const [destroyedCardKeys, setDestroyedCardKeys] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
-  const [scoringEvents, setScoringEvents] = useState<ReadonlyArray<ScoringEvent>>(
-    [],
-  );
+  const destroyedCardKeys = useGame((state) => state.destroyedCardKeys);
+  const setDestroyedCardKeys = useGame((state) => state.setDestroyedCardKeys);
+  const scoringEvents = useGame((state) => state.scoringEvents);
+  const setScoringEvents = useGame((state) => state.setScoringEvents);
 
   function pushScoringEvent(event: ScoringEvent) {
     setScoringEvents((prev) => [...prev, event]);
   }
-  const [addedCards, setAddedCards] = useState<ReadonlyArray<Card>>(() => []);
-  const [cardEnhancementsByKey, setCardEnhancementsByKey] = useState<
-    ReadonlyMap<string, Enhancement>
-  >(() => new Map());
-  const [cardSealsByKey, setCardSealsByKey] = useState<
-    ReadonlyMap<string, Seal>
-  >(() => new Map());
+  const addedCards = useGame((state) => state.addedCards);
+  const setAddedCards = useGame((state) => state.setAddedCards);
+  const cardEnhancementsByKey = useGame((state) => state.cardEnhancementsByKey);
+  const setCardEnhancementsByKey = useGame(
+    (state) => state.setCardEnhancementsByKey,
+  );
+  const cardSealsByKey = useGame((state) => state.cardSealsByKey);
+  const setCardSealsByKey = useGame((state) => state.setCardSealsByKey);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -346,114 +269,136 @@ function App() {
   }
 
   // Sequential scoring state.
-  const [scoringCards, setScoringCards] = useState<ReadonlyArray<Card>>([]);
-  const [scoringIndex, setScoringIndex] = useState<number>(0);
+  const scoringCards = useGame((state) => state.scoringCards);
+  const setScoringCards = useGame((state) => state.setScoringCards);
+  const scoringIndex = useGame((state) => state.scoringIndex);
+  const setScoringIndex = useGame((state) => state.setScoringIndex);
   const scoringFinalizeRef = useRef<(() => void) | null>(null);
   const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
   const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
 
-  const [goldScoringIds, setGoldScoringIds] = useState<ReadonlyArray<number>>([]);
-  const [goldScoringIndex, setGoldScoringIndex] = useState<number>(0);
+  const goldScoringIds = useGame((state) => state.goldScoringIds);
+  const setGoldScoringIds = useGame((state) => state.setGoldScoringIds);
+  const goldScoringIndex = useGame((state) => state.goldScoringIndex);
+  const setGoldScoringIndex = useGame((state) => state.setGoldScoringIndex);
   const goldFinalizeRef = useRef<(() => void) | null>(null);
   const currentGoldScoringId =
     goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
       ? goldScoringIds[goldScoringIndex]
       : null;
 
-  const [steelScoringIds, setSteelScoringIds] = useState<ReadonlyArray<number>>([]);
-  const [steelScoringIndex, setSteelScoringIndex] = useState<number>(0);
+  const steelScoringIds = useGame((state) => state.steelScoringIds);
+  const setSteelScoringIds = useGame((state) => state.setSteelScoringIds);
+  const steelScoringIndex = useGame((state) => state.steelScoringIndex);
+  const setSteelScoringIndex = useGame((state) => state.setSteelScoringIndex);
   const steelFinalizeRef = useRef<(() => void) | null>(null);
   const currentSteelScoringId =
     steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length
       ? steelScoringIds[steelScoringIndex]
       : null;
 
-  const [luckyMultProcIds, setLuckyMultProcIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
-  const [luckyMoneyProcIds, setLuckyMoneyProcIds] = useState<ReadonlySet<number>>(
-    () => new Set(),
-  );
+  const luckyMultProcIds = useGame((state) => state.luckyMultProcIds);
+  const setLuckyMultProcIds = useGame((state) => state.setLuckyMultProcIds);
+  const luckyMoneyProcIds = useGame((state) => state.luckyMoneyProcIds);
+  const setLuckyMoneyProcIds = useGame((state) => state.setLuckyMoneyProcIds);
 
   const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
   function triggerNopeAnimation() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
-  const [handLevelSteps, setHandLevelSteps] = useState<
-    ReadonlyArray<JokerHandLevelStep>
-  >([]);
-  const [handLevelIndex, setHandLevelIndex] = useState<number>(0);
+  const handLevelSteps = useGame((state) => state.handLevelSteps);
+  const setHandLevelSteps = useGame((state) => state.setHandLevelSteps);
+  const handLevelIndex = useGame((state) => state.handLevelIndex);
+  const setHandLevelIndex = useGame((state) => state.setHandLevelIndex);
   const handLevelFinalizeRef = useRef<(() => void) | null>(null);
 
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
-  const [pendingWin, setPendingWin] = useState<RoundWonInfo | null>(null);
+  const pendingWin = useGame((state) => state.pendingWin);
+  const setPendingWin = useGame((state) => state.setPendingWin);
 
-  const [shopOffers, setShopOffers] = useState<ReadonlyArray<ShopItem> | null>(
-    null,
+  const shopOffers = useGame((state) => state.shopOffers);
+  const setShopOffers = useGame((state) => state.setShopOffers);
+  const setSoldJokerIdsThisShopVisit = useGame(
+    (state) => state.setSoldJokerIdsThisShopVisit,
   );
-  const [soldJokerIdsThisShopVisit, setSoldJokerIdsThisShopVisit] = useState<
-    ReadonlyArray<string>
-  >([]);
-  const [consumables, setConsumables] = useState<ReadonlyArray<Consumable>>([]);
-  const [handSizeModifier, setHandSizeModifier] = useState(0);
   const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
   const [pendingDouble, setPendingDouble] = useState(false);
-  const [extraPackSlots, setExtraPackSlots] = useState(0);
-  const [pendingForcedPacks, setPendingForcedPacks] = useState<
-    ReadonlyArray<PackPool>
-  >([]);
-  const [draggingConsumableIndex, setDraggingConsumableIndex] = useState<
-    number | null
-  >(null);
-  const [draggingJokerIndex, setDraggingJokerIndex] = useState<number | null>(
-    null,
+  const consumables = useGame((state) => state.consumables);
+  const setConsumables = useGame((state) => state.setConsumables);
+  const handSizeModifier = useGame((state) => state.handSizeModifier);
+  const setHandSizeModifier = useGame((state) => state.setHandSizeModifier);
+  const extraPackSlots = useGame((state) => state.extraPackSlots);
+  const setExtraPackSlots = useGame((state) => state.setExtraPackSlots);
+  const pendingForcedPacks = useGame((state) => state.pendingForcedPacks);
+  const setPendingForcedPacks = useGame((state) => state.setPendingForcedPacks);
+  const draggingConsumableIndex = useGame(
+    (state) => state.draggingConsumableIndex,
   );
-  const [openedPack, setOpenedPack] = useState<PackOffer | null>(null);
-  const [packPicksRemaining, setPackPicksRemaining] = useState(0);
-  const [packPreviewHand, setPackPreviewHand] = useState<ReadonlyArray<Card>>(
-    [],
+  const setDraggingConsumableIndex = useGame(
+    (state) => state.setDraggingConsumableIndex,
   );
-  const [packPreviewSelectedIds, setPackPreviewSelectedIds] = useState<
-    ReadonlySet<number>
-  >(() => new Set());
-  const [pendingBlindSelect, setPendingBlindSelect] = useState(true);
-  const [pendingTags, setPendingTags] = useState<ReadonlyArray<TagId>>([]);
-  const [skipTagOffers, setSkipTagOffers] = useState<AnteSkipOffers>(() =>
-    rollAnteSkipOffers(tagOfferRngConfig.rng),
+  const draggingJokerIndex = useGame((state) => state.draggingJokerIndex);
+  const setDraggingJokerIndex = useGame((state) => state.setDraggingJokerIndex);
+  const openedPack = useGame((state) => state.openedPack);
+  const packPicksRemaining = useGame((state) => state.packPicksRemaining);
+  const packPreviewHand = useGame((state) => state.packPreviewHand);
+  const setPackPreviewHand = useGame((state) => state.setPackPreviewHand);
+  const packPreviewSelectedIds = useGame(
+    (state) => state.packPreviewSelectedIds,
   );
-  const [pendingShopMods, setPendingShopMods] = useState<
-    ReadonlyArray<NextShopModifier>
-  >([]);
-  const [ownedVoucherIds, setOwnedVoucherIds] = useState<ReadonlySet<VoucherId>>(
-    () => new Set(),
+  const skipTagOffers = useGame((state) => state.skipTagOffers);
+  const setSkipTagOffers = useGame((state) => state.setSkipTagOffers);
+  useEffect(() => {
+    setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+  }, [setSkipTagOffers]);
+  const pendingShopMods = useGame((state) => state.pendingShopMods);
+  const setPendingShopMods = useGame((state) => state.setPendingShopMods);
+  const setPackPreviewSelectedIds = useGame(
+    (state) => state.setPackPreviewSelectedIds,
   );
+  const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
+  const setPendingBlindSelect = useGame(
+    (state) => state.setPendingBlindSelect,
+  );
+  const pendingTags = useGame((state) => state.pendingTags);
+  const setPendingTags = useGame((state) => state.setPendingTags);
+  const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
   const currentHandSize = Math.max(
     1,
     HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
   );
-  const [extraVoucherSlots, setExtraVoucherSlots] = useState(0);
-  const [currentAnteVouchers, setCurrentAnteVouchers] = useState<
-    ReadonlyArray<Voucher>
-  >(() =>
-    pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
+  const extraVoucherSlots = useGame((state) => state.extraVoucherSlots);
+  const setExtraVoucherSlots = useGame((state) => state.setExtraVoucherSlots);
+  const currentAnteVouchers = useGame((state) => state.currentAnteVouchers);
+  const setCurrentAnteVouchers = useGame(
+    (state) => state.setCurrentAnteVouchers,
   );
-  const [soldVoucherIds, setSoldVoucherIds] = useState<ReadonlySet<VoucherId>>(
-    () => new Set(),
+  useEffect(() => {
+    setCurrentAnteVouchers(
+      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
+    );
+  }, [setCurrentAnteVouchers]);
+  const soldVoucherIds = useGame((state) => state.soldVoucherIds);
+  const setSoldVoucherIds = useGame((state) => state.setSoldVoucherIds);
+  const currentBoss = useGame((state) => state.currentBoss);
+  const setCurrentBoss = useGame((state) => state.setCurrentBoss);
+  useEffect(() => {
+    setCurrentBoss(pickBossForAnte({ ante: 1 }));
+  }, [setCurrentBoss]);
+  const recentBossIds = useGame((state) => state.recentBossIds);
+  const setRecentBossIds = useGame((state) => state.setRecentBossIds);
+  const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
+  const setHandHistoryThisRound = useGame(
+    (state) => state.setHandHistoryThisRound,
   );
-  const [currentBoss, setCurrentBoss] = useState<BossBlind>(() =>
-    pickBossForAnte({ ante: 1 }),
+  const playedCardKeysThisAnte = useGame(
+    (state) => state.playedCardKeysThisAnte,
   );
-  const [recentBossIds, setRecentBossIds] = useState<ReadonlySet<string>>(
-    () => new Set(),
+  const setPlayedCardKeysThisAnte = useGame(
+    (state) => state.setPlayedCardKeysThisAnte,
   );
-  const [handHistoryThisRound, setHandHistoryThisRound] = useState<
-    ReadonlyArray<HandLabel>
-  >([]);
-  const [playedCardKeysThisAnte, setPlayedCardKeysThisAnte] = useState<
-    ReadonlySet<string>
-  >(() => new Set());
 
   const bossScoreMultiplier = currentBoss.scoreMultiplier;
   const requiredScore =
@@ -614,7 +559,7 @@ function App() {
         });
       }
       if (luckyResult.moneyBonus > 0) {
-        setMoney((prev) => prev + luckyResult.moneyBonus);
+        useGame.getState().earn(luckyResult.moneyBonus);
         pushScoringEvent({
           kind: "money-delta",
           amount: luckyResult.moneyBonus,
@@ -628,7 +573,7 @@ function App() {
       }
       const sealMoney = goldSealMoney(stepCard);
       if (sealMoney > 0) {
-        setMoney((prev) => prev + sealMoney);
+        useGame.getState().earn(sealMoney);
         pushScoringEvent({
           kind: "money-delta",
           amount: sealMoney,
@@ -645,7 +590,7 @@ function App() {
         { firstFaceAlreadyScored },
       );
       if (cardJokerResult.moneyEarned > 0) {
-        setMoney((prev) => prev + cardJokerResult.moneyEarned);
+        useGame.getState().earn(cardJokerResult.moneyEarned);
       }
       if (cardJokerResult.additiveMult > 0) {
         setMultiplier((prev) => prev + cardJokerResult.additiveMult);
@@ -689,7 +634,7 @@ function App() {
     }
     const stepMs = getScoringStepMs(animationSpeed);
     const timer = window.setTimeout(() => {
-      setMoney((prev) => prev + GOLD_HELD_BONUS_PER_CARD);
+      useGame.getState().earn(GOLD_HELD_BONUS_PER_CARD);
       const goldId = goldScoringIds[goldScoringIndex];
       const goldCard = dealt.hand.find((c) => c.id === goldId);
       pushScoringEvent({
@@ -787,7 +732,7 @@ function App() {
     const interest =
       precomputed?.interest ??
       calculateInterest(interestBefore, interestCapFor(ownedVoucherIds));
-    setMoney((prev) => prev + blindReward + interest);
+    useGame.getState().earn(blindReward + interest);
     pushScoringEvent({
       kind: "money-delta",
       amount: blindReward,
@@ -805,7 +750,7 @@ function App() {
     } else {
       const tagPayout = totalDeferredBossPayout(pendingTags);
       if (tagPayout > 0) {
-        setMoney((prev) => prev + tagPayout);
+        useGame.getState().earn(tagPayout);
         setPendingTags([]);
       }
       const nextAnte = ante + 1;
@@ -885,36 +830,11 @@ function App() {
     setSelectedHand(null);
   }
 
-  function markOfferSold(idx: number) {
-    setShopOffers((current) =>
-      current
-        ? current.map((o, i) => (i === idx ? { ...o, sold: true } : o))
-        : current,
-    );
-  }
-
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
-  function openPackOffer(pack: PackOffer) {
-    setOpenedPack(pack);
-    setPackPicksRemaining(packPickLimit(pack.variant));
-    if (pack.pool === "arcana" || pack.pool === "spectral") {
-      const baseDeck = applySealOverrides(
-        applyEnhancementOverrides(createDeck(destroyedCardKeys), cardEnhancementsByKey),
-        cardSealsByKey,
-      );
-      const extras = applySealOverrides(
-        applyEnhancementOverrides(addedCards, cardEnhancementsByKey),
-        cardSealsByKey,
-      );
-      const preview = shuffle([...baseDeck, ...extras]).slice(0, currentHandSize);
-      setPackPreviewHand(preview);
-    } else {
-      setPackPreviewHand([]);
-    }
-    setPackPreviewSelectedIds(new Set());
-  }
+  const openPackOffer = useGame((s) => s.openPackOffer);
+  const decrementPackPicks = useGame((s) => s.decrementPackPicks);
 
   function openTagPack(pool: PackPool, variant: PackVariant) {
     play("pop");
@@ -932,29 +852,6 @@ function App() {
         variant,
       ),
     );
-  }
-
-  function openPack(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold || offer.kind !== "pack") return;
-    const price = applyShopDiscount(offer.price, ownedVoucherIds);
-    if (money < price) return;
-    play("pop");
-    setMoney((prev) => prev - price);
-    openPackOffer(offer.pack);
-    markOfferSold(idx);
-  }
-
-  function decrementPackPicks() {
-    setPackPicksRemaining((prev) => {
-      const remaining = prev - 1;
-      if (remaining <= 0) {
-        setOpenedPack(null);
-        setPackPreviewHand([]);
-        setPackPreviewSelectedIds(new Set());
-      }
-      return remaining;
-    });
   }
 
   function applyEnhancementToSelectedPreviewCards(enhancement: Enhancement) {
@@ -1019,10 +916,12 @@ function App() {
         }
       } else if (effect.kind === "money-multiply") {
         play("pop");
-        setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+        useGame
+          .getState()
+          .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
       } else if (effect.kind === "joker-sell-value-payout") {
         play("pop");
-        setMoney((prev) => prev + resolveTemperancePayout(jokers, effect.cap));
+        useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       } else if (effect.kind === "edition-roll") {
         play("pop");
         const result = rollWheelOfFortune(jokers, effect.chance);
@@ -1072,48 +971,12 @@ function App() {
     });
   }
 
-  function closeOpenedPack() {
-    setOpenedPack(null);
-    setPackPicksRemaining(0);
-    setPackPreviewHand([]);
-    setPackPreviewSelectedIds(new Set());
-  }
+  const closeOpenedPack = useGame((s) => s.closeOpenedPack);
 
-  function buyShopOffer(idx: number) {
-    const offer = shopOffers?.[idx];
-    if (!offer || offer.sold) return;
-    if (offer.kind === "pack") {
-      openPack(idx);
-      return;
-    }
-    const price = applyShopDiscount(offer.price, ownedVoucherIds);
-    if (money < price) return;
-    if (offer.kind === "joker") {
-      if (
-        effectiveJokerCount(jokers) >=
-        MAX_JOKERS + extraJokerSlots(ownedVoucherIds)
-      ) {
-        return;
-      }
-      play("pop");
-      setMoney((prev) => prev - price);
-      setJokers((prev) => [...prev, offer.joker]);
-      setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
-      markOfferSold(idx);
-      return;
-    }
-    if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
-    const next: Consumable =
-      offer.kind === "planet"
-        ? { kind: "planet", card: offer.planet }
-        : offer.kind === "tarot"
-          ? { kind: "tarot", card: offer.tarot }
-          : { kind: "spectral", card: offer.spectral };
-    play("pop");
-    setMoney((prev) => prev - price);
-    setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
-    markOfferSold(idx);
-  }
+  const buyShopOfferAction = useGame((s) => s.buyShopOffer);
+  const buyShopOffer = (idx: number) => {
+    if (buyShopOfferAction(idx)) play("pop");
+  };
 
   function applySpectralEffect(effect: SpectralEffect) {
     switch (effect.kind) {
@@ -1134,7 +997,7 @@ function App() {
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
         }));
-        setMoney((prev) => prev + effect.moneyGain);
+        useGame.getState().earn(effect.moneyGain);
         return;
       }
       case "sigil": {
@@ -1173,7 +1036,7 @@ function App() {
         );
         if (!created) return;
         setJokers((prev) => [...prev, created]);
-        if (effect.setMoneyToZero) setMoney(0);
+        if (effect.setMoneyToZero) useGame.getState().setMoney(0);
         return;
       }
       case "ectoplasm": {
@@ -1263,13 +1126,15 @@ function App() {
     const effect = entry.card.effect;
     if (effect.kind === "money-multiply") {
       play("pop");
-      setMoney((prev) => prev + resolveHermitPayout(prev, effect.bonusCap));
+      useGame
+        .getState()
+        .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
     if (effect.kind === "joker-sell-value-payout") {
       play("pop");
-      setMoney((prev) => prev + resolveTemperancePayout(jokers, effect.cap));
+      useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
@@ -1313,21 +1178,16 @@ function App() {
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
   }
 
-  function sellConsumable(consumableIdx: number) {
-    const entry = consumables[consumableIdx];
-    if (!entry) return;
+  const sellConsumableAction = useGame((s) => s.sellConsumable);
+  const sellConsumable = (consumableIdx: number) => {
     play("pop");
-    setMoney((prev) => prev + consumableSellValue(entry));
-    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-  }
-
-  function sellJoker(jokerIdx: number) {
-    const entry = jokers[jokerIdx];
-    if (!entry) return;
+    sellConsumableAction(consumableIdx);
+  };
+  const sellJokerAction = useGame((s) => s.sellJoker);
+  const sellJoker = (jokerIdx: number) => {
     play("pop");
-    setMoney((prev) => prev + jokerSellValue(entry));
-    setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
-  }
+    sellJokerAction(jokerIdx);
+  };
 
   const draggingConsumable =
     draggingConsumableIndex !== null
@@ -1349,29 +1209,13 @@ function App() {
     action(idx);
   };
 
-  function rerollShopOffers(cost: number) {
+  const rerollShopOffersAction = useGame((s) => s.rerollShopOffers);
+  const rerollShopOffers = (cost: number) => {
     if (!shopOffers) return;
     if (money < cost) return;
     play("pop");
-    setMoney((prev) => prev - cost);
-    const freshItems = pickShopItemOffers({
-      jokerCatalog: createJokerCatalog(),
-      excludedJokerIds: [
-        ...jokers.map((j) => j.id),
-        ...soldJokerIdsThisShopVisit,
-      ],
-      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-      tarotCatalog: createTarotCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      extraSlots: extraShopOfferSlots(ownedVoucherIds),
-      rng: shopPickerRngConfig.rng,
-    });
-    setShopOffers((current) => {
-      if (!current) return current;
-      const existingPacks = current.filter((o) => o.kind === "pack");
-      return [...freshItems, ...existingPacks];
-    });
-  }
+    rerollShopOffersAction(cost);
+  };
 
   function closeShopAndStartNextRound() {
     setShopOffers(null);
@@ -1429,8 +1273,9 @@ function App() {
           return next;
         });
       } else {
-        setMoney(
-          (prev) => prev + immediateMoneyGain(action, { stats: nextStats, money: prev }),
+        const economy = useGame.getState();
+        economy.earn(
+          immediateMoneyGain(action, { stats: nextStats, money: economy.money }),
         );
       }
       return;
@@ -1482,92 +1327,43 @@ function App() {
     });
   }
 
-  function buyAnteVoucher(voucherIdx: number) {
+  const buyAnteVoucherAction = useGame((s) => s.buyAnteVoucher);
+  const buyAnteVoucher = (voucherIdx: number) => {
     const voucher = currentAnteVouchers[voucherIdx];
     if (!voucher) return;
     if (soldVoucherIds.has(voucher.id)) return;
     if (money < voucher.cost) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
     play("pop");
-    setMoney((prev) => prev - voucher.cost);
-    const nextOwnedVoucherIds = new Set(ownedVoucherIds);
-    nextOwnedVoucherIds.add(voucher.id);
-    const handGain =
-      extraStartingHands(nextOwnedVoucherIds) -
-      extraStartingHands(ownedVoucherIds);
-    const discardGain =
-      extraStartingDiscards(nextOwnedVoucherIds) -
-      extraStartingDiscards(ownedVoucherIds);
-    if (handGain > 0) setRemainingHands((prev) => prev + handGain);
-    if (discardGain > 0) setRemainingDiscards((prev) => prev + discardGain);
-    setOwnedVoucherIds(nextOwnedVoucherIds);
-    setSoldVoucherIds((prev) => {
-      const next = new Set(prev);
-      next.add(voucher.id);
-      return next;
-    });
-    if (voucher.id === "overstock" || voucher.id === "overstock-plus") {
-      setShopOffers((current) => {
-        if (!current) return current;
-        const extra = pickSingleShopOffer(
-          {
-            jokerCatalog: createJokerCatalog(),
-            excludedJokerIds: [
-              ...jokers.map((j) => j.id),
-              ...soldJokerIdsThisShopVisit,
-            ],
-            planetCatalog: availablePlanets(
-              createPlanetCatalog(),
-              handPlayCounts,
-            ),
-            tarotCatalog: createTarotCatalog(),
-            spectralCatalog: createSpectralCatalog(),
-            rng: shopPickerRngConfig.rng,
-          },
-          current,
-        );
-        return extra ? [...current, extra] : current;
-      });
-    }
-  }
+    buyAnteVoucherAction(voucherIdx);
+  };
 
-  function reorderJokers(orderedIds: ReadonlyArray<string>) {
-    setJokers((prev) => {
-      const byId = new Map(prev.map((j) => [j.id, j]));
-      const ordered = orderedIds.flatMap((id) => byId.get(id) ?? []);
-      const seen = new Set(orderedIds);
-      return [...ordered, ...prev.filter((j) => !seen.has(j.id))];
-    });
-  }
+  const reorderJokers = useGame((s) => s.reorderJokers);
 
   function startNewGame(): void {
     setBlind(1);
     setRound(1);
     setAnte(1);
-    setMoney(4);
+    useGame.getState().resetEconomy();
     setHandSizeModifier(0);
     setPendingNextRoundHandSize(0);
     setPendingDouble(false);
     setExtraPackSlots(0);
     setPendingForcedPacks([]);
-    setExtraVoucherSlots(0);
     setDevChipsBonus(0);
     setDevMultBonus(0);
     setDevMultFactor(1);
     setForceProbabilities(false);
     setJokers(initialJokersConfig.factory());
-    setHandPlayCounts(emptyHandCounts());
-    setHandStats(createDefaultHandStats());
+    useGame.getState().resetStats();
     setDestroyedCardKeys(new Set());
     setAddedCards([]);
     setCardEnhancementsByKey(new Map());
     setConsumables([]);
-    const freshOwned = new Set<VoucherId>();
-    setOwnedVoucherIds(freshOwned);
+    useGame.getState().resetVouchers();
     setCurrentAnteVouchers(
-      pickVouchersForAnte({ ante: 1, ownedIds: freshOwned }, BASE_VOUCHER_SLOTS),
+      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
     );
-    setSoldVoucherIds(new Set());
     setRecentBossIds(new Set());
     const freshBoss = pickBossForAnte({
       ante: 1,
@@ -1699,7 +1495,7 @@ function App() {
         ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
         : 0;
     if (moneyPenalty > 0) {
-      setMoney((prev) => Math.max(0, prev - moneyPenalty));
+      useGame.getState().setMoney(money - moneyPenalty);
     }
 
     const label = detectHandLabel(playedCards);
@@ -1947,7 +1743,7 @@ function App() {
       const openModal = () => {
         play("win");
         if (remainingHandsBonus > 0) {
-          setMoney((prev) => prev + remainingHandsBonus);
+          useGame.getState().earn(remainingHandsBonus);
           pushScoringEvent({
             kind: "money-delta",
             amount: remainingHandsBonus,
@@ -2052,15 +1848,16 @@ function App() {
         currentBoss={currentBoss}
         scoringEvents={scoringEvents}
         onNewGame={startNewGame}
-        onHighVisibilityChange={setHighVisibility}
-        onAnimationSpeedChange={setAnimationSpeedState}
       />
       <Game
         onWin={handleWin}
         onAddChips={addChips}
         onAddMultiplier={addMultiplier}
         onMultiplyMultiplier={multiplyMultiplier}
-        onSetMoney={setMoney}
+        onAdjustMoney={(delta) => {
+          const economy = useGame.getState();
+          economy.setMoney(economy.money + delta);
+        }}
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
         canSubmit={(() => {
