@@ -93,14 +93,18 @@ import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
 import {
   cardKey,
   createDeck,
-  deal,
   drawCountForRefill,
   shuffle,
   HAND_SIZE,
   RANKS,
   SUITS,
-  type DealResult,
 } from "./cards/deck";
+import {
+  applyEnhancementOverrides,
+  applySealOverrides,
+  fullDeckPile,
+  initialDeal,
+} from "./cards/deckBuild";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
@@ -175,75 +179,6 @@ export function getScoringStepMs(
   }
   if (prefersReducedMotion()) return 0;
   return SCORING_STEP_MS;
-}
-
-function applyEnhancementOverrides(
-  cards: ReadonlyArray<Card>,
-  overrides: ReadonlyMap<string, Enhancement>,
-): Card[] {
-  return cards.map((c) => {
-    if (c.enhancement !== undefined) return c;
-    const override = overrides.get(cardKey(c));
-    return override === undefined ? c : { ...c, enhancement: override };
-  });
-}
-
-function applySealOverrides(
-  cards: ReadonlyArray<Card>,
-  overrides: ReadonlyMap<string, Seal>,
-): Card[] {
-  return cards.map((c) => {
-    if (c.seal !== undefined && c.seal !== null) return c;
-    const override = overrides.get(cardKey(c));
-    return override === undefined ? c : { ...c, seal: override };
-  });
-}
-
-function buildShuffledDeck(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
-  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): Card[] {
-  const base = applySealOverrides(
-    applyEnhancementOverrides(createDeck(excludedKeys), enhancementOverrides),
-    sealOverrides,
-  );
-  const extras = applySealOverrides(
-    applyEnhancementOverrides(addedCards, enhancementOverrides),
-    sealOverrides,
-  );
-  return shuffle([...base, ...extras]);
-}
-
-function initialDeal(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  handSize: number = HAND_SIZE,
-  addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
-  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): DealResult {
-  return deal(
-    buildShuffledDeck(excludedKeys, addedCards, enhancementOverrides, sealOverrides),
-    Math.max(1, handSize),
-  );
-}
-
-function fullDeckPile(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
-  sealOverrides: ReadonlyMap<string, Seal> = new Map(),
-): DealResult {
-  return {
-    hand: [],
-    remaining: buildShuffledDeck(
-      excludedKeys,
-      addedCards,
-      enhancementOverrides,
-      sealOverrides,
-    ),
-  };
 }
 
 function App() {
