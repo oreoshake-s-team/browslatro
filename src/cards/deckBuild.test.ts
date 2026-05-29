@@ -6,7 +6,7 @@ import {
   fullDeckPile,
   initialDeal,
 } from "./deckBuild";
-import { cardKey, createDeck, resetCardIds, DECK_SIZE, HAND_SIZE } from "./deck";
+import { cardKey, resetCardIds, DECK_SIZE, HAND_SIZE } from "./deck";
 import type { Card } from "./types";
 
 beforeEach(() => {
