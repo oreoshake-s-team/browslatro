@@ -15,7 +15,10 @@ import {
   jokerSellValue,
 } from "../items/jokers";
 import {
+  applyEditionToFirstJoker,
+  buildFreeJokerOffers,
   pickShopItemOffers,
+  pickShopOffers,
   pickSingleShopOffer,
   shopPickerRngConfig,
 } from "../items/shop";
@@ -30,10 +33,29 @@ import {
   extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
+  interestCapFor,
+  pickVouchersForAnte,
+  type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { createDeck, shuffle, HAND_SIZE } from "../cards/deck";
-import { applyEnhancementOverrides, applySealOverrides } from "../cards/deckBuild";
+import {
+  applyEnhancementOverrides,
+  applySealOverrides,
+  fullDeckPile,
+} from "../cards/deckBuild";
+import { recordUnusedDiscards } from "../run/runStats";
+import { applyNextShopModifiers } from "../run/nextShopMods";
+import { calculateInterest } from "../scoring/payout";
+import { BlindValues } from "../constants";
+import type { Blind } from "../cards/types";
+import {
+  rollAnteSkipOffers,
+  tagOfferRngConfig,
+  totalDeferredBossPayout,
+} from "../items/tags";
+import { pickBossForAnte, bossPickerRngConfig } from "../items/bosses";
+import { BASE_VOUCHER_SLOTS } from "./vouchers";
 
 export interface ActionsState {
   sellConsumable: (consumableIdx: number) => void;
@@ -47,6 +69,10 @@ export interface ActionsState {
   decrementPackPicks: () => void;
   closeOpenedPack: () => void;
   buyShopOffer: (idx: number) => boolean;
+  handleWin: (precomputed?: {
+    readonly interest: number;
+    readonly interestWallet: number;
+  }) => void;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -243,5 +269,117 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
     s.markOfferSold(idx);
     return true;
+  },
+  handleWin: (precomputed) => {
+    const s = get();
+    s.setRound((prev) => prev + 1);
+    s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
+    const blindReward = s.blind + 2;
+    const interestBefore = precomputed?.interestWallet ?? s.money;
+    const interest =
+      precomputed?.interest ??
+      calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds));
+    s.earn(blindReward + interest);
+    s.setScoringEvents((prev) => [
+      ...prev,
+      {
+        kind: "money-delta",
+        amount: blindReward,
+        source: `${BlindValues[s.blind]} reward`,
+      },
+    ]);
+    if (interest > 0) {
+      s.setScoringEvents((prev) => [
+        ...prev,
+        {
+          kind: "money-delta",
+          amount: interest,
+          source: `Interest on $${interestBefore}`,
+        },
+      ]);
+    }
+    if (s.blind < 3) {
+      s.setBlind((prev) => (prev + 1) as Blind);
+    } else {
+      const tagPayout = totalDeferredBossPayout(s.pendingTags);
+      if (tagPayout > 0) {
+        s.earn(tagPayout);
+        s.setPendingTags([]);
+      }
+      const nextAnte = s.ante + 1;
+      s.setAnte(nextAnte);
+      s.setBlind(1);
+      s.setCurrentAnteVouchers(
+        pickVouchersForAnte(
+          { ante: nextAnte, ownedIds: s.ownedVoucherIds },
+          BASE_VOUCHER_SLOTS + s.extraVoucherSlots,
+        ),
+      );
+      s.setSoldVoucherIds(new Set());
+      s.setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+      const nextRecent = new Set(s.recentBossIds);
+      nextRecent.add(s.currentBoss.id);
+      s.setRecentBossIds(nextRecent);
+      s.setCurrentBoss(
+        pickBossForAnte({
+          ante: nextAnte,
+          recentIds: nextRecent,
+          rng: bossPickerRngConfig.rng,
+        }),
+      );
+      s.setPlayedCardKeysThisAnte(new Set());
+    }
+    s.setSoldJokerIdsThisShopVisit([]);
+    const baseOffers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: s.jokers.map((j) => j.id),
+      planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
+      extraPackSlots: s.extraPackSlots,
+      forcedPackPools: s.pendingForcedPacks,
+      rng: shopPickerRngConfig.rng,
+    });
+    const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);
+    const pricedOffers = shopAdjustments.freeShopItems
+      ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
+      : baseOffers;
+    const freeJokerOffers = buildFreeJokerOffers(
+      shopAdjustments.freeJokerRarities,
+      createJokerCatalog(),
+      new Set(s.jokers.map((j) => j.id)),
+      shopPickerRngConfig.rng,
+    );
+    const editionedOffers = shopAdjustments.editionJokers.reduce(
+      (offers, edition) => applyEditionToFirstJoker(offers, edition),
+      [...freeJokerOffers, ...pricedOffers],
+    );
+    s.setShopOffers(editionedOffers);
+    if (shopAdjustments.extraVouchers > 0) {
+      s.setCurrentAnteVouchers((prev) => {
+        const existing = new Set(prev.map((v) => v.id));
+        const extra = pickVouchersForAnte(
+          {
+            ante: s.ante,
+            ownedIds: s.ownedVoucherIds,
+            excludeIds: new Set<VoucherId>([...s.ownedVoucherIds, ...existing]),
+          },
+          shopAdjustments.extraVouchers,
+        );
+        return [...prev, ...extra];
+      });
+    }
+    s.setPendingForcedPacks([]);
+    s.setDealt(
+      fullDeckPile(
+        s.destroyedCardKeys,
+        s.addedCards,
+        s.cardEnhancementsByKey,
+        s.cardSealsByKey,
+      ),
+    );
+    s.setSelectedIds(new Set());
+    s.setSelectedHand(null);
   },
 });

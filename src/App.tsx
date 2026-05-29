@@ -3,7 +3,7 @@ import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
 import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
-import { BASE_CHIPS, BLIND_MULTIPLIERS, BlindValues } from "./constants";
+import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
   DEFAULT_STARTING_HANDS,
@@ -36,7 +36,6 @@ import {
   resolveTagEffect,
   rollAnteSkipOffers,
   tagOfferRngConfig,
-  totalDeferredBossPayout,
   type TagId,
 } from "./items/tags";
 import { immediateMoneyGain } from "./run/immediateActions";
@@ -45,7 +44,6 @@ import {
   initialRunStats,
   recordBlindSkipped,
   recordHandPlayed,
-  recordUnusedDiscards,
   type RunStats,
 } from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
@@ -94,7 +92,7 @@ import {
   RANKS,
   SUITS,
 } from "./cards/deck";
-import { fullDeckPile, initialDeal } from "./cards/deckBuild";
+import { initialDeal } from "./cards/deckBuild";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
@@ -133,18 +131,11 @@ import {
   isFaceCard,
   withEdition,
 } from "./items/jokers";
-import {
-  SHOP_PACK_SLOTS,
-  applyEditionToFirstJoker,
-  buildFreeJokerOffers,
-  pickShopOffers,
-  shopPickerRngConfig,
-} from "./items/shop";
+import { SHOP_PACK_SLOTS, shopPickerRngConfig } from "./items/shop";
 import {
   extraConsumableSlots,
   extraHandSize,
   extraJokerSlots,
-  extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
   interestCapFor,
@@ -329,7 +320,6 @@ function App() {
   const setConsumables = useGame((state) => state.setConsumables);
   const handSizeModifier = useGame((state) => state.handSizeModifier);
   const setHandSizeModifier = useGame((state) => state.setHandSizeModifier);
-  const extraPackSlots = useGame((state) => state.extraPackSlots);
   const setExtraPackSlots = useGame((state) => state.setExtraPackSlots);
   const pendingForcedPacks = useGame((state) => state.pendingForcedPacks);
   const setPendingForcedPacks = useGame((state) => state.setPendingForcedPacks);
@@ -381,7 +371,6 @@ function App() {
     );
   }, [setCurrentAnteVouchers]);
   const soldVoucherIds = useGame((state) => state.soldVoucherIds);
-  const setSoldVoucherIds = useGame((state) => state.setSoldVoucherIds);
   const currentBoss = useGame((state) => state.currentBoss);
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
   useEffect(() => {
@@ -722,113 +711,7 @@ function App() {
     return () => window.clearTimeout(timer);
   }, [handLevelSteps, handLevelIndex, animationSpeed]);
 
-  function handleWin(
-    precomputed?: { readonly interest: number; readonly interestWallet: number },
-  ) {
-    setRound((prev) => prev + 1);
-    setRunStats((prev) => recordUnusedDiscards(prev, remainingDiscards));
-    const blindReward = blind + 2;
-    const interestBefore = precomputed?.interestWallet ?? money;
-    const interest =
-      precomputed?.interest ??
-      calculateInterest(interestBefore, interestCapFor(ownedVoucherIds));
-    useGame.getState().earn(blindReward + interest);
-    pushScoringEvent({
-      kind: "money-delta",
-      amount: blindReward,
-      source: `${BlindValues[blind]} reward`,
-    });
-    if (interest > 0) {
-      pushScoringEvent({
-        kind: "money-delta",
-        amount: interest,
-        source: `Interest on $${interestBefore}`,
-      });
-    }
-    if (blind < 3) {
-      setBlind((prev) => (prev + 1) as Blind);
-    } else {
-      const tagPayout = totalDeferredBossPayout(pendingTags);
-      if (tagPayout > 0) {
-        useGame.getState().earn(tagPayout);
-        setPendingTags([]);
-      }
-      const nextAnte = ante + 1;
-      setAnte(nextAnte);
-      setBlind(1);
-      setCurrentAnteVouchers(
-        pickVouchersForAnte(
-          { ante: nextAnte, ownedIds: ownedVoucherIds },
-          BASE_VOUCHER_SLOTS + extraVoucherSlots,
-        ),
-      );
-      setSoldVoucherIds(new Set());
-      setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
-      const nextRecent = new Set(recentBossIds);
-      nextRecent.add(currentBoss.id);
-      setRecentBossIds(nextRecent);
-      setCurrentBoss(
-        pickBossForAnte({
-          ante: nextAnte,
-          recentIds: nextRecent,
-          rng: bossPickerRngConfig.rng,
-        }),
-      );
-      setPlayedCardKeysThisAnte(new Set());
-    }
-    setSoldJokerIdsThisShopVisit([]);
-    const baseOffers = pickShopOffers({
-      jokerCatalog: createJokerCatalog(),
-      excludedJokerIds: jokers.map((j) => j.id),
-      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-      tarotCatalog: createTarotCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      extraSlots: extraShopOfferSlots(ownedVoucherIds),
-      extraPackSlots,
-      forcedPackPools: pendingForcedPacks,
-      rng: shopPickerRngConfig.rng,
-    });
-    const shopAdjustments = applyNextShopModifiers(pendingShopMods);
-    const pricedOffers = shopAdjustments.freeShopItems
-      ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
-      : baseOffers;
-    const freeJokerOffers = buildFreeJokerOffers(
-      shopAdjustments.freeJokerRarities,
-      createJokerCatalog(),
-      new Set(jokers.map((j) => j.id)),
-      shopPickerRngConfig.rng,
-    );
-    const editionedOffers = shopAdjustments.editionJokers.reduce(
-      (offers, edition) => applyEditionToFirstJoker(offers, edition),
-      [...freeJokerOffers, ...pricedOffers],
-    );
-    setShopOffers(editionedOffers);
-    if (shopAdjustments.extraVouchers > 0) {
-      setCurrentAnteVouchers((prev) => {
-        const existing = new Set(prev.map((v) => v.id));
-        const extra = pickVouchersForAnte(
-          {
-            ante,
-            ownedIds: ownedVoucherIds,
-            excludeIds: new Set<VoucherId>([...ownedVoucherIds, ...existing]),
-          },
-          shopAdjustments.extraVouchers,
-        );
-        return [...prev, ...extra];
-      });
-    }
-    setPendingForcedPacks([]);
-    setDealt(
-      fullDeckPile(
-        destroyedCardKeys,
-        addedCards,
-        cardEnhancementsByKey,
-        cardSealsByKey,
-      ),
-    );
-    setSelectedIds(new Set());
-    setSelectedHand(null);
-  }
+  const handleWin = useGame((s) => s.handleWin);
 
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
