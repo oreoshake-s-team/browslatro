@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
-import type { Blind, Card, Enhancement, Hand, Seal } from "./cards/types";
+import type { Blind, Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
   DEFAULT_STARTING_DISCARDS,
@@ -236,7 +236,6 @@ function App() {
     (state) => state.setCardEnhancementsByKey,
   );
   const cardSealsByKey = useGame((state) => state.cardSealsByKey);
-  const setCardSealsByKey = useGame((state) => state.setCardSealsByKey);
 
   function pulseJokers(firedIds: ReadonlyArray<string>) {
     if (firedIds.length === 0) return;
@@ -324,7 +323,6 @@ function App() {
   const openedPack = useGame((state) => state.openedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);
-  const setPackPreviewHand = useGame((state) => state.setPackPreviewHand);
   const packPreviewSelectedIds = useGame(
     (state) => state.packPreviewSelectedIds,
   );
@@ -728,39 +726,12 @@ function App() {
     );
   }
 
-  function applyEnhancementToSelectedPreviewCards(enhancement: Enhancement) {
-    const selectedKeys = new Set<string>();
-    for (const c of packPreviewHand) {
-      if (packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
-    }
-    setCardEnhancementsByKey((prev) => {
-      const next = new Map(prev);
-      for (const key of selectedKeys) next.set(key, enhancement);
-      return next;
-    });
-    setPackPreviewHand((prev) =>
-      prev.map((c) =>
-        packPreviewSelectedIds.has(c.id) ? { ...c, enhancement } : c,
-      ),
-    );
-    setPackPreviewSelectedIds(new Set());
-  }
-
-  function applySealToSelectedPreviewCards(seal: Seal) {
-    const selectedKeys = new Set<string>();
-    for (const c of packPreviewHand) {
-      if (packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
-    }
-    setCardSealsByKey((prev) => {
-      const next = new Map(prev);
-      for (const key of selectedKeys) next.set(key, seal);
-      return next;
-    });
-    setPackPreviewHand((prev) =>
-      prev.map((c) => (packPreviewSelectedIds.has(c.id) ? { ...c, seal } : c)),
-    );
-    setPackPreviewSelectedIds(new Set());
-  }
+  const applyEnhancementToSelectedPreviewCards = useGame(
+    (s) => s.applyEnhancementToSelectedPreviewCards,
+  );
+  const applySealToSelectedPreviewCards = useGame(
+    (s) => s.applySealToSelectedPreviewCards,
+  );
 
   function pickFromOpenedPack(optionIdx: number) {
     if (!openedPack || packPicksRemaining <= 0) return;

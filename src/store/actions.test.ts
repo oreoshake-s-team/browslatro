@@ -5,7 +5,7 @@ import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
-import { createDeck } from "../cards/deck";
+import { cardKey, createDeck } from "../cards/deck";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -374,5 +374,70 @@ describe("game actions slice", () => {
     game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
     game.applySpectralEffect({ kind: "apply-seal", seal: "gold", maxTargets: 1 });
     expect(useGame.getState().dealt.hand).toHaveLength(5);
+  });
+
+  test("applyEnhancementToSelectedPreviewCards enhances the selected card", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyEnhancementToSelectedPreviewCards("gold");
+    const card = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(card?.enhancement).toBe("gold");
+  });
+
+  test("applyEnhancementToSelectedPreviewCards leaves unselected cards alone (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyEnhancementToSelectedPreviewCards("gold");
+    const other = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[1].id);
+    expect(other?.enhancement).toBeUndefined();
+  });
+
+  test("applyEnhancementToSelectedPreviewCards records the override by key", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyEnhancementToSelectedPreviewCards("gold");
+    const key = cardKey(preview[0]);
+    expect(useGame.getState().cardEnhancementsByKey.get(key)).toBe("gold");
+  });
+
+  test("applyEnhancementToSelectedPreviewCards clears the selection", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyEnhancementToSelectedPreviewCards("gold");
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("applySealToSelectedPreviewCards seals the selected card", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applySealToSelectedPreviewCards("red");
+    const card = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(card?.seal).toBe("red");
+  });
+
+  test("applySealToSelectedPreviewCards records the override by key", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applySealToSelectedPreviewCards("red");
+    const key = cardKey(preview[0]);
+    expect(useGame.getState().cardSealsByKey.get(key)).toBe("red");
   });
 });
