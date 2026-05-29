@@ -10,7 +10,10 @@ import {
 } from "../items/consumables";
 import {
   MAX_JOKERS,
+  applyEditionToRandomJoker,
+  createJokerByRarity,
   createJokerCatalog,
+  createLegendaryJokerCatalog,
   effectiveJokerCount,
   jokerSellValue,
 } from "../items/jokers";
@@ -22,9 +25,17 @@ import {
   pickSingleShopOffer,
   shopPickerRngConfig,
 } from "../items/shop";
-import { availablePlanets, createPlanetCatalog } from "../items/planets";
+import {
+  applyPlanetUpgrade,
+  availablePlanets,
+  createPlanetCatalog,
+} from "../items/planets";
 import { createTarotCatalog } from "../items/tarots";
-import { createSpectralCatalog } from "../items/spectrals";
+import {
+  createSpectralCatalog,
+  transmuteHand,
+  type SpectralEffect,
+} from "../items/spectrals";
 import {
   applyShopDiscount,
   extraConsumableSlots,
@@ -38,7 +49,7 @@ import {
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
-import { createDeck, shuffle, HAND_SIZE } from "../cards/deck";
+import { createDeck, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
 import {
   applyEnhancementOverrides,
   applySealOverrides,
@@ -73,6 +84,7 @@ export interface ActionsState {
     readonly interest: number;
     readonly interestWallet: number;
   }) => void;
+  applySpectralEffect: (effect: SpectralEffect) => void;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -381,5 +393,96 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     );
     s.setSelectedIds(new Set());
     s.setSelectedHand(null);
+  },
+  applySpectralEffect: (effect) => {
+    const s = get();
+    switch (effect.kind) {
+      case "black-hole":
+        s.setHandStats((prev) => {
+          let next = prev;
+          for (const planet of createPlanetCatalog()) {
+            next = applyPlanetUpgrade(next, planet);
+          }
+          return next;
+        });
+        return;
+      case "immolate": {
+        const handIds = s.dealt.hand.map((c) => c.id);
+        const shuffled = [...handIds].sort(() => Math.random() - 0.5);
+        const destroyed = new Set(shuffled.slice(0, effect.destroyCount));
+        s.setDealt((prev) => ({
+          hand: prev.hand.filter((c) => !destroyed.has(c.id)),
+          remaining: prev.remaining,
+        }));
+        s.earn(effect.moneyGain);
+        return;
+      }
+      case "sigil": {
+        const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
+        s.setDealt((prev) => ({
+          hand: prev.hand.map((c) => ({ ...c, suit })),
+          remaining: prev.remaining,
+        }));
+        return;
+      }
+      case "ouija": {
+        const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+        s.setDealt((prev) => ({
+          hand: prev.hand.map((c) => ({ ...c, rank })),
+          remaining: prev.remaining,
+        }));
+        s.setHandSizeModifier((prev) => prev + effect.handSizeDelta);
+        return;
+      }
+      case "transmute": {
+        s.setDealt((prev) => ({
+          hand: transmuteHand(
+            prev.hand,
+            effect.rankFilter,
+            effect.addCount,
+            Math.random,
+          ),
+          remaining: prev.remaining,
+        }));
+        return;
+      }
+      case "create-joker-by-rarity": {
+        const capacity = MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds);
+        const created = createJokerByRarity(
+          s.jokers,
+          createJokerCatalog(),
+          effect.rarity,
+          capacity,
+          Math.random,
+        );
+        if (!created) return;
+        s.setJokers((prev) => [...prev, created]);
+        if (effect.setMoneyToZero) s.setMoney(0);
+        return;
+      }
+      case "ectoplasm": {
+        s.setJokers((prev) =>
+          applyEditionToRandomJoker(prev, "negative", Math.random),
+        );
+        s.setHandSizeModifier((prev) => prev + effect.handSizeDelta);
+        return;
+      }
+      case "create-legendary": {
+        const capacity = MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds);
+        const created = createJokerByRarity(
+          s.jokers,
+          createLegendaryJokerCatalog(),
+          "legendary",
+          capacity,
+          Math.random,
+        );
+        if (created) s.setJokers((prev) => [...prev, created]);
+        return;
+      }
+      case "apply-seal":
+        return;
+      case "duplicate-selected":
+        return;
+    }
   },
 });
