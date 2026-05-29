@@ -213,4 +213,85 @@ describe("game actions slice", () => {
     game.buyShopOffer(0);
     expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
   });
+
+  test("handleWin increments the round counter", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().round).toBe(2);
+  });
+
+  test("handleWin pays the blind reward into the wallet", () => {
+    const game = useGame.getState();
+    game.setMoney(0);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().money).toBe(3);
+  });
+
+  test("handleWin uses the precomputed interest when provided", () => {
+    const game = useGame.getState();
+    game.setMoney(0);
+    game.handleWin({ interest: 7, interestWallet: 100 });
+    expect(useGame.getState().money).toBe(10);
+  });
+
+  test("handleWin advances the blind when below the boss blind", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().blind).toBe(2);
+  });
+
+  test("handleWin does not advance the ante below the boss blind (negative)", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(1);
+  });
+
+  test("handleWin advances the ante after the boss blind", () => {
+    const game = useGame.getState();
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(2);
+  });
+
+  test("handleWin resets to the first blind after the boss blind", () => {
+    const game = useGame.getState();
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().blind).toBe(1);
+  });
+
+  test("handleWin records the defeated boss when the ante advances", () => {
+    const game = useGame.getState();
+    const defeatedId = game.currentBoss.id;
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().recentBossIds.has(defeatedId)).toBe(true);
+  });
+
+  test("handleWin generates a fresh shop", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().shopOffers).not.toBeNull();
+  });
+
+  test("handleWin clears jokers sold during the prior shop visit", () => {
+    const game = useGame.getState();
+    game.setSoldJokerIdsThisShopVisit(["abc"]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().soldJokerIdsThisShopVisit).toHaveLength(0);
+  });
+
+  test("handleWin refills the deck pile with the full deck", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().dealt.remaining).toHaveLength(52);
+  });
+
+  test("handleWin leaves the dealt hand empty", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().dealt.hand).toHaveLength(0);
+  });
+
+  test("handleWin logs a money-delta scoring event for the reward", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    const hasReward = useGame
+      .getState()
+      .scoringEvents.some((e) => e.kind === "money-delta" && e.amount === 3);
+    expect(hasReward).toBe(true);
+  });
 });
