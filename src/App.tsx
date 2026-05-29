@@ -67,7 +67,6 @@ import {
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
-  consumableSellValue,
   consumableUseBlock,
   hasFreeConsumableSlot,
   removeConsumableAt,
@@ -138,7 +137,6 @@ import {
   effectiveJokerCount,
   initialJokersConfig,
   isFaceCard,
-  jokerSellValue,
   withEdition,
 } from "./items/jokers";
 import {
@@ -1348,21 +1346,16 @@ function App() {
     setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
   }
 
-  function sellConsumable(consumableIdx: number) {
-    const entry = consumables[consumableIdx];
-    if (!entry) return;
+  const sellConsumableAction = useGame((s) => s.sellConsumable);
+  const sellConsumable = (consumableIdx: number) => {
     play("pop");
-    useGame.getState().earn(consumableSellValue(entry));
-    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-  }
-
-  function sellJoker(jokerIdx: number) {
-    const entry = jokers[jokerIdx];
-    if (!entry) return;
+    sellConsumableAction(consumableIdx);
+  };
+  const sellJokerAction = useGame((s) => s.sellJoker);
+  const sellJoker = (jokerIdx: number) => {
     play("pop");
-    useGame.getState().earn(jokerSellValue(entry));
-    setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
-  }
+    sellJokerAction(jokerIdx);
+  };
 
   const draggingConsumable =
     draggingConsumableIndex !== null
@@ -1567,14 +1560,7 @@ function App() {
     }
   }
 
-  function reorderJokers(orderedIds: ReadonlyArray<string>) {
-    setJokers((prev) => {
-      const byId = new Map(prev.map((j) => [j.id, j]));
-      const ordered = orderedIds.flatMap((id) => byId.get(id) ?? []);
-      const seen = new Set(orderedIds);
-      return [...ordered, ...prev.filter((j) => !seen.has(j.id))];
-    });
-  }
+  const reorderJokers = useGame((s) => s.reorderJokers);
 
   function startNewGame(): void {
     setBlind(1);
