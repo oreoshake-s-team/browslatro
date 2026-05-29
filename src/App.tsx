@@ -78,35 +78,23 @@ import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
 import {
   getCardChips,
   getCardMultDelta,
-  getRankChips,
   getScoringCards,
-  getScoringStep,
 } from "./scoring/scoring";
-import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
+import type { ScoringEvent } from "./scoring/scoringTrace";
 import { cardKey, drawCountForRefill, HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
-import { useScoringStepSequence } from "./hooks/useScoringStepSequence";
+import { useScoringPipeline } from "./hooks/useScoringPipeline";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   calculateInterest,
   GOLD_HELD_BONUS_PER_CARD,
   REMAINING_HAND_BONUS,
 } from "./scoring/payout";
-import {
-  STEEL_MULT_FACTOR,
-  getHeldInHand,
-  steelHeldMultiplier,
-} from "./cards/heldInHand";
-import {
-  applyCardEnhancement,
-  applyLuckyRolls,
-  cardRankForEvaluation,
-  rollEnhancementChance,
-} from "./cards/enhancements";
+import { getHeldInHand, steelHeldMultiplier } from "./cards/heldInHand";
+import { applyCardEnhancement } from "./cards/enhancements";
 import {
   blueSealHeldCards,
   expandRedSealRetriggers,
-  goldSealMoney,
   pickRandomTarot,
   planetForHand,
   purpleSealDiscarded,
@@ -209,7 +197,6 @@ function App() {
   const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
   const jokerPulseCounters = useGame((state) => state.jokerPulseCounters);
-  const setJokerPulseCounters = useGame((state) => state.setJokerPulseCounters);
   useEffect(() => {
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
@@ -226,10 +213,6 @@ function App() {
   const setDestroyedCardKeys = useGame((state) => state.setDestroyedCardKeys);
   const scoringEvents = useGame((state) => state.scoringEvents);
   const setScoringEvents = useGame((state) => state.setScoringEvents);
-
-  function pushScoringEvent(event: ScoringEvent) {
-    setScoringEvents((prev) => [...prev, event]);
-  }
   const addedCards = useGame((state) => state.addedCards);
   const setAddedCards = useGame((state) => state.setAddedCards);
   const cardEnhancementsByKey = useGame((state) => state.cardEnhancementsByKey);
@@ -238,45 +221,16 @@ function App() {
   );
   const cardSealsByKey = useGame((state) => state.cardSealsByKey);
 
-  function pulseJokers(firedIds: ReadonlyArray<string>) {
-    if (firedIds.length === 0) return;
-    setJokerPulseCounters((prev) => {
-      const next = { ...prev };
-      for (const id of firedIds) {
-        next[id] = (next[id] ?? 0) + 1;
-      }
-      return next;
-    });
-  }
-
   // Sequential scoring state.
-  const scoringCards = useGame((state) => state.scoringCards);
   const setScoringCards = useGame((state) => state.setScoringCards);
   const scoringIndex = useGame((state) => state.scoringIndex);
   const setScoringIndex = useGame((state) => state.setScoringIndex);
-  const scoringFinalizeRef = useRef<(() => void) | null>(null);
-  const isScoring = scoringCards.length > 0 && scoringIndex < scoringCards.length;
-  const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
 
-  const goldScoringIds = useGame((state) => state.goldScoringIds);
   const setGoldScoringIds = useGame((state) => state.setGoldScoringIds);
-  const goldScoringIndex = useGame((state) => state.goldScoringIndex);
   const setGoldScoringIndex = useGame((state) => state.setGoldScoringIndex);
-  const goldFinalizeRef = useRef<(() => void) | null>(null);
-  const currentGoldScoringId =
-    goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
-      ? goldScoringIds[goldScoringIndex]
-      : null;
 
-  const steelScoringIds = useGame((state) => state.steelScoringIds);
   const setSteelScoringIds = useGame((state) => state.setSteelScoringIds);
-  const steelScoringIndex = useGame((state) => state.steelScoringIndex);
   const setSteelScoringIndex = useGame((state) => state.setSteelScoringIndex);
-  const steelFinalizeRef = useRef<(() => void) | null>(null);
-  const currentSteelScoringId =
-    steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length
-      ? steelScoringIds[steelScoringIndex]
-      : null;
 
   const luckyMultProcIds = useGame((state) => state.luckyMultProcIds);
   const setLuckyMultProcIds = useGame((state) => state.setLuckyMultProcIds);
@@ -288,11 +242,21 @@ function App() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
-  const handLevelSteps = useGame((state) => state.handLevelSteps);
   const setHandLevelSteps = useGame((state) => state.setHandLevelSteps);
-  const handLevelIndex = useGame((state) => state.handLevelIndex);
   const setHandLevelIndex = useGame((state) => state.setHandLevelIndex);
-  const handLevelFinalizeRef = useRef<(() => void) | null>(null);
+
+  const scoringStepMs = getScoringStepMs(animationSpeed);
+  const {
+    isScoring,
+    currentScoringId,
+    currentGoldScoringId,
+    currentSteelScoringId,
+    scoringFinalizeRef,
+    goldFinalizeRef,
+    steelFinalizeRef,
+    handLevelFinalizeRef,
+    resetScoring,
+  } = useScoringPipeline({ stepMs: scoringStepMs });
 
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
@@ -432,266 +396,12 @@ function App() {
     pendingDiscardCountRef.current = 0;
     pendingHandPlayResetRef.current = false;
     skipDrawAfterDiscardRef.current = false;
-    setScoringCards([]);
-    setScoringIndex(0);
-    scoringFinalizeRef.current = null;
-    setGoldScoringIds([]);
-    setGoldScoringIndex(0);
-    goldFinalizeRef.current = null;
-    setSteelScoringIds([]);
-    setSteelScoringIndex(0);
-    steelFinalizeRef.current = null;
+    resetScoring();
     setLuckyMultProcIds(new Set());
     setLuckyMoneyProcIds(new Set());
-    setHandLevelSteps([]);
-    setHandLevelIndex(0);
-    handLevelFinalizeRef.current = null;
     setScoringEvents([]);
     setPendingWin(null);
   }
-
-  const scoringStepMs = getScoringStepMs(animationSpeed);
-
-  useScoringStepSequence({
-    items: scoringCards,
-    index: scoringIndex,
-    setIndex: setScoringIndex,
-    stepMs: scoringStepMs,
-    onStep: (_card, stepIdx) => {
-      const { card: stepCard, chips: stepChips } = getScoringStep(
-        scoringCards,
-        stepIdx,
-      );
-      setChips((prev) => prev + stepChips);
-      const stepCardLabel = cardLabel(stepCard);
-      const evalRank = cardRankForEvaluation(stepCard);
-      const rankChips = evalRank === null ? 0 : getRankChips(evalRank);
-      if (rankChips > 0) {
-        pushScoringEvent({
-          kind: "chips-delta",
-          amount: rankChips,
-          source: `${stepCardLabel} rank`,
-        });
-      }
-      play("pop");
-      const enhancementEffect = applyCardEnhancement(stepCard);
-      if (enhancementEffect.chipsDelta > 0) {
-        const enhancementChipsSource =
-          stepCard.enhancement === "stone"
-            ? `Stone on ${stepCardLabel}`
-            : `Bonus on ${stepCardLabel}`;
-        pushScoringEvent({
-          kind: "chips-delta",
-          amount: enhancementEffect.chipsDelta,
-          source: enhancementChipsSource,
-        });
-      }
-      if (enhancementEffect.multDelta > 0) {
-        setMultiplier((prev) => prev + enhancementEffect.multDelta);
-        pushScoringEvent({
-          kind: "mult-delta",
-          amount: enhancementEffect.multDelta,
-          source: `Mult on ${stepCardLabel}`,
-        });
-      }
-      if (enhancementEffect.multTimes !== 1) {
-        setMultiplier((prev) => prev * enhancementEffect.multTimes);
-        pushScoringEvent({
-          kind: "mult-times",
-          factor: enhancementEffect.multTimes,
-          source: `Glass on ${stepCardLabel}`,
-        });
-      }
-      if (rollEnhancementChance(enhancementEffect.destroyChance)) {
-        const key = cardKey(stepCard);
-        setDestroyedCardKeys((prev) => {
-          if (prev.has(key)) return prev;
-          const next = new Set(prev);
-          next.add(key);
-          return next;
-        });
-        pushScoringEvent({
-          kind: "card-destroyed",
-          cardLabel: stepCardLabel,
-          source: "Glass roll",
-        });
-      }
-      const luckyResult = applyLuckyRolls(stepCard);
-      if (luckyResult.multBonus > 0) {
-        setMultiplier((prev) => prev + luckyResult.multBonus);
-        pushScoringEvent({
-          kind: "mult-delta",
-          amount: luckyResult.multBonus,
-          source: `Lucky proc on ${stepCardLabel}`,
-        });
-        setLuckyMultProcIds((prev) => {
-          const next = new Set(prev);
-          next.add(stepCard.id);
-          return next;
-        });
-      }
-      if (luckyResult.moneyBonus > 0) {
-        useGame.getState().earn(luckyResult.moneyBonus);
-        pushScoringEvent({
-          kind: "money-delta",
-          amount: luckyResult.moneyBonus,
-          source: `Lucky money proc on ${stepCardLabel}`,
-        });
-        setLuckyMoneyProcIds((prev) => {
-          const next = new Set(prev);
-          next.add(stepCard.id);
-          return next;
-        });
-      }
-      const sealMoney = goldSealMoney(stepCard);
-      if (sealMoney > 0) {
-        useGame.getState().earn(sealMoney);
-        pushScoringEvent({
-          kind: "money-delta",
-          amount: sealMoney,
-          source: `Gold Seal on ${stepCardLabel}`,
-        });
-      }
-      const firstFaceAlreadyScored = scoringCards
-        .slice(0, stepIdx)
-        .some(isFaceCard);
-      const cardJokerResult = applyPerCardJokers(
-        jokers,
-        stepCard,
-        Math.random,
-        { firstFaceAlreadyScored },
-      );
-      if (cardJokerResult.moneyEarned > 0) {
-        useGame.getState().earn(cardJokerResult.moneyEarned);
-      }
-      if (cardJokerResult.additiveMult > 0) {
-        setMultiplier((prev) => prev + cardJokerResult.additiveMult);
-      }
-      if (cardJokerResult.additiveChips > 0) {
-        setChips((prev) => prev + cardJokerResult.additiveChips);
-      }
-      if (cardJokerResult.xMult !== 1) {
-        setMultiplier((prev) => prev * cardJokerResult.xMult);
-      }
-      for (const step of cardJokerResult.steps) {
-        const source = `${step.jokerName} on ${stepCardLabel}`;
-        if (step.moneyEarned !== undefined && step.moneyEarned !== 0) {
-          pushScoringEvent({ kind: "money-delta", amount: step.moneyEarned, source });
-        }
-        if (step.additiveChips !== undefined && step.additiveChips !== 0) {
-          pushScoringEvent({ kind: "chips-delta", amount: step.additiveChips, source });
-        }
-        if (step.additiveMult !== undefined && step.additiveMult !== 0) {
-          pushScoringEvent({ kind: "mult-delta", amount: step.additiveMult, source });
-        }
-        if (step.xMultFactor !== undefined && step.xMultFactor !== 1) {
-          pushScoringEvent({ kind: "mult-times", factor: step.xMultFactor, source });
-        }
-      }
-      pulseJokers(cardJokerResult.firedJokerIds);
-    },
-    onFinish: () => {
-      const finalize = scoringFinalizeRef.current;
-      if (finalize) {
-        scoringFinalizeRef.current = null;
-        finalize();
-      }
-    },
-  });
-
-  useScoringStepSequence({
-    items: goldScoringIds,
-    index: goldScoringIndex,
-    setIndex: setGoldScoringIndex,
-    stepMs: scoringStepMs,
-    onStep: (goldId) => {
-      useGame.getState().earn(GOLD_HELD_BONUS_PER_CARD);
-      const goldCard = dealt.hand.find((c) => c.id === goldId);
-      pushScoringEvent({
-        kind: "money-delta",
-        amount: GOLD_HELD_BONUS_PER_CARD,
-        source: goldCard
-          ? `Gold enhancement: ${cardLabel(goldCard)} held`
-          : "Gold enhancement held",
-      });
-      play("gold");
-    },
-    onFinish: () => {
-      const finalize = goldFinalizeRef.current;
-      goldFinalizeRef.current = null;
-      setGoldScoringIds([]);
-      setGoldScoringIndex(0);
-      if (finalize) finalize();
-    },
-  });
-
-  useScoringStepSequence({
-    items: steelScoringIds,
-    index: steelScoringIndex,
-    setIndex: setSteelScoringIndex,
-    stepMs: scoringStepMs,
-    onStep: (steelId) => {
-      setMultiplier((prev) => prev * STEEL_MULT_FACTOR);
-      const steelCard = dealt.hand.find((c) => c.id === steelId);
-      pushScoringEvent({
-        kind: "mult-times",
-        factor: STEEL_MULT_FACTOR,
-        source: steelCard
-          ? `Steel: ${cardLabel(steelCard)} held`
-          : "Steel held",
-      });
-      play("pop");
-    },
-    onFinish: () => {
-      const finalize = steelFinalizeRef.current;
-      steelFinalizeRef.current = null;
-      setSteelScoringIds([]);
-      setSteelScoringIndex(0);
-      if (finalize) finalize();
-    },
-  });
-
-  useScoringStepSequence({
-    items: handLevelSteps,
-    index: handLevelIndex,
-    setIndex: setHandLevelIndex,
-    stepMs: scoringStepMs,
-    onStep: (step) => {
-      if (step.additiveChips) {
-        setChips((prev) => prev + (step.additiveChips ?? 0));
-        pushScoringEvent({
-          kind: "chips-delta",
-          amount: step.additiveChips,
-          source: step.jokerName,
-        });
-      }
-      if (step.additiveMult) {
-        setMultiplier((prev) => prev + (step.additiveMult ?? 0));
-        pushScoringEvent({
-          kind: "mult-delta",
-          amount: step.additiveMult,
-          source: step.jokerName,
-        });
-      }
-      if (step.xMultFactor !== undefined && step.xMultFactor !== 1) {
-        setMultiplier((prev) => prev * (step.xMultFactor ?? 1));
-        pushScoringEvent({
-          kind: "mult-times",
-          factor: step.xMultFactor,
-          source: step.jokerName,
-        });
-      }
-      play("pop");
-      pulseJokers([step.jokerId]);
-    },
-    onFinish: () => {
-      const finalize = handLevelFinalizeRef.current;
-      handLevelFinalizeRef.current = null;
-      setHandLevelSteps([]);
-      setHandLevelIndex(0);
-      if (finalize) finalize();
-    },
-  });
 
   const handleWin = useGame((s) => s.handleWin);
 
@@ -1498,11 +1208,14 @@ function App() {
         play("win");
         if (remainingHandsBonus > 0) {
           useGame.getState().earn(remainingHandsBonus);
-          pushScoringEvent({
-            kind: "money-delta",
-            amount: remainingHandsBonus,
-            source: `Remaining hands × $${REMAINING_HAND_BONUS}`,
-          });
+          setScoringEvents((prev) => [
+            ...prev,
+            {
+              kind: "money-delta",
+              amount: remainingHandsBonus,
+              source: `Remaining hands × $${REMAINING_HAND_BONUS}`,
+            },
+          ]);
         }
         setPendingWin({
           roundScore: newRoundScore,
