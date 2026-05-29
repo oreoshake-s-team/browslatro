@@ -51,8 +51,6 @@ import {
   createSpectralCatalog,
   duplicateSelectedInHand,
   spectralNeedsTarget,
-  transmuteHand,
-  type SpectralEffect,
 } from "./items/spectrals";
 import {
   createTarotCatalog,
@@ -85,13 +83,7 @@ import {
   getScoringStep,
 } from "./scoring/scoring";
 import { cardLabel, type ScoringEvent } from "./scoring/scoringTrace";
-import {
-  cardKey,
-  drawCountForRefill,
-  HAND_SIZE,
-  RANKS,
-  SUITS,
-} from "./cards/deck";
+import { cardKey, drawCountForRefill, HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
@@ -120,12 +112,10 @@ import {
 } from "./cards/seals";
 import {
   MAX_JOKERS,
-  applyEditionToRandomJoker,
   applyHandLevelJokers,
   applyPerCardJokers,
   createJokerByRarity,
   createJokerCatalog,
-  createLegendaryJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
   isFaceCard,
@@ -718,6 +708,7 @@ function App() {
 
   const openPackOffer = useGame((s) => s.openPackOffer);
   const decrementPackPicks = useGame((s) => s.decrementPackPicks);
+  const applySpectralEffect = useGame((s) => s.applySpectralEffect);
 
   function openTagPack(pool: PackPool, variant: PackVariant) {
     play("pop");
@@ -860,91 +851,6 @@ function App() {
   const buyShopOffer = (idx: number) => {
     if (buyShopOfferAction(idx)) play("pop");
   };
-
-  function applySpectralEffect(effect: SpectralEffect) {
-    switch (effect.kind) {
-      case "black-hole":
-        setHandStats((prev) => {
-          let next = prev;
-          for (const planet of createPlanetCatalog()) {
-            next = applyPlanetUpgrade(next, planet);
-          }
-          return next;
-        });
-        return;
-      case "immolate": {
-        const handIds = dealt.hand.map((c) => c.id);
-        const shuffled = [...handIds].sort(() => Math.random() - 0.5);
-        const destroyed = new Set(shuffled.slice(0, effect.destroyCount));
-        setDealt((prev) => ({
-          hand: prev.hand.filter((c) => !destroyed.has(c.id)),
-          remaining: prev.remaining,
-        }));
-        useGame.getState().earn(effect.moneyGain);
-        return;
-      }
-      case "sigil": {
-        const suits = SUITS;
-        const suit = suits[Math.floor(Math.random() * suits.length)];
-        setDealt((prev) => ({
-          hand: prev.hand.map((c) => ({ ...c, suit })),
-          remaining: prev.remaining,
-        }));
-        return;
-      }
-      case "ouija": {
-        const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
-        setDealt((prev) => ({
-          hand: prev.hand.map((c) => ({ ...c, rank })),
-          remaining: prev.remaining,
-        }));
-        setHandSizeModifier((prev) => prev + effect.handSizeDelta);
-        return;
-      }
-      case "transmute": {
-        setDealt((prev) => ({
-          hand: transmuteHand(prev.hand, effect.rankFilter, effect.addCount, Math.random),
-          remaining: prev.remaining,
-        }));
-        return;
-      }
-      case "create-joker-by-rarity": {
-        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
-        const created = createJokerByRarity(
-          jokers,
-          createJokerCatalog(),
-          effect.rarity,
-          capacity,
-          Math.random,
-        );
-        if (!created) return;
-        setJokers((prev) => [...prev, created]);
-        if (effect.setMoneyToZero) useGame.getState().setMoney(0);
-        return;
-      }
-      case "ectoplasm": {
-        setJokers((prev) => applyEditionToRandomJoker(prev, "negative", Math.random));
-        setHandSizeModifier((prev) => prev + effect.handSizeDelta);
-        return;
-      }
-      case "create-legendary": {
-        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
-        const created = createJokerByRarity(
-          jokers,
-          createLegendaryJokerCatalog(),
-          "legendary",
-          capacity,
-          Math.random,
-        );
-        if (created) setJokers((prev) => [...prev, created]);
-        return;
-      }
-      case "apply-seal":
-        return;
-      case "duplicate-selected":
-        return;
-    }
-  }
 
   function useConsumable(consumableIdx: number) {
     const entry = consumables[consumableIdx];

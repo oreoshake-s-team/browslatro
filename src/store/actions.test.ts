@@ -5,6 +5,7 @@ import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
+import { createDeck } from "../cards/deck";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -293,5 +294,85 @@ describe("game actions slice", () => {
       .getState()
       .scoringEvents.some((e) => e.kind === "money-delta" && e.amount === 3);
     expect(hasReward).toBe(true);
+  });
+
+  test("applySpectralEffect immolate destroys the requested cards", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "immolate", destroyCount: 2, moneyGain: 0 });
+    expect(useGame.getState().dealt.hand).toHaveLength(3);
+  });
+
+  test("applySpectralEffect immolate adds the money gain", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.setMoney(0);
+    game.applySpectralEffect({ kind: "immolate", destroyCount: 1, moneyGain: 4 });
+    expect(useGame.getState().money).toBe(4);
+  });
+
+  test("applySpectralEffect sigil converts the hand to one suit", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "sigil" });
+    const suits = new Set(useGame.getState().dealt.hand.map((c) => c.suit));
+    expect(suits.size).toBe(1);
+  });
+
+  test("applySpectralEffect ouija converts the hand to one rank", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "ouija", handSizeDelta: -1 });
+    const ranks = new Set(useGame.getState().dealt.hand.map((c) => c.rank));
+    expect(ranks.size).toBe(1);
+  });
+
+  test("applySpectralEffect ouija applies the hand-size delta", () => {
+    useGame.getState().applySpectralEffect({ kind: "ouija", handSizeDelta: -1 });
+    expect(useGame.getState().handSizeModifier).toBe(-1);
+  });
+
+  test("applySpectralEffect create-joker-by-rarity adds a joker", () => {
+    const game = useGame.getState();
+    game.setJokers([]);
+    game.applySpectralEffect({
+      kind: "create-joker-by-rarity",
+      rarity: "common",
+      setMoneyToZero: false,
+    });
+    expect(useGame.getState().jokers.length).toBeGreaterThan(0);
+  });
+
+  test("applySpectralEffect create-joker-by-rarity can zero the wallet", () => {
+    const game = useGame.getState();
+    game.setJokers([]);
+    game.setMoney(50);
+    game.applySpectralEffect({
+      kind: "create-joker-by-rarity",
+      rarity: "common",
+      setMoneyToZero: true,
+    });
+    expect(useGame.getState().money).toBe(0);
+  });
+
+  test("applySpectralEffect ectoplasm applies the hand-size delta", () => {
+    const game = useGame.getState();
+    game.setJokers([createJokerCatalog()[0]]);
+    game.applySpectralEffect({ kind: "ectoplasm", handSizeDelta: -1 });
+    expect(useGame.getState().handSizeModifier).toBe(-1);
+  });
+
+  test("applySpectralEffect create-legendary adds a joker", () => {
+    const game = useGame.getState();
+    game.setJokers([]);
+    game.applySpectralEffect({ kind: "create-legendary" });
+    expect(useGame.getState().jokers).toHaveLength(1);
+  });
+
+  test("applySpectralEffect apply-seal is a no-op on the hand (negative)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "apply-seal", seal: "gold", maxTargets: 1 });
+    expect(useGame.getState().dealt.hand).toHaveLength(5);
   });
 });
