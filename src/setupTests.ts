@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom";
-import { useGame } from "./store/game";
 
-beforeEach(() => {
+beforeEach(async () => {
+  const { useGame } = await import("./store/game");
   useGame.getState().resetGame();
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);

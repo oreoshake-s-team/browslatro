@@ -3,6 +3,7 @@ import { useGame } from "./game";
 import { createJokerCatalog, jokerSellValue } from "../items/jokers";
 import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
+import { VOUCHER_CATALOG } from "../items/vouchers";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -47,5 +48,33 @@ describe("game actions slice", () => {
     useGame.getState().setJokers([a, b]);
     useGame.getState().reorderJokers([b.id, a.id]);
     expect(useGame.getState().jokers.map((j) => j.id)).toEqual([b.id, a.id]);
+  });
+
+  test("buyAnteVoucher marks the voucher owned when affordable", () => {
+    const voucher = VOUCHER_CATALOG.find((v) => !v.requires);
+    if (!voucher) throw new Error("expected a prereq-free voucher");
+    const game = useGame.getState();
+    game.setCurrentAnteVouchers([voucher]);
+    game.setMoney(voucher.cost + 5);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(true);
+  });
+
+  test("buyAnteVoucher is a no-op when unaffordable (negative)", () => {
+    const voucher = VOUCHER_CATALOG.find((v) => !v.requires);
+    if (!voucher) throw new Error("expected a prereq-free voucher");
+    const game = useGame.getState();
+    game.setCurrentAnteVouchers([voucher]);
+    game.setMoney(voucher.cost - 1);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(false);
+  });
+
+  test("rerollShopOffers spends the reroll cost", () => {
+    const game = useGame.getState();
+    game.setShopOffers([]);
+    game.setMoney(20);
+    game.rerollShopOffers(5);
+    expect(useGame.getState().money).toBe(15);
   });
 });

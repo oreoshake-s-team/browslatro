@@ -143,9 +143,7 @@ import {
   SHOP_PACK_SLOTS,
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
-  pickShopItemOffers,
   pickShopOffers,
-  pickSingleShopOffer,
   shopPickerRngConfig,
 } from "./items/shop";
 import {
@@ -398,9 +396,6 @@ function App() {
 
   const shopOffers = useGame((state) => state.shopOffers);
   const setShopOffers = useGame((state) => state.setShopOffers);
-  const soldJokerIdsThisShopVisit = useGame(
-    (state) => state.soldJokerIdsThisShopVisit,
-  );
   const setSoldJokerIdsThisShopVisit = useGame(
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
@@ -448,7 +443,6 @@ function App() {
   const pendingTags = useGame((state) => state.pendingTags);
   const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
-  const setOwnedVoucherIds = useGame((state) => state.setOwnedVoucherIds);
   const currentHandSize = Math.max(
     1,
     HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
@@ -1377,29 +1371,13 @@ function App() {
     action(idx);
   };
 
-  function rerollShopOffers(cost: number) {
+  const rerollShopOffersAction = useGame((s) => s.rerollShopOffers);
+  const rerollShopOffers = (cost: number) => {
     if (!shopOffers) return;
     if (money < cost) return;
     play("pop");
-    useGame.getState().spend(cost);
-    const freshItems = pickShopItemOffers({
-      jokerCatalog: createJokerCatalog(),
-      excludedJokerIds: [
-        ...jokers.map((j) => j.id),
-        ...soldJokerIdsThisShopVisit,
-      ],
-      planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-      tarotCatalog: createTarotCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      extraSlots: extraShopOfferSlots(ownedVoucherIds),
-      rng: shopPickerRngConfig.rng,
-    });
-    setShopOffers((current) => {
-      if (!current) return current;
-      const existingPacks = current.filter((o) => o.kind === "pack");
-      return [...freshItems, ...existingPacks];
-    });
-  }
+    rerollShopOffersAction(cost);
+  };
 
   function closeShopAndStartNextRound() {
     setShopOffers(null);
@@ -1511,54 +1489,16 @@ function App() {
     });
   }
 
-  function buyAnteVoucher(voucherIdx: number) {
+  const buyAnteVoucherAction = useGame((s) => s.buyAnteVoucher);
+  const buyAnteVoucher = (voucherIdx: number) => {
     const voucher = currentAnteVouchers[voucherIdx];
     if (!voucher) return;
     if (soldVoucherIds.has(voucher.id)) return;
     if (money < voucher.cost) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
     play("pop");
-    useGame.getState().spend(voucher.cost);
-    const nextOwnedVoucherIds = new Set(ownedVoucherIds);
-    nextOwnedVoucherIds.add(voucher.id);
-    const handGain =
-      extraStartingHands(nextOwnedVoucherIds) -
-      extraStartingHands(ownedVoucherIds);
-    const discardGain =
-      extraStartingDiscards(nextOwnedVoucherIds) -
-      extraStartingDiscards(ownedVoucherIds);
-    if (handGain > 0) setRemainingHands((prev) => prev + handGain);
-    if (discardGain > 0) setRemainingDiscards((prev) => prev + discardGain);
-    setOwnedVoucherIds(nextOwnedVoucherIds);
-    setSoldVoucherIds((prev) => {
-      const next = new Set(prev);
-      next.add(voucher.id);
-      return next;
-    });
-    if (voucher.id === "overstock" || voucher.id === "overstock-plus") {
-      setShopOffers((current) => {
-        if (!current) return current;
-        const extra = pickSingleShopOffer(
-          {
-            jokerCatalog: createJokerCatalog(),
-            excludedJokerIds: [
-              ...jokers.map((j) => j.id),
-              ...soldJokerIdsThisShopVisit,
-            ],
-            planetCatalog: availablePlanets(
-              createPlanetCatalog(),
-              handPlayCounts,
-            ),
-            tarotCatalog: createTarotCatalog(),
-            spectralCatalog: createSpectralCatalog(),
-            rng: shopPickerRngConfig.rng,
-          },
-          current,
-        );
-        return extra ? [...current, extra] : current;
-      });
-    }
-  }
+    buyAnteVoucherAction(voucherIdx);
+  };
 
   const reorderJokers = useGame((s) => s.reorderJokers);
 
