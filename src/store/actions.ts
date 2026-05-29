@@ -49,7 +49,7 @@ import {
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
-import { createDeck, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
+import { cardKey, createDeck, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
 import {
   applyEnhancementOverrides,
   applySealOverrides,
@@ -59,7 +59,7 @@ import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import { calculateInterest } from "../scoring/payout";
 import { BlindValues } from "../constants";
-import type { Blind } from "../cards/types";
+import type { Blind, Enhancement, Seal } from "../cards/types";
 import {
   rollAnteSkipOffers,
   tagOfferRngConfig,
@@ -85,6 +85,8 @@ export interface ActionsState {
     readonly interestWallet: number;
   }) => void;
   applySpectralEffect: (effect: SpectralEffect) => void;
+  applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
+  applySealToSelectedPreviewCards: (seal: Seal) => void;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -484,5 +486,41 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       case "duplicate-selected":
         return;
     }
+  },
+  applyEnhancementToSelectedPreviewCards: (enhancement) => {
+    const s = get();
+    const selectedKeys = new Set<string>();
+    for (const c of s.packPreviewHand) {
+      if (s.packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+    }
+    s.setCardEnhancementsByKey((prev) => {
+      const next = new Map(prev);
+      for (const key of selectedKeys) next.set(key, enhancement);
+      return next;
+    });
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        s.packPreviewSelectedIds.has(c.id) ? { ...c, enhancement } : c,
+      ),
+    );
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  applySealToSelectedPreviewCards: (seal) => {
+    const s = get();
+    const selectedKeys = new Set<string>();
+    for (const c of s.packPreviewHand) {
+      if (s.packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+    }
+    s.setCardSealsByKey((prev) => {
+      const next = new Map(prev);
+      for (const key of selectedKeys) next.set(key, seal);
+      return next;
+    });
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        s.packPreviewSelectedIds.has(c.id) ? { ...c, seal } : c,
+      ),
+    );
+    s.setPackPreviewSelectedIds(new Set());
   },
 });
