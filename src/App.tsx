@@ -44,19 +44,10 @@ import {
   type RunStats,
 } from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
-import {
-  createSpectralCatalog,
-  spectralNeedsTarget,
-} from "./items/spectrals";
-import {
-  createTarotCatalog,
-  resolveHermitPayout,
-  resolveTemperancePayout,
-  rollWheelOfFortune,
-} from "./items/tarots";
+import { createSpectralCatalog } from "./items/spectrals";
+import { createTarotCatalog } from "./items/tarots";
 import {
   MAX_CONSUMABLE_SLOTS,
-  addConsumable,
   consumableUseBlock,
   hasFreeConsumableSlot,
 } from "./items/consumables";
@@ -75,6 +66,7 @@ import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useConsumableActions } from "./hooks/useConsumableActions";
+import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   MAX_JOKERS,
@@ -82,7 +74,6 @@ import {
   createJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
-  withEdition,
 } from "./items/jokers";
 import { SHOP_PACK_SLOTS, shopPickerRngConfig } from "./items/shop";
 import {
@@ -210,6 +201,7 @@ function App() {
   }
 
   const { useConsumable } = useConsumableActions({ triggerNopeAnimation });
+  const { pickFromOpenedPack } = useOpenedPackPicker({ triggerNopeAnimation });
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
   const {
@@ -376,8 +368,6 @@ function App() {
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
   const openPackOffer = useGame((s) => s.openPackOffer);
-  const decrementPackPicks = useGame((s) => s.decrementPackPicks);
-  const applySpectralEffect = useGame((s) => s.applySpectralEffect);
 
   function openTagPack(pool: PackPool, variant: PackVariant) {
     play("pop");
@@ -397,79 +387,6 @@ function App() {
     );
   }
 
-  const applyEnhancementToSelectedPreviewCards = useGame(
-    (s) => s.applyEnhancementToSelectedPreviewCards,
-  );
-
-  function pickFromOpenedPack(optionIdx: number) {
-    if (!openedPack || packPicksRemaining <= 0) return;
-    const option = openedPack.options[optionIdx];
-    if (!option) return;
-    if (option.kind === "planet") {
-      play("pop");
-      setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
-    } else if (option.kind === "tarot") {
-      const effect = option.tarot.effect;
-      if (effect.kind === "apply-enhancement") {
-        if (packPreviewHand.length === 0) {
-          if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
-          play("pop");
-          setConsumables((prev) =>
-            addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
-          );
-        } else {
-          if (
-            packPreviewSelectedIds.size === 0 ||
-            packPreviewSelectedIds.size > effect.maxTargets
-          ) {
-            return;
-          }
-          play("pop");
-          applyEnhancementToSelectedPreviewCards(effect.enhancement);
-        }
-      } else if (effect.kind === "money-multiply") {
-        play("pop");
-        useGame
-          .getState()
-          .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
-      } else if (effect.kind === "joker-sell-value-payout") {
-        play("pop");
-        useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
-      } else if (effect.kind === "edition-roll") {
-        play("pop");
-        const result = rollWheelOfFortune(jokers, effect.chance);
-        if (result.hit && result.targetIdx >= 0) {
-          setJokers((prev) =>
-            prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
-          );
-        } else {
-          triggerNopeAnimation();
-        }
-      }
-    } else if (option.kind === "joker") {
-      if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
-      play("pop");
-      setJokers((prev) => [...prev, option.joker]);
-    } else if (option.kind === "spectral") {
-      const effect = option.spectral.effect;
-      if (spectralNeedsTarget(effect)) {
-        if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
-        play("pop");
-        setConsumables((prev) =>
-          addConsumable(prev, { kind: "spectral", card: option.spectral }, consumableCapacity),
-        );
-      } else {
-        play("pop");
-        applySpectralEffect(effect);
-      }
-    } else if (option.kind === "playing-card") {
-      play("pop");
-      setAddedCards((prev) => [...prev, option.card]);
-    } else {
-      return;
-    }
-    decrementPackPicks();
-  }
 
   function togglePackPreviewCard(cardId: number) {
     if (packPreviewHand.length === 0) return;
