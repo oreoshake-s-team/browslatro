@@ -23,29 +23,15 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
-import {
-  rollPackForPool,
-  type PackPool,
-  type PackVariant,
-} from "./items/packs";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import NopeAnimation from "./components/game/NopeAnimation";
 import {
   resolveTagEffect,
   rollAnteSkipOffers,
   tagOfferRngConfig,
-  type TagId,
 } from "./items/tags";
-import { immediateMoneyGain } from "./run/immediateActions";
 import { applyNextShopModifiers } from "./run/nextShopMods";
-import {
-  initialRunStats,
-  recordBlindSkipped,
-  type RunStats,
-} from "./run/runStats";
-import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
-import { createSpectralCatalog } from "./items/spectrals";
-import { createTarotCatalog } from "./items/tarots";
+import { initialRunStats, recordBlindSkipped } from "./run/runStats";
 import {
   MAX_CONSUMABLE_SLOTS,
   consumableUseBlock,
@@ -67,19 +53,17 @@ import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useConsumableActions } from "./hooks/useConsumableActions";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
+import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   MAX_JOKERS,
-  createJokerByRarity,
-  createJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
 } from "./items/jokers";
-import { SHOP_PACK_SLOTS, shopPickerRngConfig } from "./items/shop";
+import { SHOP_PACK_SLOTS } from "./items/shop";
 import {
   extraConsumableSlots,
   extraHandSize,
-  extraJokerSlots,
   extraStartingDiscards,
   extraStartingHands,
   pickVouchersForAnte,
@@ -165,7 +149,6 @@ function App() {
   }, [setJokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
   const handStats = useGame((state) => state.handStats);
-  const setHandStats = useGame((state) => state.setHandStats);
   const handPlaySignal = useGame((state) => state.handPlaySignal);
   const {
     pendingDiscardCountRef,
@@ -200,8 +183,13 @@ function App() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
+  const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
+
   const { useConsumable } = useConsumableActions({ triggerNopeAnimation });
   const { pickFromOpenedPack } = useOpenedPackPicker({ triggerNopeAnimation });
+  const { applyGainedTag } = useTagDispatcher({
+    setPendingNextRoundHandSize,
+  });
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
   const {
@@ -229,7 +217,6 @@ function App() {
   const setSoldJokerIdsThisShopVisit = useGame(
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
-  const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
   const [pendingDouble, setPendingDouble] = useState(false);
   const consumables = useGame((state) => state.consumables);
   const setConsumables = useGame((state) => state.setConsumables);
@@ -290,7 +277,6 @@ function App() {
   useEffect(() => {
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
   }, [setCurrentBoss]);
-  const recentBossIds = useGame((state) => state.recentBossIds);
   const setRecentBossIds = useGame((state) => state.setRecentBossIds);
   const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
   const setHandHistoryThisRound = useGame(
@@ -367,26 +353,6 @@ function App() {
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
-  const openPackOffer = useGame((s) => s.openPackOffer);
-
-  function openTagPack(pool: PackPool, variant: PackVariant) {
-    play("pop");
-    openPackOffer(
-      rollPackForPool(
-        pool,
-        {
-          planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
-          tarotCatalog: createTarotCatalog(),
-          jokerCatalog: createJokerCatalog(),
-          spectralCatalog: createSpectralCatalog(),
-          excludedJokerIds: jokers.map((j) => j.id),
-          rng: shopPickerRngConfig.rng,
-        },
-        variant,
-      ),
-    );
-  }
-
 
   function togglePackPreviewCard(cardId: number) {
     if (packPreviewHand.length === 0) return;
@@ -457,65 +423,6 @@ function App() {
   function confirmBlindSelect() {
     setPendingBlindSelect(false);
     startNewRound();
-  }
-
-  function applyGainedTag(tagId: TagId, nextStats: RunStats) {
-    const effect = resolveTagEffect(tagId);
-    if (effect.category === "immediate") {
-      const action = effect.action;
-      if (action.kind === "open-pack") {
-        openTagPack(action.pool, action.variant);
-      } else if (action.kind === "create-jokers") {
-        play("pop");
-        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
-        setJokers((prev) => {
-          let next = prev;
-          for (let i = 0; i < action.count; i += 1) {
-            const joker = createJokerByRarity(
-              next,
-              createJokerCatalog(),
-              action.rarity,
-              capacity,
-              shopPickerRngConfig.rng,
-            );
-            if (joker) next = [...next, joker];
-          }
-          return next;
-        });
-      } else if (action.kind === "reroll-boss") {
-        play("pop");
-        setCurrentBoss(
-          pickBossForAnte({
-            ante,
-            recentIds: new Set<string>([...recentBossIds, currentBoss.id]),
-            rng: bossPickerRngConfig.rng,
-          }),
-        );
-      } else if (action.kind === "upgrade-hand") {
-        play("pop");
-        const planets = createPlanetCatalog();
-        const planet = planets[Math.floor(shopPickerRngConfig.rng() * planets.length)];
-        setHandStats((prev) => {
-          let next = prev;
-          for (let i = 0; i < action.levels; i += 1) {
-            next = applyPlanetUpgrade(next, planet);
-          }
-          return next;
-        });
-      } else {
-        const economy = useGame.getState();
-        economy.earn(
-          immediateMoneyGain(action, { stats: nextStats, money: economy.money }),
-        );
-      }
-      return;
-    }
-    setPendingTags((prev) => [...prev, tagId]);
-    if (effect.category === "next-shop") {
-      setPendingShopMods((prev) => [...prev, ...effect.modifiers]);
-    } else if (effect.category === "next-round") {
-      setPendingNextRoundHandSize((prev) => prev + effect.handSizeBonus);
-    }
   }
 
   function skipBlind() {
