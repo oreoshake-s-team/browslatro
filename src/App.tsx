@@ -9,11 +9,9 @@ import {
   DEFAULT_STARTING_HANDS,
   applyBossFaceDown,
   bossAdjustHandEntry,
-  bossRequiredCardCount,
   bossBlocksHandLabel,
   availableBosses,
   bossHandSize,
-  bossMoneyPenaltyPerCard,
   bossPickerRngConfig,
   bossStartingDiscards,
   bossStartingHands,
@@ -43,7 +41,6 @@ import { applyNextShopModifiers } from "./run/nextShopMods";
 import {
   initialRunStats,
   recordBlindSkipped,
-  recordHandPlayed,
   type RunStats,
 } from "./run/runStats";
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
@@ -75,39 +72,20 @@ import {
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
-import {
-  getCardChips,
-  getCardMultDelta,
-  getScoringCards,
-} from "./scoring/scoring";
-import type { ScoringEvent } from "./scoring/scoringTrace";
-import { cardKey, drawCountForRefill, HAND_SIZE } from "./cards/deck";
+import { drawCountForRefill, HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
-import { useScoringPipeline } from "./hooks/useScoringPipeline";
+import { usePlayHand } from "./hooks/usePlayHand";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
-  calculateInterest,
-  GOLD_HELD_BONUS_PER_CARD,
-  REMAINING_HAND_BONUS,
-} from "./scoring/payout";
-import { getHeldInHand, steelHeldMultiplier } from "./cards/heldInHand";
-import { applyCardEnhancement } from "./cards/enhancements";
-import {
-  blueSealHeldCards,
-  expandRedSealRetriggers,
   pickRandomTarot,
-  planetForHand,
   purpleSealDiscarded,
 } from "./cards/seals";
 import {
   MAX_JOKERS,
-  applyHandLevelJokers,
-  applyPerCardJokers,
   createJokerByRarity,
   createJokerCatalog,
   effectiveJokerCount,
   initialJokersConfig,
-  isFaceCard,
   withEdition,
 } from "./items/jokers";
 import { SHOP_PACK_SLOTS, shopPickerRngConfig } from "./items/shop";
@@ -117,7 +95,6 @@ import {
   extraJokerSlots,
   extraStartingDiscards,
   extraStartingHands,
-  interestCapFor,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
   type VoucherId,
@@ -192,7 +169,6 @@ function App() {
   const setSelectedIds = useGame((state) => state.setSelectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
   const setDiscardingIds = useGame((state) => state.setDiscardingIds);
-  const handDisplayOrder = useGame((state) => state.handDisplayOrder);
   const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
   const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
@@ -201,7 +177,6 @@ function App() {
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
-  const setHandPlayCounts = useGame((state) => state.setHandPlayCounts);
   const handStats = useGame((state) => state.handStats);
   const setHandStats = useGame((state) => state.setHandStats);
   const pendingDiscardCountRef = useRef(0);
@@ -221,16 +196,8 @@ function App() {
   );
   const cardSealsByKey = useGame((state) => state.cardSealsByKey);
 
-  // Sequential scoring state.
-  const setScoringCards = useGame((state) => state.setScoringCards);
+  // Sequential scoring state — read for render; mutations live in usePlayHand.
   const scoringIndex = useGame((state) => state.scoringIndex);
-  const setScoringIndex = useGame((state) => state.setScoringIndex);
-
-  const setGoldScoringIds = useGame((state) => state.setGoldScoringIds);
-  const setGoldScoringIndex = useGame((state) => state.setGoldScoringIndex);
-
-  const setSteelScoringIds = useGame((state) => state.setSteelScoringIds);
-  const setSteelScoringIndex = useGame((state) => state.setSteelScoringIndex);
 
   const luckyMultProcIds = useGame((state) => state.luckyMultProcIds);
   const setLuckyMultProcIds = useGame((state) => state.setLuckyMultProcIds);
@@ -242,21 +209,21 @@ function App() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
-  const setHandLevelSteps = useGame((state) => state.setHandLevelSteps);
-  const setHandLevelIndex = useGame((state) => state.setHandLevelIndex);
-
   const scoringStepMs = getScoringStepMs(animationSpeed);
   const {
+    submitHand,
     isScoring,
     currentScoringId,
     currentGoldScoringId,
     currentSteelScoringId,
-    scoringFinalizeRef,
-    goldFinalizeRef,
-    steelFinalizeRef,
-    handLevelFinalizeRef,
     resetScoring,
-  } = useScoringPipeline({ stepMs: scoringStepMs });
+  } = usePlayHand({
+    stepMs: scoringStepMs,
+    loseGame,
+    pendingDiscardCountRef,
+    pendingHandPlayResetRef,
+    skipDrawAfterDiscardRef,
+  });
 
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
@@ -935,316 +902,6 @@ function App() {
     if (pendingDiscardCountRef.current <= 0) {
       pendingDiscardCountRef.current = 0;
       finalizeDiscard(discardingIds);
-    }
-  }
-
-  function submitHand() {
-    if (discardingIds.size > 0) return;
-    if (isScoring) return;
-
-    const handById = new Map(dealt.hand.map((c) => [c.id, c]));
-    const playedCards = handDisplayOrder
-      .map((id) => handById.get(id))
-      .filter((c): c is Card => c !== undefined && selectedIds.has(c.id));
-    const submittedSelection = selectedIds;
-
-    if (playedCards.length === 0) {
-      // Empty submission: no scoring sequence, finalize directly.
-      finalizeHandSubmission(0, submittedSelection);
-      return;
-    }
-
-    const moneyPenalty =
-      blind === 3
-        ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
-        : 0;
-    if (moneyPenalty > 0) {
-      useGame.getState().setMoney(money - moneyPenalty);
-    }
-
-    const label = detectHandLabel(playedCards);
-    const isBossRound = blind === 3;
-    if (
-      isBossRound &&
-      bossBlocksHandLabel(currentBoss, label, handHistoryThisRound)
-    ) {
-      return;
-    }
-
-    pendingHandPlayResetRef.current = true;
-
-    setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
-    setRunStats(recordHandPlayed);
-    setHandHistoryThisRound((prev) => [...prev, label]);
-    setPlayedCardKeysThisAnte((prev) => {
-      const next = new Set(prev);
-      for (const card of playedCards) next.add(cardKey(card));
-      return next;
-    });
-    const baseHandEntry = handStats[label];
-    const adjustedHandEntry = isBossRound
-      ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
-      : baseHandEntry;
-    const forcedCount = isBossRound
-      ? bossRequiredCardCount(currentBoss)
-      : null;
-    const psychicZeroed =
-      forcedCount !== null && playedCards.length !== forcedCount;
-    const handEntry = psychicZeroed
-      ? { ...adjustedHandEntry, chips: 0, multiplier: 0 }
-      : adjustedHandEntry;
-    const playedDebuffedIds = debuffedHandIds(
-      playedCards,
-      currentBoss,
-      isBossRound,
-      playedCardKeysThisAnte,
-    );
-    const scoring = expandRedSealRetriggers(
-      getScoringCards(playedCards, label),
-    ).filter((c) => !playedDebuffedIds.has(c.id));
-    if (scoring.length === 0) {
-      const handOnlyScore = handEntry.chips * handEntry.multiplier;
-      finalizeHandSubmission(handOnlyScore, submittedSelection, label);
-      return;
-    }
-    const cardChipsTotal = scoring.reduce(
-      (sum, card) => sum + getCardChips(card),
-      0,
-    );
-    const handJokerResult = applyHandLevelJokers(jokers, {
-      playedHandLabel: label,
-      playedCardCount: playedCards.length,
-      scoredCards: scoring,
-      remainingDiscards,
-      money,
-      heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
-    });
-
-    let perCardAdditiveMult = 0;
-    let perCardAdditiveChips = 0;
-    let perCardXMult = 1;
-    let firstFaceAlreadyScoredUpfront = false;
-    for (let i = 0; i < scoring.length; i += 1) {
-      const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
-        firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
-      });
-      perCardAdditiveMult += perCard.additiveMult;
-      perCardAdditiveChips += perCard.additiveChips;
-      perCardAdditiveMult += getCardMultDelta(scoring[i]);
-      perCardXMult *= perCard.xMult;
-      if (isFaceCard(scoring[i])) firstFaceAlreadyScoredUpfront = true;
-    }
-
-    const heldSteelIds = dealt.hand
-      .filter((c) => c.enhancement === "steel" && !submittedSelection.has(c.id))
-      .map((c) => c.id);
-    const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
-    const enhancementXMult = scoring.reduce(
-      (m, card) => m * applyCardEnhancement(card).multTimes,
-      1,
-    );
-    const preHandXMultNoSteel = handJokerResult.xMult * enhancementXMult * perCardXMult;
-    const totalXMult = preHandXMultNoSteel * steelMult;
-
-    // Inline the same arithmetic computeFinalScoreWithJokers does so we can
-    // fold the dev Apply Modifiers offsets in at the same place. Bumps that
-    // were displayed during the round now actually move the round score.
-    const scoringChipsTotal =
-      handEntry.chips +
-      cardChipsTotal +
-      handJokerResult.additiveChips +
-      perCardAdditiveChips;
-    const scoringMult =
-      (handEntry.multiplier +
-        handJokerResult.additiveMult +
-        perCardAdditiveMult) *
-      totalXMult;
-    const adjustedChips = scoringChipsTotal + devChipsBonus;
-    const adjustedMult = (scoringMult + devMultBonus) * devMultFactor;
-    const finalScore = Math.floor(adjustedChips * adjustedMult);
-
-    // Steel ×1.5 animates per-card during the steel sequence; hand-level
-    // jokers now animate after steel, so the starting live multiplier omits
-    // both of those factors.
-    const liveMultiplier = handEntry.multiplier * enhancementXMult;
-    setChips(handEntry.chips);
-    setMultiplier(liveMultiplier);
-
-    const finalize = () => {
-      finalizeHandSubmission(finalScore, submittedSelection, label);
-    };
-    const runHandLevel = () => {
-      if (handJokerResult.steps.length === 0) {
-        finalize();
-        return;
-      }
-      handLevelFinalizeRef.current = finalize;
-      setHandLevelSteps(handJokerResult.steps);
-      setHandLevelIndex(0);
-    };
-    scoringFinalizeRef.current = () => {
-      if (heldSteelIds.length === 0) {
-        runHandLevel();
-        return;
-      }
-      steelFinalizeRef.current = runHandLevel;
-      setSteelScoringIds(heldSteelIds);
-      setSteelScoringIndex(0);
-    };
-    const baseEvent: ScoringEvent = {
-      kind: "hand-base",
-      chips: handEntry.chips,
-      mult: handEntry.multiplier,
-      handLabel: label,
-      level: handEntry.level,
-    };
-    const submitEvents: ScoringEvent[] = [baseEvent];
-    if (psychicZeroed) {
-      submitEvents.push({
-        kind: "boss-adjustment",
-        description: `${label} zeroed to 0 × 0 (needs ${forcedCount} cards, played ${playedCards.length})`,
-        source: currentBoss.name,
-      });
-    } else if (
-      isBossRound &&
-      (handEntry.chips !== baseHandEntry.chips ||
-        handEntry.multiplier !== baseHandEntry.multiplier ||
-        handEntry.level !== baseHandEntry.level)
-    ) {
-      submitEvents.push({
-        kind: "boss-adjustment",
-        description: `${label} adjusted to ${handEntry.chips} × ${handEntry.multiplier} (Lv ${handEntry.level})`,
-        source: currentBoss.name,
-      });
-    }
-    if (moneyPenalty > 0) {
-      submitEvents.push({
-        kind: "money-delta",
-        amount: -moneyPenalty,
-        source: `${currentBoss.name}: ${playedCards.length} cards played`,
-      });
-    }
-    if (devChipsBonus !== 0) {
-      submitEvents.push({
-        kind: "chips-delta",
-        amount: devChipsBonus,
-        source: "Apply Modifiers (dev)",
-      });
-    }
-    if (devMultBonus !== 0) {
-      submitEvents.push({
-        kind: "mult-delta",
-        amount: devMultBonus,
-        source: "Apply Modifiers (dev)",
-      });
-    }
-    if (devMultFactor !== 1) {
-      submitEvents.push({
-        kind: "mult-times",
-        factor: devMultFactor,
-        source: "Apply Modifiers (dev)",
-      });
-    }
-    setScoringEvents((prev) => [...prev, ...submitEvents]);
-    setLuckyMultProcIds(new Set());
-    setLuckyMoneyProcIds(new Set());
-    setScoringCards(scoring);
-    setScoringIndex(0);
-  }
-
-  function finalizeHandSubmission(
-    score: number,
-    submittedSelection: ReadonlySet<number>,
-    playedHandLabel: HandLabel | null = null,
-  ) {
-    const newRoundScore = roundScore + score;
-    setRoundScore(newRoundScore);
-    setChips(0);
-    setMultiplier(0);
-    setDevChipsBonus(0);
-    setDevMultBonus(0);
-    setDevMultFactor(1);
-    setSelectedHand(null);
-    setScoringCards([]);
-    setScoringIndex(0);
-
-    const roundWon = newRoundScore >= requiredScore;
-    if (submittedSelection.size > 0) {
-      pendingDiscardCountRef.current = submittedSelection.size;
-      skipDrawAfterDiscardRef.current = roundWon;
-      setDiscardingIds(submittedSelection);
-    }
-
-    if (roundWon) {
-      if (playedHandLabel !== null) {
-        const blueHeld = blueSealHeldCards(dealt.hand, submittedSelection);
-        if (blueHeld.length > 0) {
-          const planet = planetForHand(playedHandLabel);
-          if (planet) {
-            setConsumables((prev) => {
-              let next = prev;
-              for (let i = 0; i < blueHeld.length; i += 1) {
-                const after = addConsumable(
-                  next,
-                  { kind: "planet", card: planet },
-                  consumableCapacity,
-                );
-                if (after === next) break;
-                next = after;
-              }
-              return next;
-            });
-          }
-        }
-      }
-      const heldGoldIds = dealt.hand
-        .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
-        .map((c) => c.id);
-      const remainingHandsCount = Math.max(0, remainingHands - 1);
-      const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
-      const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
-      const postBonusesWallet = postGoldWallet + remainingHandsBonus;
-      const openModal = () => {
-        play("win");
-        if (remainingHandsBonus > 0) {
-          useGame.getState().earn(remainingHandsBonus);
-          setScoringEvents((prev) => [
-            ...prev,
-            {
-              kind: "money-delta",
-              amount: remainingHandsBonus,
-              source: `Remaining hands × $${REMAINING_HAND_BONUS}`,
-            },
-          ]);
-        }
-        setPendingWin({
-          roundScore: newRoundScore,
-          requiredScore,
-          baseReward: blind + 2,
-          walletAtPayout: postBonusesWallet,
-          interestWallet: postGoldWallet,
-          interest: calculateInterest(
-            postGoldWallet,
-            interestCapFor(ownedVoucherIds),
-          ),
-          goldHeldCount: heldGoldIds.length,
-          remainingHandsCount,
-        });
-      };
-      if (heldGoldIds.length === 0) {
-        openModal();
-        return;
-      }
-      goldFinalizeRef.current = openModal;
-      setGoldScoringIds(heldGoldIds);
-      setGoldScoringIndex(0);
-      return;
-    }
-
-    if (remainingHands > 1) {
-      setRemainingHands((prev) => prev - 1);
-    } else {
-      loseGame();
     }
   }
 
