@@ -1,0 +1,438 @@
+import type { MutableRefObject } from "react";
+import { useGame } from "../store/game";
+import { useScoringPipeline } from "./useScoringPipeline";
+import { play } from "../components/system/sounds";
+import type { Card } from "../cards/types";
+import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
+import {
+  getCardChips,
+  getCardMultDelta,
+  getScoringCards,
+} from "../scoring/scoring";
+import type { ScoringEvent } from "../scoring/scoringTrace";
+import {
+  GOLD_HELD_BONUS_PER_CARD,
+  REMAINING_HAND_BONUS,
+  calculateInterest,
+} from "../scoring/payout";
+import {
+  bossAdjustHandEntry,
+  bossBlocksHandLabel,
+  bossMoneyPenaltyPerCard,
+  bossRequiredCardCount,
+  debuffedHandIds,
+} from "../items/bosses";
+import {
+  applyHandLevelJokers,
+  applyPerCardJokers,
+  isFaceCard,
+} from "../items/jokers";
+import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
+import {
+  MAX_CONSUMABLE_SLOTS,
+  addConsumable,
+} from "../items/consumables";
+import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../constants";
+import { applyCardEnhancement } from "../cards/enhancements";
+import {
+  blueSealHeldCards,
+  expandRedSealRetriggers,
+  planetForHand,
+} from "../cards/seals";
+import { getHeldInHand, steelHeldMultiplier } from "../cards/heldInHand";
+import { cardKey } from "../cards/deck";
+import { recordHandPlayed } from "../run/runStats";
+
+export interface UsePlayHandParams {
+  readonly stepMs: number;
+  readonly loseGame: () => void;
+  readonly pendingDiscardCountRef: MutableRefObject<number>;
+  readonly pendingHandPlayResetRef: MutableRefObject<boolean>;
+  readonly skipDrawAfterDiscardRef: MutableRefObject<boolean>;
+}
+
+export interface UsePlayHandResult {
+  readonly submitHand: () => void;
+  readonly isScoring: boolean;
+  readonly currentScoringId: number | null;
+  readonly currentGoldScoringId: number | null;
+  readonly currentSteelScoringId: number | null;
+  readonly resetScoring: () => void;
+}
+
+export function usePlayHand({
+  stepMs,
+  loseGame,
+  pendingDiscardCountRef,
+  pendingHandPlayResetRef,
+  skipDrawAfterDiscardRef,
+}: UsePlayHandParams): UsePlayHandResult {
+  const pipeline = useScoringPipeline({ stepMs });
+
+  const discardingIds = useGame((s) => s.discardingIds);
+  const dealt = useGame((s) => s.dealt);
+  const handDisplayOrder = useGame((s) => s.handDisplayOrder);
+  const selectedIds = useGame((s) => s.selectedIds);
+  const blind = useGame((s) => s.blind);
+  const ante = useGame((s) => s.ante);
+  const money = useGame((s) => s.money);
+  const currentBoss = useGame((s) => s.currentBoss);
+  const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
+  const jokers = useGame((s) => s.jokers);
+  const remainingDiscards = useGame((s) => s.remainingDiscards);
+  const handStats = useGame((s) => s.handStats);
+  const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
+  const devChipsBonus = useGame((s) => s.devChipsBonus);
+  const devMultBonus = useGame((s) => s.devMultBonus);
+  const devMultFactor = useGame((s) => s.devMultFactor);
+  const roundScore = useGame((s) => s.roundScore);
+  const remainingHands = useGame((s) => s.remainingHands);
+  const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+
+  const requiredScore =
+    blind === 3
+      ? BASE_CHIPS[ante - 1] * currentBoss.scoreMultiplier
+      : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
+  const consumableCapacity =
+    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+
+  const setHandPlayCounts = useGame((s) => s.setHandPlayCounts);
+  const setRunStats = useGame((s) => s.setRunStats);
+  const setHandHistoryThisRound = useGame((s) => s.setHandHistoryThisRound);
+  const setPlayedCardKeysThisAnte = useGame((s) => s.setPlayedCardKeysThisAnte);
+  const setChips = useGame((s) => s.setChips);
+  const setMultiplier = useGame((s) => s.setMultiplier);
+  const setScoringEvents = useGame((s) => s.setScoringEvents);
+  const setLuckyMultProcIds = useGame((s) => s.setLuckyMultProcIds);
+  const setLuckyMoneyProcIds = useGame((s) => s.setLuckyMoneyProcIds);
+  const setScoringCards = useGame((s) => s.setScoringCards);
+  const setScoringIndex = useGame((s) => s.setScoringIndex);
+  const setSelectedHand = useGame((s) => s.setSelectedHand);
+  const setDiscardingIds = useGame((s) => s.setDiscardingIds);
+  const setRoundScore = useGame((s) => s.setRoundScore);
+  const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
+  const setDevMultBonus = useGame((s) => s.setDevMultBonus);
+  const setDevMultFactor = useGame((s) => s.setDevMultFactor);
+  const setConsumables = useGame((s) => s.setConsumables);
+  const setGoldScoringIds = useGame((s) => s.setGoldScoringIds);
+  const setGoldScoringIndex = useGame((s) => s.setGoldScoringIndex);
+  const setSteelScoringIds = useGame((s) => s.setSteelScoringIds);
+  const setSteelScoringIndex = useGame((s) => s.setSteelScoringIndex);
+  const setHandLevelSteps = useGame((s) => s.setHandLevelSteps);
+  const setHandLevelIndex = useGame((s) => s.setHandLevelIndex);
+  const setRemainingHands = useGame((s) => s.setRemainingHands);
+  const setPendingWin = useGame((s) => s.setPendingWin);
+
+  function finalizeHandSubmission(
+    score: number,
+    submittedSelection: ReadonlySet<number>,
+    playedHandLabel: HandLabel | null = null,
+  ): void {
+    const newRoundScore = roundScore + score;
+    setRoundScore(newRoundScore);
+    setChips(0);
+    setMultiplier(0);
+    setDevChipsBonus(0);
+    setDevMultBonus(0);
+    setDevMultFactor(1);
+    setSelectedHand(null);
+    setScoringCards([]);
+    setScoringIndex(0);
+
+    const roundWon = newRoundScore >= requiredScore;
+    if (submittedSelection.size > 0) {
+      pendingDiscardCountRef.current = submittedSelection.size;
+      skipDrawAfterDiscardRef.current = roundWon;
+      setDiscardingIds(submittedSelection);
+    }
+
+    if (roundWon) {
+      if (playedHandLabel !== null) {
+        const blueHeld = blueSealHeldCards(dealt.hand, submittedSelection);
+        if (blueHeld.length > 0) {
+          const planet = planetForHand(playedHandLabel);
+          if (planet) {
+            setConsumables((prev) => {
+              let next = prev;
+              for (let i = 0; i < blueHeld.length; i += 1) {
+                const after = addConsumable(
+                  next,
+                  { kind: "planet", card: planet },
+                  consumableCapacity,
+                );
+                if (after === next) break;
+                next = after;
+              }
+              return next;
+            });
+          }
+        }
+      }
+      const heldGoldIds = dealt.hand
+        .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
+        .map((c) => c.id);
+      const remainingHandsCount = Math.max(0, remainingHands - 1);
+      const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
+      const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
+      const postBonusesWallet = postGoldWallet + remainingHandsBonus;
+      const openModal = () => {
+        play("win");
+        if (remainingHandsBonus > 0) {
+          useGame.getState().earn(remainingHandsBonus);
+          setScoringEvents((prev) => [
+            ...prev,
+            {
+              kind: "money-delta",
+              amount: remainingHandsBonus,
+              source: `Remaining hands × $${REMAINING_HAND_BONUS}`,
+            },
+          ]);
+        }
+        setPendingWin({
+          roundScore: newRoundScore,
+          requiredScore,
+          baseReward: blind + 2,
+          walletAtPayout: postBonusesWallet,
+          interestWallet: postGoldWallet,
+          interest: calculateInterest(
+            postGoldWallet,
+            interestCapFor(ownedVoucherIds),
+          ),
+          goldHeldCount: heldGoldIds.length,
+          remainingHandsCount,
+        });
+      };
+      if (heldGoldIds.length === 0) {
+        openModal();
+        return;
+      }
+      pipeline.goldFinalizeRef.current = openModal;
+      setGoldScoringIds(heldGoldIds);
+      setGoldScoringIndex(0);
+      return;
+    }
+
+    if (remainingHands > 1) {
+      setRemainingHands((prev) => prev - 1);
+    } else {
+      loseGame();
+    }
+  }
+
+  function submitHand(): void {
+    if (discardingIds.size > 0) return;
+    if (pipeline.isScoring) return;
+
+    const handById = new Map(dealt.hand.map((c) => [c.id, c]));
+    const playedCards = handDisplayOrder
+      .map((id) => handById.get(id))
+      .filter((c): c is Card => c !== undefined && selectedIds.has(c.id));
+    const submittedSelection = selectedIds;
+
+    if (playedCards.length === 0) {
+      finalizeHandSubmission(0, submittedSelection);
+      return;
+    }
+
+    const moneyPenalty =
+      blind === 3
+        ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
+        : 0;
+    if (moneyPenalty > 0) {
+      useGame.getState().setMoney(money - moneyPenalty);
+    }
+
+    const label = detectHandLabel(playedCards);
+    const isBossRound = blind === 3;
+    if (
+      isBossRound &&
+      bossBlocksHandLabel(currentBoss, label, handHistoryThisRound)
+    ) {
+      return;
+    }
+
+    pendingHandPlayResetRef.current = true;
+
+    setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
+    setRunStats(recordHandPlayed);
+    setHandHistoryThisRound((prev) => [...prev, label]);
+    setPlayedCardKeysThisAnte((prev) => {
+      const next = new Set(prev);
+      for (const card of playedCards) next.add(cardKey(card));
+      return next;
+    });
+    const baseHandEntry = handStats[label];
+    const adjustedHandEntry = isBossRound
+      ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
+      : baseHandEntry;
+    const forcedCount = isBossRound
+      ? bossRequiredCardCount(currentBoss)
+      : null;
+    const psychicZeroed =
+      forcedCount !== null && playedCards.length !== forcedCount;
+    const handEntry = psychicZeroed
+      ? { ...adjustedHandEntry, chips: 0, multiplier: 0 }
+      : adjustedHandEntry;
+    const playedDebuffedIds = debuffedHandIds(
+      playedCards,
+      currentBoss,
+      isBossRound,
+      playedCardKeysThisAnte,
+    );
+    const scoring = expandRedSealRetriggers(
+      getScoringCards(playedCards, label),
+    ).filter((c) => !playedDebuffedIds.has(c.id));
+    if (scoring.length === 0) {
+      const handOnlyScore = handEntry.chips * handEntry.multiplier;
+      finalizeHandSubmission(handOnlyScore, submittedSelection, label);
+      return;
+    }
+    const cardChipsTotal = scoring.reduce(
+      (sum, card) => sum + getCardChips(card),
+      0,
+    );
+    const handJokerResult = applyHandLevelJokers(jokers, {
+      playedHandLabel: label,
+      playedCardCount: playedCards.length,
+      scoredCards: scoring,
+      remainingDiscards,
+      money,
+      heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
+    });
+
+    let perCardAdditiveMult = 0;
+    let perCardAdditiveChips = 0;
+    let perCardXMult = 1;
+    let firstFaceAlreadyScoredUpfront = false;
+    for (let i = 0; i < scoring.length; i += 1) {
+      const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
+        firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
+      });
+      perCardAdditiveMult += perCard.additiveMult;
+      perCardAdditiveChips += perCard.additiveChips;
+      perCardAdditiveMult += getCardMultDelta(scoring[i]);
+      perCardXMult *= perCard.xMult;
+      if (isFaceCard(scoring[i])) firstFaceAlreadyScoredUpfront = true;
+    }
+
+    const heldSteelIds = dealt.hand
+      .filter((c) => c.enhancement === "steel" && !submittedSelection.has(c.id))
+      .map((c) => c.id);
+    const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
+    const enhancementXMult = scoring.reduce(
+      (m, card) => m * applyCardEnhancement(card).multTimes,
+      1,
+    );
+    const preHandXMultNoSteel =
+      handJokerResult.xMult * enhancementXMult * perCardXMult;
+    const totalXMult = preHandXMultNoSteel * steelMult;
+
+    const scoringChipsTotal =
+      handEntry.chips +
+      cardChipsTotal +
+      handJokerResult.additiveChips +
+      perCardAdditiveChips;
+    const scoringMult =
+      (handEntry.multiplier +
+        handJokerResult.additiveMult +
+        perCardAdditiveMult) *
+      totalXMult;
+    const adjustedChips = scoringChipsTotal + devChipsBonus;
+    const adjustedMult = (scoringMult + devMultBonus) * devMultFactor;
+    const finalScore = Math.floor(adjustedChips * adjustedMult);
+
+    const liveMultiplier = handEntry.multiplier * enhancementXMult;
+    setChips(handEntry.chips);
+    setMultiplier(liveMultiplier);
+
+    const finalize = () => {
+      finalizeHandSubmission(finalScore, submittedSelection, label);
+    };
+    const runHandLevel = () => {
+      if (handJokerResult.steps.length === 0) {
+        finalize();
+        return;
+      }
+      pipeline.handLevelFinalizeRef.current = finalize;
+      setHandLevelSteps(handJokerResult.steps);
+      setHandLevelIndex(0);
+    };
+    pipeline.scoringFinalizeRef.current = () => {
+      if (heldSteelIds.length === 0) {
+        runHandLevel();
+        return;
+      }
+      pipeline.steelFinalizeRef.current = runHandLevel;
+      setSteelScoringIds(heldSteelIds);
+      setSteelScoringIndex(0);
+    };
+    const baseEvent: ScoringEvent = {
+      kind: "hand-base",
+      chips: handEntry.chips,
+      mult: handEntry.multiplier,
+      handLabel: label,
+      level: handEntry.level,
+    };
+    const submitEvents: ScoringEvent[] = [baseEvent];
+    if (psychicZeroed) {
+      submitEvents.push({
+        kind: "boss-adjustment",
+        description: `${label} zeroed to 0 × 0 (needs ${forcedCount} cards, played ${playedCards.length})`,
+        source: currentBoss.name,
+      });
+    } else if (
+      isBossRound &&
+      (handEntry.chips !== baseHandEntry.chips ||
+        handEntry.multiplier !== baseHandEntry.multiplier ||
+        handEntry.level !== baseHandEntry.level)
+    ) {
+      submitEvents.push({
+        kind: "boss-adjustment",
+        description: `${label} adjusted to ${handEntry.chips} × ${handEntry.multiplier} (Lv ${handEntry.level})`,
+        source: currentBoss.name,
+      });
+    }
+    if (moneyPenalty > 0) {
+      submitEvents.push({
+        kind: "money-delta",
+        amount: -moneyPenalty,
+        source: `${currentBoss.name}: ${playedCards.length} cards played`,
+      });
+    }
+    if (devChipsBonus !== 0) {
+      submitEvents.push({
+        kind: "chips-delta",
+        amount: devChipsBonus,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    if (devMultBonus !== 0) {
+      submitEvents.push({
+        kind: "mult-delta",
+        amount: devMultBonus,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    if (devMultFactor !== 1) {
+      submitEvents.push({
+        kind: "mult-times",
+        factor: devMultFactor,
+        source: "Apply Modifiers (dev)",
+      });
+    }
+    setScoringEvents((prev) => [...prev, ...submitEvents]);
+    setLuckyMultProcIds(new Set());
+    setLuckyMoneyProcIds(new Set());
+    setScoringCards(scoring);
+    setScoringIndex(0);
+  }
+
+  return {
+    submitHand,
+    isScoring: pipeline.isScoring,
+    currentScoringId: pipeline.currentScoringId,
+    currentGoldScoringId: pipeline.currentGoldScoringId,
+    currentSteelScoringId: pipeline.currentSteelScoringId,
+    resetScoring: pipeline.resetScoring,
+  };
+}
