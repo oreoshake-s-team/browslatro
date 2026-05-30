@@ -103,13 +103,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download coverage report
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: coverage-html
           path: site/coverage
 
       - name: Download Playwright report
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: playwright-html
           path: site/playwright
