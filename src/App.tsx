@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
@@ -72,14 +72,11 @@ import {
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
-import { drawCountForRefill, HAND_SIZE } from "./cards/deck";
+import { HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
+import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { MAX_SELECTED } from "./components/cards/Hand";
-import {
-  pickRandomTarot,
-  purpleSealDiscarded,
-} from "./cards/seals";
 import {
   MAX_JOKERS,
   createJokerByRarity,
@@ -179,11 +176,15 @@ function App() {
   const handPlayCounts = useGame((state) => state.handPlayCounts);
   const handStats = useGame((state) => state.handStats);
   const setHandStats = useGame((state) => state.setHandStats);
-  const pendingDiscardCountRef = useRef(0);
-  const pendingHandPlayResetRef = useRef(false);
   const handPlaySignal = useGame((state) => state.handPlaySignal);
-  const setHandPlaySignal = useGame((state) => state.setHandPlaySignal);
-  const skipDrawAfterDiscardRef = useRef(false);
+  const {
+    pendingDiscardCountRef,
+    pendingHandPlayResetRef,
+    skipDrawAfterDiscardRef,
+    handleCardDiscardEnd,
+    discardSelected,
+    resetForNewRound: resetDiscardPipeline,
+  } = useDiscardPipeline();
   const destroyedCardKeys = useGame((state) => state.destroyedCardKeys);
   const setDestroyedCardKeys = useGame((state) => state.setDestroyedCardKeys);
   const scoringEvents = useGame((state) => state.scoringEvents);
@@ -360,9 +361,7 @@ function App() {
     setSelectedHand(null);
     setChips(0);
     setMultiplier(0);
-    pendingDiscardCountRef.current = 0;
-    pendingHandPlayResetRef.current = false;
-    skipDrawAfterDiscardRef.current = false;
+    resetDiscardPipeline();
     resetScoring();
     setLuckyMultProcIds(new Set());
     setLuckyMoneyProcIds(new Set());
@@ -862,82 +861,12 @@ function App() {
     setMultiplier(entry.multiplier);
   }
 
-  function finalizeDiscard(idsToDiscard: ReadonlySet<number>) {
-    const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
-    if (skipDrawAfterDiscardRef.current) {
-      skipDrawAfterDiscardRef.current = false;
-      setDealt({ hand: kept, remaining: dealt.remaining });
-    } else {
-      const effectiveHandSize =
-        blind === 3 ? bossHandSize(currentBoss, currentHandSize) : currentHandSize;
-      const drawCount = drawCountForRefill(
-        effectiveHandSize,
-        kept.length,
-        dealt.remaining.length,
-      );
-      const drawn = dealt.remaining.slice(0, drawCount);
-      const newRemaining = dealt.remaining.slice(drawCount);
-      const drawnWithFaceDown = applyBossFaceDown(
-        drawn,
-        currentBoss,
-        blind === 3,
-        "refill",
-      );
-      setDealt({ hand: [...kept, ...drawnWithFaceDown], remaining: newRemaining });
-    }
-    setSelectedIds(new Set());
-    setDiscardingIds(new Set());
-    setSelectedHand(null);
-    setChips(0);
-    setMultiplier(0);
-    if (pendingHandPlayResetRef.current) {
-      pendingHandPlayResetRef.current = false;
-      setHandPlaySignal((prev) => prev + 1);
-    }
-  }
-
-  function handleCardDiscardEnd(card: Card) {
-    if (!discardingIds.has(card.id)) return;
-    pendingDiscardCountRef.current -= 1;
-    if (pendingDiscardCountRef.current <= 0) {
-      pendingDiscardCountRef.current = 0;
-      finalizeDiscard(discardingIds);
-    }
-  }
-
   function dismissRoundWonModal() {
     const precomputed = pendingWin
       ? { interest: pendingWin.interest, interestWallet: pendingWin.interestWallet }
       : undefined;
     setPendingWin(null);
     handleWin(precomputed);
-  }
-
-  function discardSelected() {
-    if (discardingIds.size > 0) return;
-    if (selectedIds.size === 0) return;
-    if (remainingDiscards <= 0) return;
-
-    const purpleDiscards = purpleSealDiscarded(dealt.hand, selectedIds);
-    if (purpleDiscards.length > 0) {
-      setConsumables((prev) => {
-        let next = prev;
-        for (let i = 0; i < purpleDiscards.length; i += 1) {
-          const after = addConsumable(
-            next,
-            { kind: "tarot", card: pickRandomTarot() },
-            consumableCapacity,
-          );
-          if (after === next) break;
-          next = after;
-        }
-        return next;
-      });
-    }
-
-    pendingDiscardCountRef.current = selectedIds.size;
-    setDiscardingIds(selectedIds);
-    setRemainingDiscards((prev) => prev - 1);
   }
 
   const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
