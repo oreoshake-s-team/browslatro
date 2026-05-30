@@ -46,7 +46,6 @@ import {
 import { applyPlanetUpgrade, availablePlanets, createPlanetCatalog } from "./items/planets";
 import {
   createSpectralCatalog,
-  duplicateSelectedInHand,
   spectralNeedsTarget,
 } from "./items/spectrals";
 import {
@@ -60,7 +59,6 @@ import {
   addConsumable,
   consumableUseBlock,
   hasFreeConsumableSlot,
-  removeConsumableAt,
 } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
@@ -76,6 +74,7 @@ import { HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
+import { useConsumableActions } from "./hooks/useConsumableActions";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   MAX_JOKERS,
@@ -209,6 +208,8 @@ function App() {
   function triggerNopeAnimation() {
     setNopeTriggerKey((prev) => prev + 1);
   }
+
+  const { useConsumable } = useConsumableActions({ triggerNopeAnimation });
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
   const {
@@ -399,9 +400,6 @@ function App() {
   const applyEnhancementToSelectedPreviewCards = useGame(
     (s) => s.applyEnhancementToSelectedPreviewCards,
   );
-  const applySealToSelectedPreviewCards = useGame(
-    (s) => s.applySealToSelectedPreviewCards,
-  );
 
   function pickFromOpenedPack(optionIdx: number) {
     if (!openedPack || packPicksRemaining <= 0) return;
@@ -492,121 +490,6 @@ function App() {
   const buyShopOffer = (idx: number) => {
     if (buyShopOfferAction(idx)) play("pop");
   };
-
-  function useConsumable(consumableIdx: number) {
-    const entry = consumables[consumableIdx];
-    if (!entry) return;
-    const previewActive = openedPack !== null && packPreviewHand.length > 0;
-    if (entry.kind === "planet") {
-      play("pop");
-      setHandStats((prev) => applyPlanetUpgrade(prev, entry.card));
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-      return;
-    }
-    if (entry.kind === "spectral") {
-      const spectralEffect = entry.card.effect;
-      if (spectralEffect.kind === "apply-seal") {
-        if (previewActive) {
-          if (
-            packPreviewSelectedIds.size === 0 ||
-            packPreviewSelectedIds.size > spectralEffect.maxTargets
-          ) {
-            return;
-          }
-          play("pop");
-          applySealToSelectedPreviewCards(spectralEffect.seal);
-          setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-          return;
-        }
-        if (selectedIds.size !== spectralEffect.maxTargets) return;
-        play("pop");
-        setDealt((prev) => ({
-          hand: prev.hand.map((c) =>
-            selectedIds.has(c.id) ? { ...c, seal: spectralEffect.seal } : c,
-          ),
-          remaining: prev.remaining,
-        }));
-        setSelectedIds(new Set());
-        setSelectedHand(null);
-        setChips(0);
-        setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-        return;
-      }
-      if (spectralEffect.kind === "duplicate-selected") {
-        if (previewActive) return;
-        if (selectedIds.size !== spectralEffect.maxTargets) return;
-        play("pop");
-        setDealt((prev) => ({
-          hand: duplicateSelectedInHand(prev.hand, selectedIds, spectralEffect.copies),
-          remaining: prev.remaining,
-        }));
-        setSelectedIds(new Set());
-        setSelectedHand(null);
-        setChips(0);
-        setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-        return;
-      }
-      play("pop");
-      applySpectralEffect(spectralEffect);
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-      return;
-    }
-    const effect = entry.card.effect;
-    if (effect.kind === "money-multiply") {
-      play("pop");
-      useGame
-        .getState()
-        .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-      return;
-    }
-    if (effect.kind === "joker-sell-value-payout") {
-      play("pop");
-      useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-      return;
-    }
-    if (effect.kind === "edition-roll") {
-      play("pop");
-      const result = rollWheelOfFortune(jokers, effect.chance);
-      if (result.hit && result.targetIdx >= 0) {
-        setJokers((prev) =>
-          prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
-        );
-      } else {
-        triggerNopeAnimation();
-      }
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-      return;
-    }
-    if (previewActive) {
-      if (
-        packPreviewSelectedIds.size === 0 ||
-        packPreviewSelectedIds.size > effect.maxTargets
-      ) {
-        return;
-      }
-      play("pop");
-      applyEnhancementToSelectedPreviewCards(effect.enhancement);
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-      return;
-    }
-    if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
-    play("pop");
-    setDealt((prev) => ({
-      hand: prev.hand.map((c) =>
-        selectedIds.has(c.id) ? { ...c, enhancement: effect.enhancement } : c,
-      ),
-      remaining: prev.remaining,
-    }));
-    setSelectedIds(new Set());
-    setSelectedHand(null);
-    setChips(0);
-    setMultiplier(0);
-    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
-  }
 
   const sellConsumableAction = useGame((s) => s.sellConsumable);
   const sellConsumable = (consumableIdx: number) => {
