@@ -183,13 +183,14 @@ function App() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
-  const [pendingNextRoundHandSize, setPendingNextRoundHandSize] = useState(0);
+  const pendingNextRoundHandSize = useGame((s) => s.pendingNextRoundHandSize);
+  const setPendingNextRoundHandSize = useGame(
+    (s) => s.setPendingNextRoundHandSize,
+  );
 
   const { useConsumable } = useConsumableActions({ triggerNopeAnimation });
   const { pickFromOpenedPack } = useOpenedPackPicker({ triggerNopeAnimation });
-  const { applyGainedTag } = useTagDispatcher({
-    setPendingNextRoundHandSize,
-  });
+  const { applyGainedTag } = useTagDispatcher();
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
   const {
@@ -217,7 +218,8 @@ function App() {
   const setSoldJokerIdsThisShopVisit = useGame(
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
-  const [pendingDouble, setPendingDouble] = useState(false);
+  const pendingDouble = useGame((s) => s.pendingDouble);
+  const setPendingDouble = useGame((s) => s.setPendingDouble);
   const consumables = useGame((state) => state.consumables);
   const setConsumables = useGame((state) => state.setConsumables);
   const handSizeModifier = useGame((state) => state.handSizeModifier);

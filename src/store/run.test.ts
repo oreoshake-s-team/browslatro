@@ -33,4 +33,34 @@ describe("run store", () => {
     useGame.getState().resetRun();
     expect(useGame.getState().runStats.handsPlayed).toBe(0);
   });
+
+  test("starts with zero pending next-round hand size", () => {
+    expect(useGame.getState().pendingNextRoundHandSize).toBe(0);
+  });
+
+  test("starts with pendingDouble false", () => {
+    expect(useGame.getState().pendingDouble).toBe(false);
+  });
+
+  test("setPendingNextRoundHandSize accepts an updater function", () => {
+    useGame.getState().setPendingNextRoundHandSize((prev) => prev + 2);
+    expect(useGame.getState().pendingNextRoundHandSize).toBe(2);
+  });
+
+  test("setPendingDouble accepts a boolean", () => {
+    useGame.getState().setPendingDouble(true);
+    expect(useGame.getState().pendingDouble).toBe(true);
+  });
+
+  test("resetRun clears pending next-round hand size", () => {
+    useGame.getState().setPendingNextRoundHandSize(3);
+    useGame.getState().resetRun();
+    expect(useGame.getState().pendingNextRoundHandSize).toBe(0);
+  });
+
+  test("resetRun clears pendingDouble", () => {
+    useGame.getState().setPendingDouble(true);
+    useGame.getState().resetRun();
+    expect(useGame.getState().pendingDouble).toBe(false);
+  });
 });

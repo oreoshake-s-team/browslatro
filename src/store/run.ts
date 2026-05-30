@@ -24,9 +24,13 @@ export interface RunState {
   runStats: RunStats;
   skipTagOffers: AnteSkipOffers;
   pendingShopMods: ReadonlyArray<NextShopModifier>;
+  pendingNextRoundHandSize: number;
+  pendingDouble: boolean;
   setRunStats: (update: Updater<RunStats>) => void;
   setSkipTagOffers: (update: Updater<AnteSkipOffers>) => void;
   setPendingShopMods: (update: Updater<ReadonlyArray<NextShopModifier>>) => void;
+  setPendingNextRoundHandSize: (update: Updater<number>) => void;
+  setPendingDouble: (update: Updater<boolean>) => void;
   resetRun: () => void;
 }
 
@@ -34,16 +38,26 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
   runStats: initialRunStats(),
   skipTagOffers: freshSkipOffers(),
   pendingShopMods: [],
+  pendingNextRoundHandSize: 0,
+  pendingDouble: false,
   setRunStats: (update) =>
     set((state) => ({ runStats: resolve(update, state.runStats) })),
   setSkipTagOffers: (update) =>
     set((state) => ({ skipTagOffers: resolve(update, state.skipTagOffers) })),
   setPendingShopMods: (update) =>
     set((state) => ({ pendingShopMods: resolve(update, state.pendingShopMods) })),
+  setPendingNextRoundHandSize: (update) =>
+    set((state) => ({
+      pendingNextRoundHandSize: resolve(update, state.pendingNextRoundHandSize),
+    })),
+  setPendingDouble: (update) =>
+    set((state) => ({ pendingDouble: resolve(update, state.pendingDouble) })),
   resetRun: () =>
     set({
       runStats: initialRunStats(),
       skipTagOffers: freshSkipOffers(),
       pendingShopMods: [],
+      pendingNextRoundHandSize: 0,
+      pendingDouble: false,
     }),
 });
