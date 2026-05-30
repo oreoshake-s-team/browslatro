@@ -19,20 +19,15 @@ import { createSpectralCatalog } from "../items/spectrals";
 import { pickBossForAnte, bossPickerRngConfig } from "../items/bosses";
 import { immediateMoneyGain } from "../run/immediateActions";
 
-export interface UseTagDispatcherParams {
-  readonly setPendingNextRoundHandSize: (
-    updater: (prev: number) => number,
-  ) => void;
-}
-
 export interface UseTagDispatcherResult {
   readonly applyGainedTag: (tagId: TagId, nextStats: RunStats) => void;
   readonly openTagPack: (pool: PackPool, variant: PackVariant) => void;
 }
 
-export function useTagDispatcher({
-  setPendingNextRoundHandSize,
-}: UseTagDispatcherParams): UseTagDispatcherResult {
+export function useTagDispatcher(): UseTagDispatcherResult {
+  const setPendingNextRoundHandSize = useGame(
+    (s) => s.setPendingNextRoundHandSize,
+  );
   const jokers = useGame((s) => s.jokers);
   const setJokers = useGame((s) => s.setJokers);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
