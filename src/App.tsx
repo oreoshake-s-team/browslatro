@@ -1,37 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
-import type { Blind, Card, Hand } from "./cards/types";
+import type { Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
-  DEFAULT_STARTING_DISCARDS,
-  DEFAULT_STARTING_HANDS,
-  applyBossFaceDown,
   bossAdjustHandEntry,
   bossBlocksHandLabel,
   availableBosses,
-  bossHandSize,
-  bossPickerRngConfig,
-  bossStartingDiscards,
-  bossStartingHands,
   createBossCatalog,
   debuffedHandIds,
   pickBossForAnte,
-  type BossBlind,
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import NopeAnimation from "./components/game/NopeAnimation";
-import {
-  resolveTagEffect,
-  rollAnteSkipOffers,
-  tagOfferRngConfig,
-} from "./items/tags";
+import { rollAnteSkipOffers, tagOfferRngConfig } from "./items/tags";
 import { applyNextShopModifiers } from "./run/nextShopMods";
-import { initialRunStats, recordBlindSkipped } from "./run/runStats";
 import {
   MAX_CONSUMABLE_SLOTS,
   consumableUseBlock,
@@ -47,13 +34,13 @@ import {
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
-import { HAND_SIZE } from "./cards/deck";
 import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useConsumableActions } from "./hooks/useConsumableActions";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
+import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   MAX_JOKERS,
@@ -63,9 +50,6 @@ import {
 import { SHOP_PACK_SLOTS } from "./items/shop";
 import {
   extraConsumableSlots,
-  extraHandSize,
-  extraStartingDiscards,
-  extraStartingHands,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
   type VoucherId,
@@ -90,11 +74,8 @@ export function getScoringStepMs(
 
 function App() {
   const blind = useGame((state) => state.blind);
-  const setBlind = useGame((state) => state.setBlind);
   const round = useGame((state) => state.round);
-  const setRound = useGame((state) => state.setRound);
   const ante = useGame((state) => state.ante);
-  const setAnte = useGame((state) => state.setAnte);
   const money = useGame((state) => state.money);
   const chips = useGame((state) => state.chips);
   const setChips = useGame((state) => state.setChips);
@@ -120,15 +101,11 @@ function App() {
     };
   }, [forceProbabilities]);
   const roundScore = useGame((state) => state.roundScore);
-  const setRoundScore = useGame((state) => state.setRoundScore);
   const selectedHand = useGame((state) => state.selectedHand);
   const setSelectedHand = useGame((state) => state.setSelectedHand);
   const remainingHands = useGame((state) => state.remainingHands);
-  const setRemainingHands = useGame((state) => state.setRemainingHands);
   const remainingDiscards = useGame((state) => state.remainingDiscards);
-  const setRemainingDiscards = useGame((state) => state.setRemainingDiscards);
   const runStats = useGame((state) => state.runStats);
-  const setRunStats = useGame((state) => state.setRunStats);
   const dealt = useGame((state) => state.dealt);
   const setDealt = useGame((state) => state.setDealt);
   useEffect(() => {
@@ -139,7 +116,6 @@ function App() {
   const selectedIds = useGame((state) => state.selectedIds);
   const setSelectedIds = useGame((state) => state.setSelectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
-  const setDiscardingIds = useGame((state) => state.setDiscardingIds);
   const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
   const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
@@ -158,41 +134,25 @@ function App() {
     discardSelected,
     resetForNewRound: resetDiscardPipeline,
   } = useDiscardPipeline();
-  const destroyedCardKeys = useGame((state) => state.destroyedCardKeys);
-  const setDestroyedCardKeys = useGame((state) => state.setDestroyedCardKeys);
   const scoringEvents = useGame((state) => state.scoringEvents);
-  const setScoringEvents = useGame((state) => state.setScoringEvents);
-  const addedCards = useGame((state) => state.addedCards);
-  const setAddedCards = useGame((state) => state.setAddedCards);
-  const cardEnhancementsByKey = useGame((state) => state.cardEnhancementsByKey);
-  const setCardEnhancementsByKey = useGame(
-    (state) => state.setCardEnhancementsByKey,
-  );
-  const cardSealsByKey = useGame((state) => state.cardSealsByKey);
 
   // Sequential scoring state — read for render; mutations live in usePlayHand.
   const scoringIndex = useGame((state) => state.scoringIndex);
 
   const luckyMultProcIds = useGame((state) => state.luckyMultProcIds);
-  const setLuckyMultProcIds = useGame((state) => state.setLuckyMultProcIds);
   const luckyMoneyProcIds = useGame((state) => state.luckyMoneyProcIds);
-  const setLuckyMoneyProcIds = useGame((state) => state.setLuckyMoneyProcIds);
 
   const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
   function triggerNopeAnimation() {
     setNopeTriggerKey((prev) => prev + 1);
   }
 
-  const pendingNextRoundHandSize = useGame((s) => s.pendingNextRoundHandSize);
-  const setPendingNextRoundHandSize = useGame(
-    (s) => s.setPendingNextRoundHandSize,
-  );
-
   const { useConsumable } = useConsumableActions({ triggerNopeAnimation });
   const { pickFromOpenedPack } = useOpenedPackPicker({ triggerNopeAnimation });
   const { applyGainedTag } = useTagDispatcher();
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
+  const loseGameRef = useRef<() => void>(() => {});
   const {
     submitHand,
     isScoring,
@@ -202,11 +162,17 @@ function App() {
     resetScoring,
   } = usePlayHand({
     stepMs: scoringStepMs,
-    loseGame,
+    loseGame: () => loseGameRef.current(),
     pendingDiscardCountRef,
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
   });
+  const { startNewRound, startNewGame, loseGame, skipBlind } = useRoundLifecycle({
+    applyGainedTag,
+    resetScoring,
+    resetDiscardPipeline,
+  });
+  loseGameRef.current = loseGame;
 
   // Round-won modal: when non-null, the player has met the required score and
   // the modal is showing. Dismissal triggers handleWin().
@@ -218,11 +184,7 @@ function App() {
   const setSoldJokerIdsThisShopVisit = useGame(
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
-  const pendingDouble = useGame((s) => s.pendingDouble);
-  const setPendingDouble = useGame((s) => s.setPendingDouble);
   const consumables = useGame((state) => state.consumables);
-  const setConsumables = useGame((state) => state.setConsumables);
-  const handSizeModifier = useGame((state) => state.handSizeModifier);
   const setHandSizeModifier = useGame((state) => state.setHandSizeModifier);
   const setExtraPackSlots = useGame((state) => state.setExtraPackSlots);
   const pendingForcedPacks = useGame((state) => state.pendingForcedPacks);
@@ -256,12 +218,7 @@ function App() {
     (state) => state.setPendingBlindSelect,
   );
   const pendingTags = useGame((state) => state.pendingTags);
-  const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
-  const currentHandSize = Math.max(
-    1,
-    HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
-  );
   const extraVoucherSlots = useGame((state) => state.extraVoucherSlots);
   const setExtraVoucherSlots = useGame((state) => state.setExtraVoucherSlots);
   const currentAnteVouchers = useGame((state) => state.currentAnteVouchers);
@@ -279,16 +236,9 @@ function App() {
   useEffect(() => {
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
   }, [setCurrentBoss]);
-  const setRecentBossIds = useGame((state) => state.setRecentBossIds);
   const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
-  const setHandHistoryThisRound = useGame(
-    (state) => state.setHandHistoryThisRound,
-  );
   const playedCardKeysThisAnte = useGame(
     (state) => state.playedCardKeysThisAnte,
-  );
-  const setPlayedCardKeysThisAnte = useGame(
-    (state) => state.setPlayedCardKeysThisAnte,
   );
 
   const bossScoreMultiplier = currentBoss.scoreMultiplier;
@@ -296,59 +246,6 @@ function App() {
     blind === 3
       ? BASE_CHIPS[ante - 1] * bossScoreMultiplier
       : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
-
-  function startNewRound(
-    opts: {
-      blind?: Blind;
-      boss?: BossBlind | null;
-      handSizeOverride?: number;
-    } = {},
-  ) {
-    const effectiveBlind = opts.blind ?? blind;
-    const effectiveBoss =
-      opts.boss !== undefined ? opts.boss : currentBoss;
-    const isBossRound = effectiveBlind === 3;
-    const baseHandSize =
-      (opts.handSizeOverride ?? currentHandSize) + pendingNextRoundHandSize;
-    if (pendingNextRoundHandSize !== 0) setPendingNextRoundHandSize(0);
-    const startingHands =
-      (isBossRound
-        ? bossStartingHands(effectiveBoss)
-        : DEFAULT_STARTING_HANDS) + extraStartingHands(ownedVoucherIds);
-    const startingDiscards =
-      (isBossRound
-        ? bossStartingDiscards(effectiveBoss)
-        : DEFAULT_STARTING_DISCARDS) + extraStartingDiscards(ownedVoucherIds);
-    const handSize = isBossRound
-      ? bossHandSize(effectiveBoss, baseHandSize)
-      : baseHandSize;
-    setRoundScore(0);
-    setRemainingHands(startingHands);
-    setRemainingDiscards(startingDiscards);
-    setHandHistoryThisRound([]);
-    const fresh = initialDeal(
-      destroyedCardKeys,
-      handSize,
-      addedCards,
-      cardEnhancementsByKey,
-      cardSealsByKey,
-    );
-    setDealt({
-      hand: applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
-      remaining: fresh.remaining,
-    });
-    setSelectedIds(new Set());
-    setDiscardingIds(new Set());
-    setSelectedHand(null);
-    setChips(0);
-    setMultiplier(0);
-    resetDiscardPipeline();
-    resetScoring();
-    setLuckyMultProcIds(new Set());
-    setLuckyMoneyProcIds(new Set());
-    setScoringEvents([]);
-    setPendingWin(null);
-  }
 
   const handleWin = useGame((s) => s.handleWin);
 
@@ -427,24 +324,6 @@ function App() {
     startNewRound();
   }
 
-  function skipBlind() {
-    if (blind === 3) return;
-    const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
-    const effect = resolveTagEffect(offered);
-    const nextStats = recordBlindSkipped(runStats);
-    setBlind((prev) => (prev + 1) as Blind);
-    setRound((prev) => prev + 1);
-    setRunStats(nextStats);
-    if (effect.category === "duplicate-next") {
-      setPendingTags((prev) => [...prev, offered]);
-      setPendingDouble(true);
-      return;
-    }
-    const times = pendingDouble ? 2 : 1;
-    if (pendingDouble) setPendingDouble(false);
-    for (let i = 0; i < times; i += 1) applyGainedTag(offered, nextStats);
-  }
-
   function adjustVoucherSlots(delta: number) {
     const nextExtra = Math.max(-BASE_VOUCHER_SLOTS, extraVoucherSlots + delta);
     if (nextExtra === extraVoucherSlots) return;
@@ -479,45 +358,6 @@ function App() {
 
   const reorderJokers = useGame((s) => s.reorderJokers);
 
-  function startNewGame(): void {
-    setBlind(1);
-    setRound(1);
-    setAnte(1);
-    useGame.getState().resetEconomy();
-    setHandSizeModifier(0);
-    setPendingNextRoundHandSize(0);
-    setPendingDouble(false);
-    setExtraPackSlots(0);
-    setPendingForcedPacks([]);
-    setDevChipsBonus(0);
-    setDevMultBonus(0);
-    setDevMultFactor(1);
-    setForceProbabilities(false);
-    setJokers(initialJokersConfig.factory());
-    useGame.getState().resetStats();
-    setDestroyedCardKeys(new Set());
-    setAddedCards([]);
-    setCardEnhancementsByKey(new Map());
-    setConsumables([]);
-    useGame.getState().resetVouchers();
-    setCurrentAnteVouchers(
-      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
-    );
-    setRecentBossIds(new Set());
-    const freshBoss = pickBossForAnte({
-      ante: 1,
-      rng: bossPickerRngConfig.rng,
-    });
-    setCurrentBoss(freshBoss);
-    setPendingTags([]);
-    setRunStats(initialRunStats());
-    setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
-    setPendingShopMods([]);
-    setPlayedCardKeysThisAnte(new Set());
-    setHandHistoryThisRound([]);
-    setPendingBlindSelect(true);
-  }
-
   function addChips(amount: number) {
     play("pop");
     setDevChipsBonus((prev) => prev + amount);
@@ -531,12 +371,6 @@ function App() {
   function multiplyMultiplier(factor: number) {
     play("pop");
     setDevMultFactor((prev) => prev * factor);
-  }
-
-  function loseGame() {
-    play("lose");
-    alert("Game Over! Try again.");
-    startNewGame();
   }
 
   function toggleCard(card: Card) {
