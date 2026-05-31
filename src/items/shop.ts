@@ -157,6 +157,39 @@ export function applyEditionToFirstJoker(
   });
 }
 
+export function ensureBaseJokerForEdition(
+  offers: ReadonlyArray<ShopItem>,
+  jokerCatalog: ReadonlyArray<Joker>,
+  excludedIds: ReadonlySet<string>,
+  rng: RandomSource = Math.random,
+): ShopItem[] {
+  const hasBaseJoker = offers.some(
+    (o) => o.kind === "joker" && o.joker.edition === undefined,
+  );
+  if (hasBaseJoker) return [...offers];
+  const usedIds = new Set<string>(excludedIds);
+  for (const o of offers) {
+    if (o.kind === "joker") usedIds.add(o.joker.id);
+  }
+  const joker = pickRandomFromCatalog(
+    jokerCatalog,
+    (j) => !usedIds.has(j.id),
+    rng,
+  );
+  if (!joker) return [...offers];
+  const replaceIdx = offers.findIndex(
+    (o) => o.kind !== "pack" && o.kind !== "joker",
+  );
+  const fresh: ShopItem = {
+    kind: "joker",
+    joker,
+    price: JOKER_BASE_PRICE,
+    sold: false,
+  };
+  if (replaceIdx === -1) return [fresh, ...offers];
+  return offers.map((offer, idx) => (idx === replaceIdx ? fresh : offer));
+}
+
 export function rerollCostFor(
   rerollCount: number,
   reduction: number = 0,

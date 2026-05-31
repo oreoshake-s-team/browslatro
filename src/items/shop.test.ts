@@ -17,6 +17,7 @@ import {
   SPECTRAL_OFFER_CHANCE,
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
+  ensureBaseJokerForEdition,
   pickRandomJoker,
   pickRandomPlanet,
   pickRandomTarot,
@@ -746,5 +747,84 @@ describe("applyEditionToFirstJoker", () => {
       sold: false,
     };
     expect(applyEditionToFirstJoker([planetOffer], "foil")[0]).toEqual(planetOffer);
+  });
+});
+
+describe("ensureBaseJokerForEdition", () => {
+  const catalog = createJokerCatalog();
+  const planetOffer = (): ShopItem => ({
+    kind: "planet",
+    planet: createPlanetCatalog()[0],
+    price: 3,
+    sold: false,
+  });
+  const tarotOffer = (): ShopItem => ({
+    kind: "tarot",
+    tarot: createTarotCatalog()[0],
+    price: 3,
+    sold: false,
+  });
+
+  test("replaces a planet slot with a base-edition joker when none exists", () => {
+    const result = ensureBaseJokerForEdition(
+      [planetOffer(), tarotOffer()],
+      catalog,
+      new Set(),
+      () => 0,
+    );
+    expect(result[0]?.kind).toBe("joker");
+  });
+
+  test("makes the injected joker priced at the standard joker price", () => {
+    const result = ensureBaseJokerForEdition(
+      [planetOffer()],
+      catalog,
+      new Set(),
+      () => 0,
+    );
+    expect(result[0]?.price).toBe(5);
+  });
+
+  test("is a no-op when a base-edition joker is already present", () => {
+    const existing: ShopItem = {
+      kind: "joker",
+      joker: catalog[0],
+      price: 5,
+      sold: false,
+    };
+    const result = ensureBaseJokerForEdition(
+      [existing, planetOffer()],
+      catalog,
+      new Set(),
+      () => 0,
+    );
+    expect(result).toEqual([existing, planetOffer()]);
+  });
+
+  test("excludes owned jokers when picking the injected joker (negative)", () => {
+    const result = ensureBaseJokerForEdition(
+      [planetOffer()],
+      catalog,
+      new Set([catalog[0].id]),
+      () => 0,
+    );
+    if (result[0]?.kind !== "joker") throw new Error("expected joker");
+    expect(result[0].joker.id).not.toBe(catalog[0].id);
+  });
+
+  test("prepends a fresh base joker when no non-pack slot is replaceable", () => {
+    const editioned: ShopItem = {
+      kind: "joker",
+      joker: { ...catalog[0], edition: "foil" as const },
+      price: 0,
+      sold: false,
+    };
+    const result = ensureBaseJokerForEdition(
+      [editioned],
+      catalog,
+      new Set(),
+      () => 0,
+    );
+    expect(result).toHaveLength(2);
   });
 });
