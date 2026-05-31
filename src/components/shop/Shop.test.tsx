@@ -6,6 +6,7 @@ import {
   MAX_JOKERS,
   createBusinessCardJoker,
   createPlusFourMultJoker,
+  withEdition,
 } from "../../items/jokers";
 import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
@@ -150,6 +151,70 @@ describe("Shop", () => {
   test("a sold offer still carries the shop-offer-sold modifier", () => {
     renderShop({ offers: [jokerOffer("plus", true)] });
     expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-sold");
+  });
+
+  test("an editioned joker offer exposes the edition via data-edition", () => {
+    const offer: ShopItem = {
+      kind: "joker",
+      joker: withEdition(createPlusFourMultJoker(), "negative"),
+      price: 0,
+      sold: false,
+    };
+    renderShop({ offers: [offer] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-edition",
+      "negative",
+    );
+  });
+
+  test("an editioned joker offer renders a human-readable edition badge", () => {
+    const offer: ShopItem = {
+      kind: "joker",
+      joker: withEdition(createPlusFourMultJoker(), "foil"),
+      price: 0,
+      sold: false,
+    };
+    renderShop({ offers: [offer] });
+    expect(screen.getByTestId("shop-edition-0")).toHaveTextContent("Foil");
+  });
+
+  test("a free offer renders 'FREE' instead of a price", () => {
+    const offer: ShopItem = {
+      kind: "joker",
+      joker: createPlusFourMultJoker(),
+      price: 0,
+      sold: false,
+    };
+    renderShop({ offers: [offer] });
+    expect(screen.getByText("FREE")).toBeInTheDocument();
+  });
+
+  test("a free offer carries the shop-offer-free modifier class", () => {
+    const offer: ShopItem = {
+      kind: "joker",
+      joker: createPlusFourMultJoker(),
+      price: 0,
+      sold: false,
+    };
+    renderShop({ offers: [offer] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-free");
+  });
+
+  test("a base-edition joker offer has no edition badge (negative)", () => {
+    renderShop({ offers: [jokerOffer("plus")] });
+    expect(screen.queryByTestId("shop-edition-0")).not.toBeInTheDocument();
+  });
+
+  test("a base-edition joker offer has no data-edition attribute (negative)", () => {
+    renderShop({ offers: [jokerOffer("plus")] });
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveAttribute(
+      "data-edition",
+    );
+  });
+
+  test("a non-zero priced offer does not render 'FREE' (negative)", () => {
+    renderShop({ offers: [jokerOffer("plus")] });
+    expect(screen.queryByText("FREE")).not.toBeInTheDocument();
   });
 
   test("clicking an affordable buy button invokes onBuy with the offer index", async () => {

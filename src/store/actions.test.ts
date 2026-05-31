@@ -6,6 +6,7 @@ import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { cardKey, createDeck } from "../cards/deck";
+import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -439,5 +440,65 @@ describe("game actions slice", () => {
     game.applySealToSelectedPreviewCards("red");
     const key = cardKey(preview[0]);
     expect(useGame.getState().cardSealsByKey.get(key)).toBe("red");
+  });
+});
+
+describe("pending shop modifiers", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    shopPickerRngConfig.rng = forceShopLayout(["planet", "tarot"]);
+  });
+
+  test("handleWin injects a Negative joker when the shop rolls no joker", () => {
+    const game = useGame.getState();
+    game.setPendingShopMods([{ kind: "free-edition-joker", edition: "negative" }]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const editioned = useGame
+      .getState()
+      .shopOffers?.find((o) => o.kind === "joker" && o.joker.edition === "negative");
+    expect(editioned).toBeDefined();
+  });
+
+  test("the injected Negative joker is free", () => {
+    const game = useGame.getState();
+    game.setPendingShopMods([{ kind: "free-edition-joker", edition: "negative" }]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const editioned = useGame
+      .getState()
+      .shopOffers?.find((o) => o.kind === "joker" && o.joker.edition === "negative");
+    expect(editioned?.price).toBe(0);
+  });
+
+  test("handleWin does not inject a joker when no edition tag is queued (negative)", () => {
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    const editioned = useGame
+      .getState()
+      .shopOffers?.find((o) => o.kind === "joker" && o.joker.edition !== undefined);
+    expect(editioned).toBeUndefined();
+  });
+
+  test("Coupon Tag keeps item offers free after a reroll", () => {
+    const game = useGame.getState();
+    game.setPendingShopMods([{ kind: "free-shop-items" }]);
+    game.setMoney(100);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    shopPickerRngConfig.rng = forceShopLayout(["planet", "tarot"]);
+    useGame.getState().rerollShopOffers(5);
+    const items = useGame
+      .getState()
+      .shopOffers?.filter((o) => o.kind !== "pack") ?? [];
+    expect(items.every((o) => o.price === 0)).toBe(true);
+  });
+
+  test("rerolled item offers are priced normally when no Coupon Tag is queued (negative)", () => {
+    const game = useGame.getState();
+    game.setMoney(100);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    shopPickerRngConfig.rng = forceShopLayout(["planet", "tarot"]);
+    useGame.getState().rerollShopOffers(5);
+    const items = useGame
+      .getState()
+      .shopOffers?.filter((o) => o.kind !== "pack") ?? [];
+    expect(items.every((o) => o.price > 0)).toBe(true);
   });
 });

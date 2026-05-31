@@ -20,6 +20,7 @@ import {
 import {
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
+  ensureBaseJokerForEdition,
   pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
@@ -132,10 +133,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
+    const rerollAdjustments = applyNextShopModifiers(s.pendingShopMods);
+    const pricedItems = rerollAdjustments.freeShopItems
+      ? freshItems.map((o) => ({ ...o, price: 0 }))
+      : freshItems;
     s.setShopOffers((current) => {
       if (!current) return current;
       const existingPacks = current.filter((o) => o.kind === "pack");
-      return [...freshItems, ...existingPacks];
+      return [...pricedItems, ...existingPacks];
     });
   },
   buyAnteVoucher: (voucherIdx) => {
@@ -365,8 +370,17 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       new Set(s.jokers.map((j) => j.id)),
       shopPickerRngConfig.rng,
     );
+    const ownedJokerIds = new Set(s.jokers.map((j) => j.id));
     const editionedOffers = shopAdjustments.editionJokers.reduce(
-      (offers, edition) => applyEditionToFirstJoker(offers, edition),
+      (offers, edition) => {
+        const ensured = ensureBaseJokerForEdition(
+          offers,
+          createJokerCatalog(),
+          ownedJokerIds,
+          shopPickerRngConfig.rng,
+        );
+        return applyEditionToFirstJoker(ensured, edition);
+      },
       [...freeJokerOffers, ...pricedOffers],
     );
     s.setShopOffers(editionedOffers);

@@ -1,6 +1,6 @@
 import "./Shop.css";
 import { useState } from "react";
-import { MAX_JOKERS } from "../../items/jokers";
+import { MAX_JOKERS, type JokerEdition } from "../../items/jokers";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
@@ -160,6 +160,13 @@ const OFFER_KIND_BADGE: Readonly<
   pack: { icon: "🎁", label: "Pack" },
 };
 
+const EDITION_LABEL: Readonly<Record<JokerEdition, string>> = {
+  foil: "Foil",
+  holographic: "Holographic",
+  polychrome: "Polychrome",
+  negative: "Negative",
+};
+
 export default function Shop({
   money,
   equippedJokerCount,
@@ -215,14 +222,24 @@ export default function Shop({
     const label = buyButtonLabel(state, effectivePrice, offer.kind);
     const subject = offerSubject(offer);
     const badge = OFFER_KIND_BADGE[offer.kind];
+    const edition = offer.kind === "joker" ? offer.joker.edition : undefined;
+    const isFree = !offer.sold && effectivePrice === 0;
+    const modifierClasses = [
+      offer.sold && "shop-offer-sold",
+      edition && "shop-offer-editioned",
+      isFree && "shop-offer-free",
+    ]
+      .filter(Boolean)
+      .join(" ");
     return (
       <li
         key={`${offer.kind}-${subject.id}-${idx}`}
         className={`shop-offer shop-offer-${offer.kind}${
-          offer.sold ? " shop-offer-sold" : ""
+          modifierClasses ? ` ${modifierClasses}` : ""
         }`}
         data-testid={`shop-offer-${idx}`}
         data-offer-kind={offer.kind}
+        data-edition={edition}
         data-pack-pool={offer.kind === "pack" ? offer.pack.pool : undefined}
       >
         <span
@@ -234,10 +251,22 @@ export default function Shop({
           </span>
           <span className="shop-offer-kind-label">{badge.label}</span>
         </span>
-        <span className="shop-offer-name">{subject.name}</span>
+        <span className="shop-offer-name">
+          {subject.name}
+          {edition && (
+            <span
+              className="shop-offer-edition-badge"
+              data-testid={`shop-edition-${idx}`}
+            >
+              {EDITION_LABEL[edition]}
+            </span>
+          )}
+        </span>
         <span className="shop-offer-description">{subject.description}</span>
         <span className="shop-offer-price">
-          {discounted ? (
+          {isFree ? (
+            <span className="shop-offer-price-free">FREE</span>
+          ) : discounted ? (
             <>
               <span className="shop-offer-price-original">${offer.price}</span>
               <span className="shop-offer-price-discounted">${effectivePrice}</span>
