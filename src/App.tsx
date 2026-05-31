@@ -19,7 +19,6 @@ import { rollAnteSkipOffers, tagOfferRngConfig } from "./items/tags";
 import { applyNextShopModifiers } from "./run/nextShopMods";
 import {
   MAX_CONSUMABLE_SLOTS,
-  consumableUseBlock,
   hasFreeConsumableSlot,
 } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
@@ -38,6 +37,7 @@ import { useConsumableActions } from "./hooks/useConsumableActions";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
+import { useDragController } from "./hooks/useDragController";
 import {
   MAX_JOKERS,
   effectiveJokerCount,
@@ -161,14 +161,6 @@ function App() {
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
   const consumables = useGame((state) => state.consumables);
-  const draggingConsumableIndex = useGame(
-    (state) => state.draggingConsumableIndex,
-  );
-  const setDraggingConsumableIndex = useGame(
-    (state) => state.setDraggingConsumableIndex,
-  );
-  const draggingJokerIndex = useGame((state) => state.draggingJokerIndex);
-  const setDraggingJokerIndex = useGame((state) => state.setDraggingJokerIndex);
   const openedPack = useGame((state) => state.openedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);
@@ -254,25 +246,11 @@ function App() {
     sellJokerAction(jokerIdx);
   };
 
-  const draggingConsumable =
-    draggingConsumableIndex !== null
-      ? consumables[draggingConsumableIndex] ?? null
-      : null;
-  const canDropDraggedConsumableOnJokers =
-    draggingConsumable !== null &&
-    consumableUseBlock(draggingConsumable, selectedIds.size) === null;
-  const onConsumableDrop = (action: (idx: number) => void) => () => {
-    const idx = draggingConsumableIndex;
-    if (idx === null) return;
-    setDraggingConsumableIndex(null);
-    action(idx);
-  };
-  const onJokerDrop = (action: (idx: number) => void) => () => {
-    const idx = draggingJokerIndex;
-    if (idx === null) return;
-    setDraggingJokerIndex(null);
-    action(idx);
-  };
+  const dragController = useDragController({
+    useConsumable,
+    sellConsumable,
+    sellJoker,
+  });
 
   const rerollShopOffersAction = useGame((s) => s.rerollShopOffers);
   const rerollShopOffers = (cost: number) => {
@@ -378,17 +356,8 @@ function App() {
         consumableCapacity={consumableCapacity}
         onUseConsumable={useConsumable}
         onSellConsumable={sellConsumable}
-        onConsumableDragStart={setDraggingConsumableIndex}
-        onConsumableDragEnd={() => setDraggingConsumableIndex(null)}
-        draggingConsumableIndex={draggingConsumableIndex}
-        canDropDraggedConsumableOnJokers={canDropDraggedConsumableOnJokers}
-        onConsumableDropOnJokers={onConsumableDrop(useConsumable)}
-        onConsumableDropOnDeck={onConsumableDrop(sellConsumable)}
-        draggingJokerIndex={draggingJokerIndex}
-        onJokerDragStart={setDraggingJokerIndex}
-        onJokerDragEnd={() => setDraggingJokerIndex(null)}
         onSellJoker={sellJoker}
-        onJokerDropOnDeck={onJokerDrop(sellJoker)}
+        dragController={dragController}
         shop={
           shopOffers
             ? {

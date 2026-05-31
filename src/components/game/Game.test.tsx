@@ -4,6 +4,20 @@ import type { ComponentProps } from "react";
 import { beforeEach } from "vitest";
 import Game from "./Game";
 import { useGame } from "../../store/game";
+import type { DragController } from "../../hooks/useDragController";
+
+const stubDragController: DragController = {
+  draggingConsumableIndex: null,
+  draggingJokerIndex: null,
+  canDropDraggedConsumableOnJokers: false,
+  onConsumableDragStart: () => {},
+  onConsumableDragEnd: () => {},
+  onConsumableDropOnJokers: () => {},
+  onConsumableDropOnDeck: () => {},
+  onJokerDragStart: () => {},
+  onJokerDragEnd: () => {},
+  onJokerDropOnDeck: () => {},
+};
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
@@ -14,6 +28,7 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onUseConsumable={vi.fn()}
       onToggleCard={vi.fn()}
       onCardDiscardEnd={vi.fn()}
+      dragController={stubDragController}
       {...overrides}
     />,
   );
