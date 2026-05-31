@@ -95,6 +95,7 @@ export interface ActionsState {
   applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
   applySealToSelectedPreviewCards: (seal: Seal) => void;
   toggleCard: (card: Card) => void;
+  adjustVoucherSlots: (delta: number) => void;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -580,5 +581,32 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setSelectedHand(hand);
     s.setChips(entry.chips);
     s.setMultiplier(entry.multiplier);
+  },
+  adjustVoucherSlots: (delta) => {
+    const s = get();
+    const nextExtra = Math.max(
+      -BASE_VOUCHER_SLOTS,
+      s.extraVoucherSlots + delta,
+    );
+    if (nextExtra === s.extraVoucherSlots) return;
+    s.setExtraVoucherSlots(nextExtra);
+    const nextCount = BASE_VOUCHER_SLOTS + nextExtra;
+    s.setCurrentAnteVouchers((prev) => {
+      if (nextCount === 0) return [];
+      if (nextCount <= prev.length) return prev.slice(0, nextCount);
+      const existingIds = new Set(prev.map((v) => v.id));
+      const additional = pickVouchersForAnte(
+        {
+          ante: s.ante,
+          ownedIds: s.ownedVoucherIds,
+          excludeIds: new Set<VoucherId>([
+            ...s.ownedVoucherIds,
+            ...existingIds,
+          ]),
+        },
+        nextCount - prev.length,
+      );
+      return [...prev, ...additional];
+    });
   },
 });
