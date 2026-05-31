@@ -1,4 +1,4 @@
-import type { Card, Rank, Suit } from "../cards/types";
+import type { Blind, Card, Hand, Rank, Suit } from "../cards/types";
 import { cardKey } from "../cards/deck";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandStatsEntry } from "../scoring/handStats";
@@ -343,6 +343,17 @@ export function bossBlocksHandLabel(
     return history.includes(label);
   }
   return false;
+}
+
+export function canSubmitHand(
+  blind: Blind,
+  boss: BossBlind | null,
+  selectedHand: Hand | null,
+  history: ReadonlyArray<HandLabel>,
+): boolean {
+  if (blind !== 3) return true;
+  if (!selectedHand) return true;
+  return !bossBlocksHandLabel(boss, selectedHand.label as HandLabel, history);
 }
 
 export type FaceDownContext = "initial" | "refill";
