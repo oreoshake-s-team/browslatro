@@ -7,6 +7,7 @@ import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { cardKey, createDeck } from "../cards/deck";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
+import { BASE_VOUCHER_SLOTS } from "./vouchers";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -541,6 +542,80 @@ describe("game actions slice", () => {
     game.toggleCard(hand[0]);
     game.toggleCard(hand[1]);
     expect(useGame.getState().chips).toBe(Math.floor(baseChips * 0.5));
+  });
+
+  test("adjustVoucherSlots grows the row by appending fresh picks", () => {
+    const [first] = VOUCHER_CATALOG;
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(0);
+    game.setCurrentAnteVouchers([first]);
+    game.adjustVoucherSlots(2);
+    expect(useGame.getState().currentAnteVouchers.length).toBe(
+      BASE_VOUCHER_SLOTS + 2,
+    );
+  });
+
+  test("adjustVoucherSlots preserves existing vouchers when growing", () => {
+    const [first] = VOUCHER_CATALOG;
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(0);
+    game.setCurrentAnteVouchers([first]);
+    game.adjustVoucherSlots(1);
+    expect(useGame.getState().currentAnteVouchers[0].id).toBe(first.id);
+  });
+
+  test("adjustVoucherSlots shrinks the row by slicing", () => {
+    const [a, b, c] = VOUCHER_CATALOG;
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(2);
+    game.setCurrentAnteVouchers([a, b, c]);
+    game.adjustVoucherSlots(-1);
+    expect(useGame.getState().currentAnteVouchers.map((v) => v.id)).toEqual([
+      a.id,
+      b.id,
+    ]);
+  });
+
+  test("adjustVoucherSlots empties the row when nextCount is zero", () => {
+    const [a] = VOUCHER_CATALOG;
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(0);
+    game.setCurrentAnteVouchers([a]);
+    game.adjustVoucherSlots(-1);
+    expect(useGame.getState().currentAnteVouchers).toEqual([]);
+  });
+
+  test("adjustVoucherSlots updates extraVoucherSlots when growing", () => {
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(0);
+    game.adjustVoucherSlots(3);
+    expect(useGame.getState().extraVoucherSlots).toBe(3);
+  });
+
+  test("adjustVoucherSlots clamps shrink at -BASE_VOUCHER_SLOTS (negative)", () => {
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(-BASE_VOUCHER_SLOTS);
+    game.adjustVoucherSlots(-1);
+    expect(useGame.getState().extraVoucherSlots).toBe(-BASE_VOUCHER_SLOTS);
+  });
+
+  test("adjustVoucherSlots is a no-op when the delta keeps extraVoucherSlots unchanged (negative)", () => {
+    const [a] = VOUCHER_CATALOG;
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(-BASE_VOUCHER_SLOTS);
+    game.setCurrentAnteVouchers([a]);
+    game.adjustVoucherSlots(-5);
+    expect(useGame.getState().currentAnteVouchers).toEqual([a]);
+  });
+
+  test("adjustVoucherSlots excludes already-on-shelf vouchers from new picks", () => {
+    const [a] = VOUCHER_CATALOG;
+    const game = useGame.getState();
+    game.setExtraVoucherSlots(0);
+    game.setCurrentAnteVouchers([a]);
+    game.adjustVoucherSlots(2);
+    const ids = useGame.getState().currentAnteVouchers.map((v) => v.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
 

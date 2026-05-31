@@ -2,8 +2,6 @@ import "./ModifierPanel.css";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import { SHOP_PACK_SLOTS } from "../../items/shop";
-import { BASE_VOUCHER_SLOTS } from "../../store/vouchers";
-import { pickVouchersForAnte, type VoucherId } from "../../items/vouchers";
 import type { PackPool } from "../../items/packs";
 
 type QueueablePool = Extract<
@@ -48,11 +46,7 @@ export default function ModifierPanel() {
   const setExtraPackSlots = useGame((s) => s.setExtraPackSlots);
   const pendingForcedPacks = useGame((s) => s.pendingForcedPacks);
   const setPendingForcedPacks = useGame((s) => s.setPendingForcedPacks);
-  const ante = useGame((s) => s.ante);
-  const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
-  const extraVoucherSlots = useGame((s) => s.extraVoucherSlots);
-  const setExtraVoucherSlots = useGame((s) => s.setExtraVoucherSlots);
-  const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
+  const adjustVoucherSlots = useGame((s) => s.adjustVoucherSlots);
   const forceProbabilities = useGame((s) => s.forceProbabilities);
   const setForceProbabilities = useGame((s) => s.setForceProbabilities);
 
@@ -73,26 +67,6 @@ export default function ModifierPanel() {
   }
   function adjustMoney(delta: number) {
     setMoney(money + delta);
-  }
-  function adjustVoucherSlots(delta: number) {
-    const nextExtra = Math.max(-BASE_VOUCHER_SLOTS, extraVoucherSlots + delta);
-    if (nextExtra === extraVoucherSlots) return;
-    setExtraVoucherSlots(nextExtra);
-    const nextCount = BASE_VOUCHER_SLOTS + nextExtra;
-    setCurrentAnteVouchers((prev) => {
-      if (nextCount === 0) return [];
-      if (nextCount <= prev.length) return prev.slice(0, nextCount);
-      const existingIds = new Set(prev.map((v) => v.id));
-      const additional = pickVouchersForAnte(
-        {
-          ante,
-          ownedIds: ownedVoucherIds,
-          excludeIds: new Set<VoucherId>([...ownedVoucherIds, ...existingIds]),
-        },
-        nextCount - prev.length,
-      );
-      return [...prev, ...additional];
-    });
   }
   return (
     <details className="modifier-selection">
