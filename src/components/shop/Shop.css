@@ -308,6 +308,93 @@
   font-weight: 700;
 }
 
+.shop-offer-price-free {
+  color: #2b8a3e;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.shop-offer-edition-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+  background-color: #f1f3f5;
+  color: #343a40;
+}
+
+.shop-offer[data-edition="foil"] {
+  border-color: #4dabf7;
+  border-left-color: #1864ab;
+  box-shadow: 0 0 10px rgba(77, 171, 247, 0.55);
+  background: linear-gradient(135deg, #e7f5ff 0%, #fff9db 100%);
+}
+
+.shop-offer[data-edition="foil"] .shop-offer-edition-badge {
+  background-color: #4dabf7;
+  color: #fff;
+}
+
+.shop-offer[data-edition="holographic"] {
+  border-color: #cc5de8;
+  border-left-color: #862e9c;
+  box-shadow: 0 0 10px rgba(204, 93, 232, 0.55);
+  background: linear-gradient(135deg, #f8f0fc 0%, #fff9db 50%, #e3fafc 100%);
+}
+
+.shop-offer[data-edition="holographic"] .shop-offer-edition-badge {
+  background-color: #cc5de8;
+  color: #fff;
+}
+
+.shop-offer[data-edition="polychrome"] {
+  border-color: #ff8787;
+  border-left-color: #c92a2a;
+  box-shadow: 0 0 12px rgba(255, 135, 135, 0.6);
+  background: linear-gradient(
+    135deg,
+    #ffe8cc 0%,
+    #fff3bf 25%,
+    #d3f9d8 50%,
+    #d0ebff 75%,
+    #f3d9fa 100%
+  );
+}
+
+.shop-offer[data-edition="polychrome"] .shop-offer-edition-badge {
+  background-color: #ff8787;
+  color: #fff;
+}
+
+.shop-offer[data-edition="negative"] {
+  border-color: #495057;
+  border-left-color: #212529;
+  box-shadow: 0 0 12px rgba(73, 80, 87, 0.6), inset 0 0 14px rgba(0, 0, 0, 0.5);
+  background-color: #212529;
+  color: #ffe066;
+}
+
+.shop-offer[data-edition="negative"] .shop-offer-name,
+.shop-offer[data-edition="negative"] .shop-offer-description {
+  color: #f1f3f5;
+}
+
+.shop-offer[data-edition="negative"] .shop-offer-edition-badge {
+  background-color: #ffe066;
+  color: #212529;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shop-offer[data-edition] {
+    box-shadow: none;
+  }
+}
+
 .shop-offer-buy {
   grid-column: 3 / 4;
   grid-row: 2;
