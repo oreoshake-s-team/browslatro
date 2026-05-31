@@ -47,12 +47,10 @@ import {
   effectiveJokerCount,
   initialJokersConfig,
 } from "./items/jokers";
-import { SHOP_PACK_SLOTS } from "./items/shop";
 import {
   extraConsumableSlots,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
-  type VoucherId,
 } from "./items/vouchers";
 
 export const SCORING_STEP_MS = 500;
@@ -85,15 +83,9 @@ function App() {
   // so the displayed chips/multiplier reflect manual bumps until a New game
   // resets them. See #265.
   const devChipsBonus = useGame((state) => state.devChipsBonus);
-  const setDevChipsBonus = useGame((state) => state.setDevChipsBonus);
   const devMultBonus = useGame((state) => state.devMultBonus);
-  const setDevMultBonus = useGame((state) => state.setDevMultBonus);
   const devMultFactor = useGame((state) => state.devMultFactor);
-  const setDevMultFactor = useGame((state) => state.setDevMultFactor);
   const forceProbabilities = useGame((state) => state.forceProbabilities);
-  const setForceProbabilities = useGame(
-    (state) => state.setForceProbabilities,
-  );
   useEffect(() => {
     chanceOverrideConfig.force100 = forceProbabilities;
     return () => {
@@ -185,10 +177,6 @@ function App() {
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
   const consumables = useGame((state) => state.consumables);
-  const setHandSizeModifier = useGame((state) => state.setHandSizeModifier);
-  const setExtraPackSlots = useGame((state) => state.setExtraPackSlots);
-  const pendingForcedPacks = useGame((state) => state.pendingForcedPacks);
-  const setPendingForcedPacks = useGame((state) => state.setPendingForcedPacks);
   const draggingConsumableIndex = useGame(
     (state) => state.draggingConsumableIndex,
   );
@@ -219,8 +207,6 @@ function App() {
   );
   const pendingTags = useGame((state) => state.pendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
-  const extraVoucherSlots = useGame((state) => state.extraVoucherSlots);
-  const setExtraVoucherSlots = useGame((state) => state.setExtraVoucherSlots);
   const currentAnteVouchers = useGame((state) => state.currentAnteVouchers);
   const setCurrentAnteVouchers = useGame(
     (state) => state.setCurrentAnteVouchers,
@@ -324,27 +310,6 @@ function App() {
     startNewRound();
   }
 
-  function adjustVoucherSlots(delta: number) {
-    const nextExtra = Math.max(-BASE_VOUCHER_SLOTS, extraVoucherSlots + delta);
-    if (nextExtra === extraVoucherSlots) return;
-    setExtraVoucherSlots(nextExtra);
-    const nextCount = BASE_VOUCHER_SLOTS + nextExtra;
-    setCurrentAnteVouchers((prev) => {
-      if (nextCount === 0) return [];
-      if (nextCount <= prev.length) return prev.slice(0, nextCount);
-      const existingIds = new Set(prev.map((v) => v.id));
-      const additional = pickVouchersForAnte(
-        {
-          ante,
-          ownedIds: ownedVoucherIds,
-          excludeIds: new Set<VoucherId>([...ownedVoucherIds, ...existingIds]),
-        },
-        nextCount - prev.length,
-      );
-      return [...prev, ...additional];
-    });
-  }
-
   const buyAnteVoucherAction = useGame((s) => s.buyAnteVoucher);
   const buyAnteVoucher = (voucherIdx: number) => {
     const voucher = currentAnteVouchers[voucherIdx];
@@ -357,21 +322,6 @@ function App() {
   };
 
   const reorderJokers = useGame((s) => s.reorderJokers);
-
-  function addChips(amount: number) {
-    play("pop");
-    setDevChipsBonus((prev) => prev + amount);
-  }
-
-  function addMultiplier(amount: number) {
-    play("pop");
-    setDevMultBonus((prev) => prev + amount);
-  }
-
-  function multiplyMultiplier(factor: number) {
-    play("pop");
-    setDevMultFactor((prev) => prev * factor);
-  }
 
   function toggleCard(card: Card) {
     if (discardingIds.size > 0) return;
@@ -446,14 +396,6 @@ function App() {
         onNewGame={startNewGame}
       />
       <Game
-        onWin={handleWin}
-        onAddChips={addChips}
-        onAddMultiplier={addMultiplier}
-        onMultiplyMultiplier={multiplyMultiplier}
-        onAdjustMoney={(delta) => {
-          const economy = useGame.getState();
-          economy.setMoney(economy.money + delta);
-        }}
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
         canSubmit={(() => {
@@ -511,21 +453,6 @@ function App() {
         onJokerDragEnd={() => setDraggingJokerIndex(null)}
         onSellJoker={sellJoker}
         onJokerDropOnDeck={onJokerDrop(sellJoker)}
-        onShrinkHandSize={() => setHandSizeModifier((prev) => prev - 1)}
-        onGrowHandSize={() => setHandSizeModifier((prev) => prev + 1)}
-        onShrinkPackSlots={() =>
-          setExtraPackSlots((prev) => Math.max(-SHOP_PACK_SLOTS, prev - 1))
-        }
-        onGrowPackSlots={() => setExtraPackSlots((prev) => prev + 1)}
-        onQueueForcedPack={(pool) =>
-          setPendingForcedPacks((prev) => [...prev, pool])
-        }
-        onClearPendingPacks={() => setPendingForcedPacks([])}
-        pendingForcedPacks={pendingForcedPacks}
-        onShrinkVoucherSlots={() => adjustVoucherSlots(-1)}
-        onGrowVoucherSlots={() => adjustVoucherSlots(1)}
-        forceProbabilities={forceProbabilities}
-        onToggleForceProbabilities={() => setForceProbabilities((p) => !p)}
         shop={
           shopOffers
             ? {

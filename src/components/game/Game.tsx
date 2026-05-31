@@ -10,41 +10,9 @@ import Shop, { type ShopProps } from "../shop/Shop";
 import PackOpenModal, {
   type PackOpenModalProps,
 } from "../shop/PackOpenModal";
-import type { PackPool } from "../../items/packs";
-
-type QueueablePool = Extract<PackPool, "standard" | "celestial" | "arcana" | "spectral">;
-
-const QUEUEABLE_PACK_POOLS: ReadonlyArray<{
-  readonly pool: QueueablePool;
-  readonly icon: string;
-  readonly label: string;
-}> = [
-  { pool: "standard", icon: "🃏", label: "Standard" },
-  { pool: "celestial", icon: "🌌", label: "Celestial" },
-  { pool: "arcana", icon: "🔮", label: "Arcana" },
-  { pool: "spectral", icon: "👻", label: "Spectral" },
-];
-
-function countByPool(
-  pools: ReadonlyArray<PackPool>,
-): Readonly<Record<QueueablePool, number>> {
-  const counts: Record<QueueablePool, number> = {
-    standard: 0,
-    celestial: 0,
-    arcana: 0,
-    spectral: 0,
-  };
-  for (const pool of pools) {
-    if (pool in counts) counts[pool as QueueablePool] += 1;
-  }
-  return counts;
-}
+import ModifierPanel from "./ModifierPanel";
 
 interface GameProps {
-  onWin: () => void;
-  onAddChips: (amount: number) => void;
-  onAddMultiplier: (amount: number) => void;
-  onMultiplyMultiplier: (factor: number) => void;
   onSubmitHand: () => void;
   onDiscard: () => void;
   canSubmit?: boolean;
@@ -57,7 +25,6 @@ interface GameProps {
   luckyMultProcIds?: ReadonlySet<number>;
   luckyMoneyProcIds?: ReadonlySet<number>;
   handPlaySignal?: number;
-  onAdjustMoney: (delta: number) => void;
   hand: ReadonlyArray<Card>;
   remaining: ReadonlyArray<Card>;
   selectedIds: ReadonlySet<number>;
@@ -80,17 +47,6 @@ interface GameProps {
   onJokerDragEnd?: () => void;
   onSellJoker?: (index: number) => void;
   onJokerDropOnDeck?: () => void;
-  onShrinkHandSize?: () => void;
-  onGrowHandSize?: () => void;
-  onShrinkPackSlots?: () => void;
-  onGrowPackSlots?: () => void;
-  onShrinkVoucherSlots?: () => void;
-  onGrowVoucherSlots?: () => void;
-  onQueueForcedPack?: (pool: QueueablePool) => void;
-  onClearPendingPacks?: () => void;
-  pendingForcedPacks?: ReadonlyArray<PackPool>;
-  forceProbabilities?: boolean;
-  onToggleForceProbabilities?: () => void;
   shop?: ShopProps;
   packOpen?: PackOpenModalProps;
   onToggleCard: (card: Card) => void;
@@ -100,10 +56,6 @@ interface GameProps {
 }
 
 export default function Game({
-  onWin,
-  onAddChips,
-  onAddMultiplier,
-  onMultiplyMultiplier,
   onSubmitHand,
   onDiscard,
   canSubmit = true,
@@ -116,7 +68,6 @@ export default function Game({
   luckyMultProcIds,
   luckyMoneyProcIds,
   handPlaySignal,
-  onAdjustMoney,
   hand,
   remaining,
   selectedIds,
@@ -139,17 +90,6 @@ export default function Game({
   onJokerDragEnd,
   onSellJoker,
   onJokerDropOnDeck,
-  onShrinkHandSize,
-  onGrowHandSize,
-  onShrinkPackSlots,
-  onGrowPackSlots,
-  onShrinkVoucherSlots,
-  onGrowVoucherSlots,
-  onQueueForcedPack,
-  onClearPendingPacks,
-  pendingForcedPacks,
-  forceProbabilities = false,
-  onToggleForceProbabilities,
   shop,
   packOpen,
   onToggleCard,
@@ -163,15 +103,6 @@ export default function Game({
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
-  const forcedPackCounts = countByPool(pendingForcedPacks ?? []);
-  const totalPendingPacks = (pendingForcedPacks ?? []).length;
-  function handleAddMoney(amount: number) {
-    onAdjustMoney(amount);
-  }
-
-  function handleSubtractMoney(amount: number) {
-    onAdjustMoney(-amount);
-  }
 
   return (
     <div className="game">
@@ -233,128 +164,7 @@ export default function Game({
           onJokerSellDrop={onJokerDropOnDeck}
         />
       )}
-      <details className="modifier-selection">
-        <summary className="modifier-disclosure">Apply modifiers</summary>
-        <div className="modifier-grid">
-          <button className="add-chips-button" onClick={() => onAddChips(10)}>
-            🪙 Add Chips
-          </button>
-          <button
-            className="add-multiplier-button"
-            onClick={() => onAddMultiplier(1)}
-          >
-            ➕ Add Multiplier
-          </button>
-          <button
-            className="multiply-multiplier-button"
-            onClick={() => onMultiplyMultiplier(2)}
-          >
-            ✖️ Multiply Multiplier
-          </button>
-          <button className="win-button" onClick={onWin}>
-            🏆 Win
-          </button>
-          <button className="add-money-button" onClick={() => handleAddMoney(10)}>
-            💵 Add $10
-          </button>
-          <button
-            className="subtract-money-button"
-            onClick={() => handleSubtractMoney(10)}
-          >
-            💸 Subtract $10
-          </button>
-          {onShrinkHandSize && (
-            <button
-              type="button"
-              className="shrink-hand-button"
-              onClick={onShrinkHandSize}
-            >
-              🤏 Hand −1
-            </button>
-          )}
-          {onGrowHandSize && (
-            <button
-              type="button"
-              className="grow-hand-button"
-              onClick={onGrowHandSize}
-            >
-              ✋ Hand +1
-            </button>
-          )}
-          {onShrinkPackSlots && (
-            <button
-              type="button"
-              className="shrink-pack-slots-button"
-              onClick={onShrinkPackSlots}
-            >
-              📦 Packs −1
-            </button>
-          )}
-          {onGrowPackSlots && (
-            <button
-              type="button"
-              className="grow-pack-slots-button"
-              onClick={onGrowPackSlots}
-            >
-              🎁 Packs +1
-            </button>
-          )}
-          {onQueueForcedPack &&
-            QUEUEABLE_PACK_POOLS.map(({ pool, icon, label }) => {
-              const count = forcedPackCounts[pool];
-              const suffix = count > 0 ? ` (${count})` : "";
-              return (
-                <button
-                  key={pool}
-                  type="button"
-                  className={`add-pack-button add-pack-button-${pool}`}
-                  onClick={() => onQueueForcedPack(pool)}
-                >
-                  {icon} Add {label} pack{suffix}
-                </button>
-              );
-            })}
-          {onClearPendingPacks && (
-            <button
-              type="button"
-              className="clear-pending-packs-button"
-              onClick={onClearPendingPacks}
-              disabled={totalPendingPacks === 0}
-              aria-disabled={totalPendingPacks === 0}
-            >
-              ↩️ Clear pending packs
-            </button>
-          )}
-          {onShrinkVoucherSlots && (
-            <button
-              type="button"
-              className="shrink-voucher-slots-button"
-              onClick={onShrinkVoucherSlots}
-            >
-              🎟️ Vouchers −1
-            </button>
-          )}
-          {onGrowVoucherSlots && (
-            <button
-              type="button"
-              className="grow-voucher-slots-button"
-              onClick={onGrowVoucherSlots}
-            >
-              🎫 Vouchers +1
-            </button>
-          )}
-          {onToggleForceProbabilities && (
-            <button
-              type="button"
-              className="force-probabilities-button"
-              onClick={onToggleForceProbabilities}
-              aria-pressed={forceProbabilities}
-            >
-              🎲 Force Probabilities {forceProbabilities ? "Off" : "On"}
-            </button>
-          )}
-        </div>
-      </details>
+      <ModifierPanel />
       {!shop && !packOpen && (
         <div className="submit-hand">
           <div className="play-actions">
