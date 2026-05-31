@@ -2,10 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
-import type { Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
-  bossAdjustHandEntry,
   canSubmitHand,
   availableBosses,
   createBossCatalog,
@@ -33,7 +31,6 @@ import {
   usePreferences,
   type AnimationSpeed,
 } from "./components/system/preferences";
-import { detectHandLabel } from "./scoring/handEvaluator";
 import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
@@ -41,7 +38,6 @@ import { useConsumableActions } from "./hooks/useConsumableActions";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
-import { MAX_SELECTED } from "./components/cards/Hand";
 import {
   MAX_JOKERS,
   effectiveJokerCount,
@@ -76,9 +72,7 @@ function App() {
   const ante = useGame((state) => state.ante);
   const money = useGame((state) => state.money);
   const chips = useGame((state) => state.chips);
-  const setChips = useGame((state) => state.setChips);
   const multiplier = useGame((state) => state.multiplier);
-  const setMultiplier = useGame((state) => state.setMultiplier);
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
   // so the displayed chips/multiplier reflect manual bumps until a New game
   // resets them. See #265.
@@ -94,7 +88,6 @@ function App() {
   }, [forceProbabilities]);
   const roundScore = useGame((state) => state.roundScore);
   const selectedHand = useGame((state) => state.selectedHand);
-  const setSelectedHand = useGame((state) => state.setSelectedHand);
   const remainingHands = useGame((state) => state.remainingHands);
   const remainingDiscards = useGame((state) => state.remainingDiscards);
   const runStats = useGame((state) => state.runStats);
@@ -106,7 +99,6 @@ function App() {
   const highVisibility = usePreferences((state) => state.highVisibility);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);
-  const setSelectedIds = useGame((state) => state.setSelectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
   const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
   const jokers = useGame((state) => state.jokers);
@@ -315,36 +307,7 @@ function App() {
 
   const reorderJokers = useGame((s) => s.reorderJokers);
 
-  function toggleCard(card: Card) {
-    if (discardingIds.size > 0) return;
-    if (isScoring) return;
-    let nextIds: Set<number>;
-    if (selectedIds.has(card.id)) {
-      nextIds = new Set(selectedIds);
-      nextIds.delete(card.id);
-    } else {
-      if (selectedIds.size >= MAX_SELECTED) return;
-      nextIds = new Set(selectedIds);
-      nextIds.add(card.id);
-    }
-    setSelectedIds(nextIds);
-    if (nextIds.size === 0) {
-      setSelectedHand(null);
-      setChips(0);
-      setMultiplier(0);
-      return;
-    }
-    const nextSelected = dealt.hand.filter((c) => nextIds.has(c.id));
-    const label = detectHandLabel(nextSelected);
-    const entry =
-      blind === 3
-        ? bossAdjustHandEntry(currentBoss, label, handStats[label])
-        : handStats[label];
-    const hand: Hand = { label, chips: entry.chips, multiplier: entry.multiplier };
-    setSelectedHand(hand);
-    setChips(entry.chips);
-    setMultiplier(entry.multiplier);
-  }
+  const toggleCard = useGame((s) => s.toggleCard);
 
   function dismissRoundWonModal() {
     const precomputed = pendingWin
