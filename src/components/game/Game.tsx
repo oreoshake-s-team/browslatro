@@ -1,7 +1,5 @@
 import "./Game.css";
 import type { Card } from "../../cards/types";
-import type { Joker } from "../../items/jokers";
-import type { Consumable } from "../../items/consumables";
 import HandComponent from "../cards/Hand";
 import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
@@ -11,6 +9,7 @@ import PackOpenModal, {
   type PackOpenModalProps,
 } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
+import { useGame } from "../../store/game";
 
 interface GameProps {
   onSubmitHand: () => void;
@@ -19,20 +18,9 @@ interface GameProps {
   canDiscard: boolean;
   isScoring?: boolean;
   scoringId?: number | null;
-  scoringPulseTick?: number;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
-  luckyMultProcIds?: ReadonlySet<number>;
-  luckyMoneyProcIds?: ReadonlySet<number>;
-  handPlaySignal?: number;
-  hand: ReadonlyArray<Card>;
-  remaining: ReadonlyArray<Card>;
-  selectedIds: ReadonlySet<number>;
-  discardingIds: ReadonlySet<number>;
   debuffedIds?: ReadonlySet<number>;
-  jokers: ReadonlyArray<Joker>;
-  jokerPulseCounters?: Readonly<Record<string, number>>;
-  consumables: ReadonlyArray<Consumable>;
   consumableCapacity?: number;
   onUseConsumable: (index: number) => void;
   onSellConsumable?: (index: number) => void;
@@ -62,20 +50,9 @@ export default function Game({
   canDiscard,
   isScoring = false,
   scoringId = null,
-  scoringPulseTick = 0,
   goldScoringId = null,
   steelScoringId = null,
-  luckyMultProcIds,
-  luckyMoneyProcIds,
-  handPlaySignal,
-  hand,
-  remaining,
-  selectedIds,
-  discardingIds,
   debuffedIds,
-  jokers,
-  jokerPulseCounters,
-  consumables,
   consumableCapacity,
   onUseConsumable,
   onSellConsumable,
@@ -97,6 +74,18 @@ export default function Game({
   onDisplayOrderChange,
   onReorderJokers,
 }: GameProps) {
+  const hand = useGame((s) => s.dealt.hand);
+  const remaining = useGame((s) => s.dealt.remaining);
+  const selectedIds = useGame((s) => s.selectedIds);
+  const discardingIds = useGame((s) => s.discardingIds);
+  const jokers = useGame((s) => s.jokers);
+  const jokerPulseCounters = useGame((s) => s.jokerPulseCounters);
+  const consumables = useGame((s) => s.consumables);
+  const scoringPulseTick = useGame((s) => s.scoringIndex);
+  const luckyMultProcIds = useGame((s) => s.luckyMultProcIds);
+  const luckyMoneyProcIds = useGame((s) => s.luckyMoneyProcIds);
+  const handPlaySignal = useGame((s) => s.handPlaySignal);
+
   const dragging = draggingConsumableIndex !== null;
   const draggingJoker = draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;

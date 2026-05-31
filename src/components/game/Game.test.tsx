@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
+import { beforeEach } from "vitest";
 import Game from "./Game";
+import { useGame } from "../../store/game";
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
@@ -9,12 +11,6 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onSubmitHand={vi.fn()}
       onDiscard={vi.fn()}
       canDiscard={true}
-      hand={[]}
-      remaining={[]}
-      selectedIds={new Set()}
-      discardingIds={new Set()}
-      jokers={[]}
-      consumables={[]}
       onUseConsumable={vi.fn()}
       onToggleCard={vi.fn()}
       onCardDiscardEnd={vi.fn()}
@@ -24,6 +20,10 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
 }
 
 describe("Game", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
   test("Submit Hand button calls onSubmitHand", async () => {
     const user = userEvent.setup();
     const onSubmitHand = vi.fn();

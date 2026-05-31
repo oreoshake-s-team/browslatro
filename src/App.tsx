@@ -111,13 +111,11 @@ function App() {
   const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
   const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
-  const jokerPulseCounters = useGame((state) => state.jokerPulseCounters);
   useEffect(() => {
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
   const handStats = useGame((state) => state.handStats);
-  const handPlaySignal = useGame((state) => state.handPlaySignal);
   const {
     pendingDiscardCountRef,
     pendingHandPlayResetRef,
@@ -127,12 +125,6 @@ function App() {
     resetForNewRound: resetDiscardPipeline,
   } = useDiscardPipeline();
   const scoringEvents = useGame((state) => state.scoringEvents);
-
-  // Sequential scoring state — read for render; mutations live in usePlayHand.
-  const scoringIndex = useGame((state) => state.scoringIndex);
-
-  const luckyMultProcIds = useGame((state) => state.luckyMultProcIds);
-  const luckyMoneyProcIds = useGame((state) => state.luckyMoneyProcIds);
 
   const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
   function triggerNopeAnimation() {
@@ -420,25 +412,14 @@ function App() {
         }
         isScoring={isScoring}
         scoringId={currentScoringId}
-        scoringPulseTick={scoringIndex}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
-        luckyMultProcIds={luckyMultProcIds}
-        luckyMoneyProcIds={luckyMoneyProcIds}
-        handPlaySignal={handPlaySignal}
-        hand={dealt.hand}
-        remaining={dealt.remaining}
-        selectedIds={selectedIds}
-        discardingIds={discardingIds}
         debuffedIds={debuffedHandIds(
           dealt.hand,
           currentBoss,
           blind === 3,
           playedCardKeysThisAnte,
         )}
-        jokers={jokers}
-        jokerPulseCounters={jokerPulseCounters}
-        consumables={consumables}
         consumableCapacity={consumableCapacity}
         onUseConsumable={useConsumable}
         onSellConsumable={sellConsumable}
