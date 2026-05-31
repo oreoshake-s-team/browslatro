@@ -28,47 +28,6 @@
   margin-left: auto;
 }
 
-.modifier-grid button,
-.submit-hand-button {
-  padding: 10px 20px;
-  font-size: 1.1rem;
-}
-
-.modifier-selection {
-  padding: 0.8rem 1.6rem 1.6rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  background-color: #f8f9fa;
-  width: 100%;
-  max-width: 48rem;
-  box-sizing: border-box;
-}
-
-.modifier-disclosure {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #868e96;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  cursor: pointer;
-  padding: 0.4rem 0;
-  list-style-position: inside;
-}
-
-.modifier-selection[open] .modifier-grid {
-  margin-top: 0.8rem;
-}
-
-.modifier-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.8rem;
-}
-
-.modifier-grid button {
-  min-width: 0;
-}
-
 .submit-hand {
   width: 100%;
   max-width: 48rem;
@@ -105,24 +64,6 @@
   border-color: #868e96;
   cursor: not-allowed;
   opacity: 0.7;
-}
-
-.add-chips-button,
-.add-multiplier-button,
-.multiply-multiplier-button {
-  /* TODO: style */
-}
-
-.add-money-button {
-  background-color: #2f9e44;
-  color: white;
-  border-color: #2b8a3e;
-}
-
-.subtract-money-button {
-  background-color: #e03131;
-  color: white;
-  border-color: #c92a2a;
 }
 
 @media (max-width: 1024px) {

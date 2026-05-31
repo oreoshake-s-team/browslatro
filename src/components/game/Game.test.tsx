@@ -6,14 +6,9 @@ import Game from "./Game";
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
     <Game
-      onWin={vi.fn()}
-      onAddChips={vi.fn()}
-      onAddMultiplier={vi.fn()}
-      onMultiplyMultiplier={vi.fn()}
       onSubmitHand={vi.fn()}
       onDiscard={vi.fn()}
       canDiscard={true}
-      onAdjustMoney={vi.fn()}
       hand={[]}
       remaining={[]}
       selectedIds={new Set()}
@@ -28,60 +23,7 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   );
 }
 
-async function openModifiers(
-  user: ReturnType<typeof userEvent.setup>,
-): Promise<void> {
-  await user.click(screen.getByText(/Apply modifiers/));
-}
-
 describe("Game", () => {
-  test("Win button calls onWin", async () => {
-    const user = userEvent.setup();
-    const onWin = vi.fn();
-    renderGame({ onWin });
-    await openModifiers(user);
-    await user.click(screen.getByText(/^🏆 Win$/));
-    expect(onWin).toHaveBeenCalledTimes(1);
-  });
-
-  test("Win button calls onWin each time it is clicked", async () => {
-    const user = userEvent.setup();
-    const onWin = vi.fn();
-    renderGame({ onWin });
-    await openModifiers(user);
-    await user.click(screen.getByText(/^🏆 Win$/));
-    await user.click(screen.getByText(/^🏆 Win$/));
-    await user.click(screen.getByText(/^🏆 Win$/));
-    expect(onWin).toHaveBeenCalledTimes(3);
-  });
-
-  test("Add Chips button calls onAddChips with 10", async () => {
-    const user = userEvent.setup();
-    const onAddChips = vi.fn();
-    renderGame({ onAddChips });
-    await openModifiers(user);
-    await user.click(screen.getByText(/Add Chips/));
-    expect(onAddChips).toHaveBeenCalledWith(10);
-  });
-
-  test("Add Multiplier button calls onAddMultiplier with 1", async () => {
-    const user = userEvent.setup();
-    const onAddMultiplier = vi.fn();
-    renderGame({ onAddMultiplier });
-    await openModifiers(user);
-    await user.click(screen.getByText(/Add Multiplier/));
-    expect(onAddMultiplier).toHaveBeenCalledWith(1);
-  });
-
-  test("Multiply Multiplier button calls onMultiplyMultiplier with 2", async () => {
-    const user = userEvent.setup();
-    const onMultiplyMultiplier = vi.fn();
-    renderGame({ onMultiplyMultiplier });
-    await openModifiers(user);
-    await user.click(screen.getByText(/Multiply Multiplier/));
-    expect(onMultiplyMultiplier).toHaveBeenCalledWith(2);
-  });
-
   test("Submit Hand button calls onSubmitHand", async () => {
     const user = userEvent.setup();
     const onSubmitHand = vi.fn();
@@ -123,7 +65,7 @@ describe("Game", () => {
   test("clicking the modifier disclosure opens it", async () => {
     const user = userEvent.setup();
     renderGame();
-    await openModifiers(user);
+    await user.click(screen.getByText(/Apply modifiers/));
     expect(screen.getByText(/Apply modifiers/).closest("details")).toHaveAttribute(
       "open",
     );
