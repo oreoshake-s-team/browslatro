@@ -10,6 +10,7 @@ import PackOpenModal, {
 } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
 import { useGame } from "../../store/game";
+import type { DragController } from "../../hooks/useDragController";
 
 interface GameProps {
   onSubmitHand: () => void;
@@ -24,17 +25,8 @@ interface GameProps {
   consumableCapacity?: number;
   onUseConsumable: (index: number) => void;
   onSellConsumable?: (index: number) => void;
-  onConsumableDragStart?: (index: number) => void;
-  onConsumableDragEnd?: () => void;
-  draggingConsumableIndex?: number | null;
-  canDropDraggedConsumableOnJokers?: boolean;
-  onConsumableDropOnJokers?: () => void;
-  onConsumableDropOnDeck?: () => void;
-  draggingJokerIndex?: number | null;
-  onJokerDragStart?: (index: number) => void;
-  onJokerDragEnd?: () => void;
   onSellJoker?: (index: number) => void;
-  onJokerDropOnDeck?: () => void;
+  dragController: DragController;
   shop?: ShopProps;
   packOpen?: PackOpenModalProps;
   onToggleCard: (card: Card) => void;
@@ -56,17 +48,8 @@ export default function Game({
   consumableCapacity,
   onUseConsumable,
   onSellConsumable,
-  onConsumableDragStart,
-  onConsumableDragEnd,
-  draggingConsumableIndex = null,
-  canDropDraggedConsumableOnJokers = false,
-  onConsumableDropOnJokers,
-  onConsumableDropOnDeck,
-  draggingJokerIndex = null,
-  onJokerDragStart,
-  onJokerDragEnd,
   onSellJoker,
-  onJokerDropOnDeck,
+  dragController,
   shop,
   packOpen,
   onToggleCard,
@@ -86,8 +69,8 @@ export default function Game({
   const luckyMoneyProcIds = useGame((s) => s.luckyMoneyProcIds);
   const handPlaySignal = useGame((s) => s.handPlaySignal);
 
-  const dragging = draggingConsumableIndex !== null;
-  const draggingJoker = draggingJokerIndex !== null;
+  const dragging = dragController.draggingConsumableIndex !== null;
+  const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
@@ -101,10 +84,12 @@ export default function Game({
           pulseCounters={jokerPulseCounters}
           onReorder={onReorderJokers}
           onSell={onSellJoker}
-          onDragStart={onJokerDragStart}
-          onDragEnd={onJokerDragEnd}
-          consumableDropEnabled={dragging && canDropDraggedConsumableOnJokers}
-          onConsumableDrop={onConsumableDropOnJokers}
+          onDragStart={dragController.onJokerDragStart}
+          onDragEnd={dragController.onJokerDragEnd}
+          consumableDropEnabled={
+            dragging && dragController.canDropDraggedConsumableOnJokers
+          }
+          onConsumableDrop={dragController.onConsumableDropOnJokers}
         />
         <Consumables
           consumables={consumables}
@@ -113,17 +98,17 @@ export default function Game({
           capacity={consumableCapacity}
           onUse={onUseConsumable}
           onSell={onSellConsumable}
-          onDragStart={onConsumableDragStart}
-          onDragEnd={onConsumableDragEnd}
+          onDragStart={dragController.onConsumableDragStart}
+          onDragEnd={dragController.onConsumableDragEnd}
         />
         {(shop || packOpen) && (
           <div className="game-overlay-deck">
             <DeckPile
               remaining={remaining}
               consumableDropEnabled={dragging}
-              onConsumableDrop={onConsumableDropOnDeck}
+              onConsumableDrop={dragController.onConsumableDropOnDeck}
               jokerDropEnabled={draggingJoker}
-              onJokerDrop={onJokerDropOnDeck}
+              onJokerDrop={dragController.onJokerDropOnDeck}
             />
           </div>
         )}
@@ -148,9 +133,9 @@ export default function Game({
           onCardDiscardEnd={onCardDiscardEnd}
           onDisplayOrderChange={onDisplayOrderChange}
           consumableDropEnabled={dragging}
-          onConsumableSellDrop={onConsumableDropOnDeck}
+          onConsumableSellDrop={dragController.onConsumableDropOnDeck}
           jokerDropEnabled={draggingJoker}
-          onJokerSellDrop={onJokerDropOnDeck}
+          onJokerSellDrop={dragController.onJokerDropOnDeck}
         />
       )}
       <ModifierPanel />
