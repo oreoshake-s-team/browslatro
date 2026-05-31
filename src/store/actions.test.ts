@@ -441,6 +441,107 @@ describe("game actions slice", () => {
     const key = cardKey(preview[0]);
     expect(useGame.getState().cardSealsByKey.get(key)).toBe("red");
   });
+
+  test("toggleCard adds the card id to selectedIds", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    expect(useGame.getState().selectedIds.has(hand[0].id)).toBe(true);
+  });
+
+  test("toggleCard removes a previously selected card", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[0]);
+    expect(useGame.getState().selectedIds.has(hand[0].id)).toBe(false);
+  });
+
+  test("toggleCard clears the selected hand once the selection is empty", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[0]);
+    expect(useGame.getState().selectedHand).toBeNull();
+  });
+
+  test("toggleCard clears chips and multiplier once the selection is empty", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[0]);
+    const state = useGame.getState();
+    expect([state.chips, state.multiplier]).toEqual([0, 0]);
+  });
+
+  test("toggleCard caps selection at MAX_SELECTED (negative)", () => {
+    const hand = createDeck().slice(0, 6);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    for (let i = 0; i < 5; i += 1) game.toggleCard(hand[i]);
+    game.toggleCard(hand[5]);
+    expect(useGame.getState().selectedIds.has(hand[5].id)).toBe(false);
+  });
+
+  test("toggleCard is a no-op while cards are being discarded (negative)", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.setDiscardingIds(new Set([hand[1].id]));
+    game.toggleCard(hand[0]);
+    expect(useGame.getState().selectedIds.has(hand[0].id)).toBe(false);
+  });
+
+  test("toggleCard is a no-op while a scoring sequence is running (negative)", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.setScoringCards([hand[0]]);
+    game.setScoringIndex(0);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedIds.has(hand[1].id)).toBe(false);
+  });
+
+  test("toggleCard populates the selected hand label for a pair", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("toggleCard halves chips on blind 3 against The Flint", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.setBlind(3);
+    const flint = {
+      id: "the-flint",
+      name: "The Flint",
+      description: "Base Chips and Mult for played hands are halved.",
+      scoreMultiplier: 2,
+      anteMin: 2,
+      effect: {
+        kind: "hand-stats-multiplier" as const,
+        chipsFactor: 0.5,
+        multFactor: 0.5,
+      },
+    };
+    game.setCurrentBoss(flint);
+    const baseChips = game.handStats["Pair"].chips;
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().chips).toBe(Math.floor(baseChips * 0.5));
+  });
 });
 
 describe("pending shop modifiers", () => {

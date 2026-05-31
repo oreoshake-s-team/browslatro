@@ -51,6 +51,8 @@ import {
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { cardKey, createDeck, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
+import { detectHandLabel } from "../scoring/handEvaluator";
+import { MAX_SELECTED } from "../components/cards/Hand";
 import {
   applyEnhancementOverrides,
   applySealOverrides,
@@ -60,13 +62,17 @@ import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import { calculateInterest } from "../scoring/payout";
 import { BlindValues } from "../constants";
-import type { Blind, Enhancement, Seal } from "../cards/types";
+import type { Blind, Card, Enhancement, Hand, Seal } from "../cards/types";
 import {
   rollAnteSkipOffers,
   tagOfferRngConfig,
   totalDeferredBossPayout,
 } from "../items/tags";
-import { pickBossForAnte, bossPickerRngConfig } from "../items/bosses";
+import {
+  bossAdjustHandEntry,
+  bossPickerRngConfig,
+  pickBossForAnte,
+} from "../items/bosses";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
 
 export interface ActionsState {
@@ -88,6 +94,7 @@ export interface ActionsState {
   applySpectralEffect: (effect: SpectralEffect) => void;
   applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
   applySealToSelectedPreviewCards: (seal: Seal) => void;
+  toggleCard: (card: Card) => void;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -536,5 +543,42 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       ),
     );
     s.setPackPreviewSelectedIds(new Set());
+  },
+  toggleCard: (card) => {
+    const s = get();
+    if (s.discardingIds.size > 0) return;
+    const scoringInProgress =
+      s.scoringCards.length > 0 && s.scoringIndex < s.scoringCards.length;
+    if (scoringInProgress) return;
+    let nextIds: Set<number>;
+    if (s.selectedIds.has(card.id)) {
+      nextIds = new Set(s.selectedIds);
+      nextIds.delete(card.id);
+    } else {
+      if (s.selectedIds.size >= MAX_SELECTED) return;
+      nextIds = new Set(s.selectedIds);
+      nextIds.add(card.id);
+    }
+    s.setSelectedIds(nextIds);
+    if (nextIds.size === 0) {
+      s.setSelectedHand(null);
+      s.setChips(0);
+      s.setMultiplier(0);
+      return;
+    }
+    const nextSelected = s.dealt.hand.filter((c) => nextIds.has(c.id));
+    const label = detectHandLabel(nextSelected);
+    const entry =
+      s.blind === 3
+        ? bossAdjustHandEntry(s.currentBoss, label, s.handStats[label])
+        : s.handStats[label];
+    const hand: Hand = {
+      label,
+      chips: entry.chips,
+      multiplier: entry.multiplier,
+    };
+    s.setSelectedHand(hand);
+    s.setChips(entry.chips);
+    s.setMultiplier(entry.multiplier);
   },
 });
