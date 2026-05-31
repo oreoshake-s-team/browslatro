@@ -6,7 +6,7 @@ import type { Card, Hand } from "./cards/types";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
   bossAdjustHandEntry,
-  bossBlocksHandLabel,
+  canSubmitHand,
   availableBosses,
   createBossCatalog,
   debuffedHandIds,
@@ -33,7 +33,7 @@ import {
   usePreferences,
   type AnimationSpeed,
 } from "./components/system/preferences";
-import { detectHandLabel, type HandLabel } from "./scoring/handEvaluator";
+import { detectHandLabel } from "./scoring/handEvaluator";
 import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
@@ -398,20 +398,12 @@ function App() {
       <Game
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
-        canSubmit={(() => {
-          if (
-            blind === 3 &&
-            selectedHand !== null &&
-            bossBlocksHandLabel(
-              currentBoss,
-              selectedHand.label as HandLabel,
-              handHistoryThisRound,
-            )
-          ) {
-            return false;
-          }
-          return true;
-        })()}
+        canSubmit={canSubmitHand(
+          blind,
+          currentBoss,
+          selectedHand,
+          handHistoryThisRound,
+        )}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

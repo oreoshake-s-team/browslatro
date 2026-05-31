@@ -10,13 +10,14 @@ import {
   bossRequiredCardCount,
   bossStartingDiscards,
   bossStartingHands,
+  canSubmitHand,
   createBossCatalog,
   debuffedHandIds,
   isCardDebuffedByBoss,
   pickBossForAnte,
   type BossBlind,
 } from "./bosses";
-import type { Card } from "../cards/types";
+import type { Card, Hand } from "../cards/types";
 
 describe("createBossCatalog", () => {
   test("includes the default Boss Blind entry", () => {
@@ -338,6 +339,41 @@ describe("bossBlocksHandLabel", () => {
 
   test("null boss never blocks", () => {
     expect(bossBlocksHandLabel(null, "Pair", ["Pair"])).toBe(false);
+  });
+});
+
+describe("canSubmitHand", () => {
+  const mouth = createBossCatalog().find((b) => b.id === "the-mouth")!;
+  const eye = createBossCatalog().find((b) => b.id === "the-eye")!;
+  const pair: Hand = { label: "Pair", chips: 10, multiplier: 2 };
+  const flush: Hand = { label: "Flush", chips: 35, multiplier: 4 };
+
+  test("returns true when no hand is selected", () => {
+    expect(canSubmitHand(3, mouth, null, ["Pair"])).toBe(true);
+  });
+
+  test("returns true on blind 1 even when the boss rule would block", () => {
+    expect(canSubmitHand(1, eye, pair, ["Pair"])).toBe(true);
+  });
+
+  test("returns true on blind 2 even when the boss rule would block", () => {
+    expect(canSubmitHand(2, eye, pair, ["Pair"])).toBe(true);
+  });
+
+  test("returns true on blind 3 when the boss does not block this label", () => {
+    expect(canSubmitHand(3, mouth, pair, ["Pair"])).toBe(true);
+  });
+
+  test("returns false on blind 3 when The Eye sees a repeat (negative)", () => {
+    expect(canSubmitHand(3, eye, pair, ["Pair"])).toBe(false);
+  });
+
+  test("returns false on blind 3 when The Mouth sees a different label (negative)", () => {
+    expect(canSubmitHand(3, mouth, flush, ["Pair"])).toBe(false);
+  });
+
+  test("returns true on blind 3 when there is no boss", () => {
+    expect(canSubmitHand(3, null, pair, ["Pair"])).toBe(true);
   });
 });
 
