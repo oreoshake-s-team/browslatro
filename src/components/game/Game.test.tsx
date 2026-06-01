@@ -26,7 +26,6 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       onDiscard={vi.fn()}
       canDiscard={true}
       onUseConsumable={vi.fn()}
-      onToggleCard={vi.fn()}
       onCardDiscardEnd={vi.fn()}
       dragController={stubDragController}
       {...overrides}
