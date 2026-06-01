@@ -29,10 +29,7 @@ interface GameProps {
   dragController: DragController;
   shop?: ShopProps;
   packOpen?: PackOpenModalProps;
-  onToggleCard: (card: Card) => void;
   onCardDiscardEnd: (card: Card) => void;
-  onDisplayOrderChange?: (orderedIds: ReadonlyArray<number>) => void;
-  onReorderJokers?: (orderedIds: ReadonlyArray<string>) => void;
 }
 
 export default function Game({
@@ -52,10 +49,7 @@ export default function Game({
   dragController,
   shop,
   packOpen,
-  onToggleCard,
   onCardDiscardEnd,
-  onDisplayOrderChange,
-  onReorderJokers,
 }: GameProps) {
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
@@ -68,6 +62,9 @@ export default function Game({
   const luckyMultProcIds = useGame((s) => s.luckyMultProcIds);
   const luckyMoneyProcIds = useGame((s) => s.luckyMoneyProcIds);
   const handPlaySignal = useGame((s) => s.handPlaySignal);
+  const toggleCard = useGame((s) => s.toggleCard);
+  const setHandDisplayOrder = useGame((s) => s.setHandDisplayOrder);
+  const reorderJokers = useGame((s) => s.reorderJokers);
 
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
@@ -82,7 +79,7 @@ export default function Game({
         <Jokers
           jokers={jokers}
           pulseCounters={jokerPulseCounters}
-          onReorder={onReorderJokers}
+          onReorder={reorderJokers}
           onSell={onSellJoker}
           onDragStart={dragController.onJokerDragStart}
           onDragEnd={dragController.onJokerDragEnd}
@@ -129,9 +126,9 @@ export default function Game({
           luckyMultProcIds={luckyMultProcIds}
           luckyMoneyProcIds={luckyMoneyProcIds}
           handPlaySignal={handPlaySignal}
-          onToggleCard={onToggleCard}
+          onToggleCard={toggleCard}
           onCardDiscardEnd={onCardDiscardEnd}
-          onDisplayOrderChange={onDisplayOrderChange}
+          onDisplayOrderChange={setHandDisplayOrder}
           consumableDropEnabled={dragging}
           onConsumableSellDrop={dragController.onConsumableDropOnDeck}
           jokerDropEnabled={draggingJoker}

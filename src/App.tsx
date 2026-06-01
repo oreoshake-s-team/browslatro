@@ -100,7 +100,6 @@ function App() {
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
-  const setHandDisplayOrder = useGame((state) => state.setHandDisplayOrder);
   const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
   useEffect(() => {
@@ -283,10 +282,6 @@ function App() {
     buyAnteVoucherAction(voucherIdx);
   };
 
-  const reorderJokers = useGame((s) => s.reorderJokers);
-
-  const toggleCard = useGame((s) => s.toggleCard);
-
   function dismissRoundWonModal() {
     const precomputed = pendingWin
       ? { interest: pendingWin.interest, interestWallet: pendingWin.interestWallet }
@@ -401,10 +396,7 @@ function App() {
               }
             : undefined
         }
-        onToggleCard={toggleCard}
         onCardDiscardEnd={handleCardDiscardEnd}
-        onDisplayOrderChange={setHandDisplayOrder}
-        onReorderJokers={reorderJokers}
       />
       <NopeAnimation triggerKey={nopeTriggerKey} />
       {pendingWin && (
