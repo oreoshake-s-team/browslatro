@@ -3,7 +3,11 @@ import { useGame } from "./game";
 import { MAX_JOKERS, createJokerCatalog, jokerSellValue } from "../items/jokers";
 import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
-import { VOUCHER_CATALOG } from "../items/vouchers";
+import {
+  VOUCHER_CATALOG,
+  type Voucher,
+  type VoucherId,
+} from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { cardKey, createDeck } from "../cards/deck";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
@@ -72,6 +76,48 @@ describe("game actions slice", () => {
     game.setMoney(voucher.cost - 1);
     game.buyAnteVoucher(0);
     expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(false);
+  });
+
+  const noOpVoucher: Voucher = {
+    id: "blank",
+    name: "Blank",
+    description: "x",
+    cost: 10,
+  };
+
+  test("buyAnteVoucher charges full price with no discount owned (baseline)", () => {
+    const game = useGame.getState();
+    game.setCurrentAnteVouchers([noOpVoucher]);
+    game.setMoney(20);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().money).toBe(10);
+  });
+
+  test("buyAnteVoucher applies Clearance Sale's 25% discount", () => {
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set<VoucherId>(["clearance-sale"]));
+    game.setCurrentAnteVouchers([noOpVoucher]);
+    game.setMoney(20);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().money).toBe(12);
+  });
+
+  test("buyAnteVoucher applies Liquidation's 50% discount", () => {
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set<VoucherId>(["clearance-sale", "liquidation"]));
+    game.setCurrentAnteVouchers([noOpVoucher]);
+    game.setMoney(20);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().money).toBe(15);
+  });
+
+  test("buyAnteVoucher succeeds at the discounted price when full price is unaffordable (negative)", () => {
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set<VoucherId>(["clearance-sale"]));
+    game.setCurrentAnteVouchers([noOpVoucher]);
+    game.setMoney(8);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().ownedVoucherIds.has("blank")).toBe(true);
   });
 
   test("rerollShopOffers spends the reroll cost", () => {

@@ -44,6 +44,7 @@ import {
   initialJokersConfig,
 } from "./items/jokers";
 import {
+  applyShopDiscount,
   extraConsumableSlots,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
@@ -276,8 +277,8 @@ function App() {
     const voucher = currentAnteVouchers[voucherIdx];
     if (!voucher) return;
     if (soldVoucherIds.has(voucher.id)) return;
-    if (money < voucher.cost) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
+    if (money < applyShopDiscount(voucher.cost, ownedVoucherIds)) return;
     play("pop");
     buyAnteVoucherAction(voucherIdx);
   };
