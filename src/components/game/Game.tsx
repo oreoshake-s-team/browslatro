@@ -9,8 +9,11 @@ import PackOpenModal, {
   type PackOpenModalProps,
 } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
+import NopeAnimation from "./NopeAnimation";
 import { useGame } from "../../store/game";
-import type { DragController } from "../../hooks/useDragController";
+import { useDragController } from "../../hooks/useDragController";
+import { useConsumableActions } from "../../hooks/useConsumableActions";
+import { play } from "../system/sounds";
 import { canSubmitHand, debuffedHandIds } from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
 import { extraConsumableSlots } from "../../items/vouchers";
@@ -23,10 +26,6 @@ interface GameProps {
   scoringId?: number | null;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
-  onUseConsumable: (index: number) => void;
-  onSellConsumable?: (index: number) => void;
-  onSellJoker?: (index: number) => void;
-  dragController: DragController;
   shop?: ShopProps;
   packOpen?: PackOpenModalProps;
   onCardDiscardEnd: (card: Card) => void;
@@ -40,10 +39,6 @@ export default function Game({
   scoringId = null,
   goldScoringId = null,
   steelScoringId = null,
-  onUseConsumable,
-  onSellConsumable,
-  onSellJoker,
-  dragController,
   shop,
   packOpen,
   onCardDiscardEnd,
@@ -68,6 +63,26 @@ export default function Game({
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const nopeTriggerKey = useGame((s) => s.nopeTriggerKey);
+  const sellConsumableAction = useGame((s) => s.sellConsumable);
+  const sellJokerAction = useGame((s) => s.sellJoker);
+
+  const { useConsumable } = useConsumableActions();
+
+  function sellConsumable(consumableIdx: number): void {
+    play("pop");
+    sellConsumableAction(consumableIdx);
+  }
+  function sellJoker(jokerIdx: number): void {
+    play("pop");
+    sellJokerAction(jokerIdx);
+  }
+
+  const dragController = useDragController({
+    useConsumable,
+    sellConsumable,
+    sellJoker,
+  });
 
   const canSubmit = canSubmitHand(
     blind,
@@ -98,7 +113,7 @@ export default function Game({
           jokers={jokers}
           pulseCounters={jokerPulseCounters}
           onReorder={reorderJokers}
-          onSell={onSellJoker}
+          onSell={sellJoker}
           onDragStart={dragController.onJokerDragStart}
           onDragEnd={dragController.onJokerDragEnd}
           consumableDropEnabled={
@@ -111,8 +126,8 @@ export default function Game({
           selectedCount={consumableSelectedCount}
           previewMode={previewActive}
           capacity={consumableCapacity}
-          onUse={onUseConsumable}
-          onSell={onSellConsumable}
+          onUse={useConsumable}
+          onSell={sellConsumable}
           onDragStart={dragController.onConsumableDragStart}
           onDragEnd={dragController.onConsumableDragEnd}
         />
@@ -174,6 +189,7 @@ export default function Game({
           </div>
         </div>
       )}
+      <NopeAnimation triggerKey={nopeTriggerKey} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
@@ -12,7 +12,6 @@ import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
-import NopeAnimation from "./components/game/NopeAnimation";
 import { rollAnteSkipOffers, tagOfferRngConfig } from "./items/tags";
 import { applyNextShopModifiers } from "./run/nextShopMods";
 import {
@@ -31,11 +30,9 @@ import {
 import { initialDeal } from "./cards/deckBuild";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
-import { useConsumableActions } from "./hooks/useConsumableActions";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
-import { useDragController } from "./hooks/useDragController";
 import {
   MAX_JOKERS,
   effectiveJokerCount,
@@ -114,13 +111,7 @@ function App() {
   } = useDiscardPipeline();
   const scoringEvents = useGame((state) => state.scoringEvents);
 
-  const [nopeTriggerKey, setNopeTriggerKey] = useState(0);
-  function triggerNopeAnimation() {
-    setNopeTriggerKey((prev) => prev + 1);
-  }
-
-  const { useConsumable } = useConsumableActions({ triggerNopeAnimation });
-  const { pickFromOpenedPack } = useOpenedPackPicker({ triggerNopeAnimation });
+  const { pickFromOpenedPack } = useOpenedPackPicker();
   const { applyGainedTag } = useTagDispatcher();
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
@@ -226,23 +217,6 @@ function App() {
     if (buyShopOfferAction(idx)) play("pop");
   };
 
-  const sellConsumableAction = useGame((s) => s.sellConsumable);
-  const sellConsumable = (consumableIdx: number) => {
-    play("pop");
-    sellConsumableAction(consumableIdx);
-  };
-  const sellJokerAction = useGame((s) => s.sellJoker);
-  const sellJoker = (jokerIdx: number) => {
-    play("pop");
-    sellJokerAction(jokerIdx);
-  };
-
-  const dragController = useDragController({
-    useConsumable,
-    sellConsumable,
-    sellJoker,
-  });
-
   const rerollShopOffersAction = useGame((s) => s.rerollShopOffers);
   const rerollShopOffers = (cost: number) => {
     if (!shopOffers) return;
@@ -328,10 +302,6 @@ function App() {
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
-        onUseConsumable={useConsumable}
-        onSellConsumable={sellConsumable}
-        onSellJoker={sellJoker}
-        dragController={dragController}
         shop={
           shopOffers
             ? {
@@ -377,7 +347,6 @@ function App() {
         }
         onCardDiscardEnd={handleCardDiscardEnd}
       />
-      <NopeAnimation triggerKey={nopeTriggerKey} />
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
       )}

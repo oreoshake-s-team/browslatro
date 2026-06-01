@@ -10,18 +10,13 @@ import {
 } from "../items/tarots";
 import { withEdition } from "../items/jokers";
 
-export interface UseConsumableActionsParams {
-  readonly triggerNopeAnimation: () => void;
-}
-
 export interface UseConsumableActionsResult {
   readonly useConsumable: (consumableIdx: number) => void;
 }
 
-export function useConsumableActions({
-  triggerNopeAnimation,
-}: UseConsumableActionsParams): UseConsumableActionsResult {
+export function useConsumableActions(): UseConsumableActionsResult {
   const consumables = useGame((s) => s.consumables);
+  const triggerNope = useGame((s) => s.triggerNope);
   const setConsumables = useGame((s) => s.setConsumables);
   const openedPack = useGame((s) => s.openedPack);
   const packPreviewHand = useGame((s) => s.packPreviewHand);
@@ -126,7 +121,7 @@ export function useConsumableActions({
           prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
         );
       } else {
-        triggerNopeAnimation();
+        triggerNope();
       }
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
