@@ -8,17 +8,23 @@ import reportWebVitals from "./reportWebVitals";
 import { AuthProvider } from "./components/auth/AuthProvider";
 import { LoginGate } from "./components/auth/LoginGate";
 import { UserMenu } from "./components/auth/UserMenu";
+import { isAuthEnabled } from "./components/auth/config";
 
 enableDragDropTouch();
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
+const authEnabled = isAuthEnabled();
 root.render(
   <React.StrictMode>
     <AuthProvider>
-      <LoginGate>
+      {authEnabled ? (
+        <LoginGate>
+          <App />
+          <UserMenu />
+        </LoginGate>
+      ) : (
         <App />
-        <UserMenu />
-      </LoginGate>
+      )}
       <Telemetry />
     </AuthProvider>
   </React.StrictMode>
