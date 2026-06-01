@@ -11,18 +11,18 @@ import PackOpenModal, {
 import ModifierPanel from "./ModifierPanel";
 import { useGame } from "../../store/game";
 import type { DragController } from "../../hooks/useDragController";
+import { canSubmitHand, debuffedHandIds } from "../../items/bosses";
+import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
+import { extraConsumableSlots } from "../../items/vouchers";
 
 interface GameProps {
   onSubmitHand: () => void;
   onDiscard: () => void;
-  canSubmit?: boolean;
   canDiscard: boolean;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
-  debuffedIds?: ReadonlySet<number>;
-  consumableCapacity?: number;
   onUseConsumable: (index: number) => void;
   onSellConsumable?: (index: number) => void;
   onSellJoker?: (index: number) => void;
@@ -35,14 +35,11 @@ interface GameProps {
 export default function Game({
   onSubmitHand,
   onDiscard,
-  canSubmit = true,
   canDiscard,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
   steelScoringId = null,
-  debuffedIds,
-  consumableCapacity,
   onUseConsumable,
   onSellConsumable,
   onSellJoker,
@@ -65,6 +62,27 @@ export default function Game({
   const toggleCard = useGame((s) => s.toggleCard);
   const setHandDisplayOrder = useGame((s) => s.setHandDisplayOrder);
   const reorderJokers = useGame((s) => s.reorderJokers);
+  const blind = useGame((s) => s.blind);
+  const currentBoss = useGame((s) => s.currentBoss);
+  const selectedHand = useGame((s) => s.selectedHand);
+  const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
+  const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
+  const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+
+  const canSubmit = canSubmitHand(
+    blind,
+    currentBoss,
+    selectedHand,
+    handHistoryThisRound,
+  );
+  const debuffedIds = debuffedHandIds(
+    hand,
+    currentBoss,
+    blind === 3,
+    playedCardKeysThisAnte,
+  );
+  const consumableCapacity =
+    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;

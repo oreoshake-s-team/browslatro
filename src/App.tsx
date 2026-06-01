@@ -4,10 +4,8 @@ import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
 import {
-  canSubmitHand,
   availableBosses,
   createBossCatalog,
-  debuffedHandIds,
   pickBossForAnte,
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
@@ -91,7 +89,6 @@ function App() {
   const remainingHands = useGame((state) => state.remainingHands);
   const remainingDiscards = useGame((state) => state.remainingDiscards);
   const runStats = useGame((state) => state.runStats);
-  const dealt = useGame((state) => state.dealt);
   const setDealt = useGame((state) => state.setDealt);
   useEffect(() => {
     setDealt(initialDeal());
@@ -197,11 +194,6 @@ function App() {
   useEffect(() => {
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
   }, [setCurrentBoss]);
-  const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
-  const playedCardKeysThisAnte = useGame(
-    (state) => state.playedCardKeysThisAnte,
-  );
-
   const bossScoreMultiplier = currentBoss.scoreMultiplier;
   const requiredScore =
     blind === 3
@@ -326,12 +318,6 @@ function App() {
       <Game
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
-        canSubmit={canSubmitHand(
-          blind,
-          currentBoss,
-          selectedHand,
-          handHistoryThisRound,
-        )}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&
@@ -342,13 +328,6 @@ function App() {
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
-        debuffedIds={debuffedHandIds(
-          dealt.hand,
-          currentBoss,
-          blind === 3,
-          playedCardKeysThisAnte,
-        )}
-        consumableCapacity={consumableCapacity}
         onUseConsumable={useConsumable}
         onSellConsumable={sellConsumable}
         onSellJoker={sellJoker}

@@ -120,7 +120,7 @@ test.describe("Shop purchases (issue #240)", () => {
     await setForcedShopKinds(page, ["joker", "planet"]);
     await openShopAfterRound1Win(page);
     const before = await moneyOf(page);
-    await page.getByRole("button", { name: /Reroll/ }).click();
+    await page.locator("button.shop-reroll").click();
     expect(await moneyOf(page)).toBe(before - 5);
   });
 
@@ -129,7 +129,7 @@ test.describe("Shop purchases (issue #240)", () => {
   }) => {
     await setForcedShopKinds(page, ["joker", "joker"]);
     await openShopAfterRound1Win(page);
-    await page.getByRole("button", { name: /Reroll/ }).click();
+    await page.locator("button.shop-reroll").click();
     const offers = page.locator('.shop-offer[data-offer-kind="joker"]');
     await offers.first().locator("button.shop-offer-buy").click();
     await expect(
@@ -152,7 +152,7 @@ test.describe("Reroll refreshes sold offers (issue #267)", () => {
     await expect(
       firstOffer.locator("button.shop-offer-buy"),
     ).toHaveText(/Sold/);
-    await page.getByRole("button", { name: /Reroll/ }).click();
+    await page.locator("button.shop-reroll").click();
     const offerButtons = page.locator(".shop-offer button.shop-offer-buy");
     const count = await offerButtons.count();
     for (let i = 0; i < count; i += 1) {
