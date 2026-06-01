@@ -14,12 +14,13 @@ import { createDeckSlice, type DeckState } from "./deck";
 import { createBossSlice, type BossState } from "./boss";
 import { createRunSlice, type RunState } from "./run";
 import { createActionsSlice, type ActionsState } from "./actions";
+import { createAnimationsSlice, type AnimationsState } from "./animations";
 
 export interface GameState
   extends EconomyState, VouchersState, StatsState, ProgressionState,
     ConsumablesState, JokersState, ShopState, PacksState, HandState,
     ScoringState, DevModifiersState, DeckState, BossState, RunState,
-    ActionsState {
+    ActionsState, AnimationsState {
   resetGame: () => void;
 }
 
@@ -39,6 +40,7 @@ export const useGame = create<GameState>()((set, get, store) => ({
   ...createBossSlice(set, get, store),
   ...createRunSlice(set, get, store),
   ...createActionsSlice(set, get, store),
+  ...createAnimationsSlice(set, get, store),
   resetGame: () => {
     const s = get();
     s.resetEconomy();
@@ -56,5 +58,6 @@ export const useGame = create<GameState>()((set, get, store) => ({
     s.resetDeck();
     s.resetBoss();
     s.resetRun();
+    s.resetAnimations();
   },
 }));

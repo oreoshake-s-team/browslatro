@@ -19,18 +19,13 @@ import {
 import { spectralNeedsTarget } from "../items/spectrals";
 import { extraConsumableSlots } from "../items/vouchers";
 
-export interface UseOpenedPackPickerParams {
-  readonly triggerNopeAnimation: () => void;
-}
-
 export interface UseOpenedPackPickerResult {
   readonly pickFromOpenedPack: (optionIdx: number) => void;
 }
 
-export function useOpenedPackPicker({
-  triggerNopeAnimation,
-}: UseOpenedPackPickerParams): UseOpenedPackPickerResult {
+export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   const openedPack = useGame((s) => s.openedPack);
+  const triggerNope = useGame((s) => s.triggerNope);
   const packPicksRemaining = useGame((s) => s.packPicksRemaining);
   const packPreviewHand = useGame((s) => s.packPreviewHand);
   const packPreviewSelectedIds = useGame((s) => s.packPreviewSelectedIds);
@@ -92,7 +87,7 @@ export function useOpenedPackPicker({
             prev.map((j, i) => (i === result.targetIdx ? withEdition(j, result.edition) : j)),
           );
         } else {
-          triggerNopeAnimation();
+          triggerNope();
         }
       }
     } else if (option.kind === "joker") {
