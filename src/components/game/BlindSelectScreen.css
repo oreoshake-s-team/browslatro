@@ -63,6 +63,11 @@
   color: #b2f2bb;
 }
 
+.blind-select-tag:focus-visible {
+  outline: 2px solid #74c0fc;
+  outline-offset: 2px;
+}
+
 .blind-select-rows {
   list-style: none;
   margin: 0;
@@ -141,6 +146,11 @@
   border: 1px dashed #51cf66;
   background-color: rgba(81, 207, 102, 0.08);
   cursor: help;
+}
+
+.blind-select-row-skip-reward:focus-visible {
+  outline: 2px solid #74c0fc;
+  outline-offset: 2px;
 }
 
 .blind-select-row-skip-reward-label {

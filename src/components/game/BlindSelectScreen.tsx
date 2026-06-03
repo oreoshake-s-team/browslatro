@@ -1,9 +1,16 @@
 import "./BlindSelectScreen.css";
+import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
-import { getTagSpec, type AnteSkipOffers, type TagId } from "../../items/tags";
+import {
+  getTagSpec,
+  type AnteSkipOffers,
+  type TagId,
+  type TagSpec,
+} from "../../items/tags";
+import TagTooltip from "./TagTooltip";
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -13,8 +20,6 @@ interface BlindSelectScreenProps {
   onSkip?: () => void;
   tags?: ReadonlyArray<TagId>;
   skipRewards?: Partial<AnteSkipOffers>;
-  // Dev override: when both are provided, the Boss row renders a
-  // <select> that swaps `boss` for the chosen entry.
   bossOptions?: ReadonlyArray<BossBlind>;
   onSetBoss?: (id: string) => void;
 }
@@ -58,6 +63,41 @@ export default function BlindSelectScreen({
   const canOverrideBoss =
     bossOptions !== undefined && bossOptions.length > 0 && Boolean(onSetBoss);
 
+  const tooltipIdBase = useId();
+  const [tooltipOpenKey, setTooltipOpenKey] = useState<string | null>(null);
+  const [tooltipSpec, setTooltipSpec] = useState<TagSpec | null>(null);
+  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (tooltipOpenKey === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setTooltipOpenKey(null);
+        setTooltipSpec(null);
+        setTooltipRect(null);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tooltipOpenKey]);
+
+  function openTooltip(key: string, spec: TagSpec, el: HTMLElement) {
+    setTooltipOpenKey(key);
+    setTooltipSpec(spec);
+    setTooltipRect(el.getBoundingClientRect());
+  }
+
+  function closeTooltip(key: string) {
+    setTooltipOpenKey((prev) => {
+      if (prev === key) {
+        setTooltipSpec(null);
+        setTooltipRect(null);
+        return null;
+      }
+      return prev;
+    });
+  }
+
   return createPortal(
     <div
       className="blind-select-overlay"
@@ -77,18 +117,33 @@ export default function BlindSelectScreen({
           >
             {tags.map((id, idx) => {
               const spec = getTagSpec(id);
+              const key = `held-${idx}`;
+              const tooltipId = `${tooltipIdBase}-${key}`;
+              const open = tooltipOpenKey === key;
               return (
                 <li
                   key={`${id}-${idx}`}
                   className="blind-select-tag"
                   data-testid={`blind-select-tag-${idx}`}
                   data-tag-id={id}
-                  title={spec.description}
+                  tabIndex={0}
+                  aria-describedby={open ? tooltipId : undefined}
+                  onMouseEnter={(e) => openTooltip(key, spec, e.currentTarget)}
+                  onMouseLeave={() => closeTooltip(key)}
+                  onFocus={(e) => openTooltip(key, spec, e.currentTarget)}
+                  onBlur={() => closeTooltip(key)}
                 >
                   <span className="blind-select-tag-name">{spec.name}</span>
                   <span className="blind-select-tag-description">
                     {spec.description}
                   </span>
+                  {open && tooltipRect && tooltipSpec && (
+                    <TagTooltip
+                      id={tooltipId}
+                      spec={tooltipSpec}
+                      anchorRect={tooltipRect}
+                    />
+                  )}
                 </li>
               );
             })}
@@ -101,6 +156,9 @@ export default function BlindSelectScreen({
             const name = b === 3 ? boss.name : BLIND_NAMES[b];
             const rowSkipTag = skipTagForBlind(b);
             const rowSkipSpec = rowSkipTag ? getTagSpec(rowSkipTag) : null;
+            const skipKey = `skip-${b}`;
+            const skipTooltipId = `${tooltipIdBase}-${skipKey}`;
+            const skipTooltipOpen = tooltipOpenKey === skipKey;
             const stateClass = isCurrent
               ? " blind-select-row-current"
               : isCompleted
@@ -158,7 +216,18 @@ export default function BlindSelectScreen({
                   <div
                     className="blind-select-row-skip-reward"
                     data-testid={`blind-select-row-skip-reward-${b}`}
-                    title={rowSkipSpec.description}
+                    tabIndex={0}
+                    aria-describedby={
+                      skipTooltipOpen ? skipTooltipId : undefined
+                    }
+                    onMouseEnter={(e) =>
+                      openTooltip(skipKey, rowSkipSpec, e.currentTarget)
+                    }
+                    onMouseLeave={() => closeTooltip(skipKey)}
+                    onFocus={(e) =>
+                      openTooltip(skipKey, rowSkipSpec, e.currentTarget)
+                    }
+                    onBlur={() => closeTooltip(skipKey)}
                   >
                     <span className="blind-select-row-skip-reward-label">
                       Skip reward
@@ -166,6 +235,13 @@ export default function BlindSelectScreen({
                     <span className="blind-select-row-skip-reward-name">
                       + {rowSkipSpec.name}
                     </span>
+                    {skipTooltipOpen && tooltipRect && tooltipSpec && (
+                      <TagTooltip
+                        id={skipTooltipId}
+                        spec={tooltipSpec}
+                        anchorRect={tooltipRect}
+                      />
+                    )}
                   </div>
                 )}
               </li>
