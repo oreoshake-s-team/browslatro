@@ -2,7 +2,7 @@ import { useGame } from "../store/game";
 import { play } from "../components/system/sounds";
 import { applyPlanetUpgrade } from "../items/planets";
 import { removeConsumableAt } from "../items/consumables";
-import { duplicateSelectedInHand } from "../items/spectrals";
+import { applyAuraToSelectedInHand, duplicateSelectedInHand } from "../items/spectrals";
 import {
   resolveHermitPayout,
   resolveTemperancePayout,
@@ -84,6 +84,21 @@ export function useConsumableActions(): UseConsumableActionsResult {
         play("pop");
         setDealt((prev) => ({
           hand: duplicateSelectedInHand(prev.hand, selectedIds, spectralEffect.copies),
+          remaining: prev.remaining,
+        }));
+        setSelectedIds(new Set());
+        setSelectedHand(null);
+        setChips(0);
+        setMultiplier(0);
+        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        return;
+      }
+      if (spectralEffect.kind === "aura") {
+        if (previewActive) return;
+        if (selectedIds.size !== spectralEffect.maxTargets) return;
+        play("pop");
+        setDealt((prev) => ({
+          hand: applyAuraToSelectedInHand(prev.hand, selectedIds, Math.random),
           remaining: prev.remaining,
         }));
         setSelectedIds(new Set());
