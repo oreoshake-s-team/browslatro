@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import BlindSelectScreen from "./BlindSelectScreen";
 import type { BossBlind } from "../../items/bosses";
@@ -226,11 +226,34 @@ describe("BlindSelectScreen", () => {
     ).toHaveTextContent("Investment Tag");
   });
 
-  test("skip-reward preview exposes the tag's effect via the title attribute (hover)", () => {
+  test("skip-reward preview shows a tooltip with the tag's effect on hover", async () => {
+    const user = userEvent.setup();
     renderScreen({ skipRewards: { small: "investment", big: "investment" } });
-    expect(
-      screen.getByTestId("blind-select-row-skip-reward-1"),
-    ).toHaveAttribute("title", expect.stringContaining("$25"));
+    await user.hover(screen.getByTestId("blind-select-row-skip-reward-1"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("$25");
+  });
+
+  test("skip-reward preview hides the tooltip when the pointer leaves", async () => {
+    const user = userEvent.setup();
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    const target = screen.getByTestId("blind-select-row-skip-reward-1");
+    await user.hover(target);
+    await user.unhover(target);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  test("skip-reward preview is keyboard-focusable for the tooltip", () => {
+    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    const target = screen.getByTestId("blind-select-row-skip-reward-1");
+    fireEvent.focus(target);
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Investment Tag");
+  });
+
+  test("held tag shows a tooltip with its description on hover", async () => {
+    const user = userEvent.setup();
+    renderScreen({ tags: ["investment"] });
+    await user.hover(screen.getByTestId("blind-select-tag-0"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Investment Tag");
   });
 
   test("boss override select renders when bossOptions + onSetBoss are provided", () => {
