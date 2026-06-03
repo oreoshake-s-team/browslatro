@@ -53,6 +53,11 @@ export const BARON_RANKS: ReadonlyArray<Rank> = ["K"];
 export const SHOOT_THE_MOON_MULT = 13;
 export const SHOOT_THE_MOON_RANKS: ReadonlyArray<Rank> = ["Q"];
 export const RAISED_FIST_MULTIPLIER = 2;
+export const ABSTRACT_JOKER_MULT_PER_JOKER = 3;
+export const BOOTSTRAPS_MULT_PER_BUCKET = 2;
+export const BOOTSTRAPS_BUCKET_DOLLARS = 5;
+export const BLACKBOARD_X_MULT = 3;
+export const BLACKBOARD_SUITS: ReadonlyArray<Suit> = ["spades", "clubs"];
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -141,6 +146,17 @@ export type JokerEffect =
   | {
       readonly kind: "held-lowest-rank-mult";
       readonly multiplier: number;
+    }
+  | { readonly kind: "per-joker-count-mult"; readonly amount: number }
+  | {
+      readonly kind: "per-money-bucket-mult";
+      readonly bucket: number;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "x-mult-when-held-suits-all-in";
+      readonly suits: ReadonlyArray<Suit>;
+      readonly amount: number;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
@@ -821,6 +837,47 @@ export function createRaisedFistJoker(): Joker {
   };
 }
 
+export function createAbstractJoker(): Joker {
+  return {
+    id: "abstract-joker",
+    rarity: "common",
+    name: "Abstract Joker",
+    description: `+${ABSTRACT_JOKER_MULT_PER_JOKER} Mult for each Joker`,
+    effect: {
+      kind: "per-joker-count-mult",
+      amount: ABSTRACT_JOKER_MULT_PER_JOKER,
+    },
+  };
+}
+
+export function createBootstrapsJoker(): Joker {
+  return {
+    id: "bootstraps",
+    rarity: "uncommon",
+    name: "Bootstraps",
+    description: `+${BOOTSTRAPS_MULT_PER_BUCKET} Mult for every $${BOOTSTRAPS_BUCKET_DOLLARS} you have`,
+    effect: {
+      kind: "per-money-bucket-mult",
+      bucket: BOOTSTRAPS_BUCKET_DOLLARS,
+      amount: BOOTSTRAPS_MULT_PER_BUCKET,
+    },
+  };
+}
+
+export function createBlackboardJoker(): Joker {
+  return {
+    id: "blackboard",
+    rarity: "uncommon",
+    name: "Blackboard",
+    description: `X${BLACKBOARD_X_MULT} Mult if all cards held in hand are Spades or Clubs`,
+    effect: {
+      kind: "x-mult-when-held-suits-all-in",
+      suits: BLACKBOARD_SUITS,
+      amount: BLACKBOARD_X_MULT,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -881,6 +938,9 @@ export function createJokerCatalog(): Joker[] {
     createBaronJoker(),
     createShootTheMoonJoker(),
     createRaisedFistJoker(),
+    createAbstractJoker(),
+    createBootstrapsJoker(),
+    createBlackboardJoker(),
   ];
 }
 
@@ -1050,6 +1110,36 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "per-joker-count-mult": {
+        const bonus = effect.amount * jokers.length;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
+        }
+        break;
+      }
+      case "per-money-bucket-mult": {
+        const money = Math.max(0, context.money ?? 0);
+        const buckets = Math.floor(money / effect.bucket);
+        const bonus = effect.amount * buckets;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
+        }
+        break;
+      }
+      case "x-mult-when-held-suits-all-in": {
+        const held = context.heldInHandCards ?? [];
+        const allMatch = held.every((c) => effect.suits.includes(c.suit));
+        if (allMatch) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
@@ -1208,6 +1298,9 @@ export function applyPerCardJokers(
       case "per-dollar-chips":
       case "per-held-rank":
       case "held-lowest-rank-mult":
+      case "per-joker-count-mult":
+      case "per-money-bucket-mult":
+      case "x-mult-when-held-suits-all-in":
         break;
       default:
         assertNeverEffect(effect);

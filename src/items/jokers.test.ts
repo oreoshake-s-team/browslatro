@@ -639,6 +639,17 @@ describe("Held-in-hand joker catalog membership", () => {
   });
 });
 
+describe("Counting joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Abstract Joker", id: "abstract-joker" },
+    { name: "Bootstraps", id: "bootstraps" },
+    { name: "Blackboard", id: "blackboard" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(
