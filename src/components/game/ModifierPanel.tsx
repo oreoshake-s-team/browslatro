@@ -3,6 +3,7 @@ import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import { SHOP_PACK_SLOTS } from "../../items/shop";
 import type { PackPool } from "../../items/packs";
+import ModifierSpectralPicker from "./ModifierSpectralPicker";
 
 type QueueablePool = Extract<
   PackPool,
@@ -176,6 +177,7 @@ export default function ModifierPanel() {
         >
           🎲 Force Probabilities {forceProbabilities ? "Off" : "On"}
         </button>
+        <ModifierSpectralPicker />
       </div>
     </details>
   );
