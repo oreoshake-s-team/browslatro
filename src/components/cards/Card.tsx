@@ -1,7 +1,9 @@
 import "./Card.css";
+import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
 import type { Card as CardType, Enhancement, Rank, Suit } from "../../cards/types";
 import { getSealInfo } from "../../cards/seals";
+import { CARD_EDITION_INFO } from "../../cards/editions";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 
@@ -118,6 +120,7 @@ export default function Card({
     ? `card-enhancement-${card.enhancement}`
     : "";
   const sealClass = card.seal ? `card-seal-${card.seal}` : "";
+  const editionClass = card.edition ? `card-edition-${card.edition}` : "";
   const debuffedClass = debuffed ? "card-debuffed" : "";
   const baseName = isStone
     ? "Stone card"
@@ -125,12 +128,15 @@ export default function Card({
       ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
       : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
   const withSeal = card.seal ? `${baseName}, ${getSealInfo(card.seal).name}` : baseName;
+  const withEdition = card.edition
+    ? `${withSeal}, ${CARD_EDITION_INFO[card.edition].name}`
+    : withSeal;
   const showBack = card.faceDown === true && !scoring;
   const ariaLabel = showBack
     ? "Face-down card"
     : debuffed
-      ? `${withSeal}, debuffed`
-      : withSeal;
+      ? `${withEdition}, debuffed`
+      : withEdition;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
@@ -140,9 +146,10 @@ export default function Card({
     <button
       ref={buttonRef}
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${debuffedClass} ${faceDownClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
         .replace(/\s+/g, " ")
         .trim()}
+      data-edition={card.edition ?? undefined}
       aria-pressed={selected}
       aria-label={ariaLabel}
       aria-describedby={tooltipRect ? tooltipId : undefined}

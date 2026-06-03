@@ -36,11 +36,14 @@ export type Enhancement =
 
 export type Seal = "gold" | "red" | "blue" | "purple";
 
+export type CardEdition = "foil" | "holographic" | "polychrome";
+
 export interface Card {
   readonly id: number;
   readonly rank: Rank;
   readonly suit: Suit;
   readonly enhancement?: Enhancement | null;
   readonly seal?: Seal | null;
+  readonly edition?: CardEdition | null;
   readonly faceDown?: boolean;
 }

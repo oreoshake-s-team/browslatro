@@ -1,0 +1,66 @@
+.card-edition-foil {
+  border-color: #4dabf7;
+  border-width: 3px;
+  background-image: linear-gradient(
+    135deg,
+    rgba(77, 171, 247, 0.35) 0%,
+    rgba(214, 240, 255, 0.85) 45%,
+    rgba(77, 171, 247, 0.35) 100%
+  );
+  box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.45),
+    0 2px 10px rgba(77, 171, 247, 0.5),
+    inset 0 0 12px rgba(200, 230, 255, 0.55);
+}
+
+.card-edition-holographic {
+  border-color: #cc5de8;
+  border-width: 3px;
+  background-image: linear-gradient(
+    135deg,
+    rgba(204, 93, 232, 0.35) 0%,
+    rgba(173, 233, 255, 0.85) 45%,
+    rgba(204, 93, 232, 0.35) 100%
+  );
+  box-shadow: 0 0 0 2px rgba(204, 93, 232, 0.45),
+    0 2px 12px rgba(204, 93, 232, 0.55),
+    inset 0 0 14px rgba(190, 240, 255, 0.55);
+}
+
+.card-edition-polychrome {
+  border-color: #ff8787;
+  border-width: 3px;
+  background-image: linear-gradient(
+    135deg,
+    rgba(255, 135, 135, 0.4) 0%,
+    rgba(255, 211, 105, 0.55) 20%,
+    rgba(140, 233, 154, 0.55) 40%,
+    rgba(116, 192, 252, 0.55) 60%,
+    rgba(177, 151, 252, 0.55) 80%,
+    rgba(255, 135, 135, 0.4) 100%
+  );
+  box-shadow: 0 0 0 2px rgba(255, 135, 135, 0.45),
+    0 2px 14px rgba(255, 135, 135, 0.6),
+    inset 0 0 16px rgba(255, 235, 200, 0.55);
+  animation: card-edition-polychrome-shift 4s ease-in-out infinite alternate;
+}
+
+@keyframes card-edition-polychrome-shift {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(40deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-edition-polychrome {
+    animation: none;
+  }
+}
+
+.card-tooltip-edition {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  color: #e6f0ff;
+}

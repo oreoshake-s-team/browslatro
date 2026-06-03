@@ -1,6 +1,7 @@
 import type { Card, Enhancement, Suit } from "../../cards/types";
 import { getRankChips } from "../../scoring/scoring";
 import { getSealInfo, type SealInfo } from "../../cards/seals";
+import { CARD_EDITION_INFO, type CardEditionInfo } from "../../cards/editions";
 import {
   BONUS_ENHANCEMENT_CHIPS,
   GLASS_ENHANCEMENT_DESTROY_CHANCE,
@@ -62,6 +63,7 @@ export interface CardInfo {
   readonly isStone: boolean;
   readonly enhancement?: EnhancementInfo;
   readonly seal?: SealInfo;
+  readonly edition?: CardEditionInfo;
 }
 
 export function getCardInfo(card: Card): CardInfo {
@@ -75,5 +77,6 @@ export function getCardInfo(card: Card): CardInfo {
     isStone,
     enhancement: card.enhancement ? ENHANCEMENT_INFO[card.enhancement] : undefined,
     seal: card.seal ? getSealInfo(card.seal) : undefined,
+    edition: card.edition ? CARD_EDITION_INFO[card.edition] : undefined,
   };
 }

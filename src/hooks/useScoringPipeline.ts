@@ -16,6 +16,7 @@ import {
 } from "../cards/enhancements";
 import { goldSealMoney } from "../cards/seals";
 import { applyPerCardJokers, isFaceCard } from "../items/jokers";
+import { CARD_EDITION_INFO, applyCardEdition } from "../cards/editions";
 import { GOLD_HELD_BONUS_PER_CARD } from "../scoring/payout";
 import { STEEL_MULT_FACTOR } from "../cards/heldInHand";
 
@@ -239,6 +240,34 @@ export function useScoringPipeline({
         }
       }
       pulseJokers(cardJokerResult.firedJokerIds);
+      const editionContribution = applyCardEdition(stepCard);
+      if (editionContribution && stepCard.edition) {
+        const editionLabel = CARD_EDITION_INFO[stepCard.edition].name;
+        if (editionContribution.additiveChips > 0) {
+          setChips((prev) => prev + editionContribution.additiveChips);
+          pushScoringEvent({
+            kind: "chips-delta",
+            amount: editionContribution.additiveChips,
+            source: `${editionLabel} ${stepCardLabel}`,
+          });
+        }
+        if (editionContribution.additiveMult > 0) {
+          setMultiplier((prev) => prev + editionContribution.additiveMult);
+          pushScoringEvent({
+            kind: "mult-delta",
+            amount: editionContribution.additiveMult,
+            source: `${editionLabel} ${stepCardLabel}`,
+          });
+        }
+        if (editionContribution.xMult !== 1) {
+          setMultiplier((prev) => prev * editionContribution.xMult);
+          pushScoringEvent({
+            kind: "mult-times",
+            factor: editionContribution.xMult,
+            source: `${editionLabel} ${stepCardLabel}`,
+          });
+        }
+      }
     },
     onFinish: () => {
       const finalize = scoringFinalizeRef.current;
