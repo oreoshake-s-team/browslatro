@@ -1,0 +1,46 @@
+.modifier-spectral-picker {
+  grid-column: 1 / -1;
+  padding: 0.4rem 0.8rem;
+  border: 1px dashed #adb5bd;
+  border-radius: 6px;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.modifier-spectral-picker-summary {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.modifier-spectral-picker[open] .modifier-spectral-picker-grid {
+  margin-top: 0.6rem;
+}
+
+.modifier-spectral-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  gap: 0.5rem;
+}
+
+.add-spectral-button {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.95rem;
+  text-align: left;
+  background-color: #f1f3f5;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.add-spectral-button:hover:not(:disabled) {
+  background-color: #e9ecef;
+}
+
+.add-spectral-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
