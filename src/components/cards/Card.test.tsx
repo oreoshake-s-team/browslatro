@@ -10,6 +10,33 @@ const kingOfDiamonds: CardType = { id: 4, rank: "K", suit: "diamonds" };
 const sevenOfHearts: CardType = { id: 5, rank: "7", suit: "hearts" };
 
 describe("Card", () => {
+  test("applies the foil edition class when the card has the foil edition", () => {
+    render(<Card card={{ ...aceOfSpades, edition: "foil" }} />);
+    expect(screen.getByRole("button")).toHaveClass("card-edition-foil");
+  });
+
+  test("applies the polychrome edition class when the card has the polychrome edition", () => {
+    render(<Card card={{ ...aceOfSpades, edition: "polychrome" }} />);
+    expect(screen.getByRole("button")).toHaveClass("card-edition-polychrome");
+  });
+
+  test("does not apply any edition class when the card has no edition (negative)", () => {
+    const button = render(<Card card={aceOfSpades} />).getByRole("button");
+    expect(button.className).not.toMatch(/card-edition-/);
+  });
+
+  test("exposes the edition via the data-edition attribute when present", () => {
+    render(<Card card={{ ...aceOfSpades, edition: "holographic" }} />);
+    expect(screen.getByRole("button")).toHaveAttribute("data-edition", "holographic");
+  });
+
+  test("includes the edition name in the accessible label", () => {
+    render(<Card card={{ ...aceOfSpades, edition: "foil" }} />);
+    expect(
+      screen.getByRole("button", { name: /A of Spades.*Foil/ }),
+    ).toBeInTheDocument();
+  });
+
   test("renders the rank label", () => {
     render(<Card card={aceOfSpades} />);
     expect(screen.getAllByText("A").length).toBeGreaterThan(0);

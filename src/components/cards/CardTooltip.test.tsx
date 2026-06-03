@@ -131,4 +131,32 @@ describe("Card tooltip — content per card state", () => {
     await user.hover(screen.getByRole("button"));
     expect(screen.queryByText(/Base chips:/)).not.toBeInTheDocument();
   });
+
+  test("renders the Foil edition name on a foil card", async () => {
+    const user = userEvent.setup();
+    render(<Card card={{ id: 10, rank: "5", suit: "clubs", edition: "foil" }} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Foil");
+  });
+
+  test("renders the Holographic edition description on a holographic card", async () => {
+    const user = userEvent.setup();
+    render(<Card card={{ id: 11, rank: "7", suit: "hearts", edition: "holographic" }} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/Mult/);
+  });
+
+  test("renders the Polychrome edition name on a polychrome card", async () => {
+    const user = userEvent.setup();
+    render(<Card card={{ id: 12, rank: "K", suit: "diamonds", edition: "polychrome" }} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Polychrome");
+  });
+
+  test("omits the edition row on a card with no edition (negative)", async () => {
+    const user = userEvent.setup();
+    render(<Card card={plain} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.queryByText(/Polychrome|Holographic|Foil/i)).not.toBeInTheDocument();
+  });
 });

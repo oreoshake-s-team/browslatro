@@ -43,6 +43,11 @@ export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) 
           <strong>{info.seal.name}</strong> — {info.seal.description}
         </p>
       )}
+      {info.edition && (
+        <p className="card-tooltip-edition">
+          <strong>{info.edition.name}</strong> — {info.edition.description}
+        </p>
+      )}
     </div>,
     document.body,
   );
