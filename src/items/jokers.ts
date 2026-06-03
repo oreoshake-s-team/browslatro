@@ -263,6 +263,25 @@ export function replaceJokersExceptCopyOf(
   return [cloneJoker(jokers[idx])];
 }
 
+export function polychromeRandomJokerDestroyOthers(
+  jokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  if (jokers.length === 0) return [];
+  const idx = Math.floor(rng() * jokers.length);
+  return [withEdition(jokers[idx], "polychrome")];
+}
+
+export function copyRandomJokerDestroyOthers(
+  jokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  if (jokers.length === 0) return [];
+  const idx = Math.floor(rng() * jokers.length);
+  const chosen = jokers[idx];
+  return [chosen, cloneJoker(chosen)];
+}
+
 export interface JokerScoringResult {
   readonly additiveMult: number;
   readonly additiveChips: number;
