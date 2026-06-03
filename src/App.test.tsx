@@ -3435,6 +3435,46 @@ describe("D6 tag next-shop queue", () => {
   });
 });
 
+describe("Skip tag pending list cleanup (#542)", () => {
+  test("a next-shop tag is removed from pendingTags after the shop closes", async () => {
+    tagOfferRngConfig.rng = rngForTag("d6");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    expect(useGame.getState().pendingTags).not.toContain("d6");
+  });
+
+  test("a next-round tag (Juggle) is removed from pendingTags once the round starts", async () => {
+    tagOfferRngConfig.rng = rngForTag("juggle");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(useGame.getState().pendingTags).not.toContain("juggle");
+  });
+
+  test("a deferred-boss-payout tag (Investment) stays in pendingTags until boss defeat (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("investment");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(useGame.getState().pendingTags).toContain("investment");
+  });
+
+  test("a Double tag is removed from pendingTags after it duplicates the next gained tag", async () => {
+    tagOfferRngConfig.rng = rngSequenceForTags(["double", "d6"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(useGame.getState().pendingTags).not.toContain("double");
+  });
+});
+
 describe("Run-stat money tags", () => {
   test("skipping with the Speed tag grants $5 for the first blind skipped", async () => {
     tagOfferRngConfig.rng = rngForTag("speed");
