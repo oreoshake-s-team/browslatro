@@ -12,7 +12,11 @@ import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
-import { rollAnteSkipOffers, tagOfferRngConfig } from "./items/tags";
+import {
+  pruneTagsByCategory,
+  rollAnteSkipOffers,
+  tagOfferRngConfig,
+} from "./items/tags";
 import { applyNextShopModifiers } from "./run/nextShopMods";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -169,6 +173,7 @@ function App() {
     (state) => state.setPendingBlindSelect,
   );
   const pendingTags = useGame((state) => state.pendingTags);
+  const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
   const currentAnteVouchers = useGame((state) => state.currentAnteVouchers);
   const setCurrentAnteVouchers = useGame(
@@ -229,6 +234,7 @@ function App() {
     setShopOffers(null);
     setSoldJokerIdsThisShopVisit([]);
     setPendingShopMods([]);
+    setPendingTags((prev) => pruneTagsByCategory(prev, "next-shop"));
     setPendingBlindSelect(true);
   }
 

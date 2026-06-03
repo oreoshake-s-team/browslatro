@@ -274,6 +274,20 @@ export function totalDeferredBossPayout(ids: ReadonlyArray<TagId>): number {
   }, 0);
 }
 
+export function pruneTagsByCategory(
+  ids: ReadonlyArray<TagId>,
+  category: TagEffect["category"],
+  mode: "first" | "all" = "all",
+): ReadonlyArray<TagId> {
+  if (mode === "first") {
+    const idx = ids.findIndex((id) => resolveTagEffect(id).category === category);
+    if (idx === -1) return ids;
+    return [...ids.slice(0, idx), ...ids.slice(idx + 1)];
+  }
+  const next = ids.filter((id) => resolveTagEffect(id).category !== category);
+  return next.length === ids.length ? ids : next;
+}
+
 export interface AnteSkipOffers {
   readonly small: TagId;
   readonly big: TagId;

@@ -26,6 +26,7 @@ import { initialDeal } from "../cards/deckBuild";
 import { initialJokersConfig } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
+  pruneTagsByCategory,
   resolveTagEffect,
   rollAnteSkipOffers,
   tagOfferRngConfig,
@@ -127,7 +128,10 @@ export function useRoundLifecycle({
     const isBossRound = effectiveBlind === 3;
     const baseHandSize =
       (opts.handSizeOverride ?? currentHandSize) + pendingNextRoundHandSize;
-    if (pendingNextRoundHandSize !== 0) setPendingNextRoundHandSize(0);
+    if (pendingNextRoundHandSize !== 0) {
+      setPendingNextRoundHandSize(0);
+      setPendingTags((prev) => pruneTagsByCategory(prev, "next-round"));
+    }
     const startingHands =
       (isBossRound
         ? bossStartingHands(effectiveBoss)
@@ -226,7 +230,10 @@ export function useRoundLifecycle({
       return;
     }
     const times = pendingDouble ? 2 : 1;
-    if (pendingDouble) setPendingDouble(false);
+    if (pendingDouble) {
+      setPendingDouble(false);
+      setPendingTags((prev) => pruneTagsByCategory(prev, "duplicate-next", "first"));
+    }
     for (let i = 0; i < times; i += 1) applyGainedTag(offered, nextStats);
   }
 

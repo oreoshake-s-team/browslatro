@@ -3,6 +3,7 @@ import {
   INVESTMENT_TAG_REWARD,
   createTagCatalog,
   getTagSpec,
+  pruneTagsByCategory,
   resolveTagEffect,
   rollAnteSkipOffers,
   rollSkipTag,
@@ -360,5 +361,33 @@ describe("rollAnteSkipOffers", () => {
   test("rolls a big-blind offer from the catalog", () => {
     const ids = createTagCatalog().map((t) => t.id);
     expect(ids).toContain(rollAnteSkipOffers(() => 0).big);
+  });
+});
+
+describe("pruneTagsByCategory", () => {
+  test("removes all tags of the given category when mode is \"all\"", () => {
+    const next = pruneTagsByCategory(["coupon", "investment", "negative"], "next-shop");
+    expect(next).toEqual(["investment"]);
+  });
+
+  test("removes only the first matching tag when mode is \"first\"", () => {
+    const next = pruneTagsByCategory(["double", "investment", "double"], "duplicate-next", "first");
+    expect(next).toEqual(["investment", "double"]);
+  });
+
+  test("returns the same array reference when nothing matches (negative)", () => {
+    const ids = ["investment", "investment"] as const;
+    const next = pruneTagsByCategory(ids, "next-shop");
+    expect(next).toBe(ids);
+  });
+
+  test("returns an empty array when every tag matches", () => {
+    const next = pruneTagsByCategory(["coupon", "negative"], "next-shop");
+    expect(next).toEqual([]);
+  });
+
+  test("returns the input unchanged when called on an empty list", () => {
+    const ids: readonly [] = [];
+    expect(pruneTagsByCategory(ids, "next-round")).toBe(ids);
   });
 });
