@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test } from "vitest";
 import ModifierSpectralPicker from "./ModifierSpectralPicker";
@@ -87,5 +87,41 @@ describe("ModifierSpectralPicker", () => {
     await openPicker(user);
     await user.click(buttonFor("soul"));
     expect(useGame.getState().consumables).toHaveLength(MAX_CONSUMABLE_SLOTS);
+  });
+
+  test("hovering a button opens a tooltip with the spectral's name", async () => {
+    const user = userEvent.setup();
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    await user.hover(buttonFor("soul"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("The Soul");
+  });
+
+  test("hovering a button shows the spectral's effect description in the tooltip", async () => {
+    const user = userEvent.setup();
+    const blackHole = SPECTRALS.find((s) => s.id === "black-hole");
+    if (!blackHole) throw new Error("missing black-hole spectral");
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    await user.hover(buttonFor("black-hole"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(blackHole.description);
+  });
+
+  test("the tooltip closes when the pointer leaves the button", async () => {
+    const user = userEvent.setup();
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    const btn = buttonFor("soul");
+    await user.hover(btn);
+    await user.unhover(btn);
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
+
+  test("focusing a button via keyboard opens the tooltip", async () => {
+    const user = userEvent.setup();
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    fireEvent.focus(buttonFor("immolate"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("Immolate");
   });
 });
