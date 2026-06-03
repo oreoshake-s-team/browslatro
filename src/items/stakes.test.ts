@@ -8,6 +8,7 @@ import {
   getActiveStakes,
   getStakeSpec,
   stakeRank,
+  type Stake,
 } from "./stakes";
 
 describe("STAKE_ORDER", () => {
@@ -59,6 +60,12 @@ describe("getStakeSpec", () => {
   test("returns the matching spec for a known id", () => {
     expect(getStakeSpec("white").name).toBe("White Stake");
   });
+
+  test("throws for unknown stake id", () => {
+    expect(() => getStakeSpec("invalid" as unknown as Stake)).toThrow(
+      "unknown stake: invalid",
+    );
+  });
 });
 
 describe("stakeRank", () => {
@@ -88,6 +95,10 @@ describe("getActiveStakes", () => {
 describe("getActiveStakeModifiers", () => {
   test("returns an empty list at White (no modifiers wired yet)", () => {
     expect(getActiveStakeModifiers("white")).toEqual([]);
+  });
+
+  test("returns an empty list at intermediate stakes (Red)", () => {
+    expect(getActiveStakeModifiers("red")).toEqual([]);
   });
 
   test("returns an empty list at Gold while per-stake effects are unimplemented", () => {
