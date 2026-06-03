@@ -6,6 +6,7 @@ import {
   IMMOLATE_DESTROY_COUNT,
   IMMOLATE_MONEY_GAIN,
   SPECTRAL_BASE_PRICE,
+  applyAuraToSelectedInHand,
   createSpectralCatalog,
   duplicateSelectedInHand,
   makeEnhancedCard,
@@ -58,14 +59,15 @@ describe("createSpectralCatalog", () => {
     { id: "ouija", name: "Ouija" },
     { id: "hex", name: "Hex" },
     { id: "ankh", name: "Ankh" },
+    { id: "aura", name: "Aura" },
     { id: "soul", name: "The Soul" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 12 distinct effect kinds", () => {
+  test("spans 13 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(12);
+    expect(kinds.size).toBe(13);
   });
 });
 
@@ -478,5 +480,98 @@ describe("Ankh", () => {
 
   test("does not need a selected target (negative)", () => {
     expect(spectralNeedsTarget(find("ankh").effect)).toBe(false);
+  });
+});
+
+describe("Aura", () => {
+  test("is included in the catalog", () => {
+    expect(find("aura").name).toBe("Aura");
+  });
+
+  test("carries the aura effect kind", () => {
+    expect(find("aura").effect.kind).toBe("aura");
+  });
+
+  test("requires exactly 1 selected target", () => {
+    const effect = find("aura").effect;
+    if (effect.kind !== "aura") throw new Error("expected aura");
+    expect(effect.maxTargets).toBe(1);
+  });
+
+  test("describes Foil, Holographic, or Polychrome", () => {
+    expect(find("aura").description).toMatch(/Foil.*Holographic.*Polychrome/);
+  });
+
+  test("describes applying to 1 selected card in hand", () => {
+    expect(find("aura").description).toMatch(/1 selected card.*hand/i);
+  });
+
+  test("needs a selected target", () => {
+    expect(spectralNeedsTarget(find("aura").effect)).toBe(true);
+  });
+});
+
+describe("applyAuraToSelectedInHand", () => {
+  beforeEach(() => resetCardIds());
+
+  function mkCard(rank: Card["rank"] = "5", suit: Card["suit"] = "spades"): Card {
+    return { id: nextCardId(), rank, suit };
+  }
+
+  test("applies an edition to the single selected card", () => {
+    const a = mkCard();
+    const b = mkCard("7", "hearts");
+    const result = applyAuraToSelectedInHand([a, b], new Set([a.id]), sequenceRng([0]));
+    expect(result.find((c) => c.id === a.id)?.edition).toBe("foil");
+  });
+
+  test("leaves unselected cards unchanged (negative)", () => {
+    const a = mkCard();
+    const b = mkCard("7", "hearts");
+    const result = applyAuraToSelectedInHand([a, b], new Set([a.id]), sequenceRng([0]));
+    expect(result.find((c) => c.id === b.id)?.edition).toBeUndefined();
+  });
+
+  test("picks Foil when rng selects index 0", () => {
+    const a = mkCard();
+    const result = applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0]));
+    expect(result[0].edition).toBe("foil");
+  });
+
+  test("picks Holographic when rng selects index 1", () => {
+    const a = mkCard();
+    const result = applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0.5]));
+    expect(result[0].edition).toBe("holographic");
+  });
+
+  test("picks Polychrome when rng selects index 2", () => {
+    const a = mkCard();
+    const result = applyAuraToSelectedInHand(
+      [a],
+      new Set([a.id]),
+      sequenceRng([0.99]),
+    );
+    expect(result[0].edition).toBe("polychrome");
+  });
+
+  test("returns the same hand reference when zero cards are selected (negative)", () => {
+    const a = mkCard();
+    const hand = [a];
+    expect(applyAuraToSelectedInHand(hand, new Set(), sequenceRng([0]))).toBe(hand);
+  });
+
+  test("returns the same hand reference when more than one card is selected (negative)", () => {
+    const a = mkCard();
+    const b = mkCard("7", "hearts");
+    const hand = [a, b];
+    expect(
+      applyAuraToSelectedInHand(hand, new Set([a.id, b.id]), sequenceRng([0])),
+    ).toBe(hand);
+  });
+
+  test("does not mutate the original card object (negative)", () => {
+    const a = mkCard();
+    applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0]));
+    expect(a.edition).toBeUndefined();
   });
 });

@@ -1,5 +1,6 @@
 import type { Card, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import { SUITS, nextCardId } from "../cards/deck";
+import { pickRandomCardEdition } from "../cards/editions";
 import type { JokerRarity } from "./jokers";
 
 export const SPECTRAL_BASE_PRICE = 4;
@@ -39,10 +40,15 @@ export type SpectralEffect =
   | { readonly kind: "ouija"; readonly handSizeDelta: number }
   | { readonly kind: "hex" }
   | { readonly kind: "ankh" }
+  | { readonly kind: "aura"; readonly maxTargets: 1 }
   | { readonly kind: "create-legendary" };
 
 export function spectralNeedsTarget(effect: SpectralEffect): boolean {
-  return effect.kind === "apply-seal" || effect.kind === "duplicate-selected";
+  return (
+    effect.kind === "apply-seal" ||
+    effect.kind === "duplicate-selected" ||
+    effect.kind === "aura"
+  );
 }
 
 export interface SpectralCard {
@@ -124,6 +130,16 @@ export function transmuteHand(
   return [...kept, ...additions];
 }
 
+export function applyAuraToSelectedInHand(
+  hand: ReadonlyArray<Card>,
+  selectedIds: ReadonlySet<number>,
+  rng: SpectralRandomSource,
+): ReadonlyArray<Card> {
+  if (selectedIds.size !== 1) return hand;
+  const edition = pickRandomCardEdition(rng);
+  return hand.map((c) => (selectedIds.has(c.id) ? { ...c, edition } : c));
+}
+
 export function duplicateSelectedInHand(
   hand: ReadonlyArray<Card>,
   selectedIds: ReadonlySet<number>,
@@ -167,6 +183,8 @@ function describe(spec: SpectralSpec): string {
       return "Add Polychrome to a random Joker, destroy all other Jokers";
     case "ankh":
       return "Create a copy of a random Joker, destroy all other Jokers";
+    case "aura":
+      return "Add Foil, Holographic, or Polychrome effect to 1 selected card in your hand";
     case "create-legendary":
       return "Create a Legendary Joker";
   }
@@ -252,6 +270,11 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     id: "ankh",
     name: "Ankh",
     effect: { kind: "ankh" },
+  },
+  {
+    id: "aura",
+    name: "Aura",
+    effect: { kind: "aura", maxTargets: 1 },
   },
   {
     id: "soul",
