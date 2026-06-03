@@ -378,6 +378,47 @@ describe("game actions slice", () => {
     expect(useGame.getState().dealt.hand).toHaveLength(5);
   });
 
+  test("applySpectralEffect hex leaves a single joker behind", () => {
+    const [a, b, c] = createJokerCatalog();
+    useGame.getState().setJokers([a, b, c]);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    expect(useGame.getState().jokers).toHaveLength(1);
+  });
+
+  test("applySpectralEffect hex marks the surviving joker as polychrome", () => {
+    const [a, b] = createJokerCatalog();
+    useGame.getState().setJokers([a, b]);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    expect(useGame.getState().jokers[0]?.edition).toBe("polychrome");
+  });
+
+  test("applySpectralEffect hex is a no-op when no jokers are equipped (negative)", () => {
+    useGame.getState().setJokers([]);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    expect(useGame.getState().jokers).toEqual([]);
+  });
+
+  test("applySpectralEffect ankh leaves two jokers behind", () => {
+    const [a, b, c] = createJokerCatalog();
+    useGame.getState().setJokers([a, b, c]);
+    useGame.getState().applySpectralEffect({ kind: "ankh" });
+    expect(useGame.getState().jokers).toHaveLength(2);
+  });
+
+  test("applySpectralEffect ankh leaves two jokers sharing the same id", () => {
+    const [a, b] = createJokerCatalog();
+    useGame.getState().setJokers([a, b]);
+    useGame.getState().applySpectralEffect({ kind: "ankh" });
+    const jokers = useGame.getState().jokers;
+    expect(new Set(jokers.map((j) => j.id)).size).toBe(1);
+  });
+
+  test("applySpectralEffect ankh is a no-op when no jokers are equipped (negative)", () => {
+    useGame.getState().setJokers([]);
+    useGame.getState().applySpectralEffect({ kind: "ankh" });
+    expect(useGame.getState().jokers).toEqual([]);
+  });
+
   test("applyEnhancementToSelectedPreviewCards enhances the selected card", () => {
     const preview = createDeck().slice(0, 3);
     const game = useGame.getState();

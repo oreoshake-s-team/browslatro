@@ -37,6 +37,8 @@ export type SpectralEffect =
     }
   | { readonly kind: "ectoplasm"; readonly handSizeDelta: number }
   | { readonly kind: "ouija"; readonly handSizeDelta: number }
+  | { readonly kind: "hex" }
+  | { readonly kind: "ankh" }
   | { readonly kind: "create-legendary" };
 
 export function spectralNeedsTarget(effect: SpectralEffect): boolean {
@@ -161,6 +163,10 @@ function describe(spec: SpectralSpec): string {
       return `Add Negative to a random Joker, ${effect.handSizeDelta} hand size`;
     case "ouija":
       return `Convert all cards in hand to a single random rank, ${effect.handSizeDelta} hand size`;
+    case "hex":
+      return "Add Polychrome to a random Joker, destroy all other Jokers";
+    case "ankh":
+      return "Create a copy of a random Joker, destroy all other Jokers";
     case "create-legendary":
       return "Create a Legendary Joker";
   }
@@ -236,6 +242,16 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     id: "ouija",
     name: "Ouija",
     effect: { kind: "ouija", handSizeDelta: OUIJA_HAND_SIZE_DELTA },
+  },
+  {
+    id: "hex",
+    name: "Hex",
+    effect: { kind: "hex" },
+  },
+  {
+    id: "ankh",
+    name: "Ankh",
+    effect: { kind: "ankh" },
   },
   {
     id: "soul",

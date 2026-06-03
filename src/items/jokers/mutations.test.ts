@@ -3,6 +3,7 @@ import {
   JOKER_RARITIES,
   YORICK_MULT,
   cloneJoker,
+  copyRandomJokerDestroyOthers,
   createBaronJoker,
   createBusinessCardJoker,
   createJokerByRarity,
@@ -14,6 +15,7 @@ import {
   createYorickJoker,
   pickRandomEquipped,
   pickRandomFromCatalog,
+  polychromeRandomJokerDestroyOthers,
   replaceJokersExceptCopyOf,
   withEdition,
   withoutEdition,
@@ -256,5 +258,85 @@ describe("replaceJokersExceptCopyOf", () => {
 
   test("returns an empty list when invoked on an empty equipped list", () => {
     expect(replaceJokersExceptCopyOf([], 0)).toEqual([]);
+  });
+});
+
+describe("polychromeRandomJokerDestroyOthers", () => {
+  test("returns a single joker", () => {
+    const jokers = [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+    ];
+    expect(polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]))).toHaveLength(1);
+  });
+
+  test("keeps the joker selected by the rng", () => {
+    const jokers = [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+    ];
+    const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0.5]));
+    expect(result[0].id).toBe("business-card");
+  });
+
+  test("applies the Polychrome edition to the surviving joker", () => {
+    const jokers = [createPlusFourMultJoker(), createBusinessCardJoker()];
+    const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+    expect(result[0].edition).toBe("polychrome");
+  });
+
+  test("overrides any pre-existing edition on the surviving joker", () => {
+    const jokers = [withEdition(createPlusFourMultJoker(), "foil")];
+    const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+    expect(result[0].edition).toBe("polychrome");
+  });
+
+  test("returns an empty list when invoked on no jokers (negative)", () => {
+    expect(polychromeRandomJokerDestroyOthers([], fixedRng([0]))).toEqual([]);
+  });
+});
+
+describe("copyRandomJokerDestroyOthers", () => {
+  test("returns exactly two jokers when starting from at least one", () => {
+    const jokers = [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+    ];
+    expect(copyRandomJokerDestroyOthers(jokers, fixedRng([0]))).toHaveLength(2);
+  });
+
+  test("the surviving pair are both copies of the rng-selected joker", () => {
+    const jokers = [
+      createPlusFourMultJoker(),
+      createBusinessCardJoker(),
+      createJokerStencilJoker(),
+    ];
+    const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0.5]));
+    expect(result.map((j) => j.id)).toEqual(["business-card", "business-card"]);
+  });
+
+  test("preserves the chosen joker's reference as the first entry", () => {
+    const jokers = [createPlusFourMultJoker(), createBusinessCardJoker()];
+    const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+    expect(result[0]).toBe(jokers[0]);
+  });
+
+  test("the appended copy is a fresh clone, not the same reference", () => {
+    const jokers = [createPlusFourMultJoker()];
+    const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+    expect(result[1]).not.toBe(result[0]);
+  });
+
+  test("preserves edition on the cloned copy", () => {
+    const jokers = [withEdition(createPlusFourMultJoker(), "polychrome")];
+    const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+    expect(result[1].edition).toBe("polychrome");
+  });
+
+  test("returns an empty list when invoked on no jokers (negative)", () => {
+    expect(copyRandomJokerDestroyOthers([], fixedRng([0]))).toEqual([]);
   });
 });

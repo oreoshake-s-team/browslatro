@@ -56,14 +56,16 @@ describe("createSpectralCatalog", () => {
     { id: "cryptid", name: "Cryptid" },
     { id: "ectoplasm", name: "Ectoplasm" },
     { id: "ouija", name: "Ouija" },
+    { id: "hex", name: "Hex" },
+    { id: "ankh", name: "Ankh" },
     { id: "soul", name: "The Soul" },
   ])("includes $name", ({ id, name }) => {
     expect(find(id).name).toBe(name);
   });
 
-  test("spans 10 distinct effect kinds", () => {
+  test("spans 12 distinct effect kinds", () => {
     const kinds = new Set(createSpectralCatalog().map((c) => c.effect.kind));
-    expect(kinds.size).toBe(10);
+    expect(kinds.size).toBe(12);
   });
 });
 
@@ -432,5 +434,49 @@ describe("The Soul", () => {
 
   test("does not need a selected target (negative)", () => {
     expect(spectralNeedsTarget(find("soul").effect)).toBe(false);
+  });
+});
+
+describe("Hex", () => {
+  test("is included in the catalog", () => {
+    expect(find("hex").name).toBe("Hex");
+  });
+
+  test("carries the hex effect kind", () => {
+    expect(find("hex").effect.kind).toBe("hex");
+  });
+
+  test("describes adding Polychrome to a random Joker", () => {
+    expect(find("hex").description).toMatch(/Polychrome.*random Joker/i);
+  });
+
+  test("describes destroying all other Jokers", () => {
+    expect(find("hex").description).toMatch(/destroy all other Jokers/i);
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("hex").effect)).toBe(false);
+  });
+});
+
+describe("Ankh", () => {
+  test("is included in the catalog", () => {
+    expect(find("ankh").name).toBe("Ankh");
+  });
+
+  test("carries the ankh effect kind", () => {
+    expect(find("ankh").effect.kind).toBe("ankh");
+  });
+
+  test("describes creating a copy of a random Joker", () => {
+    expect(find("ankh").description).toMatch(/copy of a random Joker/i);
+  });
+
+  test("describes destroying all other Jokers", () => {
+    expect(find("ankh").description).toMatch(/destroy all other Jokers/i);
+  });
+
+  test("does not need a selected target (negative)", () => {
+    expect(spectralNeedsTarget(find("ankh").effect)).toBe(false);
   });
 });

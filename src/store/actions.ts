@@ -11,11 +11,13 @@ import {
 import {
   MAX_JOKERS,
   applyEditionToRandomJoker,
+  copyRandomJokerDestroyOthers,
   createJokerByRarity,
   createJokerCatalog,
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   jokerSellValue,
+  polychromeRandomJokerDestroyOthers,
 } from "../items/jokers";
 import {
   applyEditionToFirstJoker,
@@ -489,6 +491,18 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           applyEditionToRandomJoker(prev, "negative", Math.random),
         );
         s.setHandSizeModifier((prev) => prev + effect.handSizeDelta);
+        return;
+      }
+      case "hex": {
+        s.setJokers((prev) =>
+          polychromeRandomJokerDestroyOthers(prev, Math.random),
+        );
+        return;
+      }
+      case "ankh": {
+        s.setJokers((prev) =>
+          copyRandomJokerDestroyOthers(prev, Math.random),
+        );
         return;
       }
       case "create-legendary": {
