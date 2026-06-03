@@ -124,4 +124,23 @@ describe("ModifierSpectralPicker", () => {
     fireEvent.focus(buttonFor("immolate"));
     expect(screen.getByRole("tooltip")).toHaveTextContent("Immolate");
   });
+
+  test("moving hover from one button to another updates the tooltip to the new card", async () => {
+    const user = userEvent.setup();
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    await user.hover(buttonFor("black-hole"));
+    await user.hover(buttonFor("soul"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("The Soul");
+  });
+
+  test("pressing Escape closes the tooltip", async () => {
+    const user = userEvent.setup();
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    await user.hover(buttonFor("soul"));
+    expect(screen.getByRole("tooltip")).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+  });
 });

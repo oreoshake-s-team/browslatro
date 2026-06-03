@@ -20,34 +20,26 @@ export default function ModifierSpectralPicker() {
   const isFull = consumables.length >= capacity;
 
   const tooltipIdBase = useId();
-  const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
-  const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    readonly id: string;
+    readonly rect: DOMRect;
+  } | null>(null);
 
   useEffect(() => {
-    if (tooltipOpenId === null) return;
+    if (tooltip === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setTooltipOpenId(null);
-        setTooltipRect(null);
-      }
+      if (e.key === "Escape") setTooltip(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [tooltipOpenId]);
+  }, [tooltip]);
 
   function openTooltip(id: string, el: HTMLElement) {
-    setTooltipOpenId(id);
-    setTooltipRect(el.getBoundingClientRect());
+    setTooltip({ id, rect: el.getBoundingClientRect() });
   }
 
   function closeTooltip(id: string) {
-    setTooltipOpenId((prev) => {
-      if (prev === id) {
-        setTooltipRect(null);
-        return null;
-      }
-      return prev;
-    });
+    setTooltip((prev) => (prev?.id === id ? null : prev));
   }
 
   function addSpectral(id: string) {
@@ -68,7 +60,7 @@ export default function ModifierSpectralPicker() {
       <div className="modifier-spectral-picker-grid">
         {spectrals.map((card) => {
           const tooltipId = `${tooltipIdBase}-${card.id}`;
-          const open = tooltipOpenId === card.id;
+          const open = tooltip?.id === card.id;
           return (
             <button
               key={card.id}
@@ -85,11 +77,11 @@ export default function ModifierSpectralPicker() {
               onClick={() => addSpectral(card.id)}
             >
               👻 {card.name}
-              {open && tooltipRect && (
+              {open && tooltip && (
                 <SpectralTooltip
                   id={tooltipId}
                   card={card}
-                  anchorRect={tooltipRect}
+                  anchorRect={tooltip.rect}
                 />
               )}
             </button>
