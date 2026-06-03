@@ -137,4 +137,9 @@ describe("ModifierPanel", () => {
     await user.click(screen.getByText(/Vouchers \+1/));
     expect(useGame.getState().extraVoucherSlots).toBe(before + 1);
   });
+
+  test("renders ModifierSpectralPicker subcomponent", () => {
+    render(<ModifierPanel />);
+    expect(screen.getByText(/Add a specific Spectral/)).toBeInTheDocument();
+  });
 });
