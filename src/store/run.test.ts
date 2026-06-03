@@ -63,4 +63,19 @@ describe("run store", () => {
     useGame.getState().resetRun();
     expect(useGame.getState().pendingDouble).toBe(false);
   });
+
+  test("starts at the White stake by default", () => {
+    expect(useGame.getState().selectedStake).toBe("white");
+  });
+
+  test("setSelectedStake updates the stored stake", () => {
+    useGame.getState().setSelectedStake("gold");
+    expect(useGame.getState().selectedStake).toBe("gold");
+  });
+
+  test("resetRun returns the stake to White", () => {
+    useGame.getState().setSelectedStake("orange");
+    useGame.getState().resetRun();
+    expect(useGame.getState().selectedStake).toBe("white");
+  });
 });
