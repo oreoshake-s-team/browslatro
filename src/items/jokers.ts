@@ -1,4 +1,4 @@
-import type { Card, Rank, Suit } from "../cards/types";
+import type { Card, Enhancement, Rank, Suit } from "../cards/types";
 import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
 import { getRankChips } from "../scoring/scoring";
@@ -72,6 +72,10 @@ export const GOLDEN_JOKER_MONEY = 4;
 export const DELAYED_GRATIFICATION_MONEY_PER_DISCARD = 2;
 export const CLOUD_9_MONEY_PER_NINE = 1;
 export const CLOUD_9_RANKS: ReadonlyArray<Rank> = ["9"];
+export const STONE_JOKER_CHIPS_PER_STONE = 25;
+export const STEEL_JOKER_X_MULT_PER_STEEL = 0.2;
+export const DRIVERS_LICENSE_X_MULT = 3;
+export const DRIVERS_LICENSE_ENHANCED_THRESHOLD = 16;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -192,6 +196,21 @@ export type JokerEffect =
   | { readonly kind: "x-mult-on-final-hand"; readonly amount: number }
   | { readonly kind: "per-suit-chips"; readonly suit: Suit; readonly amount: number }
   | { readonly kind: "per-suit-money"; readonly suit: Suit; readonly amount: number }
+  | {
+      readonly kind: "per-enhanced-in-deck-chips";
+      readonly enhancement: Enhancement;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "per-enhanced-in-deck-x-mult";
+      readonly enhancement: Enhancement;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "x-mult-when-enhanced-count-at-least";
+      readonly threshold: number;
+      readonly amount: number;
+    }
   | { readonly kind: "end-of-round-money"; readonly amount: number }
   | {
       readonly kind: "per-remaining-discard-end-of-round-money";
@@ -1030,6 +1049,48 @@ export function createCloud9Joker(): Joker {
   };
 }
 
+export function createStoneJoker(): Joker {
+  return {
+    id: "stone-joker",
+    rarity: "common",
+    name: "Stone Joker",
+    description: `+${STONE_JOKER_CHIPS_PER_STONE} Chips for each Stone Card in your full deck`,
+    effect: {
+      kind: "per-enhanced-in-deck-chips",
+      enhancement: "stone",
+      amount: STONE_JOKER_CHIPS_PER_STONE,
+    },
+  };
+}
+
+export function createSteelJoker(): Joker {
+  return {
+    id: "steel-joker",
+    rarity: "uncommon",
+    name: "Steel Joker",
+    description: `Gives X(1 + ${STEEL_JOKER_X_MULT_PER_STEEL} × N) Mult, where N is the number of Steel Cards in your full deck`,
+    effect: {
+      kind: "per-enhanced-in-deck-x-mult",
+      enhancement: "steel",
+      amount: STEEL_JOKER_X_MULT_PER_STEEL,
+    },
+  };
+}
+
+export function createDriversLicenseJoker(): Joker {
+  return {
+    id: "drivers-license",
+    rarity: "rare",
+    name: "Driver's License",
+    description: `X${DRIVERS_LICENSE_X_MULT} Mult if you have at least ${DRIVERS_LICENSE_ENHANCED_THRESHOLD} Enhanced cards in your full deck`,
+    effect: {
+      kind: "x-mult-when-enhanced-count-at-least",
+      threshold: DRIVERS_LICENSE_ENHANCED_THRESHOLD,
+      amount: DRIVERS_LICENSE_X_MULT,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -1127,6 +1188,9 @@ export function createJokerCatalog(): Joker[] {
     createGoldenJoker(),
     createDelayedGratificationJoker(),
     createCloud9Joker(),
+    createStoneJoker(),
+    createSteelJoker(),
+    createDriversLicenseJoker(),
   ];
 }
 
@@ -1149,6 +1213,7 @@ export interface HandLevelContext {
   readonly remainingDiscards?: number;
   readonly remainingHands?: number;
   readonly money?: number;
+  readonly fullDeck?: ReadonlyArray<Card>;
 }
 
 export function applyHandLevelJokers(
@@ -1358,6 +1423,41 @@ export function applyHandLevelJokers(
       }
       case "x-mult-on-final-hand": {
         if (context.remainingHands === 1) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
+        }
+        break;
+      }
+      case "per-enhanced-in-deck-chips": {
+        const deck = context.fullDeck ?? [];
+        let matches = 0;
+        for (const c of deck) if (c.enhancement === effect.enhancement) matches += 1;
+        const chips = effect.amount * matches;
+        if (chips > 0) {
+          additiveChips += chips;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: chips });
+        }
+        break;
+      }
+      case "per-enhanced-in-deck-x-mult": {
+        const deck = context.fullDeck ?? [];
+        let matches = 0;
+        for (const c of deck) if (c.enhancement === effect.enhancement) matches += 1;
+        if (matches > 0) {
+          const factor = 1 + effect.amount * matches;
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: factor });
+        }
+        break;
+      }
+      case "x-mult-when-enhanced-count-at-least": {
+        const deck = context.fullDeck ?? [];
+        let enhancedCount = 0;
+        for (const c of deck) if (c.enhancement !== undefined) enhancedCount += 1;
+        if (enhancedCount >= effect.threshold) {
           xMult *= effect.amount;
           fired.push(joker.id);
           steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
@@ -1586,6 +1686,9 @@ export function applyPerCardJokers(
       case "end-of-round-money":
       case "per-remaining-discard-end-of-round-money":
       case "per-rank-in-deck-end-of-round-money":
+      case "per-enhanced-in-deck-chips":
+      case "per-enhanced-in-deck-x-mult":
+      case "x-mult-when-enhanced-count-at-least":
         break;
       default:
         assertNeverEffect(effect);

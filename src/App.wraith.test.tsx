@@ -109,10 +109,15 @@ async function useWraith(
 
 describe("Wraith (#359)", () => {
   test("using Wraith creates a Rare Joker (Baron) in the equipped row", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await useWraith(user);
-    expect(screen.getByTestId("joker-tile-filled-baron")).toBeInTheDocument();
+    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      render(<App />);
+      await useWraith(user);
+      expect(screen.getByTestId("joker-tile-filled-baron")).toBeInTheDocument();
+    } finally {
+      randomSpy.mockRestore();
+    }
   });
 
   test("using Wraith sets money to $0", async () => {

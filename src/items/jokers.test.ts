@@ -752,6 +752,17 @@ describe("End-of-round joker catalog membership", () => {
   });
 });
 
+describe("Deck-inspection joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Stone Joker", id: "stone-joker" },
+    { name: "Steel Joker", id: "steel-joker" },
+    { name: "Driver's License", id: "drivers-license" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(
