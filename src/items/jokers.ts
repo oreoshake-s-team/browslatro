@@ -1,4 +1,5 @@
 import type { Card, Enhancement, Rank, Suit } from "../cards/types";
+import { cardKey } from "../cards/deck";
 import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
 import { getRankChips } from "../scoring/scoring";
@@ -76,6 +77,10 @@ export const STONE_JOKER_CHIPS_PER_STONE = 25;
 export const STEEL_JOKER_X_MULT_PER_STEEL = 0.2;
 export const DRIVERS_LICENSE_X_MULT = 3;
 export const DRIVERS_LICENSE_ENHANCED_THRESHOLD = 16;
+export const FACELESS_JOKER_FACE_THRESHOLD = 3;
+export const FACELESS_JOKER_PAYOUT = 5;
+export const TRADING_CARD_DISCARD_SIZE = 1;
+export const TRADING_CARD_PAYOUT = 3;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -210,6 +215,16 @@ export type JokerEffect =
       readonly kind: "x-mult-when-enhanced-count-at-least";
       readonly threshold: number;
       readonly amount: number;
+    }
+  | {
+      readonly kind: "on-discard-money-when-face-count-at-least";
+      readonly threshold: number;
+      readonly payout: number;
+    }
+  | {
+      readonly kind: "on-first-discard-of-round-money-when-size";
+      readonly size: number;
+      readonly payout: number;
     }
   | { readonly kind: "end-of-round-money"; readonly amount: number }
   | {
@@ -1091,6 +1106,34 @@ export function createDriversLicenseJoker(): Joker {
   };
 }
 
+export function createFacelessJoker(): Joker {
+  return {
+    id: "faceless-joker",
+    rarity: "common",
+    name: "Faceless Joker",
+    description: `Earn $${FACELESS_JOKER_PAYOUT} if ${FACELESS_JOKER_FACE_THRESHOLD} or more face cards are discarded at the same time`,
+    effect: {
+      kind: "on-discard-money-when-face-count-at-least",
+      threshold: FACELESS_JOKER_FACE_THRESHOLD,
+      payout: FACELESS_JOKER_PAYOUT,
+    },
+  };
+}
+
+export function createTradingCardJoker(): Joker {
+  return {
+    id: "trading-card",
+    rarity: "uncommon",
+    name: "Trading Card",
+    description: `If your first discard of the round has only ${TRADING_CARD_DISCARD_SIZE} card, earn $${TRADING_CARD_PAYOUT} and destroy it`,
+    effect: {
+      kind: "on-first-discard-of-round-money-when-size",
+      size: TRADING_CARD_DISCARD_SIZE,
+      payout: TRADING_CARD_PAYOUT,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -1191,6 +1234,8 @@ export function createJokerCatalog(): Joker[] {
     createStoneJoker(),
     createSteelJoker(),
     createDriversLicenseJoker(),
+    createFacelessJoker(),
+    createTradingCardJoker(),
   ];
 }
 
@@ -1477,6 +1522,8 @@ export function applyHandLevelJokers(
       case "end-of-round-money":
       case "per-remaining-discard-end-of-round-money":
       case "per-rank-in-deck-end-of-round-money":
+      case "on-discard-money-when-face-count-at-least":
+      case "on-first-discard-of-round-money-when-size":
         break;
       default:
         assertNeverEffect(effect);
@@ -1689,6 +1736,8 @@ export function applyPerCardJokers(
       case "per-enhanced-in-deck-chips":
       case "per-enhanced-in-deck-x-mult":
       case "x-mult-when-enhanced-count-at-least":
+      case "on-discard-money-when-face-count-at-least":
+      case "on-first-discard-of-round-money-when-size":
         break;
       default:
         assertNeverEffect(effect);
@@ -1799,6 +1848,58 @@ export function applyEndOfRoundJokers(
           jokerId: joker.id,
           jokerName: joker.name,
           moneyEarned: earned,
+        });
+      }
+    }
+  }
+  return { moneyEarned, steps };
+}
+
+export interface OnDiscardContext {
+  readonly discardsUsedThisRound?: number;
+}
+
+export interface OnDiscardStep {
+  readonly jokerId: string;
+  readonly jokerName: string;
+  readonly moneyEarned: number;
+  readonly destroyedCardKey?: string;
+}
+
+export interface OnDiscardResult {
+  readonly moneyEarned: number;
+  readonly steps: ReadonlyArray<OnDiscardStep>;
+}
+
+export function applyOnDiscardJokers(
+  jokers: ReadonlyArray<Joker>,
+  discardedCards: ReadonlyArray<Card>,
+  context: OnDiscardContext = {},
+): OnDiscardResult {
+  let moneyEarned = 0;
+  const steps: OnDiscardStep[] = [];
+  for (const joker of jokers) {
+    const effect = joker.effect;
+    if (effect.kind === "on-discard-money-when-face-count-at-least") {
+      let faceCount = 0;
+      for (const c of discardedCards) if (isFaceCard(c)) faceCount += 1;
+      if (faceCount >= effect.threshold) {
+        moneyEarned += effect.payout;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: effect.payout,
+        });
+      }
+    } else if (effect.kind === "on-first-discard-of-round-money-when-size") {
+      const isFirst = (context.discardsUsedThisRound ?? 0) === 1;
+      if (isFirst && discardedCards.length === effect.size) {
+        moneyEarned += effect.payout;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: effect.payout,
+          destroyedCardKey: cardKey(discardedCards[0]),
         });
       }
     }
