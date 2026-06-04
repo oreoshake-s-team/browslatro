@@ -3724,13 +3724,27 @@ describe("Boss tag", () => {
 
 describe("Orbital tag", () => {
   test("gaining Orbital upgrades a poker hand by 3 levels", async () => {
-    tagOfferRngConfig.rng = rngForTag("orbital");
+    const ids = createTagCatalog().map((t) => t.id);
+    const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
+    let call = 0;
+    tagOfferRngConfig.rng = () => (call++ % 2 === 0 ? orbitalFrac : 0);
     shopPickerRngConfig.rng = () => 0;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("4");
+  });
+
+  test("the small-blind row preview shows which hand Orbital will upgrade (#596)", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
+    let call = 0;
+    tagOfferRngConfig.rng = () => (call++ % 2 === 0 ? orbitalFrac : 0);
+    render(<App />);
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).toHaveTextContent("Orbital Tag");
   });
 
   test("a non-Orbital tag leaves hand levels unchanged (negative)", async () => {

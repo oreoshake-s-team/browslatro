@@ -5,13 +5,14 @@ import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
 import {
+  describeSkipOffer,
   getTagSpec,
+  type AnteSkipOffer,
   type AnteSkipOffers,
   type TagId,
-  type TagSpec,
 } from "../../items/tags";
 import { hasStakeModifier, type Stake } from "../../items/stakes";
-import TagTooltip from "./TagTooltip";
+import TagTooltip, { type TagTooltipSpec } from "./TagTooltip";
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -68,14 +69,14 @@ export default function BlindSelectScreen({
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
-  const skipTagForBlind = (blind: Blind): TagId | undefined =>
+  const skipOfferForBlind = (blind: Blind): AnteSkipOffer | undefined =>
     blind === 1 ? skipRewards?.small : blind === 2 ? skipRewards?.big : undefined;
   const canOverrideBoss =
     bossOptions !== undefined && bossOptions.length > 0 && Boolean(onSetBoss);
 
   const tooltipIdBase = useId();
   const [tooltipOpenKey, setTooltipOpenKey] = useState<string | null>(null);
-  const [tooltipSpec, setTooltipSpec] = useState<TagSpec | null>(null);
+  const [tooltipSpec, setTooltipSpec] = useState<TagTooltipSpec | null>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
@@ -91,7 +92,7 @@ export default function BlindSelectScreen({
     return () => window.removeEventListener("keydown", onKey);
   }, [tooltipOpenKey]);
 
-  function openTooltip(key: string, spec: TagSpec, el: HTMLElement) {
+  function openTooltip(key: string, spec: TagTooltipSpec, el: HTMLElement) {
     setTooltipOpenKey(key);
     setTooltipSpec(spec);
     setTooltipRect(el.getBoundingClientRect());
@@ -164,8 +165,8 @@ export default function BlindSelectScreen({
             const isCurrent = b === currentBlind;
             const isCompleted = b < currentBlind;
             const name = b === 3 ? boss.name : BLIND_NAMES[b];
-            const rowSkipTag = skipTagForBlind(b);
-            const rowSkipSpec = rowSkipTag ? getTagSpec(rowSkipTag) : null;
+            const rowSkipOffer = skipOfferForBlind(b);
+            const rowSkipSpec = rowSkipOffer ? describeSkipOffer(rowSkipOffer) : null;
             const skipKey = `skip-${b}`;
             const skipTooltipId = `${tooltipIdBase}-${skipKey}`;
             const skipTooltipOpen = tooltipOpenKey === skipKey;

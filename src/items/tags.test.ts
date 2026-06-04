@@ -2,6 +2,7 @@
 import {
   INVESTMENT_TAG_REWARD,
   createTagCatalog,
+  describeSkipOffer,
   getTagSpec,
   pruneTagsByCategory,
   resolveTagEffect,
@@ -355,12 +356,41 @@ describe("rollSkipTag", () => {
 describe("rollAnteSkipOffers", () => {
   test("rolls a small-blind offer from the catalog", () => {
     const ids = createTagCatalog().map((t) => t.id);
-    expect(ids).toContain(rollAnteSkipOffers(() => 0).small);
+    expect(ids).toContain(rollAnteSkipOffers(() => 0).small.id);
   });
 
   test("rolls a big-blind offer from the catalog", () => {
     const ids = createTagCatalog().map((t) => t.id);
-    expect(ids).toContain(rollAnteSkipOffers(() => 0).big);
+    expect(ids).toContain(rollAnteSkipOffers(() => 0).big.id);
+  });
+
+  test("pre-rolls a target hand when the offer is Orbital (#596)", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
+    let call = 0;
+    const rng = () => (call++ % 2 === 0 ? orbitalFrac : 0);
+    const offer = rollAnteSkipOffers(rng).small;
+    expect(offer).toEqual({ id: "orbital", orbitalHand: "High Card" });
+  });
+
+  test("does not pre-roll a target hand for a non-Orbital tag (negative)", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    const investmentFrac = (ids.indexOf("investment") + 0.5) / ids.length;
+    const offer = rollAnteSkipOffers(() => investmentFrac).small;
+    expect(offer.orbitalHand).toBeUndefined();
+  });
+});
+
+describe("describeSkipOffer (#596)", () => {
+  test("Orbital description names the rolled hand", () => {
+    const offer = { id: "orbital", orbitalHand: "Full House" } as const;
+    expect(describeSkipOffer(offer).description).toContain("Full House");
+  });
+
+  test("non-Orbital tag falls back to the canonical spec description (negative)", () => {
+    const offer = { id: "investment" } as const;
+    const spec = getTagSpec("investment");
+    expect(describeSkipOffer(offer).description).toBe(spec.description);
   });
 });
 
