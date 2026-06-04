@@ -68,10 +68,12 @@ vi.mock("./items/spectrals", async () => {
 });
 
 import App from "./App";
+import { useGame } from "./store/game";
 
 beforeEach(() => {
   playMock.mockClear();
   bossPickerRngConfig.rng = () => 0;
+  useGame.getState().setPendingRunSelect(false);
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 

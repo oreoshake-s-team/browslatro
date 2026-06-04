@@ -10,6 +10,7 @@ import { shopPickerRngConfig } from "./items/shop";
 import { bossPickerRngConfig } from "./items/bosses";
 import { tagOfferRngConfig } from "./items/tags";
 import type { ShopItem } from "./items/shop";
+import { useGame } from "./store/game";
 
 export type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
 
@@ -98,6 +99,7 @@ export function setupAppTestEnvironment(): void {
     bossPickerRngConfig.rng = () => 0;
     tagOfferRngConfig.rng = () => 0;
     playMock.mockClear();
+    useGame.getState().setPendingRunSelect(false);
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
 

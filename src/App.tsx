@@ -12,6 +12,7 @@ import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
+import NewRunScreen from "./components/game/NewRunScreen";
 import {
   pruneTagsByCategory,
   rollAnteSkipOffers,
@@ -172,6 +173,10 @@ function App() {
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
   );
+  const pendingRunSelect = useGame((state) => state.pendingRunSelect);
+  const setPendingRunSelect = useGame((state) => state.setPendingRunSelect);
+  const selectedStake = useGame((state) => state.selectedStake);
+  const setSelectedStake = useGame((state) => state.setSelectedStake);
   const pendingTags = useGame((state) => state.pendingTags);
   const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
@@ -356,7 +361,16 @@ function App() {
       {pendingWin && (
         <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
       )}
-      {pendingBlindSelect && (
+      {pendingRunSelect && (
+        <NewRunScreen
+          initialStake={selectedStake}
+          onConfirm={({ stake }) => {
+            setSelectedStake(stake);
+            setPendingRunSelect(false);
+          }}
+        />
+      )}
+      {pendingBlindSelect && !pendingRunSelect && (
         <BlindSelectScreen
           ante={ante}
           currentBlind={blind}
