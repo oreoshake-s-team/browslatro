@@ -1,5 +1,5 @@
 .sidebar {
-  width: 300px;
+  width: 30rem;
   flex-shrink: 0;
   padding: 1.25rem;
   padding-bottom: 1.25rem;
@@ -62,7 +62,7 @@
 
 @media (orientation: landscape) and (max-width: 1024px) {
   .sidebar {
-    width: 180px;
+    width: 18rem;
     padding: 1rem 1.2rem;
     padding-bottom: 1.5rem;
   }

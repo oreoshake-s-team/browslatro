@@ -2,7 +2,7 @@
   --card-width: 6rem;
   --card-height: 8.4rem;
   --card-aspect: 5 / 7;
-  --sidebar-width: 300px;
+  --sidebar-width: 30rem;
   --game-padding-x: 2rem;
 }
 
@@ -14,13 +14,13 @@
 
 @media (orientation: landscape) and (max-width: 1024px) {
   :root {
-    --sidebar-width: 180px;
+    --sidebar-width: 18rem;
   }
 }
 
 @media (orientation: portrait) and (max-width: 768px) {
   :root {
-    --sidebar-width: 0px;
+    --sidebar-width: 0rem;
   }
 }
 

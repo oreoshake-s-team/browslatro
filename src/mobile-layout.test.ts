@@ -68,7 +68,7 @@ describe("Sidebar layout — landscape mobile (issue #105)", () => {
 
   test("landscape narrow viewports shrink the sidebar width", () => {
     const inner = blockBody(landscapeBlock, /\.sidebar\s*{/);
-    expect(inner).toMatch(/width\s*:\s*180px/);
+    expect(inner).toMatch(/width\s*:\s*18rem/);
   });
 
   test("landscape narrow viewports stack sub-info-progress as a column to save horizontal space", () => {
