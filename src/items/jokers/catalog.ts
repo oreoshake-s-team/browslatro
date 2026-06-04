@@ -41,6 +41,7 @@ import {
   createMysticSummitJoker,
   createOddToddJoker,
   createOnyxAgateJoker,
+  createPareidoliaJoker,
   createPhotographJoker,
   createPlusFourMultJoker,
   createRaisedFistJoker,
@@ -150,5 +151,6 @@ export function createJokerCatalog(): Joker[] {
     createStuntmanJoker(),
     createCreditCardJoker(),
     createBurglarJoker(),
+    createPareidoliaJoker(),
   ];
 }

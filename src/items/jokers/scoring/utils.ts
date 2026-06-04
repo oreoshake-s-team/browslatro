@@ -8,6 +8,25 @@ export function isFaceCard(card: Card): boolean {
   return FACE_RANKS.has(card.rank);
 }
 
+export function allCardsAreFaceFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.allCardsFace === true) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function isFaceCardWith(
+  card: Card,
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  if (isFaceCard(card)) return true;
+  return allCardsAreFaceFromJokers(jokers);
+}
+
 export function jokerSellValue(_joker: Joker): number {
   return JOKER_SELL_VALUE;
 }

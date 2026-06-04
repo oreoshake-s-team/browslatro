@@ -949,6 +949,16 @@ export function createBurglarJoker(): Joker {
   };
 }
 
+export function createPareidoliaJoker(): Joker {
+  return {
+    id: "pareidolia",
+    rarity: "uncommon",
+    name: "Pareidolia",
+    description: "All cards are considered face cards",
+    effect: { kind: "passive-run-stats", allCardsFace: true },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {

@@ -1,6 +1,6 @@
 import type { Card } from "../../../cards/types";
 import type { Joker } from "../types";
-import { isFaceCard } from "./utils";
+import { isFaceCardWith } from "./utils";
 
 export interface OnDiscardContext {
   readonly discardsUsedThisRound?: number;
@@ -29,7 +29,9 @@ export function applyOnDiscardJokers(
     const effect = joker.effect;
     if (effect.kind === "on-discard-money-when-face-count-at-least") {
       let faceCount = 0;
-      for (const c of discardedCards) if (isFaceCard(c)) faceCount += 1;
+      for (const c of discardedCards) {
+        if (isFaceCardWith(c, jokers)) faceCount += 1;
+      }
       if (faceCount >= effect.threshold) {
         moneyEarned += effect.payout;
         steps.push({
