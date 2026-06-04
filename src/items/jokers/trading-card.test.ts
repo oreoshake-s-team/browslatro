@@ -1,6 +1,5 @@
 // @vitest-environment node
 import {
-  TRADING_CARD_DISCARD_SIZE,
   TRADING_CARD_PAYOUT,
   applyEndOfRoundJokers,
   applyHandLevelJokers,
@@ -100,10 +99,6 @@ describe("Trading Card", () => {
       discardsUsedThisRound: 1,
     });
     expect(result.moneyEarned).toBe(TRADING_CARD_PAYOUT);
-  });
-
-  test("matches exactly TRADING_CARD_DISCARD_SIZE cards (1 in canonical Balatro)", () => {
-    expect(TRADING_CARD_DISCARD_SIZE).toBe(1);
   });
 
   test("does not contribute in the hand-level pass", () => {

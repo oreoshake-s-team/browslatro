@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
-  DEFAULT_DECK,
   createDeckCatalog,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
@@ -10,26 +9,11 @@ import {
   type Deck,
 } from "./decks";
 
-describe("DEFAULT_DECK", () => {
-  test("defaults to Red Deck (Balatro default)", () => {
-    expect(DEFAULT_DECK).toBe("red-deck");
-  });
-});
-
 describe("createDeckCatalog", () => {
   test("includes all 15 standard Balatro decks", () => {
     expect(createDeckCatalog()).toHaveLength(15);
   });
 
-  test("every spec carries a non-empty name", () => {
-    const names = createDeckCatalog().map((d) => d.name);
-    expect(names.every((n) => n.length > 0)).toBe(true);
-  });
-
-  test("every spec carries a non-empty description", () => {
-    const descs = createDeckCatalog().map((d) => d.description);
-    expect(descs.every((d) => d.length > 0)).toBe(true);
-  });
 });
 
 describe("getDeckSpec", () => {

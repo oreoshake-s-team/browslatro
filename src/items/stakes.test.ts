@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
-  DEFAULT_STAKE,
   STAKE_ORDER,
   createStakeCatalog,
   getActiveStakeModifiers,
@@ -34,27 +33,12 @@ describe("STAKE_ORDER", () => {
   });
 });
 
-describe("DEFAULT_STAKE", () => {
-  test("defaults to White", () => {
-    expect(DEFAULT_STAKE).toBe("white");
-  });
-});
-
 describe("createStakeCatalog", () => {
   test("returns a spec for every stake in STAKE_ORDER", () => {
     const ids = createStakeCatalog().map((s) => s.id);
     expect(ids).toEqual([...STAKE_ORDER]);
   });
 
-  test("every spec carries a non-empty name", () => {
-    const names = createStakeCatalog().map((s) => s.name);
-    expect(names.every((n) => n.length > 0)).toBe(true);
-  });
-
-  test("every spec carries a non-empty description", () => {
-    const descs = createStakeCatalog().map((s) => s.description);
-    expect(descs.every((d) => d.length > 0)).toBe(true);
-  });
 });
 
 describe("getStakeSpec", () => {

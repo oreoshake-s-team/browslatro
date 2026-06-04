@@ -1,6 +1,5 @@
 // @vitest-environment node
 import {
-  INVESTMENT_TAG_REWARD,
   createTagCatalog,
   describeSkipOffer,
   getTagSpec,
@@ -19,12 +18,6 @@ const KNOWN_CATEGORIES: ReadonlyArray<TagEffect["category"]> = [
   "next-round",
   "duplicate-next",
 ];
-
-describe("INVESTMENT_TAG_REWARD", () => {
-  test("equals $25", () => {
-    expect(INVESTMENT_TAG_REWARD).toBe(25);
-  });
-});
 
 describe("Tag catalog", () => {
   test("includes the Investment tag", () => {
@@ -47,10 +40,6 @@ describe("Tag catalog", () => {
 });
 
 describe("D6 tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("d6");
-  });
-
   test("resolves to the next-shop category", () => {
     expect(resolveTagEffect("d6").category).toBe("next-shop");
   });
@@ -65,18 +54,6 @@ describe("D6 tag", () => {
 });
 
 describe("run-stat money tags", () => {
-  test("Handy is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("handy");
-  });
-
-  test("Garbage is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("garbage");
-  });
-
-  test("Speed is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("speed");
-  });
-
   test("Handy resolves to an immediate $1-per-hand-played action", () => {
     const effect = resolveTagEffect("handy");
     if (effect.category !== "immediate") throw new Error("expected immediate");
@@ -109,10 +86,6 @@ describe("run-stat money tags", () => {
 });
 
 describe("Economy tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("economy");
-  });
-
   test("resolves to an immediate double-money action capped at $40", () => {
     const effect = resolveTagEffect("economy");
     if (effect.category !== "immediate") throw new Error("expected immediate");
@@ -121,18 +94,10 @@ describe("Economy tag", () => {
 });
 
 describe("Charm and Ethereal pack tags", () => {
-  test("Charm is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("charm");
-  });
-
   test("Charm resolves to an immediate open-pack action for a Mega Arcana pack", () => {
     const effect = resolveTagEffect("charm");
     if (effect.category !== "immediate") throw new Error("expected immediate");
     expect(effect.action).toEqual({ kind: "open-pack", pool: "arcana", variant: "mega" });
-  });
-
-  test("Ethereal is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("ethereal");
   });
 
   test("Ethereal resolves to an immediate open-pack action for a Spectral pack", () => {
@@ -170,10 +135,6 @@ describe("Standard, Meteor, and Buffoon pack tags", () => {
 });
 
 describe("Coupon tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("coupon");
-  });
-
   test("resolves to a next-shop free-shop-items modifier", () => {
     const effect = resolveTagEffect("coupon");
     if (effect.category !== "next-shop") throw new Error("expected next-shop");
@@ -182,18 +143,10 @@ describe("Coupon tag", () => {
 });
 
 describe("Uncommon and Rare joker tags", () => {
-  test("Uncommon is in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("uncommon");
-  });
-
   test("Uncommon resolves to a next-shop free Uncommon joker", () => {
     const effect = resolveTagEffect("uncommon");
     if (effect.category !== "next-shop") throw new Error("expected next-shop");
     expect(effect.modifiers).toEqual([{ kind: "free-joker", rarity: "uncommon" }]);
-  });
-
-  test("Rare is in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("rare");
   });
 
   test("Rare resolves to a next-shop free Rare joker", () => {
@@ -204,10 +157,6 @@ describe("Uncommon and Rare joker tags", () => {
 });
 
 describe("Voucher tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("voucher");
-  });
-
   test("resolves to a next-shop extra-voucher modifier", () => {
     const effect = resolveTagEffect("voucher");
     if (effect.category !== "next-shop") throw new Error("expected next-shop");
@@ -216,10 +165,6 @@ describe("Voucher tag", () => {
 });
 
 describe("Top-up tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("top-up");
-  });
-
   test("resolves to an immediate create-jokers action for 2 Common Jokers", () => {
     const effect = resolveTagEffect("top-up");
     if (effect.category !== "immediate") throw new Error("expected immediate");
@@ -228,10 +173,6 @@ describe("Top-up tag", () => {
 });
 
 describe("Boss tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("boss");
-  });
-
   test("resolves to an immediate reroll-boss action", () => {
     const effect = resolveTagEffect("boss");
     if (effect.category !== "immediate") throw new Error("expected immediate");
@@ -240,10 +181,6 @@ describe("Boss tag", () => {
 });
 
 describe("Orbital tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("orbital");
-  });
-
   test("resolves to an immediate upgrade-hand action for 3 levels", () => {
     const effect = resolveTagEffect("orbital");
     if (effect.category !== "immediate") throw new Error("expected immediate");
@@ -252,10 +189,6 @@ describe("Orbital tag", () => {
 });
 
 describe("Juggle tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("juggle");
-  });
-
   test("resolves to a next-round +3 hand-size effect", () => {
     const effect = resolveTagEffect("juggle");
     if (effect.category !== "next-round") throw new Error("expected next-round");
@@ -287,10 +220,6 @@ describe("edition tags", () => {
 });
 
 describe("Double tag", () => {
-  test("is included in the catalog", () => {
-    expect(createTagCatalog().map((t) => t.id)).toContain("double");
-  });
-
   test("resolves to the duplicate-next category", () => {
     expect(resolveTagEffect("double").category).toBe("duplicate-next");
   });

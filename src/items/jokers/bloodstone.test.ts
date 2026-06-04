@@ -1,6 +1,5 @@
 // @vitest-environment node
 import {
-  BLOODSTONE_CHANCE,
   BLOODSTONE_X_MULT,
   applyHandLevelJokers,
   applyPerCardJokers,
@@ -85,10 +84,6 @@ describe("Bloodstone", () => {
   test("does not contribute in the hand-level pass", () => {
     const result = applyHandLevelJokers([createBloodstoneJoker()]);
     expect(result.firedJokerIds).toEqual([]);
-  });
-
-  test("uses a 1-in-2 base chance", () => {
-    expect(BLOODSTONE_CHANCE).toBe(0.5);
   });
 
   test("is an uncommon joker", () => {

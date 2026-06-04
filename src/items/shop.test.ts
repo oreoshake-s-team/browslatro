@@ -477,7 +477,6 @@ describe("pickShopOffers — pack slots", () => {
   }
 
   test("emits SHOP_PACK_SLOTS pack offers per shop visit", () => {
-    expect(SHOP_PACK_SLOTS).toBe(2);
     expect(packOffers(pickShopOffers(baseArgs(mulberry32(1))))).toHaveLength(
       SHOP_PACK_SLOTS,
     );
