@@ -5,6 +5,7 @@ import {
   TEMPERANCE_MONEY_CAP,
   WHEEL_OF_FORTUNE_CHANCE,
   createTarotCatalog,
+  nextRankUp,
   resolveHermitPayout,
   resolveTemperancePayout,
   rollWheelOfFortune,
@@ -32,8 +33,8 @@ describe("HERMIT_MONEY_CAP", () => {
 });
 
 describe("createTarotCatalog", () => {
-  test("contains twelve entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man)", () => {
-    expect(createTarotCatalog()).toHaveLength(12);
+  test("contains thirteen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength)", () => {
+    expect(createTarotCatalog()).toHaveLength(13);
   });
 
   test("has unique ids", () => {
@@ -195,6 +196,59 @@ describe("The Hanged Man", () => {
     expect(tarotById("the-hanged-man").description).toBe(
       "Destroy up to 2 cards in hand",
     );
+  });
+});
+
+describe("Strength", () => {
+  test("strength is in the catalog", () => {
+    expect(tarotById("strength").name).toBe("Strength");
+  });
+
+  test("strength effect kind is rank-up-selected", () => {
+    expect(tarotById("strength").effect.kind).toBe("rank-up-selected");
+  });
+
+  test("strength targets up to 2 cards (matches Balatro)", () => {
+    expect(tarotById("strength").effect).toEqual({
+      kind: "rank-up-selected",
+      maxTargets: 2,
+    });
+  });
+
+  test("strength description names rank increase", () => {
+    expect(tarotById("strength").description).toBe(
+      "Increase rank of up to 2 cards in hand by 1",
+    );
+  });
+});
+
+describe("nextRankUp", () => {
+  test("advances 2 to 3", () => {
+    expect(nextRankUp("2")).toBe("3");
+  });
+
+  test("advances 9 to 10", () => {
+    expect(nextRankUp("9")).toBe("10");
+  });
+
+  test("advances 10 to J", () => {
+    expect(nextRankUp("10")).toBe("J");
+  });
+
+  test("advances J to Q", () => {
+    expect(nextRankUp("J")).toBe("Q");
+  });
+
+  test("advances Q to K", () => {
+    expect(nextRankUp("Q")).toBe("K");
+  });
+
+  test("advances K to A (matches Balatro)", () => {
+    expect(nextRankUp("K")).toBe("A");
+  });
+
+  test("wraps A back to 2 (matches Balatro)", () => {
+    expect(nextRankUp("A")).toBe("2");
   });
 });
 

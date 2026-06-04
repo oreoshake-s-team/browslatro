@@ -51,6 +51,10 @@ export function consumableUseBlock(
       if (previewMode) return "Cannot destroy cards while opening a pack";
       return checkSelection(selectedCount, effect.maxTargets);
     }
+    if (effect.kind === "rank-up-selected") {
+      if (previewMode) return "Cannot modify card ranks while opening a pack";
+      return checkSelection(selectedCount, effect.maxTargets);
+    }
     return null;
   }
   const effect = c.card.effect;

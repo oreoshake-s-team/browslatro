@@ -1,4 +1,5 @@
-import type { Enhancement } from "../cards/types";
+import type { Enhancement, Rank } from "../cards/types";
+import { RANKS } from "../cards/deck";
 import type { Joker, JokerEdition, RandomSource } from "./jokers";
 import { JOKER_EDITION_KINDS, jokerSellValue } from "./jokers";
 import { rollChance } from "../dev/chanceOverride";
@@ -32,6 +33,10 @@ export type TarotEffect =
   | {
       readonly kind: "destroy-selected";
       readonly maxTargets: 1 | 2;
+    }
+  | {
+      readonly kind: "rank-up-selected";
+      readonly maxTargets: 1 | 2;
     };
 
 export interface TarotCard {
@@ -60,6 +65,11 @@ function describe(spec: TarotSpec): string {
       effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
     return `Destroy ${targets} in hand`;
   }
+  if (effect.kind === "rank-up-selected") {
+    const targets =
+      effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
+    return `Increase rank of ${targets} in hand by 1`;
+  }
   const targets = effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
   return `Apply ${effect.enhancement} enhancement to ${targets} in hand`;
 }
@@ -74,6 +84,7 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
   { id: "the-devil", name: "The Devil", effect: { kind: "apply-enhancement", enhancement: "gold", maxTargets: 1 } },
   { id: "the-tower", name: "The Tower", effect: { kind: "apply-enhancement", enhancement: "stone", maxTargets: 1 } },
   { id: "the-hanged-man", name: "The Hanged Man", effect: { kind: "destroy-selected", maxTargets: 2 } },
+  { id: "strength", name: "Strength", effect: { kind: "rank-up-selected", maxTargets: 2 } },
   { id: "the-hermit", name: "The Hermit", effect: { kind: "money-multiply", multiplier: 2, bonusCap: HERMIT_MONEY_CAP } },
   { id: "temperance", name: "Temperance", effect: { kind: "joker-sell-value-payout", cap: TEMPERANCE_MONEY_CAP } },
   {
@@ -85,6 +96,12 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
 
 export function createTarotCatalog(): TarotCard[] {
   return TAROT_SPECS.map((spec) => ({ ...spec, description: describe(spec) }));
+}
+
+export function nextRankUp(rank: Rank): Rank {
+  const idx = RANKS.indexOf(rank);
+  if (idx < 0) return rank;
+  return RANKS[(idx + 1) % RANKS.length];
 }
 
 export function resolveHermitPayout(currentMoney: number, cap: number = HERMIT_MONEY_CAP): number {
