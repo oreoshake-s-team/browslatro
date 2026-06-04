@@ -34,4 +34,19 @@ describe("progression store", () => {
     useGame.getState().resetProgression();
     expect(useGame.getState().ante).toBe(1);
   });
+
+  test("starts with the new-run screen pending", () => {
+    expect(useGame.getState().pendingRunSelect).toBe(true);
+  });
+
+  test("setPendingRunSelect accepts a plain value", () => {
+    useGame.getState().setPendingRunSelect(false);
+    expect(useGame.getState().pendingRunSelect).toBe(false);
+  });
+
+  test("resetProgression re-arms the new-run screen", () => {
+    useGame.getState().setPendingRunSelect(false);
+    useGame.getState().resetProgression();
+    expect(useGame.getState().pendingRunSelect).toBe(true);
+  });
 });

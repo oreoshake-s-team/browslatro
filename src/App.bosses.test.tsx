@@ -19,11 +19,13 @@ vi.mock("./cards/deck", async () => {
 const playMock = play as MockedFunction<typeof play>;
 
 import App from "./App";
+import { useGame } from "./store/game";
 
 beforeEach(() => {
   playMock.mockClear();
   bossPickerRngConfig.rng = () => 0;
   mockShuffleConfig.useReverse = false;
+  useGame.getState().setPendingRunSelect(false);
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 

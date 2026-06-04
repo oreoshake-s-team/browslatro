@@ -30,6 +30,8 @@ async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
 }
 
 async function dismissBlindSelect(page: Page): Promise<void> {
+  const newRun = page.getByTestId("new-run-confirm");
+  if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
 }
 
