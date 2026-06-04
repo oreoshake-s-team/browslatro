@@ -53,24 +53,16 @@ export function cardKey(card: Pick<Card, "rank" | "suit">): string {
   return `${card.rank}-${card.suit}`;
 }
 
-export function createDeck(
-  excludedKeys: ReadonlySet<string> = new Set(),
-  startingId?: number,
-): Card[] {
+export function createDeck(): Card[] {
   const deck: Card[] = [];
-  let nextId = startingId ?? cardIdCounter;
   for (const suit of SUITS) {
     for (const rank of RANKS) {
-      if (excludedKeys.has(cardKey({ rank, suit }))) continue;
       deck.push({
-        id: ++nextId,
+        id: nextCardId(),
         rank,
         suit,
       });
     }
-  }
-  if (startingId === undefined) {
-    cardIdCounter = nextId;
   }
   return deck;
 }

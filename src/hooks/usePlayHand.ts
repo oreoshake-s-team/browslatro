@@ -93,10 +93,11 @@ export function usePlayHand({
   const roundScore = useGame((s) => s.roundScore);
   const remainingHands = useGame((s) => s.remainingHands);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
-  const destroyedCardKeys = useGame((s) => s.destroyedCardKeys);
+  const baseDeckCards = useGame((s) => s.baseDeckCards);
+  const destroyedCardIds = useGame((s) => s.destroyedCardIds);
   const addedCards = useGame((s) => s.addedCards);
-  const cardEnhancementsByKey = useGame((s) => s.cardEnhancementsByKey);
-  const cardSealsByKey = useGame((s) => s.cardSealsByKey);
+  const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
+  const cardSealsById = useGame((s) => s.cardSealsById);
 
   const requiredScore =
     blind === 3
@@ -185,10 +186,11 @@ export function usePlayHand({
       const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
       const postBonusesWallet = postGoldWallet + remainingHandsBonus;
       const fullDeck = fullDeckPile(
-        destroyedCardKeys,
+        baseDeckCards,
+        destroyedCardIds,
         addedCards,
-        cardEnhancementsByKey,
-        cardSealsByKey,
+        cardEnhancementsById,
+        cardSealsById,
       ).remaining;
       const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
@@ -327,10 +329,11 @@ export function usePlayHand({
       0,
     );
     const handLevelFullDeck = fullDeckPile(
-      destroyedCardKeys,
+      baseDeckCards,
+      destroyedCardIds,
       addedCards,
-      cardEnhancementsByKey,
-      cardSealsByKey,
+      cardEnhancementsById,
+      cardSealsById,
     ).remaining;
     const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,

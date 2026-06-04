@@ -45,8 +45,8 @@ vi.mock("./cards/deck", async () => {
       if (mockShuffleConfig.useReverse) return items.slice().reverse();
       return mockShuffleConfig.useIdentity ? items.slice() : actual.shuffle(items);
     },
-    createDeck: (excluded?: ReadonlySet<string>) => {
-      const deck = actual.createDeck(excluded);
+    createDeck: () => {
+      const deck = actual.createDeck();
       if (!mockDeckConfig.useDefaultEnhancements) return deck;
       return deck.map((c) => ({
         ...c,

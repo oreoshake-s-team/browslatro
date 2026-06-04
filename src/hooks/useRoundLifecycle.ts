@@ -21,7 +21,7 @@ import {
   extraStartingHands,
   pickVouchersForAnte,
 } from "../items/vouchers";
-import { HAND_SIZE } from "../cards/deck";
+import { HAND_SIZE, createDeck, resetCardIds } from "../cards/deck";
 import { initialDeal } from "../cards/deckBuild";
 import { initialJokersConfig } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
@@ -75,13 +75,16 @@ export function useRoundLifecycle({
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
-  const destroyedCardKeys = useGame((s) => s.destroyedCardKeys);
-  const setDestroyedCardKeys = useGame((s) => s.setDestroyedCardKeys);
+  const baseDeckCards = useGame((s) => s.baseDeckCards);
+  const setBaseDeckCards = useGame((s) => s.setBaseDeckCards);
+  const destroyedCardIds = useGame((s) => s.destroyedCardIds);
+  const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const addedCards = useGame((s) => s.addedCards);
   const setAddedCards = useGame((s) => s.setAddedCards);
-  const cardEnhancementsByKey = useGame((s) => s.cardEnhancementsByKey);
-  const setCardEnhancementsByKey = useGame((s) => s.setCardEnhancementsByKey);
-  const cardSealsByKey = useGame((s) => s.cardSealsByKey);
+  const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
+  const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
+  const cardSealsById = useGame((s) => s.cardSealsById);
+  const setCardSealsById = useGame((s) => s.setCardSealsById);
   const pendingNextRoundHandSize = useGame((s) => s.pendingNextRoundHandSize);
   const setPendingNextRoundHandSize = useGame(
     (s) => s.setPendingNextRoundHandSize,
@@ -162,11 +165,12 @@ export function useRoundLifecycle({
     setDiscardsUsedThisRound(0);
     setHandHistoryThisRound([]);
     const fresh = initialDeal(
-      destroyedCardKeys,
+      baseDeckCards,
+      destroyedCardIds,
       handSize,
       addedCards,
-      cardEnhancementsByKey,
-      cardSealsByKey,
+      cardEnhancementsById,
+      cardSealsById,
     );
     setDealt({
       hand: applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
@@ -205,9 +209,12 @@ export function useRoundLifecycle({
     setForceProbabilities(false);
     setJokers(initialJokersConfig.factory());
     useGame.getState().resetStats();
-    setDestroyedCardKeys(new Set());
+    resetCardIds();
+    setBaseDeckCards(createDeck());
+    setDestroyedCardIds(new Set());
     setAddedCards([]);
-    setCardEnhancementsByKey(new Map());
+    setCardEnhancementsById(new Map());
+    setCardSealsById(new Map());
     setConsumables([]);
     useGame.getState().resetVouchers();
     setCurrentAnteVouchers(

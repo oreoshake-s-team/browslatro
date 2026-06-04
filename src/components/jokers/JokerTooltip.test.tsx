@@ -166,7 +166,16 @@ describe("Joker tooltip — Driver's License enhanced-count progress (#632)", ()
   function setEnhancementOverrides(
     pairs: ReadonlyArray<[string, Enhancement]>,
   ): void {
-    useGame.getState().setCardEnhancementsByKey(new Map(pairs));
+    const base = useGame.getState().baseDeckCards;
+    const lookup = new Map<string, number>();
+    for (const c of base) lookup.set(`${c.rank}-${c.suit}`, c.id);
+    const idPairs: Array<[number, Enhancement]> = [];
+    for (const [rankSuit, enhancement] of pairs) {
+      const id = lookup.get(rankSuit);
+      if (id === undefined) throw new Error(`Unknown card key: ${rankSuit}`);
+      idPairs.push([id, enhancement]);
+    }
+    useGame.getState().setCardEnhancementsById(new Map(idPairs));
   }
 
   test("does not show the progress line for jokers without the threshold effect", async () => {

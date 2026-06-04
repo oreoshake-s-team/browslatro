@@ -5,7 +5,7 @@ import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
-import { cardKey, createDeck } from "../cards/deck";
+import { createDeck } from "../cards/deck";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
 
@@ -556,14 +556,15 @@ describe("game actions slice", () => {
     expect(other?.enhancement).toBeUndefined();
   });
 
-  test("applyEnhancementToSelectedPreviewCards records the override by key", () => {
+  test("applyEnhancementToSelectedPreviewCards records the override by id", () => {
     const preview = createDeck().slice(0, 1);
     const game = useGame.getState();
     game.setPackPreviewHand(preview);
     game.setPackPreviewSelectedIds(new Set([preview[0].id]));
     game.applyEnhancementToSelectedPreviewCards("gold");
-    const key = cardKey(preview[0]);
-    expect(useGame.getState().cardEnhancementsByKey.get(key)).toBe("gold");
+    expect(useGame.getState().cardEnhancementsById.get(preview[0].id)).toBe(
+      "gold",
+    );
   });
 
   test("applyEnhancementToSelectedPreviewCards clears the selection", () => {
@@ -587,14 +588,13 @@ describe("game actions slice", () => {
     expect(card?.seal).toBe("red");
   });
 
-  test("applySealToSelectedPreviewCards records the override by key", () => {
+  test("applySealToSelectedPreviewCards records the override by id", () => {
     const preview = createDeck().slice(0, 1);
     const game = useGame.getState();
     game.setPackPreviewHand(preview);
     game.setPackPreviewSelectedIds(new Set([preview[0].id]));
     game.applySealToSelectedPreviewCards("red");
-    const key = cardKey(preview[0]);
-    expect(useGame.getState().cardSealsByKey.get(key)).toBe("red");
+    expect(useGame.getState().cardSealsById.get(preview[0].id)).toBe("red");
   });
 
   test("duplicateSelectedPreviewCards adds the requested number of duplicates to addedCards (closes #630)", () => {

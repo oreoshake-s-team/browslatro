@@ -43,17 +43,6 @@ describe("createDeck", () => {
     expect(deck.every((c) => c.enhancement === undefined)).toBe(true);
   });
 
-  test("omits cards whose keys appear in the excludedKeys set", () => {
-    const excluded = new Set(["K-hearts", "5-spades"]);
-    const deck = createDeck(excluded);
-    expect(deck.find((c) => c.rank === "K" && c.suit === "hearts")).toBeUndefined();
-    expect(deck.find((c) => c.rank === "5" && c.suit === "spades")).toBeUndefined();
-  });
-
-  test("excludedKeys shrinks the deck by exactly the number of removed keys", () => {
-    const excluded = new Set(["K-hearts", "5-spades"]);
-    expect(createDeck(excluded)).toHaveLength(DECK_SIZE - 2);
-  });
 });
 
 describe("defaultEnhancementForRank", () => {

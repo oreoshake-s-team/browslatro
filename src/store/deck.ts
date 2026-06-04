@@ -13,47 +13,52 @@ function resolve<T>(update: Updater<T>, prev: T): T {
 
 function emptyDeck() {
   return {
+    baseDeckCards: [] as ReadonlyArray<Card>,
     dealt: { hand: [], remaining: [] } as DealResult,
-    destroyedCardKeys: new Set<string>() as ReadonlySet<string>,
+    destroyedCardIds: new Set<number>() as ReadonlySet<number>,
     addedCards: [] as ReadonlyArray<Card>,
-    cardEnhancementsByKey: new Map<string, Enhancement>() as ReadonlyMap<
-      string,
+    cardEnhancementsById: new Map<number, Enhancement>() as ReadonlyMap<
+      number,
       Enhancement
     >,
-    cardSealsByKey: new Map<string, Seal>() as ReadonlyMap<string, Seal>,
+    cardSealsById: new Map<number, Seal>() as ReadonlyMap<number, Seal>,
   };
 }
 
 export interface DeckState {
+  baseDeckCards: ReadonlyArray<Card>;
   dealt: DealResult;
-  destroyedCardKeys: ReadonlySet<string>;
+  destroyedCardIds: ReadonlySet<number>;
   addedCards: ReadonlyArray<Card>;
-  cardEnhancementsByKey: ReadonlyMap<string, Enhancement>;
-  cardSealsByKey: ReadonlyMap<string, Seal>;
+  cardEnhancementsById: ReadonlyMap<number, Enhancement>;
+  cardSealsById: ReadonlyMap<number, Seal>;
+  setBaseDeckCards: (update: Updater<ReadonlyArray<Card>>) => void;
   setDealt: (update: Updater<DealResult>) => void;
-  setDestroyedCardKeys: (update: Updater<ReadonlySet<string>>) => void;
+  setDestroyedCardIds: (update: Updater<ReadonlySet<number>>) => void;
   setAddedCards: (update: Updater<ReadonlyArray<Card>>) => void;
-  setCardEnhancementsByKey: (
-    update: Updater<ReadonlyMap<string, Enhancement>>,
+  setCardEnhancementsById: (
+    update: Updater<ReadonlyMap<number, Enhancement>>,
   ) => void;
-  setCardSealsByKey: (update: Updater<ReadonlyMap<string, Seal>>) => void;
+  setCardSealsById: (update: Updater<ReadonlyMap<number, Seal>>) => void;
   resetDeck: () => void;
 }
 
 export const createDeckSlice: StateCreator<GameState, [], [], DeckState> = (set) => ({
   ...emptyDeck(),
+  setBaseDeckCards: (update) =>
+    set((state) => ({ baseDeckCards: resolve(update, state.baseDeckCards) })),
   setDealt: (update) => set((state) => ({ dealt: resolve(update, state.dealt) })),
-  setDestroyedCardKeys: (update) =>
+  setDestroyedCardIds: (update) =>
     set((state) => ({
-      destroyedCardKeys: resolve(update, state.destroyedCardKeys),
+      destroyedCardIds: resolve(update, state.destroyedCardIds),
     })),
   setAddedCards: (update) =>
     set((state) => ({ addedCards: resolve(update, state.addedCards) })),
-  setCardEnhancementsByKey: (update) =>
+  setCardEnhancementsById: (update) =>
     set((state) => ({
-      cardEnhancementsByKey: resolve(update, state.cardEnhancementsByKey),
+      cardEnhancementsById: resolve(update, state.cardEnhancementsById),
     })),
-  setCardSealsByKey: (update) =>
-    set((state) => ({ cardSealsByKey: resolve(update, state.cardSealsByKey) })),
+  setCardSealsById: (update) =>
+    set((state) => ({ cardSealsById: resolve(update, state.cardSealsById) })),
   resetDeck: () => set(emptyDeck()),
 });

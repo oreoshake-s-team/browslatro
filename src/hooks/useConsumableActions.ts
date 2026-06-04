@@ -10,7 +10,7 @@ import {
   rollWheelOfFortune,
 } from "../items/tarots";
 import { withEdition } from "../items/jokers";
-import { cardKey, nextCardId } from "../cards/deck";
+import { nextCardId } from "../cards/deck";
 import type { Card } from "../cards/types";
 
 export interface UseConsumableActionsResult {
@@ -40,7 +40,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
     (s) => s.applySealToSelectedPreviewCards,
   );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
-  const setDestroyedCardKeys = useGame((s) => s.setDestroyedCardKeys);
+  const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
 
   function useConsumable(consumableIdx: number): void {
@@ -165,13 +165,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (previewActive) return;
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
-      const destroyedKeys = new Set<string>();
+      const destroyedIds = new Set<number>();
       for (const c of useGame.getState().dealt.hand) {
-        if (selectedIds.has(c.id)) destroyedKeys.add(cardKey(c));
+        if (selectedIds.has(c.id)) destroyedIds.add(c.id);
       }
-      setDestroyedCardKeys((prev) => {
+      setDestroyedCardIds((prev) => {
         const next = new Set(prev);
-        for (const k of destroyedKeys) next.add(k);
+        for (const id of destroyedIds) next.add(id);
         return next;
       });
       setDealt((prev) => ({
@@ -189,16 +189,16 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (previewActive) return;
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
-      const oldKeys = new Set<string>();
+      const oldIds = new Set<number>();
       const replacements: Card[] = [];
       for (const c of useGame.getState().dealt.hand) {
         if (!selectedIds.has(c.id)) continue;
-        oldKeys.add(cardKey(c));
+        oldIds.add(c.id);
         replacements.push({ ...c, rank: nextRankUp(c.rank) });
       }
-      setDestroyedCardKeys((prev) => {
+      setDestroyedCardIds((prev) => {
         const next = new Set(prev);
-        for (const k of oldKeys) next.add(k);
+        for (const id of oldIds) next.add(id);
         return next;
       });
       setAddedCards((prev) => [

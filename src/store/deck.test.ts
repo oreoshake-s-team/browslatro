@@ -10,32 +10,47 @@ describe("deck store", () => {
     expect(useGame.getState().dealt.hand).toHaveLength(0);
   });
 
-  test("starts with no destroyed card keys", () => {
-    expect(useGame.getState().destroyedCardKeys.size).toBe(0);
+  test("starts with no destroyed card ids", () => {
+    expect(useGame.getState().destroyedCardIds.size).toBe(0);
   });
 
-  test("setDestroyedCardKeys accepts an updater function", () => {
-    useGame.getState().setDestroyedCardKeys((prev) => {
+  test("setDestroyedCardIds accepts an updater function", () => {
+    useGame.getState().setDestroyedCardIds((prev) => {
       const next = new Set(prev);
-      next.add("AS");
+      next.add(42);
       return next;
     });
-    expect(useGame.getState().destroyedCardKeys.has("AS")).toBe(true);
+    expect(useGame.getState().destroyedCardIds.has(42)).toBe(true);
   });
 
-  test("setCardEnhancementsByKey accepts an updater function", () => {
-    useGame.getState().setCardEnhancementsByKey((prev) => {
+  test("setCardEnhancementsById accepts an updater function", () => {
+    useGame.getState().setCardEnhancementsById((prev) => {
       const next = new Map(prev);
-      next.set("AS", "gold");
+      next.set(42, "gold");
       return next;
     });
-    expect(useGame.getState().cardEnhancementsByKey.get("AS")).toBe("gold");
+    expect(useGame.getState().cardEnhancementsById.get(42)).toBe("gold");
   });
 
-  test("resetDeck clears added cards", () => {
+  test("setBaseDeckCards replaces the base deck", () => {
+    useGame.getState().setBaseDeckCards([
+      { id: 1, rank: "A", suit: "spades" },
+    ]);
+    expect(useGame.getState().baseDeckCards).toHaveLength(1);
+  });
+
+  test("resetDeck clears destroyed ids", () => {
     useGame.getState().setAddedCards((prev) => [...prev]);
-    useGame.getState().setDestroyedCardKeys(new Set(["AS"]));
+    useGame.getState().setDestroyedCardIds(new Set([1]));
     useGame.getState().resetDeck();
-    expect(useGame.getState().destroyedCardKeys.size).toBe(0);
+    expect(useGame.getState().destroyedCardIds.size).toBe(0);
+  });
+
+  test("setBaseDeckCards replacement is reset by a subsequent setBaseDeckCards", () => {
+    useGame.getState().setBaseDeckCards([
+      { id: 1, rank: "A", suit: "spades" },
+    ]);
+    useGame.getState().setBaseDeckCards([]);
+    expect(useGame.getState().baseDeckCards).toHaveLength(0);
   });
 });

@@ -1,5 +1,4 @@
 import type { Card, Enhancement, Rank, Suit } from "../cards/types";
-import { cardKey } from "../cards/deck";
 import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
 import { getRankChips } from "../scoring/scoring";
@@ -1863,7 +1862,7 @@ export interface OnDiscardStep {
   readonly jokerId: string;
   readonly jokerName: string;
   readonly moneyEarned: number;
-  readonly destroyedCardKey?: string;
+  readonly destroyedCardId?: number;
 }
 
 export interface OnDiscardResult {
@@ -1899,7 +1898,7 @@ export function applyOnDiscardJokers(
           jokerId: joker.id,
           jokerName: joker.name,
           moneyEarned: effect.payout,
-          destroyedCardKey: cardKey(discardedCards[0]),
+          destroyedCardId: discardedCards[0].id,
         });
       }
     }
