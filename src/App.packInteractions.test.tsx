@@ -105,6 +105,7 @@ describe("Selling and using during a pack-pick (#388)", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -262,6 +263,7 @@ describe("Drag-to-deck sell while the shop is open (#388)", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 

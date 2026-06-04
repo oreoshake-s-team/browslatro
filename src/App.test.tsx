@@ -69,8 +69,7 @@ describe("Winning a round resets the deck", () => {
     await user.click(screen.getByText(/^Discard$/));
     flushDiscardAnimation();
     await user.click(screen.getByText(/^Win$/));
-    // Dev Win now opens the post-round shop; skip through it and the
-    // blind-select screen to reach the next-round deal.
+    await screen.findByTestId("shop-money");
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(
@@ -1392,6 +1391,7 @@ describe("Post-round shop integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -1684,6 +1684,7 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -1881,6 +1882,7 @@ describe("Tarot purchase integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -2092,6 +2094,7 @@ describe("Voucher integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -2164,6 +2167,7 @@ describe("Spectral purchase integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -2284,6 +2288,7 @@ describe("Voucher effects integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 
@@ -3008,6 +3013,7 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 

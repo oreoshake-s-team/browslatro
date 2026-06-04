@@ -49,6 +49,7 @@ describe("Celestial pack open + pick integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
+    await screen.findByTestId("shop-money");
     return user;
   }
 

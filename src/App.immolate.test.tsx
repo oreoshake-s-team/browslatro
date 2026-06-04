@@ -116,6 +116,7 @@ async function getImmolateInConsumables(
   shopPickerRngConfig.rng = forceShopLayout(["spectral"]);
   await user.click(screen.getByText(/Add \$10/));
   await user.click(screen.getByText(/^Win$/));
+  await screen.findByTestId("shop-money");
   const buy = document
     .querySelector('[data-offer-kind="spectral"]')
     ?.querySelector("button.shop-offer-buy");

@@ -27,6 +27,10 @@ export function findShopOfferIdxOfKind(kind: ShopOfferKind): number {
   throw new Error(`No shop offer of kind '${kind}' found`);
 }
 
+export async function awaitShopOpen(): Promise<void> {
+  await screen.findByTestId("shop-money");
+}
+
 export function resetHighVisibility(): void {
   if (isHighVisibility()) {
     toggleHighVisibility();

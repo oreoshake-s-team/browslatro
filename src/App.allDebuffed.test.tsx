@@ -105,6 +105,7 @@ async function advanceToTheClubBossBlind(
 ): Promise<void> {
   await dismissBlindSelect(user);
   await user.click(screen.getByText(/Win/));
+  await screen.findByTestId("shop-money");
   await user.click(screen.getByRole("button", { name: /Next Round/ }));
   await dismissBlindSelect(user);
   await user.click(screen.getByText(/Win/));
