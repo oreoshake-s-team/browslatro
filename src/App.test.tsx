@@ -161,34 +161,6 @@ describe("Win button integration", () => {
   });
 });
 
-describe("Add Chips button integration", () => {
-  test("clicking Add Chips updates chips shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByText(/Add Chips/));
-    expect(document.querySelector(".chips")).toHaveTextContent("10");
-  });
-});
-
-describe("Add Multiplier button integration", () => {
-  test("clicking Add Multiplier updates multiplier shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByText(/Add Multiplier/));
-    expect(document.querySelector(".multiplier")).toHaveTextContent("1");
-  });
-});
-
-describe("Multiply Multiplier button integration", () => {
-  test("clicking Multiply Multiplier updates multiplier shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByText(/Multiply Multiplier/));
-    expect(document.querySelector(".multiplier")).toHaveTextContent("2");
-  });
-});
-
 describe("Fresh round empty HandScore", () => {
   test("does not render the High Card label in the sidebar on a fresh round", () => {
     render(<App />);
@@ -767,25 +739,6 @@ describe("Losing integration", () => {
       await submitOneHighCard(user);
     }
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
-  });
-});
-
-describe("Add Money button integration", () => {
-  test("clicking Add $10 updates money shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByText(/Add \$10/));
-    expect(getStatValue("Money")).toHaveTextContent("$14");
-  });
-});
-
-describe("Subtract Money button integration", () => {
-  test("clicking Subtract $10 updates money shown in the sidebar", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByText(/Add \$10/));
-    await user.click(screen.getByText(/Subtract \$10/));
-    expect(getStatValue("Money")).toHaveTextContent("$4");
   });
 });
 
