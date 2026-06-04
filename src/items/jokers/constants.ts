@@ -75,6 +75,9 @@ export const FACELESS_JOKER_FACE_THRESHOLD = 3;
 export const FACELESS_JOKER_PAYOUT = 5;
 export const TRADING_CARD_DISCARD_SIZE = 1;
 export const TRADING_CARD_PAYOUT = 3;
+export const EROSION_MULT_PER_MISSING_CARD = 4;
+export const BLUE_JOKER_CHIPS_PER_REMAINING_CARD = 2;
+export const BASEBALL_CARD_X_MULT_PER_UNCOMMON = 0.5;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

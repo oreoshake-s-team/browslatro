@@ -18,11 +18,14 @@ import {
   CLOUD_9_RANKS,
   CRAFTY_JOKER_CHIPS,
   CRAZY_JOKER_MULT,
+  BASEBALL_CARD_X_MULT_PER_UNCOMMON,
+  BLUE_JOKER_CHIPS_PER_REMAINING_CARD,
   DELAYED_GRATIFICATION_MONEY_PER_DISCARD,
   DEVIOUS_JOKER_CHIPS,
   DRIVERS_LICENSE_ENHANCED_THRESHOLD,
   DRIVERS_LICENSE_X_MULT,
   DROLL_JOKER_MULT,
+  EROSION_MULT_PER_MISSING_CARD,
   EVEN_STEVEN_MULT,
   FACELESS_JOKER_FACE_THRESHOLD,
   FACELESS_JOKER_PAYOUT,
@@ -778,6 +781,45 @@ export function createTradingCardJoker(): Joker {
       kind: "on-first-discard-of-round-money-when-size",
       size: TRADING_CARD_DISCARD_SIZE,
       payout: TRADING_CARD_PAYOUT,
+    },
+  };
+}
+
+export function createErosionJoker(): Joker {
+  return {
+    id: "erosion",
+    rarity: "uncommon",
+    name: "Erosion",
+    description: `+${EROSION_MULT_PER_MISSING_CARD} Mult for each card below your deck's starting size`,
+    effect: {
+      kind: "per-missing-card-mult",
+      amount: EROSION_MULT_PER_MISSING_CARD,
+    },
+  };
+}
+
+export function createBlueJoker(): Joker {
+  return {
+    id: "blue-joker",
+    rarity: "common",
+    name: "Blue Joker",
+    description: `+${BLUE_JOKER_CHIPS_PER_REMAINING_CARD} Chips for each remaining card in your deck`,
+    effect: {
+      kind: "per-remaining-deck-card-chips",
+      amount: BLUE_JOKER_CHIPS_PER_REMAINING_CARD,
+    },
+  };
+}
+
+export function createBaseballCardJoker(): Joker {
+  return {
+    id: "baseball-card",
+    rarity: "rare",
+    name: "Baseball Card",
+    description: `Each other Uncommon Joker gives X${1 + BASEBALL_CARD_X_MULT_PER_UNCOMMON} Mult`,
+    effect: {
+      kind: "x-mult-per-uncommon-joker",
+      amount: BASEBALL_CARD_X_MULT_PER_UNCOMMON,
     },
   };
 }

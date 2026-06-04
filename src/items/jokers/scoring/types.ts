@@ -59,4 +59,6 @@ export interface HandLevelContext {
   readonly remainingHands?: number;
   readonly money?: number;
   readonly fullDeck?: ReadonlyArray<Card>;
+  readonly remainingDeck?: ReadonlyArray<Card>;
+  readonly baseDeckSize?: number;
 }

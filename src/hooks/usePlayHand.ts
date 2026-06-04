@@ -344,6 +344,8 @@ export function usePlayHand({
       money,
       heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
       fullDeck: handLevelFullDeck,
+      remainingDeck: dealt.remaining,
+      baseDeckSize: baseDeckCards.length,
     });
 
     let perCardAdditiveMult = 0;

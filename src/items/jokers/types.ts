@@ -134,7 +134,13 @@ export type JokerEffect =
       readonly kind: "per-rank-in-deck-end-of-round-money";
       readonly ranks: ReadonlyArray<Rank>;
       readonly amount: number;
-    };
+    }
+  | { readonly kind: "per-missing-card-mult"; readonly amount: number }
+  | {
+      readonly kind: "per-remaining-deck-card-chips";
+      readonly amount: number;
+    }
+  | { readonly kind: "x-mult-per-uncommon-joker"; readonly amount: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
