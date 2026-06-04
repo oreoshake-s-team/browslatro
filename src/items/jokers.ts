@@ -65,6 +65,9 @@ export const RESERVED_PARKING_PAYOUT = 1;
 export const TRIBOULET_X_MULT = 2;
 export const TRIBOULET_RANKS: ReadonlyArray<Rank> = ["K", "Q"];
 export const ACROBAT_X_MULT = 3;
+export const ARROWHEAD_CHIPS = 50;
+export const ONYX_AGATE_MULT = 7;
+export const ROUGH_GEM_MONEY = 1;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -182,7 +185,9 @@ export type JokerEffect =
       readonly ranks: ReadonlyArray<Rank>;
       readonly amount: number;
     }
-  | { readonly kind: "x-mult-on-final-hand"; readonly amount: number };
+  | { readonly kind: "x-mult-on-final-hand"; readonly amount: number }
+  | { readonly kind: "per-suit-chips"; readonly suit: Suit; readonly amount: number }
+  | { readonly kind: "per-suit-money"; readonly suit: Suit; readonly amount: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -944,6 +949,36 @@ export function createReservedParkingJoker(): Joker {
   };
 }
 
+export function createArrowheadJoker(): Joker {
+  return {
+    id: "arrowhead",
+    rarity: "uncommon",
+    name: "Arrowhead",
+    description: `+${ARROWHEAD_CHIPS} Chips per scored Spade`,
+    effect: { kind: "per-suit-chips", suit: "spades", amount: ARROWHEAD_CHIPS },
+  };
+}
+
+export function createOnyxAgateJoker(): Joker {
+  return {
+    id: "onyx-agate",
+    rarity: "uncommon",
+    name: "Onyx Agate",
+    description: `+${ONYX_AGATE_MULT} Mult per scored Club`,
+    effect: { kind: "per-suit-mult", suit: "clubs", amount: ONYX_AGATE_MULT },
+  };
+}
+
+export function createRoughGemJoker(): Joker {
+  return {
+    id: "rough-gem",
+    rarity: "uncommon",
+    name: "Rough Gem",
+    description: `+$${ROUGH_GEM_MONEY} per scored Diamond`,
+    effect: { kind: "per-suit-money", suit: "diamonds", amount: ROUGH_GEM_MONEY },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -1035,6 +1070,9 @@ export function createJokerCatalog(): Joker[] {
     createSwashbucklerJoker(),
     createReservedParkingJoker(),
     createAcrobatJoker(),
+    createArrowheadJoker(),
+    createOnyxAgateJoker(),
+    createRoughGemJoker(),
   ];
 }
 
@@ -1280,6 +1318,8 @@ export function applyHandLevelJokers(
       case "per-scored-rank":
       case "per-suit-chance-x-mult":
       case "per-scored-rank-x-mult":
+      case "per-suit-chips":
+      case "per-suit-money":
         break;
       default:
         assertNeverEffect(effect);
@@ -1360,6 +1400,30 @@ export function applyPerCardJokers(
             jokerId: joker.id,
             jokerName: joker.name,
             xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "per-suit-chips": {
+        if (card.suit === effect.suit) {
+          additiveChips += effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveChips: effect.amount,
+          });
+        }
+        break;
+      }
+      case "per-suit-money": {
+        if (card.suit === effect.suit) {
+          moneyEarned += effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.amount,
           });
         }
         break;
