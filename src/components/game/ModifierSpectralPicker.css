@@ -1,43 +1,70 @@
 .modifier-spectral-picker {
   grid-column: 1 / -1;
-  padding: 0.4rem 0.8rem;
+  padding: 0.4rem 0.7rem 0.7rem;
   border: 1px dashed #adb5bd;
-  border-radius: 6px;
-  background-color: rgba(255, 255, 255, 0.4);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.55);
 }
 
 .modifier-spectral-picker-summary {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #495057;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   cursor: pointer;
   padding: 0.2rem 0;
+  user-select: none;
+}
+
+.modifier-spectral-picker-summary:hover {
+  color: #5f3dc4;
 }
 
 .modifier-spectral-picker[open] .modifier-spectral-picker-grid {
-  margin-top: 0.6rem;
+  margin-top: 0.5rem;
 }
 
 .modifier-spectral-picker-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .add-spectral-button {
-  padding: 0.5rem 0.8rem;
-  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.65rem;
+  min-height: 2.2rem;
+  font-size: 0.85rem;
+  font-weight: 600;
   text-align: left;
-  background-color: #f1f3f5;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
+  line-height: 1.2;
+  background-color: #f3f0ff;
+  color: #5f3dc4;
+  border: 1px solid #d0bfff;
+  border-radius: 6px;
   cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.05s ease;
 }
 
 .add-spectral-button:hover:not(:disabled) {
-  background-color: #e9ecef;
+  background-color: #e5dbff;
+  border-color: #b197fc;
+}
+
+.add-spectral-button:focus-visible {
+  outline: 2px solid #5f3dc4;
+  outline-offset: 2px;
+}
+
+.add-spectral-button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 .add-spectral-button:disabled {

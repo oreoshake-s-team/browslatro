@@ -23,8 +23,8 @@ describe("Game layout — landscape mobile regression (issue #50)", () => {
     expect(gameRuleBody()).toMatch(/overflow-y\s*:\s*auto/);
   });
 
-  test(".game uses safe centering so the top of the column is never clipped", () => {
-    expect(gameRuleBody()).toMatch(/justify-content\s*:\s*safe\s+center/);
+  test(".game anchors content to the top so the column is never clipped", () => {
+    expect(gameRuleBody()).toMatch(/justify-content\s*:\s*flex-start/);
   });
 
   test(".game sets min-height: 0 so the flex item can shrink below its content size", () => {

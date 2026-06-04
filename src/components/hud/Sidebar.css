@@ -1,8 +1,8 @@
 .sidebar {
   width: 300px;
   flex-shrink: 0;
-  padding: 2rem;
-  padding-bottom: 3rem;
+  padding: 1.25rem;
+  padding-bottom: 1.25rem;
   background-color: #f8f9fa;
   border-right: 1px solid #dee2e6;
   overflow-y: auto;
@@ -18,12 +18,12 @@
 }
 
 .sidebar > * {
-  padding-bottom: 2.5rem;
+  padding-bottom: 1.25rem;
   border-bottom: 1px solid #dee2e6;
 }
 
 .sidebar > * + * {
-  padding-top: 2rem;
+  padding-top: 1rem;
 }
 
 .sidebar > *:last-child {
