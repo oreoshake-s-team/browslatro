@@ -1,4 +1,3 @@
-import type { Card } from "../cards/types";
 import {
   ABSTRACT_JOKER_MULT_PER_JOKER,
   ACROBAT_X_MULT,
@@ -71,7 +70,6 @@ import {
   ZANY_JOKER_MULT,
 } from "./jokers/constants";
 import type { Joker } from "./jokers/types";
-import { isFaceCard } from "./jokers/scoring/utils";
 
 export * from "./jokers/constants";
 export type {
@@ -113,6 +111,18 @@ export {
   applyJokersToScoring,
   computeFinalScoreWithJokers,
 } from "./jokers/scoring/finalScore";
+export type {
+  EndOfRoundContext,
+  EndOfRoundResult,
+  EndOfRoundStep,
+} from "./jokers/scoring/endOfRound";
+export { applyEndOfRoundJokers } from "./jokers/scoring/endOfRound";
+export type {
+  OnDiscardContext,
+  OnDiscardResult,
+  OnDiscardStep,
+} from "./jokers/scoring/onDiscard";
+export { applyOnDiscardJokers } from "./jokers/scoring/onDiscard";
 export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
 
 export function createPlusFourMultJoker(): Joker {
@@ -933,123 +943,4 @@ export function createJokerCatalog(): Joker[] {
 
 
 
-export interface EndOfRoundContext {
-  readonly remainingDiscards?: number;
-  readonly discardsUsedThisRound?: number;
-  readonly fullDeck?: ReadonlyArray<Card>;
-}
-
-export interface EndOfRoundStep {
-  readonly jokerId: string;
-  readonly jokerName: string;
-  readonly moneyEarned: number;
-}
-
-export interface EndOfRoundResult {
-  readonly moneyEarned: number;
-  readonly steps: ReadonlyArray<EndOfRoundStep>;
-}
-
-export function applyEndOfRoundJokers(
-  jokers: ReadonlyArray<Joker>,
-  context: EndOfRoundContext = {},
-): EndOfRoundResult {
-  let moneyEarned = 0;
-  const steps: EndOfRoundStep[] = [];
-  for (const joker of jokers) {
-    const effect = joker.effect;
-    if (effect.kind === "end-of-round-money") {
-      if (effect.amount > 0) {
-        moneyEarned += effect.amount;
-        steps.push({
-          jokerId: joker.id,
-          jokerName: joker.name,
-          moneyEarned: effect.amount,
-        });
-      }
-    } else if (effect.kind === "per-remaining-discard-end-of-round-money") {
-      const used = context.discardsUsedThisRound ?? 0;
-      if (used === 0) {
-        const discards = Math.max(0, context.remainingDiscards ?? 0);
-        const earned = effect.amount * discards;
-        if (earned > 0) {
-          moneyEarned += earned;
-          steps.push({
-            jokerId: joker.id,
-            jokerName: joker.name,
-            moneyEarned: earned,
-          });
-        }
-      }
-    } else if (effect.kind === "per-rank-in-deck-end-of-round-money") {
-      const deck = context.fullDeck ?? [];
-      let matches = 0;
-      for (const c of deck) {
-        if (effect.ranks.includes(c.rank)) matches += 1;
-      }
-      const earned = effect.amount * matches;
-      if (earned > 0) {
-        moneyEarned += earned;
-        steps.push({
-          jokerId: joker.id,
-          jokerName: joker.name,
-          moneyEarned: earned,
-        });
-      }
-    }
-  }
-  return { moneyEarned, steps };
-}
-
-export interface OnDiscardContext {
-  readonly discardsUsedThisRound?: number;
-}
-
-export interface OnDiscardStep {
-  readonly jokerId: string;
-  readonly jokerName: string;
-  readonly moneyEarned: number;
-  readonly destroyedCardId?: number;
-}
-
-export interface OnDiscardResult {
-  readonly moneyEarned: number;
-  readonly steps: ReadonlyArray<OnDiscardStep>;
-}
-
-export function applyOnDiscardJokers(
-  jokers: ReadonlyArray<Joker>,
-  discardedCards: ReadonlyArray<Card>,
-  context: OnDiscardContext = {},
-): OnDiscardResult {
-  let moneyEarned = 0;
-  const steps: OnDiscardStep[] = [];
-  for (const joker of jokers) {
-    const effect = joker.effect;
-    if (effect.kind === "on-discard-money-when-face-count-at-least") {
-      let faceCount = 0;
-      for (const c of discardedCards) if (isFaceCard(c)) faceCount += 1;
-      if (faceCount >= effect.threshold) {
-        moneyEarned += effect.payout;
-        steps.push({
-          jokerId: joker.id,
-          jokerName: joker.name,
-          moneyEarned: effect.payout,
-        });
-      }
-    } else if (effect.kind === "on-first-discard-of-round-money-when-size") {
-      const isFirst = (context.discardsUsedThisRound ?? 0) === 1;
-      if (isFirst && discardedCards.length === effect.size) {
-        moneyEarned += effect.payout;
-        steps.push({
-          jokerId: joker.id,
-          jokerName: joker.name,
-          moneyEarned: effect.payout,
-          destroyedCardId: discardedCards[0].id,
-        });
-      }
-    }
-  }
-  return { moneyEarned, steps };
-}
 
