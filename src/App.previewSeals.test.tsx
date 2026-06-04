@@ -74,7 +74,7 @@ async function ownTalismanWithPreview(): Promise<
   const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
   render(<App />);
   await user.click(screen.getByText(/Add \$10/));
-  await user.click(screen.getByText(/^🏆 Win$/));
+  await user.click(screen.getByText(/^Win$/));
   const packOffer = document.querySelector('[data-offer-kind="pack"]');
   const open = packOffer?.querySelector(
     "button.shop-offer-buy",

@@ -47,7 +47,7 @@ describe("ModifierPanel", () => {
     render(<ModifierPanel />);
     await openModifiers(user);
     const before = useGame.getState().round;
-    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^Win$/));
     expect(useGame.getState().round).toBe(before + 1);
   });
 

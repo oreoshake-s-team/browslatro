@@ -43,7 +43,7 @@ async function buyWheelOfFortuneConsumable(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
   shopPickerRngConfig.rng = forceShopLayout(["tarot", "joker"]);
-  await user.click(screen.getByText(/^🏆 Win$/));
+  await user.click(screen.getByText(/^Win$/));
   const idx = findShopOfferIdxOfKind("tarot");
   const buy = screen
     .getByTestId(`shop-offer-${idx}`)
@@ -89,7 +89,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     useGame.getState().setPendingForcedPacks((prev) => [...prev, "arcana"]);
-    await user.click(screen.getByText(/^🏆 Win$/));
+    await user.click(screen.getByText(/^Win$/));
     const arcanaOffer = document.querySelector('[data-pack-pool="arcana"]');
     if (!arcanaOffer) throw new Error("no arcana pack offer");
     const open = arcanaOffer.querySelector("button.shop-offer-buy");

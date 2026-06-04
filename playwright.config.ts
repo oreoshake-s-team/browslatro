@@ -16,10 +16,12 @@ export default defineConfig({
   reporter: process.env.CI
     ? [["github"], ["list"], ["html", { open: "never", outputFolder: "playwright-report" }]]
     : "list",
+  expect: { timeout: 5_000 },
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
+    actionTimeout: 5_000,
   },
   projects: [
     {

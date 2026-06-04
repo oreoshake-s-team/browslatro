@@ -257,7 +257,7 @@ describe("Purple Seal — discard creates a Tarot (#208)", () => {
     const beforeCount = consumableCount();
     const cards = getHandCardButtons();
     await user.click(cards[0]);
-    await user.click(screen.getByText(/🗑️ Discard/));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
     flushAllTimers();
     expect(consumableCount()).toBe(beforeCount + 1);
   });
@@ -278,7 +278,7 @@ describe("Purple Seal — discard creates a Tarot (#208)", () => {
     const beforeCount = consumableCount();
     const cards = getHandCardButtons();
     await user.click(cards[0]);
-    await user.click(screen.getByText(/🗑️ Discard/));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
     flushAllTimers();
     expect(consumableCount()).toBe(beforeCount);
   });

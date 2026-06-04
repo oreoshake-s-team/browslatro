@@ -36,45 +36,45 @@ export default function ModifierPanel() {
       <summary className="modifier-disclosure">Apply modifiers</summary>
       <div className="modifier-grid">
         <button className="add-chips-button" onClick={() => addChips(10)}>
-          🪙 Add Chips
+          <span aria-hidden="true">🪙 </span>Add Chips
         </button>
         <button
           className="add-multiplier-button"
           onClick={() => addMultiplier(1)}
         >
-          ➕ Add Multiplier
+          <span aria-hidden="true">➕ </span>Add Multiplier
         </button>
         <button
           className="multiply-multiplier-button"
           onClick={() => multiplyMultiplier(2)}
         >
-          ✖️ Multiply Multiplier
+          <span aria-hidden="true">✖️ </span>Multiply Multiplier
         </button>
         <button className="win-button" onClick={() => handleWin()}>
-          🏆 Win
+          <span aria-hidden="true">🏆 </span>Win
         </button>
         <button className="add-money-button" onClick={() => adjustMoney(10)}>
-          💵 Add $10
+          <span aria-hidden="true">💵 </span>Add $10
         </button>
         <button
           className="subtract-money-button"
           onClick={() => adjustMoney(-10)}
         >
-          💸 Subtract $10
+          <span aria-hidden="true">💸 </span>Subtract $10
         </button>
         <button
           type="button"
           className="shrink-hand-button"
           onClick={() => setHandSizeModifier((prev) => prev - 1)}
         >
-          🤏 Hand −1
+          <span aria-hidden="true">🤏 </span>Hand −1
         </button>
         <button
           type="button"
           className="grow-hand-button"
           onClick={() => setHandSizeModifier((prev) => prev + 1)}
         >
-          ✋ Hand +1
+          <span aria-hidden="true">✋ </span>Hand +1
         </button>
         <button
           type="button"
@@ -82,7 +82,7 @@ export default function ModifierPanel() {
           onClick={() => setForceProbabilities((p) => !p)}
           aria-pressed={forceProbabilities}
         >
-          🎲 Force Probabilities {forceProbabilities ? "Off" : "On"}
+          <span aria-hidden="true">🎲 </span>Force Probabilities {forceProbabilities ? "Off" : "On"}
         </button>
         <ModifierTarotPicker />
         <ModifierPlanetPicker />

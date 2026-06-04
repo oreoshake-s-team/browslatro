@@ -12,7 +12,7 @@ test.beforeEach(async ({ context }) => {
 });
 
 const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^🃏 Submit Hand$/;
+const SUBMIT_BUTTON = /^Submit Hand$/;
 const CONTINUE_BUTTON = /Continue/;
 const NEXT_ROUND_BUTTON = /Next Round/;
 const SHOP_HEADING = /Shop/;
