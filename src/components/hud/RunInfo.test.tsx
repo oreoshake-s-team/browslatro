@@ -33,6 +33,7 @@ describe("RunInfo trigger", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
@@ -40,6 +41,7 @@ describe("RunInfo trigger", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByRole("dialog")).toHaveAccessibleName("Run Information");
   });
 });
@@ -49,6 +51,7 @@ describe("RunInfo dialog content", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={counts} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
   }
 
   test("renders a row for every HANDS entry", async () => {
@@ -96,6 +99,7 @@ describe("RunInfo with upgraded handStats", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByTestId("run-info-stats-High Card")).toHaveTextContent(
       "15 × 2",
     );
@@ -109,6 +113,7 @@ describe("RunInfo with upgraded handStats", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent(
       "2",
     );
@@ -122,6 +127,7 @@ describe("RunInfo with upgraded handStats", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByTestId("run-info-level-Pair")).toHaveTextContent("1");
   });
 
@@ -133,6 +139,7 @@ describe("RunInfo with upgraded handStats", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={upgraded} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByTestId("run-info-stats-Pair")).toHaveTextContent(
       `${defaultStats.Pair.chips} × ${defaultStats.Pair.multiplier}`,
     );
@@ -144,6 +151,7 @@ describe("RunInfo dismissal", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -152,6 +160,7 @@ describe("RunInfo dismissal", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     await user.click(screen.getByRole("button", { name: "Close" }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -160,6 +169,7 @@ describe("RunInfo dismissal", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     await user.click(screen.getByRole("dialog"));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
@@ -168,6 +178,7 @@ describe("RunInfo dismissal", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     await user.click(screen.getByRole("heading", { name: "Run Information" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
@@ -176,6 +187,7 @@ describe("RunInfo dismissal", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     fireEvent.keyDown(window, { key: "a" });
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
@@ -203,6 +215,7 @@ describe("RunInfo tab control", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     return user;
   }
 
@@ -301,9 +314,11 @@ describe("RunInfo tab control", () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     await user.click(screen.getByRole("tab", { name: "Vouchers" }));
     await user.click(screen.getByRole("button", { name: "Close" }));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     expect(screen.getByRole("tab", { name: "Hands" })).toHaveAttribute(
       "aria-selected",
       "true",
@@ -336,6 +351,7 @@ describe("RunInfo vouchers panel", () => {
       />,
     );
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
     await user.click(screen.getByRole("tab", { name: "Vouchers" }));
   }
 

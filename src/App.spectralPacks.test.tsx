@@ -112,6 +112,7 @@ describe("inline spectral pack-picks (closes #367)", () => {
     const user = await openSpectralPack("black-hole");
     await user.click(screen.getByTestId("pack-open-pick-0"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     const levels = HANDS.map((h) =>
       Number(
         screen.getByTestId(`run-info-level-${h.label}`).textContent ?? "1",
