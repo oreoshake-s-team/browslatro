@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { GameState } from "./game";
-import { emptyHandCounts, type HandPlayCounts } from "../components/hud/RunInfo";
+import { emptyHandCounts, type HandPlayCounts } from "../components/hud/handPlayCounts";
 import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
 
 type Updater<T> = T | ((prev: T) => T);

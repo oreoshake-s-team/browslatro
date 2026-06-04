@@ -1630,6 +1630,7 @@ describe("Run information modal integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
       "1",
     );
@@ -1640,6 +1641,7 @@ describe("Run information modal integration", () => {
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
       "0",
     );
@@ -1655,6 +1657,7 @@ describe("Run information modal integration", () => {
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(screen.getByTestId("run-info-count-High Card")).toHaveTextContent(
       "0",
     );
@@ -1773,6 +1776,7 @@ describe("Planet purchase integration", () => {
   test("buying the planet alone does not change RunInfo stats", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     const before = readRunInfoStats();
     await user.click(screen.getByRole("button", { name: "Close" }));
     const planetBuy = screen
@@ -1783,12 +1787,14 @@ describe("Planet purchase integration", () => {
     }
     await user.click(planetBuy);
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(readRunInfoStats()).toEqual(before);
   });
 
   test("using the planet consumable upgrades exactly one row's chips × mult in RunInfo", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     const before = readRunInfoStats();
     await user.click(screen.getByRole("button", { name: "Close" }));
     const planetBuy = screen
@@ -1801,6 +1807,7 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     const after = readRunInfoStats();
     const changedRows = Object.keys(after).filter(
       (key) => after[key] !== before[key],
@@ -1825,6 +1832,7 @@ describe("Planet purchase integration", () => {
   test("starting a new game restores RunInfo stats to baseline", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     const baseline = readRunInfoStats();
     await user.click(screen.getByRole("button", { name: "Close" }));
     const planetBuy = screen
@@ -1839,6 +1847,7 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(readRunInfoStats()).toEqual(baseline);
   });
 
@@ -2239,6 +2248,7 @@ describe("Spectral purchase integration", () => {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("2");
   });
 
@@ -3733,6 +3743,7 @@ describe("Orbital tag", () => {
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("4");
   });
 
@@ -3753,6 +3764,7 @@ describe("Orbital tag", () => {
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog", { name: "Run Information" });
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("1");
   });
 });
