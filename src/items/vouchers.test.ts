@@ -42,6 +42,16 @@ describe("vouchers catalog", () => {
   test("includes at least one voucher gated by a prerequisite", () => {
     expect(createVoucherCatalog().some((v) => Boolean(v.requires))).toBe(true);
   });
+
+  test("includes the Hieroglyph voucher with no prerequisite", () => {
+    const voucher = createVoucherCatalog().find((v) => v.id === "hieroglyph");
+    expect(voucher?.requires).toBeUndefined();
+  });
+
+  test("Petroglyph requires Hieroglyph", () => {
+    const voucher = createVoucherCatalog().find((v) => v.id === "petroglyph");
+    expect(voucher?.requires).toBe("hieroglyph");
+  });
 });
 
 describe("pickVoucherForAnte", () => {
@@ -283,6 +293,16 @@ describe("extraStartingHands", () => {
       extraStartingHands(new Set<VoucherId>(["grabber", "nacho-tong"])),
     ).toBe(2);
   });
+
+  test("Hieroglyph alone subtracts 1 hand per round", () => {
+    expect(extraStartingHands(new Set<VoucherId>(["hieroglyph"]))).toBe(-1);
+  });
+
+  test("Hieroglyph offsets Grabber so the net delta is 0", () => {
+    expect(
+      extraStartingHands(new Set<VoucherId>(["grabber", "hieroglyph"])),
+    ).toBe(0);
+  });
 });
 
 describe("extraStartingDiscards", () => {
@@ -294,6 +314,16 @@ describe("extraStartingDiscards", () => {
 
   test("returns 0 without Wasteful", () => {
     expect(extraStartingDiscards(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("Petroglyph alone subtracts 1 discard per round", () => {
+    expect(extraStartingDiscards(new Set<VoucherId>(["petroglyph"]))).toBe(-1);
+  });
+
+  test("Petroglyph offsets Wasteful so the net delta is 0", () => {
+    expect(
+      extraStartingDiscards(new Set<VoucherId>(["wasteful", "petroglyph"])),
+    ).toBe(0);
   });
 });
 

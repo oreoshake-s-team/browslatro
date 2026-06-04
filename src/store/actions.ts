@@ -176,6 +176,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       extraStartingDiscards(s.ownedVoucherIds);
     if (handGain > 0) s.setRemainingHands((prev) => prev + handGain);
     if (discardGain > 0) s.setRemainingDiscards((prev) => prev + discardGain);
+    if (voucher.id === "hieroglyph" || voucher.id === "petroglyph") {
+      s.setAnte((prev) => Math.max(1, prev - 1));
+    }
     s.setOwnedVoucherIds(nextOwnedVoucherIds);
     s.setSoldVoucherIds((prev) => {
       const next = new Set(prev);

@@ -155,19 +155,23 @@ export function useRoundLifecycle({
       setPendingNextRoundHandSize(0);
       setPendingTags((prev) => pruneTagsByCategory(prev, "next-round"));
     }
-    const startingHands =
+    const startingHands = Math.max(
+      1,
       (isBossRound
         ? bossStartingHands(effectiveBoss)
         : DEFAULT_STARTING_HANDS) +
-      extraStartingHands(ownedVoucherIds) +
-      deckStartingHandsDelta(selectedDeck);
-    const startingDiscards =
+        extraStartingHands(ownedVoucherIds) +
+        deckStartingHandsDelta(selectedDeck),
+    );
+    const startingDiscards = Math.max(
+      0,
       (isBossRound
         ? bossStartingDiscards(effectiveBoss)
         : DEFAULT_STARTING_DISCARDS) +
-      extraStartingDiscards(ownedVoucherIds) +
-      extraStartingDiscardsFromJokers(equippedJokers) +
-      deckStartingDiscardsDelta(selectedDeck);
+        extraStartingDiscards(ownedVoucherIds) +
+        extraStartingDiscardsFromJokers(equippedJokers) +
+        deckStartingDiscardsDelta(selectedDeck),
+    );
     const handSize = isBossRound
       ? bossHandSize(effectiveBoss, baseHandSize)
       : baseHandSize;
