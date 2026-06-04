@@ -18,7 +18,7 @@ Browlatro is an educational journey meant to help the author brush up on their f
 - Only use strict typescript. No use of JS or "any" types.
 - Prioritize accessibility and i18n.
 - When developing new branches, work in worktrees.
-- Always use ISSUE_TEMPLATE.md when creating issues.
+- Always use the issue template at `.github/ISSUE_TEMPLATE/issue.yml` when creating issues.
 - Use yarn for all package management and script execution (e.g. `yarn install`, `yarn test`, `yarn build`). Do not use npm.
 
 # Testing
