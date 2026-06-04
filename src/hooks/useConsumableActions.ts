@@ -39,6 +39,9 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applySealToSelectedPreviewCards = useGame(
     (s) => s.applySealToSelectedPreviewCards,
   );
+  const applySuitToSelectedPreviewCards = useGame(
+    (s) => s.applySuitToSelectedPreviewCards,
+  );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
@@ -188,6 +191,49 @@ export function useConsumableActions(): UseConsumableActionsResult {
       });
       setDealt((prev) => ({
         hand: prev.hand.filter((c) => !selectedIds.has(c.id)),
+        remaining: prev.remaining,
+      }));
+      setSelectedIds(new Set());
+      setSelectedHand(null);
+      setChips(0);
+      setMultiplier(0);
+      consume();
+      return;
+    }
+    if (effect.kind === "convert-suit") {
+      if (previewActive) {
+        if (
+          packPreviewSelectedIds.size === 0 ||
+          packPreviewSelectedIds.size > effect.maxTargets
+        ) {
+          return;
+        }
+        play("pop");
+        applySuitToSelectedPreviewCards(effect.suit);
+        consume();
+        return;
+      }
+      if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
+      play("pop");
+      const oldIds = new Set<number>();
+      const replacements: Card[] = [];
+      for (const c of useGame.getState().dealt.hand) {
+        if (!selectedIds.has(c.id)) continue;
+        oldIds.add(c.id);
+        replacements.push({ ...c, suit: effect.suit });
+      }
+      setDestroyedCardIds((prev) => {
+        const next = new Set(prev);
+        for (const id of oldIds) next.add(id);
+        return next;
+      });
+      setAddedCards((prev) => [
+        ...prev,
+        ...replacements.map((r) => ({ ...r, id: nextCardId() })),
+      ]);
+      const replacementById = new Map(replacements.map((r) => [r.id, r]));
+      setDealt((prev) => ({
+        hand: prev.hand.map((c) => replacementById.get(c.id) ?? c),
         remaining: prev.remaining,
       }));
       setSelectedIds(new Set());

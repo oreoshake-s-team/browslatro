@@ -33,8 +33,8 @@ describe("HERMIT_MONEY_CAP", () => {
 });
 
 describe("createTarotCatalog", () => {
-  test("contains thirteen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength)", () => {
-    expect(createTarotCatalog()).toHaveLength(13);
+  test("contains seventeen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Star + Moon + Sun + World)", () => {
+    expect(createTarotCatalog()).toHaveLength(17);
   });
 
   test("has unique ids", () => {
@@ -324,5 +324,63 @@ describe("rollWheelOfFortune", () => {
     } finally {
       chanceOverrideConfig.force100 = false;
     }
+  });
+});
+
+describe("suit-conversion tarots", () => {
+  test("The Star converts to diamonds", () => {
+    expect(tarotById("the-star").effect).toEqual({
+      kind: "convert-suit",
+      suit: "diamonds",
+      maxTargets: 3,
+    });
+  });
+
+  test("The Moon converts to clubs", () => {
+    expect(tarotById("the-moon").effect).toEqual({
+      kind: "convert-suit",
+      suit: "clubs",
+      maxTargets: 3,
+    });
+  });
+
+  test("The Sun converts to hearts", () => {
+    expect(tarotById("the-sun").effect).toEqual({
+      kind: "convert-suit",
+      suit: "hearts",
+      maxTargets: 3,
+    });
+  });
+
+  test("The World converts to spades", () => {
+    expect(tarotById("the-world").effect).toEqual({
+      kind: "convert-suit",
+      suit: "spades",
+      maxTargets: 3,
+    });
+  });
+
+  test("The Star description names diamonds and up to 3 cards", () => {
+    expect(tarotById("the-star").description).toBe(
+      "Convert up to 3 cards in hand to ♦ Diamonds",
+    );
+  });
+
+  test("The Moon description names clubs", () => {
+    expect(tarotById("the-moon").description).toBe(
+      "Convert up to 3 cards in hand to ♣ Clubs",
+    );
+  });
+
+  test("The Sun description names hearts", () => {
+    expect(tarotById("the-sun").description).toBe(
+      "Convert up to 3 cards in hand to ♥ Hearts",
+    );
+  });
+
+  test("The World description names spades", () => {
+    expect(tarotById("the-world").description).toBe(
+      "Convert up to 3 cards in hand to ♠ Spades",
+    );
   });
 });

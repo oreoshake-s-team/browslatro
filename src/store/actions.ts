@@ -71,7 +71,7 @@ import {
 import { calculateInterest } from "../scoring/payout";
 import { BlindValues } from "../constants";
 import { hasStakeModifier } from "../items/stakes";
-import type { Blind, Card, Enhancement, Hand, Seal } from "../cards/types";
+import type { Blind, Card, Enhancement, Hand, Seal, Suit } from "../cards/types";
 import {
   rollAnteSkipOffers,
   tagOfferRngConfig,
@@ -103,6 +103,7 @@ export interface ActionsState {
   applySpectralEffect: (effect: SpectralEffect) => void;
   applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
   applySealToSelectedPreviewCards: (seal: Seal) => void;
+  applySuitToSelectedPreviewCards: (suit: Suit) => void;
   duplicateSelectedPreviewCards: (copies: number) => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
@@ -576,6 +577,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setPackPreviewHand((prev) =>
       prev.map((c) =>
         s.packPreviewSelectedIds.has(c.id) ? { ...c, enhancement } : c,
+      ),
+    );
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  applySuitToSelectedPreviewCards: (suit) => {
+    const s = get();
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        s.packPreviewSelectedIds.has(c.id) ? { ...c, suit } : c,
       ),
     );
     s.setPackPreviewSelectedIds(new Set());

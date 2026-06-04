@@ -55,6 +55,9 @@ export function consumableUseBlock(
       if (previewMode) return "Cannot modify card ranks while opening a pack";
       return checkSelection(selectedCount, effect.maxTargets);
     }
+    if (effect.kind === "convert-suit") {
+      return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
+    }
     return null;
   }
   const effect = c.card.effect;
