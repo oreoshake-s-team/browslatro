@@ -40,14 +40,6 @@ export interface BossBlind {
 
 const BOSS_SPECS: ReadonlyArray<BossBlind> = [
   {
-    id: "boss-default",
-    name: "Boss Blind",
-    description: "A standard boss blind. Score at least the required chips.",
-    scoreMultiplier: 2,
-    anteMin: 1,
-    effect: { kind: "none" },
-  },
-  {
     id: "the-wall",
     name: "The Wall",
     description: "Extra large blind requirement.",
