@@ -30,6 +30,7 @@ import {
   resolveTagEffect,
   rollAnteSkipOffers,
   tagOfferRngConfig,
+  type AnteSkipOffer,
   type TagId,
 } from "../items/tags";
 import {
@@ -38,7 +39,10 @@ import {
 } from "../items/decks";
 
 export interface UseRoundLifecycleParams {
-  readonly applyGainedTag: (tagId: TagId, nextStats: RunStats) => void;
+  readonly applyGainedTag: (
+    offer: AnteSkipOffer | TagId,
+    nextStats: RunStats,
+  ) => void;
   readonly resetScoring: () => void;
   readonly resetDiscardPipeline: () => void;
 }
@@ -232,13 +236,13 @@ export function useRoundLifecycle({
   function skipBlind(): void {
     if (blind === 3) return;
     const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
-    const effect = resolveTagEffect(offered);
+    const effect = resolveTagEffect(offered.id);
     const nextStats = recordBlindSkipped(runStats);
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);
     setRunStats(nextStats);
     if (effect.category === "duplicate-next") {
-      setPendingTags((prev) => [...prev, offered]);
+      setPendingTags((prev) => [...prev, offered.id]);
       setPendingDouble(true);
       return;
     }

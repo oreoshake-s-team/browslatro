@@ -1,5 +1,7 @@
 import type { ImmediateAction } from "../run/immediateActions";
 import type { NextShopModifier } from "../run/nextShopMods";
+import type { HandLabel } from "../scoring/handEvaluator";
+import { createPlanetCatalog, type PlanetCard } from "./planets";
 
 export type TagId =
   | "investment"
@@ -288,9 +290,14 @@ export function pruneTagsByCategory(
   return next.length === ids.length ? ids : next;
 }
 
+export interface AnteSkipOffer {
+  readonly id: TagId;
+  readonly orbitalHand?: HandLabel;
+}
+
 export interface AnteSkipOffers {
-  readonly small: TagId;
-  readonly big: TagId;
+  readonly small: AnteSkipOffer;
+  readonly big: AnteSkipOffer;
 }
 
 export const tagOfferRngConfig: { rng: () => number } = { rng: Math.random };
@@ -301,6 +308,44 @@ export function rollSkipTag(rng: () => number = Math.random): TagId {
   return ids[index];
 }
 
-export function rollAnteSkipOffers(rng: () => number = Math.random): AnteSkipOffers {
-  return { small: rollSkipTag(rng), big: rollSkipTag(rng) };
+function rollOrbitalHand(
+  rng: () => number,
+  planetCatalog: ReadonlyArray<PlanetCard>,
+): HandLabel {
+  const planet =
+    planetCatalog[Math.min(planetCatalog.length - 1, Math.floor(rng() * planetCatalog.length))];
+  return planet.hands[0];
+}
+
+export function rollSkipOffer(
+  rng: () => number = Math.random,
+  planetCatalog: ReadonlyArray<PlanetCard> = createPlanetCatalog(),
+): AnteSkipOffer {
+  const id = rollSkipTag(rng);
+  if (id !== "orbital") return { id };
+  return { id, orbitalHand: rollOrbitalHand(rng, planetCatalog) };
+}
+
+export function rollAnteSkipOffers(
+  rng: () => number = Math.random,
+  planetCatalog: ReadonlyArray<PlanetCard> = createPlanetCatalog(),
+): AnteSkipOffers {
+  return {
+    small: rollSkipOffer(rng, planetCatalog),
+    big: rollSkipOffer(rng, planetCatalog),
+  };
+}
+
+export function describeSkipOffer(offer: AnteSkipOffer): {
+  readonly name: string;
+  readonly description: string;
+} {
+  const spec = getTagSpec(offer.id);
+  if (offer.id === "orbital" && offer.orbitalHand) {
+    return {
+      name: spec.name,
+      description: `Upgrade ${offer.orbitalHand} by 3 levels.`,
+    };
+  }
+  return { name: spec.name, description: spec.description };
 }

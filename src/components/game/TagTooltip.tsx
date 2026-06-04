@@ -1,10 +1,14 @@
 import { createPortal } from "react-dom";
 import "./TagTooltip.css";
-import type { TagSpec } from "../../items/tags";
+
+export interface TagTooltipSpec {
+  readonly name: string;
+  readonly description: string;
+}
 
 interface TagTooltipProps {
   id: string;
-  spec: TagSpec;
+  spec: TagTooltipSpec;
   anchorRect: DOMRect;
 }
 

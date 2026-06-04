@@ -179,21 +179,21 @@ describe("BlindSelectScreen", () => {
   });
 
   test("skip-reward preview renders on Small Blind from the small offer", () => {
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toBeInTheDocument();
   });
 
   test("skip-reward preview renders on Big Blind from the big offer", () => {
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-2"),
     ).toBeInTheDocument();
   });
 
   test("skip-reward preview does NOT render on Boss Blind even when offers are provided", () => {
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     expect(
       screen.queryByTestId("blind-select-row-skip-reward-3"),
     ).not.toBeInTheDocument();
@@ -207,21 +207,21 @@ describe("BlindSelectScreen", () => {
   });
 
   test("a blind without its own offer shows no skip reward (negative)", () => {
-    renderScreen({ skipRewards: { small: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" } } });
     expect(
       screen.queryByTestId("blind-select-row-skip-reward-2"),
     ).not.toBeInTheDocument();
   });
 
   test("the blind with an offer still shows its skip reward when the other is absent", () => {
-    renderScreen({ skipRewards: { small: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" } } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toBeInTheDocument();
   });
 
   test("skip-reward preview names the granted tag", () => {
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).toHaveTextContent("Investment Tag");
@@ -229,14 +229,14 @@ describe("BlindSelectScreen", () => {
 
   test("skip-reward preview shows a tooltip with the tag's effect on hover", async () => {
     const user = userEvent.setup();
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     await user.hover(screen.getByTestId("blind-select-row-skip-reward-1"));
     expect(screen.getByRole("tooltip")).toHaveTextContent("$25");
   });
 
   test("skip-reward preview hides the tooltip when the pointer leaves", async () => {
     const user = userEvent.setup();
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     const target = screen.getByTestId("blind-select-row-skip-reward-1");
     await user.hover(target);
     await user.unhover(target);
@@ -244,7 +244,7 @@ describe("BlindSelectScreen", () => {
   });
 
   test("skip-reward preview is keyboard-focusable for the tooltip", () => {
-    renderScreen({ skipRewards: { small: "investment", big: "investment" } });
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     const target = screen.getByTestId("blind-select-row-skip-reward-1");
     fireEvent.focus(target);
     expect(screen.getByRole("tooltip")).toHaveTextContent("Investment Tag");

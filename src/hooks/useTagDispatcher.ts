@@ -2,6 +2,7 @@ import { useGame } from "../store/game";
 import { play } from "../components/system/sounds";
 import {
   resolveTagEffect,
+  type AnteSkipOffer,
   type TagId,
 } from "../items/tags";
 import type { RunStats } from "../run/runStats";
@@ -20,7 +21,10 @@ import { pickBossForAnte, bossPickerRngConfig } from "../items/bosses";
 import { immediateMoneyGain } from "../run/immediateActions";
 
 export interface UseTagDispatcherResult {
-  readonly applyGainedTag: (tagId: TagId, nextStats: RunStats) => void;
+  readonly applyGainedTag: (
+    offer: AnteSkipOffer | TagId,
+    nextStats: RunStats,
+  ) => void;
   readonly openTagPack: (pool: PackPool, variant: PackVariant) => void;
 }
 
@@ -59,7 +63,12 @@ export function useTagDispatcher(): UseTagDispatcherResult {
     );
   }
 
-  function applyGainedTag(tagId: TagId, nextStats: RunStats): void {
+  function applyGainedTag(
+    offer: AnteSkipOffer | TagId,
+    nextStats: RunStats,
+  ): void {
+    const tagId = typeof offer === "string" ? offer : offer.id;
+    const orbitalHand = typeof offer === "string" ? undefined : offer.orbitalHand;
     const effect = resolveTagEffect(tagId);
     if (effect.category === "immediate") {
       const action = effect.action;
@@ -94,7 +103,10 @@ export function useTagDispatcher(): UseTagDispatcherResult {
       } else if (action.kind === "upgrade-hand") {
         play("pop");
         const planets = createPlanetCatalog();
-        const planet = planets[Math.floor(shopPickerRngConfig.rng() * planets.length)];
+        const planet = orbitalHand
+          ? planets.find((p) => p.hands.includes(orbitalHand)) ??
+            planets[Math.floor(shopPickerRngConfig.rng() * planets.length)]
+          : planets[Math.floor(shopPickerRngConfig.rng() * planets.length)];
         setHandStats((prev) => {
           let next = prev;
           for (let i = 0; i < action.levels; i += 1) {
