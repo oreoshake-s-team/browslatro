@@ -41,6 +41,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
     if (!entry) return;
+    function consumeAndClearSelection(): void {
+      setSelectedIds(new Set());
+      setSelectedHand(null);
+      setChips(0);
+      setMultiplier(0);
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+    }
     const previewActive = openedPack !== null && packPreviewHand.length > 0;
     if (entry.kind === "planet") {
       play("pop");
@@ -86,11 +93,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
           ),
           remaining: prev.remaining,
         }));
-        setSelectedIds(new Set());
-        setSelectedHand(null);
-        setChips(0);
-        setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        consumeAndClearSelection();
         return;
       }
       if (spectralEffect.kind === "duplicate-selected") {
@@ -101,11 +104,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
           hand: duplicateSelectedInHand(prev.hand, selectedIds, spectralEffect.copies),
           remaining: prev.remaining,
         }));
-        setSelectedIds(new Set());
-        setSelectedHand(null);
-        setChips(0);
-        setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        consumeAndClearSelection();
         return;
       }
       if (spectralEffect.kind === "aura") {
@@ -116,11 +115,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
           hand: applyAuraToSelectedInHand(prev.hand, selectedIds, Math.random),
           remaining: prev.remaining,
         }));
-        setSelectedIds(new Set());
-        setSelectedHand(null);
-        setChips(0);
-        setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        consumeAndClearSelection();
         return;
       }
       play("pop");
@@ -176,11 +171,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       ),
       remaining: prev.remaining,
     }));
-    setSelectedIds(new Set());
-    setSelectedHand(null);
-    setChips(0);
-    setMultiplier(0);
-    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+    consumeAndClearSelection();
   }
 
   return { useConsumable };
