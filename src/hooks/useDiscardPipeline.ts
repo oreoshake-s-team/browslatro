@@ -12,6 +12,7 @@ import {
   addConsumable,
 } from "../items/consumables";
 import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
+import { applyOnDiscardJokers } from "../items/jokers";
 
 export interface UseDiscardPipelineResult {
   readonly pendingDiscardCountRef: MutableRefObject<number>;
@@ -35,6 +36,9 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const remainingDiscards = useGame((s) => s.remainingDiscards);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const jokers = useGame((s) => s.jokers);
+  const discardsUsedThisRound = useGame((s) => s.discardsUsedThisRound);
+  const setScoringEvents = useGame((s) => s.setScoringEvents);
 
   const setDealt = useGame((s) => s.setDealt);
   const setSelectedIds = useGame((s) => s.setSelectedIds);
@@ -123,6 +127,22 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     setDiscardingIds(selectedIds);
     setRemainingDiscards((prev) => prev - 1);
     setDiscardsUsedThisRound((prev) => prev + 1);
+
+    const discardedCards = dealt.hand.filter((c) => selectedIds.has(c.id));
+    const onDiscardResult = applyOnDiscardJokers(jokers, discardedCards, {
+      discardsUsedThisRound: discardsUsedThisRound + 1,
+    });
+    for (const step of onDiscardResult.steps) {
+      useGame.getState().earn(step.moneyEarned);
+      setScoringEvents((prev) => [
+        ...prev,
+        {
+          kind: "money-delta",
+          amount: step.moneyEarned,
+          source: step.jokerName,
+        },
+      ]);
+    }
   }
 
   function resetForNewRound(): void {
