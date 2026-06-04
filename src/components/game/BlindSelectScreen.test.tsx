@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { describe, expect, test, vi } from "vitest";
 import BlindSelectScreen from "./BlindSelectScreen";
 import type { BossBlind } from "../../items/bosses";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
@@ -311,5 +312,25 @@ describe("BlindSelectScreen", () => {
       "the-needle",
     );
     expect(onSetBoss).toHaveBeenCalledWith("the-needle");
+  });
+
+  test("Small Blind payout is $0 on Red Stake (#553)", () => {
+    renderScreen({ stake: "red" });
+    expect(screen.getByTestId("blind-select-payout-1")).toHaveTextContent("$0");
+  });
+
+  test("Big Blind payout is still $4 on Red Stake (negative)", () => {
+    renderScreen({ stake: "red" });
+    expect(screen.getByTestId("blind-select-payout-2")).toHaveTextContent("$4");
+  });
+
+  test("Boss Blind payout is still $5 on Red Stake (negative)", () => {
+    renderScreen({ stake: "red" });
+    expect(screen.getByTestId("blind-select-payout-3")).toHaveTextContent("$5");
+  });
+
+  test("Small Blind payout is still $3 on White Stake (negative)", () => {
+    renderScreen({ stake: "white" });
+    expect(screen.getByTestId("blind-select-payout-1")).toHaveTextContent("$3");
   });
 });

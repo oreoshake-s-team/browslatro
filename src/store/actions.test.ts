@@ -305,6 +305,32 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(4);
   });
 
+  test("handleWin does not log Small Blind reward event on Red Stake", () => {
+    const game = useGame.getState();
+    game.setSelectedStake("red");
+    game.setBlind(1);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const hasSmallBlindReward = useGame
+      .getState()
+      .scoringEvents.some(
+        (e) => e.kind === "money-delta" && e.source === "Small Blind reward",
+      );
+    expect(hasSmallBlindReward).toBe(false);
+  });
+
+  test("handleWin logs Big Blind reward event on Red Stake (negative)", () => {
+    const game = useGame.getState();
+    game.setSelectedStake("red");
+    game.setBlind(2);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const hasBigBlindReward = useGame
+      .getState()
+      .scoringEvents.some(
+        (e) => e.kind === "money-delta" && e.source === "Big Blind reward",
+      );
+    expect(hasBigBlindReward).toBe(true);
+  });
+
   test("handleWin records the defeated boss when the ante advances", () => {
     const game = useGame.getState();
     const defeatedId = game.currentBoss.id;
