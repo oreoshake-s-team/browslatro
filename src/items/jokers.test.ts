@@ -804,6 +804,16 @@ describe("Passive run-stat joker catalog membership (#687)", () => {
   });
 });
 
+describe("Multi-stat passive joker catalog membership (#690)", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Merry Andy", id: "merry-andy" },
+    { name: "Troubadour", id: "troubadour" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(

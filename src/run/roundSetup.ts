@@ -13,6 +13,7 @@ import {
 } from "../items/decks";
 import {
   extraStartingDiscardsFromJokers,
+  extraStartingHandsFromJokers,
   type Joker,
 } from "../items/jokers";
 import {
@@ -38,6 +39,7 @@ export function computeStartingHands(ctx: StartingResourceContext): number {
     1,
     base +
       extraStartingHands(ctx.ownedVoucherIds) +
+      extraStartingHandsFromJokers(ctx.jokers) +
       deckStartingHandsDelta(ctx.deck),
   );
 }

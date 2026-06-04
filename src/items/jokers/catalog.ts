@@ -34,6 +34,7 @@ import {
   createJugglerJoker,
   createLustyJoker,
   createMadJoker,
+  createMerryAndyJoker,
   createMisprintJoker,
   createMysticSummitJoker,
   createOddToddJoker,
@@ -59,6 +60,7 @@ import {
   createTheTrioJoker,
   createTradingCardJoker,
   createTribouletJoker,
+  createTroubadourJoker,
   createWalkieTalkieJoker,
   createWilyJoker,
   createWrathfulJoker,
@@ -140,5 +142,7 @@ export function createJokerCatalog(): Joker[] {
     createSeeingDoubleJoker(),
     createJugglerJoker(),
     createDrunkardJoker(),
+    createMerryAndyJoker(),
+    createTroubadourJoker(),
   ];
 }

@@ -39,6 +39,8 @@ import {
   JOLLY_JOKER_MULT,
   JUGGLER_HAND_SIZE_BONUS,
   MAD_JOKER_MULT,
+  MERRY_ANDY_DISCARDS,
+  MERRY_ANDY_HAND_SIZE,
   MISPRINT_MAX_MULT,
   MISPRINT_MIN_MULT,
   MYSTIC_SUMMIT_MULT,
@@ -70,6 +72,8 @@ import {
   TRADING_CARD_PAYOUT,
   TRIBOULET_RANKS,
   TRIBOULET_X_MULT,
+  TROUBADOUR_HAND_SIZE,
+  TROUBADOUR_HANDS,
   WALKIE_TALKIE_CHIPS,
   WALKIE_TALKIE_MULT,
   WALKIE_TALKIE_RANKS,
@@ -857,7 +861,7 @@ export function createJugglerJoker(): Joker {
     rarity: "common",
     name: "Juggler",
     description: `+${JUGGLER_HAND_SIZE_BONUS} hand size`,
-    effect: { kind: "passive-hand-size", amount: JUGGLER_HAND_SIZE_BONUS },
+    effect: { kind: "passive-run-stats", handSize: JUGGLER_HAND_SIZE_BONUS },
   };
 }
 
@@ -868,8 +872,36 @@ export function createDrunkardJoker(): Joker {
     name: "Drunkard",
     description: `+${DRUNKARD_DISCARDS_BONUS} discard each round`,
     effect: {
-      kind: "passive-starting-discards",
-      amount: DRUNKARD_DISCARDS_BONUS,
+      kind: "passive-run-stats",
+      discards: DRUNKARD_DISCARDS_BONUS,
+    },
+  };
+}
+
+export function createMerryAndyJoker(): Joker {
+  return {
+    id: "merry-andy",
+    rarity: "uncommon",
+    name: "Merry Andy",
+    description: `+${MERRY_ANDY_DISCARDS} discards each round, -${Math.abs(MERRY_ANDY_HAND_SIZE)} hand size`,
+    effect: {
+      kind: "passive-run-stats",
+      discards: MERRY_ANDY_DISCARDS,
+      handSize: MERRY_ANDY_HAND_SIZE,
+    },
+  };
+}
+
+export function createTroubadourJoker(): Joker {
+  return {
+    id: "troubadour",
+    rarity: "uncommon",
+    name: "Troubadour",
+    description: `+${TROUBADOUR_HAND_SIZE} hand size, -${Math.abs(TROUBADOUR_HANDS)} hand each round`,
+    effect: {
+      kind: "passive-run-stats",
+      handSize: TROUBADOUR_HAND_SIZE,
+      hands: TROUBADOUR_HANDS,
     },
   };
 }

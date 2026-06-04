@@ -20,6 +20,7 @@ export {
   effectiveJokerCount,
   extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
+  extraStartingHandsFromJokers,
   pickRandomEquipped,
   pickRandomFromCatalog,
   polychromeRandomJokerDestroyOthers,

@@ -350,8 +350,7 @@ export function applyHandLevelJokers(
       case "per-rank-in-deck-end-of-round-money":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
-      case "passive-hand-size":
-      case "passive-starting-discards":
+      case "passive-run-stats":
         break;
       default:
         assertNeverEffect(effect);

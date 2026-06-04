@@ -12,7 +12,9 @@ export function extraStartingHandSizeFromJokers(
 ): number {
   let total = 0;
   for (const j of jokers) {
-    if (j.effect.kind === "passive-hand-size") total += j.effect.amount;
+    if (j.effect.kind === "passive-run-stats" && j.effect.handSize !== undefined) {
+      total += j.effect.handSize;
+    }
   }
   return total;
 }
@@ -22,7 +24,21 @@ export function extraStartingDiscardsFromJokers(
 ): number {
   let total = 0;
   for (const j of jokers) {
-    if (j.effect.kind === "passive-starting-discards") total += j.effect.amount;
+    if (j.effect.kind === "passive-run-stats" && j.effect.discards !== undefined) {
+      total += j.effect.discards;
+    }
+  }
+  return total;
+}
+
+export function extraStartingHandsFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.hands !== undefined) {
+      total += j.effect.hands;
+    }
   }
   return total;
 }
