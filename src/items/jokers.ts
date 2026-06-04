@@ -70,6 +70,8 @@ export const ONYX_AGATE_MULT = 7;
 export const ROUGH_GEM_MONEY = 1;
 export const GOLDEN_JOKER_MONEY = 4;
 export const DELAYED_GRATIFICATION_MONEY_PER_DISCARD = 2;
+export const CLOUD_9_MONEY_PER_NINE = 1;
+export const CLOUD_9_RANKS: ReadonlyArray<Rank> = ["9"];
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -193,6 +195,11 @@ export type JokerEffect =
   | { readonly kind: "end-of-round-money"; readonly amount: number }
   | {
       readonly kind: "per-remaining-discard-end-of-round-money";
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "per-rank-in-deck-end-of-round-money";
+      readonly ranks: ReadonlyArray<Rank>;
       readonly amount: number;
     };
 
@@ -1009,6 +1016,20 @@ export function createDelayedGratificationJoker(): Joker {
   };
 }
 
+export function createCloud9Joker(): Joker {
+  return {
+    id: "cloud-9",
+    rarity: "uncommon",
+    name: "Cloud 9",
+    description: `Earn $${CLOUD_9_MONEY_PER_NINE} for each 9 in your full deck at end of round`,
+    effect: {
+      kind: "per-rank-in-deck-end-of-round-money",
+      ranks: CLOUD_9_RANKS,
+      amount: CLOUD_9_MONEY_PER_NINE,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -1105,6 +1126,7 @@ export function createJokerCatalog(): Joker[] {
     createRoughGemJoker(),
     createGoldenJoker(),
     createDelayedGratificationJoker(),
+    createCloud9Joker(),
   ];
 }
 
@@ -1354,6 +1376,7 @@ export function applyHandLevelJokers(
       case "per-suit-money":
       case "end-of-round-money":
       case "per-remaining-discard-end-of-round-money":
+      case "per-rank-in-deck-end-of-round-money":
         break;
       default:
         assertNeverEffect(effect);
@@ -1562,6 +1585,7 @@ export function applyPerCardJokers(
       case "x-mult-on-final-hand":
       case "end-of-round-money":
       case "per-remaining-discard-end-of-round-money":
+      case "per-rank-in-deck-end-of-round-money":
         break;
       default:
         assertNeverEffect(effect);
@@ -1614,6 +1638,7 @@ export function applyJokersToScoring(
 export interface EndOfRoundContext {
   readonly remainingDiscards?: number;
   readonly discardsUsedThisRound?: number;
+  readonly fullDeck?: ReadonlyArray<Card>;
 }
 
 export interface EndOfRoundStep {
@@ -1657,6 +1682,21 @@ export function applyEndOfRoundJokers(
             moneyEarned: earned,
           });
         }
+      }
+    } else if (effect.kind === "per-rank-in-deck-end-of-round-money") {
+      const deck = context.fullDeck ?? [];
+      let matches = 0;
+      for (const c of deck) {
+        if (effect.ranks.includes(c.rank)) matches += 1;
+      }
+      const earned = effect.amount * matches;
+      if (earned > 0) {
+        moneyEarned += earned;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: earned,
+        });
       }
     }
   }

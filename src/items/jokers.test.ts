@@ -745,6 +745,7 @@ describe("End-of-round joker catalog membership", () => {
   test.each<{ name: string; id: string }>([
     { name: "Golden Joker", id: "golden-joker" },
     { name: "Delayed Gratification", id: "delayed-gratification" },
+    { name: "Cloud 9", id: "cloud-9" },
   ])("$name appears in the joker catalog", ({ id }) => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain(id);
