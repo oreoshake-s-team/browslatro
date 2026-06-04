@@ -9,6 +9,7 @@ import {
   rollWheelOfFortune,
 } from "../items/tarots";
 import { withEdition } from "../items/jokers";
+import { cardKey } from "../cards/deck";
 
 export interface UseConsumableActionsResult {
   readonly useConsumable: (consumableIdx: number) => void;
@@ -37,6 +38,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
     (s) => s.applySealToSelectedPreviewCards,
   );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
+  const setDestroyedCardKeys = useGame((s) => s.setDestroyedCardKeys);
 
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
@@ -153,6 +155,30 @@ export function useConsumableActions(): UseConsumableActionsResult {
       } else {
         triggerNope();
       }
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      return;
+    }
+    if (effect.kind === "destroy-selected") {
+      if (previewActive) return;
+      if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
+      play("pop");
+      const destroyedKeys = new Set<string>();
+      for (const c of useGame.getState().dealt.hand) {
+        if (selectedIds.has(c.id)) destroyedKeys.add(cardKey(c));
+      }
+      setDestroyedCardKeys((prev) => {
+        const next = new Set(prev);
+        for (const k of destroyedKeys) next.add(k);
+        return next;
+      });
+      setDealt((prev) => ({
+        hand: prev.hand.filter((c) => !selectedIds.has(c.id)),
+        remaining: prev.remaining,
+      }));
+      setSelectedIds(new Set());
+      setSelectedHand(null);
+      setChips(0);
+      setMultiplier(0);
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }

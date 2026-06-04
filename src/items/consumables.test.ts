@@ -249,4 +249,40 @@ describe("consumables", () => {
   test("previewMode returns null for a non-seal spectral", () => {
     expect(consumableUseBlock(spectralConsumable, 0, true)).toBeNull();
   });
+
+  test("consumableUseBlock blocks The Hanged Man with zero selection", () => {
+    const hangedMan = createTarotCatalog().find(
+      (t) => t.id === "the-hanged-man",
+    );
+    if (!hangedMan) throw new Error("no hanged-man in catalog");
+    const c: Consumable = { kind: "tarot", card: hangedMan };
+    expect(consumableUseBlock(c, 0)).toMatch(/Select/);
+  });
+
+  test("consumableUseBlock blocks The Hanged Man when more than 2 cards are selected", () => {
+    const hangedMan = createTarotCatalog().find(
+      (t) => t.id === "the-hanged-man",
+    );
+    if (!hangedMan) throw new Error("no hanged-man in catalog");
+    const c: Consumable = { kind: "tarot", card: hangedMan };
+    expect(consumableUseBlock(c, 3)).toMatch(/Too many/);
+  });
+
+  test("consumableUseBlock returns null for The Hanged Man with 1 or 2 selected", () => {
+    const hangedMan = createTarotCatalog().find(
+      (t) => t.id === "the-hanged-man",
+    );
+    if (!hangedMan) throw new Error("no hanged-man in catalog");
+    const c: Consumable = { kind: "tarot", card: hangedMan };
+    expect(consumableUseBlock(c, 2)).toBeNull();
+  });
+
+  test("previewMode blocks The Hanged Man even with a valid selection", () => {
+    const hangedMan = createTarotCatalog().find(
+      (t) => t.id === "the-hanged-man",
+    );
+    if (!hangedMan) throw new Error("no hanged-man in catalog");
+    const c: Consumable = { kind: "tarot", card: hangedMan };
+    expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
+  });
 });

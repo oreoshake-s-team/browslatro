@@ -32,8 +32,8 @@ describe("HERMIT_MONEY_CAP", () => {
 });
 
 describe("createTarotCatalog", () => {
-  test("contains eleven entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune)", () => {
-    expect(createTarotCatalog()).toHaveLength(11);
+  test("contains twelve entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man)", () => {
+    expect(createTarotCatalog()).toHaveLength(12);
   });
 
   test("has unique ids", () => {
@@ -172,6 +172,29 @@ describe("resolveTemperancePayout", () => {
       createBusinessCardJoker(),
     ];
     expect(resolveTemperancePayout(jokers, 3)).toBe(3);
+  });
+});
+
+describe("The Hanged Man", () => {
+  test("the-hanged-man is in the catalog", () => {
+    expect(tarotById("the-hanged-man").name).toBe("The Hanged Man");
+  });
+
+  test("the-hanged-man effect kind is destroy-selected", () => {
+    expect(tarotById("the-hanged-man").effect.kind).toBe("destroy-selected");
+  });
+
+  test("the-hanged-man targets up to 2 cards (matches Balatro)", () => {
+    expect(tarotById("the-hanged-man").effect).toEqual({
+      kind: "destroy-selected",
+      maxTargets: 2,
+    });
+  });
+
+  test("the-hanged-man description names destruction and up to 2 cards", () => {
+    expect(tarotById("the-hanged-man").description).toBe(
+      "Destroy up to 2 cards in hand",
+    );
   });
 });
 
