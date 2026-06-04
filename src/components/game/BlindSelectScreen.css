@@ -6,6 +6,16 @@
   align-items: center;
   justify-content: center;
   z-index: 120;
+  padding: 1.5rem;
+  padding-left: calc(var(--sidebar-width, 0rem) + var(--game-padding-x, 0rem));
+  padding-right: max(
+    1.5rem,
+    calc(
+      100vw - var(--sidebar-width, 0rem) - var(--game-padding-x, 0rem) -
+        var(--game-row-width, 90rem)
+    )
+  );
+  box-sizing: border-box;
 }
 
 .blind-select-modal {
@@ -13,9 +23,10 @@
   color: #f8f9fa;
   border: 2px solid #748ffc;
   border-radius: 12px;
-  padding: 3rem 3.6rem;
-  width: 75vw;
-  height: 75vh;
+  padding: 2.4rem 2.8rem;
+  width: 100%;
+  max-width: 70rem;
+  max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   display: flex;
@@ -73,8 +84,8 @@
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
-  gap: 1.6rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.4rem;
   flex: 1;
 }
 

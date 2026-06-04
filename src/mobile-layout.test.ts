@@ -16,6 +16,7 @@ const gameCss = readFileSync(
   join(__dirname, "components", "game", "Game.css"),
   "utf8",
 );
+const indexCss = readFileSync(join(__dirname, "index.css"), "utf8");
 
 function handCardsRuleBody(): string {
   const match = handCss.match(/\.hand-cards\s*{([^}]*)}/);
@@ -67,7 +68,7 @@ describe("Sidebar layout — landscape mobile (issue #105)", () => {
 
   test("landscape narrow viewports shrink the sidebar width", () => {
     const inner = blockBody(landscapeBlock, /\.sidebar\s*{/);
-    expect(inner).toMatch(/width\s*:\s*180px/);
+    expect(inner).toMatch(/width\s*:\s*18rem/);
   });
 
   test("landscape narrow viewports stack sub-info-progress as a column to save horizontal space", () => {
@@ -105,12 +106,17 @@ describe("App layout — portrait mobile (issue #105)", () => {
 });
 
 describe("Game layout — mobile spacing (issue #105)", () => {
-  test("narrow viewports reduce the .game padding to free up room for the hand", () => {
+  test(".game padding tracks --game-padding-x so the value can be shared with portal-rendered modals", () => {
+    const block = blockBody(gameCss, /\.game\s*{/);
+    expect(block).toMatch(/padding\s*:\s*var\(--game-padding-x[^)]*\)/);
+  });
+
+  test("narrow viewports reduce --game-padding-x to free up room for the hand", () => {
     const block = blockBody(
-      gameCss,
+      indexCss,
       /@media\s*\(max-width:\s*1024px\)\s*{/,
     );
-    const inner = blockBody(block, /\.game\s*{/);
-    expect(inner).toMatch(/padding\s*:\s*1rem/);
+    const inner = blockBody(block, /:root\s*{/);
+    expect(inner).toMatch(/--game-padding-x\s*:\s*1rem/);
   });
 });

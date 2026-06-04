@@ -7,10 +7,19 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  padding-left: calc(var(--sidebar-width, 0rem) + var(--game-padding-x, 0rem));
+  padding-right: max(
+    1.5rem,
+    calc(
+      100vw - var(--sidebar-width, 0rem) - var(--game-padding-x, 0rem) -
+        var(--game-row-width, 90rem)
+    )
+  );
+  box-sizing: border-box;
 }
 
 .new-run-modal {
-  width: min(640px, 100%);
+  width: min(60rem, 100%);
   background-color: #1c2128;
   color: #e9ecef;
   border-radius: 12px;
