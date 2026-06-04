@@ -333,4 +333,20 @@ describe("BlindSelectScreen", () => {
     renderScreen({ stake: "white" });
     expect(screen.getByTestId("blind-select-payout-1")).toHaveTextContent("$3");
   });
+
+  test("moving hover from one skip-reward to another updates the tooltip to the second (#581)", async () => {
+    const user = userEvent.setup();
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "d6" } } });
+    await user.hover(screen.getByTestId("blind-select-row-skip-reward-1"));
+    await user.hover(screen.getByTestId("blind-select-row-skip-reward-2"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent("D6");
+  });
+
+  test("the tooltip role is mounted exactly once at a time when moving hover (#581)", async () => {
+    const user = userEvent.setup();
+    renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "d6" } } });
+    await user.hover(screen.getByTestId("blind-select-row-skip-reward-1"));
+    await user.hover(screen.getByTestId("blind-select-row-skip-reward-2"));
+    expect(screen.getAllByRole("tooltip")).toHaveLength(1);
+  });
 });
