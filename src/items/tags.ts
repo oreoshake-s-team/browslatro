@@ -303,7 +303,26 @@ export interface AnteSkipOffers {
 
 export const tagOfferRngConfig = createRngConfig();
 
+const FORCE_SKIP_TAG_IDS_KEY = "browslatro:forceSkipTagIds";
+
+function readForcedSkipTagId(): TagId | null {
+  try {
+    if (typeof window === "undefined") return null;
+    const raw = window.localStorage.getItem(FORCE_SKIP_TAG_IDS_KEY);
+    if (!raw) return null;
+    const first = raw.split(",")[0]?.trim();
+    if (!first) return null;
+    const allIds = TAG_SPECS.map((s) => s.id) as ReadonlyArray<string>;
+    if (allIds.includes(first)) return first as TagId;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function rollSkipTag(rng: () => number = Math.random): TagId {
+  const forced = readForcedSkipTagId();
+  if (forced !== null) return forced;
   const ids = TAG_SPECS.map((spec) => spec.id);
   const index = Math.min(ids.length - 1, Math.floor(rng() * ids.length));
   return ids[index];
