@@ -48,6 +48,7 @@ test.describe("Skip-tag flow (#697)", () => {
   test("skipping the Big Blind advances the current blind to Boss", async ({
     page,
   }) => {
+    await forceSkipTag(page, "investment");
     await startRound(page);
     await page.getByTestId("blind-select-skip").click();
     await page.getByTestId("blind-select-skip").click();
@@ -60,6 +61,7 @@ test.describe("Skip-tag flow (#697)", () => {
   test("the Boss Blind does not render a Skip button (negative)", async ({
     page,
   }) => {
+    await forceSkipTag(page, "investment");
     await startRound(page);
     await page.getByTestId("blind-select-skip").click();
     await page.getByTestId("blind-select-skip").click();

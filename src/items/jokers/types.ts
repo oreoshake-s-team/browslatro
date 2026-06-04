@@ -154,6 +154,7 @@ export type JokerEffect =
       readonly discardsOverride?: number;
       readonly additiveChips?: number;
       readonly debtFloor?: number;
+      readonly allCardsFace?: boolean;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";

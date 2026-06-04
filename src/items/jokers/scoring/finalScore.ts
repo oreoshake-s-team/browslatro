@@ -3,7 +3,7 @@ import type { Joker, RandomSource } from "../types";
 import { applyHandLevelJokers } from "./handLevel";
 import { applyPerCardJokers } from "./perCard";
 import type { HandLevelContext, JokerScoringResult } from "./types";
-import { isFaceCard } from "./utils";
+import { isFaceCardWith } from "./utils";
 
 export function applyJokersToScoring(
   jokers: ReadonlyArray<Joker>,
@@ -28,7 +28,7 @@ export function applyJokersToScoring(
     perCardAdditiveMult += cardResult.additiveMult;
     perCardAdditiveChips += cardResult.additiveChips;
     perCardXMult *= cardResult.xMult;
-    if (isFaceCard(scoredCards[c])) firstFaceAlreadyScored = true;
+    if (isFaceCardWith(scoredCards[c], jokers)) firstFaceAlreadyScored = true;
   }
   return {
     additiveMult: handResult.additiveMult + perCardAdditiveMult,

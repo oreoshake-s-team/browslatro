@@ -7,7 +7,7 @@ import type {
   JokerCardStep,
   PerCardContext,
 } from "./types";
-import { assertNeverEffect, isFaceCard } from "./utils";
+import { assertNeverEffect, isFaceCardWith } from "./utils";
 
 export function applyPerCardJokers(
   jokers: ReadonlyArray<Joker>,
@@ -27,7 +27,7 @@ export function applyPerCardJokers(
     const effect = joker.effect;
     switch (effect.kind) {
       case "business-card": {
-        if (isFaceCard(card) && rollChance(effect.chance, rng)) {
+        if (isFaceCardWith(card, jokers) && rollChance(effect.chance, rng)) {
           moneyEarned += effect.payout;
           fired.push(joker.id);
           steps.push({
@@ -108,7 +108,7 @@ export function applyPerCardJokers(
         break;
       }
       case "per-scored-face": {
-        if (isFaceCard(card)) {
+        if (isFaceCardWith(card, jokers)) {
           if (effect.contribution.kind === "mult") {
             additiveMult += effect.contribution.amount;
             steps.push({
@@ -129,7 +129,7 @@ export function applyPerCardJokers(
         break;
       }
       case "x-mult-on-face-scored": {
-        if (isFaceCard(card) && !context.firstFaceAlreadyScored) {
+        if (isFaceCardWith(card, jokers) && !context.firstFaceAlreadyScored) {
           xMult *= effect.amount;
           fired.push(joker.id);
           steps.push({

@@ -14,7 +14,7 @@ import type {
   JokerHandLevelStep,
   JokerHandResult,
 } from "./types";
-import { assertNeverEffect, isFaceCard, jokerSellValue } from "./utils";
+import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
 
 export function applyHandLevelJokers(
   jokers: ReadonlyArray<Joker>,
@@ -210,7 +210,7 @@ export function applyHandLevelJokers(
         const rng = context.rng ?? Math.random;
         let earned = 0;
         for (const c of held) {
-          if (isFaceCard(c) && rollChance(effect.chance, rng)) {
+          if (isFaceCardWith(c, jokers) && rollChance(effect.chance, rng)) {
             earned += effect.payout;
           }
         }
