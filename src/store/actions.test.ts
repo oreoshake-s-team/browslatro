@@ -597,6 +597,80 @@ describe("game actions slice", () => {
     expect(useGame.getState().cardSealsByKey.get(key)).toBe("red");
   });
 
+  test("duplicateSelectedPreviewCards adds the requested number of duplicates to addedCards (closes #630)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setAddedCards([]);
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.duplicateSelectedPreviewCards(2);
+    expect(useGame.getState().addedCards).toHaveLength(2);
+  });
+
+  test("duplicateSelectedPreviewCards copies the selected card's rank and suit", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setAddedCards([]);
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.duplicateSelectedPreviewCards(2);
+    const added = useGame.getState().addedCards;
+    expect(added.every((c) => c.rank === preview[0].rank && c.suit === preview[0].suit)).toBe(
+      true,
+    );
+  });
+
+  test("duplicateSelectedPreviewCards mints fresh card ids for each duplicate", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setAddedCards([]);
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.duplicateSelectedPreviewCards(2);
+    const added = useGame.getState().addedCards;
+    const ids = new Set(added.map((c) => c.id));
+    expect(ids.size).toBe(added.length);
+  });
+
+  test("duplicateSelectedPreviewCards appends the duplicates to the preview hand", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setAddedCards([]);
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.duplicateSelectedPreviewCards(2);
+    expect(useGame.getState().packPreviewHand).toHaveLength(preview.length + 2);
+  });
+
+  test("duplicateSelectedPreviewCards clears the preview selection", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.duplicateSelectedPreviewCards(2);
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("duplicateSelectedPreviewCards is a no-op when nothing is selected (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setAddedCards([]);
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.duplicateSelectedPreviewCards(2);
+    expect(useGame.getState().addedCards).toEqual([]);
+  });
+
+  test("duplicateSelectedPreviewCards is a no-op when copies is zero (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setAddedCards([]);
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.duplicateSelectedPreviewCards(0);
+    expect(useGame.getState().addedCards).toEqual([]);
+  });
+
   test("toggleCard adds the card id to selectedIds", () => {
     const hand = createDeck().slice(0, 5);
     const game = useGame.getState();

@@ -453,6 +453,82 @@ describe("PackOpenModal — Spectral pack rendering", () => {
   });
 });
 
+function cryptidPack(): PackOffer {
+  const cryptid = SPECTRALS.find((s) => s.id === "cryptid");
+  if (!cryptid) throw new Error("missing cryptid spectral in catalog");
+  return {
+    pool: "spectral",
+    variant: "normal",
+    options: [{ kind: "spectral" as const, spectral: cryptid }],
+  };
+}
+
+const PREVIEW_HAND_FOR_CRYPTID = [
+  { id: 4001, rank: "A" as const, suit: "spades" as const },
+  { id: 4002, rank: "K" as const, suit: "hearts" as const },
+];
+
+describe("PackOpenModal — Cryptid Pick gating (closes #630)", () => {
+  test("Cryptid Pick is disabled when no preview card is selected (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={cryptidPack()}
+        picksRemaining={1}
+        previewHand={PREVIEW_HAND_FOR_CRYPTID}
+        previewSelectedIds={new Set()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /^Pick Cryptid$/ })).toBeDisabled();
+  });
+
+  test("Cryptid Pick is enabled when exactly 1 preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={cryptidPack()}
+        picksRemaining={1}
+        previewHand={PREVIEW_HAND_FOR_CRYPTID}
+        previewSelectedIds={new Set([PREVIEW_HAND_FOR_CRYPTID[0].id])}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /^Pick Cryptid$/ })).not.toBeDisabled();
+  });
+
+  test("Cryptid Pick stays enabled when the consumable tray is full (no longer gated by slot)", () => {
+    render(
+      <PackOpenModal
+        pack={cryptidPack()}
+        picksRemaining={1}
+        previewHand={PREVIEW_HAND_FOR_CRYPTID}
+        previewSelectedIds={new Set([PREVIEW_HAND_FOR_CRYPTID[0].id])}
+        consumableSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /^Pick Cryptid$/ })).not.toBeDisabled();
+  });
+
+  test("Cryptid Pick is disabled with a selection-required tooltip when no preview card is selected", () => {
+    render(
+      <PackOpenModal
+        pack={cryptidPack()}
+        picksRemaining={1}
+        previewHand={PREVIEW_HAND_FOR_CRYPTID}
+        previewSelectedIds={new Set()}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /^Pick Cryptid$/ }),
+    ).toHaveAttribute("title", "Select 1 card in the preview hand first");
+  });
+});
+
 function standardPack(
   variant: "normal" | "jumbo" | "mega",
   cards: ReadonlyArray<{

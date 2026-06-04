@@ -39,6 +39,9 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   const applyEnhancementToSelectedPreviewCards = useGame(
     (s) => s.applyEnhancementToSelectedPreviewCards,
   );
+  const duplicateSelectedPreviewCards = useGame(
+    (s) => s.duplicateSelectedPreviewCards,
+  );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const decrementPackPicks = useGame((s) => s.decrementPackPicks);
 
@@ -96,7 +99,16 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
       setJokers((prev) => [...prev, option.joker]);
     } else if (option.kind === "spectral") {
       const effect = option.spectral.effect;
-      if (spectralNeedsTarget(effect)) {
+      if (effect.kind === "duplicate-selected") {
+        if (
+          packPreviewSelectedIds.size === 0 ||
+          packPreviewSelectedIds.size > effect.maxTargets
+        ) {
+          return;
+        }
+        play("pop");
+        duplicateSelectedPreviewCards(effect.copies);
+      } else if (spectralNeedsTarget(effect)) {
         if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
         play("pop");
         setConsumables((prev) =>
