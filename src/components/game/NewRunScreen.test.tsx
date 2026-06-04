@@ -4,9 +4,19 @@ import { describe, expect, test, vi } from "vitest";
 import NewRunScreen from "./NewRunScreen";
 
 describe("NewRunScreen", () => {
-  test("renders one button per stake in the catalog", () => {
+  test("renders one button per implemented stake", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio")).toHaveLength(8);
+    expect(screen.getAllByRole("radio")).toHaveLength(2);
+  });
+
+  test("does not render unimplemented stakes like Gold (negative)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.queryByTestId("new-run-stake-gold")).not.toBeInTheDocument();
+  });
+
+  test("renders the Red stake tile (implemented)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-stake-red")).toBeInTheDocument();
   });
 
   test("initial stake defaults to White", () => {
@@ -18,8 +28,8 @@ describe("NewRunScreen", () => {
   });
 
   test("respects an initialStake override", () => {
-    render(<NewRunScreen initialStake="gold" onConfirm={vi.fn()} />);
-    expect(screen.getByTestId("new-run-stake-gold")).toHaveAttribute(
+    render(<NewRunScreen initialStake="red" onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-stake-red")).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -38,9 +48,9 @@ describe("NewRunScreen", () => {
   test("the description region updates to the selected stake", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    await user.click(screen.getByTestId("new-run-stake-blue"));
+    await user.click(screen.getByTestId("new-run-stake-red"));
     expect(screen.getByTestId("new-run-stake-description")).toHaveTextContent(
-      "Blue Stake",
+      "Red Stake",
     );
   });
 
@@ -48,9 +58,9 @@ describe("NewRunScreen", () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
     render(<NewRunScreen onConfirm={onConfirm} />);
-    await user.click(screen.getByTestId("new-run-stake-green"));
+    await user.click(screen.getByTestId("new-run-stake-red"));
     await user.click(screen.getByTestId("new-run-confirm"));
-    expect(onConfirm).toHaveBeenCalledWith({ stake: "green" });
+    expect(onConfirm).toHaveBeenCalledWith({ stake: "red" });
   });
 
   test("Start Run defaults to the initial stake when nothing is clicked", async () => {
@@ -74,7 +84,7 @@ describe("NewRunScreen", () => {
   test("keyboard radio role marks the active tile as checked exactly once", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    await user.click(screen.getByTestId("new-run-stake-purple"));
+    await user.click(screen.getByTestId("new-run-stake-red"));
     const checked = screen
       .getAllByRole("radio")
       .filter((r) => r.getAttribute("aria-checked") === "true");

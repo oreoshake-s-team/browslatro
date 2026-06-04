@@ -64,6 +64,7 @@ import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import { calculateInterest } from "../scoring/payout";
 import { BlindValues } from "../constants";
+import { hasStakeModifier } from "../items/stakes";
 import type { Blind, Card, Enhancement, Hand, Seal } from "../cards/types";
 import {
   rollAnteSkipOffers,
@@ -303,20 +304,26 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const s = get();
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
-    const blindReward = s.blind + 2;
+    const baseBlindReward = s.blind + 2;
+    const smallBlindSkipped =
+      s.blind === 1 &&
+      hasStakeModifier(s.selectedStake, "red-small-blind-no-reward");
+    const blindReward = smallBlindSkipped ? 0 : baseBlindReward;
     const interestBefore = precomputed?.interestWallet ?? s.money;
     const interest =
       precomputed?.interest ??
       calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds));
     s.earn(blindReward + interest);
-    s.setScoringEvents((prev) => [
-      ...prev,
-      {
-        kind: "money-delta",
-        amount: blindReward,
-        source: `${BlindValues[s.blind]} reward`,
-      },
-    ]);
+    if (blindReward > 0) {
+      s.setScoringEvents((prev) => [
+        ...prev,
+        {
+          kind: "money-delta",
+          amount: blindReward,
+          source: `${BlindValues[s.blind]} reward`,
+        },
+      ]);
+    }
     if (interest > 0) {
       s.setScoringEvents((prev) => [
         ...prev,

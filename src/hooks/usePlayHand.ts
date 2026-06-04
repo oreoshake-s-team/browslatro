@@ -28,6 +28,7 @@ import {
   isFaceCard,
 } from "../items/jokers";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
+import { hasStakeModifier } from "../items/stakes";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -77,6 +78,7 @@ export function usePlayHand({
   const ante = useGame((s) => s.ante);
   const money = useGame((s) => s.money);
   const currentBoss = useGame((s) => s.currentBoss);
+  const selectedStake = useGame((s) => s.selectedStake);
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const jokers = useGame((s) => s.jokers);
   const remainingDiscards = useGame((s) => s.remainingDiscards);
@@ -188,10 +190,13 @@ export function usePlayHand({
             },
           ]);
         }
+        const smallBlindSkipped =
+          blind === 1 &&
+          hasStakeModifier(selectedStake, "red-small-blind-no-reward");
         setPendingWin({
           roundScore: newRoundScore,
           requiredScore,
-          baseReward: blind + 2,
+          baseReward: smallBlindSkipped ? 0 : blind + 2,
           walletAtPayout: postBonusesWallet,
           interestWallet: postGoldWallet,
           interest: calculateInterest(

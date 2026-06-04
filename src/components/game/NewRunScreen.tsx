@@ -12,7 +12,7 @@ interface NewRunScreenProps {
   onConfirm: (selection: { stake: Stake }) => void;
 }
 
-const STAKES = createStakeCatalog();
+const STAKES = createStakeCatalog().filter((s) => s.implemented);
 
 export default function NewRunScreen({
   initialStake = DEFAULT_STAKE,

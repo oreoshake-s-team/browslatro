@@ -375,6 +375,7 @@ function App() {
           ante={ante}
           currentBlind={blind}
           boss={currentBoss}
+          stake={selectedStake}
           onPlay={confirmBlindSelect}
           onSkip={skipBlind}
           tags={pendingTags}

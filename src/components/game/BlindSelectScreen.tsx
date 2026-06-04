@@ -10,12 +10,14 @@ import {
   type TagId,
   type TagSpec,
 } from "../../items/tags";
+import { hasStakeModifier, type Stake } from "../../items/stakes";
 import TagTooltip from "./TagTooltip";
 
 interface BlindSelectScreenProps {
   ante: number;
   currentBlind: Blind;
   boss: BossBlind;
+  stake?: Stake;
   onPlay: () => void;
   onSkip?: () => void;
   tags?: ReadonlyArray<TagId>;
@@ -40,7 +42,14 @@ function requiredScoreFor(
   return base * BLIND_MULTIPLIERS[blind - 1];
 }
 
-function payoutFor(blind: Blind): number {
+function payoutFor(blind: Blind, stake?: Stake): number {
+  if (
+    blind === 1 &&
+    stake &&
+    hasStakeModifier(stake, "red-small-blind-no-reward")
+  ) {
+    return 0;
+  }
   return blind + 2;
 }
 
@@ -48,6 +57,7 @@ export default function BlindSelectScreen({
   ante,
   currentBlind,
   boss,
+  stake,
   onPlay,
   onSkip,
   tags = [],
@@ -208,7 +218,7 @@ export default function BlindSelectScreen({
                   <div className="blind-select-row-stat">
                     <dt>Payout</dt>
                     <dd data-testid={`blind-select-payout-${b}`}>
-                      ${payoutFor(b)}
+                      ${payoutFor(b, stake)}
                     </dd>
                   </div>
                 </dl>
