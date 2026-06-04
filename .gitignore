@@ -23,9 +23,13 @@
 
 # production
 /build
+bundle-stats.html
 
 # worktrees
 .claude/worktrees/
+
+# playwright MCP server cache
+.playwright-mcp/
 
 # misc
 .DS_Store
