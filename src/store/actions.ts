@@ -212,6 +212,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const s = get();
     s.setOpenedPack(pack);
     s.setPackPicksRemaining(packPickLimit(pack.variant));
+    s.setPickedPackOptionIndices(new Set());
     if (pack.pool === "arcana" || pack.pool === "spectral") {
       const currentHandSize = Math.max(
         1,
@@ -255,6 +256,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         s.setOpenedPack(null);
         s.setPackPreviewHand([]);
         s.setPackPreviewSelectedIds(new Set());
+        s.setPickedPackOptionIndices(new Set());
       }
       return remaining;
     });
@@ -265,6 +267,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setPackPicksRemaining(0);
     s.setPackPreviewHand([]);
     s.setPackPreviewSelectedIds(new Set());
+    s.setPickedPackOptionIndices(new Set());
   },
   buyShopOffer: (idx) => {
     const s = get();

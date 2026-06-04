@@ -180,6 +180,9 @@ function App() {
   const packPreviewSelectedIds = useGame(
     (state) => state.packPreviewSelectedIds,
   );
+  const pickedPackOptionIndices = useGame(
+    (state) => state.pickedPackOptionIndices,
+  );
   const skipTagOffers = useGame((state) => state.skipTagOffers);
   const setSkipTagOffers = useGame((state) => state.setSkipTagOffers);
   useEffect(() => {
@@ -375,6 +378,7 @@ function App() {
                 jokerSlotsFull: effectiveJokerCount(jokers) >= MAX_JOKERS,
                 previewHand: packPreviewHand,
                 previewSelectedIds: packPreviewSelectedIds,
+                pickedIndices: pickedPackOptionIndices,
                 onSelectPreviewCard: togglePackPreviewCard,
                 onPick: pickFromOpenedPack,
                 onClose: closeOpenedPack,

@@ -139,6 +139,42 @@ describe("PackOpenModal", () => {
     await user.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalled();
   });
+
+  test("an option at a picked index is removed from the list (#647)", () => {
+    renderModal({
+      pack: celestialPack("mega", 5),
+      picksRemaining: 1,
+      pickedIndices: new Set([0]),
+    });
+    expect(screen.queryByTestId("pack-open-pick-0")).not.toBeInTheDocument();
+  });
+
+  test("other indices still render when one index is picked (#647)", () => {
+    renderModal({
+      pack: celestialPack("mega", 5),
+      picksRemaining: 1,
+      pickedIndices: new Set([0]),
+    });
+    expect(screen.getByTestId("pack-open-pick-1")).toBeInTheDocument();
+  });
+
+  test("a remaining Pick button stays enabled after one index was picked (#647)", () => {
+    renderModal({
+      pack: celestialPack("mega", 5),
+      picksRemaining: 1,
+      pickedIndices: new Set([0]),
+    });
+    expect(screen.getByTestId("pack-open-pick-1")).not.toBeDisabled();
+  });
+
+  test("with no picked indices, every option still renders (regression #647)", () => {
+    renderModal({
+      pack: celestialPack("mega", 5),
+      picksRemaining: 2,
+      pickedIndices: new Set(),
+    });
+    expect(screen.getAllByRole("button", { name: /^Pick / })).toHaveLength(5);
+  });
 });
 
 describe("PackOpenModal — Arcana pack rendering", () => {
