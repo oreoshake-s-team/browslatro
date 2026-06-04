@@ -1,4 +1,8 @@
 import { Suspense, lazy, useEffect, useRef } from "react";
+
+const BlindSelectScreenLazy = lazy(
+  () => import("./components/game/BlindSelectScreen"),
+);
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
@@ -11,7 +15,6 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
-import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
 import { deckStartingMoneyDelta } from "./items/decks";
@@ -383,21 +386,23 @@ function App() {
         />
       )}
       {pendingBlindSelect && !pendingRunSelect && (
-        <BlindSelectScreen
-          ante={ante}
-          currentBlind={blind}
-          boss={currentBoss}
-          stake={selectedStake}
-          onPlay={confirmBlindSelect}
-          onSkip={skipBlind}
-          tags={pendingTags}
-          skipRewards={skipTagOffers}
-          bossOptions={availableBosses(createBossCatalog(), ante)}
-          onSetBoss={(id) => {
-            const next = createBossCatalog().find((b) => b.id === id);
-            if (next) setCurrentBoss(next);
-          }}
-        />
+        <Suspense fallback={null}>
+          <BlindSelectScreenLazy
+            ante={ante}
+            currentBlind={blind}
+            boss={currentBoss}
+            stake={selectedStake}
+            onPlay={confirmBlindSelect}
+            onSkip={skipBlind}
+            tags={pendingTags}
+            skipRewards={skipTagOffers}
+            bossOptions={availableBosses(createBossCatalog(), ante)}
+            onSetBoss={(id) => {
+              const next = createBossCatalog().find((b) => b.id === id);
+              if (next) setCurrentBoss(next);
+            }}
+          />
+        </Suspense>
       )}
     </div>
   );
