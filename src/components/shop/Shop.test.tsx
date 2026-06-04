@@ -470,6 +470,38 @@ describe("Shop", () => {
       expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
     });
 
+    test("voucher price reflects Clearance Sale 25% off (#434)", () => {
+      renderShop({
+        vouchers: [OVERSTOCK_VOUCHER],
+        money: 10,
+        ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]),
+      });
+      expect(screen.getByText("$8")).toBeInTheDocument();
+    });
+
+    test("voucher buy label reflects Liquidation 50% off (#434)", () => {
+      renderShop({
+        vouchers: [OVERSTOCK_VOUCHER],
+        money: 10,
+        ownedVoucherIds: new Set<VoucherId>([
+          "clearance-sale",
+          "liquidation",
+        ]),
+      });
+      expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent(
+        "Buy ($5)",
+      );
+    });
+
+    test("voucher is affordable at the discounted price when full price isn't (#434, negative)", () => {
+      renderShop({
+        vouchers: [OVERSTOCK_VOUCHER],
+        money: 8,
+        ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]),
+      });
+      expect(screen.getByTestId("shop-voucher-buy-0")).toBeEnabled();
+    });
+
     test("the buy button is disabled when the prerequisite voucher is not owned", () => {
       renderShop({
         vouchers: [OVERSTOCK_PLUS_VOUCHER],

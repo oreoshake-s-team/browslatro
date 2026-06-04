@@ -45,13 +45,14 @@ function resolveVoucherButton(
   ownedIds: ReadonlySet<VoucherId>,
 ): VoucherButtonState {
   if (sold) return { disabled: true, label: "Sold", title: "Already purchased this ante" };
+  const price = applyShopDiscount(voucher.cost, ownedIds);
   if (voucher.requires && !ownedIds.has(voucher.requires)) {
-    return { disabled: true, label: `Buy ($${voucher.cost})`, title: `Requires ${voucher.requires}` };
+    return { disabled: true, label: `Buy ($${price})`, title: `Requires ${voucher.requires}` };
   }
-  if (money < voucher.cost) {
-    return { disabled: true, label: `Buy ($${voucher.cost})`, title: "Not enough money" };
+  if (money < price) {
+    return { disabled: true, label: `Buy ($${price})`, title: "Not enough money" };
   }
-  return { disabled: false, label: `Buy ($${voucher.cost})`, title: undefined };
+  return { disabled: false, label: `Buy ($${price})`, title: undefined };
 }
 
 type BuyButtonState =
@@ -358,6 +359,10 @@ export default function Shop({
                 {vouchers.map((voucher, idx) => {
                   const sold = soldVoucherIds.has(voucher.id);
                   const btn = resolveVoucherButton(voucher, sold, money, ownedVoucherIds);
+                  const displayPrice = applyShopDiscount(
+                    voucher.cost,
+                    ownedVoucherIds,
+                  );
                   return (
                     <li
                       key={voucher.id}
@@ -367,7 +372,7 @@ export default function Shop({
                     >
                       <span className="shop-voucher-name">{voucher.name}</span>
                       <span className="shop-voucher-description">{voucher.description}</span>
-                      <span className="shop-voucher-price">${voucher.cost}</span>
+                      <span className="shop-voucher-price">${displayPrice}</span>
                       <button
                         type="button"
                         className="shop-voucher-buy"
