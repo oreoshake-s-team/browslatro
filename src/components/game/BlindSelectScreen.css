@@ -6,6 +6,9 @@
   align-items: center;
   justify-content: center;
   z-index: 120;
+  padding: 1.5rem;
+  padding-left: calc(var(--sidebar-width, 0px) + 1.5rem);
+  box-sizing: border-box;
 }
 
 .blind-select-modal {
@@ -14,8 +17,9 @@
   border: 2px solid #748ffc;
   border-radius: 12px;
   padding: 3rem 3.6rem;
-  width: 75vw;
-  height: 75vh;
+  width: 100%;
+  max-width: var(--game-row-width, 90rem);
+  max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   display: flex;

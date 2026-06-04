@@ -7,6 +7,7 @@
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
+  padding-left: calc(var(--sidebar-width, 0px) + 1.5rem);
 }
 
 .new-run-modal {
