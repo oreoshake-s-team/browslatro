@@ -15,12 +15,14 @@ export interface JokersState {
   jokerPulseCounters: Readonly<Record<string, number>>;
   draggingJokerIndex: number | null;
   soldJokerIdsThisShopVisit: ReadonlyArray<string>;
+  pendingJokerGrantIds: ReadonlyArray<string>;
   setJokers: (update: Updater<ReadonlyArray<Joker>>) => void;
   setJokerPulseCounters: (
     update: Updater<Readonly<Record<string, number>>>,
   ) => void;
   setDraggingJokerIndex: (update: Updater<number | null>) => void;
   setSoldJokerIdsThisShopVisit: (update: Updater<ReadonlyArray<string>>) => void;
+  setPendingJokerGrantIds: (update: Updater<ReadonlyArray<string>>) => void;
   resetJokers: () => void;
 }
 
@@ -29,6 +31,7 @@ export const createJokersSlice: StateCreator<GameState, [], [], JokersState> = (
   jokerPulseCounters: {},
   draggingJokerIndex: null,
   soldJokerIdsThisShopVisit: [],
+  pendingJokerGrantIds: [],
   setJokers: (update) => set((state) => ({ jokers: resolve(update, state.jokers) })),
   setJokerPulseCounters: (update) =>
     set((state) => ({
@@ -42,11 +45,16 @@ export const createJokersSlice: StateCreator<GameState, [], [], JokersState> = (
     set((state) => ({
       soldJokerIdsThisShopVisit: resolve(update, state.soldJokerIdsThisShopVisit),
     })),
+  setPendingJokerGrantIds: (update) =>
+    set((state) => ({
+      pendingJokerGrantIds: resolve(update, state.pendingJokerGrantIds),
+    })),
   resetJokers: () =>
     set({
       jokers: initialJokersConfig.factory(),
       jokerPulseCounters: {},
       draggingJokerIndex: null,
       soldJokerIdsThisShopVisit: [],
+      pendingJokerGrantIds: [],
     }),
 });

@@ -44,6 +44,9 @@ export function useTagDispatcher(): UseTagDispatcherResult {
   const setPendingTags = useGame((s) => s.setPendingTags);
   const setPendingShopMods = useGame((s) => s.setPendingShopMods);
   const openPackOffer = useGame((s) => s.openPackOffer);
+  const setPendingJokerGrantIds = useGame(
+    (s) => s.setPendingJokerGrantIds,
+  );
 
   function openTagPack(pool: PackPool, variant: PackVariant): void {
     play("pop");
@@ -77,6 +80,7 @@ export function useTagDispatcher(): UseTagDispatcherResult {
       } else if (action.kind === "create-jokers") {
         play("pop");
         const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        const grantedIds: string[] = [];
         setJokers((prev) => {
           let next = prev;
           for (let i = 0; i < action.count; i += 1) {
@@ -87,10 +91,16 @@ export function useTagDispatcher(): UseTagDispatcherResult {
               capacity,
               shopPickerRngConfig.rng,
             );
-            if (joker) next = [...next, joker];
+            if (joker) {
+              next = [...next, joker];
+              grantedIds.push(joker.id);
+            }
           }
           return next;
         });
+        if (grantedIds.length > 0) {
+          setPendingJokerGrantIds((prev) => [...prev, ...grantedIds]);
+        }
       } else if (action.kind === "reroll-boss") {
         play("pop");
         setCurrentBoss(
