@@ -23,6 +23,7 @@ import {
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
+  mergeFreeJokerOffersIntoShop,
   pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
@@ -403,7 +404,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         );
         return applyEditionToFirstJoker(ensured, edition);
       },
-      [...freeJokerOffers, ...pricedOffers],
+      mergeFreeJokerOffersIntoShop(pricedOffers, freeJokerOffers),
     );
     s.setShopOffers(editionedOffers);
     if (shopAdjustments.extraVouchers > 0) {

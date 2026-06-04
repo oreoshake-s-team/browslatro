@@ -3514,6 +3514,34 @@ describe("Uncommon and Rare joker tags", () => {
       screen.queryAllByRole("button", { name: /Buy \(\$0\)/ }).length,
     ).toBeGreaterThan(0);
   });
+
+  test("Uncommon tag does not grow the shop item-offer count (#603)", async () => {
+    tagOfferRngConfig.rng = rngForTag("uncommon");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^Win$/));
+    const items = screen
+      .queryAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
+    expect(items).toHaveLength(2);
+  });
+
+  test("Rare tag does not grow the shop item-offer count (#603)", async () => {
+    tagOfferRngConfig.rng = rngForTag("rare");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(screen.getByTestId("blind-select-play"));
+    await user.click(screen.getByText(/^Win$/));
+    const items = screen
+      .queryAllByTestId(/^shop-offer-/)
+      .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
+    expect(items).toHaveLength(2);
+  });
 });
 
 describe("Voucher tag", () => {

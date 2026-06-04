@@ -143,6 +143,17 @@ export function buildFreeJokerOffers(
   });
 }
 
+export function mergeFreeJokerOffersIntoShop(
+  baseOffers: ReadonlyArray<ShopItem>,
+  freeJokerOffers: ReadonlyArray<ShopItem>,
+): ShopItem[] {
+  if (freeJokerOffers.length === 0) return [...baseOffers];
+  const items = baseOffers.filter((o) => o.kind !== "pack");
+  const packs = baseOffers.filter((o) => o.kind === "pack");
+  const merged = [...freeJokerOffers, ...items].slice(0, items.length);
+  return [...merged, ...packs];
+}
+
 export function applyEditionToFirstJoker(
   offers: ReadonlyArray<ShopItem>,
   edition: JokerEdition,
