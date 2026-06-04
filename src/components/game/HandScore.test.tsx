@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, vi } from "vitest";
 import HandScore from "./HandScore";
 import { HANDS } from "../../constants";
 
@@ -117,5 +118,277 @@ describe("HandScore level chip (#241)", () => {
     expect(
       screen.getByRole("heading", { name: "Pair" }),
     ).toBeInTheDocument();
+  });
+});
+
+describe("HandScore level-up animation (#601)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    let raf = 0;
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      raf += 1;
+      window.setTimeout(() => cb(performance.now()), 16);
+      return raf;
+    });
+    vi.stubGlobal("cancelAnimationFrame", (id: number) => {
+      window.clearTimeout(id);
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  test("highlights chips when the hand level bumps for the same selected hand", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={25}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(container.querySelector(".chips")).toHaveAttribute(
+      "data-leveling",
+      "true",
+    );
+  });
+
+  test("highlights multiplier when the hand level bumps for the same selected hand", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={10}
+        multiplier={5}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(container.querySelector(".multiplier")).toHaveAttribute(
+      "data-leveling",
+      "true",
+    );
+  });
+
+  test("does not highlight when a different hand is selected (negative)", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={20}
+        multiplier={3}
+        selectedHand={HANDS[2]}
+        selectedHandLevel={1}
+      />,
+    );
+    expect(container.querySelector(".chips")).not.toHaveAttribute(
+      "data-leveling",
+    );
+  });
+
+  test("does not highlight when chips change without a level bump (e.g. dev modifier, negative)", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={25}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    expect(container.querySelector(".chips")).not.toHaveAttribute(
+      "data-leveling",
+    );
+  });
+
+  test("clears the leveling class after the animation finishes", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={25}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(container.querySelector(".chips")).not.toHaveAttribute(
+      "data-leveling",
+    );
+  });
+
+  test("eventually reaches the new chips target after animating", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={40}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(container.querySelector(".chips")).toHaveTextContent("40");
+  });
+
+  test("animates from 0 when anchor changes to a higher level hand (level > 1)", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={0}
+        multiplier={0}
+        selectedHand={null}
+        selectedHandLevel={null}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={30}
+        multiplier={3}
+        selectedHand={HANDS[0]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(container.querySelector(".chips")).toHaveAttribute(
+      "data-leveling",
+      "true",
+    );
+  });
+
+  test("does not animate when selecting a level 1 hand for the first time (no level bump)", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={0}
+        multiplier={0}
+        selectedHand={null}
+        selectedHandLevel={null}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={20}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    expect(container.querySelector(".chips")).not.toHaveAttribute(
+      "data-leveling",
+    );
+  });
+
+  test("snaps to value without animation when prefers-reduced-motion is enabled", () => {
+    vi.stubGlobal(
+      "matchMedia",
+      (query: string) =>
+        ({
+          matches: query === "(prefers-reduced-motion: reduce)",
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }) as MediaQueryList,
+    );
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={25}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(50);
+    });
+    expect(container.querySelector(".chips")).toHaveTextContent("25");
+  });
+
+  test("eventually reaches the new multiplier target after animating", () => {
+    const { rerender, container } = render(
+      <HandScore
+        chips={10}
+        multiplier={2}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={1}
+      />,
+    );
+    rerender(
+      <HandScore
+        chips={10}
+        multiplier={8}
+        selectedHand={HANDS[1]}
+        selectedHandLevel={2}
+      />,
+    );
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(container.querySelector(".multiplier")).toHaveTextContent("8");
   });
 });

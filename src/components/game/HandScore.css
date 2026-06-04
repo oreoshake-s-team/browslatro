@@ -65,3 +65,41 @@
   display: inline-block;
   animation: bounce calc(0.35s * var(--animation-speed, 1)) ease-out;
 }
+
+@keyframes hand-score-level-up {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 212, 59, 0);
+  }
+  25% {
+    transform: scale(1.18);
+    box-shadow:
+      0 0 0 4px #ffd43b,
+      0 0 24px 8px rgba(255, 212, 59, 0.85);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 212, 59, 0);
+  }
+}
+
+.chips.hand-score-leveling,
+.multiplier.hand-score-leveling {
+  animation: hand-score-level-up calc(0.7s * var(--animation-speed, 1))
+    ease-out;
+  outline: 2px solid #ffd43b;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chips.hand-score-leveling,
+  .multiplier.hand-score-leveling {
+    animation: none;
+    outline: 2px solid #ffd43b;
+    outline-offset: 2px;
+  }
+}
+
+.hand-score-leveling {
+  /* TODO: style */
+}
