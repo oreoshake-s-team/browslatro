@@ -1,51 +1,192 @@
-.modifier-grid button {
-  padding: 10px 20px;
-  font-size: 1.1rem;
-}
-
 .modifier-selection {
-  padding: 0.8rem 1.6rem 1.6rem;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
+  padding: 0.6rem 1rem 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
   background-color: #f8f9fa;
   width: 100%;
   max-width: 48rem;
   box-sizing: border-box;
+  box-shadow: 0 1px 2px rgba(15, 15, 20, 0.04);
 }
 
 .modifier-disclosure {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.78rem;
+  font-weight: 700;
   color: #495057;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   cursor: pointer;
-  padding: 0.4rem 0;
+  padding: 0.3rem 0;
   list-style-position: inside;
+  user-select: none;
+}
+
+.modifier-disclosure:hover {
+  color: #1971c2;
 }
 
 .modifier-selection[open] .modifier-grid {
-  margin-top: 0.8rem;
+  margin-top: 0.6rem;
 }
 
 .modifier-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.8rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
 }
 
 .modifier-grid button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  min-height: 2.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #212529;
+  background-color: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  line-height: 1.2;
   min-width: 0;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease,
+    transform 0.05s ease;
 }
 
-.add-money-button {
-  background-color: #2f9e44;
-  color: white;
-  border-color: #2b8a3e;
+.modifier-grid button:hover:not(:disabled) {
+  background-color: #f1f3f5;
+  border-color: #adb5bd;
 }
 
-.subtract-money-button {
-  background-color: #e03131;
-  color: white;
-  border-color: #c92a2a;
+.modifier-grid button:focus-visible {
+  outline: 2px solid #1971c2;
+  outline-offset: 2px;
+}
+
+.modifier-grid button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.modifier-grid button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.modifier-grid .add-chips-button,
+.modifier-grid .add-multiplier-button,
+.modifier-grid .multiply-multiplier-button {
+  background-color: #e7f5ff;
+  border-color: #a5d8ff;
+  color: #1864ab;
+}
+
+.modifier-grid .add-chips-button:hover:not(:disabled),
+.modifier-grid .add-multiplier-button:hover:not(:disabled),
+.modifier-grid .multiply-multiplier-button:hover:not(:disabled) {
+  background-color: #d0ebff;
+  border-color: #74c0fc;
+}
+
+.modifier-grid .win-button {
+  background-color: #fff3bf;
+  border-color: #ffd43b;
+  color: #5c3a00;
+}
+
+.modifier-grid .win-button:hover:not(:disabled) {
+  background-color: #ffe066;
+  border-color: #fab005;
+}
+
+.modifier-grid .add-money-button {
+  background-color: #d3f9d8;
+  border-color: #69db7c;
+  color: #2b8a3e;
+}
+
+.modifier-grid .add-money-button:hover:not(:disabled) {
+  background-color: #b2f2bb;
+  border-color: #51cf66;
+}
+
+.modifier-grid .subtract-money-button {
+  background-color: #ffe3e3;
+  border-color: #ffa8a8;
+  color: #c92a2a;
+}
+
+.modifier-grid .subtract-money-button:hover:not(:disabled) {
+  background-color: #ffc9c9;
+  border-color: #ff8787;
+}
+
+.modifier-grid .shrink-hand-button,
+.modifier-grid .grow-hand-button,
+.modifier-grid .shrink-pack-slots-button,
+.modifier-grid .grow-pack-slots-button,
+.modifier-grid .shrink-voucher-slots-button,
+.modifier-grid .grow-voucher-slots-button {
+  background-color: #f1f3f5;
+  border-color: #ced4da;
+  color: #343a40;
+}
+
+.modifier-grid .shrink-hand-button:hover:not(:disabled),
+.modifier-grid .grow-hand-button:hover:not(:disabled),
+.modifier-grid .shrink-pack-slots-button:hover:not(:disabled),
+.modifier-grid .grow-pack-slots-button:hover:not(:disabled),
+.modifier-grid .shrink-voucher-slots-button:hover:not(:disabled),
+.modifier-grid .grow-voucher-slots-button:hover:not(:disabled) {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.modifier-grid .add-pack-button {
+  background-color: #f3f0ff;
+  border-color: #d0bfff;
+  color: #5f3dc4;
+}
+
+.modifier-grid .add-pack-button:hover:not(:disabled) {
+  background-color: #e5dbff;
+  border-color: #b197fc;
+}
+
+.modifier-grid .clear-pending-packs-button {
+  background-color: #fff4e6;
+  border-color: #ffd8a8;
+  color: #d9480f;
+}
+
+.modifier-grid .clear-pending-packs-button:hover:not(:disabled) {
+  background-color: #ffe8cc;
+  border-color: #ffc078;
+}
+
+.modifier-grid .force-probabilities-button {
+  background-color: #fff9db;
+  border-color: #ffec99;
+  color: #5c3a00;
+}
+
+.modifier-grid .force-probabilities-button:hover:not(:disabled) {
+  background-color: #fff3bf;
+  border-color: #ffe066;
+}
+
+.modifier-grid .force-probabilities-button[aria-pressed="true"] {
+  background-color: #ffd43b;
+  border-color: #f59f00;
+  color: #4d2a00;
+}
+
+.modifier-grid .force-probabilities-button[aria-pressed="true"]:hover:not(:disabled) {
+  background-color: #fab005;
+  border-color: #e67700;
 }
