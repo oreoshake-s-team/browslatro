@@ -30,7 +30,8 @@
 }
 
 .card-discarding {
-  animation: card-discard calc(400ms * var(--animation-speed, 1)) ease-in forwards;
+  animation: card-discard calc(400ms * var(--animation-speed, 1)) ease-in forwards
+    !important;
   pointer-events: none;
 }
 
