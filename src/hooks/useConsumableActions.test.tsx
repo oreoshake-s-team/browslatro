@@ -326,3 +326,154 @@ describe("useConsumableActions — lastUsedConsumable tracking (#615)", () => {
     expect(useGame.getState().lastUsedConsumable).toEqual(hermit);
   });
 });
+
+function suitConversionConsumable(id: string): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === id);
+  if (!tarot) throw new Error(`${id} missing from catalog`);
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — The Sun (suit-conversion)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([suitConversionConsumable("the-sun")]);
+  });
+
+  test("converts one selected card to hearts in the dealt hand", () => {
+    const card: Card = { id: 1, rank: "5", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.suit).toBe("hearts");
+  });
+
+  test("preserves the rank of the converted card", () => {
+    const card: Card = { id: 1, rank: "Q", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.rank).toBe("Q");
+  });
+
+  test("preserves the enhancement of the converted card", () => {
+    const card: Card = { id: 1, rank: "5", suit: "spades", enhancement: "glass" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.enhancement).toBe("glass");
+  });
+
+  test("original card id is added to destroyedCardIds (persistent removal)", () => {
+    const card: Card = { id: 7, rank: "5", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().destroyedCardIds.has(7)).toBe(true);
+  });
+
+  test("new converted card is pushed to addedCards (persistent addition)", () => {
+    const card: Card = { id: 1, rank: "5", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().addedCards;
+    expect(added.some((c) => c.suit === "hearts" && c.rank === "5")).toBe(true);
+  });
+
+  test("leaves non-selected cards unchanged (negative)", () => {
+    const a: Card = { id: 1, rank: "5", suit: "spades" };
+    const b: Card = { id: 2, rank: "5", suit: "clubs" };
+    seedHand([a, b]);
+    useGame.getState().setSelectedIds(new Set([a.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[1]?.suit).toBe("clubs");
+  });
+
+  test("converts three selected cards", () => {
+    const a: Card = { id: 1, rank: "5", suit: "spades" };
+    const b: Card = { id: 2, rank: "6", suit: "clubs" };
+    const c: Card = { id: 3, rank: "7", suit: "diamonds" };
+    seedHand([a, b, c]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id, c.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const suits = useGame.getState().dealt.hand.map((x) => x.suit);
+    expect(suits).toEqual(["hearts", "hearts", "hearts"]);
+  });
+
+  test("with no cards selected, The Sun is a no-op (consumable stays)", () => {
+    const card: Card = { id: 1, rank: "5", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set());
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("with more than 3 selected, The Sun is a no-op (no suit change)", () => {
+    const a: Card = { id: 1, rank: "5", suit: "spades" };
+    const b: Card = { id: 2, rank: "6", suit: "clubs" };
+    const c: Card = { id: 3, rank: "7", suit: "diamonds" };
+    const d: Card = { id: 4, rank: "8", suit: "spades" };
+    seedHand([a, b, c, d]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id, c.id, d.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand.map((x) => x.suit)).toEqual([
+      "spades",
+      "clubs",
+      "diamonds",
+      "spades",
+    ]);
+  });
+
+  test("The Sun is consumed from the consumable list on use", () => {
+    const card: Card = { id: 1, rank: "5", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+describe("useConsumableActions — The Star (suit-conversion) on pack-preview", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([suitConversionConsumable("the-star")]);
+  });
+
+  test("converts selected preview cards to diamonds", () => {
+    const card: Card = { id: 10, rank: "K", suit: "spades" };
+    useGame.getState().setOpenedPack({
+      pool: "standard",
+      variant: "normal",
+      options: [],
+    });
+    useGame.getState().setPackPreviewHand([card]);
+    useGame.getState().setPackPreviewSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand[0]?.suit).toBe("diamonds");
+  });
+
+  test("clears the preview selection after applying", () => {
+    const card: Card = { id: 11, rank: "K", suit: "spades" };
+    useGame.getState().setOpenedPack({
+      pool: "standard",
+      variant: "normal",
+      options: [],
+    });
+    useGame.getState().setPackPreviewHand([card]);
+    useGame.getState().setPackPreviewSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+});

@@ -1,4 +1,4 @@
-import type { Enhancement, Rank } from "../cards/types";
+import type { Enhancement, Rank, Suit } from "../cards/types";
 import { RANKS } from "../cards/deck";
 import type { Joker, JokerEdition, RandomSource } from "./jokers";
 import { JOKER_EDITION_KINDS, jokerSellValue } from "./jokers";
@@ -15,7 +15,7 @@ export type TarotEffect =
   | {
       readonly kind: "apply-enhancement";
       readonly enhancement: Enhancement;
-      readonly maxTargets: 1 | 2;
+      readonly maxTargets: 1 | 2 | 3;
     }
   | {
       readonly kind: "money-multiply";
@@ -32,11 +32,16 @@ export type TarotEffect =
     }
   | {
       readonly kind: "destroy-selected";
-      readonly maxTargets: 1 | 2;
+      readonly maxTargets: 1 | 2 | 3;
     }
   | {
       readonly kind: "rank-up-selected";
-      readonly maxTargets: 1 | 2;
+      readonly maxTargets: 1 | 2 | 3;
+    }
+  | {
+      readonly kind: "convert-suit";
+      readonly suit: Suit;
+      readonly maxTargets: 3;
     };
 
 export interface TarotCard {
@@ -70,9 +75,19 @@ function describe(spec: TarotSpec): string {
       effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
     return `Increase rank of ${targets} in hand by 1`;
   }
+  if (effect.kind === "convert-suit") {
+    return `Convert up to ${effect.maxTargets} cards in hand to ${SUIT_DISPLAY[effect.suit]}`;
+  }
   const targets = effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
   return `Apply ${effect.enhancement} enhancement to ${targets} in hand`;
 }
+
+const SUIT_DISPLAY: Readonly<Record<Suit, string>> = {
+  diamonds: "♦ Diamonds",
+  clubs: "♣ Clubs",
+  hearts: "♥ Hearts",
+  spades: "♠ Spades",
+};
 
 const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
   { id: "the-magician", name: "The Magician", effect: { kind: "apply-enhancement", enhancement: "lucky", maxTargets: 2 } },
@@ -85,6 +100,10 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
   { id: "the-tower", name: "The Tower", effect: { kind: "apply-enhancement", enhancement: "stone", maxTargets: 1 } },
   { id: "the-hanged-man", name: "The Hanged Man", effect: { kind: "destroy-selected", maxTargets: 2 } },
   { id: "strength", name: "Strength", effect: { kind: "rank-up-selected", maxTargets: 2 } },
+  { id: "the-star", name: "The Star", effect: { kind: "convert-suit", suit: "diamonds", maxTargets: 3 } },
+  { id: "the-moon", name: "The Moon", effect: { kind: "convert-suit", suit: "clubs", maxTargets: 3 } },
+  { id: "the-sun", name: "The Sun", effect: { kind: "convert-suit", suit: "hearts", maxTargets: 3 } },
+  { id: "the-world", name: "The World", effect: { kind: "convert-suit", suit: "spades", maxTargets: 3 } },
   { id: "the-hermit", name: "The Hermit", effect: { kind: "money-multiply", multiplier: 2, bonusCap: HERMIT_MONEY_CAP } },
   { id: "temperance", name: "Temperance", effect: { kind: "joker-sell-value-payout", cap: TEMPERANCE_MONEY_CAP } },
   {

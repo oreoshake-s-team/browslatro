@@ -32,7 +32,7 @@ interface OptionView {
   readonly description: string;
   readonly needsConsumableSlot: boolean;
   readonly needsJokerSlot: boolean;
-  readonly requiresPreviewSelection?: { readonly maxTargets: 1 | 2 };
+  readonly requiresPreviewSelection?: { readonly maxTargets: 1 | 2 | 3 };
 }
 
 function describeOption(option: PackOption): OptionView | null {
