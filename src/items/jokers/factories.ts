@@ -62,6 +62,8 @@ import {
   SMILEY_FACE_MULT,
   STEEL_JOKER_X_MULT_PER_STEEL,
   STONE_JOKER_CHIPS_PER_STONE,
+  STUNTMAN_CHIPS,
+  STUNTMAN_HAND_SIZE,
   SUIT_MULT_AMOUNT,
   THE_DUO_X_MULT,
   THE_FAMILY_X_MULT,
@@ -902,6 +904,20 @@ export function createTroubadourJoker(): Joker {
       kind: "passive-run-stats",
       handSize: TROUBADOUR_HAND_SIZE,
       hands: TROUBADOUR_HANDS,
+    },
+  };
+}
+
+export function createStuntmanJoker(): Joker {
+  return {
+    id: "stuntman",
+    rarity: "rare",
+    name: "Stuntman",
+    description: `+${STUNTMAN_CHIPS} Chips, -${Math.abs(STUNTMAN_HAND_SIZE)} hand size`,
+    effect: {
+      kind: "passive-run-stats",
+      handSize: STUNTMAN_HAND_SIZE,
+      additiveChips: STUNTMAN_CHIPS,
     },
   };
 }
