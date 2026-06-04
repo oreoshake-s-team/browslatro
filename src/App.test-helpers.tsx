@@ -43,8 +43,8 @@ export async function dismissBlindSelect(
 ): Promise<void> {
   const runConfirm = screen.queryByTestId("new-run-confirm");
   if (runConfirm) await user.click(runConfirm);
-  const btn = screen.queryByTestId("blind-select-play");
-  if (btn) await user.click(btn);
+  const btn = await screen.findByTestId("blind-select-play");
+  await user.click(btn);
 }
 
 export function getHandCardButtons(): HTMLElement[] {

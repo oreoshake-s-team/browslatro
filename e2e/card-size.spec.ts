@@ -11,8 +11,7 @@ test.beforeEach(async ({ context }) => {
 async function dismissBlindSelect(page: Page): Promise<void> {
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
-  const btn = page.getByTestId("blind-select-play");
-  if (await btn.isVisible().catch(() => false)) await btn.click();
+  await page.getByTestId("blind-select-play").click();
 }
 
 async function boxOf(page: Page, selector: string) {
