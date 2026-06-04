@@ -1,9 +1,20 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
+
+const analyzePlugin: PluginOption | false =
+  process.env.ANALYZE === "true" &&
+  visualizer({
+    filename: "bundle-stats.html",
+    gzipSize: true,
+    brotliSize: true,
+    template: "treemap",
+    open: false,
+  });
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), ...(analyzePlugin ? [analyzePlugin] : [])],
   build: {
     outDir: "build",
   },
