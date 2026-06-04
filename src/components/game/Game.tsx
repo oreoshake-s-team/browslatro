@@ -197,7 +197,7 @@ export default function Game({
           </div>
         </div>
       )}
-      <ModifierPanel />
+      {import.meta.env.DEV && <ModifierPanel />}
       <Suspense fallback={null}>
         <NopeAnimation triggerKey={nopeTriggerKey} />
       </Suspense>
