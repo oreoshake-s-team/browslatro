@@ -849,6 +849,17 @@ describe("Options modal new game integration", () => {
     expect(getStatValue("Round")).toHaveTextContent("1");
   });
 
+  test("confirming New game kicks the player back to the deck/stake screen", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    expect(screen.queryByTestId("new-run-confirm")).not.toBeInTheDocument();
+    vi.spyOn(window, "confirm").mockReturnValueOnce(true);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("New game"));
+    expect(screen.getByTestId("new-run-confirm")).toBeInTheDocument();
+  });
+
   test("cancelling the New game confirm leaves the current run intact (issue #269)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);

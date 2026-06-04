@@ -41,6 +41,8 @@ export function getStatValue(label: string): HTMLElement {
 export async function dismissBlindSelect(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
+  const runConfirm = screen.queryByTestId("new-run-confirm");
+  if (runConfirm) await user.click(runConfirm);
   const btn = screen.queryByTestId("blind-select-play");
   if (btn) await user.click(btn);
 }

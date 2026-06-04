@@ -98,6 +98,7 @@ export function useRoundLifecycle({
   );
   const setHandHistoryThisRound = useGame((s) => s.setHandHistoryThisRound);
   const setPendingBlindSelect = useGame((s) => s.setPendingBlindSelect);
+  const setPendingRunSelect = useGame((s) => s.setPendingRunSelect);
   const setRoundScore = useGame((s) => s.setRoundScore);
   const setRemainingHands = useGame((s) => s.setRemainingHands);
   const setRemainingDiscards = useGame((s) => s.setRemainingDiscards);
@@ -208,6 +209,7 @@ export function useRoundLifecycle({
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
     setPendingBlindSelect(true);
+    setPendingRunSelect(true);
   }
 
   function loseGame(): void {
