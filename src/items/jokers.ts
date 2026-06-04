@@ -68,6 +68,8 @@ export const ACROBAT_X_MULT = 3;
 export const ARROWHEAD_CHIPS = 50;
 export const ONYX_AGATE_MULT = 7;
 export const ROUGH_GEM_MONEY = 1;
+export const GOLDEN_JOKER_MONEY = 4;
+export const DELAYED_GRATIFICATION_MONEY_PER_DISCARD = 2;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -187,7 +189,12 @@ export type JokerEffect =
     }
   | { readonly kind: "x-mult-on-final-hand"; readonly amount: number }
   | { readonly kind: "per-suit-chips"; readonly suit: Suit; readonly amount: number }
-  | { readonly kind: "per-suit-money"; readonly suit: Suit; readonly amount: number };
+  | { readonly kind: "per-suit-money"; readonly suit: Suit; readonly amount: number }
+  | { readonly kind: "end-of-round-money"; readonly amount: number }
+  | {
+      readonly kind: "per-remaining-discard-end-of-round-money";
+      readonly amount: number;
+    };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -979,6 +986,29 @@ export function createRoughGemJoker(): Joker {
   };
 }
 
+export function createGoldenJoker(): Joker {
+  return {
+    id: "golden-joker",
+    rarity: "common",
+    name: "Golden Joker",
+    description: `Earn $${GOLDEN_JOKER_MONEY} at end of round`,
+    effect: { kind: "end-of-round-money", amount: GOLDEN_JOKER_MONEY },
+  };
+}
+
+export function createDelayedGratificationJoker(): Joker {
+  return {
+    id: "delayed-gratification",
+    rarity: "common",
+    name: "Delayed Gratification",
+    description: `Earn $${DELAYED_GRATIFICATION_MONEY_PER_DISCARD} per remaining discard at end of round`,
+    effect: {
+      kind: "per-remaining-discard-end-of-round-money",
+      amount: DELAYED_GRATIFICATION_MONEY_PER_DISCARD,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -1073,6 +1103,8 @@ export function createJokerCatalog(): Joker[] {
     createArrowheadJoker(),
     createOnyxAgateJoker(),
     createRoughGemJoker(),
+    createGoldenJoker(),
+    createDelayedGratificationJoker(),
   ];
 }
 
@@ -1320,6 +1352,8 @@ export function applyHandLevelJokers(
       case "per-scored-rank-x-mult":
       case "per-suit-chips":
       case "per-suit-money":
+      case "end-of-round-money":
+      case "per-remaining-discard-end-of-round-money":
         break;
       default:
         assertNeverEffect(effect);
@@ -1526,6 +1560,8 @@ export function applyPerCardJokers(
       case "other-jokers-sell-value-mult":
       case "per-held-face-chance-money":
       case "x-mult-on-final-hand":
+      case "end-of-round-money":
+      case "per-remaining-discard-end-of-round-money":
         break;
       default:
         assertNeverEffect(effect);
@@ -1573,6 +1609,54 @@ export function applyJokersToScoring(
     xMult: handResult.xMult * perCardXMult,
     moneyEarned,
   };
+}
+
+export interface EndOfRoundContext {
+  readonly remainingDiscards?: number;
+}
+
+export interface EndOfRoundStep {
+  readonly jokerId: string;
+  readonly jokerName: string;
+  readonly moneyEarned: number;
+}
+
+export interface EndOfRoundResult {
+  readonly moneyEarned: number;
+  readonly steps: ReadonlyArray<EndOfRoundStep>;
+}
+
+export function applyEndOfRoundJokers(
+  jokers: ReadonlyArray<Joker>,
+  context: EndOfRoundContext = {},
+): EndOfRoundResult {
+  let moneyEarned = 0;
+  const steps: EndOfRoundStep[] = [];
+  for (const joker of jokers) {
+    const effect = joker.effect;
+    if (effect.kind === "end-of-round-money") {
+      if (effect.amount > 0) {
+        moneyEarned += effect.amount;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: effect.amount,
+        });
+      }
+    } else if (effect.kind === "per-remaining-discard-end-of-round-money") {
+      const discards = Math.max(0, context.remainingDiscards ?? 0);
+      const earned = effect.amount * discards;
+      if (earned > 0) {
+        moneyEarned += earned;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: earned,
+        });
+      }
+    }
+  }
+  return { moneyEarned, steps };
 }
 
 export function computeFinalScoreWithJokers(
