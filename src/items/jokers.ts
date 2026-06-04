@@ -1001,7 +1001,7 @@ export function createDelayedGratificationJoker(): Joker {
     id: "delayed-gratification",
     rarity: "common",
     name: "Delayed Gratification",
-    description: `Earn $${DELAYED_GRATIFICATION_MONEY_PER_DISCARD} per remaining discard at end of round`,
+    description: `Earn $${DELAYED_GRATIFICATION_MONEY_PER_DISCARD} per remaining discard at end of round, if no discards were used this round`,
     effect: {
       kind: "per-remaining-discard-end-of-round-money",
       amount: DELAYED_GRATIFICATION_MONEY_PER_DISCARD,
@@ -1613,6 +1613,7 @@ export function applyJokersToScoring(
 
 export interface EndOfRoundContext {
   readonly remainingDiscards?: number;
+  readonly discardsUsedThisRound?: number;
 }
 
 export interface EndOfRoundStep {
@@ -1644,15 +1645,18 @@ export function applyEndOfRoundJokers(
         });
       }
     } else if (effect.kind === "per-remaining-discard-end-of-round-money") {
-      const discards = Math.max(0, context.remainingDiscards ?? 0);
-      const earned = effect.amount * discards;
-      if (earned > 0) {
-        moneyEarned += earned;
-        steps.push({
-          jokerId: joker.id,
-          jokerName: joker.name,
-          moneyEarned: earned,
-        });
+      const used = context.discardsUsedThisRound ?? 0;
+      if (used === 0) {
+        const discards = Math.max(0, context.remainingDiscards ?? 0);
+        const earned = effect.amount * discards;
+        if (earned > 0) {
+          moneyEarned += earned;
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: earned,
+          });
+        }
       }
     }
   }

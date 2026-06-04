@@ -45,6 +45,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const setHandPlaySignal = useGame((s) => s.setHandPlaySignal);
   const setConsumables = useGame((s) => s.setConsumables);
   const setRemainingDiscards = useGame((s) => s.setRemainingDiscards);
+  const setDiscardsUsedThisRound = useGame((s) => s.setDiscardsUsedThisRound);
 
   const currentHandSize = Math.max(
     1,
@@ -121,6 +122,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     pendingDiscardCountRef.current = selectedIds.size;
     setDiscardingIds(selectedIds);
     setRemainingDiscards((prev) => prev - 1);
+    setDiscardsUsedThisRound((prev) => prev + 1);
   }
 
   function resetForNewRound(): void {

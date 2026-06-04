@@ -19,9 +19,10 @@ beforeEach(() => {
 });
 
 describe("Delayed Gratification", () => {
-  test("pays DELAYED_GRATIFICATION_MONEY_PER_DISCARD per remaining discard", () => {
+  test("pays DELAYED_GRATIFICATION_MONEY_PER_DISCARD per remaining discard when no discards were used", () => {
     const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
       remainingDiscards: 3,
+      discardsUsedThisRound: 0,
     });
     expect(result.moneyEarned).toBe(DELAYED_GRATIFICATION_MONEY_PER_DISCARD * 3);
   });
@@ -29,6 +30,7 @@ describe("Delayed Gratification", () => {
   test("emits a single step crediting Delayed Gratification with the total", () => {
     const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
       remainingDiscards: 2,
+      discardsUsedThisRound: 0,
     });
     expect(result.steps).toEqual([
       {
@@ -39,9 +41,41 @@ describe("Delayed Gratification", () => {
     ]);
   });
 
+  test("treats missing discardsUsedThisRound as zero (defaults to firing)", () => {
+    const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
+      remainingDiscards: 1,
+    });
+    expect(result.moneyEarned).toBe(DELAYED_GRATIFICATION_MONEY_PER_DISCARD);
+  });
+
+  test("pays nothing once any discard has been used this round (negative)", () => {
+    const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
+      remainingDiscards: 3,
+      discardsUsedThisRound: 1,
+    });
+    expect(result.moneyEarned).toBe(0);
+  });
+
+  test("emits no step once any discard has been used this round (negative)", () => {
+    const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
+      remainingDiscards: 3,
+      discardsUsedThisRound: 1,
+    });
+    expect(result.steps).toEqual([]);
+  });
+
+  test("stays gated even when many discards have been used (negative)", () => {
+    const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
+      remainingDiscards: 2,
+      discardsUsedThisRound: 5,
+    });
+    expect(result.moneyEarned).toBe(0);
+  });
+
   test("pays nothing when no discards remain", () => {
     const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
       remainingDiscards: 0,
+      discardsUsedThisRound: 0,
     });
     expect(result.moneyEarned).toBe(0);
   });
@@ -49,6 +83,7 @@ describe("Delayed Gratification", () => {
   test("emits no step when no discards remain", () => {
     const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
       remainingDiscards: 0,
+      discardsUsedThisRound: 0,
     });
     expect(result.steps).toEqual([]);
   });
@@ -61,6 +96,7 @@ describe("Delayed Gratification", () => {
   test("clamps a negative remainingDiscards value to zero", () => {
     const result = applyEndOfRoundJokers([createDelayedGratificationJoker()], {
       remainingDiscards: -3,
+      discardsUsedThisRound: 0,
     });
     expect(result.moneyEarned).toBe(0);
   });

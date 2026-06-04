@@ -83,6 +83,7 @@ export function usePlayHand({
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const jokers = useGame((s) => s.jokers);
   const remainingDiscards = useGame((s) => s.remainingDiscards);
+  const discardsUsedThisRound = useGame((s) => s.discardsUsedThisRound);
   const handStats = useGame((s) => s.handStats);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const devChipsBonus = useGame((s) => s.devChipsBonus);
@@ -180,6 +181,7 @@ export function usePlayHand({
       const postBonusesWallet = postGoldWallet + remainingHandsBonus;
       const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
+        discardsUsedThisRound,
       });
       const postJokerWallet = postBonusesWallet + endOfRoundJokerResult.moneyEarned;
       const openModal = () => {
