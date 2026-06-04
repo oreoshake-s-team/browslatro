@@ -82,6 +82,10 @@ export const FLOWER_POT_X_MULT = 3;
 export const SEEING_DOUBLE_X_MULT = 2;
 export const JUGGLER_HAND_SIZE_BONUS = 1;
 export const DRUNKARD_DISCARDS_BONUS = 1;
+export const MERRY_ANDY_DISCARDS = 3;
+export const MERRY_ANDY_HAND_SIZE = -1;
+export const TROUBADOUR_HAND_SIZE = 2;
+export const TROUBADOUR_HANDS = -1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
