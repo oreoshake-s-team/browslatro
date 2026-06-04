@@ -80,6 +80,7 @@ async function ownTalismanWithPreview(): Promise<
     "button.shop-offer-buy",
   ) as HTMLButtonElement;
   await user.click(open);
+  await screen.findByTestId("pack-open-close");
   await user.click(screen.getByTestId("pack-open-pick-0"));
   return user;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
@@ -10,7 +10,7 @@ import {
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
-import RoundWonModal from "./components/game/RoundWonModal";
+const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
@@ -366,7 +366,9 @@ function App() {
         onCardDiscardEnd={handleCardDiscardEnd}
       />
       {pendingWin && (
-        <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+        <Suspense fallback={null}>
+          <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+        </Suspense>
       )}
       {pendingRunSelect && (
         <NewRunScreen

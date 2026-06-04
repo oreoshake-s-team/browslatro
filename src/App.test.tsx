@@ -642,7 +642,7 @@ describe("Submit Hand win integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
     // Round-won modal now blocks until dismissed.
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 
@@ -938,7 +938,7 @@ describe("Sequential card scoring", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await submitFirstFiveSpades();
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 });
@@ -1006,7 +1006,7 @@ describe("Hand-level joker ordering (issue #192)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await submitFirstFiveSpades();
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 });
@@ -1139,7 +1139,7 @@ describe("Round won modal", () => {
   test("clicking Continue dismisses the modal", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     // The round-won modal is gone (the post-round shop now takes over the
     // dialog role, so we assert on the round-won title specifically).
     expect(screen.queryByText(/Round Won!/)).not.toBeInTheDocument();
@@ -1148,7 +1148,7 @@ describe("Round won modal", () => {
   test("clicking Continue advances to the next blind", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(screen.getByText("Big Blind")).toBeInTheDocument();
   });
 
@@ -1161,7 +1161,7 @@ describe("Round won modal", () => {
     // Final = $4 + $3 + $3 + $3 + $1 = $14.
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(getStatValue("Money")).toHaveTextContent("$14");
   });
 
@@ -1175,7 +1175,7 @@ describe("Round won modal", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
     playMock.mockClear();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
     expect(winCalls).toHaveLength(0);
   });
@@ -1390,7 +1390,7 @@ describe("Post-round shop integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -1575,7 +1575,7 @@ describe("Post-round shop integration", () => {
     const buy = packOffer.querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
-    await user.click(screen.getByTestId("pack-open-close"));
+    await user.click(await screen.findByTestId("pack-open-close"));
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const afterPack = document.querySelector<HTMLElement>(
       "[data-offer-kind='pack']",
@@ -1614,7 +1614,7 @@ describe("Post-round shop integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
       "Reroll ($5)",
     );
@@ -1682,7 +1682,7 @@ describe("Planet purchase integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -1879,7 +1879,7 @@ describe("Tarot purchase integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -2090,7 +2090,7 @@ describe("Voucher integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -2146,7 +2146,7 @@ describe("Voucher integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
   });
 });
@@ -2162,7 +2162,7 @@ describe("Spectral purchase integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -2282,7 +2282,7 @@ describe("Voucher effects integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -2295,7 +2295,7 @@ describe("Voucher effects integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
   }
 
   test("ante 1 voucher is deterministic when the first Math.random is forced to 0", async () => {
@@ -2479,7 +2479,7 @@ describe("Consumable drag and sell integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     const planetIdx = findShopOfferIdxOfKind("planet");
     const buy = screen
       .getByTestId(`shop-offer-${planetIdx}`)
@@ -2574,7 +2574,7 @@ describe("Consumable drag and sell integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     const tarotIdx = findShopOfferIdxOfKind("tarot");
     const tarotName = screen
       .getByTestId(`shop-offer-${tarotIdx}`)
@@ -3006,7 +3006,7 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -3056,7 +3056,7 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     const offers = screen.getAllByTestId(/^shop-offer-/);
     const packIdx = offers.findIndex(
       (el) => el.getAttribute("data-offer-kind") === "pack",

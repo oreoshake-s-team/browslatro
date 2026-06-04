@@ -1,3 +1,4 @@
+import { Suspense, lazy } from "react";
 import "./Game.css";
 import type { Card } from "../../cards/types";
 import HandComponent from "../cards/Hand";
@@ -5,11 +6,10 @@ import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
 import Shop, { type ShopProps } from "../shop/Shop";
-import PackOpenModal, {
-  type PackOpenModalProps,
-} from "../shop/PackOpenModal";
+import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
-import NopeAnimation from "./NopeAnimation";
+const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
+const NopeAnimation = lazy(() => import("./NopeAnimation"));
 import { useGame } from "../../store/game";
 import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
@@ -143,7 +143,11 @@ export default function Game({
           </div>
         )}
       </div>
-      {packOpen && <PackOpenModal {...packOpen} />}
+      {packOpen && (
+        <Suspense fallback={null}>
+          <PackOpenModal {...packOpen} />
+        </Suspense>
+      )}
       {shop && <Shop {...shop} disabled={!!packOpen} />}
       {!shop && !packOpen && (
         <HandComponent
@@ -189,7 +193,9 @@ export default function Game({
         </div>
       )}
       <ModifierPanel />
-      <NopeAnimation triggerKey={nopeTriggerKey} />
+      <Suspense fallback={null}>
+        <NopeAnimation triggerKey={nopeTriggerKey} />
+      </Suspense>
     </div>
   );
 }
