@@ -35,7 +35,7 @@ vi.mock("./cards/deck", async () => {
 
 setupAppTestEnvironment();
 
-function openPoolPack(
+async function openPoolPack(
   user: ReturnType<typeof userEvent.setup>,
   pool: string,
 ): Promise<void> {
@@ -44,7 +44,8 @@ function openPoolPack(
   );
   if (!offer) throw new Error(`no ${pool} pack offer in shop`);
   const open = offer.querySelector("button.shop-offer-buy") as HTMLButtonElement;
-  return user.click(open);
+  await user.click(open);
+  await screen.findByTestId("pack-open-close");
 }
 
 describe("Spectral packs show a preview hand (#401)", () => {
@@ -58,7 +59,7 @@ describe("Spectral packs show a preview hand (#401)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     await openPoolPack(user, "spectral");
     expect(screen.getByTestId("pack-open-preview-hand")).toBeInTheDocument();
   });
@@ -80,7 +81,7 @@ describe("Applying owned enhancement tarots to the preview hand (#401)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     const tarotOffer = document.querySelector('[data-offer-kind="tarot"]');
     if (!tarotOffer) throw new Error("no tarot offer in shop");
     const tarotName =

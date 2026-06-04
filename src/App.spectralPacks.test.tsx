@@ -94,6 +94,7 @@ async function openSpectralPack(
     "button.shop-offer-buy",
   ) as HTMLButtonElement;
   await user.click(open);
+  await screen.findByTestId("pack-open-close");
   return user;
 }
 

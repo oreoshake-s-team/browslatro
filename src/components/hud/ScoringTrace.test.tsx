@@ -118,6 +118,7 @@ describe("ScoringTrace expand affordance", () => {
     const user = userEvent.setup();
     render(<ScoringTrace events={[]} />);
     await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await screen.findByRole("dialog");
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 
@@ -129,6 +130,7 @@ describe("ScoringTrace expand affordance", () => {
     );
     render(<ScoringTrace events={events} />);
     await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await screen.findByRole("dialog");
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("+11 Chips (A♠ rank)")).toBeInTheDocument();
   });
@@ -137,6 +139,7 @@ describe("ScoringTrace expand affordance", () => {
     const user = userEvent.setup();
     render(<ScoringTrace events={[]} />);
     await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await screen.findByRole("dialog");
     await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

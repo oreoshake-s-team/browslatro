@@ -87,7 +87,7 @@ describe("Joker drag-reorder during shop and pack-pick (#399)", () => {
     initialJokersConfig.factory = originalFactory;
   });
 
-  function openPackOffer(
+  async function openPackOffer(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     const offers = screen.getAllByTestId(/^shop-offer-/);
@@ -97,7 +97,8 @@ describe("Joker drag-reorder during shop and pack-pick (#399)", () => {
     const openBtn = offers[packIdx].querySelector(
       "button.shop-offer-buy",
     ) as HTMLButtonElement;
-    return user.click(openBtn);
+    await user.click(openBtn);
+    await screen.findByTestId("pack-open-close");
   }
 
   async function reachShop(): Promise<ReturnType<typeof userEvent.setup>> {
@@ -109,7 +110,7 @@ describe("Joker drag-reorder during shop and pack-pick (#399)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 

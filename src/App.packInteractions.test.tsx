@@ -63,7 +63,9 @@ function fakeDataTransfer(): DataTransfer {
   } as unknown as DataTransfer;
 }
 
-function openPackOffer(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+async function openPackOffer(
+  user: ReturnType<typeof userEvent.setup>,
+): Promise<void> {
   const offers = screen.getAllByTestId(/^shop-offer-/);
   const packIdx = offers.findIndex(
     (el) => el.getAttribute("data-offer-kind") === "pack",
@@ -71,7 +73,8 @@ function openPackOffer(user: ReturnType<typeof userEvent.setup>): Promise<void> 
   const openBtn = offers[packIdx].querySelector(
     "button.shop-offer-buy",
   ) as HTMLButtonElement;
-  return user.click(openBtn);
+  await user.click(openBtn);
+  await screen.findByTestId("pack-open-close");
 }
 
 describe("Selling and using during a pack-pick (#388)", () => {
@@ -101,7 +104,7 @@ describe("Selling and using during a pack-pick (#388)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -258,7 +261,7 @@ describe("Drag-to-deck sell while the shop is open (#388)", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 

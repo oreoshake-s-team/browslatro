@@ -60,7 +60,7 @@ describe("Wheel of Fortune nope animation — consumable-use path", () => {
     await buyWheelOfFortuneConsumable(user);
     tarotRngConfig.rng = MISS_RNG;
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(screen.getByTestId("nope-animation")).toBeInTheDocument();
+    expect(await screen.findByTestId("nope-animation")).toBeInTheDocument();
   });
 
   test("plays the nope animation when there is no joker to target", async () => {
@@ -70,7 +70,7 @@ describe("Wheel of Fortune nope animation — consumable-use path", () => {
     await buyWheelOfFortuneConsumable(user);
     tarotRngConfig.rng = HIT_RNG;
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(screen.getByTestId("nope-animation")).toBeInTheDocument();
+    expect(await screen.findByTestId("nope-animation")).toBeInTheDocument();
   });
 
   test("does not play the nope animation on a successful apply", async () => {
@@ -95,6 +95,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
     const open = arcanaOffer.querySelector("button.shop-offer-buy");
     if (!(open instanceof HTMLButtonElement)) throw new Error("missing open");
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
   }
 
   test("plays the nope animation when the edition roll misses", async () => {
@@ -104,7 +105,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
     await openArcanaPackWithWheelOfFortune(user);
     tarotRngConfig.rng = MISS_RNG;
     await user.click(screen.getByTestId("pack-open-pick-0"));
-    expect(screen.getByTestId("nope-animation")).toBeInTheDocument();
+    expect(await screen.findByTestId("nope-animation")).toBeInTheDocument();
   });
 
   test("plays the nope animation when there is no joker to target", async () => {
@@ -114,7 +115,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
     await openArcanaPackWithWheelOfFortune(user);
     tarotRngConfig.rng = HIT_RNG;
     await user.click(screen.getByTestId("pack-open-pick-0"));
-    expect(screen.getByTestId("nope-animation")).toBeInTheDocument();
+    expect(await screen.findByTestId("nope-animation")).toBeInTheDocument();
   });
 
   test("does not play the nope animation on a successful apply", async () => {

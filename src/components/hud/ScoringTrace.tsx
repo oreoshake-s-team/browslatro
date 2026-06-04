@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { Suspense, lazy, useCallback, useState } from "react";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
-import ScoringTraceModal from "./ScoringTraceModal";
 import "./ScoringTrace.css";
+
+const ScoringTraceModal = lazy(() => import("./ScoringTraceModal"));
 
 interface ScoringTraceProps {
   readonly events: ReadonlyArray<ScoringEvent>;
@@ -36,7 +37,9 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
         <ScoringTraceContent events={events} />
       </div>
       {isExpanded ? (
-        <ScoringTraceModal events={events} onClose={close} />
+        <Suspense fallback={null}>
+          <ScoringTraceModal events={events} onClose={close} />
+        </Suspense>
       ) : null}
     </section>
   );

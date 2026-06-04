@@ -45,7 +45,7 @@ describe("Celestial pack open + pick integration", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    await user.click(screen.getByRole("button", { name: /Continue/ }));
+    await user.click(await screen.findByRole("button", { name: /Continue/ }));
     return user;
   }
 
@@ -70,6 +70,7 @@ describe("Celestial pack open + pick integration", () => {
       .getByTestId(`shop-offer-${idx}`)
       .querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
   });
 
@@ -82,6 +83,7 @@ describe("Celestial pack open + pick integration", () => {
     const price = Number(priceText.replace(/[^0-9]/g, ""));
     const open = offer.querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     expect(moneyOf()).toBe(before - price);
   });
 
@@ -92,6 +94,7 @@ describe("Celestial pack open + pick integration", () => {
       .getByTestId(`shop-offer-${idx}`)
       .querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-close"));
     expect(
       screen
@@ -111,6 +114,7 @@ describe("Celestial pack open + pick integration", () => {
       .getByTestId(`shop-offer-${idx}`)
       .querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-pick-0"));
     expect(screen.queryAllByTestId(/^consumable-tile-filled-/)).toHaveLength(
       consumablesBefore,
@@ -125,6 +129,7 @@ describe("Celestial pack open + pick integration", () => {
       .getByTestId(`shop-offer-${idx}`)
       .querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-pick-0"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
     await screen.findByRole("dialog", { name: "Run Information" });
@@ -144,6 +149,7 @@ describe("Celestial pack open + pick integration", () => {
       .getByTestId(`shop-offer-${idx}`)
       .querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-pick-0"));
     expect(screen.queryByTestId("pack-open-subtitle")).not.toBeInTheDocument();
   });
@@ -155,6 +161,7 @@ describe("Celestial pack open + pick integration", () => {
       .getByTestId(`shop-offer-${idx}`)
       .querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
+    await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-close"));
     expect(
       screen
