@@ -1,0 +1,31 @@
+.modifier-pack-picker {
+  grid-column: 1 / -1;
+}
+
+.modifier-pack-picker-summary {
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+}
+
+.modifier-pack-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+}
+
+.add-pack-button {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  color: #495057;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.add-pack-button:hover {
+  background: #e9ecef;
+}
