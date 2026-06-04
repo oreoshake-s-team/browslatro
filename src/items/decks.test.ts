@@ -4,6 +4,7 @@ import {
   DEFAULT_DECK,
   createDeckCatalog,
   deckStartingDiscardsDelta,
+  deckStartingHandsDelta,
   deckStartingMoneyDelta,
   getDeckSpec,
   type Deck,
@@ -44,18 +45,18 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red Deck and Yellow Deck are implemented", () => {
+  test("Red, Yellow, and Blue Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
-    expect(implemented).toEqual(["red-deck", "yellow-deck"]);
+    expect(implemented).toEqual(["red-deck", "yellow-deck", "blue-deck"]);
   });
 
   test("other decks are not yet implemented (negative)", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(13);
+    expect(unimplementedCount).toBe(12);
   });
 });
 
@@ -76,5 +77,15 @@ describe("deckStartingDiscardsDelta", () => {
 
   test("Yellow Deck does not change starting discards (negative)", () => {
     expect(deckStartingDiscardsDelta("yellow-deck")).toBe(0);
+  });
+});
+
+describe("deckStartingHandsDelta", () => {
+  test("Blue Deck adds 1 hand", () => {
+    expect(deckStartingHandsDelta("blue-deck")).toBe(1);
+  });
+
+  test("Red Deck does not change starting hands (negative)", () => {
+    expect(deckStartingHandsDelta("red-deck")).toBe(0);
   });
 });
