@@ -154,3 +154,95 @@ describe("Round — Boss Blind name (#245 phase 0)", () => {
     expect(screen.getByText("Boss Blind")).toBeInTheDocument();
   });
 });
+
+describe("Round — The Mouth locked-hand indicator (#631)", () => {
+  const mouth: BossBlind = {
+    id: "the-mouth",
+    name: "The Mouth",
+    description: "Only one hand type can be played this round.",
+    scoreMultiplier: 2,
+    anteMin: 2,
+    effect: { kind: "single-hand-type" },
+  };
+
+  const wall: BossBlind = {
+    id: "the-wall",
+    name: "The Wall",
+    description: "Extra large blind requirement.",
+    scoreMultiplier: 4,
+    anteMin: 2,
+    effect: { kind: "none" },
+  };
+
+  test("renders the locked hand label when first hand has been played", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={600}
+        boss={mouth}
+        firstPlayedHandLabel="Pair"
+      />,
+    );
+    expect(screen.getByTestId("boss-locked-hand")).toHaveTextContent(
+      /Locked to:\s*Pair/,
+    );
+  });
+
+  test("does not render the locked indicator before any hand is played", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={600}
+        boss={mouth}
+        firstPlayedHandLabel={null}
+      />,
+    );
+    expect(screen.queryByTestId("boss-locked-hand")).not.toBeInTheDocument();
+  });
+
+  test("does not render the locked indicator when boss is not The Mouth", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={600}
+        boss={wall}
+        firstPlayedHandLabel="Pair"
+      />,
+    );
+    expect(screen.queryByTestId("boss-locked-hand")).not.toBeInTheDocument();
+  });
+
+  test("does not render the locked indicator on a non-boss blind", () => {
+    render(
+      <Round
+        blind={1}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={300}
+        boss={mouth}
+        firstPlayedHandLabel="Pair"
+      />,
+    );
+    expect(screen.queryByTestId("boss-locked-hand")).not.toBeInTheDocument();
+  });
+
+  test("uses an aria-label that names the locked hand for screen readers", () => {
+    render(
+      <Round
+        blind={3}
+        BlindValues={BlindValues}
+        roundScore={0}
+        requiredScore={600}
+        boss={mouth}
+        firstPlayedHandLabel="Flush"
+      />,
+    );
+    expect(screen.getByLabelText("Locked to Flush")).toBeInTheDocument();
+  });
+});

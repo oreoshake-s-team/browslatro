@@ -218,6 +218,8 @@ function App() {
   }, [setCurrentAnteVouchers]);
   const soldVoucherIds = useGame((state) => state.soldVoucherIds);
   const currentBoss = useGame((state) => state.currentBoss);
+  const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
+  const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
   useEffect(() => {
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
@@ -325,6 +327,7 @@ function App() {
         handStats={handStats}
         ownedVouchers={VOUCHER_CATALOG.filter((v) => ownedVoucherIds.has(v.id))}
         currentBoss={currentBoss}
+        firstPlayedHandLabel={firstPlayedHandLabel}
         scoringEvents={scoringEvents}
         onNewGame={startNewGame}
       />

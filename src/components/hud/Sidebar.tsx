@@ -32,6 +32,7 @@ interface SidebarProps {
   handStats: HandStats;
   ownedVouchers: ReadonlyArray<Voucher>;
   currentBoss: BossBlind | null;
+  firstPlayedHandLabel?: HandLabel | null;
   scoringEvents: ReadonlyArray<ScoringEvent>;
   onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
@@ -54,6 +55,7 @@ export default function Sidebar({
   handStats,
   ownedVouchers,
   currentBoss,
+  firstPlayedHandLabel = null,
   scoringEvents,
   onNewGame,
   onHighVisibilityChange,
@@ -67,6 +69,7 @@ export default function Sidebar({
         roundScore={roundScore}
         requiredScore={requiredScore}
         boss={currentBoss}
+        firstPlayedHandLabel={firstPlayedHandLabel}
       />
       <HandScore
         chips={chips}

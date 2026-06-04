@@ -14,13 +14,28 @@
 }
 
 .boss-effect {
-  font-size: 2.2rem;
+  font-size: 1.4rem;
   font-style: italic;
   color: #c92a2a;
   max-width: 18rem;
   margin-left: auto;
   margin-right: auto;
   line-height: 1.2;
+}
+
+.boss-locked-hand {
+  font-size: 1.1rem;
+  color: #862e9c;
+  max-width: 18rem;
+  margin: 0.5rem auto;
+  padding: 0.3rem 0;
+  line-height: 1.2;
+  border-top: 1px solid #dee2e6;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.boss-locked-hand strong {
+  font-weight: 700;
 }
 
 .round-score {
