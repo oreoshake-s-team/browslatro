@@ -42,11 +42,23 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
+  const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
 
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
     if (!entry) return;
     const previewActive = openedPack !== null && packPreviewHand.length > 0;
+    function consume(): void {
+      const idx = consumableIdx;
+      setConsumables((prev) => removeConsumableAt(prev, idx));
+      if (entry.kind === "planet") {
+        setLastUsedConsumable(entry);
+        return;
+      }
+      if (entry.kind === "tarot" && entry.card.id !== "the-fool") {
+        setLastUsedConsumable(entry);
+      }
+    }
     if (entry.kind === "planet") {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, entry.card));
@@ -65,7 +77,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
         setChips(entry2.chips);
         setMultiplier(entry2.multiplier);
       }
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (entry.kind === "spectral") {
@@ -80,7 +92,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
           }
           play("pop");
           applySealToSelectedPreviewCards(spectralEffect.seal);
-          setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+          consume();
           return;
         }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
@@ -95,7 +107,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
         setSelectedHand(null);
         setChips(0);
         setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        consume();
         return;
       }
       if (spectralEffect.kind === "duplicate-selected") {
@@ -110,7 +122,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
         setSelectedHand(null);
         setChips(0);
         setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        consume();
         return;
       }
       if (spectralEffect.kind === "aura") {
@@ -125,12 +137,12 @@ export function useConsumableActions(): UseConsumableActionsResult {
         setSelectedHand(null);
         setChips(0);
         setMultiplier(0);
-        setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+        consume();
         return;
       }
       play("pop");
       applySpectralEffect(spectralEffect);
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     const effect = entry.card.effect;
@@ -139,13 +151,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
       useGame
         .getState()
         .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (effect.kind === "joker-sell-value-payout") {
       play("pop");
       useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (effect.kind === "edition-roll") {
@@ -158,7 +170,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       } else {
         triggerNope();
       }
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (effect.kind === "destroy-selected") {
@@ -182,7 +194,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       setSelectedHand(null);
       setChips(0);
       setMultiplier(0);
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (effect.kind === "rank-up-selected") {
@@ -214,7 +226,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       setSelectedHand(null);
       setChips(0);
       setMultiplier(0);
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (previewActive) {
@@ -226,7 +238,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       }
       play("pop");
       applyEnhancementToSelectedPreviewCards(effect.enhancement);
-      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      consume();
       return;
     }
     if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
@@ -241,7 +253,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
     setSelectedHand(null);
     setChips(0);
     setMultiplier(0);
-    setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+    consume();
   }
 
   return { useConsumable };

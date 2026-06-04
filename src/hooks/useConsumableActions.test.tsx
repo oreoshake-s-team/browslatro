@@ -228,3 +228,101 @@ describe("useConsumableActions — Strength", () => {
     ]);
   });
 });
+
+function hermitConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-hermit");
+  if (!tarot) throw new Error("The Hermit missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+function plutoConsumable(): Consumable {
+  return {
+    kind: "planet",
+    card: {
+      id: "pluto",
+      name: "Pluto",
+      description: "test",
+      hands: ["High Card"],
+      chipsDelta: 10,
+      multDelta: 1,
+    },
+  };
+}
+
+function blackHoleConsumable(): Consumable {
+  return {
+    kind: "spectral",
+    card: {
+      id: "black-hole",
+      name: "Black Hole",
+      description: "test",
+      effect: { kind: "black-hole" },
+    },
+  };
+}
+
+function foolConsumable(): Consumable {
+  return {
+    kind: "tarot",
+    card: {
+      id: "the-fool",
+      name: "The Fool",
+      description: "test",
+      effect: { kind: "money-multiply", multiplier: 1, bonusCap: 0 },
+    },
+  };
+}
+
+describe("useConsumableActions — lastUsedConsumable tracking (#615)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("using a tarot records it as lastUsedConsumable", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual(hermit);
+  });
+
+  test("using a planet records it as lastUsedConsumable", () => {
+    const pluto = plutoConsumable();
+    useGame.getState().setConsumables([pluto]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual(pluto);
+  });
+
+  test("using a spectral does not update lastUsedConsumable", () => {
+    useGame.getState().setConsumables([blackHoleConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().lastUsedConsumable).toBeNull();
+  });
+
+  test("a spectral used after a tarot leaves the previous tarot as lastUsedConsumable", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit, blackHoleConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual(hermit);
+  });
+
+  test("using The Fool does not update lastUsedConsumable (it would copy itself)", () => {
+    useGame.getState().setConsumables([foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().lastUsedConsumable).toBeNull();
+  });
+
+  test("using The Fool after a tarot leaves the previous tarot as lastUsedConsumable", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit, foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual(hermit);
+  });
+});
