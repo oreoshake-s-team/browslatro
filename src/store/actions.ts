@@ -52,7 +52,7 @@ import {
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
-import { cardKey, createDeck, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
+import { cardKey, createDeck, nextCardId, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
 import { detectHandLabel } from "../scoring/handEvaluator";
 import { MAX_SELECTED } from "../components/cards/Hand";
 import {
@@ -97,6 +97,7 @@ export interface ActionsState {
   applySpectralEffect: (effect: SpectralEffect) => void;
   applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
   applySealToSelectedPreviewCards: (seal: Seal) => void;
+  duplicateSelectedPreviewCards: (copies: number) => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
 }
@@ -565,6 +566,22 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         s.packPreviewSelectedIds.has(c.id) ? { ...c, seal } : c,
       ),
     );
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  duplicateSelectedPreviewCards: (copies) => {
+    const s = get();
+    const originals = s.packPreviewHand.filter((c) =>
+      s.packPreviewSelectedIds.has(c.id),
+    );
+    if (originals.length === 0 || copies <= 0) return;
+    const additions: Card[] = [];
+    for (const original of originals) {
+      for (let i = 0; i < copies; i += 1) {
+        additions.push({ ...original, id: nextCardId() });
+      }
+    }
+    s.setAddedCards((prev) => [...prev, ...additions]);
+    s.setPackPreviewHand((prev) => [...prev, ...additions]);
     s.setPackPreviewSelectedIds(new Set());
   },
   toggleCard: (card) => {

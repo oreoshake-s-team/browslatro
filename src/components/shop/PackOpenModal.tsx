@@ -72,13 +72,18 @@ function describeOption(option: PackOption): OptionView | null {
   }
   if (option.kind === "spectral") {
     const effect = option.spectral.effect;
+    const appliesDirectlyToPreview = effect.kind === "duplicate-selected";
     return {
       id: option.spectral.id,
       icon: "👻",
       name: option.spectral.name,
       description: option.spectral.description,
-      needsConsumableSlot: spectralNeedsTarget(effect),
+      needsConsumableSlot:
+        spectralNeedsTarget(effect) && !appliesDirectlyToPreview,
       needsJokerSlot: false,
+      requiresPreviewSelection: appliesDirectlyToPreview
+        ? { maxTargets: effect.maxTargets }
+        : undefined,
     };
   }
   if (option.kind === "playing-card") {
