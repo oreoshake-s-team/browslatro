@@ -30,6 +30,7 @@ function resetPreferences(): void {
 }
 
 describe("Options", () => {
+  beforeEach(resetPreferences);
   afterEach(resetPreferences);
 
   test("button opens modal", async () => {

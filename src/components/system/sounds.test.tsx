@@ -1,8 +1,24 @@
 const isMutedMock = vi.fn(() => false);
+type PreferencesState = { muted: boolean; highVisibility: boolean };
+type Subscriber = (state: PreferencesState, prev: PreferencesState) => void;
+const subscribers = new Set<Subscriber>();
 
 vi.mock("./preferences", () => ({
   isMuted: () => isMutedMock(),
+  usePreferences: {
+    subscribe: (cb: Subscriber) => {
+      subscribers.add(cb);
+      return () => subscribers.delete(cb);
+    },
+  },
 }));
+
+function emitPrefsChange(
+  state: PreferencesState,
+  prev: PreferencesState,
+): void {
+  for (const cb of subscribers) cb(state, prev);
+}
 
 const audioContextCtor = vi.fn();
 
@@ -38,6 +54,7 @@ beforeEach(() => {
   audioContextCtor.mockReset();
   audioContextCtor.mockImplementation(buildFakeContext);
   vi.stubGlobal("AudioContext", audioContextCtor);
+  subscribers.clear();
 });
 
 afterEach(() => {
@@ -64,5 +81,45 @@ describe("play(\"pop\") sample path", () => {
     const { play } = await import("./sounds");
     play("pop");
     expect(audioContextCtor).not.toHaveBeenCalled();
+  });
+});
+
+describe("sample preloading", () => {
+  test("no <audio> elements are constructed at module-load time when unmuted (deferred)", async () => {
+    const audioCtor = vi.fn(function () {
+      return { volume: 0, cloneNode: () => null };
+    });
+    vi.stubGlobal("Audio", audioCtor);
+    vi.resetModules();
+    await import("./sounds");
+    expect(audioCtor).not.toHaveBeenCalled();
+  });
+
+  test("does not schedule a preload when muted at module load", async () => {
+    isMutedMock.mockReturnValue(true);
+    const setTimeoutSpy = vi.spyOn(window, "setTimeout");
+    vi.resetModules();
+    await import("./sounds");
+    expect(setTimeoutSpy).not.toHaveBeenCalled();
+    setTimeoutSpy.mockRestore();
+  });
+
+  test("preloads the three samples after unmuting", async () => {
+    isMutedMock.mockReturnValue(true);
+    const audioCtor = vi.fn(function () {
+      return { volume: 0, cloneNode: () => null };
+    });
+    vi.stubGlobal("Audio", audioCtor);
+    vi.useFakeTimers();
+    vi.resetModules();
+    await import("./sounds");
+    expect(audioCtor).not.toHaveBeenCalled();
+    emitPrefsChange(
+      { muted: false, highVisibility: false },
+      { muted: true, highVisibility: false },
+    );
+    vi.runAllTimers();
+    expect(audioCtor).toHaveBeenCalledTimes(3);
+    vi.useRealTimers();
   });
 });

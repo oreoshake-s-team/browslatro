@@ -1,4 +1,4 @@
-import { isMuted } from "./preferences";
+import { isMuted, usePreferences } from "./preferences";
 
 const cache = new Map<string, HTMLAudioElement>();
 const synths = new Map<string, () => void>();
@@ -45,7 +45,32 @@ function playGoldChime(): void {
   });
 }
 
-preload("pop", "/sounds/pop.mp3");
-preload("win", "/sounds/win.mp3");
-preload("lose", "/sounds/lose.mp3");
 registerSynth("gold", playGoldChime);
+
+let preloaded = false;
+
+function preloadAll(): void {
+  if (preloaded) return;
+  preloaded = true;
+  preload("pop", "/sounds/pop.mp3");
+  preload("win", "/sounds/win.mp3");
+  preload("lose", "/sounds/lose.mp3");
+}
+
+function schedulePreload(): void {
+  const w = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+  };
+  if (typeof w.requestIdleCallback === "function") {
+    w.requestIdleCallback(preloadAll, { timeout: 2000 });
+  } else {
+    window.setTimeout(preloadAll, 200);
+  }
+}
+
+if (typeof window !== "undefined") {
+  if (!isMuted()) schedulePreload();
+  usePreferences.subscribe((state, prev) => {
+    if (prev.muted && !state.muted) schedulePreload();
+  });
+}
