@@ -360,6 +360,14 @@ export function useScoringPipeline({
           source: step.jokerName,
         });
       }
+      if (step.moneyEarned !== undefined && step.moneyEarned !== 0) {
+        useGame.getState().earn(step.moneyEarned);
+        pushScoringEvent({
+          kind: "money-delta",
+          amount: step.moneyEarned,
+          source: step.jokerName,
+        });
+      }
       play("pop");
       pulseJokers([step.jokerId]);
     },
