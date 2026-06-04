@@ -794,6 +794,16 @@ describe("Suit-composition joker catalog membership (#682)", () => {
   });
 });
 
+describe("Passive run-stat joker catalog membership (#687)", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Juggler", id: "juggler" },
+    { name: "Drunkard", id: "drunkard" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(

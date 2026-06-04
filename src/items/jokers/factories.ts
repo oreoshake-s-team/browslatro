@@ -25,6 +25,7 @@ import {
   DRIVERS_LICENSE_ENHANCED_THRESHOLD,
   DRIVERS_LICENSE_X_MULT,
   DROLL_JOKER_MULT,
+  DRUNKARD_DISCARDS_BONUS,
   EROSION_MULT_PER_MISSING_CARD,
   EVEN_STEVEN_MULT,
   FACELESS_JOKER_FACE_THRESHOLD,
@@ -36,6 +37,7 @@ import {
   HALF_JOKER_MAX_CARDS,
   HALF_JOKER_MULT,
   JOLLY_JOKER_MULT,
+  JUGGLER_HAND_SIZE_BONUS,
   MAD_JOKER_MULT,
   MISPRINT_MAX_MULT,
   MISPRINT_MIN_MULT,
@@ -845,6 +847,29 @@ export function createSeeingDoubleJoker(): Joker {
     effect: {
       kind: "x-mult-when-clubs-and-other-suit",
       amount: SEEING_DOUBLE_X_MULT,
+    },
+  };
+}
+
+export function createJugglerJoker(): Joker {
+  return {
+    id: "juggler",
+    rarity: "common",
+    name: "Juggler",
+    description: `+${JUGGLER_HAND_SIZE_BONUS} hand size`,
+    effect: { kind: "passive-hand-size", amount: JUGGLER_HAND_SIZE_BONUS },
+  };
+}
+
+export function createDrunkardJoker(): Joker {
+  return {
+    id: "drunkard",
+    rarity: "common",
+    name: "Drunkard",
+    description: `+${DRUNKARD_DISCARDS_BONUS} discard each round`,
+    effect: {
+      kind: "passive-starting-discards",
+      amount: DRUNKARD_DISCARDS_BONUS,
     },
   };
 }

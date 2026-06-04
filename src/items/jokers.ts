@@ -18,6 +18,8 @@ export {
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
   effectiveJokerCount,
+  extraStartingDiscardsFromJokers,
+  extraStartingHandSizeFromJokers,
   pickRandomEquipped,
   pickRandomFromCatalog,
   polychromeRandomJokerDestroyOthers,

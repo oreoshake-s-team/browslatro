@@ -12,7 +12,10 @@ import {
   addConsumable,
 } from "../items/consumables";
 import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
-import { applyOnDiscardJokers } from "../items/jokers";
+import {
+  applyOnDiscardJokers,
+  extraStartingHandSizeFromJokers,
+} from "../items/jokers";
 import { cardLabel } from "../scoring/scoringTrace";
 
 export interface UseDiscardPipelineResult {
@@ -54,7 +57,10 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
 
   const currentHandSize = Math.max(
     1,
-    HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
+    HAND_SIZE +
+      handSizeModifier +
+      extraHandSize(ownedVoucherIds) +
+      extraStartingHandSizeFromJokers(jokers),
   );
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);

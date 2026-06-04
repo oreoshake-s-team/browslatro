@@ -195,6 +195,8 @@ export function applyPerCardJokers(
       case "x-mult-per-uncommon-joker":
       case "all-suits-x-mult":
       case "x-mult-when-clubs-and-other-suit":
+      case "passive-hand-size":
+      case "passive-starting-discards":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
         break;

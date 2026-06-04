@@ -7,6 +7,26 @@ export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
   return count;
 }
 
+export function extraStartingHandSizeFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-hand-size") total += j.effect.amount;
+  }
+  return total;
+}
+
+export function extraStartingDiscardsFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-starting-discards") total += j.effect.amount;
+  }
+  return total;
+}
+
 export function pickRandomEquipped(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
