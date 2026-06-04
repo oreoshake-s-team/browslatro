@@ -115,7 +115,7 @@ async function getImmolateInConsumables(
 ): Promise<void> {
   shopPickerRngConfig.rng = forceShopLayout(["spectral"]);
   await user.click(screen.getByText(/Add \$10/));
-  await user.click(screen.getByText(/^🏆 Win$/));
+  await user.click(screen.getByText(/^Win$/));
   const buy = document
     .querySelector('[data-offer-kind="spectral"]')
     ?.querySelector("button.shop-offer-buy");
@@ -135,7 +135,7 @@ describe("Immolate → discard refills hand to HAND_SIZE (#231)", () => {
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     expect(getHandCardButtons()).toHaveLength(3);
     await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByText(/🗑️ Discard/));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
     flushDiscardAnimation();
     expect(getHandCardButtons()).toHaveLength(8);
   });
@@ -144,7 +144,7 @@ describe("Immolate → discard refills hand to HAND_SIZE (#231)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByText(/🗑️ Discard/));
+    await user.click(screen.getByRole("button", { name: "Discard" }));
     flushDiscardAnimation();
     expect(getHandCardButtons()).toHaveLength(8);
   });

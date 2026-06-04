@@ -95,7 +95,7 @@ async function useWraith(
 ): Promise<void> {
   shopPickerRngConfig.rng = forceShopLayout(["spectral"]);
   await user.click(screen.getByText(/Add \$10/));
-  await user.click(screen.getByText(/^🏆 Win$/));
+  await user.click(screen.getByText(/^Win$/));
   const buy = document
     .querySelector('[data-offer-kind="spectral"]')
     ?.querySelector("button.shop-offer-buy");

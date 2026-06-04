@@ -49,7 +49,7 @@ export default function NewRunScreen({
           <h3 id="new-run-deck-label" className="new-run-section-label">
             Deck
           </h3>
-          <ul
+          <div
             className="new-run-deck-grid"
             role="radiogroup"
             aria-label="Deck variant"
@@ -57,7 +57,7 @@ export default function NewRunScreen({
             {DECKS.map((spec) => {
               const isSelected = spec.id === deck;
               return (
-                <li key={spec.id} className="new-run-deck-cell">
+                <div key={spec.id} className="new-run-deck-cell">
                   <button
                     type="button"
                     role="radio"
@@ -71,10 +71,10 @@ export default function NewRunScreen({
                   >
                     <span className="new-run-deck-name">{spec.name}</span>
                   </button>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
           <p
             className="new-run-deck-description"
             data-testid="new-run-deck-description"
@@ -90,7 +90,7 @@ export default function NewRunScreen({
           <h3 id="new-run-stake-label" className="new-run-section-label">
             Stake
           </h3>
-          <ul
+          <div
             className="new-run-stake-grid"
             role="radiogroup"
             aria-label="Stake difficulty"
@@ -98,7 +98,7 @@ export default function NewRunScreen({
             {STAKES.map((spec) => {
               const isSelected = spec.id === stake;
               return (
-                <li key={spec.id} className="new-run-stake-cell">
+                <div key={spec.id} className="new-run-stake-cell">
                   <button
                     type="button"
                     role="radio"
@@ -112,10 +112,10 @@ export default function NewRunScreen({
                   >
                     <span className="new-run-stake-name">{spec.name}</span>
                   </button>
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
           <p
             className="new-run-stake-description"
             data-testid="new-run-stake-description"

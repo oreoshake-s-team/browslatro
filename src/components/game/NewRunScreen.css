@@ -185,15 +185,15 @@
   padding: 0.8rem 2rem;
   font-size: 1.1rem;
   font-weight: 600;
-  background-color: #2f9e44;
+  background-color: #1f7a33;
   color: #f8f9fa;
-  border: 2px solid #2b8a3e;
+  border: 2px solid #186626;
   border-radius: 6px;
   cursor: pointer;
 }
 
 .new-run-confirm:hover {
-  background-color: #37b24d;
+  background-color: #287d3a;
 }
 
 .new-run-confirm:focus-visible {

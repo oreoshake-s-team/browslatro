@@ -126,4 +126,16 @@ describe("NewRunScreen", () => {
     fireEvent.focus(screen.getByTestId("new-run-confirm"));
     expect(screen.getByTestId("new-run-confirm")).toHaveFocus();
   });
+
+  test("the deck radiogroup is not a list (#640)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    const group = screen.getByRole("radiogroup", { name: "Deck variant" });
+    expect(group.tagName).toBe("DIV");
+  });
+
+  test("the stake radiogroup is not a list (#640)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    const group = screen.getByRole("radiogroup", { name: "Stake difficulty" });
+    expect(group.tagName).toBe("DIV");
+  });
 });

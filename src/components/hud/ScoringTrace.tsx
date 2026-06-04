@@ -22,7 +22,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
           className="scoring-trace__expand"
           onClick={open}
           aria-haspopup="dialog"
-          aria-label="Expand scoring trace to full screen"
+          title="Expand scoring trace to full screen"
         >
           <span aria-hidden="true">⤢ </span>Expand
         </button>

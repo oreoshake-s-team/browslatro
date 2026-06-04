@@ -105,7 +105,7 @@ describe("ScoringTrace expand affordance", () => {
   test("renders an Expand button", () => {
     render(<ScoringTrace events={[]} />);
     expect(
-      screen.getByRole("button", { name: /expand scoring trace/i }),
+      screen.getByRole("button", { name: "Expand" }),
     ).toBeInTheDocument();
   });
 
@@ -117,7 +117,7 @@ describe("ScoringTrace expand affordance", () => {
   test("pressing Expand opens the full-screen dialog", async () => {
     const user = userEvent.setup();
     render(<ScoringTrace events={[]} />);
-    await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await user.click(screen.getByRole("button", { name: "Expand" }));
     await screen.findByRole("dialog");
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
@@ -129,7 +129,7 @@ describe("ScoringTrace expand affordance", () => {
       { kind: "chips-delta", amount: 11, source: "A♠ rank" },
     );
     render(<ScoringTrace events={events} />);
-    await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await user.click(screen.getByRole("button", { name: "Expand" }));
     await screen.findByRole("dialog");
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("+11 Chips (A♠ rank)")).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe("ScoringTrace expand affordance", () => {
   test("closing the dialog returns to the sidebar trace", async () => {
     const user = userEvent.setup();
     render(<ScoringTrace events={[]} />);
-    await user.click(screen.getByRole("button", { name: /expand scoring trace/i }));
+    await user.click(screen.getByRole("button", { name: "Expand" }));
     await screen.findByRole("dialog");
     await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -146,15 +146,16 @@ describe("ScoringTrace expand affordance", () => {
 
   test("expand button glyph is aria-hidden so it does not split the accessible name (#606)", () => {
     render(<ScoringTrace events={[]} />);
-    const btn = screen.getByRole("button", { name: /expand scoring trace/i });
+    const btn = screen.getByRole("button", { name: "Expand" });
     const decoration = btn.querySelector("span[aria-hidden='true']");
     expect(decoration).toHaveTextContent("⤢");
   });
 
-  test("expand button still exposes its descriptive accessible name (negative)", () => {
+  test("expand button keeps the long description on title for hover/voice (#640)", () => {
     render(<ScoringTrace events={[]} />);
-    expect(
-      screen.getByRole("button", { name: "Expand scoring trace to full screen" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Expand" })).toHaveAttribute(
+      "title",
+      "Expand scoring trace to full screen",
+    );
   });
 });

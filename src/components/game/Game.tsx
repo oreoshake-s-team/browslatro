@@ -107,7 +107,7 @@ export default function Game({
     : selectedIds.size;
 
   return (
-    <div className="game">
+    <main className="game" aria-label="Game">
       <div className="game-top-row">
         <Jokers
           jokers={jokers}
@@ -180,14 +180,14 @@ export default function Game({
               onClick={onSubmitHand}
               disabled={isScoring || !canSubmit}
             >
-              🃏 Submit Hand
+              <span aria-hidden="true">🃏 </span>Submit Hand
             </button>
             <button
               className="discard-button"
               onClick={onDiscard}
               disabled={!canDiscard}
             >
-              🗑️ Discard
+              <span aria-hidden="true">🗑️ </span>Discard
             </button>
           </div>
         </div>
@@ -196,6 +196,6 @@ export default function Game({
       <Suspense fallback={null}>
         <NopeAnimation triggerKey={nopeTriggerKey} />
       </Suspense>
-    </div>
+    </main>
   );
 }

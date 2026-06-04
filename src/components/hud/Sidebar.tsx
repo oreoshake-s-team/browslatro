@@ -60,7 +60,7 @@ export default function Sidebar({
   onAnimationSpeedChange,
 }: SidebarProps) {
   return (
-    <div className="sidebar">
+    <aside className="sidebar" aria-label="Game status">
       <Round
         blind={blind}
         BlindValues={BlindValues}
@@ -97,6 +97,6 @@ export default function Sidebar({
         </div>
       </div>
       <ScoringTrace events={scoringEvents} />
-    </div>
+    </aside>
   );
 }
