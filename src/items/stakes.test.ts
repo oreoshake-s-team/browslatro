@@ -130,19 +130,18 @@ describe("hasStakeModifier", () => {
 });
 
 describe("StakeSpec.implemented", () => {
-  test("White and Red are implemented", () => {
+  test("White, Red, and Green are implemented", () => {
     const implemented = createStakeCatalog()
       .filter((s) => s.implemented)
       .map((s) => s.id);
-    expect(implemented).toEqual(["white", "red"]);
+    expect(implemented).toEqual(["white", "red", "green"]);
   });
 
-  test("Green through Gold are not implemented (negative)", () => {
+  test("Black through Gold are not implemented (negative)", () => {
     const unimplemented = createStakeCatalog()
       .filter((s) => !s.implemented)
       .map((s) => s.id);
     expect(unimplemented).toEqual([
-      "green",
       "black",
       "blue",
       "purple",

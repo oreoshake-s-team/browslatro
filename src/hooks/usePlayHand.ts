@@ -35,7 +35,7 @@ import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../items/consumables";
-import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../constants";
+import { requiredChipsForBlind } from "../scoring/anteScaling";
 import { applyCardEnhancement } from "../cards/enhancements";
 import {
   blueSealHeldCards,
@@ -99,10 +99,12 @@ export function usePlayHand({
   const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
 
-  const requiredScore =
-    blind === 3
-      ? BASE_CHIPS[ante - 1] * currentBoss.scoreMultiplier
-      : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
+  const requiredScore = requiredChipsForBlind({
+    ante,
+    blind,
+    boss: currentBoss,
+    stake: selectedStake,
+  });
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
