@@ -140,4 +140,18 @@ describe("ScoringTrace expand affordance", () => {
     await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
+
+  test("expand button glyph is aria-hidden so it does not split the accessible name (#606)", () => {
+    render(<ScoringTrace events={[]} />);
+    const btn = screen.getByRole("button", { name: /expand scoring trace/i });
+    const decoration = btn.querySelector("span[aria-hidden='true']");
+    expect(decoration).toHaveTextContent("⤢");
+  });
+
+  test("expand button still exposes its descriptive accessible name (negative)", () => {
+    render(<ScoringTrace events={[]} />);
+    expect(
+      screen.getByRole("button", { name: "Expand scoring trace to full screen" }),
+    ).toBeInTheDocument();
+  });
 });

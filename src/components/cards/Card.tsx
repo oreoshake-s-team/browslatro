@@ -175,7 +175,7 @@ export default function Card({
         <span className="card-stone-face" aria-hidden="true" />
       ) : (
         <>
-          <span className="card-corner card-corner-top">
+          <span className="card-corner card-corner-top" aria-hidden="true">
             <span className="card-rank">{card.rank}</span>
             <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
           </span>

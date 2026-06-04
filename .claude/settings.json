@@ -2,18 +2,6 @@
   "hooks": {
     "PostToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "agent",
-            "if": "Bash(git commit *)",
-            "prompt": "A git commit was just made. Run 'git show --stat HEAD' to find which source files changed (ignore test files like *.test.* or *.spec.*). For each changed source file, check whether tests already exist and add or update tests to cover the new or modified code. Project rules: strict TypeScript with no `any` types, one assertion per test unless testing a multistep flow, keep code compartmentalized. Do NOT run git commit — leave the test changes unstaged for the user to review.",
-            "timeout": 180,
-            "statusMessage": "Reviewing committed changes and updating tests..."
-          }
-        ]
-      },
-      {
         "matcher": "Edit|Write",
         "hooks": [
           {
