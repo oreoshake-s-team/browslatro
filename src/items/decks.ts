@@ -19,7 +19,8 @@ export const DEFAULT_DECK: Deck = "red-deck";
 
 export type DeckModifier =
   | { readonly kind: "starting-money-delta"; readonly amount: number }
-  | { readonly kind: "starting-discards-delta"; readonly amount: number };
+  | { readonly kind: "starting-discards-delta"; readonly amount: number }
+  | { readonly kind: "starting-hands-delta"; readonly amount: number };
 
 export interface DeckSpec {
   readonly id: Deck;
@@ -44,7 +45,13 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     implemented: true,
     modifiers: [{ kind: "starting-money-delta", amount: 10 }],
   },
-  { id: "blue-deck", name: "Blue Deck", description: "+1 hand each round.", implemented: false, modifiers: [] },
+  {
+    id: "blue-deck",
+    name: "Blue Deck",
+    description: "+1 hand each round.",
+    implemented: true,
+    modifiers: [{ kind: "starting-hands-delta", amount: 1 }],
+  },
   { id: "green-deck", name: "Green Deck", description: "At end of round, +$2 per remaining hand and discard; no interest.", implemented: false, modifiers: [] },
   { id: "black-deck", name: "Black Deck", description: "+1 joker slot, -1 hand each round.", implemented: false, modifiers: [] },
   { id: "magic-deck", name: "Magic Deck", description: "Start with Crystal Ball voucher and 2 copies of The Fool.", implemented: false, modifiers: [] },
@@ -87,6 +94,15 @@ export function deckStartingDiscardsDelta(deck: Deck): number {
     .filter(
       (m): m is Extract<DeckModifier, { kind: "starting-discards-delta" }> =>
         m.kind === "starting-discards-delta",
+    )
+    .reduce((sum, m) => sum + m.amount, 0);
+}
+
+export function deckStartingHandsDelta(deck: Deck): number {
+  return getActiveDeckModifiers(deck)
+    .filter(
+      (m): m is Extract<DeckModifier, { kind: "starting-hands-delta" }> =>
+        m.kind === "starting-hands-delta",
     )
     .reduce((sum, m) => sum + m.amount, 0);
 }

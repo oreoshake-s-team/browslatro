@@ -35,6 +35,7 @@ import {
 } from "../items/tags";
 import {
   deckStartingDiscardsDelta,
+  deckStartingHandsDelta,
   deckStartingMoneyDelta,
 } from "../items/decks";
 
@@ -149,7 +150,9 @@ export function useRoundLifecycle({
     const startingHands =
       (isBossRound
         ? bossStartingHands(effectiveBoss)
-        : DEFAULT_STARTING_HANDS) + extraStartingHands(ownedVoucherIds);
+        : DEFAULT_STARTING_HANDS) +
+      extraStartingHands(ownedVoucherIds) +
+      deckStartingHandsDelta(selectedDeck);
     const startingDiscards =
       (isBossRound
         ? bossStartingDiscards(effectiveBoss)
