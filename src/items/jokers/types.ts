@@ -152,6 +152,7 @@ export type JokerEffect =
       readonly hands?: number;
       readonly discards?: number;
       readonly additiveChips?: number;
+      readonly debtFloor?: number;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";

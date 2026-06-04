@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { useGame } from "./game";
 import { STARTING_MONEY } from "./economy";
+import { CREDIT_CARD_DEBT_FLOOR, createCreditCardJoker } from "../items/jokers";
 
 describe("economy store", () => {
   beforeEach(() => {
-    useGame.setState({ money: STARTING_MONEY });
+    useGame.setState({ money: STARTING_MONEY, jokers: [] });
   });
 
   test("starts with the starting wallet", () => {
@@ -48,5 +49,43 @@ describe("economy store", () => {
     useGame.getState().earn(20);
     useGame.getState().resetEconomy();
     expect(useGame.getState().money).toBe(STARTING_MONEY);
+  });
+
+  test("Credit Card lets spend dip into debt up to its floor (#705)", () => {
+    useGame.setState({ money: 0, jokers: [createCreditCardJoker()] });
+    const ok = useGame.getState().spend(5);
+    expect(ok).toBe(true);
+  });
+
+  test("Credit Card debt purchase reduces money below zero (#705)", () => {
+    useGame.setState({ money: 0, jokers: [createCreditCardJoker()] });
+    useGame.getState().spend(5);
+    expect(useGame.getState().money).toBe(-5);
+  });
+
+  test("Credit Card blocks a spend that would exceed the debt floor (#705)", () => {
+    useGame.setState({ money: 0, jokers: [createCreditCardJoker()] });
+    expect(
+      useGame.getState().spend(CREDIT_CARD_DEBT_FLOOR + 1),
+    ).toBe(false);
+  });
+
+  test("Credit Card blocked spend leaves money untouched (#705)", () => {
+    useGame.setState({ money: 0, jokers: [createCreditCardJoker()] });
+    useGame.getState().spend(CREDIT_CARD_DEBT_FLOOR + 1);
+    expect(useGame.getState().money).toBe(0);
+  });
+
+  test("Two Credit Cards double the debt floor (#705)", () => {
+    useGame.setState({
+      money: 0,
+      jokers: [createCreditCardJoker(), createCreditCardJoker()],
+    });
+    expect(useGame.getState().spend(CREDIT_CARD_DEBT_FLOOR + 5)).toBe(true);
+  });
+
+  test("Without Credit Card, spend still blocks at zero (negative #705)", () => {
+    useGame.setState({ money: 3, jokers: [] });
+    expect(useGame.getState().spend(5)).toBe(false);
   });
 });
