@@ -159,9 +159,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const voucher = s.currentAnteVouchers[voucherIdx];
     if (!voucher) return;
     if (s.soldVoucherIds.has(voucher.id)) return;
-    if (s.money < voucher.cost) return;
+    const price = applyShopDiscount(voucher.cost, s.ownedVoucherIds);
+    if (s.money < price) return;
     if (voucher.requires && !s.ownedVoucherIds.has(voucher.requires)) return;
-    s.spend(voucher.cost);
+    s.spend(price);
     const nextOwnedVoucherIds = new Set(s.ownedVoucherIds);
     nextOwnedVoucherIds.add(voucher.id);
     const handGain =

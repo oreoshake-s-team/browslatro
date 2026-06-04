@@ -74,6 +74,48 @@ describe("game actions slice", () => {
     expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(false);
   });
 
+  test("buyAnteVoucher applies Clearance Sale 25% off (#434)", () => {
+    const voucher = VOUCHER_CATALOG.find(
+      (v) => !v.requires && v.id !== "clearance-sale",
+    );
+    if (!voucher) throw new Error("expected a prereq-free voucher");
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set(["clearance-sale"]));
+    game.setCurrentAnteVouchers([voucher]);
+    game.setMoney(voucher.cost);
+    game.buyAnteVoucher(0);
+    const expected = voucher.cost - Math.ceil(voucher.cost * 0.75);
+    expect(useGame.getState().money).toBe(expected);
+  });
+
+  test("buyAnteVoucher applies Liquidation 50% off (#434)", () => {
+    const voucher = VOUCHER_CATALOG.find(
+      (v) => !v.requires && v.id !== "clearance-sale" && v.id !== "liquidation",
+    );
+    if (!voucher) throw new Error("expected a prereq-free voucher");
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set(["clearance-sale", "liquidation"]));
+    game.setCurrentAnteVouchers([voucher]);
+    game.setMoney(voucher.cost);
+    game.buyAnteVoucher(0);
+    const expected = voucher.cost - Math.ceil(voucher.cost * 0.5);
+    expect(useGame.getState().money).toBe(expected);
+  });
+
+  test("buyAnteVoucher succeeds at the discounted price when full price is unaffordable (#434, negative)", () => {
+    const voucher = VOUCHER_CATALOG.find(
+      (v) => !v.requires && v.id !== "clearance-sale",
+    );
+    if (!voucher) throw new Error("expected a prereq-free voucher");
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set(["clearance-sale"]));
+    game.setCurrentAnteVouchers([voucher]);
+    const discounted = Math.max(1, Math.ceil(voucher.cost * 0.75));
+    game.setMoney(discounted);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(true);
+  });
+
   test("rerollShopOffers spends the reroll cost", () => {
     const game = useGame.getState();
     game.setShopOffers([]);
