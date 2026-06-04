@@ -29,6 +29,7 @@ import {
   isFaceCard,
 } from "../items/jokers";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
+import { fullDeckPile } from "../cards/deckBuild";
 import { hasStakeModifier } from "../items/stakes";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -92,6 +93,10 @@ export function usePlayHand({
   const roundScore = useGame((s) => s.roundScore);
   const remainingHands = useGame((s) => s.remainingHands);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const destroyedCardKeys = useGame((s) => s.destroyedCardKeys);
+  const addedCards = useGame((s) => s.addedCards);
+  const cardEnhancementsByKey = useGame((s) => s.cardEnhancementsByKey);
+  const cardSealsByKey = useGame((s) => s.cardSealsByKey);
 
   const requiredScore =
     blind === 3
@@ -179,9 +184,16 @@ export function usePlayHand({
       const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
       const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
       const postBonusesWallet = postGoldWallet + remainingHandsBonus;
+      const fullDeck = fullDeckPile(
+        destroyedCardKeys,
+        addedCards,
+        cardEnhancementsByKey,
+        cardSealsByKey,
+      ).remaining;
       const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
         discardsUsedThisRound,
+        fullDeck,
       });
       const postJokerWallet = postBonusesWallet + endOfRoundJokerResult.moneyEarned;
       const openModal = () => {
