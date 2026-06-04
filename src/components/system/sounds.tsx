@@ -45,7 +45,21 @@ function playGoldChime(): void {
   });
 }
 
-preload("pop", "/sounds/pop.mp3");
-preload("win", "/sounds/win.mp3");
-preload("lose", "/sounds/lose.mp3");
 registerSynth("gold", playGoldChime);
+
+function preloadAll(): void {
+  preload("pop", "/sounds/pop.mp3");
+  preload("win", "/sounds/win.mp3");
+  preload("lose", "/sounds/lose.mp3");
+}
+
+if (typeof window !== "undefined") {
+  const w = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => void;
+  };
+  if (typeof w.requestIdleCallback === "function") {
+    w.requestIdleCallback(preloadAll, { timeout: 2000 });
+  } else {
+    window.setTimeout(preloadAll, 200);
+  }
+}

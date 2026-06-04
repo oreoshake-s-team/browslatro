@@ -66,3 +66,13 @@ describe("play(\"pop\") sample path", () => {
     expect(audioContextCtor).not.toHaveBeenCalled();
   });
 });
+
+describe("sample preloading is deferred", () => {
+  test("no <audio> elements are constructed at module-load time", async () => {
+    const audioCtor = vi.fn(() => ({ volume: 0, cloneNode: () => null }));
+    vi.stubGlobal("Audio", audioCtor);
+    vi.resetModules();
+    await import("./sounds");
+    expect(audioCtor).not.toHaveBeenCalled();
+  });
+});
