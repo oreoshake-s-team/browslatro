@@ -7,6 +7,7 @@ import {
   getActiveStakeModifiers,
   getActiveStakes,
   getStakeSpec,
+  hasStakeModifier,
   stakeRank,
   type Stake,
 } from "./stakes";
@@ -97,11 +98,56 @@ describe("getActiveStakeModifiers", () => {
     expect(getActiveStakeModifiers("white")).toEqual([]);
   });
 
-  test("returns an empty list at intermediate stakes (Red)", () => {
-    expect(getActiveStakeModifiers("red")).toEqual([]);
+  test("returns the Red modifier at Red", () => {
+    expect(
+      getActiveStakeModifiers("red").some(
+        (m) => m.kind === "red-small-blind-no-reward",
+      ),
+    ).toBe(true);
   });
 
-  test("returns an empty list at Gold while per-stake effects are unimplemented", () => {
-    expect(getActiveStakeModifiers("gold")).toEqual([]);
+  test("Red modifier persists into Gold (cumulative)", () => {
+    expect(
+      getActiveStakeModifiers("gold").some(
+        (m) => m.kind === "red-small-blind-no-reward",
+      ),
+    ).toBe(true);
+  });
+});
+
+describe("hasStakeModifier", () => {
+  test("is false at White for the Red modifier (negative)", () => {
+    expect(hasStakeModifier("white", "red-small-blind-no-reward")).toBe(false);
+  });
+
+  test("is true at Red for the Red modifier", () => {
+    expect(hasStakeModifier("red", "red-small-blind-no-reward")).toBe(true);
+  });
+
+  test("is true at Gold for the Red modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "red-small-blind-no-reward")).toBe(true);
+  });
+});
+
+describe("StakeSpec.implemented", () => {
+  test("White and Red are implemented", () => {
+    const implemented = createStakeCatalog()
+      .filter((s) => s.implemented)
+      .map((s) => s.id);
+    expect(implemented).toEqual(["white", "red"]);
+  });
+
+  test("Green through Gold are not implemented (negative)", () => {
+    const unimplemented = createStakeCatalog()
+      .filter((s) => !s.implemented)
+      .map((s) => s.id);
+    expect(unimplemented).toEqual([
+      "green",
+      "black",
+      "blue",
+      "purple",
+      "orange",
+      "gold",
+    ]);
   });
 });
