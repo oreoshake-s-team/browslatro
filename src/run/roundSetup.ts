@@ -12,6 +12,7 @@ import {
   type Deck,
 } from "../items/decks";
 import {
+  discardsOverrideFromJokers,
   extraStartingDiscardsFromJokers,
   extraStartingHandsFromJokers,
   type Joker,
@@ -45,6 +46,8 @@ export function computeStartingHands(ctx: StartingResourceContext): number {
 }
 
 export function computeStartingDiscards(ctx: StartingResourceContext): number {
+  const override = discardsOverrideFromJokers(ctx.jokers);
+  if (override !== null) return Math.max(0, override);
   const isBossRound = ctx.blind === 3;
   const base = isBossRound
     ? bossStartingDiscards(ctx.boss)

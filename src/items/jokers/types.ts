@@ -151,6 +151,7 @@ export type JokerEffect =
       readonly handSize?: number;
       readonly hands?: number;
       readonly discards?: number;
+      readonly discardsOverride?: number;
       readonly additiveChips?: number;
       readonly debtFloor?: number;
     };

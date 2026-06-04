@@ -17,6 +17,7 @@ export {
 export {
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
+  discardsOverrideFromJokers,
   effectiveJokerCount,
   extraDebtFloorFromJokers,
   extraStartingDiscardsFromJokers,

@@ -828,6 +828,13 @@ describe("Credit Card catalog membership (#705)", () => {
   });
 });
 
+describe("Burglar catalog membership (#709)", () => {
+  test("Burglar appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("burglar");
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(
