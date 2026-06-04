@@ -25,15 +25,33 @@ html {
   overflow-x: hidden;
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1280px) {
   html {
     font-size: 75%;
   }
 }
 
-@media (min-width: 1920px) {
+@media (min-width: 1440px) {
   html {
     font-size: 87.5%;
+  }
+}
+
+@media (min-width: 1700px) {
+  html {
+    font-size: 100%;
+  }
+}
+
+@media (min-width: 1920px) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
+@media (min-width: 2400px) {
+  html {
+    font-size: 125%;
   }
 }
 

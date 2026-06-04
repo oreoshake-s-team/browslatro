@@ -1,17 +1,19 @@
 .new-run-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--sidebar-width, 0px);
   z-index: 130;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  padding-left: calc(var(--sidebar-width, 0px) + 1.5rem);
 }
 
 .new-run-modal {
-  width: min(640px, 100%);
+  width: min(60rem, 100%);
   background-color: #1c2128;
   color: #e9ecef;
   border-radius: 12px;
