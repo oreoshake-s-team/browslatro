@@ -17,6 +17,7 @@ import {
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
+import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
@@ -401,9 +402,11 @@ function App() {
         onCardDiscardEnd={handleCardDiscardEnd}
       />
       {pendingWin && (
-        <Suspense fallback={null}>
-          <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
-        </Suspense>
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={null}>
+            <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
       )}
       {pendingRunSelect && (
         <NewRunScreen
@@ -418,37 +421,41 @@ function App() {
         />
       )}
       {pendingJokerGrantIds.length > 0 && (
-        <Suspense fallback={null}>
-          <JokerGrantAcknowledge
-            jokers={pendingJokerGrantIds.flatMap((id) => {
-              const j = jokers.find((joker) => joker.id === id);
-              return j ? [j] : [];
-            })}
-            onAcknowledge={() => setPendingJokerGrantIds([])}
-          />
-        </Suspense>
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={null}>
+            <JokerGrantAcknowledge
+              jokers={pendingJokerGrantIds.flatMap((id) => {
+                const j = jokers.find((joker) => joker.id === id);
+                return j ? [j] : [];
+              })}
+              onAcknowledge={() => setPendingJokerGrantIds([])}
+            />
+          </Suspense>
+        </LazyChunkErrorBoundary>
       )}
       {pendingBlindSelect &&
         !pendingRunSelect &&
         openedPack === null &&
         pendingJokerGrantIds.length === 0 && (
-          <Suspense fallback={null}>
-            <BlindSelectScreenLazy
-              ante={ante}
-              currentBlind={blind}
-              boss={currentBoss}
-              stake={selectedStake}
-              onPlay={confirmBlindSelect}
-              onSkip={skipBlind}
-              tags={pendingTags}
-              skipRewards={skipTagOffers}
-              bossOptions={availableBosses(createBossCatalog(), ante)}
-              onSetBoss={(id) => {
-                const next = createBossCatalog().find((b) => b.id === id);
-                if (next) setCurrentBoss(next);
-              }}
-            />
-          </Suspense>
+          <LazyChunkErrorBoundary>
+            <Suspense fallback={null}>
+              <BlindSelectScreenLazy
+                ante={ante}
+                currentBlind={blind}
+                boss={currentBoss}
+                stake={selectedStake}
+                onPlay={confirmBlindSelect}
+                onSkip={skipBlind}
+                tags={pendingTags}
+                skipRewards={skipTagOffers}
+                bossOptions={availableBosses(createBossCatalog(), ante)}
+                onSetBoss={(id) => {
+                  const next = createBossCatalog().find((b) => b.id === id);
+                  if (next) setCurrentBoss(next);
+                }}
+              />
+            </Suspense>
+          </LazyChunkErrorBoundary>
         )}
     </div>
   );
