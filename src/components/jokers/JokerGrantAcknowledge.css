@@ -1,0 +1,83 @@
+.joker-grant-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 130;
+}
+
+.joker-grant-modal {
+  background-color: #1a1f2e;
+  color: #f8f9fa;
+  border: 2px solid #51cf66;
+  border-radius: 12px;
+  padding: 2rem 2.4rem;
+  width: min(28rem, 80vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-sizing: border-box;
+}
+
+.joker-grant-title {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: #b2f2bb;
+}
+
+.joker-grant-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.joker-grant-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #51cf66;
+  background-color: rgba(81, 207, 102, 0.08);
+}
+
+.joker-grant-name {
+  font-weight: 700;
+  color: #c3fae8;
+}
+
+.joker-grant-description {
+  font-size: 0.9rem;
+  color: #b2f2bb;
+}
+
+.joker-grant-ok {
+  align-self: center;
+  padding: 0.8rem 2.4rem;
+  border-radius: 8px;
+  background-color: #51cf66;
+  color: #102b1c;
+  border: none;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.joker-grant-ok:hover {
+  background-color: #69db7c;
+}
+
+.joker-grant-ok:focus-visible {
+  outline: 2px solid #74c0fc;
+  outline-offset: 2px;
+}

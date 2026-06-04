@@ -3,6 +3,9 @@ import { Suspense, lazy, useEffect, useRef } from "react";
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
 );
+const JokerGrantAcknowledge = lazy(
+  () => import("./components/jokers/JokerGrantAcknowledge"),
+);
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
@@ -196,6 +199,12 @@ function App() {
   const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
+  );
+  const pendingJokerGrantIds = useGame(
+    (state) => state.pendingJokerGrantIds,
+  );
+  const setPendingJokerGrantIds = useGame(
+    (state) => state.setPendingJokerGrantIds,
   );
   const pendingRunSelect = useGame((state) => state.pendingRunSelect);
   const setPendingRunSelect = useGame((state) => state.setPendingRunSelect);
@@ -407,25 +416,39 @@ function App() {
           }}
         />
       )}
-      {pendingBlindSelect && !pendingRunSelect && (
+      {pendingJokerGrantIds.length > 0 && (
         <Suspense fallback={null}>
-          <BlindSelectScreenLazy
-            ante={ante}
-            currentBlind={blind}
-            boss={currentBoss}
-            stake={selectedStake}
-            onPlay={confirmBlindSelect}
-            onSkip={skipBlind}
-            tags={pendingTags}
-            skipRewards={skipTagOffers}
-            bossOptions={availableBosses(createBossCatalog(), ante)}
-            onSetBoss={(id) => {
-              const next = createBossCatalog().find((b) => b.id === id);
-              if (next) setCurrentBoss(next);
-            }}
+          <JokerGrantAcknowledge
+            jokers={pendingJokerGrantIds.flatMap((id) => {
+              const j = jokers.find((joker) => joker.id === id);
+              return j ? [j] : [];
+            })}
+            onAcknowledge={() => setPendingJokerGrantIds([])}
           />
         </Suspense>
       )}
+      {pendingBlindSelect &&
+        !pendingRunSelect &&
+        openedPack === null &&
+        pendingJokerGrantIds.length === 0 && (
+          <Suspense fallback={null}>
+            <BlindSelectScreenLazy
+              ante={ante}
+              currentBlind={blind}
+              boss={currentBoss}
+              stake={selectedStake}
+              onPlay={confirmBlindSelect}
+              onSkip={skipBlind}
+              tags={pendingTags}
+              skipRewards={skipTagOffers}
+              bossOptions={availableBosses(createBossCatalog(), ante)}
+              onSetBoss={(id) => {
+                const next = createBossCatalog().find((b) => b.id === id);
+                if (next) setCurrentBoss(next);
+              }}
+            />
+          </Suspense>
+        )}
     </div>
   );
 }

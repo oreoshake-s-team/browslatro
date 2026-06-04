@@ -3572,6 +3572,10 @@ describe("Voucher tag", () => {
 });
 
 describe("Top-up tag", () => {
+  beforeEach(() => {
+    useGame.getState().closeOpenedPack();
+    useGame.getState().setPendingJokerGrantIds([]);
+  });
   const jokerCount = () => screen.queryAllByTestId(/^joker-tile-filled-/).length;
 
   test("gaining Top-up creates two Common Jokers", async () => {
@@ -3591,6 +3595,88 @@ describe("Top-up tag", () => {
     const before = jokerCount();
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(jokerCount() - before).toBe(0);
+  });
+
+  test("Top-up shows the joker-grant ack modal (#654)", async () => {
+    tagOfferRngConfig.rng = rngForTag("top-up");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(await screen.findByTestId("blind-select-skip"));
+    expect(await screen.findByTestId("joker-grant-modal")).toBeInTheDocument();
+  });
+
+  test("Top-up hides the BlindSelectScreen while the ack modal is up (#654)", async () => {
+    tagOfferRngConfig.rng = rngForTag("top-up");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await screen.findByTestId("joker-grant-modal");
+    expect(screen.queryByTestId("blind-select-play")).not.toBeInTheDocument();
+  });
+
+  test("dismissing the joker-grant modal brings BlindSelect back (#654)", async () => {
+    tagOfferRngConfig.rng = rngForTag("top-up");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(await screen.findByTestId("joker-grant-ok"));
+    expect(await screen.findByTestId("blind-select-play")).toBeInTheDocument();
+  });
+
+  test("a non-Top-up tag does not show the joker-grant modal (negative #654)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.queryByTestId("joker-grant-modal")).not.toBeInTheDocument();
+  });
+});
+
+describe("Skip tag pack rewards hide BlindSelect (#654)", () => {
+  beforeEach(() => {
+    useGame.getState().closeOpenedPack();
+    useGame.getState().setPendingJokerGrantIds([]);
+  });
+
+  test("Charm tag hides BlindSelectScreen while the Mega Arcana pack is open", async () => {
+    tagOfferRngConfig.rng = rngForTag("charm");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await screen.findByTestId("pack-open-close");
+    expect(screen.queryByTestId("blind-select-play")).not.toBeInTheDocument();
+  });
+
+  test("closing the Charm-tag pack brings BlindSelect back", async () => {
+    tagOfferRngConfig.rng = rngForTag("charm");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await user.click(await screen.findByTestId("pack-open-close"));
+    expect(await screen.findByTestId("blind-select-play")).toBeInTheDocument();
+  });
+
+  test("Ethereal tag hides BlindSelectScreen while the Spectral pack is open", async () => {
+    tagOfferRngConfig.rng = rngForTag("ethereal");
+    shopPickerRngConfig.rng = () => 0;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    await screen.findByTestId("pack-open-close");
+    expect(screen.queryByTestId("blind-select-play")).not.toBeInTheDocument();
+  });
+
+  test("a non-pack tag does not hide BlindSelect (negative)", async () => {
+    tagOfferRngConfig.rng = rngForTag("economy");
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByTestId("blind-select-skip"));
+    expect(screen.getByTestId("blind-select-play")).toBeInTheDocument();
   });
 });
 
