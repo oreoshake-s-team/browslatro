@@ -326,6 +326,12 @@ export function usePlayHand({
       (sum, card) => sum + getCardChips(card),
       0,
     );
+    const handLevelFullDeck = fullDeckPile(
+      destroyedCardKeys,
+      addedCards,
+      cardEnhancementsByKey,
+      cardSealsByKey,
+    ).remaining;
     const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
@@ -334,6 +340,7 @@ export function usePlayHand({
       remainingHands,
       money,
       heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
+      fullDeck: handLevelFullDeck,
     });
 
     let perCardAdditiveMult = 0;

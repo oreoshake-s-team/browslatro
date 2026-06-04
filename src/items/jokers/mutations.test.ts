@@ -4,7 +4,6 @@ import {
   YORICK_MULT,
   cloneJoker,
   copyRandomJokerDestroyOthers,
-  createBaronJoker,
   createBusinessCardJoker,
   createJokerByRarity,
   createJokerCatalog,
@@ -216,7 +215,9 @@ describe("createJokerByRarity", () => {
   });
 
   test("returns null when no unowned joker of the rarity exists", () => {
-    const result = createJokerByRarity([createBaronJoker()], createJokerCatalog(), "rare", 5, fixedRng([0]));
+    const catalog = createJokerCatalog();
+    const allRare = catalog.filter((j) => j.rarity === "rare");
+    const result = createJokerByRarity(allRare, catalog, "rare", 99, fixedRng([0]));
     expect(result).toBeNull();
   });
 });
