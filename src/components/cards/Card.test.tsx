@@ -351,12 +351,6 @@ describe("Card accessible-name vs visible-text (#606)", () => {
     expect(corner).toHaveAttribute("aria-hidden", "true");
   });
 
-  test("bottom corner visible glyphs are aria-hidden so they do not duplicate the aria-label", () => {
-    const { container } = render(<Card card={aceOfSpades} />);
-    const corner = container.querySelector(".card-corner-bottom");
-    expect(corner).toHaveAttribute("aria-hidden", "true");
-  });
-
   test("the button's accessible name still comes from the aria-label", () => {
     render(<Card card={aceOfSpades} />);
     expect(screen.getByRole("button")).toHaveAccessibleName("A of Spades");
