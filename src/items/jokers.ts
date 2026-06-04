@@ -58,6 +58,10 @@ export const BOOTSTRAPS_MULT_PER_BUCKET = 2;
 export const BOOTSTRAPS_BUCKET_DOLLARS = 5;
 export const BLACKBOARD_X_MULT = 3;
 export const BLACKBOARD_SUITS: ReadonlyArray<Suit> = ["spades", "clubs"];
+export const BLOODSTONE_CHANCE = 0.5;
+export const BLOODSTONE_X_MULT = 1.5;
+export const RESERVED_PARKING_CHANCE = 0.5;
+export const RESERVED_PARKING_PAYOUT = 1;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -157,6 +161,18 @@ export type JokerEffect =
       readonly kind: "x-mult-when-held-suits-all-in";
       readonly suits: ReadonlyArray<Suit>;
       readonly amount: number;
+    }
+  | {
+      readonly kind: "per-suit-chance-x-mult";
+      readonly suit: Suit;
+      readonly chance: number;
+      readonly amount: number;
+    }
+  | { readonly kind: "other-jokers-sell-value-mult" }
+  | {
+      readonly kind: "per-held-face-chance-money";
+      readonly chance: number;
+      readonly payout: number;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
@@ -311,12 +327,14 @@ export interface JokerHandLevelStep {
   readonly additiveMult?: number;
   readonly additiveChips?: number;
   readonly xMultFactor?: number;
+  readonly moneyEarned?: number;
 }
 
 export interface JokerHandResult {
   readonly additiveMult: number;
   readonly additiveChips: number;
   readonly xMult: number;
+  readonly moneyEarned: number;
   readonly firedJokerIds: ReadonlyArray<string>;
   readonly steps: ReadonlyArray<JokerHandLevelStep>;
 }
@@ -878,6 +896,45 @@ export function createBlackboardJoker(): Joker {
   };
 }
 
+export function createBloodstoneJoker(): Joker {
+  return {
+    id: "bloodstone",
+    rarity: "uncommon",
+    name: "Bloodstone",
+    description: `Each scored Heart has a 1 in ${Math.round(1 / BLOODSTONE_CHANCE)} chance to give X${BLOODSTONE_X_MULT} Mult`,
+    effect: {
+      kind: "per-suit-chance-x-mult",
+      suit: "hearts",
+      chance: BLOODSTONE_CHANCE,
+      amount: BLOODSTONE_X_MULT,
+    },
+  };
+}
+
+export function createSwashbucklerJoker(): Joker {
+  return {
+    id: "swashbuckler",
+    rarity: "common",
+    name: "Swashbuckler",
+    description: "Adds the sell value of all other equipped Jokers to Mult",
+    effect: { kind: "other-jokers-sell-value-mult" },
+  };
+}
+
+export function createReservedParkingJoker(): Joker {
+  return {
+    id: "reserved-parking",
+    rarity: "common",
+    name: "Reserved Parking",
+    description: `Each face card held in hand has a 1 in ${Math.round(1 / RESERVED_PARKING_CHANCE)} chance to give $${RESERVED_PARKING_PAYOUT}`,
+    effect: {
+      kind: "per-held-face-chance-money",
+      chance: RESERVED_PARKING_CHANCE,
+      payout: RESERVED_PARKING_PAYOUT,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
@@ -941,6 +998,9 @@ export function createJokerCatalog(): Joker[] {
     createAbstractJoker(),
     createBootstrapsJoker(),
     createBlackboardJoker(),
+    createBloodstoneJoker(),
+    createSwashbucklerJoker(),
+    createReservedParkingJoker(),
   ];
 }
 
@@ -971,6 +1031,7 @@ export function applyHandLevelJokers(
   let additiveMult = 0;
   let additiveChips = 0;
   let xMult = 1;
+  let moneyEarned = 0;
   const fired: string[] = [];
   const steps: JokerHandLevelStep[] = [];
 
@@ -1140,12 +1201,41 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "other-jokers-sell-value-mult": {
+        let total = 0;
+        for (let k = 0; k < jokers.length; k += 1) {
+          if (k !== i) total += jokerSellValue(jokers[k]);
+        }
+        if (total > 0) {
+          additiveMult += total;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: total });
+        }
+        break;
+      }
+      case "per-held-face-chance-money": {
+        const held = context.heldInHandCards ?? [];
+        const rng = context.rng ?? Math.random;
+        let earned = 0;
+        for (const c of held) {
+          if (isFaceCard(c) && rollChance(effect.chance, rng)) {
+            earned += effect.payout;
+          }
+        }
+        if (earned > 0) {
+          moneyEarned += earned;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, moneyEarned: earned });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
       case "per-scored-face":
       case "x-mult-on-face-scored":
       case "per-scored-rank":
+      case "per-suit-chance-x-mult":
         break;
       default:
         assertNeverEffect(effect);
@@ -1174,7 +1264,7 @@ export function applyHandLevelJokers(
     }
   }
 
-  return { additiveMult, additiveChips, xMult, firedJokerIds: fired, steps };
+  return { additiveMult, additiveChips, xMult, moneyEarned, firedJokerIds: fired, steps };
 }
 
 export function applyPerCardJokers(
@@ -1214,6 +1304,18 @@ export function applyPerCardJokers(
             jokerId: joker.id,
             jokerName: joker.name,
             additiveMult: effect.amount,
+          });
+        }
+        break;
+      }
+      case "per-suit-chance-x-mult": {
+        if (card.suit === effect.suit && rollChance(effect.chance, rng)) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
           });
         }
         break;
@@ -1301,6 +1403,8 @@ export function applyPerCardJokers(
       case "per-joker-count-mult":
       case "per-money-bucket-mult":
       case "x-mult-when-held-suits-all-in":
+      case "other-jokers-sell-value-mult":
+      case "per-held-face-chance-money":
         break;
       default:
         assertNeverEffect(effect);
@@ -1327,7 +1431,7 @@ export function applyJokersToScoring(
     ...context,
     scoredCards: context.scoredCards ?? scoredCards,
   });
-  let moneyEarned = 0;
+  let moneyEarned = handResult.moneyEarned;
   let perCardAdditiveMult = 0;
   let perCardAdditiveChips = 0;
   let perCardXMult = 1;
