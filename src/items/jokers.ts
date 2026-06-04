@@ -1,258 +1,107 @@
-import type { Card, Enhancement, Rank, Suit } from "../cards/types";
+import type { Card, Rank } from "../cards/types";
 import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
 import { getRankChips } from "../scoring/scoring";
-import { JOKER_BASE_PRICE } from "../constants";
+import {
+  ABSTRACT_JOKER_MULT_PER_JOKER,
+  ACROBAT_X_MULT,
+  ARROWHEAD_CHIPS,
+  BANNER_CHIPS_PER_DISCARD,
+  BARON_RANKS,
+  BARON_X_MULT,
+  BLACKBOARD_SUITS,
+  BLACKBOARD_X_MULT,
+  BLOODSTONE_CHANCE,
+  BLOODSTONE_X_MULT,
+  BOOTSTRAPS_BUCKET_DOLLARS,
+  BOOTSTRAPS_MULT_PER_BUCKET,
+  BULL_CHIPS_PER_DOLLAR,
+  BUSINESS_CARD_PROC_CHANCE,
+  CLEVER_JOKER_CHIPS,
+  CLOUD_9_MONEY_PER_NINE,
+  CLOUD_9_RANKS,
+  CRAFTY_JOKER_CHIPS,
+  CRAZY_JOKER_MULT,
+  DELAYED_GRATIFICATION_MONEY_PER_DISCARD,
+  DEVIOUS_JOKER_CHIPS,
+  DRIVERS_LICENSE_ENHANCED_THRESHOLD,
+  DRIVERS_LICENSE_X_MULT,
+  DROLL_JOKER_MULT,
+  EVEN_STEVEN_MULT,
+  FACELESS_JOKER_FACE_THRESHOLD,
+  FACELESS_JOKER_PAYOUT,
+  FIBONACCI_MULT,
+  FIBONACCI_RANKS,
+  FOIL_CHIPS,
+  GOLDEN_JOKER_MONEY,
+  HALF_JOKER_MAX_CARDS,
+  HALF_JOKER_MULT,
+  HOLOGRAPHIC_MULT,
+  JOKER_SELL_VALUE,
+  JOLLY_JOKER_MULT,
+  MAD_JOKER_MULT,
+  MAX_JOKERS,
+  MISPRINT_MAX_MULT,
+  MISPRINT_MIN_MULT,
+  MYSTIC_SUMMIT_MULT,
+  ODD_TODD_CHIPS,
+  ONYX_AGATE_MULT,
+  PHOTOGRAPH_X_MULT,
+  POLYCHROME_X_MULT,
+  RANK_PARITY,
+  RAISED_FIST_MULTIPLIER,
+  RESERVED_PARKING_CHANCE,
+  RESERVED_PARKING_PAYOUT,
+  ROUGH_GEM_MONEY,
+  SCARY_FACE_CHIPS,
+  SCHOLAR_CHIPS,
+  SCHOLAR_MULT,
+  SCHOLAR_RANKS,
+  SHOOT_THE_MOON_MULT,
+  SHOOT_THE_MOON_RANKS,
+  SLY_JOKER_CHIPS,
+  SMILEY_FACE_MULT,
+  STEEL_JOKER_X_MULT_PER_STEEL,
+  STONE_JOKER_CHIPS_PER_STONE,
+  SUIT_MULT_AMOUNT,
+  THE_DUO_X_MULT,
+  THE_FAMILY_X_MULT,
+  THE_ORDER_X_MULT,
+  THE_TRIBE_X_MULT,
+  THE_TRIO_X_MULT,
+  TRADING_CARD_DISCARD_SIZE,
+  TRADING_CARD_PAYOUT,
+  TRIBOULET_RANKS,
+  TRIBOULET_X_MULT,
+  WALKIE_TALKIE_CHIPS,
+  WALKIE_TALKIE_MULT,
+  WALKIE_TALKIE_RANKS,
+  WILY_JOKER_CHIPS,
+  ZANY_JOKER_MULT,
+} from "./jokers/constants";
+import type {
+  Joker,
+  JokerEdition,
+  JokerEditionInfo,
+  JokerRarity,
+  RandomSource,
+} from "./jokers/types";
 
-export const MAX_JOKERS = 5;
-
-export const JOKER_SELL_VALUE = Math.floor(JOKER_BASE_PRICE / 2);
+export * from "./jokers/constants";
+export type {
+  Joker,
+  JokerEdition,
+  JokerEditionInfo,
+  JokerEffect,
+  JokerRarity,
+  RandomSource,
+} from "./jokers/types";
 
 export function jokerSellValue(_joker: Joker): number {
   return JOKER_SELL_VALUE;
 }
-export const BUSINESS_CARD_PROC_CHANCE = 0.5;
-export const SUIT_MULT_AMOUNT = 3;
-export const JOLLY_JOKER_MULT = 8;
-export const ZANY_JOKER_MULT = 12;
-export const MAD_JOKER_MULT = 10;
-export const CRAZY_JOKER_MULT = 12;
-export const DROLL_JOKER_MULT = 10;
-export const SLY_JOKER_CHIPS = 50;
-export const WILY_JOKER_CHIPS = 100;
-export const CLEVER_JOKER_CHIPS = 80;
-export const DEVIOUS_JOKER_CHIPS = 100;
-export const CRAFTY_JOKER_CHIPS = 80;
-export const EVEN_STEVEN_MULT = 4;
-export const ODD_TODD_CHIPS = 31;
-export const HALF_JOKER_MULT = 20;
-export const HALF_JOKER_MAX_CARDS = 3;
-export const MISPRINT_MIN_MULT = 0;
-export const MISPRINT_MAX_MULT = 23;
-export const SCARY_FACE_CHIPS = 30;
-export const SMILEY_FACE_MULT = 5;
-export const PHOTOGRAPH_X_MULT = 2;
-export const FIBONACCI_MULT = 8;
-export const FIBONACCI_RANKS: ReadonlyArray<Rank> = ["A", "2", "3", "5", "8"];
-export const SCHOLAR_CHIPS = 20;
-export const SCHOLAR_MULT = 4;
-export const SCHOLAR_RANKS: ReadonlyArray<Rank> = ["A"];
-export const WALKIE_TALKIE_CHIPS = 10;
-export const WALKIE_TALKIE_MULT = 4;
-export const WALKIE_TALKIE_RANKS: ReadonlyArray<Rank> = ["10", "4"];
-export const BANNER_CHIPS_PER_DISCARD = 30;
-export const MYSTIC_SUMMIT_MULT = 15;
-export const BULL_CHIPS_PER_DOLLAR = 2;
-export const THE_DUO_X_MULT = 2;
-export const THE_TRIO_X_MULT = 3;
-export const THE_FAMILY_X_MULT = 4;
-export const THE_ORDER_X_MULT = 3;
-export const THE_TRIBE_X_MULT = 2;
-export const BARON_X_MULT = 1.5;
-export const BARON_RANKS: ReadonlyArray<Rank> = ["K"];
-export const SHOOT_THE_MOON_MULT = 13;
-export const SHOOT_THE_MOON_RANKS: ReadonlyArray<Rank> = ["Q"];
-export const RAISED_FIST_MULTIPLIER = 2;
-export const ABSTRACT_JOKER_MULT_PER_JOKER = 3;
-export const BOOTSTRAPS_MULT_PER_BUCKET = 2;
-export const BOOTSTRAPS_BUCKET_DOLLARS = 5;
-export const BLACKBOARD_X_MULT = 3;
-export const BLACKBOARD_SUITS: ReadonlyArray<Suit> = ["spades", "clubs"];
-export const BLOODSTONE_CHANCE = 0.5;
-export const BLOODSTONE_X_MULT = 1.5;
-export const RESERVED_PARKING_CHANCE = 0.5;
-export const RESERVED_PARKING_PAYOUT = 1;
-export const TRIBOULET_X_MULT = 2;
-export const TRIBOULET_RANKS: ReadonlyArray<Rank> = ["K", "Q"];
-export const ACROBAT_X_MULT = 3;
-export const ARROWHEAD_CHIPS = 50;
-export const ONYX_AGATE_MULT = 7;
-export const ROUGH_GEM_MONEY = 1;
-export const GOLDEN_JOKER_MONEY = 4;
-export const DELAYED_GRATIFICATION_MONEY_PER_DISCARD = 2;
-export const CLOUD_9_MONEY_PER_NINE = 1;
-export const CLOUD_9_RANKS: ReadonlyArray<Rank> = ["9"];
-export const STONE_JOKER_CHIPS_PER_STONE = 25;
-export const STEEL_JOKER_X_MULT_PER_STEEL = 0.2;
-export const DRIVERS_LICENSE_X_MULT = 3;
-export const DRIVERS_LICENSE_ENHANCED_THRESHOLD = 16;
-export const FACELESS_JOKER_FACE_THRESHOLD = 3;
-export const FACELESS_JOKER_PAYOUT = 5;
-export const TRADING_CARD_DISCARD_SIZE = 1;
-export const TRADING_CARD_PAYOUT = 3;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
-
-export type RankParity = "even" | "odd" | "face";
-
-export const RANK_PARITY: Record<Rank, RankParity> = {
-  A: "odd",
-  "2": "even",
-  "3": "odd",
-  "4": "even",
-  "5": "odd",
-  "6": "even",
-  "7": "odd",
-  "8": "even",
-  "9": "odd",
-  "10": "even",
-  J: "face",
-  Q: "face",
-  K: "face",
-};
-
-export type RandomSource = () => number;
-
-export type JokerEffect =
-  | { readonly kind: "additive-mult"; readonly amount: number }
-  | { readonly kind: "business-card"; readonly chance: number; readonly payout: number }
-  | { readonly kind: "stencil" }
-  | { readonly kind: "per-suit-mult"; readonly suit: Suit; readonly amount: number }
-  | {
-      readonly kind: "on-hand-type-mult";
-      readonly requires: HandLabel;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "on-hand-type-chips";
-      readonly requires: HandLabel;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "on-hand-type-x-mult";
-      readonly requires: HandLabel;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "per-scored-rank-parity";
-      readonly parity: "even" | "odd";
-      readonly contribution:
-        | { readonly kind: "mult"; readonly amount: number }
-        | { readonly kind: "chips"; readonly amount: number };
-    }
-  | {
-      readonly kind: "additive-mult-when-hand-size";
-      readonly maxCardsPlayed: number;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "additive-mult-random";
-      readonly min: number;
-      readonly max: number;
-    }
-  | {
-      readonly kind: "per-scored-face";
-      readonly contribution:
-        | { readonly kind: "mult"; readonly amount: number }
-        | { readonly kind: "chips"; readonly amount: number };
-    }
-  | {
-      readonly kind: "x-mult-on-face-scored";
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "per-scored-rank";
-      readonly ranks: ReadonlyArray<Rank>;
-      readonly mult?: number;
-      readonly chips?: number;
-    }
-  | { readonly kind: "per-remaining-discard-chips"; readonly amount: number }
-  | { readonly kind: "mult-when-no-discards"; readonly amount: number }
-  | { readonly kind: "per-dollar-chips"; readonly amount: number }
-  | {
-      readonly kind: "per-held-rank";
-      readonly ranks: ReadonlyArray<Rank>;
-      readonly mult?: number;
-      readonly xMult?: number;
-    }
-  | {
-      readonly kind: "held-lowest-rank-mult";
-      readonly multiplier: number;
-    }
-  | { readonly kind: "per-joker-count-mult"; readonly amount: number }
-  | {
-      readonly kind: "per-money-bucket-mult";
-      readonly bucket: number;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "x-mult-when-held-suits-all-in";
-      readonly suits: ReadonlyArray<Suit>;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "per-suit-chance-x-mult";
-      readonly suit: Suit;
-      readonly chance: number;
-      readonly amount: number;
-    }
-  | { readonly kind: "other-jokers-sell-value-mult" }
-  | {
-      readonly kind: "per-held-face-chance-money";
-      readonly chance: number;
-      readonly payout: number;
-    }
-  | {
-      readonly kind: "per-scored-rank-x-mult";
-      readonly ranks: ReadonlyArray<Rank>;
-      readonly amount: number;
-    }
-  | { readonly kind: "x-mult-on-final-hand"; readonly amount: number }
-  | { readonly kind: "per-suit-chips"; readonly suit: Suit; readonly amount: number }
-  | { readonly kind: "per-suit-money"; readonly suit: Suit; readonly amount: number }
-  | {
-      readonly kind: "per-enhanced-in-deck-chips";
-      readonly enhancement: Enhancement;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "per-enhanced-in-deck-x-mult";
-      readonly enhancement: Enhancement;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "x-mult-when-enhanced-count-at-least";
-      readonly threshold: number;
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "on-discard-money-when-face-count-at-least";
-      readonly threshold: number;
-      readonly payout: number;
-    }
-  | {
-      readonly kind: "on-first-discard-of-round-money-when-size";
-      readonly size: number;
-      readonly payout: number;
-    }
-  | { readonly kind: "end-of-round-money"; readonly amount: number }
-  | {
-      readonly kind: "per-remaining-discard-end-of-round-money";
-      readonly amount: number;
-    }
-  | {
-      readonly kind: "per-rank-in-deck-end-of-round-money";
-      readonly ranks: ReadonlyArray<Rank>;
-      readonly amount: number;
-    };
-
-export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
-
-export const JOKER_EDITION_KINDS: ReadonlyArray<JokerEdition> = [
-  "foil",
-  "holographic",
-  "polychrome",
-  "negative",
-];
-
-export const FOIL_CHIPS = 50;
-export const HOLOGRAPHIC_MULT = 10;
-export const POLYCHROME_X_MULT = 1.5;
-
-export interface JokerEditionInfo {
-  readonly name: string;
-  readonly description: string;
-}
 
 export const JOKER_EDITION_INFO: Readonly<Record<JokerEdition, JokerEditionInfo>> = {
   foil: { name: "Foil", description: `+${FOIL_CHIPS} chips when scored` },
@@ -266,24 +115,6 @@ export const JOKER_EDITION_INFO: Readonly<Record<JokerEdition, JokerEditionInfo>
   },
   negative: { name: "Negative", description: "+1 Joker slot" },
 };
-
-export type JokerRarity = "common" | "uncommon" | "rare" | "legendary";
-
-export const JOKER_RARITIES: ReadonlyArray<JokerRarity> = [
-  "common",
-  "uncommon",
-  "rare",
-  "legendary",
-];
-
-export interface Joker {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly effect: JokerEffect;
-  readonly rarity: JokerRarity;
-  readonly edition?: JokerEdition;
-}
 
 export function withEdition(joker: Joker, edition: JokerEdition): Joker {
   return { ...joker, edition };
