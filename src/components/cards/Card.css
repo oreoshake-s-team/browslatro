@@ -9,7 +9,7 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   cursor: pointer;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   font-family: "Georgia", serif;
   transition: transform calc(120ms * var(--animation-speed, 1)) ease,
     box-shadow calc(120ms * var(--animation-speed, 1)) ease;
@@ -157,11 +157,6 @@
 
 .card-corner-top {
   justify-self: start;
-}
-
-.card-corner-bottom {
-  justify-self: end;
-  transform: rotate(180deg);
 }
 
 .card-rank {
