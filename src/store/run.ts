@@ -8,6 +8,7 @@ import {
 import { initialRunStats, type RunStats } from "../run/runStats";
 import type { NextShopModifier } from "../run/nextShopMods";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
+import { DEFAULT_DECK, type Deck } from "../items/decks";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -28,12 +29,14 @@ export interface RunState {
   pendingNextRoundHandSize: number;
   pendingDouble: boolean;
   selectedStake: Stake;
+  selectedDeck: Deck;
   setRunStats: (update: Updater<RunStats>) => void;
   setSkipTagOffers: (update: Updater<AnteSkipOffers>) => void;
   setPendingShopMods: (update: Updater<ReadonlyArray<NextShopModifier>>) => void;
   setPendingNextRoundHandSize: (update: Updater<number>) => void;
   setPendingDouble: (update: Updater<boolean>) => void;
   setSelectedStake: (update: Updater<Stake>) => void;
+  setSelectedDeck: (update: Updater<Deck>) => void;
   resetRun: () => void;
 }
 
@@ -44,6 +47,7 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
   pendingNextRoundHandSize: 0,
   pendingDouble: false,
   selectedStake: DEFAULT_STAKE,
+  selectedDeck: DEFAULT_DECK,
   setRunStats: (update) =>
     set((state) => ({ runStats: resolve(update, state.runStats) })),
   setSkipTagOffers: (update) =>
@@ -58,6 +62,8 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
     set((state) => ({ pendingDouble: resolve(update, state.pendingDouble) })),
   setSelectedStake: (update) =>
     set((state) => ({ selectedStake: resolve(update, state.selectedStake) })),
+  setSelectedDeck: (update) =>
+    set((state) => ({ selectedDeck: resolve(update, state.selectedDeck) })),
   resetRun: () =>
     set({
       runStats: initialRunStats(),
@@ -66,5 +72,6 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
       pendingNextRoundHandSize: 0,
       pendingDouble: false,
       selectedStake: DEFAULT_STAKE,
+      selectedDeck: DEFAULT_DECK,
     }),
 });

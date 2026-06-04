@@ -6,7 +6,7 @@ import NewRunScreen from "./NewRunScreen";
 describe("NewRunScreen", () => {
   test("renders one button per implemented stake", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio")).toHaveLength(2);
+    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(2);
   });
 
   test("does not render unimplemented stakes like Gold (negative)", () => {
@@ -60,20 +60,50 @@ describe("NewRunScreen", () => {
     render(<NewRunScreen onConfirm={onConfirm} />);
     await user.click(screen.getByTestId("new-run-stake-red"));
     await user.click(screen.getByTestId("new-run-confirm"));
-    expect(onConfirm).toHaveBeenCalledWith({ stake: "red" });
+    expect(onConfirm).toHaveBeenCalledWith({
+      stake: "red",
+      deck: "red-deck",
+    });
   });
 
-  test("Start Run defaults to the initial stake when nothing is clicked", async () => {
+  test("Start Run defaults to the initial selections when nothing is clicked", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
     render(<NewRunScreen onConfirm={onConfirm} />);
     await user.click(screen.getByTestId("new-run-confirm"));
-    expect(onConfirm).toHaveBeenCalledWith({ stake: "white" });
+    expect(onConfirm).toHaveBeenCalledWith({ stake: "white", deck: "red-deck" });
   });
 
-  test("shows the deck slot as a placeholder for the #561 follow-up (negative)", () => {
+  test("renders one button per implemented deck", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getByText(/Deck selection coming soon/i)).toBeInTheDocument();
+    expect(screen.getAllByRole("radio", { name: /Deck/i })).toHaveLength(2);
+  });
+
+  test("initial deck defaults to Red Deck", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-deck-red-deck")).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  test("picking Yellow Deck updates aria-checked and onConfirm payload", async () => {
+    const user = userEvent.setup();
+    const onConfirm = vi.fn();
+    render(<NewRunScreen onConfirm={onConfirm} />);
+    await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
+    await user.click(screen.getByTestId("new-run-confirm"));
+    expect(onConfirm).toHaveBeenCalledWith({
+      stake: "white",
+      deck: "yellow-deck",
+    });
+  });
+
+  test("does not render unimplemented decks like Plasma (negative)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(
+      screen.queryByTestId("new-run-deck-plasma-deck"),
+    ).not.toBeInTheDocument();
   });
 
   test("does not render the dialog content twice (negative)", () => {
@@ -81,12 +111,12 @@ describe("NewRunScreen", () => {
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
   });
 
-  test("keyboard radio role marks the active tile as checked exactly once", async () => {
+  test("stake radio group marks exactly one tile as checked", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-red"));
     const checked = screen
-      .getAllByRole("radio")
+      .getAllByRole("radio", { name: /Stake/i })
       .filter((r) => r.getAttribute("aria-checked") === "true");
     expect(checked).toHaveLength(1);
   });

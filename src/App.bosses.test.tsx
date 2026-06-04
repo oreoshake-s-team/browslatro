@@ -256,13 +256,13 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     expect(statByLabel("Hands")).toHaveTextContent("1");
   });
 
-  test("The Water on ante 2 starts the round with 0 discards remaining", async () => {
+  test("The Water on ante 2 starts the round with 1 discard remaining on Red Deck (+1 stacks on top of the override)", async () => {
     bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-water"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToAnte2BossBlindStartedRound(user);
     expect(screen.getByText("The Water")).toBeInTheDocument();
-    expect(statByLabel("Discards")).toHaveTextContent("0");
+    expect(statByLabel("Discards")).toHaveTextContent("1");
   });
 
   test("New game with no boss picks resets the picker back to ante 1", async () => {
