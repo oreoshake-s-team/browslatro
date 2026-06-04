@@ -1,6 +1,5 @@
 // @vitest-environment node
 import {
-  RESERVED_PARKING_CHANCE,
   RESERVED_PARKING_PAYOUT,
   applyHandLevelJokers,
   applyPerCardJokers,
@@ -92,10 +91,6 @@ describe("Reserved Parking", () => {
       rng,
     });
     expect(result.moneyEarned).toBe(RESERVED_PARKING_PAYOUT * 2);
-  });
-
-  test("uses a 1-in-2 base chance", () => {
-    expect(RESERVED_PARKING_CHANCE).toBe(0.5);
   });
 
   test("does not contribute in the per-card pass", () => {

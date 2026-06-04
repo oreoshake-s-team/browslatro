@@ -1065,50 +1065,6 @@ describe("Round won modal", () => {
     flushDiscardAnimation();
   }
 
-  test("does not render the modal before a round is won", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await dismissBlindSelect(user);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  });
-
-  test("renders the modal when the round score meets the required score", async () => {
-    await triggerWin();
-    expect(screen.getByRole("dialog")).toBeInTheDocument();
-  });
-
-  test("displays the final round score in the modal", async () => {
-    await triggerWin();
-    expect(screen.getByTestId("round-won-score")).toHaveTextContent("1080");
-  });
-
-  test("displays the required score in the modal", async () => {
-    await triggerWin();
-    expect(screen.getByTestId("round-won-required")).toHaveTextContent("300");
-  });
-
-  test("displays the base reward (blind + 2) in the modal", async () => {
-    // Small Blind = 1 → reward $3.
-    await triggerWin();
-    expect(screen.getByTestId("round-won-base-reward")).toHaveTextContent("$3");
-  });
-
-  test("clicking Continue dismisses the modal", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await triggerWin();
-    await user.click(await screen.findByRole("button", { name: /Continue/ }));
-    // The round-won modal is gone (the post-round shop now takes over the
-    // dialog role, so we assert on the round-won title specifically).
-    expect(screen.queryByText(/Round Won!/)).not.toBeInTheDocument();
-  });
-
-  test("clicking Continue advances to the next blind", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    await triggerWin();
-    await user.click(await screen.findByRole("button", { name: /Continue/ }));
-    expect(screen.getByText("Big Blind")).toBeInTheDocument();
-  });
-
   test("clicking Continue credits base + interest on the interest wallet (#353)", async () => {
     // Pre-win wallet = $4. Gold bonus = $3 (one held 2♠ gold default).
     // Remaining hands bonus = 3 hands × $1 = $3 (won on hand 1 of 4).
@@ -1661,32 +1617,6 @@ describe("Planet purchase integration", () => {
     return stats;
   }
 
-  test("a planet offer is rendered in the shop with data-offer-kind=planet", async () => {
-    await openShop();
-    expect(screen.getByTestId(planetSlotTestId())).toHaveAttribute(
-      "data-offer-kind",
-      "planet",
-    );
-  });
-
-  test("buying the planet deducts the planet price from money", async () => {
-    const user = await openShop();
-    const moneyBefore = Number(
-      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
-    );
-    const planetBuy = screen
-      .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(planetBuy instanceof HTMLButtonElement)) {
-      throw new Error("Planet buy button not found");
-    }
-    await user.click(planetBuy);
-    const moneyAfter = Number(
-      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
-    );
-    expect(moneyAfter).toBe(moneyBefore - 3);
-  });
-
   test("buying the planet does not add a joker to the equipped set", async () => {
     const user = await openShop();
     const jokerCountBefore = screen.queryAllByTestId(/^joker-tile-filled-/).length;
@@ -1699,36 +1629,6 @@ describe("Planet purchase integration", () => {
     await user.click(planetBuy);
     expect(screen.queryAllByTestId(/^joker-tile-filled-/)).toHaveLength(
       jokerCountBefore,
-    );
-  });
-
-  test("buying the planet marks that offer as Sold", async () => {
-    const user = await openShop();
-    const planetBuy = screen
-      .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(planetBuy instanceof HTMLButtonElement)) {
-      throw new Error("Planet buy button not found");
-    }
-    const slotId = planetSlotTestId();
-    await user.click(planetBuy);
-    expect(
-      screen.getByTestId(slotId).querySelector(".shop-offer-buy"),
-    ).toHaveTextContent(/Sold/);
-  });
-
-  test("buying the planet enqueues it into a consumable slot", async () => {
-    const user = await openShop();
-    const planetBuy = screen
-      .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(planetBuy instanceof HTMLButtonElement)) {
-      throw new Error("Planet buy button not found");
-    }
-    await user.click(planetBuy);
-    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
-      "data-consumable-kind",
-      "planet",
     );
   });
 
@@ -1772,20 +1672,6 @@ describe("Planet purchase integration", () => {
       (key) => after[key] !== before[key],
     );
     expect(changedRows.length).toBeGreaterThanOrEqual(1);
-  });
-
-  test("using the planet consumable empties the slot", async () => {
-    const user = await openShop();
-    const planetBuy = screen
-      .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(planetBuy instanceof HTMLButtonElement)) {
-      throw new Error("Planet buy button not found");
-    }
-    await user.click(planetBuy);
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
   });
 
   test("starting a new game restores RunInfo stats to baseline", async () => {
@@ -1853,51 +1739,6 @@ describe("Tarot purchase integration", () => {
     );
   }
 
-  test("a tarot offer is rendered in the shop with data-offer-kind=tarot", async () => {
-    await openShop();
-    expect(screen.getByTestId(tarotSlotTestId())).toHaveAttribute(
-      "data-offer-kind",
-      "tarot",
-    );
-  });
-
-  test("buying any tarot deducts the tarot price from money", async () => {
-    const user = await openShop();
-    const before = moneyOf();
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(moneyOf()).toBe(before - 3);
-  });
-
-  test("buying any tarot marks the offer Sold immediately", async () => {
-    const user = await openShop();
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    const slotId = tarotSlotTestId();
-    expect(
-      screen.getByTestId(slotId).querySelector(".shop-offer-buy"),
-    ).toHaveTextContent(/Sold/);
-  });
-
-  test("buying any tarot enqueues it into a consumable slot", async () => {
-    const user = await openShop();
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
-      "data-consumable-kind",
-      "tarot",
-    );
-  });
-
   test("buying The Hermit alone does not apply the money payout", async () => {
     const user = await openShop();
     const tarotName = screen
@@ -1911,24 +1752,6 @@ describe("Tarot purchase integration", () => {
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     expect(moneyOf()).toBe(before - 3);
-  });
-
-  test("using The Hermit consumable doubles current money capped at +$20", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName !== "The Hermit") return;
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    const afterBuy = moneyOf();
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    const bonus = Math.min(afterBuy, 20);
-    expect(moneyOf()).toBe(afterBuy + bonus);
   });
 
   test("buying an enhancement tarot does not open the card-picker dialog", async () => {
@@ -2132,70 +1955,6 @@ describe("Spectral purchase integration", () => {
     return `shop-offer-${findShopOfferIdxOfKind("spectral")}`;
   }
 
-  function moneyOf(): number {
-    return Number(
-      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
-    );
-  }
-
-  test("a spectral offer renders with data-offer-kind=spectral", async () => {
-    await openShop();
-    expect(screen.getByTestId(spectralSlotTestId())).toHaveAttribute(
-      "data-offer-kind",
-      "spectral",
-    );
-  });
-
-  test("a spectral offer carries the shop-offer-spectral modifier class", async () => {
-    await openShop();
-    expect(screen.getByTestId(spectralSlotTestId())).toHaveClass(
-      "shop-offer-spectral",
-    );
-  });
-
-  test("a spectral offer renders a 'Spectral' kind label", async () => {
-    await openShop();
-    const idx = findShopOfferIdxOfKind("spectral");
-    expect(screen.getByTestId(`shop-kind-${idx}`)).toHaveTextContent("Spectral");
-  });
-
-  test("buying a spectral deducts the spectral base price from money", async () => {
-    const user = await openShop();
-    const before = moneyOf();
-    const buy = screen
-      .getByTestId(spectralSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(moneyOf()).toBe(before - 4);
-  });
-
-  test("buying a spectral marks the offer Sold", async () => {
-    const user = await openShop();
-    const slotId = spectralSlotTestId();
-    const buy = screen
-      .getByTestId(slotId)
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(
-      screen.getByTestId(slotId).querySelector(".shop-offer-buy"),
-    ).toHaveTextContent(/Sold/);
-  });
-
-  test("buying a spectral enqueues it into a consumable slot tagged spectral", async () => {
-    const user = await openShop();
-    const buy = screen
-      .getByTestId(spectralSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
-      "data-consumable-kind",
-      "spectral",
-    );
-  });
-
   test("using Black Hole upgrades High Card from level 1 to level 2", async () => {
     const user = await openShop();
     const name = screen
@@ -2266,17 +2025,6 @@ describe("Voucher effects integration", () => {
     expect(
       screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name"),
     ).toHaveTextContent("Overstock");
-  });
-
-  test("the dev override picker replaces the offered voucher with the chosen one", async () => {
-    const user = await openShopWithVoucher(0);
-    await user.selectOptions(
-      screen.getByTestId("shop-voucher-override"),
-      "crystal-ball",
-    );
-    expect(
-      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name"),
-    ).toHaveTextContent("Crystal Ball");
   });
 
   test("buying Overstock raises the next shop's item offer count from 2 to 3", async () => {

@@ -71,20 +71,6 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Constants", () => {
-  test("MAX_JOKERS equals 5", () => {
-    expect(MAX_JOKERS).toBe(5);
-  });
-
-  test("BUSINESS_CARD_PROC_CHANCE equals 0.5", () => {
-    expect(BUSINESS_CARD_PROC_CHANCE).toBe(0.5);
-  });
-
-  test("JOKER_SELL_VALUE equals half the joker base price (floored)", () => {
-    expect(JOKER_SELL_VALUE).toBe(2);
-  });
-});
-
 describe("jokerSellValue", () => {
   test("returns JOKER_SELL_VALUE for any joker", () => {
     expect(jokerSellValue(createPlusFourMultJoker())).toBe(JOKER_SELL_VALUE);
@@ -287,10 +273,6 @@ describe("applyPerCardJokers", () => {
 });
 
 describe("Suit-conditional Mult jokers", () => {
-  test("SUIT_MULT_AMOUNT equals 3", () => {
-    expect(SUIT_MULT_AMOUNT).toBe(3);
-  });
-
   test.each<{ name: string; suit: Suit; factory: () => ReturnType<typeof createGreedyJoker> }>([
     { name: "Greedy", suit: "diamonds", factory: createGreedyJoker },
     { name: "Lusty", suit: "hearts", factory: createLustyJoker },

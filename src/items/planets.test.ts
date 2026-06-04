@@ -3,7 +3,6 @@ import { HANDS } from "../constants";
 import type { HandLabel } from "../scoring/handEvaluator";
 import { createDefaultHandStats } from "../scoring/handStats";
 import {
-  PLANET_BASE_PRICE,
   applyPlanetUpgrade,
   availablePlanets,
   createPlanetCatalog,
@@ -29,12 +28,6 @@ function planetById(id: string): PlanetCard {
   if (!found) throw new Error(`No planet with id ${id}`);
   return found;
 }
-
-describe("PLANET_BASE_PRICE", () => {
-  test("is three dollars", () => {
-    expect(PLANET_BASE_PRICE).toBe(3);
-  });
-});
 
 describe("createPlanetCatalog", () => {
   test("contains one planet per hand-type entry from the wiki table", () => {

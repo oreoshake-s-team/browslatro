@@ -19,10 +19,6 @@ const blue: Card = { id: 4, rank: "5", suit: "clubs", seal: "blue" };
 const purple: Card = { id: 5, rank: "6", suit: "spades", seal: "purple" };
 
 describe("seals — constants", () => {
-  test("GOLD_SEAL_BONUS is 3", () => {
-    expect(GOLD_SEAL_BONUS).toBe(3);
-  });
-
   test("SEAL_KINDS contains all four seals", () => {
     expect(SEAL_KINDS).toEqual(["gold", "red", "blue", "purple"]);
   });

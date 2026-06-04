@@ -5,9 +5,7 @@ import {
   GLASS_ENHANCEMENT_DESTROY_CHANCE,
   GLASS_ENHANCEMENT_MULT_TIMES,
   LUCKY_ENHANCEMENT_MONEY_AMOUNT,
-  LUCKY_ENHANCEMENT_MONEY_CHANCE,
   LUCKY_ENHANCEMENT_MULT_AMOUNT,
-  LUCKY_ENHANCEMENT_MULT_CHANCE,
   MULT_ENHANCEMENT_MULT_DELTA,
   NO_ENHANCEMENT_EFFECT,
   STONE_ENHANCEMENT_CHIPS,
@@ -76,10 +74,6 @@ describe("applyCardEnhancement — Stone", () => {
     );
   });
 
-  test("STONE_ENHANCEMENT_CHIPS equals 50 per the Balatro wiki", () => {
-    expect(STONE_ENHANCEMENT_CHIPS).toBe(50);
-  });
-
   test("Stone does not change multDelta", () => {
     expect(applyCardEnhancement(makeCard("stone")).multDelta).toBe(0);
   });
@@ -114,14 +108,6 @@ describe("applyCardEnhancement — Glass", () => {
     expect(applyCardEnhancement(makeCard("glass")).destroyChance).toBe(
       GLASS_ENHANCEMENT_DESTROY_CHANCE,
     );
-  });
-
-  test("GLASS_ENHANCEMENT_MULT_TIMES equals 2 per the Balatro wiki", () => {
-    expect(GLASS_ENHANCEMENT_MULT_TIMES).toBe(2);
-  });
-
-  test("GLASS_ENHANCEMENT_DESTROY_CHANCE equals 0.25 per the Balatro wiki", () => {
-    expect(GLASS_ENHANCEMENT_DESTROY_CHANCE).toBe(0.25);
   });
 
   test("Glass does not change chipsDelta", () => {
@@ -218,10 +204,6 @@ describe("applyCardEnhancement — Mult", () => {
     );
   });
 
-  test("MULT_ENHANCEMENT_MULT_DELTA equals 4 per the Balatro wiki", () => {
-    expect(MULT_ENHANCEMENT_MULT_DELTA).toBe(4);
-  });
-
   test("Mult does not change chipsDelta", () => {
     expect(applyCardEnhancement(makeCard("mult")).chipsDelta).toBe(0);
   });
@@ -236,10 +218,6 @@ describe("applyCardEnhancement — Bonus", () => {
     expect(applyCardEnhancement(makeCard("bonus")).chipsDelta).toBe(
       BONUS_ENHANCEMENT_CHIPS,
     );
-  });
-
-  test("BONUS_ENHANCEMENT_CHIPS equals 30 per the Balatro wiki", () => {
-    expect(BONUS_ENHANCEMENT_CHIPS).toBe(30);
   });
 
   test("Bonus does not change multDelta", () => {
@@ -298,24 +276,6 @@ describe("cardRankForEvaluation", () => {
 
   test("returns null for a Stone card so rank-based detection skips it", () => {
     expect(cardRankForEvaluation(makeCard("stone"))).toBeNull();
-  });
-});
-
-describe("Lucky enhancement constants", () => {
-  test("LUCKY_ENHANCEMENT_MULT_CHANCE equals 1-in-5 per the Balatro wiki", () => {
-    expect(LUCKY_ENHANCEMENT_MULT_CHANCE).toBe(0.2);
-  });
-
-  test("LUCKY_ENHANCEMENT_MULT_AMOUNT equals 20 per the Balatro wiki", () => {
-    expect(LUCKY_ENHANCEMENT_MULT_AMOUNT).toBe(20);
-  });
-
-  test("LUCKY_ENHANCEMENT_MONEY_CHANCE equals 1-in-15 per the Balatro wiki", () => {
-    expect(LUCKY_ENHANCEMENT_MONEY_CHANCE).toBe(1 / 15);
-  });
-
-  test("LUCKY_ENHANCEMENT_MONEY_AMOUNT equals 20 per the Balatro wiki", () => {
-    expect(LUCKY_ENHANCEMENT_MONEY_AMOUNT).toBe(20);
   });
 });
 

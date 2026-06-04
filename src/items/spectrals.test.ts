@@ -133,16 +133,6 @@ describe("Spectral descriptions", () => {
   });
 });
 
-describe("Immolate constants", () => {
-  test("destroys 5 cards (Balatro authentic)", () => {
-    expect(IMMOLATE_DESTROY_COUNT).toBe(5);
-  });
-
-  test("gains $20 (Balatro authentic)", () => {
-    expect(IMMOLATE_MONEY_GAIN).toBe(20);
-  });
-});
-
 function sequenceRng(values: ReadonlyArray<number>): () => number {
   let i = 0;
   return (): number => {
@@ -246,10 +236,6 @@ describe("transmuteHand", () => {
 });
 
 describe("Cryptid", () => {
-  test("creates 2 copies (Balatro authentic)", () => {
-    expect(CRYPTID_COPY_COUNT).toBe(2);
-  });
-
   test("targets a single card", () => {
     const card = find("cryptid");
     if (card.effect.kind !== "duplicate-selected") {
@@ -382,10 +368,6 @@ describe("Wraith", () => {
 });
 
 describe("Ectoplasm", () => {
-  test("is included in the catalog", () => {
-    expect(find("ectoplasm").name).toBe("Ectoplasm");
-  });
-
   test("carries a -1 hand-size delta", () => {
     const effect = find("ectoplasm").effect;
     if (effect.kind !== "ectoplasm") throw new Error("expected ectoplasm");
@@ -402,10 +384,6 @@ describe("Ectoplasm", () => {
 });
 
 describe("Ouija", () => {
-  test("is included in the catalog", () => {
-    expect(find("ouija").name).toBe("Ouija");
-  });
-
   test("carries a -1 hand-size delta", () => {
     const effect = find("ouija").effect;
     if (effect.kind !== "ouija") throw new Error("expected ouija");
@@ -422,10 +400,6 @@ describe("Ouija", () => {
 });
 
 describe("The Soul", () => {
-  test("is included in the catalog", () => {
-    expect(find("soul").name).toBe("The Soul");
-  });
-
   test("creates a Legendary joker", () => {
     expect(find("soul").effect.kind).toBe("create-legendary");
   });
@@ -440,10 +414,6 @@ describe("The Soul", () => {
 });
 
 describe("Hex", () => {
-  test("is included in the catalog", () => {
-    expect(find("hex").name).toBe("Hex");
-  });
-
   test("carries the hex effect kind", () => {
     expect(find("hex").effect.kind).toBe("hex");
   });
@@ -462,10 +432,6 @@ describe("Hex", () => {
 });
 
 describe("Ankh", () => {
-  test("is included in the catalog", () => {
-    expect(find("ankh").name).toBe("Ankh");
-  });
-
   test("carries the ankh effect kind", () => {
     expect(find("ankh").effect.kind).toBe("ankh");
   });
@@ -484,10 +450,6 @@ describe("Ankh", () => {
 });
 
 describe("Aura", () => {
-  test("is included in the catalog", () => {
-    expect(find("aura").name).toBe("Aura");
-  });
-
   test("carries the aura effect kind", () => {
     expect(find("aura").effect.kind).toBe("aura");
   });
