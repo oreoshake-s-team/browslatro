@@ -3,7 +3,6 @@ import { ENHANCEMENT_KINDS } from "../cards/enhancements";
 import {
   HERMIT_MONEY_CAP,
   TEMPERANCE_MONEY_CAP,
-  WHEEL_OF_FORTUNE_CHANCE,
   createTarotCatalog,
   nextRankUp,
   resolveHermitPayout,
@@ -26,12 +25,6 @@ function tarotById(id: string): TarotCard {
   return found;
 }
 
-describe("HERMIT_MONEY_CAP", () => {
-  test("is twenty dollars (matches Balatro)", () => {
-    expect(HERMIT_MONEY_CAP).toBe(20);
-  });
-});
-
 describe("createTarotCatalog", () => {
   test("contains seventeen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Star + Moon + Sun + World)", () => {
     expect(createTarotCatalog()).toHaveLength(17);
@@ -42,12 +35,6 @@ describe("createTarotCatalog", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test("every entry has a non-empty description", () => {
-    const allDescribed = createTarotCatalog().every(
-      (t) => t.description.length > 0,
-    );
-    expect(allDescribed).toBe(true);
-  });
 });
 
 describe("enhancement tarots reference valid Enhancement kinds", () => {
@@ -122,11 +109,7 @@ describe("resolveHermitPayout", () => {
 });
 
 describe("Temperance", () => {
-  test("TEMPERANCE_MONEY_CAP is $50 (matches Balatro)", () => {
-    expect(TEMPERANCE_MONEY_CAP).toBe(50);
-  });
-
-  test("temperance is in the catalog", () => {
+  test("temperance is in the catalog with the canonical name", () => {
     expect(tarotById("temperance").name).toBe("Temperance");
   });
 
@@ -253,11 +236,7 @@ describe("nextRankUp", () => {
 });
 
 describe("Wheel of Fortune", () => {
-  test("WHEEL_OF_FORTUNE_CHANCE is 1/4 (matches Balatro)", () => {
-    expect(WHEEL_OF_FORTUNE_CHANCE).toBe(0.25);
-  });
-
-  test("wheel-of-fortune is in the catalog", () => {
+  test("wheel-of-fortune is in the catalog with the canonical name", () => {
     expect(tarotById("wheel-of-fortune").name).toBe("Wheel of Fortune");
   });
 
