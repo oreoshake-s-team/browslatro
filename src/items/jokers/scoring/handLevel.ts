@@ -264,6 +264,44 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "per-missing-card-mult": {
+        if (context.fullDeck === undefined) break;
+        const missing = Math.max(
+          0,
+          effect.baseDeckSize - context.fullDeck.length,
+        );
+        if (missing > 0) {
+          const bonus = effect.amount * missing;
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
+        }
+        break;
+      }
+      case "per-remaining-deck-card-chips": {
+        const remaining = context.remainingDeck ?? [];
+        if (remaining.length > 0) {
+          const bonus = effect.amount * remaining.length;
+          additiveChips += bonus;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveChips: bonus });
+        }
+        break;
+      }
+      case "x-mult-per-uncommon-joker": {
+        let uncommonCount = 0;
+        for (let k = 0; k < jokers.length; k += 1) {
+          if (k === i) continue;
+          if (jokers[k].rarity === "uncommon") uncommonCount += 1;
+        }
+        if (uncommonCount > 0) {
+          const factor = Math.pow(1 + effect.amount, uncommonCount);
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: factor });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":

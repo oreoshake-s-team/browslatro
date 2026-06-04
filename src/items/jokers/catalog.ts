@@ -4,8 +4,10 @@ import {
   createArrowheadJoker,
   createBannerJoker,
   createBaronJoker,
+  createBaseballCardJoker,
   createBlackboardJoker,
   createBloodstoneJoker,
+  createBlueJoker,
   createBootstrapsJoker,
   createBullJoker,
   createBusinessCardJoker,
@@ -17,6 +19,7 @@ import {
   createDeviousJoker,
   createDriversLicenseJoker,
   createDrollJoker,
+  createErosionJoker,
   createEvenStevenJoker,
   createFacelessJoker,
   createFibonacciJoker,
@@ -126,5 +129,8 @@ export function createJokerCatalog(): Joker[] {
     createDriversLicenseJoker(),
     createFacelessJoker(),
     createTradingCardJoker(),
+    createErosionJoker(),
+    createBlueJoker(),
+    createBaseballCardJoker(),
   ];
 }

@@ -773,6 +773,17 @@ describe("Discard-event joker catalog membership", () => {
   });
 });
 
+describe("Group A backfill catalog membership (#678)", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Erosion", id: "erosion" },
+    { name: "Blue Joker", id: "blue-joker" },
+    { name: "Baseball Card", id: "baseball-card" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(

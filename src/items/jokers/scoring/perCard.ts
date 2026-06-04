@@ -190,6 +190,9 @@ export function applyPerCardJokers(
       case "per-enhanced-in-deck-chips":
       case "per-enhanced-in-deck-x-mult":
       case "x-mult-when-enhanced-count-at-least":
+      case "per-missing-card-mult":
+      case "per-remaining-deck-card-chips":
+      case "x-mult-per-uncommon-joker":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
         break;
