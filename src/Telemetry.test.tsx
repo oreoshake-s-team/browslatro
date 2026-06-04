@@ -10,18 +10,21 @@ vi.mock("@vercel/speed-insights/react", () => ({
 }));
 
 describe("Telemetry", () => {
-  it("renders Vercel Analytics", () => {
+  it("renders Vercel Analytics", async () => {
     render(<Telemetry />);
-    expect(screen.getByTestId("vercel-analytics")).toBeInTheDocument();
+    expect(await screen.findByTestId("vercel-analytics")).toBeInTheDocument();
   });
 
-  it("renders Vercel Speed Insights", () => {
+  it("renders Vercel Speed Insights", async () => {
     render(<Telemetry />);
-    expect(screen.getByTestId("vercel-speed-insights")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("vercel-speed-insights"),
+    ).toBeInTheDocument();
   });
 
-  it("renders no visible UI", () => {
+  it("renders nothing visible once loaded", async () => {
     const { container } = render(<Telemetry />);
+    await screen.findByTestId("vercel-analytics");
     expect(container).not.toHaveTextContent(/\S/);
   });
 });
