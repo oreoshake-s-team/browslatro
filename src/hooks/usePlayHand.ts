@@ -301,6 +301,7 @@ export function usePlayHand({
       playedCardCount: playedCards.length,
       scoredCards: scoring,
       remainingDiscards,
+      remainingHands,
       money,
       heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
     });

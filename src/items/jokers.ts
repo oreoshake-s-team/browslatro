@@ -62,6 +62,9 @@ export const BLOODSTONE_CHANCE = 0.5;
 export const BLOODSTONE_X_MULT = 1.5;
 export const RESERVED_PARKING_CHANCE = 0.5;
 export const RESERVED_PARKING_PAYOUT = 1;
+export const TRIBOULET_X_MULT = 2;
+export const TRIBOULET_RANKS: ReadonlyArray<Rank> = ["K", "Q"];
+export const ACROBAT_X_MULT = 3;
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
@@ -173,7 +176,13 @@ export type JokerEffect =
       readonly kind: "per-held-face-chance-money";
       readonly chance: number;
       readonly payout: number;
-    };
+    }
+  | {
+      readonly kind: "per-scored-rank-x-mult";
+      readonly ranks: ReadonlyArray<Rank>;
+      readonly amount: number;
+    }
+  | { readonly kind: "x-mult-on-final-hand"; readonly amount: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -947,12 +956,36 @@ export function createYorickJoker(): Joker {
   };
 }
 
+export function createTribouletJoker(): Joker {
+  return {
+    id: "triboulet",
+    rarity: "legendary",
+    name: "Triboulet",
+    description: `X${TRIBOULET_X_MULT} Mult per scored King or Queen`,
+    effect: {
+      kind: "per-scored-rank-x-mult",
+      ranks: TRIBOULET_RANKS,
+      amount: TRIBOULET_X_MULT,
+    },
+  };
+}
+
+export function createAcrobatJoker(): Joker {
+  return {
+    id: "acrobat",
+    rarity: "uncommon",
+    name: "Acrobat",
+    description: `X${ACROBAT_X_MULT} Mult on the final hand of the round`,
+    effect: { kind: "x-mult-on-final-hand", amount: ACROBAT_X_MULT },
+  };
+}
+
 export const initialJokersConfig: { factory: () => Joker[] } = {
   factory: () => [],
 };
 
 export function createLegendaryJokerCatalog(): Joker[] {
-  return [createYorickJoker()];
+  return [createYorickJoker(), createTribouletJoker()];
 }
 
 export function createJokerCatalog(): Joker[] {
@@ -1001,6 +1034,7 @@ export function createJokerCatalog(): Joker[] {
     createBloodstoneJoker(),
     createSwashbucklerJoker(),
     createReservedParkingJoker(),
+    createAcrobatJoker(),
   ];
 }
 
@@ -1021,6 +1055,7 @@ export interface HandLevelContext {
   readonly heldInHandCards?: ReadonlyArray<Card>;
   readonly rng?: RandomSource;
   readonly remainingDiscards?: number;
+  readonly remainingHands?: number;
   readonly money?: number;
 }
 
@@ -1229,6 +1264,14 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "x-mult-on-final-hand": {
+        if (context.remainingHands === 1) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
@@ -1236,6 +1279,7 @@ export function applyHandLevelJokers(
       case "x-mult-on-face-scored":
       case "per-scored-rank":
       case "per-suit-chance-x-mult":
+      case "per-scored-rank-x-mult":
         break;
       default:
         assertNeverEffect(effect);
@@ -1388,6 +1432,18 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "per-scored-rank-x-mult": {
+        if (effect.ranks.includes(card.rank)) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
       case "additive-mult":
       case "stencil":
       case "on-hand-type-mult":
@@ -1405,6 +1461,7 @@ export function applyPerCardJokers(
       case "x-mult-when-held-suits-all-in":
       case "other-jokers-sell-value-mult":
       case "per-held-face-chance-money":
+      case "x-mult-on-final-hand":
         break;
       default:
         assertNeverEffect(effect);
