@@ -12,6 +12,8 @@ import {
   BOOTSTRAPS_BUCKET_DOLLARS,
   BOOTSTRAPS_MULT_PER_BUCKET,
   BULL_CHIPS_PER_DOLLAR,
+  BURGLAR_DISCARDS_OVERRIDE,
+  BURGLAR_HANDS,
   BUSINESS_CARD_PROC_CHANCE,
   CLEVER_JOKER_CHIPS,
   CLOUD_9_MONEY_PER_NINE,
@@ -930,6 +932,20 @@ export function createCreditCardJoker(): Joker {
     name: "Credit Card",
     description: `Your money can go as low as -\$${CREDIT_CARD_DEBT_FLOOR}`,
     effect: { kind: "passive-run-stats", debtFloor: CREDIT_CARD_DEBT_FLOOR },
+  };
+}
+
+export function createBurglarJoker(): Joker {
+  return {
+    id: "burglar",
+    rarity: "uncommon",
+    name: "Burglar",
+    description: `+${BURGLAR_HANDS} hands per round, lose all discards`,
+    effect: {
+      kind: "passive-run-stats",
+      hands: BURGLAR_HANDS,
+      discardsOverride: BURGLAR_DISCARDS_OVERRIDE,
+    },
   };
 }
 

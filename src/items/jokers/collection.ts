@@ -43,6 +43,20 @@ export function extraDebtFloorFromJokers(
   return total;
 }
 
+export function discardsOverrideFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number | null {
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.discardsOverride !== undefined
+    ) {
+      return j.effect.discardsOverride;
+    }
+  }
+  return null;
+}
+
 export function extraStartingHandsFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number {
