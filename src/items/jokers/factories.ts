@@ -18,6 +18,7 @@ import {
   CLOUD_9_RANKS,
   CRAFTY_JOKER_CHIPS,
   CRAZY_JOKER_MULT,
+  CREDIT_CARD_DEBT_FLOOR,
   BASEBALL_CARD_X_MULT_PER_UNCOMMON,
   BLUE_JOKER_CHIPS_PER_REMAINING_CARD,
   DELAYED_GRATIFICATION_MONEY_PER_DISCARD,
@@ -919,6 +920,16 @@ export function createStuntmanJoker(): Joker {
       handSize: STUNTMAN_HAND_SIZE,
       additiveChips: STUNTMAN_CHIPS,
     },
+  };
+}
+
+export function createCreditCardJoker(): Joker {
+  return {
+    id: "credit-card",
+    rarity: "common",
+    name: "Credit Card",
+    description: `Your money can go as low as -\$${CREDIT_CARD_DEBT_FLOOR}`,
+    effect: { kind: "passive-run-stats", debtFloor: CREDIT_CARD_DEBT_FLOOR },
   };
 }
 

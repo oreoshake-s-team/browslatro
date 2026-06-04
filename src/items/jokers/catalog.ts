@@ -15,6 +15,7 @@ import {
   createCloud9Joker,
   createCraftyJoker,
   createCrazyJoker,
+  createCreditCardJoker,
   createDelayedGratificationJoker,
   createDeviousJoker,
   createDriversLicenseJoker,
@@ -146,5 +147,6 @@ export function createJokerCatalog(): Joker[] {
     createMerryAndyJoker(),
     createTroubadourJoker(),
     createStuntmanJoker(),
+    createCreditCardJoker(),
   ];
 }

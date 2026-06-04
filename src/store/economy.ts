@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { GameState } from "./game";
+import { extraDebtFloorFromJokers } from "../items/jokers";
 
 export const STARTING_MONEY = 4;
 
@@ -15,7 +16,9 @@ export const createEconomySlice: StateCreator<GameState, [], [], EconomyState> =
   money: STARTING_MONEY,
   earn: (amount) => set((state) => ({ money: state.money + amount })),
   spend: (amount) => {
-    if (get().money < amount) return false;
+    const s = get();
+    const debtFloor = extraDebtFloorFromJokers(s.jokers);
+    if (s.money + debtFloor < amount) return false;
     set((state) => ({ money: state.money - amount }));
     return true;
   },

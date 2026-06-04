@@ -31,6 +31,18 @@ export function extraStartingDiscardsFromJokers(
   return total;
 }
 
+export function extraDebtFloorFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.debtFloor !== undefined) {
+      total += j.effect.debtFloor;
+    }
+  }
+  return total;
+}
+
 export function extraStartingHandsFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number {

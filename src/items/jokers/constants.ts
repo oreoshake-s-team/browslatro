@@ -88,6 +88,7 @@ export const TROUBADOUR_HAND_SIZE = 2;
 export const TROUBADOUR_HANDS = -1;
 export const STUNTMAN_CHIPS = 250;
 export const STUNTMAN_HAND_SIZE = -2;
+export const CREDIT_CARD_DEBT_FLOOR = 20;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
