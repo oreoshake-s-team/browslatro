@@ -3,7 +3,7 @@ import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
-import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
+import { requiredChipsForBlind } from "../../scoring/anteScaling";
 import {
   describeSkipOffer,
   getTagSpec,
@@ -33,15 +33,6 @@ const BLIND_NAMES: Readonly<Record<Blind, string>> = {
   3: "Boss Blind",
 };
 
-function requiredScoreFor(
-  blind: Blind,
-  ante: number,
-  boss: BossBlind,
-): number {
-  const base = BASE_CHIPS[ante - 1];
-  if (blind === 3) return base * boss.scoreMultiplier;
-  return base * BLIND_MULTIPLIERS[blind - 1];
-}
 
 function payoutFor(blind: Blind, stake?: Stake): number {
   if (
@@ -202,7 +193,7 @@ export default function BlindSelectScreen({
                   <div className="blind-select-row-stat">
                     <dt>Score at least</dt>
                     <dd data-testid={`blind-select-required-${b}`}>
-                      {requiredScoreFor(b, ante, boss)}
+                      {requiredChipsForBlind({ ante, blind: b, boss, stake })}
                     </dd>
                   </div>
                   <div className="blind-select-row-stat">

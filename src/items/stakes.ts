@@ -21,7 +21,9 @@ export const STAKE_ORDER: ReadonlyArray<Stake> = [
 
 export const DEFAULT_STAKE: Stake = "white";
 
-export type StakeModifier = { readonly kind: "red-small-blind-no-reward" };
+export type StakeModifier =
+  | { readonly kind: "red-small-blind-no-reward" }
+  | { readonly kind: "green-ante-scaling" };
 
 export interface StakeSpec {
   readonly id: Stake;
@@ -49,9 +51,9 @@ const STAKE_SPECS: ReadonlyArray<StakeSpec> = [
   {
     id: "green",
     name: "Green Stake",
-    description: "Required score scales faster per ante.",
-    implemented: false,
-    modifiers: [],
+    description: "Required score scales faster per Ante.",
+    implemented: true,
+    modifiers: [{ kind: "green-ante-scaling" }],
   },
   {
     id: "black",

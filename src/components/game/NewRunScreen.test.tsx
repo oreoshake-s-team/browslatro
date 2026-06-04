@@ -6,7 +6,12 @@ import NewRunScreen from "./NewRunScreen";
 describe("NewRunScreen", () => {
   test("renders one button per implemented stake", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(2);
+    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(3);
+  });
+
+  test("renders the Green stake tile (implemented)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-stake-green")).toBeInTheDocument();
   });
 
   test("does not render unimplemented stakes like Gold (negative)", () => {

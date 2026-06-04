@@ -9,7 +9,7 @@ const JokerGrantAcknowledge = lazy(
 import "./App.css";
 import { useGame } from "./store/game";
 import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
-import { BASE_CHIPS, BLIND_MULTIPLIERS } from "./constants";
+import { requiredChipsForBlind } from "./scoring/anteScaling";
 import {
   availableBosses,
   createBossCatalog,
@@ -233,11 +233,12 @@ function App() {
   useEffect(() => {
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
   }, [setCurrentBoss]);
-  const bossScoreMultiplier = currentBoss.scoreMultiplier;
-  const requiredScore =
-    blind === 3
-      ? BASE_CHIPS[ante - 1] * bossScoreMultiplier
-      : BASE_CHIPS[ante - 1] * BLIND_MULTIPLIERS[blind - 1];
+  const requiredScore = requiredChipsForBlind({
+    ante,
+    blind,
+    boss: currentBoss,
+    stake: selectedStake,
+  });
 
   const handleWin = useGame((s) => s.handleWin);
 
