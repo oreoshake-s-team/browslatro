@@ -285,4 +285,32 @@ describe("consumables", () => {
     const c: Consumable = { kind: "tarot", card: hangedMan };
     expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
   });
+
+  test("consumableUseBlock blocks Strength with zero selection", () => {
+    const strength = createTarotCatalog().find((t) => t.id === "strength");
+    if (!strength) throw new Error("no strength in catalog");
+    const c: Consumable = { kind: "tarot", card: strength };
+    expect(consumableUseBlock(c, 0)).toMatch(/Select/);
+  });
+
+  test("consumableUseBlock blocks Strength when more than 2 cards are selected", () => {
+    const strength = createTarotCatalog().find((t) => t.id === "strength");
+    if (!strength) throw new Error("no strength in catalog");
+    const c: Consumable = { kind: "tarot", card: strength };
+    expect(consumableUseBlock(c, 3)).toMatch(/Too many/);
+  });
+
+  test("consumableUseBlock returns null for Strength with 1 or 2 selected", () => {
+    const strength = createTarotCatalog().find((t) => t.id === "strength");
+    if (!strength) throw new Error("no strength in catalog");
+    const c: Consumable = { kind: "tarot", card: strength };
+    expect(consumableUseBlock(c, 2)).toBeNull();
+  });
+
+  test("previewMode blocks Strength even with a valid selection", () => {
+    const strength = createTarotCatalog().find((t) => t.id === "strength");
+    if (!strength) throw new Error("no strength in catalog");
+    const c: Consumable = { kind: "tarot", card: strength };
+    expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
+  });
 });

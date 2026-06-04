@@ -4,12 +4,14 @@ import { applyPlanetUpgrade } from "../items/planets";
 import { removeConsumableAt } from "../items/consumables";
 import { applyAuraToSelectedInHand, duplicateSelectedInHand } from "../items/spectrals";
 import {
+  nextRankUp,
   resolveHermitPayout,
   resolveTemperancePayout,
   rollWheelOfFortune,
 } from "../items/tarots";
 import { withEdition } from "../items/jokers";
-import { cardKey } from "../cards/deck";
+import { cardKey, nextCardId } from "../cards/deck";
+import type { Card } from "../cards/types";
 
 export interface UseConsumableActionsResult {
   readonly useConsumable: (consumableIdx: number) => void;
@@ -39,6 +41,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
   );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardKeys = useGame((s) => s.setDestroyedCardKeys);
+  const setAddedCards = useGame((s) => s.setAddedCards);
 
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
@@ -173,6 +176,38 @@ export function useConsumableActions(): UseConsumableActionsResult {
       });
       setDealt((prev) => ({
         hand: prev.hand.filter((c) => !selectedIds.has(c.id)),
+        remaining: prev.remaining,
+      }));
+      setSelectedIds(new Set());
+      setSelectedHand(null);
+      setChips(0);
+      setMultiplier(0);
+      setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+      return;
+    }
+    if (effect.kind === "rank-up-selected") {
+      if (previewActive) return;
+      if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
+      play("pop");
+      const oldKeys = new Set<string>();
+      const replacements: Card[] = [];
+      for (const c of useGame.getState().dealt.hand) {
+        if (!selectedIds.has(c.id)) continue;
+        oldKeys.add(cardKey(c));
+        replacements.push({ ...c, rank: nextRankUp(c.rank) });
+      }
+      setDestroyedCardKeys((prev) => {
+        const next = new Set(prev);
+        for (const k of oldKeys) next.add(k);
+        return next;
+      });
+      setAddedCards((prev) => [
+        ...prev,
+        ...replacements.map((r) => ({ ...r, id: nextCardId() })),
+      ]);
+      const replacementById = new Map(replacements.map((r) => [r.id, r]));
+      setDealt((prev) => ({
+        hand: prev.hand.map((c) => replacementById.get(c.id) ?? c),
         remaining: prev.remaining,
       }));
       setSelectedIds(new Set());
