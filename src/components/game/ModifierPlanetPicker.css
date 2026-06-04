@@ -1,4 +1,4 @@
-.modifier-spectral-picker {
+.modifier-planet-picker {
   width: 100%;
   padding: 0.4rem 0.7rem 0.7rem;
   border: 1px dashed #adb5bd;
@@ -7,7 +7,7 @@
   box-sizing: border-box;
 }
 
-.modifier-spectral-picker-summary {
+.modifier-planet-picker-summary {
   font-size: 0.72rem;
   font-weight: 700;
   color: #495057;
@@ -18,21 +18,21 @@
   user-select: none;
 }
 
-.modifier-spectral-picker-summary:hover {
-  color: #5f3dc4;
+.modifier-planet-picker-summary:hover {
+  color: #1864ab;
 }
 
-.modifier-spectral-picker[open] .modifier-spectral-picker-grid {
+.modifier-planet-picker[open] .modifier-planet-picker-grid {
   margin-top: 0.5rem;
 }
 
-.modifier-spectral-picker-grid {
+.modifier-planet-picker-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.4rem;
 }
 
-.add-spectral-button {
+.add-planet-button {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -42,9 +42,9 @@
   font-weight: 600;
   text-align: left;
   line-height: 1.2;
-  background-color: #f3f0ff;
-  color: #5f3dc4;
-  border: 1px solid #d0bfff;
+  background-color: #e7f5ff;
+  color: #1864ab;
+  border: 1px solid #a5d8ff;
   border-radius: 6px;
   cursor: pointer;
   transition:
@@ -54,21 +54,21 @@
     transform 0.05s ease;
 }
 
-.add-spectral-button:hover:not(:disabled) {
-  background-color: #e5dbff;
-  border-color: #b197fc;
+.add-planet-button:hover:not(:disabled) {
+  background-color: #d0ebff;
+  border-color: #74c0fc;
 }
 
-.add-spectral-button:focus-visible {
-  outline: 2px solid #5f3dc4;
+.add-planet-button:focus-visible {
+  outline: 2px solid #1864ab;
   outline-offset: 2px;
 }
 
-.add-spectral-button:active:not(:disabled) {
+.add-planet-button:active:not(:disabled) {
   transform: translateY(1px);
 }
 
-.add-spectral-button:disabled {
+.add-planet-button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }

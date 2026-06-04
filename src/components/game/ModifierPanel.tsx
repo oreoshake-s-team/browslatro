@@ -1,40 +1,9 @@
 import "./ModifierPanel.css";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
-import { SHOP_PACK_SLOTS } from "../../items/shop";
-import type { PackPool } from "../../items/packs";
 import ModifierSpectralPicker from "./ModifierSpectralPicker";
-
-type QueueablePool = Extract<
-  PackPool,
-  "standard" | "celestial" | "arcana" | "spectral"
->;
-
-const QUEUEABLE_PACK_POOLS: ReadonlyArray<{
-  readonly pool: QueueablePool;
-  readonly icon: string;
-  readonly label: string;
-}> = [
-  { pool: "standard", icon: "🃏", label: "Standard" },
-  { pool: "celestial", icon: "🌌", label: "Celestial" },
-  { pool: "arcana", icon: "🔮", label: "Arcana" },
-  { pool: "spectral", icon: "👻", label: "Spectral" },
-];
-
-function countByPool(
-  pools: ReadonlyArray<PackPool>,
-): Readonly<Record<QueueablePool, number>> {
-  const counts: Record<QueueablePool, number> = {
-    standard: 0,
-    celestial: 0,
-    arcana: 0,
-    spectral: 0,
-  };
-  for (const pool of pools) {
-    if (pool in counts) counts[pool as QueueablePool] += 1;
-  }
-  return counts;
-}
+import ModifierTarotPicker from "./ModifierTarotPicker";
+import ModifierPlanetPicker from "./ModifierPlanetPicker";
 
 export default function ModifierPanel() {
   const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
@@ -44,15 +13,8 @@ export default function ModifierPanel() {
   const money = useGame((s) => s.money);
   const setMoney = useGame((s) => s.setMoney);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
-  const setExtraPackSlots = useGame((s) => s.setExtraPackSlots);
-  const pendingForcedPacks = useGame((s) => s.pendingForcedPacks);
-  const setPendingForcedPacks = useGame((s) => s.setPendingForcedPacks);
-  const adjustVoucherSlots = useGame((s) => s.adjustVoucherSlots);
   const forceProbabilities = useGame((s) => s.forceProbabilities);
   const setForceProbabilities = useGame((s) => s.setForceProbabilities);
-
-  const forcedPackCounts = countByPool(pendingForcedPacks);
-  const totalPendingPacks = pendingForcedPacks.length;
 
   function addChips(amount: number) {
     play("pop");
@@ -116,67 +78,14 @@ export default function ModifierPanel() {
         </button>
         <button
           type="button"
-          className="shrink-pack-slots-button"
-          onClick={() =>
-            setExtraPackSlots((prev) => Math.max(-SHOP_PACK_SLOTS, prev - 1))
-          }
-        >
-          📦 Packs −1
-        </button>
-        <button
-          type="button"
-          className="grow-pack-slots-button"
-          onClick={() => setExtraPackSlots((prev) => prev + 1)}
-        >
-          🎁 Packs +1
-        </button>
-        {QUEUEABLE_PACK_POOLS.map(({ pool, icon, label }) => {
-          const count = forcedPackCounts[pool];
-          const suffix = count > 0 ? ` (${count})` : "";
-          return (
-            <button
-              key={pool}
-              type="button"
-              className={`add-pack-button add-pack-button-${pool}`}
-              onClick={() =>
-                setPendingForcedPacks((prev) => [...prev, pool])
-              }
-            >
-              {icon} Add {label} pack{suffix}
-            </button>
-          );
-        })}
-        <button
-          type="button"
-          className="clear-pending-packs-button"
-          onClick={() => setPendingForcedPacks([])}
-          disabled={totalPendingPacks === 0}
-          aria-disabled={totalPendingPacks === 0}
-        >
-          ↩️ Clear pending packs
-        </button>
-        <button
-          type="button"
-          className="shrink-voucher-slots-button"
-          onClick={() => adjustVoucherSlots(-1)}
-        >
-          🎟️ Vouchers −1
-        </button>
-        <button
-          type="button"
-          className="grow-voucher-slots-button"
-          onClick={() => adjustVoucherSlots(1)}
-        >
-          🎫 Vouchers +1
-        </button>
-        <button
-          type="button"
           className="force-probabilities-button"
           onClick={() => setForceProbabilities((p) => !p)}
           aria-pressed={forceProbabilities}
         >
           🎲 Force Probabilities {forceProbabilities ? "Off" : "On"}
         </button>
+        <ModifierTarotPicker />
+        <ModifierPlanetPicker />
         <ModifierSpectralPicker />
       </div>
     </details>

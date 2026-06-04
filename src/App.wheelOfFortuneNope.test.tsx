@@ -88,7 +88,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
   async function openArcanaPackWithWheelOfFortune(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
-    await user.click(screen.getByRole("button", { name: /Add Arcana pack/ }));
+    useGame.getState().setPendingForcedPacks((prev) => [...prev, "arcana"]);
     await user.click(screen.getByText(/^🏆 Win$/));
     const arcanaOffer = document.querySelector('[data-pack-pool="arcana"]');
     if (!arcanaOffer) throw new Error("no arcana pack offer");

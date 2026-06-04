@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
+import { useGame } from "./store/game";
 import {
   dismissBlindSelect,
   flushDiscardAnimation,
@@ -52,7 +53,7 @@ describe("Spectral packs show a preview hand (#401)", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    await user.click(screen.getByRole("button", { name: /Add Spectral pack/ }));
+    useGame.getState().setPendingForcedPacks((prev) => [...prev, "spectral"]);
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
@@ -74,7 +75,7 @@ describe("Applying owned enhancement tarots to the preview hand (#401)", () => {
     render(<App />);
     await user.click(screen.getByText(/Add \$10/));
     await dismissBlindSelect(user);
-    await user.click(screen.getByRole("button", { name: /Add Arcana pack/ }));
+    useGame.getState().setPendingForcedPacks((prev) => [...prev, "arcana"]);
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));

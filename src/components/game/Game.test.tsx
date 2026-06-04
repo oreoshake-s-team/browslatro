@@ -78,4 +78,12 @@ describe("Game", () => {
     renderGame();
     expect(screen.queryByText(/Play or discard/i)).not.toBeInTheDocument();
   });
+
+  test("Submit Hand renders before Apply modifiers in DOM order (closes #634)", () => {
+    renderGame();
+    const submit = screen.getByText(/Submit Hand/);
+    const modifiers = screen.getByText(/Apply modifiers/);
+    const position = submit.compareDocumentPosition(modifiers);
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  });
 });
