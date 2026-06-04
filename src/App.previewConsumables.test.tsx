@@ -39,6 +39,7 @@ async function openPoolPack(
   user: ReturnType<typeof userEvent.setup>,
   pool: string,
 ): Promise<void> {
+  await screen.findByTestId("shop-money");
   const offer = document.querySelector(
     `[data-offer-kind="pack"][data-pack-pool="${pool}"]`,
   );

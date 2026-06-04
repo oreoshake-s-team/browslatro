@@ -5,9 +5,10 @@ import HandComponent from "../cards/Hand";
 import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
-import Shop, { type ShopProps } from "../shop/Shop";
+import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
+const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
 const NopeAnimation = lazy(() => import("./NopeAnimation"));
 import { useGame } from "../../store/game";
@@ -148,7 +149,11 @@ export default function Game({
           <PackOpenModal {...packOpen} />
         </Suspense>
       )}
-      {shop && <Shop {...shop} disabled={!!packOpen} />}
+      {shop && (
+        <Suspense fallback={null}>
+          <Shop {...shop} disabled={!!packOpen} />
+        </Suspense>
+      )}
       {!shop && !packOpen && (
         <HandComponent
           hand={hand}
