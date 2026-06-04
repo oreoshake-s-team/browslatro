@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom";
 
+if (typeof HTMLMediaElement !== "undefined") {
+  HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+  HTMLMediaElement.prototype.pause = vi.fn();
+  HTMLMediaElement.prototype.load = vi.fn();
+}
+
 beforeEach(async () => {
   const { useGame } = await import("./store/game");
   useGame.getState().resetGame();
