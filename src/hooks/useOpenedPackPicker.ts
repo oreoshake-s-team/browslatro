@@ -44,6 +44,9 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const decrementPackPicks = useGame((s) => s.decrementPackPicks);
+  const setPickedPackOptionIndices = useGame(
+    (s) => s.setPickedPackOptionIndices,
+  );
 
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
@@ -124,6 +127,11 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
     } else {
       return;
     }
+    setPickedPackOptionIndices((prev) => {
+      const next = new Set(prev);
+      next.add(optionIdx);
+      return next;
+    });
     decrementPackPicks();
   }
 

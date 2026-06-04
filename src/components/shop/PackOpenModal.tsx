@@ -15,6 +15,7 @@ import { useEscapeToClose } from "../system/useEscapeToClose";
 export interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
+  pickedIndices?: ReadonlySet<number>;
   consumableSlotsFull?: boolean;
   jokerSlotsFull?: boolean;
   previewHand?: ReadonlyArray<CardType>;
@@ -112,6 +113,7 @@ function describeOption(option: PackOption): OptionView | null {
 export default function PackOpenModal({
   pack,
   picksRemaining,
+  pickedIndices,
   consumableSlotsFull = false,
   jokerSlotsFull = false,
   previewHand = [],
@@ -152,6 +154,7 @@ export default function PackOpenModal({
         </p>
         <ul className="pack-open-options" aria-label="Pack options">
           {pack.options.map((option, idx) => {
+            if (pickedIndices?.has(idx)) return null;
             const view = describeOption(option);
             if (!view) return null;
             const noPicksLeft = picksRemaining <= 0;

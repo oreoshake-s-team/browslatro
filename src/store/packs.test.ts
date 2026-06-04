@@ -30,4 +30,23 @@ describe("packs store", () => {
     useGame.getState().resetPacks();
     expect(useGame.getState().pendingForcedPacks).toHaveLength(0);
   });
+
+  test("starts with no picked pack option indices (#647)", () => {
+    expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
+  });
+
+  test("setPickedPackOptionIndices accepts an updater function (#647)", () => {
+    useGame.getState().setPickedPackOptionIndices((prev) => {
+      const next = new Set(prev);
+      next.add(2);
+      return next;
+    });
+    expect(useGame.getState().pickedPackOptionIndices.has(2)).toBe(true);
+  });
+
+  test("resetPacks clears picked pack option indices (#647)", () => {
+    useGame.getState().setPickedPackOptionIndices(new Set([0, 1]));
+    useGame.getState().resetPacks();
+    expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
+  });
 });

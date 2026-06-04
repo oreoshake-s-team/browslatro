@@ -1,8 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import { HANDS } from "./constants";
 import { shopPickerRngConfig } from "./items/shop";
+import { createPlanetCatalog } from "./items/planets";
+import { useGame } from "./store/game";
+import type { PackOffer } from "./items/packs";
 import {
   flushDiscardAnimation,
   getHandCardButtons,
@@ -168,6 +171,65 @@ describe("Celestial pack open + pick integration", () => {
         .getByTestId(`shop-offer-${idx}`)
         .querySelector("button.shop-offer-buy"),
     ).toHaveTextContent("Sold");
+  });
+});
+
+describe("Mega pack — picked option is removed from list (#647)", () => {
+  function megaCelestialPack(): PackOffer {
+    const planets = createPlanetCatalog().slice(0, 5);
+    return {
+      pool: "celestial",
+      variant: "mega",
+      options: planets.map((planet) => ({ kind: "planet" as const, planet })),
+    };
+  }
+
+  function openMegaCelestialPack(): ReturnType<typeof userEvent.setup> {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    act(() => useGame.getState().openPackOffer(megaCelestialPack()));
+    return user;
+  }
+
+  test("after picking option 0, the option-0 pick button is gone from the DOM", async () => {
+    const user = openMegaCelestialPack();
+    await screen.findByTestId("pack-open-pick-0");
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.queryByTestId("pack-open-pick-0")).not.toBeInTheDocument();
+  });
+
+  test("after picking option 0, the other pick buttons stay rendered", async () => {
+    const user = openMegaCelestialPack();
+    await screen.findByTestId("pack-open-pick-0");
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.getByTestId("pack-open-pick-1")).toBeInTheDocument();
+  });
+
+  test("after picking option 0, the picks-remaining counter shows 1 left", async () => {
+    const user = openMegaCelestialPack();
+    await screen.findByTestId("pack-open-pick-0");
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
+      /1 left/,
+    );
+  });
+
+  test("picking both options closes the modal", async () => {
+    const user = openMegaCelestialPack();
+    await screen.findByTestId("pack-open-pick-0");
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    await user.click(screen.getByTestId("pack-open-pick-1"));
+    expect(screen.queryByTestId("pack-open-subtitle")).not.toBeInTheDocument();
+  });
+
+  test("opening a fresh Mega pack resets the picked indices (next pack shows all options)", async () => {
+    const user = openMegaCelestialPack();
+    await screen.findByTestId("pack-open-pick-0");
+    await user.click(screen.getByTestId("pack-open-pick-0"));
+    await user.click(screen.getByTestId("pack-open-pick-1"));
+    act(() => useGame.getState().openPackOffer(megaCelestialPack()));
+    await screen.findByTestId("pack-open-pick-0");
+    expect(screen.getByTestId("pack-open-pick-0")).toBeInTheDocument();
   });
 });
 

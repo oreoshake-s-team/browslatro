@@ -212,6 +212,39 @@ describe("game actions slice", () => {
     expect(useGame.getState().openedPack).toBeNull();
   });
 
+  test("openPackOffer resets pickedPackOptionIndices even if previously populated (#647)", () => {
+    const game = useGame.getState();
+    game.setPickedPackOptionIndices(new Set([0, 1]));
+    game.openPackOffer({ pool: "arcana", variant: "mega", options: [] });
+    expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
+  });
+
+  test("decrementPackPicks clears pickedPackOptionIndices once picks reach zero (#647)", () => {
+    const game = useGame.getState();
+    game.setOpenedPack({ pool: "arcana", variant: "mega", options: [] });
+    game.setPackPicksRemaining(1);
+    game.setPickedPackOptionIndices(new Set([0]));
+    game.decrementPackPicks();
+    expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
+  });
+
+  test("decrementPackPicks keeps pickedPackOptionIndices while picks remain (#647)", () => {
+    const game = useGame.getState();
+    game.setOpenedPack({ pool: "arcana", variant: "mega", options: [] });
+    game.setPackPicksRemaining(2);
+    game.setPickedPackOptionIndices(new Set([0]));
+    game.decrementPackPicks();
+    expect(useGame.getState().pickedPackOptionIndices.has(0)).toBe(true);
+  });
+
+  test("closeOpenedPack clears pickedPackOptionIndices (#647)", () => {
+    const game = useGame.getState();
+    game.setOpenedPack({ pool: "arcana", variant: "mega", options: [] });
+    game.setPickedPackOptionIndices(new Set([1]));
+    game.closeOpenedPack();
+    expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
+  });
+
   test("buyShopOffer adds a purchased joker to the row", () => {
     const joker = createJokerCatalog()[0];
     const game = useGame.getState();
