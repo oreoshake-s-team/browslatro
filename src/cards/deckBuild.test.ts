@@ -3,6 +3,7 @@ import {
   applyEnhancementOverrides,
   applySealOverrides,
   buildShuffledDeck,
+  countEnhancedInFullDeck,
   fullDeckPile,
   initialDeal,
 } from "./deckBuild";
@@ -122,5 +123,46 @@ describe("fullDeckPile", () => {
     expect(fullDeckPile(new Set(), added).remaining).toHaveLength(
       DECK_SIZE + 1,
     );
+  });
+});
+
+describe("countEnhancedInFullDeck", () => {
+  test("returns 0 when no overrides and no added cards are enhanced", () => {
+    expect(countEnhancedInFullDeck()).toBe(0);
+  });
+
+  test("counts each base-deck enhancement override exactly once", () => {
+    const overrides = new Map([
+      ["A-spades", "gold" as const],
+      ["K-hearts", "steel" as const],
+      ["5-diamonds", "glass" as const],
+    ]);
+    expect(countEnhancedInFullDeck(new Set(), [], overrides)).toBe(3);
+  });
+
+  test("does not double-count an enhanced added card whose rank-suit also has a base override", () => {
+    const overrides = new Map([["A-spades", "gold" as const]]);
+    const added = [card({ id: 999, enhancement: "steel" })];
+    expect(countEnhancedInFullDeck(new Set(), added, overrides)).toBe(2);
+  });
+
+  test("counts added cards that carry their own enhancement", () => {
+    const added = [
+      card({ id: 1, rank: "2", suit: "clubs", enhancement: "mult" }),
+      card({ id: 2, rank: "3", suit: "clubs", enhancement: "bonus" }),
+    ];
+    expect(countEnhancedInFullDeck(new Set(), added)).toBe(2);
+  });
+
+  test("does not count added cards that lack an enhancement", () => {
+    const added = [card({ id: 1, rank: "2", suit: "clubs" })];
+    expect(countEnhancedInFullDeck(new Set(), added)).toBe(0);
+  });
+
+  test("a destroyed rank-suit no longer contributes its base override", () => {
+    const overrides = new Map([["A-spades", "gold" as const]]);
+    expect(
+      countEnhancedInFullDeck(new Set(["A-spades"]), [], overrides),
+    ).toBe(0);
   });
 });

@@ -1,15 +1,20 @@
+import { beforeEach } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Jokers from "./Jokers";
 import {
+  DRIVERS_LICENSE_ENHANCED_THRESHOLD,
   JOKER_EDITION_INFO,
   JOKER_EDITION_KINDS,
+  createDriversLicenseJoker,
   createGreedyJoker,
   createPlusFourMultJoker,
   jokerSellValue,
   withEdition,
   type JokerEdition,
 } from "../../items/jokers";
+import { useGame } from "../../store/game";
+import type { Enhancement } from "../../cards/types";
 
 describe("Joker tooltip — open / close affordances", () => {
   test("no tooltip is rendered on initial mount", () => {
@@ -149,6 +154,77 @@ describe("Joker tooltip — content", () => {
     await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
     expect(screen.getByRole("tooltip")).toHaveTextContent(
       JOKER_EDITION_INFO.negative.description,
+    );
+  });
+});
+
+describe("Joker tooltip — Driver's License enhanced-count progress (#632)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  function setEnhancementOverrides(
+    pairs: ReadonlyArray<[string, Enhancement]>,
+  ): void {
+    useGame.getState().setCardEnhancementsByKey(new Map(pairs));
+  }
+
+  test("does not show the progress line for jokers without the threshold effect", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(
+      screen.queryByTestId("joker-tooltip-enhanced-progress"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows the progress line for Driver's License when its tooltip opens", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createDriversLicenseJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-drivers-license"));
+    expect(
+      screen.getByTestId("joker-tooltip-enhanced-progress"),
+    ).toBeInTheDocument();
+  });
+
+  test("renders zero / threshold when no cards are enhanced", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createDriversLicenseJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-drivers-license"));
+    expect(
+      screen.getByTestId("joker-tooltip-enhanced-progress"),
+    ).toHaveTextContent(`0 / ${DRIVERS_LICENSE_ENHANCED_THRESHOLD}`);
+  });
+
+  test("renders the live enhanced count from the store", async () => {
+    setEnhancementOverrides([
+      ["A-spades", "gold"],
+      ["K-hearts", "steel"],
+      ["5-diamonds", "glass"],
+    ]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createDriversLicenseJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-drivers-license"));
+    expect(
+      screen.getByTestId("joker-tooltip-enhanced-progress"),
+    ).toHaveTextContent(`3 / ${DRIVERS_LICENSE_ENHANCED_THRESHOLD}`);
+  });
+
+  test("counts the threshold count when it is reached", async () => {
+    const pairs: Array<[string, Enhancement]> = [];
+    const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2", "3", "4"];
+    const suits = ["spades", "hearts", "diamonds", "clubs"];
+    for (let i = 0; i < DRIVERS_LICENSE_ENHANCED_THRESHOLD; i += 1) {
+      pairs.push([`${ranks[i]}-${suits[i % 4]}`, "gold"]);
+    }
+    setEnhancementOverrides(pairs);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createDriversLicenseJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-drivers-license"));
+    expect(
+      screen.getByTestId("joker-tooltip-enhanced-progress"),
+    ).toHaveTextContent(
+      `${DRIVERS_LICENSE_ENHANCED_THRESHOLD} / ${DRIVERS_LICENSE_ENHANCED_THRESHOLD}`,
     );
   });
 });

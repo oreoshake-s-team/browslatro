@@ -60,6 +60,22 @@ export function initialDeal(
   );
 }
 
+export function countEnhancedInFullDeck(
+  excludedKeys: ReadonlySet<string> = new Set(),
+  addedCards: ReadonlyArray<Card> = [],
+  enhancementOverrides: ReadonlyMap<string, Enhancement> = new Map(),
+): number {
+  const base = applyEnhancementOverrides(
+    createDeck(excludedKeys),
+    enhancementOverrides,
+  );
+  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
+  let count = 0;
+  for (const c of base) if (c.enhancement !== undefined) count += 1;
+  for (const c of extras) if (c.enhancement !== undefined) count += 1;
+  return count;
+}
+
 export function fullDeckPile(
   excludedKeys: ReadonlySet<string> = new Set(),
   addedCards: ReadonlyArray<Card> = [],

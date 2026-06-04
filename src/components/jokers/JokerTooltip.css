@@ -48,6 +48,12 @@
   color: #ced4da;
 }
 
+.joker-tooltip-progress {
+  color: #b2f2bb;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .joker-tooltip-sell {
   color: #ffd43b;
   font-weight: 600;
