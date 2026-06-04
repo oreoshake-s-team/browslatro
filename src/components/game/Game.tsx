@@ -168,7 +168,6 @@ export default function Game({
           onJokerSellDrop={dragController.onJokerDropOnDeck}
         />
       )}
-      <ModifierPanel />
       {!shop && !packOpen && (
         <div className="submit-hand">
           <div className="play-actions">
@@ -189,6 +188,7 @@ export default function Game({
           </div>
         </div>
       )}
+      <ModifierPanel />
       <NopeAnimation triggerKey={nopeTriggerKey} />
     </div>
   );

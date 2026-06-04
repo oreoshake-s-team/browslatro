@@ -25,6 +25,7 @@
   display: flex;
   flex-wrap: nowrap;
   align-items: stretch;
+  justify-content: space-around;
   gap: 0;
   list-style: none;
   padding: 0;

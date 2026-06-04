@@ -87,39 +87,6 @@ describe("ModifierPanel", () => {
     expect(useGame.getState().handSizeModifier).toBe(before + 1);
   });
 
-  test("Packs +1 button increments extraPackSlots", async () => {
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    const before = useGame.getState().extraPackSlots;
-    await user.click(screen.getByText(/Packs \+1/));
-    expect(useGame.getState().extraPackSlots).toBe(before + 1);
-  });
-
-  test("Add Standard pack queues a forced standard pack", async () => {
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    await user.click(screen.getByText(/Add Standard pack/));
-    expect(useGame.getState().pendingForcedPacks).toContain("standard");
-  });
-
-  test("Clear pending packs empties the queue", async () => {
-    const user = userEvent.setup();
-    useGame.getState().setPendingForcedPacks(["standard", "celestial"]);
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    await user.click(screen.getByText(/Clear pending packs/));
-    expect(useGame.getState().pendingForcedPacks).toEqual([]);
-  });
-
-  test("Clear pending packs is disabled when no packs are queued (negative)", async () => {
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    expect(screen.getByText(/Clear pending packs/)).toBeDisabled();
-  });
-
   test("Force Probabilities toggles the flag", async () => {
     const user = userEvent.setup();
     render(<ModifierPanel />);
@@ -129,17 +96,38 @@ describe("ModifierPanel", () => {
     expect(useGame.getState().forceProbabilities).toBe(!before);
   });
 
-  test("Vouchers +1 increases extraVoucherSlots by 1", async () => {
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    const before = useGame.getState().extraVoucherSlots;
-    await user.click(screen.getByText(/Vouchers \+1/));
-    expect(useGame.getState().extraVoucherSlots).toBe(before + 1);
-  });
-
   test("renders ModifierSpectralPicker subcomponent", () => {
     render(<ModifierPanel />);
     expect(screen.getByText(/Add a specific Spectral/)).toBeInTheDocument();
   });
+
+  test("renders ModifierTarotPicker subcomponent", () => {
+    render(<ModifierPanel />);
+    expect(screen.getByText(/Add a specific Tarot/)).toBeInTheDocument();
+  });
+
+  test("renders ModifierPlanetPicker subcomponent", () => {
+    render(<ModifierPanel />);
+    expect(screen.getByText(/Add a specific Planet/)).toBeInTheDocument();
+  });
+
+  test.each([
+    "Add Arcana pack",
+    "Add Celestial pack",
+    "Add Standard pack",
+    "Add Spectral pack",
+    "Clear pending packs",
+    "Packs +1",
+    "Packs −1",
+    "Vouchers +1",
+    "Vouchers −1",
+  ])(
+    "%s is no longer rendered in the modifier panel (closes #634)",
+    async (label) => {
+      const user = userEvent.setup();
+      render(<ModifierPanel />);
+      await openModifiers(user);
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    },
+  );
 });
