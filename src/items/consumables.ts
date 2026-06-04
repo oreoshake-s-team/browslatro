@@ -44,8 +44,14 @@ export function consumableUseBlock(
   if (c.kind === "planet") return null;
   if (c.kind === "tarot") {
     const effect = c.card.effect;
-    if (effect.kind !== "apply-enhancement") return null;
-    return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
+    if (effect.kind === "apply-enhancement") {
+      return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
+    }
+    if (effect.kind === "destroy-selected") {
+      if (previewMode) return "Cannot destroy cards while opening a pack";
+      return checkSelection(selectedCount, effect.maxTargets);
+    }
+    return null;
   }
   const effect = c.card.effect;
   if (effect.kind === "apply-seal") {
