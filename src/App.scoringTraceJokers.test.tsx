@@ -12,7 +12,6 @@ import {
 } from "./items/jokers";
 import type { Card } from "./cards/types";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const playMock = play as MockedFunction<typeof play>;
 

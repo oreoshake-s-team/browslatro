@@ -4,7 +4,6 @@ import type { PackOffer } from "./items/packs";
 import { HANDS } from "./constants";
 import { getStatValue, setupAppTestEnvironment } from "./App.test-helpers";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 let nextSpectralPack: PackOffer | null = null;
 

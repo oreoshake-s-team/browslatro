@@ -10,7 +10,6 @@ import type { AnimationSpeed } from "./components/system/preferences";
 import type { Card } from "./cards/types";
 import { bossPickerRngConfig } from "./items/bosses";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const playMock = play as MockedFunction<typeof play>;
 

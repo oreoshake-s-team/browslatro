@@ -1,3 +1,4 @@
+import { createRngConfig } from "../dev/rngConfig";
 import type { ImmediateAction } from "../run/immediateActions";
 import type { NextShopModifier } from "../run/nextShopMods";
 import type { HandLabel } from "../scoring/handEvaluator";
@@ -300,7 +301,7 @@ export interface AnteSkipOffers {
   readonly big: AnteSkipOffer;
 }
 
-export const tagOfferRngConfig: { rng: () => number } = { rng: Math.random };
+export const tagOfferRngConfig = createRngConfig();
 
 export function rollSkipTag(rng: () => number = Math.random): TagId {
   const ids = TAG_SPECS.map((spec) => spec.id);

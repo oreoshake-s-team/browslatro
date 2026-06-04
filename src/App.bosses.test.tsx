@@ -4,7 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const mockShuffleConfig = { useReverse: false };
 vi.mock("./cards/deck", async () => {

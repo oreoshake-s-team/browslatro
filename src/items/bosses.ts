@@ -1,5 +1,6 @@
 import type { Blind, Card, Hand, Rank, Suit } from "../cards/types";
 import { cardKey } from "../cards/deck";
+import { createRngConfig } from "../dev/rngConfig";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandStatsEntry } from "../scoring/handStats";
 import { createPlanetCatalog } from "./planets";
@@ -229,9 +230,9 @@ function readDeterministicBossFlag(): boolean {
   }
 }
 
-export const bossPickerRngConfig: { rng: BossRandomSource } = {
-  rng: readDeterministicBossFlag() ? () => 0 : Math.random,
-};
+export const bossPickerRngConfig = createRngConfig(
+  readDeterministicBossFlag() ? () => 0 : Math.random,
+);
 
 export interface PickBossArgs {
   readonly ante: number;

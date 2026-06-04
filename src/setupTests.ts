@@ -1,5 +1,7 @@
 import "@testing-library/jest-dom";
 
+vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
+
 if (typeof HTMLMediaElement !== "undefined") {
   HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
   HTMLMediaElement.prototype.pause = vi.fn();

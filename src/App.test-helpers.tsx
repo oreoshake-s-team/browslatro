@@ -6,8 +6,9 @@ import {
   toggleHighVisibility,
 } from "./components/system/preferences";
 import { play } from "./components/system/sounds";
-import { shopPickerRngConfig } from "./items/shop";
+import { resetAllRngConfigs } from "./dev/rngConfig";
 import { bossPickerRngConfig } from "./items/bosses";
+import type { Deck } from "./items/decks";
 import { tagOfferRngConfig } from "./items/tags";
 import type { ShopItem } from "./items/shop";
 import { useGame } from "./store/game";
@@ -114,8 +115,16 @@ export function setupAppTestEnvironment(): void {
       vi.runOnlyPendingTimers();
     });
     vi.useRealTimers();
-    shopPickerRngConfig.rng = Math.random;
-    bossPickerRngConfig.rng = Math.random;
-    tagOfferRngConfig.rng = Math.random;
+    resetAllRngConfigs();
+  });
+}
+
+export function withDeck(deck: Deck): void {
+  beforeEach(() => {
+    useGame.getState().setPendingRunSelect(false);
+    useGame.getState().setSelectedDeck(deck);
+  });
+  afterEach(() => {
+    useGame.getState().setSelectedDeck("red-deck");
   });
 }
