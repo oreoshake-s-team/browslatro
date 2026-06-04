@@ -4,7 +4,6 @@ import {
   YORICK_MULT,
   cloneJoker,
   copyRandomJokerDestroyOthers,
-  createBaronJoker,
   createBusinessCardJoker,
   createJokerByRarity,
   createJokerCatalog,
