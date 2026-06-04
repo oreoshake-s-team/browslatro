@@ -23,7 +23,9 @@ export type VoucherId =
   | "paint-brush"
   | "palette"
   | "blank"
-  | "antimatter";
+  | "antimatter"
+  | "hieroglyph"
+  | "petroglyph";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -51,6 +53,8 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "palette", name: "Palette", description: "+1 additional hand size.", cost: VOUCHER_BASE_PRICE, requires: "paint-brush" },
   { id: "blank", name: "Blank", description: "Does nothing… for now.", cost: VOUCHER_BASE_PRICE },
   { id: "antimatter", name: "Antimatter", description: "+1 joker slot.", cost: VOUCHER_BASE_PRICE, requires: "blank" },
+  { id: "hieroglyph", name: "Hieroglyph", description: "-1 Ante, -1 hand per round.", cost: VOUCHER_BASE_PRICE },
+  { id: "petroglyph", name: "Petroglyph", description: "-1 Ante, -1 discard per round.", cost: VOUCHER_BASE_PRICE, requires: "hieroglyph" },
 ];
 
 export function createVoucherCatalog(): ReadonlyArray<Voucher> {
@@ -157,6 +161,7 @@ export function extraStartingHands(ownedIds: ReadonlySet<VoucherId>): number {
   let extra = 0;
   if (ownedIds.has("grabber")) extra += 1;
   if (ownedIds.has("nacho-tong")) extra += 1;
+  if (ownedIds.has("hieroglyph")) extra -= 1;
   return extra;
 }
 
@@ -164,6 +169,7 @@ export function extraStartingDiscards(ownedIds: ReadonlySet<VoucherId>): number 
   let extra = 0;
   if (ownedIds.has("wasteful")) extra += 1;
   if (ownedIds.has("recyclomancy")) extra += 1;
+  if (ownedIds.has("petroglyph")) extra -= 1;
   return extra;
 }
 
