@@ -78,4 +78,19 @@ describe("run store", () => {
     useGame.getState().resetRun();
     expect(useGame.getState().selectedStake).toBe("white");
   });
+
+  test("starts on the Red Deck by default", () => {
+    expect(useGame.getState().selectedDeck).toBe("red-deck");
+  });
+
+  test("setSelectedDeck updates the stored deck", () => {
+    useGame.getState().setSelectedDeck("yellow-deck");
+    expect(useGame.getState().selectedDeck).toBe("yellow-deck");
+  });
+
+  test("resetRun returns the deck to the default Red Deck", () => {
+    useGame.getState().setSelectedDeck("yellow-deck");
+    useGame.getState().resetRun();
+    expect(useGame.getState().selectedDeck).toBe("red-deck");
+  });
 });

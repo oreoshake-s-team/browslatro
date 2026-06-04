@@ -6,20 +6,30 @@ import {
   createStakeCatalog,
   type Stake,
 } from "../../items/stakes";
+import {
+  DEFAULT_DECK,
+  createDeckCatalog,
+  type Deck,
+} from "../../items/decks";
 
 interface NewRunScreenProps {
   initialStake?: Stake;
-  onConfirm: (selection: { stake: Stake }) => void;
+  initialDeck?: Deck;
+  onConfirm: (selection: { stake: Stake; deck: Deck }) => void;
 }
 
 const STAKES = createStakeCatalog().filter((s) => s.implemented);
+const DECKS = createDeckCatalog().filter((d) => d.implemented);
 
 export default function NewRunScreen({
   initialStake = DEFAULT_STAKE,
+  initialDeck = DEFAULT_DECK,
   onConfirm,
 }: NewRunScreenProps) {
   const [stake, setStake] = useState<Stake>(initialStake);
-  const selectedSpec = STAKES.find((s) => s.id === stake) ?? STAKES[0];
+  const [deck, setDeck] = useState<Deck>(initialDeck);
+  const selectedStakeSpec = STAKES.find((s) => s.id === stake) ?? STAKES[0];
+  const selectedDeckSpec = DECKS.find((d) => d.id === deck) ?? DECKS[0];
 
   return createPortal(
     <div
@@ -39,10 +49,39 @@ export default function NewRunScreen({
           <h3 id="new-run-deck-label" className="new-run-section-label">
             Deck
           </h3>
-          <div className="new-run-deck-placeholder">
-            <span className="new-run-deck-name">Red Deck</span>
-            <span className="new-run-deck-hint">Deck selection coming soon</span>
-          </div>
+          <ul
+            className="new-run-deck-grid"
+            role="radiogroup"
+            aria-label="Deck variant"
+          >
+            {DECKS.map((spec) => {
+              const isSelected = spec.id === deck;
+              return (
+                <li key={spec.id} className="new-run-deck-cell">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={`new-run-deck-tile new-run-deck-tile-${spec.id}${
+                      isSelected ? " new-run-deck-tile-selected" : ""
+                    }`}
+                    data-testid={`new-run-deck-${spec.id}`}
+                    data-selected={isSelected || undefined}
+                    onClick={() => setDeck(spec.id)}
+                  >
+                    <span className="new-run-deck-name">{spec.name}</span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          <p
+            className="new-run-deck-description"
+            data-testid="new-run-deck-description"
+            aria-live="polite"
+          >
+            <strong>{selectedDeckSpec.name}:</strong> {selectedDeckSpec.description}
+          </p>
         </section>
         <section
           className="new-run-section new-run-section-stake"
@@ -82,7 +121,7 @@ export default function NewRunScreen({
             data-testid="new-run-stake-description"
             aria-live="polite"
           >
-            <strong>{selectedSpec.name}:</strong> {selectedSpec.description}
+            <strong>{selectedStakeSpec.name}:</strong> {selectedStakeSpec.description}
           </p>
         </section>
         <div className="new-run-actions">
@@ -90,7 +129,7 @@ export default function NewRunScreen({
             type="button"
             className="new-run-confirm"
             data-testid="new-run-confirm"
-            onClick={() => onConfirm({ stake })}
+            onClick={() => onConfirm({ stake, deck })}
             autoFocus
           >
             Start Run →

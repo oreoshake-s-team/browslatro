@@ -32,6 +32,10 @@ import {
   tagOfferRngConfig,
   type TagId,
 } from "../items/tags";
+import {
+  deckStartingDiscardsDelta,
+  deckStartingMoneyDelta,
+} from "../items/decks";
 
 export interface UseRoundLifecycleParams {
   readonly applyGainedTag: (tagId: TagId, nextStats: RunStats) => void;
@@ -65,6 +69,7 @@ export function useRoundLifecycle({
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
   const destroyedCardKeys = useGame((s) => s.destroyedCardKeys);
   const setDestroyedCardKeys = useGame((s) => s.setDestroyedCardKeys);
@@ -140,7 +145,9 @@ export function useRoundLifecycle({
     const startingDiscards =
       (isBossRound
         ? bossStartingDiscards(effectiveBoss)
-        : DEFAULT_STARTING_DISCARDS) + extraStartingDiscards(ownedVoucherIds);
+        : DEFAULT_STARTING_DISCARDS) +
+      extraStartingDiscards(ownedVoucherIds) +
+      deckStartingDiscardsDelta(selectedDeck);
     const handSize = isBossRound
       ? bossHandSize(effectiveBoss, baseHandSize)
       : baseHandSize;
@@ -177,6 +184,10 @@ export function useRoundLifecycle({
     setRound(1);
     setAnte(1);
     useGame.getState().resetEconomy();
+    const moneyDelta = deckStartingMoneyDelta(selectedDeck);
+    if (moneyDelta !== 0) {
+      useGame.getState().setMoney(useGame.getState().money + moneyDelta);
+    }
     setHandSizeModifier(0);
     setPendingNextRoundHandSize(0);
     setPendingDouble(false);

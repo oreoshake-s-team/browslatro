@@ -13,6 +13,8 @@ import Game from "./components/game/Game";
 import RoundWonModal from "./components/game/RoundWonModal";
 import BlindSelectScreen from "./components/game/BlindSelectScreen";
 import NewRunScreen from "./components/game/NewRunScreen";
+import { STARTING_MONEY } from "./store/economy";
+import { deckStartingMoneyDelta } from "./items/decks";
 import {
   pruneTagsByCategory,
   rollAnteSkipOffers,
@@ -177,6 +179,9 @@ function App() {
   const setPendingRunSelect = useGame((state) => state.setPendingRunSelect);
   const selectedStake = useGame((state) => state.selectedStake);
   const setSelectedStake = useGame((state) => state.setSelectedStake);
+  const selectedDeck = useGame((state) => state.selectedDeck);
+  const setSelectedDeck = useGame((state) => state.setSelectedDeck);
+  const setMoney = useGame((state) => state.setMoney);
   const pendingTags = useGame((state) => state.pendingTags);
   const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
@@ -364,8 +369,11 @@ function App() {
       {pendingRunSelect && (
         <NewRunScreen
           initialStake={selectedStake}
-          onConfirm={({ stake }) => {
+          initialDeck={selectedDeck}
+          onConfirm={({ stake, deck }) => {
             setSelectedStake(stake);
+            setSelectedDeck(deck);
+            setMoney(STARTING_MONEY + deckStartingMoneyDelta(deck));
             setPendingRunSelect(false);
           }}
         />
