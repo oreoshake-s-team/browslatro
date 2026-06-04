@@ -30,7 +30,7 @@
 
 .submit-hand {
   width: 100%;
-  max-width: 48rem;
+  max-width: 900px;
   align-self: center;
   box-sizing: border-box;
   display: flex;
