@@ -45,6 +45,21 @@ export function useConsumableActions(): UseConsumableActionsResult {
     if (entry.kind === "planet") {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, entry.card));
+      if (selectedIds.size === 0) {
+        const targetHand = entry.card.hands[0];
+        const upgraded = applyPlanetUpgrade(
+          useGame.getState().handStats,
+          entry.card,
+        );
+        const entry2 = upgraded[targetHand];
+        setSelectedHand({
+          label: targetHand,
+          chips: entry2.chips,
+          multiplier: entry2.multiplier,
+        });
+        setChips(entry2.chips);
+        setMultiplier(entry2.multiplier);
+      }
       setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
       return;
     }
