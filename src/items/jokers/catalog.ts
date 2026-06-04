@@ -23,6 +23,7 @@ import {
   createEvenStevenJoker,
   createFacelessJoker,
   createFibonacciJoker,
+  createFlowerPotJoker,
   createGluttonousJoker,
   createGoldenJoker,
   createGreedyJoker,
@@ -42,6 +43,7 @@ import {
   createRoughGemJoker,
   createScaryFaceJoker,
   createScholarJoker,
+  createSeeingDoubleJoker,
   createShootTheMoonJoker,
   createSlyJoker,
   createSmileyFaceJoker,
@@ -132,5 +134,7 @@ export function createJokerCatalog(): Joker[] {
     createErosionJoker(),
     createBlueJoker(),
     createBaseballCardJoker(),
+    createFlowerPotJoker(),
+    createSeeingDoubleJoker(),
   ];
 }

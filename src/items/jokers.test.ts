@@ -784,6 +784,16 @@ describe("Group A backfill catalog membership (#678)", () => {
   });
 });
 
+describe("Suit-composition joker catalog membership (#682)", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Flower Pot", id: "flower-pot" },
+    { name: "Seeing Double", id: "seeing-double" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(

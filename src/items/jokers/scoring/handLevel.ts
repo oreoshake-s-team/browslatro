@@ -303,6 +303,38 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "all-suits-x-mult": {
+        const scored = context.scoredCards ?? [];
+        const suits = new Set<string>();
+        for (const c of scored) suits.add(c.suit);
+        if (
+          suits.has("spades") &&
+          suits.has("hearts") &&
+          suits.has("diamonds") &&
+          suits.has("clubs")
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
+        }
+        break;
+      }
+      case "x-mult-when-clubs-and-other-suit": {
+        const scored = context.scoredCards ?? [];
+        let hasClub = false;
+        let hasOther = false;
+        for (const c of scored) {
+          if (c.suit === "clubs") hasClub = true;
+          else hasOther = true;
+          if (hasClub && hasOther) break;
+        }
+        if (hasClub && hasOther) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":

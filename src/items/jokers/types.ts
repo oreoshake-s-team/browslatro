@@ -140,7 +140,12 @@ export type JokerEffect =
       readonly kind: "per-remaining-deck-card-chips";
       readonly amount: number;
     }
-  | { readonly kind: "x-mult-per-uncommon-joker"; readonly amount: number };
+  | { readonly kind: "x-mult-per-uncommon-joker"; readonly amount: number }
+  | { readonly kind: "all-suits-x-mult"; readonly amount: number }
+  | {
+      readonly kind: "x-mult-when-clubs-and-other-suit";
+      readonly amount: number;
+    };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
