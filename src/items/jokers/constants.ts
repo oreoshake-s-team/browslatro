@@ -78,6 +78,8 @@ export const TRADING_CARD_PAYOUT = 3;
 export const EROSION_MULT_PER_MISSING_CARD = 4;
 export const BLUE_JOKER_CHIPS_PER_REMAINING_CARD = 2;
 export const BASEBALL_CARD_X_MULT_PER_UNCOMMON = 0.5;
+export const FLOWER_POT_X_MULT = 3;
+export const SEEING_DOUBLE_X_MULT = 2;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

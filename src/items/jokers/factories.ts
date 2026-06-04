@@ -31,6 +31,7 @@ import {
   FACELESS_JOKER_PAYOUT,
   FIBONACCI_MULT,
   FIBONACCI_RANKS,
+  FLOWER_POT_X_MULT,
   GOLDEN_JOKER_MONEY,
   HALF_JOKER_MAX_CARDS,
   HALF_JOKER_MULT,
@@ -50,6 +51,7 @@ import {
   SCHOLAR_CHIPS,
   SCHOLAR_MULT,
   SCHOLAR_RANKS,
+  SEEING_DOUBLE_X_MULT,
   SHOOT_THE_MOON_MULT,
   SHOOT_THE_MOON_RANKS,
   SLY_JOKER_CHIPS,
@@ -820,6 +822,29 @@ export function createBaseballCardJoker(): Joker {
     effect: {
       kind: "x-mult-per-uncommon-joker",
       amount: BASEBALL_CARD_X_MULT_PER_UNCOMMON,
+    },
+  };
+}
+
+export function createFlowerPotJoker(): Joker {
+  return {
+    id: "flower-pot",
+    rarity: "uncommon",
+    name: "Flower Pot",
+    description: `X${FLOWER_POT_X_MULT} Mult if scored hand contains a card of each suit`,
+    effect: { kind: "all-suits-x-mult", amount: FLOWER_POT_X_MULT },
+  };
+}
+
+export function createSeeingDoubleJoker(): Joker {
+  return {
+    id: "seeing-double",
+    rarity: "uncommon",
+    name: "Seeing Double",
+    description: `X${SEEING_DOUBLE_X_MULT} Mult if scored hand has a Club card and a card of any other suit`,
+    effect: {
+      kind: "x-mult-when-clubs-and-other-suit",
+      amount: SEEING_DOUBLE_X_MULT,
     },
   };
 }

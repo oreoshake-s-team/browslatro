@@ -193,6 +193,8 @@ export function applyPerCardJokers(
       case "per-missing-card-mult":
       case "per-remaining-deck-card-chips":
       case "x-mult-per-uncommon-joker":
+      case "all-suits-x-mult":
+      case "x-mult-when-clubs-and-other-suit":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
         break;
