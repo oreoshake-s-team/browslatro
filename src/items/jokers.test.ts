@@ -650,6 +650,17 @@ describe("Counting joker catalog membership", () => {
   });
 });
 
+describe("Chance / sell-value joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Bloodstone", id: "bloodstone" },
+    { name: "Swashbuckler", id: "swashbuckler" },
+    { name: "Reserved Parking", id: "reserved-parking" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(
