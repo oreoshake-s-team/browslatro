@@ -29,6 +29,7 @@ async function setForcedShopKinds(
 
 async function openShopAfterRound1Win(page: Page): Promise<void> {
   await page.goto("/");
+  await page.getByTestId("new-run-confirm").click();
   await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   for (let i = 0; i < 5; i += 1) {
