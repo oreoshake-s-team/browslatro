@@ -56,10 +56,12 @@ test("always-win path: 4 consecutive Straight Flushes advance ante and money", a
 
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
   await playStraightFlushAndContinue(page);
-  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+  await expect(page.locator(HAND_CARDS)).toHaveCount(7);
   await expect(statValue(page, "Money")).toHaveText("$19");
 
-  await expect(page.getByRole("heading", { name: "Boss Blind" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "The Manacle" }),
+  ).toBeVisible();
   await playStraightFlushAndContinue(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   await expect(statValue(page, "Money")).toHaveText("$30");
