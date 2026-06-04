@@ -190,10 +190,6 @@ export default function Card({
               {SUIT_GLYPHS[card.suit]}
             </span>
           )}
-          <span className="card-corner card-corner-bottom" aria-hidden="true">
-            <span className="card-rank">{card.rank}</span>
-            <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
-          </span>
         </>
       )}
       {card.seal && (
