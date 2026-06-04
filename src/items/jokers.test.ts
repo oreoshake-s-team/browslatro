@@ -4,8 +4,10 @@ import {
   CLEVER_JOKER_CHIPS,
   CRAFTY_JOKER_CHIPS,
   CRAZY_JOKER_MULT,
+  DELAYED_GRATIFICATION_MONEY_PER_DISCARD,
   DEVIOUS_JOKER_CHIPS,
   DROLL_JOKER_MULT,
+  GOLDEN_JOKER_MONEY,
   JOKER_SELL_VALUE,
   JOLLY_JOKER_MULT,
   MAD_JOKER_MULT,
@@ -22,6 +24,7 @@ import {
   ZANY_JOKER_MULT,
   jokerSellValue,
   applyEditionToRandomJoker,
+  applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyJokersToScoring,
   applyPerCardJokers,
@@ -30,9 +33,11 @@ import {
   createCleverJoker,
   createCraftyJoker,
   createCrazyJoker,
+  createDelayedGratificationJoker,
   createDeviousJoker,
   createDrollJoker,
   createGluttonousJoker,
+  createGoldenJoker,
   createGreedyJoker,
   createJokerStencilJoker,
   createJollyJoker,
@@ -673,6 +678,73 @@ describe("Gemstone joker catalog membership", () => {
     { name: "Arrowhead", id: "arrowhead" },
     { name: "Onyx Agate", id: "onyx-agate" },
     { name: "Rough Gem", id: "rough-gem" },
+  ])("$name appears in the joker catalog", ({ id }) => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain(id);
+  });
+});
+
+describe("applyEndOfRoundJokers", () => {
+  test("returns zero money earned when no jokers are equipped", () => {
+    const result = applyEndOfRoundJokers([]);
+    expect(result.moneyEarned).toBe(0);
+  });
+
+  test("returns empty steps when no jokers are equipped", () => {
+    const result = applyEndOfRoundJokers([]);
+    expect(result.steps).toEqual([]);
+  });
+
+  test("sums money earned from multiple end-of-round jokers", () => {
+    const result = applyEndOfRoundJokers(
+      [createGoldenJoker(), createGoldenJoker()],
+    );
+    expect(result.moneyEarned).toBe(GOLDEN_JOKER_MONEY * 2);
+  });
+
+  test("emits separate steps for each fired joker in order", () => {
+    const result = applyEndOfRoundJokers(
+      [createGoldenJoker(), createGoldenJoker()],
+    );
+    expect(result.steps).toEqual([
+      { jokerId: "golden-joker", jokerName: "Golden Joker", moneyEarned: GOLDEN_JOKER_MONEY },
+      { jokerId: "golden-joker", jokerName: "Golden Joker", moneyEarned: GOLDEN_JOKER_MONEY },
+    ]);
+  });
+
+  test("combines per-remaining-discard-end-of-round-money with flat amounts", () => {
+    const result = applyEndOfRoundJokers(
+      [createGoldenJoker(), createDelayedGratificationJoker()],
+      { remainingDiscards: 3 },
+    );
+    expect(result.moneyEarned).toBe(
+      GOLDEN_JOKER_MONEY + DELAYED_GRATIFICATION_MONEY_PER_DISCARD * 3,
+    );
+  });
+
+  test("respects firing order in steps when combining both effect kinds", () => {
+    const result = applyEndOfRoundJokers(
+      [createDelayedGratificationJoker(), createGoldenJoker()],
+      { remainingDiscards: 2 },
+    );
+    const stepIds = result.steps.map((s) => s.jokerId);
+    expect(stepIds).toEqual(["delayed-gratification", "golden-joker"]);
+  });
+
+  test("ignores hand-level and per-card effect jokers", () => {
+    const result = applyEndOfRoundJokers(
+      [createPlusFourMultJoker(), createGoldenJoker(), createBusinessCardJoker()],
+    );
+    expect(result.moneyEarned).toBe(GOLDEN_JOKER_MONEY);
+    expect(result.steps).toHaveLength(1);
+    expect(result.steps[0]?.jokerId).toBe("golden-joker");
+  });
+});
+
+describe("End-of-round joker catalog membership", () => {
+  test.each<{ name: string; id: string }>([
+    { name: "Golden Joker", id: "golden-joker" },
+    { name: "Delayed Gratification", id: "delayed-gratification" },
   ])("$name appears in the joker catalog", ({ id }) => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain(id);

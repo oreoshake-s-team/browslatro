@@ -23,6 +23,7 @@ import {
   debuffedHandIds,
 } from "../items/bosses";
 import {
+  applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyPerCardJokers,
   isFaceCard,
@@ -82,6 +83,7 @@ export function usePlayHand({
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const jokers = useGame((s) => s.jokers);
   const remainingDiscards = useGame((s) => s.remainingDiscards);
+  const discardsUsedThisRound = useGame((s) => s.discardsUsedThisRound);
   const handStats = useGame((s) => s.handStats);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const devChipsBonus = useGame((s) => s.devChipsBonus);
@@ -177,6 +179,11 @@ export function usePlayHand({
       const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
       const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
       const postBonusesWallet = postGoldWallet + remainingHandsBonus;
+      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
+        remainingDiscards,
+        discardsUsedThisRound,
+      });
+      const postJokerWallet = postBonusesWallet + endOfRoundJokerResult.moneyEarned;
       const openModal = () => {
         play("win");
         if (remainingHandsBonus > 0) {
@@ -190,6 +197,17 @@ export function usePlayHand({
             },
           ]);
         }
+        for (const step of endOfRoundJokerResult.steps) {
+          useGame.getState().earn(step.moneyEarned);
+          setScoringEvents((prev) => [
+            ...prev,
+            {
+              kind: "money-delta",
+              amount: step.moneyEarned,
+              source: step.jokerName,
+            },
+          ]);
+        }
         const smallBlindSkipped =
           blind === 1 &&
           hasStakeModifier(selectedStake, "red-small-blind-no-reward");
@@ -197,7 +215,7 @@ export function usePlayHand({
           roundScore: newRoundScore,
           requiredScore,
           baseReward: smallBlindSkipped ? 0 : blind + 2,
-          walletAtPayout: postBonusesWallet,
+          walletAtPayout: postJokerWallet,
           interestWallet: postGoldWallet,
           interest: calculateInterest(
             postGoldWallet,

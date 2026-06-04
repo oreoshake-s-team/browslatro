@@ -34,4 +34,19 @@ describe("hand store", () => {
     useGame.getState().resetHand();
     expect(useGame.getState().selectedIds.size).toBe(0);
   });
+
+  test("starts with zero discardsUsedThisRound", () => {
+    expect(useGame.getState().discardsUsedThisRound).toBe(0);
+  });
+
+  test("setDiscardsUsedThisRound accepts an updater function", () => {
+    useGame.getState().setDiscardsUsedThisRound((prev) => prev + 1);
+    expect(useGame.getState().discardsUsedThisRound).toBe(1);
+  });
+
+  test("resetHand zeroes discardsUsedThisRound", () => {
+    useGame.getState().setDiscardsUsedThisRound(3);
+    useGame.getState().resetHand();
+    expect(useGame.getState().discardsUsedThisRound).toBe(0);
+  });
 });

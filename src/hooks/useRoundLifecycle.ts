@@ -111,6 +111,7 @@ export function useRoundLifecycle({
   const setRoundScore = useGame((s) => s.setRoundScore);
   const setRemainingHands = useGame((s) => s.setRemainingHands);
   const setRemainingDiscards = useGame((s) => s.setRemainingDiscards);
+  const setDiscardsUsedThisRound = useGame((s) => s.setDiscardsUsedThisRound);
   const setDealt = useGame((s) => s.setDealt);
   const setSelectedIds = useGame((s) => s.setSelectedIds);
   const setDiscardingIds = useGame((s) => s.setDiscardingIds);
@@ -158,6 +159,7 @@ export function useRoundLifecycle({
     setRoundScore(0);
     setRemainingHands(startingHands);
     setRemainingDiscards(startingDiscards);
+    setDiscardsUsedThisRound(0);
     setHandHistoryThisRound([]);
     const fresh = initialDeal(
       destroyedCardKeys,

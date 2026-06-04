@@ -20,12 +20,14 @@ export interface HandState {
   handDisplayOrder: ReadonlyArray<number>;
   remainingHands: number;
   remainingDiscards: number;
+  discardsUsedThisRound: number;
   setSelectedHand: (update: Updater<Hand | null>) => void;
   setSelectedIds: (update: Updater<ReadonlySet<number>>) => void;
   setDiscardingIds: (update: Updater<ReadonlySet<number>>) => void;
   setHandDisplayOrder: (update: Updater<ReadonlyArray<number>>) => void;
   setRemainingHands: (update: Updater<number>) => void;
   setRemainingDiscards: (update: Updater<number>) => void;
+  setDiscardsUsedThisRound: (update: Updater<number>) => void;
   resetHand: () => void;
 }
 
@@ -36,6 +38,7 @@ export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set)
   handDisplayOrder: [],
   remainingHands: STARTING_HANDS,
   remainingDiscards: STARTING_DISCARDS,
+  discardsUsedThisRound: 0,
   setSelectedHand: (update) =>
     set((state) => ({ selectedHand: resolve(update, state.selectedHand) })),
   setSelectedIds: (update) =>
@@ -52,6 +55,10 @@ export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set)
     set((state) => ({
       remainingDiscards: resolve(update, state.remainingDiscards),
     })),
+  setDiscardsUsedThisRound: (update) =>
+    set((state) => ({
+      discardsUsedThisRound: resolve(update, state.discardsUsedThisRound),
+    })),
   resetHand: () =>
     set({
       selectedHand: null,
@@ -60,5 +67,6 @@ export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set)
       handDisplayOrder: [],
       remainingHands: STARTING_HANDS,
       remainingDiscards: STARTING_DISCARDS,
+      discardsUsedThisRound: 0,
     }),
 });
