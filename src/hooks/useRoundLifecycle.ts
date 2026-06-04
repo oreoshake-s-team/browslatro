@@ -2,13 +2,9 @@ import { useGame } from "../store/game";
 import { play } from "../components/system/sounds";
 import type { Blind } from "../cards/types";
 import {
-  DEFAULT_STARTING_DISCARDS,
-  DEFAULT_STARTING_HANDS,
   applyBossFaceDown,
   bossHandSize,
   bossPickerRngConfig,
-  bossStartingDiscards,
-  bossStartingHands,
   pickBossForAnte,
   type BossBlind,
 } from "../items/bosses";
@@ -17,14 +13,11 @@ import {
 } from "../store/vouchers";
 import {
   extraHandSize,
-  extraStartingDiscards,
-  extraStartingHands,
   pickVouchersForAnte,
 } from "../items/vouchers";
 import { HAND_SIZE, createDeck, resetCardIds } from "../cards/deck";
 import { initialDeal } from "../cards/deckBuild";
 import {
-  extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
 } from "../items/jokers";
@@ -37,11 +30,11 @@ import {
   type AnteSkipOffer,
   type TagId,
 } from "../items/tags";
+import { deckStartingMoneyDelta } from "../items/decks";
 import {
-  deckStartingDiscardsDelta,
-  deckStartingHandsDelta,
-  deckStartingMoneyDelta,
-} from "../items/decks";
+  computeStartingDiscards,
+  computeStartingHands,
+} from "../run/roundSetup";
 
 export interface UseRoundLifecycleParams {
   readonly applyGainedTag: (
@@ -155,23 +148,15 @@ export function useRoundLifecycle({
       setPendingNextRoundHandSize(0);
       setPendingTags((prev) => pruneTagsByCategory(prev, "next-round"));
     }
-    const startingHands = Math.max(
-      1,
-      (isBossRound
-        ? bossStartingHands(effectiveBoss)
-        : DEFAULT_STARTING_HANDS) +
-        extraStartingHands(ownedVoucherIds) +
-        deckStartingHandsDelta(selectedDeck),
-    );
-    const startingDiscards = Math.max(
-      0,
-      (isBossRound
-        ? bossStartingDiscards(effectiveBoss)
-        : DEFAULT_STARTING_DISCARDS) +
-        extraStartingDiscards(ownedVoucherIds) +
-        extraStartingDiscardsFromJokers(equippedJokers) +
-        deckStartingDiscardsDelta(selectedDeck),
-    );
+    const resourceCtx = {
+      blind: effectiveBlind,
+      boss: effectiveBoss,
+      ownedVoucherIds,
+      deck: selectedDeck,
+      jokers: equippedJokers,
+    };
+    const startingHands = computeStartingHands(resourceCtx);
+    const startingDiscards = computeStartingDiscards(resourceCtx);
     const handSize = isBossRound
       ? bossHandSize(effectiveBoss, baseHandSize)
       : baseHandSize;

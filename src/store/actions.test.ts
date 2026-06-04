@@ -160,6 +160,40 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(3);
   });
 
+  test("buyAnteVoucher Hieroglyph immediately decrements remainingHands (#279)", () => {
+    const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
+    if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
+    const game = useGame.getState();
+    game.setRemainingHands(4);
+    game.setCurrentAnteVouchers([hieroglyph]);
+    game.setMoney(hieroglyph.cost);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().remainingHands).toBe(3);
+  });
+
+  test("buyAnteVoucher Petroglyph immediately decrements remainingDiscards (#279)", () => {
+    const petroglyph = VOUCHER_CATALOG.find((v) => v.id === "petroglyph");
+    if (!petroglyph) throw new Error("expected Petroglyph voucher");
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set(["hieroglyph"]));
+    game.setRemainingDiscards(3);
+    game.setCurrentAnteVouchers([petroglyph]);
+    game.setMoney(petroglyph.cost);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().remainingDiscards).toBe(2);
+  });
+
+  test("buyAnteVoucher Hieroglyph never drives remainingHands below 0 (#279)", () => {
+    const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
+    if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
+    const game = useGame.getState();
+    game.setRemainingHands(0);
+    game.setCurrentAnteVouchers([hieroglyph]);
+    game.setMoney(hieroglyph.cost);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().remainingHands).toBe(0);
+  });
+
   test("rerollShopOffers spends the reroll cost", () => {
     const game = useGame.getState();
     game.setShopOffers([]);
@@ -377,6 +411,29 @@ describe("game actions slice", () => {
     game.setBlind(3);
     game.handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().blind).toBe(1);
+  });
+
+  test("handleWin resets remainingHands to the upcoming round's starting hands (#279)", () => {
+    const game = useGame.getState();
+    game.setRemainingHands(0);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().remainingHands).toBe(4);
+  });
+
+  test("handleWin resets remainingDiscards to the upcoming round's starting discards (#279)", () => {
+    const game = useGame.getState();
+    game.setSelectedDeck("yellow-deck");
+    game.setRemainingDiscards(0);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().remainingDiscards).toBe(3);
+  });
+
+  test("handleWin reflects Hieroglyph penalty in the reset remainingHands (#279)", () => {
+    const game = useGame.getState();
+    game.setOwnedVoucherIds(new Set(["hieroglyph"]));
+    game.setRemainingHands(0);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().remainingHands).toBe(3);
   });
 
   test("handleWin awards $0 for Small Blind on Red Stake (#553)", () => {

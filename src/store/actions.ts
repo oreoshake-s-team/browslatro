@@ -64,6 +64,10 @@ import {
 } from "../cards/deckBuild";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
+import {
+  computeStartingDiscards,
+  computeStartingHands,
+} from "../run/roundSetup";
 import { calculateInterest } from "../scoring/payout";
 import { BlindValues } from "../constants";
 import { hasStakeModifier } from "../items/stakes";
@@ -174,8 +178,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const discardGain =
       extraStartingDiscards(nextOwnedVoucherIds) -
       extraStartingDiscards(s.ownedVoucherIds);
-    if (handGain > 0) s.setRemainingHands((prev) => prev + handGain);
-    if (discardGain > 0) s.setRemainingDiscards((prev) => prev + discardGain);
+    if (handGain !== 0) {
+      s.setRemainingHands((prev) => Math.max(0, prev + handGain));
+    }
+    if (discardGain !== 0) {
+      s.setRemainingDiscards((prev) => Math.max(0, prev + discardGain));
+    }
     if (voucher.id === "hieroglyph" || voucher.id === "petroglyph") {
       s.setAnte((prev) => Math.max(1, prev - 1));
     }
@@ -378,6 +386,16 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       );
       s.setPlayedCardKeysThisAnte(new Set());
     }
+    const next = get();
+    const resourceCtx = {
+      blind: next.blind,
+      boss: next.currentBoss,
+      ownedVoucherIds: next.ownedVoucherIds,
+      deck: next.selectedDeck,
+      jokers: next.jokers,
+    };
+    s.setRemainingHands(computeStartingHands(resourceCtx));
+    s.setRemainingDiscards(computeStartingDiscards(resourceCtx));
     s.setSoldJokerIdsThisShopVisit([]);
     const baseOffers = pickShopOffers({
       jokerCatalog: createJokerCatalog(),
