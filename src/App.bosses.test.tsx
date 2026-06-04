@@ -50,16 +50,16 @@ async function dismissBlindSelect(
 }
 
 describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
-  test("with rng=0 the picker lands on boss-default ('Boss Blind')", async () => {
+  test("with rng=0 the picker lands on the-manacle ('The Manacle')", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
-    expect(screen.getByText("Boss Blind")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Manacle" })).toBeInTheDocument();
   });
 
-  test("default boss yields a 2x required score (300 → 600)", async () => {
+  test("The Manacle yields a 2x required score on ante 1 (300 → 600)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
@@ -248,7 +248,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   }
 
   test("The Needle on ante 2 starts the round with only 1 hand remaining", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-needle"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-needle"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToAnte2BossBlindStartedRound(user);
@@ -257,7 +257,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   });
 
   test("The Water on ante 2 starts the round with 1 discard remaining on Red Deck (+1 stacks on top of the override)", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-water"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-water"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToAnte2BossBlindStartedRound(user);
@@ -279,7 +279,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
-    expect(screen.getByText("Boss Blind")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "The Manacle" })).toBeInTheDocument();
   });
 });
 
@@ -376,7 +376,7 @@ describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
   }
 
   test("The Mouth disables Submit when the second-played-hand type would differ from the first", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-mouth"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-mouth"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
@@ -388,7 +388,7 @@ describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
   });
 
   test("The Flint on ante 2 halves the displayed chips preview", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-flint"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-flint"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
@@ -435,7 +435,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
   }
 
   test("The House makes every card in the initial boss-blind deal face-down", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-house"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-house"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
@@ -454,7 +454,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
   });
 
   test("The Mark only face-downs face cards in the dealt hand", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-mark"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-mark"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
@@ -477,7 +477,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
   });
 
   test("non-face-down bosses leave the boss-blind hand face-up", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["boss-default", "the-wall"]);
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-wall"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);

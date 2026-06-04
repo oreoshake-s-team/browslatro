@@ -20,8 +20,8 @@ import {
 import type { Card, Hand } from "../cards/types";
 
 describe("createBossCatalog", () => {
-  test("includes the default Boss Blind entry", () => {
-    expect(createBossCatalog().some((b) => b.id === "boss-default")).toBe(true);
+  test("does not include the abilityless generic boss-default entry (#672)", () => {
+    expect(createBossCatalog().some((b) => b.id === "boss-default")).toBe(false);
   });
 
   test("includes The Wall entry", () => {
@@ -39,9 +39,9 @@ describe("availableBosses — ante gating", () => {
     expect(ids).not.toContain("the-wall");
   });
 
-  test("ante 1 includes boss-default", () => {
+  test("ante 1 includes The Manacle (anteMin=1)", () => {
     const ids = availableBosses(createBossCatalog(), 1).map((b) => b.id);
-    expect(ids).toContain("boss-default");
+    expect(ids).toContain("the-manacle");
   });
 
   test("ante 2 includes The Wall", () => {
@@ -51,8 +51,8 @@ describe("availableBosses — ante gating", () => {
 });
 
 describe("pickBossForAnte", () => {
-  test("with rng=0 returns the first eligible boss for ante 1 (boss-default)", () => {
-    expect(pickBossForAnte({ ante: 1, rng: () => 0 }).id).toBe("boss-default");
+  test("with rng=0 returns the first eligible boss for ante 1 (the-manacle)", () => {
+    expect(pickBossForAnte({ ante: 1, rng: () => 0 }).id).toBe("the-manacle");
   });
 
   test("uses the provided rng deterministically", () => {

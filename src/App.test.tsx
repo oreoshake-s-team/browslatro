@@ -18,6 +18,7 @@ import {
   createPlusFourMultJoker,
   initialJokersConfig,
 } from "./items/jokers";
+import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import { useGame } from "./store/game";
 import {
@@ -148,7 +149,9 @@ describe("Win button integration", () => {
     expect(getStatValue("Round")).toHaveTextContent("2");
 
     await user.click(screen.getByText(/^Win$/));
-    expect(screen.getByText("Boss Blind")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "The Manacle" }),
+    ).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$12");
 
     await user.click(screen.getByText(/^Win$/));
@@ -832,7 +835,9 @@ describe("Options modal new game integration", () => {
 
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
-    expect(screen.getByText("Boss Blind")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "The Manacle" }),
+    ).toBeInTheDocument();
     expect(getStatValue("Money")).toHaveTextContent("$12");
 
     await user.click(screen.getByText("Options"));
@@ -2716,6 +2721,9 @@ describe("Hand size modifier (issue #210)", () => {
   });
 
   test("the −1 modifier persists across two round transitions", async () => {
+    const eligible = createBossCatalog().filter((b) => b.anteMin <= 1);
+    const targetIdx = eligible.findIndex((b) => b.id === "the-club");
+    bossPickerRngConfig.rng = () => targetIdx / eligible.length;
     const user = await clickShrink();
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));

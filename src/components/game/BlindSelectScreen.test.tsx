@@ -6,7 +6,7 @@ import type { BossBlind } from "../../items/bosses";
 import { BASE_CHIPS, BLIND_MULTIPLIERS } from "../../constants";
 
 const TEST_BOSS: BossBlind = {
-  id: "boss-default",
+  id: "the-wall",
   name: "The Wall",
   description: "Extra large blind requirement.",
   scoreMultiplier: 2,
