@@ -814,6 +814,13 @@ describe("Multi-stat passive joker catalog membership (#690)", () => {
   });
 });
 
+describe("Stuntman catalog membership (#701)", () => {
+  test("Stuntman appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("stuntman");
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(

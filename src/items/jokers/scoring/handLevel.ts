@@ -335,6 +335,18 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "passive-run-stats": {
+        if (effect.additiveChips !== undefined && effect.additiveChips > 0) {
+          additiveChips += effect.additiveChips;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveChips: effect.additiveChips,
+          });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
@@ -350,7 +362,6 @@ export function applyHandLevelJokers(
       case "per-rank-in-deck-end-of-round-money":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
-      case "passive-run-stats":
         break;
       default:
         assertNeverEffect(effect);
