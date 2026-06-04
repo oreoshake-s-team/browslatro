@@ -29,7 +29,7 @@ describe("Trading Card", () => {
     expect(result.moneyEarned).toBe(TRADING_CARD_PAYOUT);
   });
 
-  test("emits a single step crediting Trading Card with the payout", () => {
+  test("emits a single step crediting Trading Card with the payout and destroyedCardKey", () => {
     const discarded = [card("9")];
     const result = applyOnDiscardJokers([createTradingCardJoker()], discarded, {
       discardsUsedThisRound: 1,
@@ -39,8 +39,17 @@ describe("Trading Card", () => {
         jokerId: "trading-card",
         jokerName: "Trading Card",
         moneyEarned: TRADING_CARD_PAYOUT,
+        destroyedCardKey: "9-spades",
       },
     ]);
+  });
+
+  test("destroyedCardKey reflects the rank and suit of the discarded card", () => {
+    const discarded = [card("K", "hearts")];
+    const result = applyOnDiscardJokers([createTradingCardJoker()], discarded, {
+      discardsUsedThisRound: 1,
+    });
+    expect(result.steps[0].destroyedCardKey).toBe("K-hearts");
   });
 
   test("pays nothing when the first discard of the round is more than the configured size (negative)", () => {

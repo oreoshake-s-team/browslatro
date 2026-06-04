@@ -1,4 +1,5 @@
 import type { Card, Enhancement, Rank, Suit } from "../cards/types";
+import { cardKey } from "../cards/deck";
 import { rollChance } from "../dev/chanceOverride";
 import { type HandLabel, handContains } from "../scoring/handEvaluator";
 import { getRankChips } from "../scoring/scoring";
@@ -1124,7 +1125,7 @@ export function createTradingCardJoker(): Joker {
     id: "trading-card",
     rarity: "uncommon",
     name: "Trading Card",
-    description: `If your first discard of the round has only ${TRADING_CARD_DISCARD_SIZE} card, earn $${TRADING_CARD_PAYOUT}`,
+    description: `If your first discard of the round has only ${TRADING_CARD_DISCARD_SIZE} card, earn $${TRADING_CARD_PAYOUT} and destroy it`,
     effect: {
       kind: "on-first-discard-of-round-money-when-size",
       size: TRADING_CARD_DISCARD_SIZE,
@@ -1862,6 +1863,7 @@ export interface OnDiscardStep {
   readonly jokerId: string;
   readonly jokerName: string;
   readonly moneyEarned: number;
+  readonly destroyedCardKey?: string;
 }
 
 export interface OnDiscardResult {
@@ -1897,6 +1899,7 @@ export function applyOnDiscardJokers(
           jokerId: joker.id,
           jokerName: joker.name,
           moneyEarned: effect.payout,
+          destroyedCardKey: cardKey(discardedCards[0]),
         });
       }
     }
