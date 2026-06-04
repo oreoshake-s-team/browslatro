@@ -7,7 +7,6 @@ import {
   getScoringStep,
 } from "../scoring/scoring";
 import { cardLabel, type ScoringEvent } from "../scoring/scoringTrace";
-import { cardKey } from "../cards/deck";
 import {
   applyCardEnhancement,
   applyLuckyRolls,
@@ -71,7 +70,7 @@ export function useScoringPipeline({
   const setScoringEvents = useGame((s) => s.setScoringEvents);
   const setLuckyMultProcIds = useGame((s) => s.setLuckyMultProcIds);
   const setLuckyMoneyProcIds = useGame((s) => s.setLuckyMoneyProcIds);
-  const setDestroyedCardKeys = useGame((s) => s.setDestroyedCardKeys);
+  const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setJokerPulseCounters = useGame((s) => s.setJokerPulseCounters);
   const jokers = useGame((s) => s.jokers);
   const dealt = useGame((s) => s.dealt);
@@ -154,11 +153,11 @@ export function useScoringPipeline({
         });
       }
       if (rollEnhancementChance(enhancementEffect.destroyChance)) {
-        const key = cardKey(stepCard);
-        setDestroyedCardKeys((prev) => {
-          if (prev.has(key)) return prev;
+        const id = stepCard.id;
+        setDestroyedCardIds((prev) => {
+          if (prev.has(id)) return prev;
           const next = new Set(prev);
-          next.add(key);
+          next.add(id);
           return next;
         });
         pushScoringEvent({

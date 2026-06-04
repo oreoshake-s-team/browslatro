@@ -52,7 +52,7 @@ import {
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
-import { cardKey, createDeck, nextCardId, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
+import { nextCardId, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
 import { detectHandLabel } from "../scoring/handEvaluator";
 import { MAX_SELECTED } from "../components/cards/Hand";
 import {
@@ -217,16 +217,16 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         1,
         HAND_SIZE + s.handSizeModifier + extraHandSize(s.ownedVoucherIds),
       );
+      const survivingBase = s.baseDeckCards.filter(
+        (c) => !s.destroyedCardIds.has(c.id),
+      );
       const baseDeck = applySealOverrides(
-        applyEnhancementOverrides(
-          createDeck(s.destroyedCardKeys),
-          s.cardEnhancementsByKey,
-        ),
-        s.cardSealsByKey,
+        applyEnhancementOverrides(survivingBase, s.cardEnhancementsById),
+        s.cardSealsById,
       );
       const extras = applySealOverrides(
-        applyEnhancementOverrides(s.addedCards, s.cardEnhancementsByKey),
-        s.cardSealsByKey,
+        applyEnhancementOverrides(s.addedCards, s.cardEnhancementsById),
+        s.cardSealsById,
       );
       s.setPackPreviewHand(
         shuffle([...baseDeck, ...extras]).slice(0, currentHandSize),
@@ -420,10 +420,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setPendingForcedPacks([]);
     s.setDealt(
       fullDeckPile(
-        s.destroyedCardKeys,
+        s.baseDeckCards,
+        s.destroyedCardIds,
         s.addedCards,
-        s.cardEnhancementsByKey,
-        s.cardSealsByKey,
+        s.cardEnhancementsById,
+        s.cardSealsById,
       ),
     );
     s.setSelectedIds(new Set());
@@ -534,13 +535,13 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   applyEnhancementToSelectedPreviewCards: (enhancement) => {
     const s = get();
-    const selectedKeys = new Set<string>();
+    const selectedIds = new Set<number>();
     for (const c of s.packPreviewHand) {
-      if (s.packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+      if (s.packPreviewSelectedIds.has(c.id)) selectedIds.add(c.id);
     }
-    s.setCardEnhancementsByKey((prev) => {
+    s.setCardEnhancementsById((prev) => {
       const next = new Map(prev);
-      for (const key of selectedKeys) next.set(key, enhancement);
+      for (const id of selectedIds) next.set(id, enhancement);
       return next;
     });
     s.setPackPreviewHand((prev) =>
@@ -552,13 +553,13 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   applySealToSelectedPreviewCards: (seal) => {
     const s = get();
-    const selectedKeys = new Set<string>();
+    const selectedIds = new Set<number>();
     for (const c of s.packPreviewHand) {
-      if (s.packPreviewSelectedIds.has(c.id)) selectedKeys.add(cardKey(c));
+      if (s.packPreviewSelectedIds.has(c.id)) selectedIds.add(c.id);
     }
-    s.setCardSealsByKey((prev) => {
+    s.setCardSealsById((prev) => {
       const next = new Map(prev);
-      for (const key of selectedKeys) next.set(key, seal);
+      for (const id of selectedIds) next.set(id, seal);
       return next;
     });
     s.setPackPreviewHand((prev) =>

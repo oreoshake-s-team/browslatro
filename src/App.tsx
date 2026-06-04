@@ -35,6 +35,7 @@ import {
   type AnimationSpeed,
 } from "./components/system/preferences";
 import { initialDeal } from "./cards/deckBuild";
+import { createDeck, resetCardIds } from "./cards/deck";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
@@ -95,9 +96,23 @@ function App() {
   const remainingDiscards = useGame((state) => state.remainingDiscards);
   const runStats = useGame((state) => state.runStats);
   const setDealt = useGame((state) => state.setDealt);
+  const setBaseDeckCards = useGame((state) => state.setBaseDeckCards);
   useEffect(() => {
-    setDealt(initialDeal());
-  }, [setDealt]);
+    resetCardIds();
+    const fresh = createDeck();
+    setBaseDeckCards(fresh);
+    const s = useGame.getState();
+    setDealt(
+      initialDeal(
+        fresh,
+        s.destroyedCardIds,
+        undefined,
+        s.addedCards,
+        s.cardEnhancementsById,
+        s.cardSealsById,
+      ),
+    );
+  }, [setDealt, setBaseDeckCards]);
   const highVisibility = usePreferences((state) => state.highVisibility);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);

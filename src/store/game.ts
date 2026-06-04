@@ -11,6 +11,7 @@ import { createHandSlice, type HandState } from "./hand";
 import { createScoringSlice, type ScoringState } from "./scoring";
 import { createDevModifiersSlice, type DevModifiersState } from "./devModifiers";
 import { createDeckSlice, type DeckState } from "./deck";
+import { createDeck, resetCardIds } from "../cards/deck";
 import { createBossSlice, type BossState } from "./boss";
 import { createRunSlice, type RunState } from "./run";
 import { createActionsSlice, type ActionsState } from "./actions";
@@ -56,6 +57,8 @@ export const useGame = create<GameState>()((set, get, store) => ({
     s.resetScoring();
     s.resetDevModifiers();
     s.resetDeck();
+    resetCardIds();
+    s.setBaseDeckCards(createDeck());
     s.resetBoss();
     s.resetRun();
     s.resetAnimations();

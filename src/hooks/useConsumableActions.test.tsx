@@ -2,7 +2,6 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test } from "vitest";
 import { useConsumableActions } from "./useConsumableActions";
 import { useGame } from "../store/game";
-import { cardKey } from "../cards/deck";
 import { createTarotCatalog } from "../items/tarots";
 import type { Consumable } from "../items/consumables";
 import type { Card } from "../cards/types";
@@ -32,13 +31,13 @@ describe("useConsumableActions — The Hanged Man", () => {
     expect(useGame.getState().dealt.hand).toHaveLength(0);
   });
 
-  test("destroying one selected card adds its rank-suit key to destroyedCardKeys", () => {
+  test("destroying one selected card adds its id to destroyedCardIds", () => {
     const card: Card = { id: 1, rank: "A", suit: "spades" };
     seedHand([card]);
     useGame.getState().setSelectedIds(new Set([card.id]));
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
-    expect(useGame.getState().destroyedCardKeys.has(cardKey(card))).toBe(true);
+    expect(useGame.getState().destroyedCardIds.has(card.id)).toBe(true);
   });
 
   test("destroying consumes the tarot from the consumable list", () => {
@@ -87,17 +86,16 @@ describe("useConsumableActions — The Hanged Man", () => {
     useGame.getState().setSelectedIds(new Set([a.id, b.id, c.id]));
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
-    expect(useGame.getState().destroyedCardKeys.size).toBe(0);
+    expect(useGame.getState().destroyedCardIds.size).toBe(0);
   });
 
-  test("destroyed key persists across resetDeck() only via destroyedCardKeys (createDeck excludes it)", () => {
+  test("destroyed id persists in destroyedCardIds after the action", () => {
     const card: Card = { id: 1, rank: "A", suit: "spades" };
     seedHand([card]);
     useGame.getState().setSelectedIds(new Set([card.id]));
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
-    const key = cardKey(card);
-    expect(useGame.getState().destroyedCardKeys.has(key)).toBe(true);
+    expect(useGame.getState().destroyedCardIds.has(card.id)).toBe(true);
   });
 });
 
@@ -167,13 +165,13 @@ describe("useConsumableActions — Strength", () => {
     expect(useGame.getState().dealt.hand[0]?.rank).toBe("2");
   });
 
-  test("original rank-suit key is added to destroyedCardKeys (persistent removal of old card)", () => {
+  test("original card id is added to destroyedCardIds (persistent removal of old card)", () => {
     const card: Card = { id: 1, rank: "5", suit: "spades" };
     seedHand([card]);
     useGame.getState().setSelectedIds(new Set([card.id]));
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
-    expect(useGame.getState().destroyedCardKeys.has(cardKey(card))).toBe(true);
+    expect(useGame.getState().destroyedCardIds.has(card.id)).toBe(true);
   });
 
   test("new rank-suit card is pushed to addedCards (persistent addition of upgraded card)", () => {

@@ -53,14 +53,16 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
 function useEnhancedThresholdProgress(
   joker: Joker,
 ): { readonly count: number; readonly threshold: number } | null {
-  const destroyedCardKeys = useGame((s) => s.destroyedCardKeys);
+  const baseDeckCards = useGame((s) => s.baseDeckCards);
+  const destroyedCardIds = useGame((s) => s.destroyedCardIds);
   const addedCards = useGame((s) => s.addedCards);
-  const cardEnhancementsByKey = useGame((s) => s.cardEnhancementsByKey);
+  const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
   if (joker.effect.kind !== "x-mult-when-enhanced-count-at-least") return null;
   const count = countEnhancedInFullDeck(
-    destroyedCardKeys,
+    baseDeckCards,
+    destroyedCardIds,
     addedCards,
-    cardEnhancementsByKey,
+    cardEnhancementsById,
   );
   return { count, threshold: joker.effect.threshold };
 }

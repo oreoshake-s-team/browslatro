@@ -143,15 +143,15 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
           source: step.jokerName,
         },
       ]);
-      if (step.destroyedCardKey) {
-        const key = step.destroyedCardKey;
-        useGame.getState().setDestroyedCardKeys((prev) => {
-          if (prev.has(key)) return prev;
+      if (step.destroyedCardId !== undefined) {
+        const id = step.destroyedCardId;
+        useGame.getState().setDestroyedCardIds((prev) => {
+          if (prev.has(id)) return prev;
           const next = new Set(prev);
-          next.add(key);
+          next.add(id);
           return next;
         });
-        const destroyed = discardedCards.find((c) => `${c.rank}-${c.suit}` === key);
+        const destroyed = discardedCards.find((c) => c.id === id);
         if (destroyed) {
           setScoringEvents((prev) => [
             ...prev,
