@@ -661,6 +661,13 @@ describe("Chance / sell-value joker catalog membership", () => {
   });
 });
 
+describe("Acrobat catalog membership", () => {
+  test("Acrobat appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("acrobat");
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(
