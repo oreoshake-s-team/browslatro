@@ -135,11 +135,7 @@ export type JokerEffect =
       readonly ranks: ReadonlyArray<Rank>;
       readonly amount: number;
     }
-  | {
-      readonly kind: "per-missing-card-mult";
-      readonly amount: number;
-      readonly baseDeckSize: number;
-    }
+  | { readonly kind: "per-missing-card-mult"; readonly amount: number }
   | {
       readonly kind: "per-remaining-deck-card-chips";
       readonly amount: number;

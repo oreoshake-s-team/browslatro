@@ -266,9 +266,10 @@ export function applyHandLevelJokers(
       }
       case "per-missing-card-mult": {
         if (context.fullDeck === undefined) break;
+        if (context.baseDeckSize === undefined) break;
         const missing = Math.max(
           0,
-          effect.baseDeckSize - context.fullDeck.length,
+          context.baseDeckSize - context.fullDeck.length,
         );
         if (missing > 0) {
           const bonus = effect.amount * missing;

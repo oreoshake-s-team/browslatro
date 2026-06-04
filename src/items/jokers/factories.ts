@@ -25,7 +25,6 @@ import {
   DRIVERS_LICENSE_ENHANCED_THRESHOLD,
   DRIVERS_LICENSE_X_MULT,
   DROLL_JOKER_MULT,
-  EROSION_BASE_DECK_SIZE,
   EROSION_MULT_PER_MISSING_CARD,
   EVEN_STEVEN_MULT,
   FACELESS_JOKER_FACE_THRESHOLD,
@@ -791,11 +790,10 @@ export function createErosionJoker(): Joker {
     id: "erosion",
     rarity: "uncommon",
     name: "Erosion",
-    description: `+${EROSION_MULT_PER_MISSING_CARD} Mult for each card below ${EROSION_BASE_DECK_SIZE} in your full deck`,
+    description: `+${EROSION_MULT_PER_MISSING_CARD} Mult for each card below your deck's starting size`,
     effect: {
       kind: "per-missing-card-mult",
       amount: EROSION_MULT_PER_MISSING_CARD,
-      baseDeckSize: EROSION_BASE_DECK_SIZE,
     },
   };
 }
