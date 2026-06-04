@@ -3,6 +3,13 @@
   --card-height: 8.4rem;
   --card-aspect: 5 / 7;
   --sidebar-width: 300px;
+  --game-padding-x: 2rem;
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --game-padding-x: 1rem;
+  }
 }
 
 @media (orientation: landscape) and (max-width: 1024px) {
