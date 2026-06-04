@@ -79,13 +79,8 @@ import {
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
 } from "./jokers/constants";
-import type {
-  Joker,
-  JokerEdition,
-  JokerEditionInfo,
-  JokerRarity,
-  RandomSource,
-} from "./jokers/types";
+import { effectiveJokerCount } from "./jokers/collection";
+import type { Joker, RandomSource } from "./jokers/types";
 
 export * from "./jokers/constants";
 export type {
@@ -96,115 +91,28 @@ export type {
   JokerRarity,
   RandomSource,
 } from "./jokers/types";
+export {
+  JOKER_EDITION_INFO,
+  applyEditionToRandomJoker,
+  cloneJoker,
+  withEdition,
+  withoutEdition,
+} from "./jokers/editions";
+export {
+  copyRandomJokerDestroyOthers,
+  createJokerByRarity,
+  effectiveJokerCount,
+  pickRandomEquipped,
+  pickRandomFromCatalog,
+  polychromeRandomJokerDestroyOthers,
+  replaceJokersExceptCopyOf,
+} from "./jokers/collection";
 
 export function jokerSellValue(_joker: Joker): number {
   return JOKER_SELL_VALUE;
 }
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
-
-export const JOKER_EDITION_INFO: Readonly<Record<JokerEdition, JokerEditionInfo>> = {
-  foil: { name: "Foil", description: `+${FOIL_CHIPS} chips when scored` },
-  holographic: {
-    name: "Holographic",
-    description: `+${HOLOGRAPHIC_MULT} Mult when scored`,
-  },
-  polychrome: {
-    name: "Polychrome",
-    description: `×${POLYCHROME_X_MULT} Mult when scored`,
-  },
-  negative: { name: "Negative", description: "+1 Joker slot" },
-};
-
-export function withEdition(joker: Joker, edition: JokerEdition): Joker {
-  return { ...joker, edition };
-}
-
-export function applyEditionToRandomJoker(
-  jokers: ReadonlyArray<Joker>,
-  edition: JokerEdition,
-  rng: RandomSource = Math.random,
-): Joker[] {
-  if (jokers.length === 0) return [...jokers];
-  const idx = Math.floor(rng() * jokers.length);
-  return jokers.map((joker, i) => (i === idx ? withEdition(joker, edition) : joker));
-}
-
-export function withoutEdition(joker: Joker): Joker {
-  const { edition: _edition, ...rest } = joker;
-  return rest;
-}
-
-export function cloneJoker(joker: Joker): Joker {
-  return { ...joker };
-}
-
-export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
-  let count = 0;
-  for (const j of jokers) if (j.edition !== "negative") count += 1;
-  return count;
-}
-
-export function pickRandomEquipped(
-  jokers: ReadonlyArray<Joker>,
-  rng: RandomSource = Math.random,
-): Joker | null {
-  if (jokers.length === 0) return null;
-  return jokers[Math.floor(rng() * jokers.length)];
-}
-
-export function pickRandomFromCatalog(
-  catalog: ReadonlyArray<Joker>,
-  filter: (j: Joker) => boolean,
-  rng: RandomSource = Math.random,
-): Joker | null {
-  const pool = catalog.filter(filter);
-  if (pool.length === 0) return null;
-  return pool[Math.floor(rng() * pool.length)];
-}
-
-export function createJokerByRarity(
-  jokers: ReadonlyArray<Joker>,
-  catalog: ReadonlyArray<Joker>,
-  rarity: JokerRarity,
-  capacity: number,
-  rng: RandomSource = Math.random,
-): Joker | null {
-  if (effectiveJokerCount(jokers) >= capacity) return null;
-  const ownedIds = new Set(jokers.map((j) => j.id));
-  return pickRandomFromCatalog(
-    catalog,
-    (j) => j.rarity === rarity && !ownedIds.has(j.id),
-    rng,
-  );
-}
-
-export function replaceJokersExceptCopyOf(
-  jokers: ReadonlyArray<Joker>,
-  idx: number,
-): Joker[] {
-  if (idx < 0 || idx >= jokers.length) return [...jokers];
-  return [cloneJoker(jokers[idx])];
-}
-
-export function polychromeRandomJokerDestroyOthers(
-  jokers: ReadonlyArray<Joker>,
-  rng: RandomSource = Math.random,
-): Joker[] {
-  if (jokers.length === 0) return [];
-  const idx = Math.floor(rng() * jokers.length);
-  return [withEdition(jokers[idx], "polychrome")];
-}
-
-export function copyRandomJokerDestroyOthers(
-  jokers: ReadonlyArray<Joker>,
-  rng: RandomSource = Math.random,
-): Joker[] {
-  if (jokers.length === 0) return [];
-  const idx = Math.floor(rng() * jokers.length);
-  const chosen = jokers[idx];
-  return [chosen, cloneJoker(chosen)];
-}
 
 export interface JokerScoringResult {
   readonly additiveMult: number;
