@@ -10,6 +10,7 @@ const SpeedInsights = lazy(() =>
 );
 
 export function Telemetry() {
+  if (import.meta.env.VITE_ON_VERCEL !== "1") return null;
   return (
     <Suspense fallback={null}>
       <SpeedInsights />
