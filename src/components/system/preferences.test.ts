@@ -14,9 +14,9 @@ describe("preferences (highVisibility)", () => {
     window.localStorage.clear();
   });
 
-  test("defaults to false when localStorage has no value", async () => {
+  test("defaults to true when localStorage has no value", async () => {
     const { isHighVisibility } = await loadPreferences();
-    expect(isHighVisibility()).toBe(false);
+    expect(isHighVisibility()).toBe(true);
   });
 
   test("reads a persisted true value from localStorage on init", async () => {
@@ -34,26 +34,26 @@ describe("preferences (highVisibility)", () => {
   test("toggleHighVisibility flips the in-memory value", async () => {
     const { isHighVisibility, toggleHighVisibility } = await loadPreferences();
     toggleHighVisibility();
-    expect(isHighVisibility()).toBe(true);
+    expect(isHighVisibility()).toBe(false);
   });
 
-  test("toggleHighVisibility writes true to localStorage", async () => {
+  test("toggleHighVisibility writes false to localStorage from the default", async () => {
     const { toggleHighVisibility } = await loadPreferences();
-    toggleHighVisibility();
-    expect(window.localStorage.getItem(STORAGE_KEY)).toBe("true");
-  });
-
-  test("toggling twice writes false back to localStorage", async () => {
-    const { toggleHighVisibility } = await loadPreferences();
-    toggleHighVisibility();
     toggleHighVisibility();
     expect(window.localStorage.getItem(STORAGE_KEY)).toBe("false");
   });
 
-  test("ignores unrelated stored values and defaults to false", async () => {
+  test("toggling twice writes true back to localStorage", async () => {
+    const { toggleHighVisibility } = await loadPreferences();
+    toggleHighVisibility();
+    toggleHighVisibility();
+    expect(window.localStorage.getItem(STORAGE_KEY)).toBe("true");
+  });
+
+  test("ignores unrelated stored values and defaults to true", async () => {
     window.localStorage.setItem(STORAGE_KEY, "yes");
     const { isHighVisibility } = await loadPreferences();
-    expect(isHighVisibility()).toBe(false);
+    expect(isHighVisibility()).toBe(true);
   });
 });
 
@@ -63,34 +63,34 @@ describe("preferences (muted)", () => {
     window.localStorage.clear();
   });
 
-  test("defaults to false when localStorage has no value", async () => {
+  test("defaults to true when localStorage has no value", async () => {
+    const { isMuted } = await loadPreferences();
+    expect(isMuted()).toBe(true);
+  });
+
+  test("reads a persisted false value from localStorage on init", async () => {
+    window.localStorage.setItem(MUTED_KEY, "false");
     const { isMuted } = await loadPreferences();
     expect(isMuted()).toBe(false);
   });
 
-  test("reads a persisted true value from localStorage on init", async () => {
-    window.localStorage.setItem(MUTED_KEY, "true");
-    const { isMuted } = await loadPreferences();
-    expect(isMuted()).toBe(true);
-  });
-
-  test("toggleMute flips the in-memory value", async () => {
+  test("toggleMute flips the in-memory value from the default", async () => {
     const { isMuted, toggleMute } = await loadPreferences();
     toggleMute();
-    expect(isMuted()).toBe(true);
+    expect(isMuted()).toBe(false);
   });
 
-  test("toggleMute writes true to localStorage", async () => {
+  test("toggleMute writes false to localStorage from the default", async () => {
     const { toggleMute } = await loadPreferences();
-    toggleMute();
-    expect(window.localStorage.getItem(MUTED_KEY)).toBe("true");
-  });
-
-  test("toggling twice writes false back to localStorage", async () => {
-    const { toggleMute } = await loadPreferences();
-    toggleMute();
     toggleMute();
     expect(window.localStorage.getItem(MUTED_KEY)).toBe("false");
+  });
+
+  test("toggling twice writes true back to localStorage", async () => {
+    const { toggleMute } = await loadPreferences();
+    toggleMute();
+    toggleMute();
+    expect(window.localStorage.getItem(MUTED_KEY)).toBe("true");
   });
 });
 

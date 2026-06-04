@@ -789,9 +789,10 @@ describe("Subtract Money button integration", () => {
 });
 
 describe("High visibility preference integration", () => {
+  beforeEach(resetHighVisibility);
   afterEach(resetHighVisibility);
 
-  test("App root does not carry the high-visibility class by default", () => {
+  test("App root does not carry the high-visibility class after the user disables it", () => {
     const { container } = render(<App />);
     expect(container.querySelector(".App")).not.toHaveClass("high-visibility");
   });

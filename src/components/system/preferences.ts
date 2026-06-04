@@ -22,11 +22,14 @@ const ANIMATION_SPEED_MULTIPLIERS: Readonly<Record<AnimationSpeed, number>> = {
 
 const DEFAULT_ANIMATION_SPEED: AnimationSpeed = "normal";
 
-function readBoolean(key: string): boolean {
+function readBoolean(key: string, defaultValue: boolean): boolean {
   try {
-    return window.localStorage.getItem(key) === "true";
+    const raw = window.localStorage.getItem(key);
+    if (raw === "true") return true;
+    if (raw === "false") return false;
+    return defaultValue;
   } catch {
-    return false;
+    return defaultValue;
   }
 }
 
@@ -66,8 +69,8 @@ interface PreferencesState {
 }
 
 export const usePreferences = create<PreferencesState>()(() => ({
-  highVisibility: readBoolean(HIGH_VISIBILITY_KEY),
-  muted: readBoolean(MUTED_KEY),
+  highVisibility: readBoolean(HIGH_VISIBILITY_KEY, true),
+  muted: readBoolean(MUTED_KEY, true),
   animationSpeed: readAnimationSpeed(),
 }));
 
