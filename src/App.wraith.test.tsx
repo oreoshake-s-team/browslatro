@@ -5,7 +5,6 @@ import { play } from "./components/system/sounds";
 import { shopPickerRngConfig, type ShopItem } from "./items/shop";
 import { bossPickerRngConfig } from "./items/bosses";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const playMock = play as MockedFunction<typeof play>;
 

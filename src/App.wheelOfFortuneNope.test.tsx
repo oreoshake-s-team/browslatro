@@ -10,7 +10,6 @@ import {
   setupAppTestEnvironment,
 } from "./App.test-helpers";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 vi.mock("./items/tarots", async () => {
   const actual =

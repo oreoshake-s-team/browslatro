@@ -1,10 +1,9 @@
+import { createRngConfig } from "../dev/rngConfig";
 import type { RandomSource } from "./jokers";
 
 export const VOUCHER_BASE_PRICE = 10;
 
-export const voucherPickerRngConfig: { rng: RandomSource } = {
-  rng: Math.random,
-};
+export const voucherPickerRngConfig = createRngConfig();
 
 export type VoucherId =
   | "overstock"

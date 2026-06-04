@@ -1,3 +1,5 @@
+vi.unmock("./sounds");
+
 const isMutedMock = vi.fn(() => false);
 type PreferencesState = { muted: boolean; highVisibility: boolean };
 type Subscriber = (state: PreferencesState, prev: PreferencesState) => void;

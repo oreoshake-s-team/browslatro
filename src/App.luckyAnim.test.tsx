@@ -6,7 +6,6 @@ import { enhancementRngConfig } from "./cards/enhancements";
 import { bossPickerRngConfig } from "./items/bosses";
 import type { Card } from "./cards/types";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 const playMock = play as MockedFunction<typeof play>;
 

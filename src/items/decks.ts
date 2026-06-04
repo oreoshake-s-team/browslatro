@@ -80,29 +80,20 @@ export function getActiveDeckModifiers(deck: Deck): ReadonlyArray<DeckModifier> 
   return getDeckSpec(deck).modifiers;
 }
 
-export function deckStartingMoneyDelta(deck: Deck): number {
+function sumDeckModifier<K extends DeckModifier["kind"]>(
+  deck: Deck,
+  kind: K,
+): number {
   return getActiveDeckModifiers(deck)
-    .filter(
-      (m): m is Extract<DeckModifier, { kind: "starting-money-delta" }> =>
-        m.kind === "starting-money-delta",
-    )
+    .filter((m): m is Extract<DeckModifier, { kind: K }> => m.kind === kind)
     .reduce((sum, m) => sum + m.amount, 0);
 }
 
-export function deckStartingDiscardsDelta(deck: Deck): number {
-  return getActiveDeckModifiers(deck)
-    .filter(
-      (m): m is Extract<DeckModifier, { kind: "starting-discards-delta" }> =>
-        m.kind === "starting-discards-delta",
-    )
-    .reduce((sum, m) => sum + m.amount, 0);
-}
+export const deckStartingMoneyDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "starting-money-delta");
 
-export function deckStartingHandsDelta(deck: Deck): number {
-  return getActiveDeckModifiers(deck)
-    .filter(
-      (m): m is Extract<DeckModifier, { kind: "starting-hands-delta" }> =>
-        m.kind === "starting-hands-delta",
-    )
-    .reduce((sum, m) => sum + m.amount, 0);
-}
+export const deckStartingDiscardsDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "starting-discards-delta");
+
+export const deckStartingHandsDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "starting-hands-delta");

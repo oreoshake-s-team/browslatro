@@ -36,7 +36,6 @@ import {
   setupAppTestEnvironment,
 } from "./App.test-helpers";
 
-vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
 vi.mock("./cards/deck", async () => {
   const actual = await vi.importActual<typeof import("./cards/deck")>("./cards/deck");
