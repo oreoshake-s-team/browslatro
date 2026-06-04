@@ -80,6 +80,8 @@ export const BLUE_JOKER_CHIPS_PER_REMAINING_CARD = 2;
 export const BASEBALL_CARD_X_MULT_PER_UNCOMMON = 0.5;
 export const FLOWER_POT_X_MULT = 3;
 export const SEEING_DOUBLE_X_MULT = 2;
+export const JUGGLER_HAND_SIZE_BONUS = 1;
+export const DRUNKARD_DISCARDS_BONUS = 1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

@@ -145,7 +145,9 @@ export type JokerEffect =
   | {
       readonly kind: "x-mult-when-clubs-and-other-suit";
       readonly amount: number;
-    };
+    }
+  | { readonly kind: "passive-hand-size"; readonly amount: number }
+  | { readonly kind: "passive-starting-discards"; readonly amount: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 

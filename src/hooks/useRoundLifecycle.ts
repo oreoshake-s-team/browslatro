@@ -23,7 +23,11 @@ import {
 } from "../items/vouchers";
 import { HAND_SIZE, createDeck, resetCardIds } from "../cards/deck";
 import { initialDeal } from "../cards/deckBuild";
-import { initialJokersConfig } from "../items/jokers";
+import {
+  extraStartingDiscardsFromJokers,
+  extraStartingHandSizeFromJokers,
+  initialJokersConfig,
+} from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
   pruneTagsByCategory,
@@ -74,6 +78,7 @@ export function useRoundLifecycle({
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const equippedJokers = useGame((s) => s.jokers);
   const selectedDeck = useGame((s) => s.selectedDeck);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
@@ -129,7 +134,10 @@ export function useRoundLifecycle({
 
   const currentHandSize = Math.max(
     1,
-    HAND_SIZE + handSizeModifier + extraHandSize(ownedVoucherIds),
+    HAND_SIZE +
+      handSizeModifier +
+      extraHandSize(ownedVoucherIds) +
+      extraStartingHandSizeFromJokers(equippedJokers),
   );
 
   function startNewRound(opts: {
@@ -158,6 +166,7 @@ export function useRoundLifecycle({
         ? bossStartingDiscards(effectiveBoss)
         : DEFAULT_STARTING_DISCARDS) +
       extraStartingDiscards(ownedVoucherIds) +
+      extraStartingDiscardsFromJokers(equippedJokers) +
       deckStartingDiscardsDelta(selectedDeck);
     const handSize = isBossRound
       ? bossHandSize(effectiveBoss, baseHandSize)

@@ -16,6 +16,7 @@ import {
   createJokerCatalog,
   createLegendaryJokerCatalog,
   effectiveJokerCount,
+  extraStartingHandSizeFromJokers,
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
 } from "../items/jokers";
@@ -217,7 +218,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (pack.pool === "arcana" || pack.pool === "spectral") {
       const currentHandSize = Math.max(
         1,
-        HAND_SIZE + s.handSizeModifier + extraHandSize(s.ownedVoucherIds),
+        HAND_SIZE +
+          s.handSizeModifier +
+          extraHandSize(s.ownedVoucherIds) +
+          extraStartingHandSizeFromJokers(s.jokers),
       );
       const survivingBase = s.baseDeckCards.filter(
         (c) => !s.destroyedCardIds.has(c.id),

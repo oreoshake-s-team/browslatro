@@ -19,6 +19,7 @@ import {
   createDeviousJoker,
   createDriversLicenseJoker,
   createDrollJoker,
+  createDrunkardJoker,
   createErosionJoker,
   createEvenStevenJoker,
   createFacelessJoker,
@@ -30,6 +31,7 @@ import {
   createHalfJoker,
   createJokerStencilJoker,
   createJollyJoker,
+  createJugglerJoker,
   createLustyJoker,
   createMadJoker,
   createMisprintJoker,
@@ -136,5 +138,7 @@ export function createJokerCatalog(): Joker[] {
     createBaseballCardJoker(),
     createFlowerPotJoker(),
     createSeeingDoubleJoker(),
+    createJugglerJoker(),
+    createDrunkardJoker(),
   ];
 }
