@@ -18,6 +18,7 @@ import {
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
+  mergeFreeJokerOffersIntoShop,
   pickRandomJoker,
   pickRandomPlanet,
   pickRandomTarot,
@@ -826,5 +827,108 @@ describe("ensureBaseJokerForEdition", () => {
       () => 0,
     );
     expect(result).toHaveLength(2);
+  });
+});
+
+describe("mergeFreeJokerOffersIntoShop (#603)", () => {
+  const catalog = createJokerCatalog();
+  const planet = createPlanetCatalog()[0];
+  const jokerItem = (id: string, price = 5): ShopItem => ({
+    kind: "joker",
+    joker: { ...catalog[0], id },
+    price,
+    sold: false,
+  });
+  const planetItem = (): ShopItem => ({
+    kind: "planet",
+    planet,
+    price: 3,
+    sold: false,
+  });
+  const packItem = (): ShopItem => ({
+    kind: "pack",
+    pack: { pool: "celestial", variant: "normal", options: [] },
+    price: 4,
+    sold: false,
+  });
+  const freeJoker = (id: string): ShopItem => ({
+    kind: "joker",
+    joker: { ...catalog[0], id },
+    price: 0,
+    sold: false,
+  });
+
+  test("returns the base offers unchanged when there are no free jokers", () => {
+    const base = [jokerItem("j1"), planetItem(), packItem()];
+    expect(mergeFreeJokerOffersIntoShop(base, [])).toEqual(base);
+  });
+
+  test("keeps the total item-offer count stable when a free joker is added", () => {
+    const base = [jokerItem("j1"), planetItem(), packItem(), packItem()];
+    const merged = mergeFreeJokerOffersIntoShop(base, [freeJoker("free")]);
+    const items = merged.filter((o) => o.kind !== "pack");
+    expect(items).toHaveLength(2);
+  });
+
+  test("the free joker occupies the first item slot", () => {
+    const base = [jokerItem("j1"), planetItem(), packItem()];
+    const merged = mergeFreeJokerOffersIntoShop(base, [freeJoker("free")]);
+    const firstItem = merged.find((o) => o.kind !== "pack");
+    if (firstItem?.kind !== "joker") throw new Error("expected joker first");
+    expect(firstItem.joker.id).toBe("free");
+  });
+
+  test("drops the trailing base item to make room for the free joker", () => {
+    const base = [jokerItem("j1"), planetItem(), packItem()];
+    const merged = mergeFreeJokerOffersIntoShop(base, [freeJoker("free")]);
+    const items = merged.filter((o) => o.kind !== "pack");
+    const itemIds = items.map((o) =>
+      o.kind === "joker" ? o.joker.id : `planet:${o.kind === "planet" ? "yes" : "no"}`,
+    );
+    expect(itemIds).not.toContain("planet:yes");
+  });
+
+  test("preserves all pack offers unchanged", () => {
+    const base = [
+      jokerItem("j1"),
+      planetItem(),
+      packItem(),
+      packItem(),
+    ];
+    const merged = mergeFreeJokerOffersIntoShop(base, [freeJoker("free")]);
+    expect(merged.filter((o) => o.kind === "pack")).toHaveLength(2);
+  });
+
+  test("two free jokers consume both item slots", () => {
+    const base = [jokerItem("j1"), planetItem(), packItem()];
+    const merged = mergeFreeJokerOffersIntoShop(base, [
+      freeJoker("f1"),
+      freeJoker("f2"),
+    ]);
+    const items = merged.filter((o) => o.kind !== "pack");
+    expect(items.every((o) => o.kind === "joker" && o.price === 0)).toBe(true);
+  });
+
+  test("free jokers exceeding item-slot count are truncated (no growth)", () => {
+    const base = [jokerItem("j1"), packItem()];
+    const merged = mergeFreeJokerOffersIntoShop(base, [
+      freeJoker("f1"),
+      freeJoker("f2"),
+      freeJoker("f3"),
+    ]);
+    const items = merged.filter((o) => o.kind !== "pack");
+    expect(items).toHaveLength(1);
+  });
+
+  test("an Overstock-style extra item slot is respected (3 items stay 3)", () => {
+    const base = [
+      jokerItem("j1"),
+      jokerItem("j2"),
+      planetItem(),
+      packItem(),
+    ];
+    const merged = mergeFreeJokerOffersIntoShop(base, [freeJoker("free")]);
+    const items = merged.filter((o) => o.kind !== "pack");
+    expect(items).toHaveLength(3);
   });
 });
