@@ -14,6 +14,9 @@ const analyzePlugin: PluginOption | false =
   });
 
 export default defineConfig({
+  define: {
+    "import.meta.env.VITE_ON_VERCEL": JSON.stringify(process.env.VERCEL ?? "0"),
+  },
   plugins: [react(), ...(analyzePlugin ? [analyzePlugin] : [])],
   build: {
     outDir: "build",

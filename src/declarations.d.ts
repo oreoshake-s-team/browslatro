@@ -1,5 +1,13 @@
 declare module "*.css";
 
+interface ImportMetaEnv {
+  readonly VITE_ON_VERCEL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 declare module "@dragdroptouch/drag-drop-touch" {
   export interface EnableDragDropTouchOptions {
     readonly allowDragScroll?: boolean;
