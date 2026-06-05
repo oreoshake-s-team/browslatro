@@ -4,6 +4,8 @@ import type { ComponentProps } from "react";
 import { beforeEach } from "vitest";
 import Game from "./Game";
 import { useGame } from "../../store/game";
+import type { ShopProps } from "../shop/Shop";
+import type { Card } from "../../cards/types";
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
@@ -15,6 +17,37 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
       {...overrides}
     />,
   );
+}
+
+function makeShopProps(): ShopProps {
+  return {
+    money: 0,
+    equippedJokerCount: 0,
+    consumableCount: 0,
+    consumableCapacity: 2,
+    offers: [],
+    vouchers: [],
+    soldVoucherIds: new Set(),
+    ownedVoucherIds: new Set(),
+    onBuy: vi.fn(),
+    onBuyVoucher: vi.fn(),
+    onReroll: vi.fn(),
+    onNext: vi.fn(),
+  };
+}
+
+function makeCards(start: number, count: number): Card[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: start + i,
+    rank: "5" as const,
+    suit: "spades" as const,
+  }));
+}
+
+function deckPileCount(): number {
+  const button = screen.getByLabelText(/^Deck \(\d+ cards remaining\)$/);
+  const match = button.getAttribute("aria-label")?.match(/Deck \((\d+) cards remaining\)/);
+  return match ? Number(match[1]) : -1;
 }
 
 describe("Game", () => {
@@ -85,5 +118,100 @@ describe("Game", () => {
     const modifiers = screen.getByText(/Apply modifiers/);
     const position = submit.compareDocumentPosition(modifiers);
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  });
+
+  describe("shop overlay deck pile (closes #747)", () => {
+    test("reflects current baseDeckCards count, ignoring stale dealt.remaining", () => {
+      const base = makeCards(1, 40);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: makeCards(1000, 4) },
+      });
+      renderGame({ shop: makeShopProps() });
+      expect(deckPileCount()).toBe(40);
+    });
+
+    test("decreases synchronously when destroyedCardIds grows (e.g. Hanged Man)", () => {
+      const base = makeCards(1, 40);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: [] },
+      });
+      const { rerender } = render(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+          shop={makeShopProps()}
+        />,
+      );
+      expect(deckPileCount()).toBe(40);
+      useGame.setState({ destroyedCardIds: new Set([1, 2, 3]) });
+      rerender(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+          shop={makeShopProps()}
+        />,
+      );
+      expect(deckPileCount()).toBe(37);
+    });
+
+    test("increases synchronously when addedCards grows (e.g. picking from a Standard pack)", () => {
+      const base = makeCards(1, 40);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: [] },
+      });
+      const { rerender } = render(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+          shop={makeShopProps()}
+        />,
+      );
+      expect(deckPileCount()).toBe(40);
+      useGame.setState({ addedCards: makeCards(500, 2) });
+      rerender(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+          shop={makeShopProps()}
+        />,
+      );
+      expect(deckPileCount()).toBe(42);
+    });
+
+    test("modal listing reflects enhancement overrides applied after deal (e.g. Sigil/Strength)", async () => {
+      const user = userEvent.setup();
+      const base = makeCards(1, 1);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: [] },
+        cardEnhancementsById: new Map([[1, "gold"]]),
+      });
+      renderGame({ shop: makeShopProps() });
+      await user.click(screen.getByLabelText(/^Deck \(1 cards remaining\)$/));
+      expect(
+        document.querySelector(".deck-modal .card-enhancement-gold"),
+      ).not.toBeNull();
+    });
+
+    test("in-hand deck pile (no shop/pack) still shows dealt.remaining, not full deck", () => {
+      const base = makeCards(1, 40);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: makeCards(2000, 7) },
+      });
+      renderGame();
+      expect(deckPileCount()).toBe(7);
+    });
   });
 });
