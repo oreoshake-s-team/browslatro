@@ -349,4 +349,66 @@ describe("BlindSelectScreen", () => {
     await user.hover(screen.getByTestId("blind-select-row-skip-reward-2"));
     expect(screen.getAllByRole("tooltip")).toHaveLength(1);
   });
+
+  describe("Reroll Boss button (#280)", () => {
+    test("is not rendered when onRerollBoss is omitted", () => {
+      renderScreen();
+      expect(
+        screen.queryByTestId("blind-select-boss-reroll"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("is not rendered when bossRerollsRemaining is 0", () => {
+      renderScreen({ onRerollBoss: vi.fn(), bossRerollsRemaining: 0 });
+      expect(
+        screen.queryByTestId("blind-select-boss-reroll"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("is rendered when bossRerollsRemaining is > 0", () => {
+      renderScreen({
+        onRerollBoss: vi.fn(),
+        bossRerollsRemaining: 1,
+        bossRerollCost: 10,
+        canAffordBossReroll: true,
+      });
+      expect(
+        screen.getByTestId("blind-select-boss-reroll"),
+      ).toBeInTheDocument();
+    });
+
+    test("displays the configured reroll cost in its label", () => {
+      renderScreen({
+        onRerollBoss: vi.fn(),
+        bossRerollsRemaining: 1,
+        bossRerollCost: 10,
+        canAffordBossReroll: true,
+      });
+      expect(screen.getByTestId("blind-select-boss-reroll")).toHaveTextContent(
+        "$10",
+      );
+    });
+
+    test("is disabled when canAffordBossReroll is false", () => {
+      renderScreen({
+        onRerollBoss: vi.fn(),
+        bossRerollsRemaining: 1,
+        bossRerollCost: 10,
+        canAffordBossReroll: false,
+      });
+      expect(screen.getByTestId("blind-select-boss-reroll")).toBeDisabled();
+    });
+
+    test("invokes onRerollBoss when clicked", () => {
+      const onRerollBoss = vi.fn();
+      renderScreen({
+        onRerollBoss,
+        bossRerollsRemaining: 1,
+        bossRerollCost: 10,
+        canAffordBossReroll: true,
+      });
+      fireEvent.click(screen.getByTestId("blind-select-boss-reroll"));
+      expect(onRerollBoss).toHaveBeenCalledTimes(1);
+    });
+  });
 });

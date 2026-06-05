@@ -235,3 +235,29 @@
   outline: 2px solid #adb5bd;
   outline-offset: 2px;
 }
+
+.blind-select-boss-reroll {
+  align-self: flex-start;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  background-color: rgba(116, 143, 252, 0.18);
+  color: #dbe4ff;
+  border: 1px solid #748ffc;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.blind-select-boss-reroll:hover:not(:disabled) {
+  background-color: rgba(116, 143, 252, 0.32);
+}
+
+.blind-select-boss-reroll:focus-visible {
+  outline: 2px solid #adb5bd;
+  outline-offset: 2px;
+}
+
+.blind-select-boss-reroll:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

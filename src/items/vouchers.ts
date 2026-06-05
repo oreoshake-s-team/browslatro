@@ -24,7 +24,9 @@ export type VoucherId =
   | "blank"
   | "antimatter"
   | "hieroglyph"
-  | "petroglyph";
+  | "petroglyph"
+  | "directors-cut"
+  | "retcon";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -54,7 +56,11 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "antimatter", name: "Antimatter", description: "+1 joker slot.", cost: VOUCHER_BASE_PRICE, requires: "blank" },
   { id: "hieroglyph", name: "Hieroglyph", description: "-1 Ante, -1 hand per round.", cost: VOUCHER_BASE_PRICE },
   { id: "petroglyph", name: "Petroglyph", description: "-1 Ante, -1 discard per round.", cost: VOUCHER_BASE_PRICE, requires: "hieroglyph" },
+  { id: "directors-cut", name: "Director's Cut", description: "Reroll the Boss Blind 1 time per ante. Costs $10 each.", cost: VOUCHER_BASE_PRICE },
+  { id: "retcon", name: "Retcon", description: "Reroll the Boss Blind unlimited times. Costs $10 each.", cost: VOUCHER_BASE_PRICE, requires: "directors-cut" },
 ];
+
+export const BOSS_REROLL_COST = 10;
 
 export function createVoucherCatalog(): ReadonlyArray<Voucher> {
   return VOUCHER_CATALOG;
@@ -181,4 +187,21 @@ export function extraHandSize(ownedIds: ReadonlySet<VoucherId>): number {
 
 export function extraJokerSlots(ownedIds: ReadonlySet<VoucherId>): number {
   return ownedIds.has("antimatter") ? 1 : 0;
+}
+
+export function bossRerollsAllowedPerAnte(
+  ownedIds: ReadonlySet<VoucherId>,
+): number {
+  if (ownedIds.has("retcon")) return Number.POSITIVE_INFINITY;
+  if (ownedIds.has("directors-cut")) return 1;
+  return 0;
+}
+
+export function bossRerollsRemaining(
+  ownedIds: ReadonlySet<VoucherId>,
+  usedThisAnte: number,
+): number {
+  const allowed = bossRerollsAllowedPerAnte(ownedIds);
+  if (!Number.isFinite(allowed)) return allowed;
+  return Math.max(0, allowed - usedThisAnte);
 }
