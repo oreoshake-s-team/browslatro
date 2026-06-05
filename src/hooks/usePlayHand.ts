@@ -38,7 +38,11 @@ import {
   addConsumable,
 } from "../items/consumables";
 import { requiredChipsForBlind } from "../scoring/anteScaling";
-import { applyCardEnhancement } from "../cards/enhancements";
+import {
+  applyCardEnhancement,
+  applyLuckyRolls,
+  type LuckyRollResult,
+} from "../cards/enhancements";
 import {
   blueSealHeldCards,
   expandRedSealRetriggers,
@@ -121,6 +125,9 @@ export function usePlayHand({
   const setLuckyMoneyProcIds = useGame((s) => s.setLuckyMoneyProcIds);
   const setScoringCards = useGame((s) => s.setScoringCards);
   const setScoringIndex = useGame((s) => s.setScoringIndex);
+  const setLuckyRollsByScoringIndex = useGame(
+    (s) => s.setLuckyRollsByScoringIndex,
+  );
   const setSelectedHand = useGame((s) => s.setSelectedHand);
   const setDiscardingIds = useGame((s) => s.setDiscardingIds);
   const setRoundScore = useGame((s) => s.setRoundScore);
@@ -358,6 +365,7 @@ export function usePlayHand({
     let perCardAdditiveChips = 0;
     let perCardXMult = 1;
     let firstFaceAlreadyScoredUpfront = false;
+    const luckyRollsByScoringIndex: LuckyRollResult[] = [];
     for (let i = 0; i < scoring.length; i += 1) {
       const perCard = applyPerCardJokers(jokers.filter(isJokerActive), scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
@@ -366,8 +374,12 @@ export function usePlayHand({
       perCardAdditiveChips += perCard.additiveChips;
       perCardAdditiveMult += getCardMultDelta(scoring[i]);
       perCardXMult *= perCard.xMult;
+      const luckyRoll = applyLuckyRolls(scoring[i]);
+      luckyRollsByScoringIndex.push(luckyRoll);
+      perCardAdditiveMult += luckyRoll.multBonus;
       if (isFaceCard(scoring[i])) firstFaceAlreadyScoredUpfront = true;
     }
+    setLuckyRollsByScoringIndex(luckyRollsByScoringIndex);
 
     const heldSteelIds = dealt.hand
       .filter((c) => c.enhancement === "steel" && !submittedSelection.has(c.id))

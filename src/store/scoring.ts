@@ -3,6 +3,7 @@ import type { GameState } from "./game";
 import type { ScoringEvent } from "../scoring/scoringTrace";
 import type { Card } from "../cards/types";
 import type { JokerHandLevelStep } from "../items/jokers";
+import type { LuckyRollResult } from "../cards/enhancements";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -25,6 +26,7 @@ export interface ScoringState {
   steelScoringIndex: number;
   luckyMultProcIds: ReadonlySet<number>;
   luckyMoneyProcIds: ReadonlySet<number>;
+  luckyRollsByScoringIndex: ReadonlyArray<LuckyRollResult>;
   handLevelSteps: ReadonlyArray<JokerHandLevelStep>;
   handLevelIndex: number;
   setChips: (update: Updater<number>) => void;
@@ -39,6 +41,9 @@ export interface ScoringState {
   setSteelScoringIndex: (update: Updater<number>) => void;
   setLuckyMultProcIds: (update: Updater<ReadonlySet<number>>) => void;
   setLuckyMoneyProcIds: (update: Updater<ReadonlySet<number>>) => void;
+  setLuckyRollsByScoringIndex: (
+    update: Updater<ReadonlyArray<LuckyRollResult>>,
+  ) => void;
   setHandLevelSteps: (update: Updater<ReadonlyArray<JokerHandLevelStep>>) => void;
   setHandLevelIndex: (update: Updater<number>) => void;
   resetScoring: () => void;
@@ -54,6 +59,7 @@ function createInitialAnimation() {
     steelScoringIndex: 0,
     luckyMultProcIds: new Set<number>() as ReadonlySet<number>,
     luckyMoneyProcIds: new Set<number>() as ReadonlySet<number>,
+    luckyRollsByScoringIndex: [] as ReadonlyArray<LuckyRollResult>,
     handLevelSteps: [] as ReadonlyArray<JokerHandLevelStep>,
     handLevelIndex: 0,
   };
@@ -95,6 +101,13 @@ export const createScoringSlice: StateCreator<GameState, [], [], ScoringState> =
   setLuckyMoneyProcIds: (update) =>
     set((state) => ({
       luckyMoneyProcIds: resolve(update, state.luckyMoneyProcIds),
+    })),
+  setLuckyRollsByScoringIndex: (update) =>
+    set((state) => ({
+      luckyRollsByScoringIndex: resolve(
+        update,
+        state.luckyRollsByScoringIndex,
+      ),
     })),
   setHandLevelSteps: (update) =>
     set((state) => ({ handLevelSteps: resolve(update, state.handLevelSteps) })),

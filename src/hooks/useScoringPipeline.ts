@@ -9,7 +9,6 @@ import {
 import { cardLabel, type ScoringEvent } from "../scoring/scoringTrace";
 import {
   applyCardEnhancement,
-  applyLuckyRolls,
   cardRankForEvaluation,
   rollEnhancementChance,
 } from "../cards/enhancements";
@@ -166,7 +165,10 @@ export function useScoringPipeline({
           source: "Glass roll",
         });
       }
-      const luckyResult = applyLuckyRolls(stepCard);
+      const luckyResult = useGame.getState().luckyRollsByScoringIndex[stepIdx] ?? {
+        multBonus: 0,
+        moneyBonus: 0,
+      };
       if (luckyResult.multBonus > 0) {
         setMultiplier((prev) => prev + luckyResult.multBonus);
         pushScoringEvent({
