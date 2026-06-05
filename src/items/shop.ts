@@ -3,6 +3,7 @@ import {
   RENTAL_BASE_PRICE,
   hasSticker,
   pickRandomFromCatalog,
+  rollEdition,
   withEdition,
 } from "./jokers";
 import type { PlanetCard } from "./planets";
@@ -284,6 +285,7 @@ export interface PickShopOffersArgs {
   readonly extraSlots?: number;
   readonly extraPackSlots?: number;
   readonly forcedPackPools?: ReadonlyArray<PackPool>;
+  readonly editionRateMultiplier?: number;
   readonly rng?: RandomSource;
 }
 
@@ -316,7 +318,11 @@ function pickOfferByKind(
     case "joker": {
       const excluded = [...args.excludedJokerIds, ...picked.joker];
       const next = pickRandom(args.jokerCatalog, excluded, rng);
-      return next ? jokerOffer(next) : null;
+      if (!next) return null;
+      const multiplier = args.editionRateMultiplier ?? 1;
+      if (multiplier <= 1) return jokerOffer(next);
+      const edition = rollEdition(rng, multiplier);
+      return jokerOffer(edition ? withEdition(next, edition) : next);
     }
     case "planet": {
       const next = pickRandom(args.planetCatalog, [...picked.planet], rng);

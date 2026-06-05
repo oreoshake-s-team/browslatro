@@ -2066,7 +2066,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Crystal Ball adds a third consumable slot to the tray", async () => {
-    const user = await openShopWithVoucher(0.25);
+    const user = await openShopWithVoucher(0.18);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);

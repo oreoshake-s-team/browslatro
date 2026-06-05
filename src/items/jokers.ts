@@ -27,6 +27,7 @@ export {
   JOKER_EDITION_INFO,
   applyEditionToRandomJoker,
   cloneJoker,
+  rollEdition,
   withEdition,
   withoutEdition,
 } from "./jokers/editions";

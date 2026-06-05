@@ -26,7 +26,9 @@ export type VoucherId =
   | "hieroglyph"
   | "petroglyph"
   | "directors-cut"
-  | "retcon";
+  | "retcon"
+  | "hone"
+  | "glow-up";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -58,6 +60,8 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "petroglyph", name: "Petroglyph", description: "-1 Ante, -1 discard per round.", cost: VOUCHER_BASE_PRICE, requires: "hieroglyph" },
   { id: "directors-cut", name: "Director's Cut", description: "Reroll the Boss Blind 1 time per ante. Costs $10 each.", cost: VOUCHER_BASE_PRICE },
   { id: "retcon", name: "Retcon", description: "Reroll the Boss Blind unlimited times. Costs $10 each.", cost: VOUCHER_BASE_PRICE, requires: "directors-cut" },
+  { id: "hone", name: "Hone", description: "Foil, Holographic, and Polychrome Jokers appear 2× as often.", cost: VOUCHER_BASE_PRICE },
+  { id: "glow-up", name: "Glow Up", description: "Foil, Holographic, and Polychrome Jokers appear 4× as often.", cost: VOUCHER_BASE_PRICE, requires: "hone" },
 ];
 
 export const BOSS_REROLL_COST = 10;
@@ -204,4 +208,12 @@ export function bossRerollsRemaining(
   const allowed = bossRerollsAllowedPerAnte(ownedIds);
   if (!Number.isFinite(allowed)) return allowed;
   return Math.max(0, allowed - usedThisAnte);
+}
+
+export function editionRateMultiplier(
+  ownedIds: ReadonlySet<VoucherId>,
+): 1 | 2 | 4 {
+  if (ownedIds.has("glow-up")) return 4;
+  if (ownedIds.has("hone")) return 2;
+  return 1;
 }
