@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
+  BLUE_DISCARD_DELTA,
   STAKE_ORDER,
   createStakeCatalog,
   getActiveStakeModifiers,
@@ -8,6 +9,7 @@ import {
   getStakeSpec,
   hasStakeModifier,
   stakeRank,
+  stakeStartingDiscardsDelta,
   stakeStickerOdds,
   type Stake,
 } from "./stakes";
@@ -115,18 +117,18 @@ describe("hasStakeModifier", () => {
 });
 
 describe("StakeSpec.implemented", () => {
-  test("White, Red, Green, and Black are implemented", () => {
+  test("White, Red, Green, Black, and Blue are implemented", () => {
     const implemented = createStakeCatalog()
       .filter((s) => s.implemented)
       .map((s) => s.id);
-    expect(implemented).toEqual(["white", "red", "green", "black"]);
+    expect(implemented).toEqual(["white", "red", "green", "black", "blue"]);
   });
 
-  test("Blue through Gold are not implemented (negative)", () => {
+  test("Purple through Gold are not implemented (negative)", () => {
     const unimplemented = createStakeCatalog()
       .filter((s) => !s.implemented)
       .map((s) => s.id);
-    expect(unimplemented).toEqual(["blue", "purple", "orange", "gold"]);
+    expect(unimplemented).toEqual(["purple", "orange", "gold"]);
   });
 });
 
@@ -148,6 +150,41 @@ describe("Black Stake — black-eternal-roll modifier (#555)", () => {
 
   test("higher stakes still carry the black-eternal-roll modifier (cumulative)", () => {
     expect(hasStakeModifier("gold", "black-eternal-roll")).toBe(true);
+  });
+});
+
+describe("Blue Stake — blue-discard-delta modifier (#556)", () => {
+  test("Blue Stake carries the blue-discard-delta modifier", () => {
+    expect(hasStakeModifier("blue", "blue-discard-delta")).toBe(true);
+  });
+
+  test("Black Stake does not carry the blue-discard-delta modifier (negative)", () => {
+    expect(hasStakeModifier("black", "blue-discard-delta")).toBe(false);
+  });
+
+  test("the modifier's amount is BLUE_DISCARD_DELTA (-1)", () => {
+    const mod = getActiveStakeModifiers("blue").find(
+      (m) => m.kind === "blue-discard-delta",
+    );
+    expect(mod && "amount" in mod ? mod.amount : null).toBe(BLUE_DISCARD_DELTA);
+  });
+
+  test("higher stakes still carry the blue-discard-delta modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "blue-discard-delta")).toBe(true);
+  });
+});
+
+describe("stakeStartingDiscardsDelta", () => {
+  test("returns 0 for stakes below Blue", () => {
+    expect(stakeStartingDiscardsDelta("black")).toBe(0);
+  });
+
+  test("returns -1 at Blue Stake", () => {
+    expect(stakeStartingDiscardsDelta("blue")).toBe(-1);
+  });
+
+  test("returns -1 at Gold Stake too (cumulative; only Blue contributes)", () => {
+    expect(stakeStartingDiscardsDelta("gold")).toBe(-1);
   });
 });
 

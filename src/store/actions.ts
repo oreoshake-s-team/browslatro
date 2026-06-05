@@ -425,6 +425,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       ownedVoucherIds: next.ownedVoucherIds,
       deck: next.selectedDeck,
       jokers: next.jokers,
+      stake: next.selectedStake,
     };
     s.setRemainingHands(computeStartingHands(resourceCtx));
     s.setRemainingDiscards(computeStartingDiscards(resourceCtx));

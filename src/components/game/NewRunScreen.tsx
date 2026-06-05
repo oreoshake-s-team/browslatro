@@ -11,6 +11,11 @@ import {
   createDeckCatalog,
   type Deck,
 } from "../../items/decks";
+import type { VoucherId } from "../../items/vouchers";
+import {
+  computeStartingDiscards,
+  computeStartingHands,
+} from "../../run/roundSetup";
 
 interface NewRunScreenProps {
   initialStake?: Stake;
@@ -20,6 +25,7 @@ interface NewRunScreenProps {
 
 const STAKES = createStakeCatalog().filter((s) => s.implemented);
 const DECKS = createDeckCatalog().filter((d) => d.implemented);
+const NO_VOUCHERS: ReadonlySet<VoucherId> = new Set();
 
 export default function NewRunScreen({
   initialStake = DEFAULT_STAKE,
@@ -31,6 +37,17 @@ export default function NewRunScreen({
   const selectedStakeSpec = STAKES.find((s) => s.id === stake) ?? STAKES[0];
   const selectedDeckSpec = DECKS.find((d) => d.id === deck) ?? DECKS[0];
 
+  const resourceCtx = {
+    blind: 1 as const,
+    boss: null,
+    ownedVoucherIds: NO_VOUCHERS,
+    deck,
+    jokers: [],
+    stake,
+  };
+  const startingHands = computeStartingHands(resourceCtx);
+  const startingDiscards = computeStartingDiscards(resourceCtx);
+
   return createPortal(
     <div
       className="new-run-overlay"
@@ -39,9 +56,43 @@ export default function NewRunScreen({
       aria-labelledby="new-run-title"
     >
       <div className="new-run-modal">
-        <h2 id="new-run-title" className="new-run-title">
-          Start New Run
-        </h2>
+        <div className="new-run-header">
+          <h2 id="new-run-title" className="new-run-title">
+            Start New Run
+          </h2>
+          <p
+            className="new-run-header-preview"
+            aria-label="Starting resources for this run"
+          >
+            <span
+              className="new-run-header-preview-pair"
+              data-testid="new-run-preview-hands"
+            >
+              <span
+                className="new-run-header-preview-value"
+                aria-live="polite"
+              >
+                {startingHands}
+              </span>{" "}
+              starting hands
+            </span>
+            <span aria-hidden="true" className="new-run-header-preview-sep">
+              ·
+            </span>
+            <span
+              className="new-run-header-preview-pair"
+              data-testid="new-run-preview-discards"
+            >
+              <span
+                className="new-run-header-preview-value"
+                aria-live="polite"
+              >
+                {startingDiscards}
+              </span>{" "}
+              starting discards
+            </span>
+          </p>
+        </div>
         <section
           className="new-run-section new-run-section-deck"
           aria-labelledby="new-run-deck-label"

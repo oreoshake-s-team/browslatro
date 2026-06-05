@@ -26,13 +26,14 @@ test.describe("Stake picker (#695)", () => {
     await page.goto("/");
   });
 
-  test("renders White / Red / Green / Black stake tiles; does not render Gold (still implemented:false)", async ({
+  test("renders White / Red / Green / Black / Blue stake tiles; does not render Gold (still implemented:false)", async ({
     page,
   }) => {
     await expect(page.getByTestId("new-run-stake-white")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-red")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
+    await expect(page.getByTestId("new-run-stake-blue")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-gold")).toHaveCount(0);
   });
 });
@@ -80,5 +81,34 @@ test.describe("Stake-derived deltas on BlindSelectScreen (#695)", () => {
     await clickWin(page);
     await page.getByRole("button", { name: /Next Round/ }).click();
     await expect(page.getByTestId("blind-select-required-1")).toHaveText("900");
+  });
+
+  test("Blue Stake: starting Small Blind on Yellow Deck shows 2 discards (base 3 − 1) (#556)", async ({
+    page,
+  }) => {
+    await page.getByTestId("new-run-stake-blue").click();
+    await page.getByTestId("new-run-deck-yellow-deck").click();
+    await page.getByTestId("new-run-confirm").click();
+    await page.getByTestId("blind-select-play").click();
+    const discardsStat = page
+      .locator(".stat")
+      .filter({ has: page.getByText("Discards", { exact: true }) })
+      .locator(".stat-value");
+    await expect(discardsStat).toHaveText("2");
+  });
+
+  test("NewRunScreen preview: Starting Discards updates live as stake/deck change (#737)", async ({
+    page,
+  }) => {
+    const discardsPreview = page
+      .getByTestId("new-run-preview-discards")
+      .locator(".new-run-header-preview-value");
+    await expect(discardsPreview).toHaveText("4");
+    await page.getByTestId("new-run-deck-yellow-deck").click();
+    await expect(discardsPreview).toHaveText("3");
+    await page.getByTestId("new-run-stake-blue").click();
+    await expect(discardsPreview).toHaveText("2");
+    await page.getByTestId("new-run-stake-white").click();
+    await expect(discardsPreview).toHaveText("3");
   });
 });
