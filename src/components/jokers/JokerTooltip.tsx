@@ -2,8 +2,12 @@ import { createPortal } from "react-dom";
 import "./JokerTooltip.css";
 import {
   JOKER_EDITION_INFO,
+  JOKER_STICKER_INFO,
+  PERISHABLE_LIFE,
   jokerSellValue,
+  jokerStickers,
   type Joker,
+  type JokerSticker,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
 import { countEnhancedInFullDeck } from "../../cards/deckBuild";
@@ -44,10 +48,27 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
           <strong>{editionInfo.name}</strong> — {editionInfo.description}
         </p>
       )}
+      {jokerStickers(joker).map((sticker, idx) => (
+        <p
+          key={`${sticker.kind}-${idx}`}
+          className={`joker-tooltip-sticker joker-tooltip-sticker-${sticker.kind}`}
+          data-testid={`joker-tooltip-sticker-${sticker.kind}`}
+        >
+          <strong>{JOKER_STICKER_INFO[sticker.kind].name}</strong> — {stickerLine(sticker)}
+        </p>
+      ))}
       <p className="joker-tooltip-sell">Sell for ${sellValue}</p>
     </div>,
     document.body,
   );
+}
+
+function stickerLine(sticker: JokerSticker): string {
+  if (sticker.kind === "perishable") {
+    const remaining = Math.max(0, PERISHABLE_LIFE - sticker.roundsHeld);
+    return `${remaining} of ${PERISHABLE_LIFE} rounds left`;
+  }
+  return JOKER_STICKER_INFO[sticker.kind].description;
 }
 
 function useEnhancedThresholdProgress(

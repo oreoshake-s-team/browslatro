@@ -6,11 +6,14 @@ import {
   DRIVERS_LICENSE_ENHANCED_THRESHOLD,
   JOKER_EDITION_INFO,
   JOKER_EDITION_KINDS,
+  JOKER_STICKER_INFO,
+  PERISHABLE_LIFE,
   createDriversLicenseJoker,
   createGreedyJoker,
   createPlusFourMultJoker,
   jokerSellValue,
   withEdition,
+  type Joker,
   type JokerEdition,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
@@ -155,6 +158,53 @@ describe("Joker tooltip — content", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent(
       JOKER_EDITION_INFO.negative.description,
     );
+  });
+});
+
+describe("Joker tooltip — stickers (#724)", () => {
+  function withStickers(stickers: Joker["stickers"]): Joker {
+    return { ...createPlusFourMultJoker(), stickers };
+  }
+
+  test("does not render any sticker row on a plain joker", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(
+      screen.queryByTestId("joker-tooltip-sticker-eternal"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders the Eternal sticker row when present", async () => {
+    const user = userEvent.setup();
+    const joker = withStickers([{ kind: "eternal" }]);
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(
+      screen.getByTestId("joker-tooltip-sticker-eternal"),
+    ).toHaveTextContent(JOKER_STICKER_INFO.eternal.description);
+  });
+
+  test("renders the Rental sticker row with its info text", async () => {
+    const user = userEvent.setup();
+    const joker = withStickers([{ kind: "rental" }]);
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(
+      screen.getByTestId("joker-tooltip-sticker-rental"),
+    ).toHaveTextContent(JOKER_STICKER_INFO.rental.description);
+  });
+
+  test("Perishable sticker row shows remaining rounds dynamically", async () => {
+    const user = userEvent.setup();
+    const joker = withStickers([
+      { kind: "perishable", roundsHeld: 2 },
+    ]);
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(
+      screen.getByTestId("joker-tooltip-sticker-perishable"),
+    ).toHaveTextContent(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`);
   });
 });
 

@@ -58,3 +58,19 @@
   color: #ffd43b;
   font-weight: 600;
 }
+
+.joker-tooltip-sticker {
+  font-weight: 600;
+}
+
+.joker-tooltip-sticker-eternal {
+  color: #ffe066;
+}
+
+.joker-tooltip-sticker-perishable {
+  color: #d0bfff;
+}
+
+.joker-tooltip-sticker-rental {
+  color: #99e9f2;
+}
