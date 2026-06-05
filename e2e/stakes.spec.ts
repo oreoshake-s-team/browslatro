@@ -96,4 +96,19 @@ test.describe("Stake-derived deltas on BlindSelectScreen (#695)", () => {
       .locator(".stat-value");
     await expect(discardsStat).toHaveText("2");
   });
+
+  test("NewRunScreen preview: Starting Discards updates live as stake/deck change (#737)", async ({
+    page,
+  }) => {
+    const discardsPreview = page
+      .getByTestId("new-run-preview-discards")
+      .locator(".new-run-preview-value");
+    await expect(discardsPreview).toHaveText("4");
+    await page.getByTestId("new-run-deck-yellow-deck").click();
+    await expect(discardsPreview).toHaveText("3");
+    await page.getByTestId("new-run-stake-blue").click();
+    await expect(discardsPreview).toHaveText("2");
+    await page.getByTestId("new-run-stake-white").click();
+    await expect(discardsPreview).toHaveText("3");
+  });
 });

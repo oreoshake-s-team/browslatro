@@ -185,6 +185,39 @@
   color: #ffd43b;
 }
 
+.new-run-preview {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  background-color: #161a1f;
+  border: 1px solid #2f3640;
+}
+
+.new-run-preview-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 4.5rem;
+}
+
+.new-run-preview-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffd43b;
+}
+
+.new-run-preview-label {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #adb5bd;
+}
+
 .new-run-actions {
   display: flex;
   justify-content: center;

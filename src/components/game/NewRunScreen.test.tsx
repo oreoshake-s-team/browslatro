@@ -153,4 +153,48 @@ describe("NewRunScreen", () => {
     const group = screen.getByRole("radiogroup", { name: "Stake difficulty" });
     expect(group.tagName).toBe("DIV");
   });
+
+  test("initial preview shows 4 Hands / 4 Discards on White Stake + Red Deck (#737)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-preview-hands")).toHaveTextContent("4");
+    expect(screen.getByTestId("new-run-preview-discards")).toHaveTextContent("4");
+  });
+
+  test("picking Yellow Deck updates the Discards preview from 4 to 3 (no Red Deck +1)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
+    expect(screen.getByTestId("new-run-preview-discards")).toHaveTextContent("3");
+  });
+
+  test("picking Blue Stake on Red Deck updates the Discards preview from 4 to 3 (Red +1, Blue −1)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-blue"));
+    expect(screen.getByTestId("new-run-preview-discards")).toHaveTextContent("3");
+  });
+
+  test("picking Blue Stake + Yellow Deck shows 2 Discards (base 3 − 1)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-blue"));
+    await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
+    expect(screen.getByTestId("new-run-preview-discards")).toHaveTextContent("2");
+  });
+
+  test("switching back from Blue to White restores Discards to 4 on Red Deck (negative)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-blue"));
+    await user.click(screen.getByTestId("new-run-stake-white"));
+    expect(screen.getByTestId("new-run-preview-discards")).toHaveTextContent("4");
+  });
+
+  test("Hands preview stays at 4 across stake/deck swaps (no current modifier touches Hands)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-blue"));
+    await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
+    expect(screen.getByTestId("new-run-preview-hands")).toHaveTextContent("4");
+  });
 });

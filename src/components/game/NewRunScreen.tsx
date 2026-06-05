@@ -11,6 +11,11 @@ import {
   createDeckCatalog,
   type Deck,
 } from "../../items/decks";
+import type { VoucherId } from "../../items/vouchers";
+import {
+  computeStartingDiscards,
+  computeStartingHands,
+} from "../../run/roundSetup";
 
 interface NewRunScreenProps {
   initialStake?: Stake;
@@ -20,6 +25,7 @@ interface NewRunScreenProps {
 
 const STAKES = createStakeCatalog().filter((s) => s.implemented);
 const DECKS = createDeckCatalog().filter((d) => d.implemented);
+const NO_VOUCHERS: ReadonlySet<VoucherId> = new Set();
 
 export default function NewRunScreen({
   initialStake = DEFAULT_STAKE,
@@ -30,6 +36,17 @@ export default function NewRunScreen({
   const [deck, setDeck] = useState<Deck>(initialDeck);
   const selectedStakeSpec = STAKES.find((s) => s.id === stake) ?? STAKES[0];
   const selectedDeckSpec = DECKS.find((d) => d.id === deck) ?? DECKS[0];
+
+  const resourceCtx = {
+    blind: 1 as const,
+    boss: null,
+    ownedVoucherIds: NO_VOUCHERS,
+    deck,
+    jokers: [],
+    stake,
+  };
+  const startingHands = computeStartingHands(resourceCtx);
+  const startingDiscards = computeStartingDiscards(resourceCtx);
 
   return createPortal(
     <div
@@ -123,6 +140,29 @@ export default function NewRunScreen({
           >
             <strong>{selectedStakeSpec.name}:</strong> {selectedStakeSpec.description}
           </p>
+        </section>
+        <section
+          className="new-run-preview"
+          aria-label="Starting resources for this run"
+        >
+          <div
+            className="new-run-preview-stat"
+            data-testid="new-run-preview-hands"
+          >
+            <span className="new-run-preview-value" aria-live="polite">
+              {startingHands}
+            </span>
+            <span className="new-run-preview-label">Starting Hands</span>
+          </div>
+          <div
+            className="new-run-preview-stat"
+            data-testid="new-run-preview-discards"
+          >
+            <span className="new-run-preview-value" aria-live="polite">
+              {startingDiscards}
+            </span>
+            <span className="new-run-preview-label">Starting Discards</span>
+          </div>
         </section>
         <div className="new-run-actions">
           <button
