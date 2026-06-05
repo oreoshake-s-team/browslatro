@@ -102,7 +102,7 @@ test.describe("Stake-derived deltas on BlindSelectScreen (#695)", () => {
   }) => {
     const discardsPreview = page
       .getByTestId("new-run-preview-discards")
-      .locator(".new-run-preview-value");
+      .locator(".new-run-header-preview-value");
     await expect(discardsPreview).toHaveText("4");
     await page.getByTestId("new-run-deck-yellow-deck").click();
     await expect(discardsPreview).toHaveText("3");

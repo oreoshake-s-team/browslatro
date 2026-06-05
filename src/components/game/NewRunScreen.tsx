@@ -56,9 +56,43 @@ export default function NewRunScreen({
       aria-labelledby="new-run-title"
     >
       <div className="new-run-modal">
-        <h2 id="new-run-title" className="new-run-title">
-          Start New Run
-        </h2>
+        <div className="new-run-header">
+          <h2 id="new-run-title" className="new-run-title">
+            Start New Run
+          </h2>
+          <p
+            className="new-run-header-preview"
+            aria-label="Starting resources for this run"
+          >
+            <span
+              className="new-run-header-preview-pair"
+              data-testid="new-run-preview-hands"
+            >
+              <span
+                className="new-run-header-preview-value"
+                aria-live="polite"
+              >
+                {startingHands}
+              </span>{" "}
+              starting hands
+            </span>
+            <span aria-hidden="true" className="new-run-header-preview-sep">
+              ·
+            </span>
+            <span
+              className="new-run-header-preview-pair"
+              data-testid="new-run-preview-discards"
+            >
+              <span
+                className="new-run-header-preview-value"
+                aria-live="polite"
+              >
+                {startingDiscards}
+              </span>{" "}
+              starting discards
+            </span>
+          </p>
+        </div>
         <section
           className="new-run-section new-run-section-deck"
           aria-labelledby="new-run-deck-label"
@@ -140,29 +174,6 @@ export default function NewRunScreen({
           >
             <strong>{selectedStakeSpec.name}:</strong> {selectedStakeSpec.description}
           </p>
-        </section>
-        <section
-          className="new-run-preview"
-          aria-label="Starting resources for this run"
-        >
-          <div
-            className="new-run-preview-stat"
-            data-testid="new-run-preview-hands"
-          >
-            <span className="new-run-preview-value" aria-live="polite">
-              {startingHands}
-            </span>
-            <span className="new-run-preview-label">Starting Hands</span>
-          </div>
-          <div
-            className="new-run-preview-stat"
-            data-testid="new-run-preview-discards"
-          >
-            <span className="new-run-preview-value" aria-live="polite">
-              {startingDiscards}
-            </span>
-            <span className="new-run-preview-label">Starting Discards</span>
-          </div>
         </section>
         <div className="new-run-actions">
           <button
