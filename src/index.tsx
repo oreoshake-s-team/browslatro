@@ -5,8 +5,12 @@ import "./index.css";
 import App from "./App";
 import { Telemetry } from "./Telemetry";
 import reportWebVitals from "./reportWebVitals";
+import { restoreSnapshotIfPresent, subscribeAndAutoSave } from "./save/restore";
 
 enableDragDropTouch();
+
+restoreSnapshotIfPresent();
+subscribeAndAutoSave();
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(
