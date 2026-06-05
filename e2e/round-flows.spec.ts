@@ -76,18 +76,21 @@ test("always-win path: 4 consecutive Straight Flushes advance ante and money", a
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
 });
 
-test("the post-round shop appears after dismissing the round-won modal", async ({
+test("post-round shop flow: round-won modal → Continue → shop with 2 items + 2 packs (no duplicates, no equipped jokers) + Next Round closes the shop", async ({
   page,
 }) => {
   await page.goto("/");
   await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
+  const equippedNames = await page
+    .locator('[data-testid^="joker-tile-filled-"] .joker-tile-name')
+    .allTextContents();
+
   await selectAndSubmitStraightFlush(page);
   await expect(page.getByRole("heading", { name: /Round Won!/ })).toBeVisible();
 
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
-
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
   await expect(
     page.locator('[data-testid^="shop-offer-"]:not([data-offer-kind="pack"])'),
@@ -98,47 +101,15 @@ test("the post-round shop appears after dismissing the round-won modal", async (
   await expect(
     page.getByRole("button", { name: NEXT_ROUND_BUTTON }),
   ).toBeVisible();
-});
-
-test("shop offers exclude already-equipped jokers and never duplicate within a single shop", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await dismissBlindSelect(page);
-
-  const equippedNames = await page
-    .locator('[data-testid^="joker-tile-filled-"] .joker-tile-name')
-    .allTextContents();
-
-  await selectAndSubmitStraightFlush(page);
-  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
-  await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
-  await expect(
-    page.locator('[data-testid^="shop-offer-"]:not([data-offer-kind="pack"])'),
-  ).toHaveCount(2);
 
   const offerNames = await page
     .locator('.shop-offer:not([data-offer-kind="pack"]) .shop-offer-name')
     .allTextContents();
-
-  const overlap = offerNames.filter((name) => equippedNames.includes(name));
-  expect(overlap).toEqual([]);
+  expect(offerNames.filter((name) => equippedNames.includes(name))).toEqual([]);
   expect(new Set(offerNames).size).toBe(offerNames.length);
-});
-
-test("clicking Next Round in the shop closes it and starts the next blind", async ({
-  page,
-}) => {
-  await page.goto("/");
-  await dismissBlindSelect(page);
-
-  await selectAndSubmitStraightFlush(page);
-  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
-  await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 
   await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
   await dismissBlindSelect(page);
-
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
 });

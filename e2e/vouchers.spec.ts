@@ -50,26 +50,15 @@ test.describe("Shop vouchers (#699)", () => {
     await setDeterministic(page);
   });
 
-  test("the voucher row is visible in the shop", async ({ page }) => {
-    await reachShop(page);
-    await expect(page.getByTestId("shop-voucher")).toBeVisible();
-  });
-
-  test("overriding the voucher via the dev select changes the displayed name", async ({
+  test("voucher row is visible; overriding to Grabber renames the tile; buying Grabber deducts money", async ({
     page,
   }) => {
     await reachShop(page);
+    await expect(page.getByTestId("shop-voucher")).toBeVisible();
     await page
       .getByTestId("shop-voucher-override")
       .selectOption({ value: "grabber" });
     await expect(page.getByTestId("shop-voucher-0")).toContainText("Grabber");
-  });
-
-  test("buying a voucher decreases money by its price", async ({ page }) => {
-    await reachShop(page);
-    await page
-      .getByTestId("shop-voucher-override")
-      .selectOption({ value: "grabber" });
     const before = await moneyOf(page);
     await page.getByTestId("shop-voucher-buy-0").click();
     const after = await moneyOf(page);

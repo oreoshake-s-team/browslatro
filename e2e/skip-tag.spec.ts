@@ -34,7 +34,7 @@ test.describe("Skip-tag flow (#697)", () => {
     await setDeterministic(page);
   });
 
-  test("skipping the Small Blind advances the current blind to Big", async ({
+  test("skipping Small advances to Big; skipping Big advances to Boss; the Boss row has no Skip button (negative)", async ({
     page,
   }) => {
     await forceSkipTag(page, "investment");
@@ -44,28 +44,11 @@ test.describe("Skip-tag flow (#697)", () => {
       "data-blind-state",
       "current",
     );
-  });
-
-  test("skipping the Big Blind advances the current blind to Boss", async ({
-    page,
-  }) => {
-    await forceSkipTag(page, "investment");
-    await startRound(page);
-    await page.getByTestId("blind-select-skip").click();
     await page.getByTestId("blind-select-skip").click();
     await expect(page.getByTestId("blind-select-row-3")).toHaveAttribute(
       "data-blind-state",
       "current",
     );
-  });
-
-  test("the Boss Blind does not render a Skip button (negative)", async ({
-    page,
-  }) => {
-    await forceSkipTag(page, "investment");
-    await startRound(page);
-    await page.getByTestId("blind-select-skip").click();
-    await page.getByTestId("blind-select-skip").click();
     await expect(page.getByTestId("blind-select-skip")).toHaveCount(0);
   });
 
