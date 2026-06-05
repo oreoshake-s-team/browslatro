@@ -35,6 +35,28 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(before);
   });
 
+  test("sellJoker is a no-op for an eternal joker (#577)", () => {
+    const joker = {
+      ...createJokerCatalog()[0],
+      stickers: [{ kind: "eternal" as const }],
+    };
+    useGame.getState().setJokers([joker]);
+    useGame.getState().sellJoker(0);
+    expect(useGame.getState().jokers).toHaveLength(1);
+  });
+
+  test("sellJoker does not pay out for an eternal joker (#577)", () => {
+    const joker = {
+      ...createJokerCatalog()[0],
+      stickers: [{ kind: "eternal" as const }],
+    };
+    const game = useGame.getState();
+    game.setJokers([joker]);
+    const before = useGame.getState().money;
+    game.sellJoker(0);
+    expect(useGame.getState().money).toBe(before);
+  });
+
   test("sellConsumable adds the consumable's sell value to the wallet", () => {
     const consumable: Consumable = {
       kind: "planet",
