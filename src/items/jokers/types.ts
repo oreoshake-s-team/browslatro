@@ -167,6 +167,13 @@ export interface JokerEditionInfo {
 
 export type JokerRarity = "common" | "uncommon" | "rare" | "legendary";
 
+export type JokerSticker =
+  | { readonly kind: "eternal" }
+  | { readonly kind: "perishable"; readonly roundsHeld: number }
+  | { readonly kind: "rental" };
+
+export type JokerStickerKind = JokerSticker["kind"];
+
 export interface Joker {
   readonly id: string;
   readonly name: string;
@@ -174,4 +181,5 @@ export interface Joker {
   readonly effect: JokerEffect;
   readonly rarity: JokerRarity;
   readonly edition?: JokerEdition;
+  readonly stickers?: ReadonlyArray<JokerSticker>;
 }

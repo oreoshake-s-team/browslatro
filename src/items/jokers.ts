@@ -5,8 +5,24 @@ export type {
   JokerEditionInfo,
   JokerEffect,
   JokerRarity,
+  JokerSticker,
+  JokerStickerKind,
   RandomSource,
 } from "./jokers/types";
+export {
+  JOKER_STICKER_INFO,
+  PERISHABLE_LIFE,
+  RENTAL_BASE_PRICE,
+  RENTAL_END_OF_ROUND_DRAIN,
+  applyStakeStickersOnRoll,
+  canDestroyJoker,
+  canSellJoker,
+  hasSticker,
+  isJokerActive,
+  jokerStickers,
+  tickPerishableRounds,
+} from "./jokers/stickers";
+export type { JokerStickerInfo, StakeStickerOdds } from "./jokers/stickers";
 export {
   JOKER_EDITION_INFO,
   applyEditionToRandomJoker,

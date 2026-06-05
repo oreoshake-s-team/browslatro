@@ -11,6 +11,7 @@ import {
 import {
   MAX_JOKERS,
   applyEditionToRandomJoker,
+  canSellJoker,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
   createJokerCatalog,
@@ -124,6 +125,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const s = get();
     const entry = s.jokers[jokerIdx];
     if (!entry) return;
+    if (!canSellJoker(entry)) return;
     s.earn(jokerSellValue(entry));
     s.setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
   },

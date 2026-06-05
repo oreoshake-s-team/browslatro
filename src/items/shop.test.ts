@@ -8,7 +8,8 @@ import {
 } from "./jokers";
 import { availablePlanets, createPlanetCatalog } from "./planets";
 import type { HandLabel } from "../scoring/handEvaluator";
-import { HANDS } from "../constants";
+import { HANDS, JOKER_BASE_PRICE } from "../constants";
+import { RENTAL_BASE_PRICE } from "./jokers";
 import { createSpectralCatalog } from "./spectrals";
 import { createTarotCatalog } from "./tarots";
 import {
@@ -18,6 +19,7 @@ import {
   applyEditionToFirstJoker,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
+  jokerOfferPrice,
   mergeFreeJokerOffersIntoShop,
   pickRandomJoker,
   pickRandomPlanet,
@@ -929,5 +931,24 @@ describe("mergeFreeJokerOffersIntoShop (#603)", () => {
     const merged = mergeFreeJokerOffersIntoShop(base, [freeJoker("free")]);
     const items = merged.filter((o) => o.kind !== "pack");
     expect(items).toHaveLength(3);
+  });
+});
+
+describe("jokerOfferPrice (#577)", () => {
+  test("a vanilla joker is priced at JOKER_BASE_PRICE", () => {
+    const joker = createJokerCatalog()[0];
+    expect(jokerOfferPrice(joker)).toBe(JOKER_BASE_PRICE);
+  });
+
+  test("a rental joker is priced at RENTAL_BASE_PRICE", () => {
+    const base = createJokerCatalog()[0];
+    const rental = { ...base, stickers: [{ kind: "rental" as const }] };
+    expect(jokerOfferPrice(rental)).toBe(RENTAL_BASE_PRICE);
+  });
+
+  test("a non-rental sticker doesn't lower the price (negative)", () => {
+    const base = createJokerCatalog()[0];
+    const eternal = { ...base, stickers: [{ kind: "eternal" as const }] };
+    expect(jokerOfferPrice(eternal)).toBe(JOKER_BASE_PRICE);
   });
 });

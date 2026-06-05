@@ -1,9 +1,19 @@
 import type { Joker, JokerEdition, JokerRarity, RandomSource } from "./jokers";
-import { pickRandomFromCatalog, withEdition } from "./jokers";
+import {
+  RENTAL_BASE_PRICE,
+  hasSticker,
+  pickRandomFromCatalog,
+  withEdition,
+} from "./jokers";
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
 import { JOKER_BASE_PRICE } from "../constants";
+
+export function jokerOfferPrice(joker: Joker): number {
+  if (hasSticker(joker, "rental")) return RENTAL_BASE_PRICE;
+  return JOKER_BASE_PRICE;
+}
 import { rollChance } from "../dev/chanceOverride";
 import { createRngConfig } from "../dev/rngConfig";
 import { PLANET_BASE_PRICE } from "./planets";
@@ -195,7 +205,7 @@ export function ensureBaseJokerForEdition(
   const fresh: ShopItem = {
     kind: "joker",
     joker,
-    price: JOKER_BASE_PRICE,
+    price: jokerOfferPrice(joker),
     sold: false,
   };
   if (replaceIdx === -1) return [fresh, ...offers];
@@ -246,7 +256,7 @@ export function pickRandomTarot(
 }
 
 function jokerOffer(joker: Joker): ShopItem {
-  return { kind: "joker", joker, price: JOKER_BASE_PRICE, sold: false };
+  return { kind: "joker", joker, price: jokerOfferPrice(joker), sold: false };
 }
 
 function planetOffer(planet: PlanetCard): ShopItem {
