@@ -1065,75 +1065,43 @@ describe("Round won modal", () => {
     flushDiscardAnimation();
   }
 
-  test("clicking Continue credits base + interest on the interest wallet (#353)", async () => {
+  test("Small Blind win with gold + remaining-hands: reward breakdown + Continue credits interest wallet (#353)", async () => {
     // Pre-win wallet = $4. Gold bonus = $3 (one held 2♠ gold default).
     // Remaining hands bonus = 3 hands × $1 = $3 (won on hand 1 of 4).
-    // Visible wallet at modal = $10, but the interest wallet excludes the
-    // remaining-hands bonus, so interest is on $7 only.
-    // Interest = floor(7/5) = $1. Continue adds base ($3) + interest ($1).
-    // Final = $4 + $3 + $3 + $3 + $1 = $14.
+    // Wallet at modal = $4 + $3 gold + $3 hands = $10.
+    // Interest wallet (excludes remaining-hands) = $7; interest = floor(7/5) = $1.
+    // Modal breakdown: base $3 + gold $3 + hands $3 + interest $1 = $10.
+    // Continue credits base ($3) + interest ($1); final wallet = $14.
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
+    expect(getStatValue("Money")).toHaveTextContent("$10");
+    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
+    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
+      "on $7",
+    );
+    expect(screen.getByTestId("round-won-hands")).toHaveTextContent("+$3");
+    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent(
+      "Remaining hands (3 × $1)",
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$10");
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
     expect(getStatValue("Money")).toHaveTextContent("$14");
   });
 
-  test("plays the win sound exactly once when the modal opens", async () => {
-    await triggerWin();
-    const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
-    expect(winCalls).toHaveLength(1);
-  });
-
-  test("does not play the win sound again when the modal is dismissed", async () => {
+  test("win sound plays exactly once on win; gold sound plays once per held gold card; neither replays on Continue", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     await triggerWin();
+    expect(
+      playMock.mock.calls.filter(([name]) => name === "win"),
+    ).toHaveLength(1);
+    expect(
+      playMock.mock.calls.filter(([name]) => name === "gold"),
+    ).toHaveLength(1);
     playMock.mockClear();
     await user.click(await screen.findByRole("button", { name: /Continue/ }));
-    const winCalls = playMock.mock.calls.filter(([name]) => name === "win");
-    expect(winCalls).toHaveLength(0);
-  });
-
-  test("gold scoring + remaining-hands bonus both credit the wallet before the modal opens", async () => {
-    // $4 + $3 gold + $3 hands-bonus = $10.
-    await triggerWin();
-    expect(getStatValue("Money")).toHaveTextContent("$10");
-  });
-
-  test("modal interest is calculated on the gold-augmented wallet, excluding remaining-hands (#353)", async () => {
-    // $4 + $3 gold = $7 (no remaining-hands). floor($7/$5) = $1.
-    await triggerWin();
-    expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
-  });
-
-  test("modal interest label reflects the interest wallet (excludes remaining-hands, #353)", async () => {
-    await triggerWin();
-    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
-      "on $7",
-    );
-  });
-
-  test("modal renders a remaining-hands row with the count × $1", async () => {
-    await triggerWin();
-    expect(screen.getByTestId("round-won-hands")).toHaveTextContent("+$3");
-  });
-
-  test("modal hands-row label includes the count and per-hand bonus", async () => {
-    await triggerWin();
-    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent(
-      "Remaining hands (3 × $1)",
-    );
-  });
-
-  test("modal total equals base + gold + remaining-hands + interest", async () => {
-    // base $3 + gold $3 + hands $3 + interest $1 = $10.
-    await triggerWin();
-    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$10");
-  });
-
-  test("gold scoring plays the gold sound once per held gold card", async () => {
-    await triggerWin();
-    const goldCalls = playMock.mock.calls.filter(([name]) => name === "gold");
-    expect(goldCalls).toHaveLength(1);
+    expect(
+      playMock.mock.calls.filter(([name]) => name === "win"),
+    ).toHaveLength(0);
   });
 
   test("submitting an empty hand never plays the gold sound (negative)", async () => {
