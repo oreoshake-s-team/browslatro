@@ -477,3 +477,153 @@ describe("useConsumableActions — The Star (suit-conversion) on pack-preview", 
     expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
   });
 });
+
+function deathConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "death");
+  if (!tarot) throw new Error("Death missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — Death", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([deathConsumable()]);
+  });
+
+  test("left card becomes a copy of the right card (rank)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.rank).toBe("K");
+  });
+
+  test("left card becomes a copy of the right card (suit)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.suit).toBe("hearts");
+  });
+
+  test("left card keeps its own id (stable React key)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.id).toBe(1);
+  });
+
+  test("right card is unchanged", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[1]).toEqual(right);
+  });
+
+  test("left/right ordering follows handDisplayOrder, not Set insertion", () => {
+    const a: Card = { id: 1, rank: "2", suit: "spades" };
+    const b: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([a, b]);
+    useGame.getState().setHandDisplayOrder([b.id, a.id]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand.find((c) => c.id === b.id)?.rank).toBe(
+      "2",
+    );
+  });
+
+  test("copies enhancement/seal/edition from the right card", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = {
+      id: 2,
+      rank: "K",
+      suit: "hearts",
+      enhancement: "glass",
+      seal: "gold",
+      edition: "foil",
+    };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]).toEqual({
+      id: 1,
+      rank: "K",
+      suit: "hearts",
+      enhancement: "glass",
+      seal: "gold",
+      edition: "foil",
+    });
+  });
+
+  test("Death is consumed from the consumable list on use", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("selection is cleared after use", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().selectedIds.size).toBe(0);
+  });
+
+  test("with 1 selected card, Death is a no-op (consumable stays)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    seedHand([left]);
+    useGame.getState().setHandDisplayOrder([left.id]);
+    useGame.getState().setSelectedIds(new Set([left.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("with 3 selected cards, Death is a no-op (consumable stays)", () => {
+    const a: Card = { id: 1, rank: "2", suit: "spades" };
+    const b: Card = { id: 2, rank: "K", suit: "hearts" };
+    const c: Card = { id: 3, rank: "5", suit: "clubs" };
+    seedHand([a, b, c]);
+    useGame.getState().setHandDisplayOrder([a.id, b.id, c.id]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id, c.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("cards not in handDisplayOrder are appended in dealt.hand order (left/right still resolves)", () => {
+    const left: Card = { id: 10, rank: "2", suit: "spades" };
+    const right: Card = { id: 20, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.rank).toBe("K");
+  });
+});

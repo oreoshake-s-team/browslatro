@@ -46,6 +46,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
+  const handDisplayOrder = useGame((s) => s.handDisplayOrder);
 
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
@@ -234,6 +235,39 @@ export function useConsumableActions(): UseConsumableActionsResult {
       const replacementById = new Map(replacements.map((r) => [r.id, r]));
       setDealt((prev) => ({
         hand: prev.hand.map((c) => replacementById.get(c.id) ?? c),
+        remaining: prev.remaining,
+      }));
+      setSelectedIds(new Set());
+      setSelectedHand(null);
+      setChips(0);
+      setMultiplier(0);
+      consume();
+      return;
+    }
+    if (effect.kind === "death-copy") {
+      if (previewActive) return;
+      if (selectedIds.size !== effect.requiredTargets) return;
+      const hand = useGame.getState().dealt.hand;
+      const handById = new Map(hand.map((c) => [c.id, c]));
+      const seen = new Set<number>();
+      const orderedHand: Card[] = [];
+      for (const id of handDisplayOrder) {
+        const c = handById.get(id);
+        if (c) {
+          orderedHand.push(c);
+          seen.add(id);
+        }
+      }
+      for (const c of hand) {
+        if (!seen.has(c.id)) orderedHand.push(c);
+      }
+      const selectedInOrder = orderedHand.filter((c) => selectedIds.has(c.id));
+      if (selectedInOrder.length !== 2) return;
+      const [left, right] = selectedInOrder;
+      play("pop");
+      const copied: Card = { ...right, id: left.id };
+      setDealt((prev) => ({
+        hand: prev.hand.map((c) => (c.id === left.id ? copied : c)),
         remaining: prev.remaining,
       }));
       setSelectedIds(new Set());

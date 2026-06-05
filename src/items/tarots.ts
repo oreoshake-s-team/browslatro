@@ -39,6 +39,10 @@ export type TarotEffect =
       readonly maxTargets: 1 | 2 | 3;
     }
   | {
+      readonly kind: "death-copy";
+      readonly requiredTargets: 2;
+    }
+  | {
       readonly kind: "convert-suit";
       readonly suit: Suit;
       readonly maxTargets: 3;
@@ -75,6 +79,9 @@ function describe(spec: TarotSpec): string {
       effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
     return `Increase rank of ${targets} in hand by 1`;
   }
+  if (effect.kind === "death-copy") {
+    return `Select ${effect.requiredTargets} cards in hand: left card becomes a copy of the right`;
+  }
   if (effect.kind === "convert-suit") {
     return `Convert up to ${effect.maxTargets} cards in hand to ${SUIT_DISPLAY[effect.suit]}`;
   }
@@ -100,6 +107,7 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
   { id: "the-tower", name: "The Tower", effect: { kind: "apply-enhancement", enhancement: "stone", maxTargets: 1 } },
   { id: "the-hanged-man", name: "The Hanged Man", effect: { kind: "destroy-selected", maxTargets: 2 } },
   { id: "strength", name: "Strength", effect: { kind: "rank-up-selected", maxTargets: 2 } },
+  { id: "death", name: "Death", effect: { kind: "death-copy", requiredTargets: 2 } },
   { id: "the-star", name: "The Star", effect: { kind: "convert-suit", suit: "diamonds", maxTargets: 3 } },
   { id: "the-moon", name: "The Moon", effect: { kind: "convert-suit", suit: "clubs", maxTargets: 3 } },
   { id: "the-sun", name: "The Sun", effect: { kind: "convert-suit", suit: "hearts", maxTargets: 3 } },
