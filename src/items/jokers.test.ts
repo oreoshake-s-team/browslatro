@@ -824,6 +824,13 @@ describe("Pareidolia catalog membership (#715)", () => {
   });
 });
 
+describe("Splash catalog membership (#721)", () => {
+  test("Splash appears in the joker catalog", () => {
+    const ids = createJokerCatalog().map((j) => j.id);
+    expect(ids).toContain("splash");
+  });
+});
+
 describe("applyEditionToRandomJoker", () => {
   test("applies the edition to the joker chosen by the rng", () => {
     const result = applyEditionToRandomJoker(

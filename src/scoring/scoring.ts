@@ -90,14 +90,23 @@ const RANK_ORDER: Record<Rank, number> = {
  * the cards forming the group score. For High Card, only the single highest
  * card scores.
  */
+export interface GetScoringCardsOptions {
+  readonly allCardsScore?: boolean;
+}
+
 export function getScoringCards(
   cards: ReadonlyArray<Card>,
   label: HandLabel,
+  options: GetScoringCardsOptions = {},
 ): Card[] {
   if (cards.length === 0) return [];
 
   const stones = cards.filter(isStoneCard);
   const nonStones = cards.filter((c) => !isStoneCard(c));
+
+  if (options.allCardsScore === true) {
+    return cards.slice();
+  }
 
   let matched: Card[];
   switch (label) {

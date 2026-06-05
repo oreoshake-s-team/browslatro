@@ -959,6 +959,16 @@ export function createPareidoliaJoker(): Joker {
   };
 }
 
+export function createSplashJoker(): Joker {
+  return {
+    id: "splash",
+    rarity: "uncommon",
+    name: "Splash",
+    description: "Every played card counts in scoring",
+    effect: { kind: "passive-run-stats", allCardsScore: true },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
