@@ -144,7 +144,9 @@ test.describe("Pack opening flow (#694)", () => {
       .locator(".card")
       .first();
     await firstPreviewCard.click();
-    await page.locator('[data-consumable-kind="tarot"]').first().click();
+    const tarotTile = page.locator('[data-consumable-kind="tarot"]').first();
+    await expect(tarotTile).toBeEnabled();
+    await tarotTile.click();
     await expect(
       page
         .getByTestId("pack-open-preview-hand")
@@ -164,7 +166,9 @@ test.describe("Pack opening flow (#694)", () => {
       .locator(".card")
       .first();
     await firstPreviewCard.click();
-    await page.locator('[data-consumable-kind="tarot"]').first().click();
+    const tarotTile = page.locator('[data-consumable-kind="tarot"]').first();
+    await expect(tarotTile).toBeEnabled();
+    await tarotTile.click();
     await expect(
       page
         .getByTestId("pack-open-preview-hand")
