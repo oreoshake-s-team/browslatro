@@ -29,7 +29,9 @@ export type VoucherId =
   | "retcon"
   | "hone"
   | "glow-up"
-  | "omen-globe";
+  | "omen-globe"
+  | "telescope"
+  | "observatory";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -64,9 +66,21 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "hone", name: "Hone", description: "Foil, Holographic, and Polychrome Jokers appear 2× as often.", cost: VOUCHER_BASE_PRICE },
   { id: "glow-up", name: "Glow Up", description: "Foil, Holographic, and Polychrome Jokers appear 4× as often.", cost: VOUCHER_BASE_PRICE, requires: "hone" },
   { id: "omen-globe", name: "Omen Globe", description: "1 in 5 Tarot card rolls in the shop become Spectral cards instead.", cost: VOUCHER_BASE_PRICE, requires: "crystal-ball" },
+  { id: "telescope", name: "Telescope", description: "Celestial Packs always contain the Planet card for your most-played hand.", cost: VOUCHER_BASE_PRICE },
+  { id: "observatory", name: "Observatory", description: "Each Planet card in your consumable area gives ×1.5 Mult to its specified hand.", cost: VOUCHER_BASE_PRICE, requires: "telescope" },
 ];
 
 export const BOSS_REROLL_COST = 10;
+
+export const OBSERVATORY_MULT_PER_PLANET = 1.5;
+
+export function observatoryMultFor(
+  ownedIds: ReadonlySet<VoucherId>,
+  matchingPlanetCount: number,
+): number {
+  if (!ownedIds.has("observatory") || matchingPlanetCount <= 0) return 1;
+  return Math.pow(OBSERVATORY_MULT_PER_PLANET, matchingPlanetCount);
+}
 
 export function createVoucherCatalog(): ReadonlyArray<Voucher> {
   return VOUCHER_CATALOG;

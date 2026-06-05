@@ -333,6 +333,7 @@ export interface PickShopOffersArgs {
   readonly forcedPackPools?: ReadonlyArray<PackPool>;
   readonly editionRateMultiplier?: number;
   readonly tarotToSpectralSwapChance?: number;
+  readonly guaranteedPlanetId?: string;
   readonly rng?: RandomSource;
 }
 
@@ -471,6 +472,7 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
     jokerCatalog: args.jokerCatalog,
     spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
+    guaranteedPlanetId: args.guaranteedPlanetId,
     rng,
   };
   for (const pool of forced) {

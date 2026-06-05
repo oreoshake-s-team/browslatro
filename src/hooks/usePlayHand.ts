@@ -34,6 +34,7 @@ import {
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import { fullDeckPile } from "../cards/deckBuild";
 import { hasStakeModifier } from "../items/stakes";
+import { observatoryMultFor } from "../items/vouchers";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -105,6 +106,7 @@ export function usePlayHand({
   const addedCards = useGame((s) => s.addedCards);
   const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
+  const consumables = useGame((s) => s.consumables);
 
   const requiredScore = requiredChipsForBlind({
     ante,
@@ -393,8 +395,15 @@ export function usePlayHand({
       (m, card) => m * applyCardEnhancement(card).multTimes,
       1,
     );
+    const matchingObservatoryPlanets = consumables.filter(
+      (c) => c.kind === "planet" && c.card.hands.includes(label),
+    ).length;
+    const observatoryMult = observatoryMultFor(
+      ownedVoucherIds,
+      matchingObservatoryPlanets,
+    );
     const preHandXMultNoSteel =
-      handJokerResult.xMult * enhancementXMult * perCardXMult;
+      handJokerResult.xMult * enhancementXMult * perCardXMult * observatoryMult;
     const totalXMult = preHandXMultNoSteel * steelMult;
 
     const scoringChipsTotal =
@@ -488,6 +497,13 @@ export function usePlayHand({
         kind: "mult-times",
         factor: devMultFactor,
         source: "Apply Modifiers (dev)",
+      });
+    }
+    if (observatoryMult !== 1) {
+      submitEvents.push({
+        kind: "mult-times",
+        factor: observatoryMult,
+        source: `Observatory: ${matchingObservatoryPlanets} matching Planet${matchingObservatoryPlanets === 1 ? "" : "s"}`,
       });
     }
     setScoringEvents((prev) => [...prev, ...submitEvents]);

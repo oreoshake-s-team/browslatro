@@ -9,6 +9,7 @@ import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
 import { createSpectralCatalog } from "./items/spectrals";
 import { voucherPickerRngConfig, type VoucherId } from "./items/vouchers";
+import { createPlanetCatalog } from "./items/planets";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -1947,6 +1948,99 @@ describe("Voucher effects integration", () => {
     const before = discardsValue();
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     expect(discardsValue()).toBe(before);
+  });
+});
+
+describe("Observatory voucher applies ×1.5 Mult per matching held Planet (#281)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  function plutoConsumable() {
+    const card = createPlanetCatalog().find((p) => p.id === "pluto");
+    if (!card) throw new Error("missing Pluto in catalog");
+    return { kind: "planet" as const, card };
+  }
+
+  function mercuryConsumable() {
+    const card = createPlanetCatalog().find((p) => p.id === "mercury");
+    if (!card) throw new Error("missing Mercury in catalog");
+    return { kind: "planet" as const, card };
+  }
+
+  function readRoundScore(): number {
+    return Number(
+      document.querySelector(".round-score-value")?.textContent ?? "0",
+    );
+  }
+
+  test("one matching Planet emits an Observatory ×1.5 Mult scoring-trace entry and bumps the round score by ×1.5", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([plutoConsumable()]);
+    useGame.getState().setOwnedVoucherIds(
+      new Set<VoucherId>(["telescope", "observatory"]),
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+      /×1\.5 Mult \(Observatory: 1 matching Planet\)/,
+    );
+    expect(readRoundScore()).toBe(Math.floor(14 * 1.5));
+  });
+
+  test("two matching Planets emit an Observatory ×2.25 Mult scoring-trace entry", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([
+      plutoConsumable(),
+      plutoConsumable(),
+    ]);
+    useGame.getState().setOwnedVoucherIds(
+      new Set<VoucherId>(["telescope", "observatory"]),
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+      /×2\.25 Mult \(Observatory: 2 matching Planets\)/,
+    );
+  });
+
+  test("non-matching held Planets do not trigger Observatory (negative)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([
+      mercuryConsumable(),
+      mercuryConsumable(),
+    ]);
+    useGame.getState().setOwnedVoucherIds(
+      new Set<VoucherId>(["telescope", "observatory"]),
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).not.toHaveTextContent(
+      /Observatory/,
+    );
+  });
+
+  test("matching Planets without the Observatory voucher do not multiply Mult (negative)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([plutoConsumable()]);
+    useGame.getState().setOwnedVoucherIds(new Set<VoucherId>());
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).not.toHaveTextContent(
+      /Observatory/,
+    );
   });
 });
 

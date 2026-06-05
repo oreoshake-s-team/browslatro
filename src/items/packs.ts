@@ -124,12 +124,27 @@ export interface RollPackOptionsArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly excludedJokerIds?: ReadonlyArray<string>;
+  readonly guaranteedPlanetId?: string;
   readonly rng: RandomSource;
 }
 
 export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOption> {
   const want = packOptionsCount(args.pool, args.variant);
   if (args.pool === "celestial") {
+    const guaranteed = args.guaranteedPlanetId
+      ? args.planetCatalog.find((p) => p.id === args.guaranteedPlanetId) ?? null
+      : null;
+    if (guaranteed && want >= 1) {
+      const rest = drawWithoutReplacement(
+        args.planetCatalog.filter((p) => p.id !== guaranteed.id),
+        want - 1,
+        args.rng,
+      );
+      return [guaranteed, ...rest].map((planet) => ({
+        kind: "planet" as const,
+        planet,
+      }));
+    }
     return drawWithoutReplacement(args.planetCatalog, want, args.rng).map((planet) => ({
       kind: "planet" as const,
       planet,
@@ -206,6 +221,7 @@ export interface RollPackArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly excludedJokerIds?: ReadonlyArray<string>;
+  readonly guaranteedPlanetId?: string;
   readonly rng: RandomSource;
 }
 
@@ -220,6 +236,7 @@ export function rollPack(args: RollPackArgs): PackOffer {
     jokerCatalog: args.jokerCatalog,
     spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
+    guaranteedPlanetId: args.guaranteedPlanetId,
     rng: args.rng,
   });
   return { pool, variant, options };
@@ -238,6 +255,7 @@ export function rollPackForPool(
     jokerCatalog: args.jokerCatalog,
     spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
+    guaranteedPlanetId: args.guaranteedPlanetId,
     rng: args.rng,
   });
   return { pool, variant, options };

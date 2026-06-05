@@ -1170,3 +1170,46 @@ describe("applyAstronomerPricing (#741)", () => {
     expect(out[0].kind === "pack" && out[0].price).toBe(4);
   });
 });
+
+describe("Telescope: guaranteedPlanetId on forced Celestial pack (#281)", () => {
+  test("a forced Celestial pack with a guaranteedPlanetId always includes that planet", () => {
+    const offers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: [],
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      forcedPackPools: ["celestial"],
+      guaranteedPlanetId: "jupiter",
+      rng: () => 0.5,
+    });
+    const pack = offers.find((o) => o.kind === "pack");
+    const ids =
+      pack && pack.kind === "pack"
+        ? pack.pack.options.flatMap((o) =>
+            o.kind === "planet" ? [o.planet.id] : [],
+          )
+        : [];
+    expect(ids).toContain("jupiter");
+  });
+
+  test("a forced Celestial pack without a guaranteedPlanetId does not always include Jupiter (negative)", () => {
+    const offers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: [],
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      forcedPackPools: ["celestial"],
+      rng: () => 0.001,
+    });
+    const pack = offers.find((o) => o.kind === "pack");
+    const ids =
+      pack && pack.kind === "pack"
+        ? pack.pack.options.flatMap((o) =>
+            o.kind === "planet" ? [o.planet.id] : [],
+          )
+        : [];
+    expect(ids).not.toContain("jupiter");
+  });
+});
