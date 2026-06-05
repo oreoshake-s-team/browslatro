@@ -28,6 +28,7 @@ import {
   createFacelessJoker,
   createFibonacciJoker,
   createFlowerPotJoker,
+  createFourFingersJoker,
   createGluttonousJoker,
   createGoldenJoker,
   createGreedyJoker,
@@ -52,6 +53,7 @@ import {
   createScholarJoker,
   createSeeingDoubleJoker,
   createShootTheMoonJoker,
+  createShortcutJoker,
   createSlyJoker,
   createSmileyFaceJoker,
   createSplashJoker,
@@ -156,5 +158,7 @@ export function createJokerCatalog(): Joker[] {
     createPareidoliaJoker(),
     createSplashJoker(),
     createAstronomerJoker(),
+    createFourFingersJoker(),
+    createShortcutJoker(),
   ];
 }
