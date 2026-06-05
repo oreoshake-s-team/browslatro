@@ -37,10 +37,6 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2]
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -80,14 +76,14 @@ jobs:
         run: yarn build
 
       - name: Run Playwright tests
-        run: yarn e2e --shard=${{ matrix.shard }}/${{ strategy.job-total }}
+        run: yarn e2e
 
       - name: Upload Playwright report
         id: playwright-report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report-shard-${{ matrix.shard }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 7
 
@@ -95,16 +91,14 @@ jobs:
         if: failure()
         env:
           REPORT_URL: ${{ steps.playwright-report.outputs.artifact-url }}
-          SHARD: ${{ matrix.shard }}
-          TOTAL: ${{ strategy.job-total }}
         run: |
           cat >> "$GITHUB_STEP_SUMMARY" <<EOF
-          ## Playwright report (shard $SHARD/$TOTAL)
+          ## Playwright report
 
           The e2e run failed. The full HTML report (with traces and failure
           screenshots from the retried specs) is attached to this run:
 
-          [Download the \`playwright-report-shard-$SHARD\` artifact]($REPORT_URL)
+          [Download the \`playwright-report\` artifact]($REPORT_URL)
 
           Unzip it and run \`yarn playwright show-report playwright-report\` to
           view it locally.
