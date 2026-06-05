@@ -171,4 +171,27 @@ test.describe("Pack opening flow (#694)", () => {
         .locator(".card.card-enhancement-wild"),
     ).toHaveCount(1);
   });
+
+  test("Standard pack: picking a card increments the shop overlay deck pile count (closes #747)", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await winRound1AndOpenShop(page);
+    const deckPile = page.locator(".game-overlay-deck .deck-pile");
+    await expect(deckPile).toBeVisible();
+    const before = Number(
+      (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+    );
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await page.getByTestId("pack-open-pick-0").click();
+    await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
+    await expect
+      .poll(async () =>
+        Number(
+          (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+        ),
+      )
+      .toBe(before + 1);
+  });
 });

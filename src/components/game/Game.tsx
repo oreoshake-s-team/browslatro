@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useMemo } from "react";
 import "./Game.css";
 import type { Card } from "../../cards/types";
 import HandComponent from "../cards/Hand";
@@ -18,6 +18,7 @@ import { play } from "../system/sounds";
 import { canSubmitHand, debuffedHandIds } from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
 import { extraConsumableSlots } from "../../items/vouchers";
+import { fullDeckPile } from "../../cards/deckBuild";
 
 interface GameProps {
   onSubmitHand: () => void;
@@ -46,6 +47,11 @@ export default function Game({
 }: GameProps) {
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
+  const baseDeckCards = useGame((s) => s.baseDeckCards);
+  const destroyedCardIds = useGame((s) => s.destroyedCardIds);
+  const addedCards = useGame((s) => s.addedCards);
+  const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
+  const cardSealsById = useGame((s) => s.cardSealsById);
   const selectedIds = useGame((s) => s.selectedIds);
   const discardingIds = useGame((s) => s.discardingIds);
   const jokers = useGame((s) => s.jokers);
@@ -104,6 +110,23 @@ export default function Game({
   );
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+  const overlayDeckRemaining = useMemo(
+    () =>
+      fullDeckPile(
+        baseDeckCards,
+        destroyedCardIds,
+        addedCards,
+        cardEnhancementsById,
+        cardSealsById,
+      ).remaining,
+    [
+      baseDeckCards,
+      destroyedCardIds,
+      addedCards,
+      cardEnhancementsById,
+      cardSealsById,
+    ],
+  );
 
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
@@ -140,7 +163,7 @@ export default function Game({
         {(shop || packOpen) && (
           <div className="game-overlay-deck">
             <DeckPile
-              remaining={remaining}
+              remaining={overlayDeckRemaining}
               consumableDropEnabled={dragging}
               onConsumableDrop={dragController.onConsumableDropOnDeck}
               jokerDropEnabled={draggingJoker}
