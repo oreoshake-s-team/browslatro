@@ -17,6 +17,7 @@ import {
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
   applyEditionToFirstJoker,
+  applyAstronomerPricing,
   applyStakeStickersToShopOffers,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
@@ -1053,5 +1054,69 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     };
     const stamped = applyStakeStickersToShopOffers([offer], { eternal: 1 }, () => 0);
     expect(stamped[0]).toEqual(offer);
+  });
+});
+
+describe("applyAstronomerPricing (#741)", () => {
+  function planetOffer(id: string, price = 3): ShopItem {
+    const planet = createPlanetCatalog().find((p) => p.id === id);
+    if (!planet) throw new Error(`no planet ${id}`);
+    return { kind: "planet", planet, price, sold: false };
+  }
+
+  function tarotOffer(price = 3): ShopItem {
+    return {
+      kind: "tarot",
+      tarot: createTarotCatalog()[0],
+      price,
+      sold: false,
+    };
+  }
+
+  function celestialPackOffer(price = 4): ShopItem {
+    return {
+      kind: "pack",
+      pack: { pool: "celestial", variant: "normal", options: [] },
+      price,
+      sold: false,
+    };
+  }
+
+  function buffoonPackOffer(price = 4): ShopItem {
+    return {
+      kind: "pack",
+      pack: { pool: "buffoon", variant: "normal", options: [] },
+      price,
+      sold: false,
+    };
+  }
+
+  test("is a no-op when Astronomer is not active", () => {
+    const offers = [planetOffer("jupiter"), celestialPackOffer()];
+    expect(applyAstronomerPricing(offers, false)).toEqual(offers);
+  });
+
+  test("zeroes the price of every Planet offer when Astronomer is active", () => {
+    const offers = [planetOffer("jupiter", 3)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "planet" && out[0].price).toBe(0);
+  });
+
+  test("zeroes the price of every Celestial pack offer when Astronomer is active", () => {
+    const offers = [celestialPackOffer(4)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "pack" && out[0].price).toBe(0);
+  });
+
+  test("does not change Tarot offer prices (negative — other kinds untouched)", () => {
+    const offers = [tarotOffer(3)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "tarot" && out[0].price).toBe(3);
+  });
+
+  test("does not change Buffoon pack prices (negative — only Celestial is free)", () => {
+    const offers = [buffoonPackOffer(4)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "pack" && out[0].price).toBe(4);
   });
 });

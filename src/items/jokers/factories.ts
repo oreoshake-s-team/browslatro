@@ -969,6 +969,16 @@ export function createSplashJoker(): Joker {
   };
 }
 
+export function createAstronomerJoker(): Joker {
+  return {
+    id: "astronomer",
+    rarity: "uncommon",
+    name: "Astronomer",
+    description: "All Celestial Packs and Planet cards in the shop are free",
+    effect: { kind: "passive-run-stats", astronomer: true },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {

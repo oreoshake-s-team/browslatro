@@ -220,6 +220,20 @@ export function ensureBaseJokerForEdition(
   return offers.map((offer, idx) => (idx === replaceIdx ? fresh : offer));
 }
 
+export function applyAstronomerPricing(
+  offers: ReadonlyArray<ShopItem>,
+  astronomerActive: boolean,
+): ShopItem[] {
+  if (!astronomerActive) return [...offers];
+  return offers.map((offer) => {
+    if (offer.kind === "planet") return { ...offer, price: 0 };
+    if (offer.kind === "pack" && offer.pack.pool === "celestial") {
+      return { ...offer, price: 0 };
+    }
+    return offer;
+  });
+}
+
 export function applyStakeStickersToShopOffers(
   offers: ReadonlyArray<ShopItem>,
   odds: StakeStickerOdds | undefined,

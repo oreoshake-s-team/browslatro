@@ -156,6 +156,7 @@ export type JokerEffect =
       readonly debtFloor?: number;
       readonly allCardsFace?: boolean;
       readonly allCardsScore?: boolean;
+      readonly astronomer?: boolean;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
