@@ -20,9 +20,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "e2e": "playwright test",
-    "wt:prune": "scripts/wt-prune.sh",
-    "wtest": "scripts/wtest.sh"
+    "e2e": "playwright test"
   },
   "browserslist": {
     "production": [

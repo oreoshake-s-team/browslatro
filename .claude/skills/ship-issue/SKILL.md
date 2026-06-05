@@ -34,10 +34,11 @@ gh issue comment <N> --body "Starting work on this."
 ### 2. Create a worktree and branch
 
 Branch name: `<N>-<kebab-title>` (e.g. `432-add-steel-card`).
-Worktree path: `.claude/worktrees/<branch-name>`.
+Worktree path: `~/.cache/browslatro-worktrees/<branch-name>` (outside the project tree so vitest workers don't hit a parent `.pnp.cjs`).
 
 ```bash
-git worktree add .claude/worktrees/<branch> -b <branch> main
+mkdir -p ~/.cache/browslatro-worktrees
+git worktree add ~/.cache/browslatro-worktrees/<branch> -b <branch> main
 ```
 
 ### 3. Implement
