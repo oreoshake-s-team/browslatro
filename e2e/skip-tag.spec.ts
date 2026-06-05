@@ -37,6 +37,7 @@ test.describe("Skip-tag flow (#697)", () => {
   test("skipping the Small Blind advances the current blind to Big", async ({
     page,
   }) => {
+    await forceSkipTag(page, "investment");
     await startRound(page);
     await page.getByTestId("blind-select-skip").click();
     await expect(page.getByTestId("blind-select-row-2")).toHaveAttribute(
