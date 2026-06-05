@@ -26,8 +26,8 @@ function tarotById(id: string): TarotCard {
 }
 
 describe("createTarotCatalog", () => {
-  test("contains seventeen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Star + Moon + Sun + World)", () => {
-    expect(createTarotCatalog()).toHaveLength(17);
+  test("contains eighteen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World)", () => {
+    expect(createTarotCatalog()).toHaveLength(18);
   });
 
   test("has unique ids", () => {
@@ -201,6 +201,29 @@ describe("Strength", () => {
   test("strength description names rank increase", () => {
     expect(tarotById("strength").description).toBe(
       "Increase rank of up to 2 cards in hand by 1",
+    );
+  });
+});
+
+describe("Death", () => {
+  test("death is in the catalog", () => {
+    expect(tarotById("death").name).toBe("Death");
+  });
+
+  test("death effect kind is death-copy", () => {
+    expect(tarotById("death").effect.kind).toBe("death-copy");
+  });
+
+  test("death requires exactly 2 selected cards (matches Balatro)", () => {
+    expect(tarotById("death").effect).toEqual({
+      kind: "death-copy",
+      requiredTargets: 2,
+    });
+  });
+
+  test("death description names the left-becomes-right semantics", () => {
+    expect(tarotById("death").description).toBe(
+      "Select 2 cards in hand: left card becomes a copy of the right",
     );
   });
 });
