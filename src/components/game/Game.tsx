@@ -61,6 +61,11 @@ export default function Game({
   const blind = useGame((s) => s.blind);
   const currentBoss = useGame((s) => s.currentBoss);
   const selectedHand = useGame((s) => s.selectedHand);
+  const chips = useGame((s) => s.chips);
+  const multiplier = useGame((s) => s.multiplier);
+  const devChipsBonus = useGame((s) => s.devChipsBonus);
+  const devMultBonus = useGame((s) => s.devMultBonus);
+  const devMultFactor = useGame((s) => s.devMultFactor);
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
@@ -184,8 +189,32 @@ export default function Game({
               className="submit-hand-button"
               onClick={onSubmitHand}
               disabled={isScoring || !canSubmit}
+              aria-label={
+                selectedHand
+                  ? `Submit Hand: ${selectedHand.label}, ${chips + devChipsBonus} chips times ${(multiplier + devMultBonus) * devMultFactor} multiplier`
+                  : "Submit Hand"
+              }
             >
               <span aria-hidden="true">🃏 </span>Submit Hand
+              {selectedHand && (
+                <span
+                  className="submit-hand-button-detected"
+                  data-testid="submit-hand-detected"
+                >
+                  <span className="submit-hand-button-detected-label">
+                    {selectedHand.label}
+                  </span>
+                  <span className="submit-hand-button-detected-score">
+                    <span className="submit-hand-button-chips">
+                      {chips + devChipsBonus}
+                    </span>
+                    <span aria-hidden="true"> × </span>
+                    <span className="submit-hand-button-mult">
+                      {(multiplier + devMultBonus) * devMultFactor}
+                    </span>
+                  </span>
+                </span>
+              )}
             </button>
             <button
               className="discard-button"
