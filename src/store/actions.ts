@@ -18,10 +18,12 @@ import {
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   extraStartingHandSizeFromJokers,
+  hasAstronomerInJokers,
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
 } from "../items/jokers";
 import {
+  applyAstronomerPricing,
   applyEditionToFirstJoker,
   applyStakeStickersToShopOffers,
   buildFreeJokerOffers,
@@ -169,10 +171,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       stakeStickerOdds(s.selectedStake),
       shopPickerRngConfig.rng,
     );
+    const astronomerPricedRerollItems = applyAstronomerPricing(
+      stampedRerollItems,
+      hasAstronomerInJokers(s.jokers),
+    );
     s.setShopOffers((current) => {
       if (!current) return current;
       const existingPacks = current.filter((o) => o.kind === "pack");
-      return [...stampedRerollItems, ...existingPacks];
+      return [...astronomerPricedRerollItems, ...existingPacks];
     });
   },
   buyAnteVoucher: (voucherIdx) => {
@@ -231,7 +237,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           stakeStickerOdds(s.selectedStake),
           shopPickerRngConfig.rng,
         );
-        return [...current, stampedExtra];
+        const [astronomerExtra] = applyAstronomerPricing(
+          [stampedExtra],
+          hasAstronomerInJokers(s.jokers),
+        );
+        return [...current, astronomerExtra];
       });
     }
   },
@@ -459,7 +469,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       stakeStickerOdds(s.selectedStake),
       shopPickerRngConfig.rng,
     );
-    s.setShopOffers(stamped);
+    const astronomerPriced = applyAstronomerPricing(
+      stamped,
+      hasAstronomerInJokers(s.jokers),
+    );
+    s.setShopOffers(astronomerPriced);
     if (shopAdjustments.extraVouchers > 0) {
       s.setCurrentAnteVouchers((prev) => {
         const existing = new Set(prev.map((v) => v.id));

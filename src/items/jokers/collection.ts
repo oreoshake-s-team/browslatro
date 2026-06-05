@@ -55,6 +55,17 @@ export function allCardsScoreFromJokers(
   return false;
 }
 
+export function hasAstronomerInJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.astronomer === true) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function discardsOverrideFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number | null {

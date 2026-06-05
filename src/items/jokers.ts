@@ -41,6 +41,7 @@ export {
   extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
   extraStartingHandsFromJokers,
+  hasAstronomerInJokers,
   pickRandomEquipped,
   pickRandomFromCatalog,
   polychromeRandomJokerDestroyOthers,

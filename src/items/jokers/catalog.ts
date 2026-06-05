@@ -2,6 +2,7 @@ import {
   createAbstractJoker,
   createAcrobatJoker,
   createArrowheadJoker,
+  createAstronomerJoker,
   createBannerJoker,
   createBaronJoker,
   createBaseballCardJoker,
@@ -154,5 +155,6 @@ export function createJokerCatalog(): Joker[] {
     createBurglarJoker(),
     createPareidoliaJoker(),
     createSplashJoker(),
+    createAstronomerJoker(),
   ];
 }
