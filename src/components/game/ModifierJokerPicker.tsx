@@ -1,0 +1,144 @@
+import "./ModifierJokerPicker.css";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useGame } from "../../store/game";
+import { play } from "../system/sounds";
+import {
+  MAX_JOKERS,
+  createJokerCatalog,
+  createLegendaryJokerCatalog,
+  effectiveJokerCount,
+  type Joker,
+} from "../../items/jokers";
+import { extraJokerSlots } from "../../items/vouchers";
+import JokerTooltip from "../jokers/JokerTooltip";
+
+const PAGE_SIZE = 12;
+
+export default function ModifierJokerPicker() {
+  const jokers = useGame((s) => s.jokers);
+  const setJokers = useGame((s) => s.setJokers);
+  const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+  const isFull = effectiveJokerCount(jokers) >= capacity;
+
+  const sortedCatalog = useMemo<ReadonlyArray<Joker>>(
+    () =>
+      [...createJokerCatalog(), ...createLegendaryJokerCatalog()].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
+    [],
+  );
+  const totalPages = Math.max(1, Math.ceil(sortedCatalog.length / PAGE_SIZE));
+  const [page, setPage] = useState(1);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const el = detailsRef.current;
+    if (!el) return;
+    const onToggle = () => {
+      if (el.open) setPage(1);
+    };
+    el.addEventListener("toggle", onToggle);
+    return () => el.removeEventListener("toggle", onToggle);
+  }, []);
+
+  const tooltipIdBase = useId();
+  const [tooltip, setTooltip] = useState<{
+    readonly id: string;
+    readonly rect: DOMRect;
+  } | null>(null);
+  useEffect(() => {
+    if (!tooltip) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setTooltip(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [tooltip]);
+
+  const openTip = (id: string, el: HTMLElement) =>
+    setTooltip({ id, rect: el.getBoundingClientRect() });
+  const closeTip = (id: string) =>
+    setTooltip((prev) => (prev?.id === id ? null : prev));
+
+  function addJoker(joker: Joker) {
+    if (isFull) return;
+    play("pop");
+    setJokers((prev) => [...prev, { ...joker }]);
+  }
+
+  return (
+    <details className="modifier-joker-picker" ref={detailsRef}>
+      <summary className="modifier-joker-picker-summary">
+        Add a specific Joker
+      </summary>
+      <div className="modifier-joker-picker-body">
+        <div className="modifier-joker-picker-grid">
+          {sortedCatalog
+            .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+            .map((joker) => {
+              const tooltipId = `${tooltipIdBase}-${joker.id}`;
+              const open = tooltip?.id === joker.id;
+              return (
+                <button
+                  key={joker.id}
+                  type="button"
+                  className={`add-joker-button add-joker-button-${joker.rarity}`}
+                  data-joker-id={joker.id}
+                  disabled={isFull}
+                  aria-disabled={isFull}
+                  aria-describedby={open ? tooltipId : undefined}
+                  onMouseEnter={(e) => openTip(joker.id, e.currentTarget)}
+                  onMouseLeave={() => closeTip(joker.id)}
+                  onFocus={(e) => openTip(joker.id, e.currentTarget)}
+                  onBlur={() => closeTip(joker.id)}
+                  onClick={() => addJoker(joker)}
+                >
+                  <span aria-hidden="true">🃏 </span>
+                  {joker.name}
+                  {open && tooltip && (
+                    <JokerTooltip
+                      id={tooltipId}
+                      joker={joker}
+                      anchorRect={tooltip.rect}
+                    />
+                  )}
+                </button>
+              );
+            })}
+        </div>
+        <nav
+          className="modifier-joker-picker-nav"
+          aria-label="Joker picker pagination"
+        >
+          <button
+            type="button"
+            className="modifier-joker-picker-prev"
+            data-testid="modifier-joker-picker-prev"
+            aria-label="Previous joker page"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            ← Prev
+          </button>
+          <span
+            className="modifier-joker-picker-page-label"
+            data-testid="modifier-joker-picker-page-label"
+            aria-live="polite"
+          >
+            Page {page} / {totalPages}
+          </span>
+          <button
+            type="button"
+            className="modifier-joker-picker-next"
+            data-testid="modifier-joker-picker-next"
+            aria-label="Next joker page"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          >
+            Next →
+          </button>
+        </nav>
+      </div>
+    </details>
+  );
+}
