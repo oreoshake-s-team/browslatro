@@ -24,19 +24,13 @@ test.describe("Boss blinds on BlindSelectScreen (#698)", () => {
     await startRound(page);
   });
 
-  test("overriding the boss updates the description text", async ({
+  test("The Manacle (scoreMultiplier 2): description reads '-1 Hand Size.' and Boss Blind required reads 600 at ante 1", async ({
     page,
   }) => {
     await overrideBoss(page, "the-manacle");
     await expect(page.getByTestId("blind-select-boss-description")).toHaveText(
       "-1 Hand Size.",
     );
-  });
-
-  test("The Manacle (scoreMultiplier 2) → Boss Blind required reads 600 at ante 1", async ({
-    page,
-  }) => {
-    await overrideBoss(page, "the-manacle");
     await expect(page.getByTestId("blind-select-required-3")).toHaveText("600");
   });
 
@@ -56,18 +50,7 @@ test.describe("Boss blinds on BlindSelectScreen (#698)", () => {
     );
   });
 
-  test("the override select does not list The Wall at ante 1 (negative — anteMin 2)", async ({
-    page,
-  }) => {
-    const select = page.getByTestId("blind-select-boss-override");
-    await expect(select).toBeVisible();
-    const options = await select
-      .locator("option")
-      .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
-    expect(options).not.toContain("the-wall");
-  });
-
-  test("the override select includes ante-1-eligible bosses like The Manacle (positive baseline)", async ({
+  test("the override select includes ante-1-eligible bosses (The Manacle) but not anteMin-2 bosses (The Wall) at ante 1", async ({
     page,
   }) => {
     const select = page.getByTestId("blind-select-boss-override");
@@ -76,5 +59,6 @@ test.describe("Boss blinds on BlindSelectScreen (#698)", () => {
       .locator("option")
       .evaluateAll((els) => els.map((e) => (e as HTMLOptionElement).value));
     expect(options).toContain("the-manacle");
+    expect(options).not.toContain("the-wall");
   });
 });

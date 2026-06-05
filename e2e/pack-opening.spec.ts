@@ -61,21 +61,13 @@ test.describe("Pack opening flow (#694)", () => {
     await page.getByTestId("new-run-confirm").click();
   });
 
-  test("forcing a Standard pack pool surfaces a Standard pack in the shop and the modal opens on buy", async ({
+  test("Standard pack pool: forced → modal opens on buy → picking the first option closes the modal", async ({
     page,
   }) => {
     await forcePackPool(page, "standard");
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
-  });
-
-  test("picking the first option from a Standard pack closes the modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "standard");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
     await page.getByTestId("pack-open-pick-0").click();
     await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
   });

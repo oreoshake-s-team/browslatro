@@ -49,21 +49,13 @@ async function dismissBlindSelect(
 }
 
 describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
-  test("with rng=0 the picker lands on the-manacle ('The Manacle')", async () => {
+  test("with rng=0 the ante 1 picker lands on The Manacle (300 → 600 required score = 2x multiplier)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
     expect(screen.getByRole("heading", { name: "The Manacle" })).toBeInTheDocument();
-  });
-
-  test("The Manacle yields a 2x required score on ante 1 (300 → 600)", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await dismissBlindSelect(user);
-    await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByText(/^Win$/));
     expect(screen.getByText("Score at least: 600")).toBeInTheDocument();
   });
 });
@@ -82,18 +74,12 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
     await user.click(screen.getByText(/^Win$/));
   }
 
-  test("with rng=0 the ante 2 picker lands on The Wall (first fresh)", async () => {
+  test("with rng=0 the ante 2 picker lands on The Wall on ante 2 (800 → 3200 required score = 4x multiplier)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await advanceToAnte2BossBlind(user);
     expect(screen.getByText("The Wall")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
-  });
-
-  test("The Wall on ante 2 yields a 4x required score (800 → 3200)", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await advanceToAnte2BossBlind(user);
     expect(screen.getByText("Score at least: 3200")).toBeInTheDocument();
   });
 });
@@ -175,7 +161,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
       .forEach((btn) => fireEvent.animationEnd(btn));
   }
 
-  test("submitting 4 cards on The Psychic consumes a hand but leaves round score at 0 (#329)", async () => {
+  test("submitting 4 cards on The Psychic consumes a hand AND leaves round score at 0 (#329)", async () => {
     bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -195,21 +181,6 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
       getStatValue("Hands").textContent?.replace(/[^0-9]/g, "") ?? "0",
     );
     expect(handsAfter).toBe(handsBefore - 1);
-  });
-
-  test("submitting 4 cards on The Psychic leaves the round score at 0 (#329)", async () => {
-    bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await advanceToBossBlindAfterStartingTheRound(user);
-    const cards = Array.from(
-      screen
-        .getByLabelText("Your hand")
-        .querySelectorAll("button[aria-pressed]"),
-    );
-    for (let i = 0; i < 4; i += 1) await user.click(cards[i] as HTMLElement);
-    await user.click(screen.getByText(/Submit Hand/));
-    flushDiscardAnimation();
     const value = document.querySelector(".round-score-value");
     expect(value?.textContent ?? "").toBe("0");
   });

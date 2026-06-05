@@ -26,25 +26,13 @@ test.describe("Stake picker (#695)", () => {
     await page.goto("/");
   });
 
-  test("renders the White stake tile", async ({ page }) => {
-    await expect(page.getByTestId("new-run-stake-white")).toBeVisible();
-  });
-
-  test("renders the Red stake tile", async ({ page }) => {
-    await expect(page.getByTestId("new-run-stake-red")).toBeVisible();
-  });
-
-  test("renders the Green stake tile", async ({ page }) => {
-    await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
-  });
-
-  test("renders the Black stake tile (implemented in #555)", async ({ page }) => {
-    await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
-  });
-
-  test("does not render the Gold stake tile (negative — implemented:false)", async ({
+  test("renders White / Red / Green / Black stake tiles; does not render Gold (still implemented:false)", async ({
     page,
   }) => {
+    await expect(page.getByTestId("new-run-stake-white")).toBeVisible();
+    await expect(page.getByTestId("new-run-stake-red")).toBeVisible();
+    await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
+    await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-gold")).toHaveCount(0);
   });
 });
@@ -55,33 +43,21 @@ test.describe("Stake-derived deltas on BlindSelectScreen (#695)", () => {
     await page.goto("/");
   });
 
-  test("Red Stake: Small Blind payout is $0", async ({ page }) => {
-    await page.getByTestId("new-run-stake-red").click();
-    await page.getByTestId("new-run-confirm").click();
-    await expect(page.getByTestId("blind-select-payout-1")).toHaveText("$0");
-  });
-
-  test("Red Stake: Big Blind payout is still $4 (negative — only Small is zeroed)", async ({
+  test("Red Stake: Small Blind payout is $0; Big Blind payout is still $4 (only Small is zeroed)", async ({
     page,
   }) => {
     await page.getByTestId("new-run-stake-red").click();
     await page.getByTestId("new-run-confirm").click();
+    await expect(page.getByTestId("blind-select-payout-1")).toHaveText("$0");
     await expect(page.getByTestId("blind-select-payout-2")).toHaveText("$4");
   });
 
-  test("White Stake: Small Blind payout is $3 (regression baseline)", async ({
+  test("White Stake: Small Blind payout is $3 and Ante 1 Small Blind required is 300 (BASE_CHIPS[0])", async ({
     page,
   }) => {
     await page.getByTestId("new-run-stake-white").click();
     await page.getByTestId("new-run-confirm").click();
     await expect(page.getByTestId("blind-select-payout-1")).toHaveText("$3");
-  });
-
-  test("White Stake: Ante 1 Small Blind required is 300 (BASE_CHIPS[0])", async ({
-    page,
-  }) => {
-    await page.getByTestId("new-run-stake-white").click();
-    await page.getByTestId("new-run-confirm").click();
     await expect(page.getByTestId("blind-select-required-1")).toHaveText("300");
   });
 
