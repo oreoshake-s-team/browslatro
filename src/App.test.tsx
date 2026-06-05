@@ -59,7 +59,7 @@ vi.mock("./cards/deck", async () => {
 setupAppTestEnvironment();
 
 describe("Winning a round resets the deck", () => {
-  test("restores the remaining deck count to its full post-deal size after a win", async () => {
+  test("after a discard, Win → deck is full at 52 while the shop is displayed; Next Round → deck redeals to 44", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
@@ -69,65 +69,36 @@ describe("Winning a round resets the deck", () => {
     await user.click(screen.getByText(/^Discard$/));
     flushDiscardAnimation();
     await user.click(screen.getByText(/^Win$/));
+    expect(
+      screen.getByRole("button", { name: /Deck \(52 cards remaining\)/ }),
+    ).toBeInTheDocument();
     await screen.findByTestId("shop-money");
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     expect(
-      screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ })
+      screen.getByRole("button", { name: /Deck \(44 cards remaining\)/ }),
     ).toBeInTheDocument();
   });
 
-  test("replenishes the full deck while the shop is displayed", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await dismissBlindSelect(user);
-    await user.click(getHandCardButtons()[0]);
-    await user.click(getHandCardButtons()[1]);
-    await user.click(screen.getByText(/^Discard$/));
-    flushDiscardAnimation();
-    await user.click(screen.getByText(/^Win$/));
-    expect(
-      screen.getByRole("button", { name: /Deck \(52 cards remaining\)/ })
-    ).toBeInTheDocument();
-  });
-
-  test("keeps the hand at 8 cards after a win resets the deck", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await dismissBlindSelect(user);
-    expect(getHandCardButtons()).toHaveLength(8);
-  });
-
-  test("clears any in-flight card selection on win", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await dismissBlindSelect(user);
-    await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await dismissBlindSelect(user);
-    const selectedCount = getHandCardButtons().filter(
-      (btn) => btn.getAttribute("aria-pressed") === "true"
-    ).length;
-    expect(selectedCount).toBe(0);
-  });
-
-  test("deals different cards (fresh shuffle) after a win", async () => {
+  test("Win → Next Round redeals a fresh 8-card hand, clears any in-flight selection, and the new hand differs from the previous", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
     const before = getHandCardButtons().map((btn) =>
-      btn.getAttribute("aria-label")
+      btn.getAttribute("aria-label"),
     );
+    await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
+    expect(getHandCardButtons()).toHaveLength(8);
+    const selectedCount = getHandCardButtons().filter(
+      (btn) => btn.getAttribute("aria-pressed") === "true",
+    ).length;
+    expect(selectedCount).toBe(0);
     const after = getHandCardButtons().map((btn) =>
-      btn.getAttribute("aria-label")
+      btn.getAttribute("aria-label"),
     );
-    // With a fresh shuffle, the new hand should not match the old hand exactly
     expect(after).not.toEqual(before);
   });
 });
@@ -262,21 +233,31 @@ describe("Card selection drives hand detection", () => {
 });
 
 describe("Submitting a hand discards the selected cards", () => {
-  test("clears all selection highlights after submit and animation", async () => {
+  test("submitting a 2-card play clears the selection highlights and replaces the originally-selected cards", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
+    const beforeLabels = getHandCardButtons()
+      .slice(0, 2)
+      .map((btn) => btn.getAttribute("aria-label"));
     const cards = getHandCardButtons();
     await user.click(cards[0]);
     await user.click(cards[1]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const selectedCount = getHandCardButtons().filter(
-      (btn) => btn.getAttribute("aria-pressed") === "true"
+      (btn) => btn.getAttribute("aria-pressed") === "true",
     ).length;
     expect(selectedCount).toBe(0);
+    const afterLabels = getHandCardButtons().map((btn) =>
+      btn.getAttribute("aria-label"),
+    );
+    const stillPresent = beforeLabels.filter((label) =>
+      afterLabels.includes(label),
+    );
+    expect(stillPresent).toEqual([]);
   });
 
-  test("keeps the hand at 8 cards by drawing replacements from the deck", async () => {
+  test("submitting a sub-threshold 3-card play keeps the hand at 8 and decrements the deck count by 3 (41 remaining)", async () => {
     // Identity shuffle deals Spades 2..9; selecting the top 3 (9,8,7♠) scores
     // a High Card well below the 300 threshold, so the round is not won and
     // replacements are drawn.
@@ -290,41 +271,9 @@ describe("Submitting a hand discards the selected cards", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     expect(getHandCardButtons()).toHaveLength(8);
-  });
-
-  test("decrements the remaining deck count by the number of discarded cards", async () => {
-    mockShuffleConfig.useIdentity = true;
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    const cards = getHandCardButtons();
-    await user.click(cards[0]);
-    await user.click(cards[1]);
-    await user.click(cards[2]);
-    await user.click(screen.getByText(/Submit Hand/));
-    flushDiscardAnimation();
     expect(
-      screen.getByRole("button", { name: /Deck \(41 cards remaining\)/ })
+      screen.getByRole("button", { name: /Deck \(41 cards remaining\)/ }),
     ).toBeInTheDocument();
-  });
-
-  test("replaces the originally-selected cards with different cards", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    const beforeLabels = getHandCardButtons()
-      .slice(0, 2)
-      .map((btn) => btn.getAttribute("aria-label"));
-    const cards = getHandCardButtons();
-    await user.click(cards[0]);
-    await user.click(cards[1]);
-    await user.click(screen.getByText(/Submit Hand/));
-    flushDiscardAnimation();
-    const afterLabels = getHandCardButtons().map((btn) =>
-      btn.getAttribute("aria-label")
-    );
-    const stillPresent = beforeLabels.filter((label) =>
-      afterLabels.includes(label)
-    );
-    expect(stillPresent).toEqual([]);
   });
 
   test("submitting with no cards selected leaves the hand unchanged", async () => {
@@ -1684,111 +1633,35 @@ describe("Tarot purchase integration", () => {
     expect(moneyOf()).toBe(before - 3);
   });
 
-  test("buying an enhancement tarot does not open the card-picker dialog", async () => {
+  test("enhancement-tarot full lifecycle: buy → tile disabled → card-selected enables tile → use empties slot, clears selection, never opens a TarotPicker modal", async () => {
     const user = await openShop();
+    const slotId = tarotSlotTestId();
     const tarotName = screen
-      .getByTestId(tarotSlotTestId())
+      .getByTestId(slotId)
       .querySelector(".shop-offer-name")?.textContent;
     if (tarotName === "The Hermit") return;
     const buy = screen
-      .getByTestId(tarotSlotTestId())
+      .getByTestId(slotId)
       .querySelector("button.shop-offer-buy");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
-  });
-
-  test("an enhancement-tarot consumable tile marks use as disabled when no card is selected", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     expect(screen.getByTestId("consumable-tile-filled-0")).toHaveAttribute(
       "data-use-disabled",
       "true",
     );
-  });
-
-  test("selecting a hand card enables the enhancement-tarot consumable tile", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(getHandCardButtons()[0]);
     expect(screen.getByTestId("consumable-tile-filled-0")).not.toBeDisabled();
-  });
-
-  test("using an enhancement-tarot consumable empties the slot", async () => {
-    const user = await openShop();
-    const tarotName = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await dismissBlindSelect(user);
-    await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(screen.queryByTestId("consumable-tile-filled-0")).not.toBeInTheDocument();
-  });
-
-  test("using an enhancement-tarot consumable clears the selection", async () => {
-    const user = await openShop();
-    const slotId = tarotSlotTestId();
-    const tarotName = screen
-      .getByTestId(slotId)
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId(slotId)
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await dismissBlindSelect(user);
-    await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
+    expect(
+      screen.queryByTestId("consumable-tile-filled-0"),
+    ).not.toBeInTheDocument();
     const pressedCount = getHandCardButtons().filter(
       (btn) => btn.getAttribute("aria-pressed") === "true",
     ).length;
     expect(pressedCount).toBe(0);
-  });
-
-  test("no TarotPicker modal is ever rendered (selection replaces it)", async () => {
-    const user = await openShop();
-    const slotId = tarotSlotTestId();
-    const tarotName = screen
-      .getByTestId(slotId)
-      .querySelector(".shop-offer-name")?.textContent;
-    if (tarotName === "The Hermit") return;
-    const buy = screen
-      .getByTestId(slotId)
-      .querySelector("button.shop-offer-buy");
-    if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
-    await user.click(buy);
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
-    await dismissBlindSelect(user);
-    await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
   });
 });
@@ -1814,40 +1687,21 @@ describe("Voucher integration", () => {
     );
   }
 
-  test("renders the voucher slot when the shop opens", async () => {
-    await openShop();
+  test("shop renders the voucher slot, buying it deducts the cost from money, marks the slot Sold, and Reroll preserves both the name and the Sold state", async () => {
+    const user = await openShop();
     expect(screen.getByTestId("shop-voucher")).toBeInTheDocument();
-  });
-
-  test("buying the voucher deducts its cost from money", async () => {
-    const user = await openShop();
-    const before = moneyValue();
-    const buy = screen.getByTestId("shop-voucher-buy-0");
-    await user.click(buy);
-    expect(moneyValue()).toBe(before - 10);
-  });
-
-  test("buying the voucher marks the voucher slot as Sold", async () => {
-    const user = await openShop();
-    await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
-  });
-
-  test("clicking Reroll does not change the voucher's name", async () => {
-    const user = await openShop();
     const slot = screen.getByTestId("shop-voucher");
-    const before = slot.querySelector(".shop-voucher-name")?.textContent ?? "";
+    const nameBefore =
+      slot.querySelector(".shop-voucher-name")?.textContent ?? "";
+    const moneyBefore = moneyValue();
+    await user.click(screen.getByTestId("shop-voucher-buy-0"));
+    expect(moneyValue()).toBe(moneyBefore - 10);
+    expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    const after =
+    const nameAfter =
       screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name")
         ?.textContent ?? "";
-    expect(after).toBe(before);
-  });
-
-  test("clicking Reroll does not clear the voucher Sold state", async () => {
-    const user = await openShop();
-    await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    expect(nameAfter).toBe(nameBefore);
     expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
   });
 
@@ -3172,7 +3026,7 @@ describe("Top-up tag", () => {
   });
   const jokerCount = () => screen.queryAllByTestId(/^joker-tile-filled-/).length;
 
-  test("gaining Top-up creates two Common Jokers", async () => {
+  test("Top-up tag flow: skipping with Top-up creates 2 jokers + shows ack modal + hides BlindSelect; dismissing brings BlindSelect back (#654)", async () => {
     tagOfferRngConfig.rng = rngForTag("top-up");
     shopPickerRngConfig.rng = () => 0;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3180,51 +3034,19 @@ describe("Top-up tag", () => {
     const before = jokerCount();
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(jokerCount() - before).toBe(2);
+    expect(await screen.findByTestId("joker-grant-modal")).toBeInTheDocument();
+    expect(screen.queryByTestId("blind-select-play")).not.toBeInTheDocument();
+    await user.click(await screen.findByTestId("joker-grant-ok"));
+    expect(await screen.findByTestId("blind-select-play")).toBeInTheDocument();
   });
 
-  test("a non-Top-up tag creates no jokers (negative)", async () => {
+  test("a non-Top-up tag creates no jokers and shows no joker-grant modal (negative #654)", async () => {
     tagOfferRngConfig.rng = rngForTag("economy");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const before = jokerCount();
     await user.click(screen.getByTestId("blind-select-skip"));
     expect(jokerCount() - before).toBe(0);
-  });
-
-  test("Top-up shows the joker-grant ack modal (#654)", async () => {
-    tagOfferRngConfig.rng = rngForTag("top-up");
-    shopPickerRngConfig.rng = () => 0;
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(await screen.findByTestId("blind-select-skip"));
-    expect(await screen.findByTestId("joker-grant-modal")).toBeInTheDocument();
-  });
-
-  test("Top-up hides the BlindSelectScreen while the ack modal is up (#654)", async () => {
-    tagOfferRngConfig.rng = rngForTag("top-up");
-    shopPickerRngConfig.rng = () => 0;
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByTestId("blind-select-skip"));
-    await screen.findByTestId("joker-grant-modal");
-    expect(screen.queryByTestId("blind-select-play")).not.toBeInTheDocument();
-  });
-
-  test("dismissing the joker-grant modal brings BlindSelect back (#654)", async () => {
-    tagOfferRngConfig.rng = rngForTag("top-up");
-    shopPickerRngConfig.rng = () => 0;
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByTestId("blind-select-skip"));
-    await user.click(await screen.findByTestId("joker-grant-ok"));
-    expect(await screen.findByTestId("blind-select-play")).toBeInTheDocument();
-  });
-
-  test("a non-Top-up tag does not show the joker-grant modal (negative #654)", async () => {
-    tagOfferRngConfig.rng = rngForTag("economy");
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    render(<App />);
-    await user.click(screen.getByTestId("blind-select-skip"));
     expect(screen.queryByTestId("joker-grant-modal")).not.toBeInTheDocument();
   });
 });
