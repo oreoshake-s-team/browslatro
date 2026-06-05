@@ -56,6 +56,8 @@ import {
 } from "./items/jokers";
 import {
   applyShopDiscount,
+  BOSS_REROLL_COST,
+  bossRerollsRemaining,
   extraConsumableSlots,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
@@ -233,6 +235,9 @@ function App() {
   }, [setCurrentAnteVouchers]);
   const soldVoucherIds = useGame((state) => state.soldVoucherIds);
   const currentBoss = useGame((state) => state.currentBoss);
+  const bossRerollsUsedThisAnte = useGame(
+    (state) => state.bossRerollsUsedThisAnte,
+  );
   const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
   const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
@@ -459,6 +464,15 @@ function App() {
                   const next = createBossCatalog().find((b) => b.id === id);
                   if (next) setCurrentBoss(next);
                 }}
+                onRerollBoss={() => {
+                  useGame.getState().rerollBoss();
+                }}
+                bossRerollsRemaining={bossRerollsRemaining(
+                  ownedVoucherIds,
+                  bossRerollsUsedThisAnte,
+                )}
+                bossRerollCost={BOSS_REROLL_COST}
+                canAffordBossReroll={money >= BOSS_REROLL_COST}
               />
             </Suspense>
           </LazyChunkErrorBoundary>

@@ -44,6 +44,8 @@ import {
 } from "../items/spectrals";
 import {
   applyShopDiscount,
+  BOSS_REROLL_COST,
+  bossRerollsRemaining,
   extraConsumableSlots,
   extraHandSize,
   extraJokerSlots,
@@ -108,6 +110,7 @@ export interface ActionsState {
   duplicateSelectedPreviewCards: (copies: number) => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
+  rerollBoss: () => boolean;
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -387,6 +390,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           rng: bossPickerRngConfig.rng,
         }),
       );
+      s.setBossRerollsUsedThisAnte(0);
       s.setPlayedCardKeysThisAnte(new Set());
     }
     const next = get();
@@ -689,5 +693,22 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       );
       return [...prev, ...additional];
     });
+  },
+  rerollBoss: () => {
+    const s = get();
+    if (bossRerollsRemaining(s.ownedVoucherIds, s.bossRerollsUsedThisAnte) <= 0)
+      return false;
+    if (s.money < BOSS_REROLL_COST) return false;
+    s.spend(BOSS_REROLL_COST);
+    const exclude = new Set([...s.recentBossIds, s.currentBoss.id]);
+    s.setCurrentBoss(
+      pickBossForAnte({
+        ante: s.ante,
+        recentIds: exclude,
+        rng: bossPickerRngConfig.rng,
+      }),
+    );
+    s.setBossRerollsUsedThisAnte((prev) => prev + 1);
+    return true;
   },
 });

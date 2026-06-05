@@ -25,6 +25,10 @@ interface BlindSelectScreenProps {
   skipRewards?: Partial<AnteSkipOffers>;
   bossOptions?: ReadonlyArray<BossBlind>;
   onSetBoss?: (id: string) => void;
+  onRerollBoss?: () => void;
+  bossRerollsRemaining?: number;
+  bossRerollCost?: number;
+  canAffordBossReroll?: boolean;
 }
 
 const BLIND_NAMES: Readonly<Record<Blind, string>> = {
@@ -56,6 +60,10 @@ export default function BlindSelectScreen({
   skipRewards,
   bossOptions,
   onSetBoss,
+  onRerollBoss,
+  bossRerollsRemaining,
+  bossRerollCost,
+  canAffordBossReroll,
 }: BlindSelectScreenProps) {
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
   const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
@@ -64,6 +72,10 @@ export default function BlindSelectScreen({
     blind === 1 ? skipRewards?.small : blind === 2 ? skipRewards?.big : undefined;
   const canOverrideBoss =
     bossOptions !== undefined && bossOptions.length > 0 && Boolean(onSetBoss);
+  const showRerollBoss =
+    onRerollBoss !== undefined &&
+    bossRerollsRemaining !== undefined &&
+    bossRerollsRemaining > 0;
 
   const tooltipIdBase = useId();
   const [tooltip, setTooltip] = useState<{
@@ -188,6 +200,22 @@ export default function BlindSelectScreen({
                   >
                     {boss.description}
                   </span>
+                )}
+                {b === 3 && showRerollBoss && (
+                  <button
+                    type="button"
+                    className="blind-select-boss-reroll"
+                    data-testid="blind-select-boss-reroll"
+                    onClick={onRerollBoss}
+                    disabled={canAffordBossReroll === false}
+                    aria-label={
+                      canAffordBossReroll === false
+                        ? `Reroll Boss ($${bossRerollCost ?? 10}) — not enough money`
+                        : `Reroll Boss ($${bossRerollCost ?? 10})`
+                    }
+                  >
+                    Reroll Boss (${bossRerollCost ?? 10})
+                  </button>
                 )}
                 <dl className="blind-select-row-stats">
                   <div className="blind-select-row-stat">
