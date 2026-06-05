@@ -5,6 +5,7 @@ import ModifierSpectralPicker from "./ModifierSpectralPicker";
 import ModifierTarotPicker from "./ModifierTarotPicker";
 import ModifierPlanetPicker from "./ModifierPlanetPicker";
 import ModifierPackPicker from "./ModifierPackPicker";
+import ModifierJokerPicker from "./ModifierJokerPicker";
 
 export default function ModifierPanel() {
   const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
@@ -89,6 +90,7 @@ export default function ModifierPanel() {
         <ModifierPlanetPicker />
         <ModifierSpectralPicker />
         <ModifierPackPicker />
+        <ModifierJokerPicker />
       </div>
     </details>
   );
