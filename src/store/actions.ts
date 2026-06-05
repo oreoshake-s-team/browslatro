@@ -47,6 +47,7 @@ import {
   applyShopDiscount,
   BOSS_REROLL_COST,
   bossRerollsRemaining,
+  editionRateMultiplier,
   extraConsumableSlots,
   extraHandSize,
   extraJokerSlots,
@@ -156,6 +157,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       tarotCatalog: createTarotCatalog(),
       spectralCatalog: createSpectralCatalog(),
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
+      editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const rerollAdjustments = applyNextShopModifiers(s.pendingShopMods);
@@ -218,6 +220,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
             planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
             tarotCatalog: createTarotCatalog(),
             spectralCatalog: createSpectralCatalog(),
+            editionRateMultiplier: editionRateMultiplier(nextOwnedVoucherIds),
             rng: shopPickerRngConfig.rng,
           },
           current,
@@ -425,6 +428,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
       extraPackSlots: s.extraPackSlots,
       forcedPackPools: s.pendingForcedPacks,
+      editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);

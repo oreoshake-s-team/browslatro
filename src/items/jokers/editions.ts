@@ -1,4 +1,5 @@
 import {
+  EDITION_BASE_RATES,
   FOIL_CHIPS,
   HOLOGRAPHIC_MULT,
   POLYCHROME_X_MULT,
@@ -44,4 +45,19 @@ export function withoutEdition(joker: Joker): Joker {
 
 export function cloneJoker(joker: Joker): Joker {
   return { ...joker };
+}
+
+export function rollEdition(
+  rng: RandomSource = Math.random,
+  rateMultiplier: number = 1,
+): JokerEdition | undefined {
+  const multiplier = Math.max(0, rateMultiplier);
+  const poly = Math.min(1, EDITION_BASE_RATES.polychrome * multiplier);
+  const holo = Math.min(1, EDITION_BASE_RATES.holographic * multiplier);
+  const foil = Math.min(1, EDITION_BASE_RATES.foil * multiplier);
+  const r = rng();
+  if (r < poly) return "polychrome";
+  if (r < poly + holo) return "holographic";
+  if (r < poly + holo + foil) return "foil";
+  return undefined;
 }

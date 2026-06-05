@@ -96,6 +96,14 @@ export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
 export const POLYCHROME_X_MULT = 1.5;
 
+export const EDITION_BASE_RATES: Readonly<
+  Record<"foil" | "holographic" | "polychrome", number>
+> = {
+  foil: 0.04,
+  holographic: 0.02,
+  polychrome: 0.003,
+};
+
 export const JOKER_EDITION_KINDS: ReadonlyArray<JokerEdition> = [
   "foil",
   "holographic",
