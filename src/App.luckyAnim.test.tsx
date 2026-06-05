@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { enhancementRngConfig } from "./cards/enhancements";
 import { bossPickerRngConfig } from "./items/bosses";
+import { useGame } from "./store/game";
 import type { Card } from "./cards/types";
 
 
@@ -149,6 +150,30 @@ describe("Lucky proc visual indicator (#368)", () => {
         "[data-testid^='lucky-mult-scoring-'], [data-testid^='lucky-money-scoring-']",
       ),
     ).toBeNull();
+  });
+
+  test("a Lucky mult proc on a Three of a Kind contributes +20 Mult to the round score (#746)", async () => {
+    enhancementRngConfig.rng = () => 0;
+    deckConfig.hand = [
+      makeCard("Q", "diamonds"),
+      makeCard("Q", "spades"),
+      makeCard("Q", "spades", "lucky"),
+      makeCard("2", "clubs"),
+      makeCard("3", "diamonds"),
+      makeCard("4", "hearts"),
+      makeCard("5", "spades"),
+      makeCard("6", "clubs"),
+    ];
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    await user.click(cards[0]);
+    await user.click(cards[1]);
+    await user.click(cards[2]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(useGame.getState().roundScore).toBe(1380);
   });
 
   test("renders no lucky indicators when the scored card is not Lucky (negative)", async () => {
