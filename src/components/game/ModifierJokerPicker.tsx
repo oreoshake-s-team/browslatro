@@ -13,7 +13,6 @@ import { extraJokerSlots } from "../../items/vouchers";
 import JokerTooltip from "../jokers/JokerTooltip";
 
 const PAGE_SIZE = 12;
-const RARITY_ORDER = ["common", "uncommon", "rare", "legendary"] as const;
 
 export default function ModifierJokerPicker() {
   const jokers = useGame((s) => s.jokers);
@@ -24,10 +23,8 @@ export default function ModifierJokerPicker() {
 
   const sortedCatalog = useMemo<ReadonlyArray<Joker>>(
     () =>
-      [...createJokerCatalog(), ...createLegendaryJokerCatalog()].sort(
-        (a, b) =>
-          RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) ||
-          a.name.localeCompare(b.name),
+      [...createJokerCatalog(), ...createLegendaryJokerCatalog()].sort((a, b) =>
+        a.name.localeCompare(b.name),
       ),
     [],
   );

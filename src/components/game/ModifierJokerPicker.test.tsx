@@ -10,11 +10,8 @@ import {
   type Joker,
 } from "../../items/jokers";
 
-const RARITY_ORDER = ["common", "uncommon", "rare", "legendary"] as const;
 const ALL = [...createJokerCatalog(), ...createLegendaryJokerCatalog()].sort(
-  (a, b) =>
-    RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) ||
-    a.name.localeCompare(b.name),
+  (a, b) => a.name.localeCompare(b.name),
 );
 const PAGE_SIZE = 12;
 const TOTAL_PAGES = Math.ceil(ALL.length / PAGE_SIZE);
@@ -51,7 +48,7 @@ describe("ModifierJokerPicker", () => {
     expect(visibleTileIds()).toHaveLength(PAGE_SIZE);
   });
 
-  test("first page is sorted by (rarity, name) — stable pin", async () => {
+  test("first page is sorted alphabetically by name — stable pin", async () => {
     const user = userEvent.setup();
     render(<ModifierJokerPicker />);
     await openPicker(user);
