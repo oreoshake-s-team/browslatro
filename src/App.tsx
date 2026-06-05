@@ -18,6 +18,7 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
+import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
@@ -105,6 +106,7 @@ function App() {
   const setDealt = useGame((state) => state.setDealt);
   const setBaseDeckCards = useGame((state) => state.setBaseDeckCards);
   useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
     resetCardIds();
     const fresh = createDeck();
     setBaseDeckCards(fresh);
@@ -127,6 +129,7 @@ function App() {
   const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
   useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
@@ -190,6 +193,7 @@ function App() {
   const skipTagOffers = useGame((state) => state.skipTagOffers);
   const setSkipTagOffers = useGame((state) => state.setSkipTagOffers);
   useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
     setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
   }, [setSkipTagOffers]);
   const pendingShopMods = useGame((state) => state.pendingShopMods);
@@ -222,6 +226,7 @@ function App() {
     (state) => state.setCurrentAnteVouchers,
   );
   useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
     setCurrentAnteVouchers(
       pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
     );
@@ -232,6 +237,7 @@ function App() {
   const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
   useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
     setCurrentBoss(pickBossForAnte({ ante: 1 }));
   }, [setCurrentBoss]);
   const requiredScore = requiredChipsForBlind({

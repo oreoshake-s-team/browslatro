@@ -36,6 +36,10 @@ export function nextCardId(): number {
   return ++cardIdCounter;
 }
 
+export function advanceCardIdsTo(maxId: number): void {
+  if (maxId > cardIdCounter) cardIdCounter = maxId;
+}
+
 export const RANK_ENHANCEMENTS: Readonly<Partial<Record<Rank, Enhancement>>> = {
   A: "steel",
   "4": "mult",
