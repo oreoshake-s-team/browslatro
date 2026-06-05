@@ -23,6 +23,7 @@ import {
   debuffedHandIds,
 } from "../items/bosses";
 import {
+  allCardsScoreFromJokers,
   applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyPerCardJokers,
@@ -319,7 +320,9 @@ export function usePlayHand({
       playedCardKeysThisAnte,
     );
     const scoring = expandRedSealRetriggers(
-      getScoringCards(playedCards, label),
+      getScoringCards(playedCards, label, {
+        allCardsScore: allCardsScoreFromJokers(jokers),
+      }),
     ).filter((c) => !playedDebuffedIds.has(c.id));
     if (scoring.length === 0) {
       const handOnlyScore = handEntry.chips * handEntry.multiplier;

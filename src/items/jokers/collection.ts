@@ -43,6 +43,17 @@ export function extraDebtFloorFromJokers(
   return total;
 }
 
+export function allCardsScoreFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.allCardsScore === true) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function discardsOverrideFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number | null {

@@ -53,6 +53,7 @@ import {
   createShootTheMoonJoker,
   createSlyJoker,
   createSmileyFaceJoker,
+  createSplashJoker,
   createSteelJoker,
   createStoneJoker,
   createStuntmanJoker,
@@ -152,5 +153,6 @@ export function createJokerCatalog(): Joker[] {
     createCreditCardJoker(),
     createBurglarJoker(),
     createPareidoliaJoker(),
+    createSplashJoker(),
   ];
 }

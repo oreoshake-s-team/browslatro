@@ -15,6 +15,7 @@ export {
   withoutEdition,
 } from "./jokers/editions";
 export {
+  allCardsScoreFromJokers,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
   discardsOverrideFromJokers,
