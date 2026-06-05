@@ -1276,27 +1276,23 @@ describe("Post-round shop integration", () => {
     return user;
   }
 
-  test("opens the shop after the round-won modal is dismissed", async () => {
+  test("opens the shop after round-won is dismissed and renders 2 item offers + 2 pack offers with unique item names", async () => {
     await openShop();
     expect(
       screen.getByRole("heading", { name: /Shop/ }),
     ).toBeInTheDocument();
-  });
-
-  test("shows exactly two item offers in the shop by default", async () => {
-    await openShop();
     const items = screen
       .getAllByTestId(/^shop-offer-/)
       .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
     expect(items).toHaveLength(2);
-  });
-
-  test("shows two pack offers in the shop by default", async () => {
-    await openShop();
     const packs = screen
       .getAllByTestId(/^shop-offer-/)
       .filter((el) => el.getAttribute("data-offer-kind") === "pack");
     expect(packs).toHaveLength(2);
+    const itemNames = items.map(
+      (el) => el.querySelector(".shop-offer-name")?.textContent ?? "",
+    );
+    expect(new Set(itemNames).size).toBe(itemNames.length);
   });
 
   test("clicking Next Round closes the shop and starts the next blind", async () => {
@@ -1307,18 +1303,12 @@ describe("Post-round shop integration", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("buying an affordable joker deducts the price from money", async () => {
+  test("buying the first affordable offer deducts the price from money and marks the offer Sold", async () => {
     const user = await openShop();
     const moneyBefore = getStatValue("Money").textContent;
     const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
     await user.click(buyButtons[0]);
     expect(getStatValue("Money").textContent).not.toBe(moneyBefore);
-  });
-
-  test("buying an offer marks it as Sold", async () => {
-    const user = await openShop();
-    const buyButtons = screen.getAllByRole("button", { name: /^Buy/ });
-    await user.click(buyButtons[0]);
     expect(screen.getByRole("button", { name: /Sold/ })).toBeInTheDocument();
   });
 
@@ -1366,33 +1356,18 @@ describe("Post-round shop integration", () => {
     expect(equippedNames).toContain(boughtName);
   });
 
-  test("the two item offers never share a name in a single shop visit", async () => {
-    await openShop();
-    const offerNames = screen
-      .getAllByTestId(/^shop-offer-/)
-      .filter((el) => el.getAttribute("data-offer-kind") !== "pack")
-      .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
-    expect(new Set(offerNames).size).toBe(offerNames.length);
-  });
-
-  test("clicking Reroll deducts $5 from money", async () => {
+  test("clicking Reroll deducts $5 from money and bumps the cost to $6", async () => {
     const user = await openShop();
     const moneyBefore = Number(
       getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
     );
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    const moneyAfter = Number(
-      getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0",
-    );
-    expect(moneyAfter).toBe(moneyBefore - 5);
-  });
-
-  test("after one reroll the button shows $6", async () => {
-    const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toHaveTextContent(
-      "Reroll ($6)",
-    );
+    expect(
+      Number(getStatValue("Money").textContent?.replace(/[^0-9-]/g, "") ?? "0"),
+    ).toBe(moneyBefore - 5);
+    expect(
+      screen.getByRole("button", { name: /Reroll shop offers/ }),
+    ).toHaveTextContent("Reroll ($6)");
   });
 
   test("Reroll replaces the unsold offers with new joker names", async () => {
@@ -1434,18 +1409,12 @@ describe("Post-round shop integration", () => {
     ).map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
   }
 
-  test("Reroll does not change the pack offer names (#374)", async () => {
+  test("Reroll preserves both the names and count of pack offers (#374)", async () => {
     const user = await openShop();
     const before = packNames();
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     expect(packNames()).toEqual(before);
-  });
-
-  test("Reroll preserves the number of pack offers (#374)", async () => {
-    const user = await openShop();
-    const beforeCount = packNames().length;
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    expect(packNames().length).toBe(beforeCount);
+    expect(packNames().length).toBe(before.length);
   });
 
   test("Reroll preserves the Sold state of a previously bought pack (#374)", async () => {
@@ -1467,21 +1436,14 @@ describe("Post-round shop integration", () => {
     ).toMatch(/Sold/);
   });
 
-  test("Reroll is disabled when the player can't afford it", async () => {
+  test("Reroll is disabled once the player can't afford it, and the disabled button is a no-op on money", async () => {
     const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    expect(screen.getByRole("button", { name: /Reroll shop offers/ })).toBeDisabled();
-  });
-
-  test("clicking Reroll when disabled is a no-op on money", async () => {
-    const user = await openShop();
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
-    await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    for (let i = 0; i < 4; i += 1) {
+      await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
+    }
+    expect(
+      screen.getByRole("button", { name: /Reroll shop offers/ }),
+    ).toBeDisabled();
     const moneyBefore = getStatValue("Money").textContent;
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     expect(getStatValue("Money").textContent).toBe(moneyBefore);
@@ -2011,23 +1973,17 @@ describe("Voucher effects integration", () => {
       .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
   }
 
-  test("buying Overstock immediately expands the current shop from 2 to 3 items (#301)", async () => {
-    const user = await openShopWithVoucher(0);
-    expect(itemOfferTiles()).toHaveLength(2);
-    await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    expect(itemOfferTiles()).toHaveLength(3);
-  });
-
-  test("the newly-appended Overstock offer is not a duplicate of an existing item (#301)", async () => {
+  test("buying Overstock expands the current shop from 2 to 3 items and the new offer is not a duplicate (#301)", async () => {
     const user = await openShopWithVoucher(0);
     const beforeNames = itemOfferTiles().map(
       (tile) => tile.querySelector(".shop-offer-name")?.textContent ?? "",
     );
+    expect(itemOfferTiles()).toHaveLength(2);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    const afterNames = itemOfferTiles().map(
-      (tile) => tile.querySelector(".shop-offer-name")?.textContent ?? "",
-    );
-    const newOffer = afterNames[afterNames.length - 1];
+    const afterTiles = itemOfferTiles();
+    expect(afterTiles).toHaveLength(3);
+    const newOffer = afterTiles[afterTiles.length - 1]
+      .querySelector(".shop-offer-name")?.textContent ?? "";
     expect(beforeNames).not.toContain(newOffer);
   });
 
@@ -2044,16 +2000,7 @@ describe("Voucher effects integration", () => {
     expect(stillSoldName).toBe(soldName);
   });
 
-  test("buying Clearance Sale shows a discounted joker price on the existing offer", async () => {
-    const user = await openShopWithVoucher(0.15);
-    await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    const joker = screen
-      .getByTestId(`shop-offer-${findShopOfferIdxOfKind("joker")}`)
-      .querySelector(".shop-offer-price-discounted");
-    expect(joker).toHaveTextContent("$4");
-  });
-
-  test("buying Clearance Sale lets the player afford a joker they couldn't at full price", async () => {
+  test("buying Clearance Sale shows a discounted joker price and keeps the joker buy enabled", async () => {
     const user = await openShopWithVoucher(0.15);
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buyButton = screen
@@ -2063,6 +2010,10 @@ describe("Voucher effects integration", () => {
     expect(buyButton).not.toBeDisabled();
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     expect(buyButton).not.toBeDisabled();
+    const discounted = screen
+      .getByTestId(jokerSlotId)
+      .querySelector(".shop-offer-price-discounted");
+    expect(discounted).toHaveTextContent("$4");
   });
 
   test("buying Crystal Ball adds a third consumable slot to the tray", async () => {
@@ -2764,59 +2715,26 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
     return Array.from(all).filter((b) => !/Open/i.test(b.textContent ?? ""));
   }
 
-  test("pack-pick renders without a .pack-open-overlay wrapper", async () => {
+  test("pack-pick renders inline (no overlay, no aria-modal) and locks the rest of the shop while open (#370)", async () => {
     await openShopThenPack();
     expect(document.querySelector(".pack-open-overlay")).toBeNull();
-  });
-
-  test("pack-pick does not carry aria-modal", async () => {
-    await openShopThenPack();
     const region = document
       .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
     expect(region).not.toHaveAttribute("aria-modal");
-  });
-
-  test("the player's hand is NOT in the document while a pack-pick is open", async () => {
-    await openShopThenPack();
     expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
-  });
-
-  test("the jokers row remains queryable while a pack-pick is open", async () => {
-    await openShopThenPack();
     expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
-  });
-
-  test("the consumables tray remains queryable while a pack-pick is open", async () => {
-    await openShopThenPack();
     expect(screen.getByLabelText("Consumable slots")).toBeInTheDocument();
-  });
-
-  test("non-pack shop offer Buy buttons are disabled while a pack-pick is open", async () => {
-    await openShopThenPack();
-    const buys = nonPackBuyButtons();
-    expect(buys.every((b) => b.disabled)).toBe(true);
-  });
-
-  test("shop Reroll button is disabled while a pack-pick is open", async () => {
-    await openShopThenPack();
+    expect(nonPackBuyButtons().every((b) => b.disabled)).toBe(true);
     expect(
       screen.getByRole("button", { name: /Reroll shop offers/i }),
     ).toBeDisabled();
-  });
-
-  test("shop Next Round button is disabled while a pack-pick is open", async () => {
-    await openShopThenPack();
     expect(
       screen.getByRole("button", { name: /Next Round/i }),
     ).toBeDisabled();
-  });
-
-  test("shop Voucher Buy button is disabled while a pack-pick is open", async () => {
-    await openShopThenPack();
     expect(screen.getByTestId("shop-voucher-buy-0")).toBeDisabled();
   });
 
-  test("clicking a locked shop Buy button while pack-pick is open does NOT change money", async () => {
+  test("clicking a locked shop Buy button while pack-pick is open does NOT change money (negative)", async () => {
     const user = await openShopThenPack();
     const before = moneyValue();
     const buys = nonPackBuyButtons();
