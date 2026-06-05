@@ -65,6 +65,60 @@ describe("computeStartingDiscards — Burglar override (#709)", () => {
   });
 });
 
+describe("computeStartingDiscards — Blue Stake -1 discard (#556)", () => {
+  test("White Stake leaves base starting discards unchanged (regression)", () => {
+    expect(
+      computeStartingDiscards({
+        blind: 1,
+        boss: null,
+        ownedVoucherIds: NO_VOUCHERS,
+        deck: "yellow-deck",
+        jokers: [],
+        stake: "white",
+      }),
+    ).toBe(3);
+  });
+
+  test("Blue Stake subtracts 1 from starting discards", () => {
+    expect(
+      computeStartingDiscards({
+        blind: 1,
+        boss: null,
+        ownedVoucherIds: NO_VOUCHERS,
+        deck: "yellow-deck",
+        jokers: [],
+        stake: "blue",
+      }),
+    ).toBe(2);
+  });
+
+  test("Blue Stake stacks with Red Deck's +1 delta (net 3)", () => {
+    expect(
+      computeStartingDiscards({
+        blind: 1,
+        boss: null,
+        ownedVoucherIds: NO_VOUCHERS,
+        deck: "red-deck",
+        jokers: [],
+        stake: "blue",
+      }),
+    ).toBe(3);
+  });
+
+  test("Blue Stake floors discards at 0 when Burglar override is active", () => {
+    expect(
+      computeStartingDiscards({
+        blind: 1,
+        boss: null,
+        ownedVoucherIds: NO_VOUCHERS,
+        deck: "red-deck",
+        jokers: [createBurglarJoker()],
+        stake: "blue",
+      }),
+    ).toBe(0);
+  });
+});
+
 describe("computeStartingHands — Burglar +3 hands (#709)", () => {
   test("Burglar adds 3 hands on top of the default", () => {
     const baseline = computeStartingHands({

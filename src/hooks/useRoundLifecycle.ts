@@ -73,6 +73,7 @@ export function useRoundLifecycle({
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const equippedJokers = useGame((s) => s.jokers);
   const selectedDeck = useGame((s) => s.selectedDeck);
+  const selectedStake = useGame((s) => s.selectedStake);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
   const setBaseDeckCards = useGame((s) => s.setBaseDeckCards);
@@ -154,6 +155,7 @@ export function useRoundLifecycle({
       ownedVoucherIds,
       deck: selectedDeck,
       jokers: equippedJokers,
+      stake: selectedStake,
     };
     const startingHands = computeStartingHands(resourceCtx);
     const startingDiscards = computeStartingDiscards(resourceCtx);
