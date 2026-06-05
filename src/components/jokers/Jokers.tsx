@@ -3,6 +3,7 @@ import "./Jokers.css";
 import {
   JOKER_EDITION_INFO,
   MAX_JOKERS,
+  canSellJoker,
   effectiveJokerCount,
   jokerSellValue,
   type Joker,
@@ -177,6 +178,7 @@ export default function Jokers({
           const pulse = pulseCounters?.[joker.id] ?? 0;
           const isDragging = draggingId === joker.id;
           const sellValue = jokerSellValue(joker);
+          const jokerSellable = sellable && canSellJoker(joker);
           const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
           const editionClass = joker.edition
             ? ` joker-tile-edition joker-tile-edition-${joker.edition}`
@@ -184,9 +186,9 @@ export default function Jokers({
           const editionLabel = editionInfo
             ? ` ${editionInfo.name} edition: ${editionInfo.description}.`
             : "";
-          const ariaLabel = sellable
+          const ariaLabel = jokerSellable
             ? `${joker.name}. ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
-            : editionInfo
+            : editionInfo || sellable
               ? `${joker.name}. ${joker.description}.${editionLabel}`
               : undefined;
           const tooltipId = `${tooltipIdBase}-${joker.id}`;
@@ -217,7 +219,7 @@ export default function Jokers({
                         if (e.dataTransfer) {
                           e.dataTransfer.effectAllowed = "move";
                           e.dataTransfer.setData("text/plain", joker.id);
-                          if (sellable) {
+                          if (jokerSellable) {
                             e.dataTransfer.setData(JOKER_DRAG_MIME, String(idx));
                           }
                         }
@@ -227,7 +229,7 @@ export default function Jokers({
                 }
                 onDragEnd={tileDraggable ? endDrag : undefined}
                 onClick={
-                  sellable
+                  jokerSellable
                     ? (e) => {
                         if (e.shiftKey) onSell?.(idx);
                       }
@@ -245,7 +247,7 @@ export default function Jokers({
                   <span className="joker-tile-name">{joker.name}</span>
                   <span className="joker-tile-description">{joker.description}</span>
                   <JokerStickerBadges joker={joker} />
-                  {sellable && isDragging && (
+                  {jokerSellable && isDragging && (
                     <span className="joker-tile-sell" aria-hidden="true">
                       Sell ${sellValue}
                     </span>

@@ -8,6 +8,7 @@ import {
   getStakeSpec,
   hasStakeModifier,
   stakeRank,
+  stakeStickerOdds,
   type Stake,
 } from "./stakes";
 
@@ -114,23 +115,52 @@ describe("hasStakeModifier", () => {
 });
 
 describe("StakeSpec.implemented", () => {
-  test("White, Red, and Green are implemented", () => {
+  test("White, Red, Green, and Black are implemented", () => {
     const implemented = createStakeCatalog()
       .filter((s) => s.implemented)
       .map((s) => s.id);
-    expect(implemented).toEqual(["white", "red", "green"]);
+    expect(implemented).toEqual(["white", "red", "green", "black"]);
   });
 
-  test("Black through Gold are not implemented (negative)", () => {
+  test("Blue through Gold are not implemented (negative)", () => {
     const unimplemented = createStakeCatalog()
       .filter((s) => !s.implemented)
       .map((s) => s.id);
-    expect(unimplemented).toEqual([
-      "black",
-      "blue",
-      "purple",
-      "orange",
-      "gold",
-    ]);
+    expect(unimplemented).toEqual(["blue", "purple", "orange", "gold"]);
+  });
+});
+
+describe("Black Stake — black-eternal-roll modifier (#555)", () => {
+  test("Black Stake carries the black-eternal-roll modifier", () => {
+    expect(hasStakeModifier("black", "black-eternal-roll")).toBe(true);
+  });
+
+  test("Red Stake does not carry the black-eternal-roll modifier (negative)", () => {
+    expect(hasStakeModifier("red", "black-eternal-roll")).toBe(false);
+  });
+
+  test("the modifier's chance defaults to BLACK_ETERNAL_ROLL_CHANCE", () => {
+    const mod = getActiveStakeModifiers("black").find(
+      (m) => m.kind === "black-eternal-roll",
+    );
+    expect(mod && "chance" in mod ? mod.chance : null).toBeCloseTo(0.3);
+  });
+
+  test("higher stakes still carry the black-eternal-roll modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "black-eternal-roll")).toBe(true);
+  });
+});
+
+describe("stakeStickerOdds", () => {
+  test("returns undefined for stakes below Black", () => {
+    expect(stakeStickerOdds("green")).toBeUndefined();
+  });
+
+  test("returns eternal odds at Black Stake", () => {
+    expect(stakeStickerOdds("black")?.eternal).toBeCloseTo(0.3);
+  });
+
+  test("returns eternal odds at Gold Stake too (cumulative)", () => {
+    expect(stakeStickerOdds("gold")?.eternal).toBeCloseTo(0.3);
   });
 });

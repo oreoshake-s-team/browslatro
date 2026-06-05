@@ -38,10 +38,8 @@ test.describe("Stake picker (#695)", () => {
     await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
   });
 
-  test("does not render the Black stake tile (negative — implemented:false)", async ({
-    page,
-  }) => {
-    await expect(page.getByTestId("new-run-stake-black")).toHaveCount(0);
+  test("renders the Black stake tile (implemented in #555)", async ({ page }) => {
+    await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
   });
 
   test("does not render the Gold stake tile (negative — implemented:false)", async ({

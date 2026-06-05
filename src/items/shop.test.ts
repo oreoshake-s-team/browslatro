@@ -17,6 +17,7 @@ import {
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
   applyEditionToFirstJoker,
+  applyStakeStickersToShopOffers,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
   jokerOfferPrice,
@@ -950,5 +951,107 @@ describe("jokerOfferPrice (#577)", () => {
     const base = createJokerCatalog()[0];
     const eternal = { ...base, stickers: [{ kind: "eternal" as const }] };
     expect(jokerOfferPrice(eternal)).toBe(JOKER_BASE_PRICE);
+  });
+});
+
+describe("applyStakeStickersToShopOffers (#555)", () => {
+  function jokerOffer(id: string): ShopItem {
+    const joker = { ...createBusinessCardJoker(), id };
+    return { kind: "joker", joker, price: JOKER_BASE_PRICE, sold: false };
+  }
+
+  function packOfferWithJokerOption(jokerId: string): ShopItem {
+    const joker = { ...createBusinessCardJoker(), id: jokerId };
+    return {
+      kind: "pack",
+      pack: {
+        pool: "buffoon",
+        variant: "normal",
+        options: [{ kind: "joker", joker }],
+      },
+      price: 4,
+      sold: false,
+    };
+  }
+
+  test("is a no-op when odds is undefined", () => {
+    const offers = [jokerOffer("j1")];
+    expect(applyStakeStickersToShopOffers(offers, undefined)).toEqual(offers);
+  });
+
+  test("stamps Eternal onto a shop joker offer when the roll succeeds", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { eternal: 1 },
+      () => 0,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers).toEqual([
+      { kind: "eternal" },
+    ]);
+  });
+
+  test("does not stamp Eternal when the roll fails (negative)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { eternal: 0.1 },
+      () => 0.9,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers).toBeUndefined();
+  });
+
+  test("Eternal sticker does not change the joker's price (#555)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { eternal: 1 },
+      () => 0,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].price).toBe(JOKER_BASE_PRICE);
+  });
+
+  test("Rental sticker overrides the joker's price to RENTAL_BASE_PRICE", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { rental: 1 },
+      () => 0,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].price).toBe(RENTAL_BASE_PRICE);
+  });
+
+  test("a free-tag joker offer (price 0) stays $0 even after rental is stamped", () => {
+    const free = { ...jokerOffer("j1"), price: 0 };
+    const stamped = applyStakeStickersToShopOffers(
+      [free],
+      { rental: 1 },
+      () => 0,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].price).toBe(0);
+  });
+
+  test("stamps Eternal on a Buffoon pack's joker option when the roll succeeds", () => {
+    const offers = [packOfferWithJokerOption("p1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { eternal: 1 },
+      () => 0,
+    );
+    const opt = stamped[0].kind === "pack" ? stamped[0].pack.options[0] : null;
+    expect(opt && opt.kind === "joker" ? opt.joker.stickers : null).toEqual([
+      { kind: "eternal" },
+    ]);
+  });
+
+  test("non-joker offers pass through unchanged", () => {
+    const offer: ShopItem = {
+      kind: "tarot",
+      tarot: createTarotCatalog()[0],
+      price: 3,
+      sold: false,
+    };
+    const stamped = applyStakeStickersToShopOffers([offer], { eternal: 1 }, () => 0);
+    expect(stamped[0]).toEqual(offer);
   });
 });
