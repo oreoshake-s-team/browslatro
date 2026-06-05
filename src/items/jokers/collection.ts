@@ -1,4 +1,5 @@
 import { cloneJoker, withEdition } from "./editions";
+import { canDestroyJoker } from "./stickers";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -122,13 +123,27 @@ export function replaceJokersExceptCopyOf(
   return [cloneJoker(jokers[idx])];
 }
 
+function partitionByDestroyable(
+  jokers: ReadonlyArray<Joker>,
+): { readonly destroyable: ReadonlyArray<Joker>; readonly kept: ReadonlyArray<Joker> } {
+  const destroyable: Joker[] = [];
+  const kept: Joker[] = [];
+  for (const j of jokers) {
+    if (canDestroyJoker(j)) destroyable.push(j);
+    else kept.push(j);
+  }
+  return { destroyable, kept };
+}
+
 export function polychromeRandomJokerDestroyOthers(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
 ): Joker[] {
   if (jokers.length === 0) return [];
-  const idx = Math.floor(rng() * jokers.length);
-  return [withEdition(jokers[idx], "polychrome")];
+  const { destroyable, kept } = partitionByDestroyable(jokers);
+  if (destroyable.length === 0) return [...jokers];
+  const chosen = destroyable[Math.floor(rng() * destroyable.length)];
+  return [withEdition(chosen, "polychrome"), ...kept];
 }
 
 export function copyRandomJokerDestroyOthers(
@@ -136,7 +151,8 @@ export function copyRandomJokerDestroyOthers(
   rng: RandomSource = Math.random,
 ): Joker[] {
   if (jokers.length === 0) return [];
-  const idx = Math.floor(rng() * jokers.length);
-  const chosen = jokers[idx];
-  return [chosen, cloneJoker(chosen)];
+  const { destroyable, kept } = partitionByDestroyable(jokers);
+  if (destroyable.length === 0) return [...jokers];
+  const chosen = destroyable[Math.floor(rng() * destroyable.length)];
+  return [chosen, cloneJoker(chosen), ...kept];
 }
