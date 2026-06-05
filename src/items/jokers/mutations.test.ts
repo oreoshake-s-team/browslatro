@@ -341,3 +341,123 @@ describe("copyRandomJokerDestroyOthers", () => {
     expect(copyRandomJokerDestroyOthers([], fixedRng([0]))).toEqual([]);
   });
 });
+
+describe("Eternal-joker preservation in destroy paths (#733)", () => {
+  function withEternal<J extends ReturnType<typeof createPlusFourMultJoker>>(j: J): J {
+    return { ...j, stickers: [{ kind: "eternal" as const }] };
+  }
+
+  describe("polychromeRandomJokerDestroyOthers", () => {
+    test("preserves an Eternal joker alongside the Polychrome winner", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+      ];
+      const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      expect(result.map((j) => j.id).sort()).toEqual([
+        "business-card",
+        "plus-four-mult",
+      ]);
+    });
+
+    test("the Eternal joker is not granted Polychrome (only destroyable jokers are)", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+      ];
+      const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      const eternal = result.find((j) => j.id === "plus-four-mult");
+      expect(eternal?.edition).toBeUndefined();
+    });
+
+    test("the rng-selected destroyable joker receives Polychrome", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+      ];
+      const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      const winner = result.find((j) => j.id === "business-card");
+      expect(winner?.edition).toBe("polychrome");
+    });
+
+    test("is a no-op for an all-Eternal slate (negative)", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        withEternal(createBusinessCardJoker()),
+      ];
+      const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      expect(result.map((j) => j.id)).toEqual([
+        "plus-four-mult",
+        "business-card",
+      ]);
+    });
+
+    test("does not add an edition to any joker for an all-Eternal slate (negative)", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        withEternal(createBusinessCardJoker()),
+      ];
+      const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      expect(result.every((j) => j.edition === undefined)).toBe(true);
+    });
+
+    test("with a single non-Eternal among Eternals, only that one gets Polychrome", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+        withEternal(createJokerStencilJoker()),
+      ];
+      const result = polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      const winner = result.find((j) => j.id === "business-card");
+      expect(winner?.edition).toBe("polychrome");
+    });
+  });
+
+  describe("copyRandomJokerDestroyOthers", () => {
+    test("preserves an Eternal joker alongside the chosen + copied pair", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+      ];
+      const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      expect(result.map((j) => j.id).sort()).toEqual([
+        "business-card",
+        "business-card",
+        "plus-four-mult",
+      ]);
+    });
+
+    test("does not copy the Eternal joker (chosen comes only from destroyable)", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+      ];
+      const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      const copies = result.filter((j) => j.id === "plus-four-mult");
+      expect(copies).toHaveLength(1);
+    });
+
+    test("is a no-op for an all-Eternal slate (negative)", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        withEternal(createBusinessCardJoker()),
+      ];
+      const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      expect(result.map((j) => j.id)).toEqual([
+        "plus-four-mult",
+        "business-card",
+      ]);
+    });
+
+    test("with a single non-Eternal among Eternals, only that one is copied", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        createBusinessCardJoker(),
+        withEternal(createJokerStencilJoker()),
+      ];
+      const result = copyRandomJokerDestroyOthers(jokers, fixedRng([0]));
+      const copies = result.filter((j) => j.id === "business-card");
+      expect(copies).toHaveLength(2);
+    });
+  });
+});

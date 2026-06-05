@@ -688,6 +688,59 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toEqual([]);
   });
 
+  test("applySpectralEffect hex preserves an Eternal joker (#733)", () => {
+    const [a, b] = createJokerCatalog();
+    const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
+    useGame.getState().setJokers([eternalA, b]);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    const ids = useGame.getState().jokers.map((j) => j.id).sort();
+    expect(ids).toEqual([a.id, b.id].sort());
+  });
+
+  test("applySpectralEffect hex does not grant Polychrome to an Eternal joker (#733)", () => {
+    const [a, b] = createJokerCatalog();
+    const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
+    useGame.getState().setJokers([eternalA, b]);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    const eternal = useGame.getState().jokers.find((j) => j.id === a.id);
+    expect(eternal?.edition).toBeUndefined();
+  });
+
+  test("applySpectralEffect hex on an all-Eternal slate is a no-op (#733, negative)", () => {
+    const [a, b] = createJokerCatalog();
+    const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
+    const eternalB = { ...b, stickers: [{ kind: "eternal" as const }] };
+    useGame.getState().setJokers([eternalA, eternalB]);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    expect(useGame.getState().jokers.map((j) => j.id)).toEqual([a.id, b.id]);
+  });
+
+  test("applySpectralEffect ankh preserves an Eternal joker alongside the copied pair (#733)", () => {
+    const [a, b] = createJokerCatalog();
+    const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
+    useGame.getState().setJokers([eternalA, b]);
+    useGame.getState().applySpectralEffect({ kind: "ankh" });
+    expect(useGame.getState().jokers).toHaveLength(3);
+  });
+
+  test("applySpectralEffect ankh does not copy an Eternal joker (#733)", () => {
+    const [a, b] = createJokerCatalog();
+    const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
+    useGame.getState().setJokers([eternalA, b]);
+    useGame.getState().applySpectralEffect({ kind: "ankh" });
+    const matches = useGame.getState().jokers.filter((j) => j.id === a.id);
+    expect(matches).toHaveLength(1);
+  });
+
+  test("applySpectralEffect ankh on an all-Eternal slate is a no-op (#733, negative)", () => {
+    const [a, b] = createJokerCatalog();
+    const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
+    const eternalB = { ...b, stickers: [{ kind: "eternal" as const }] };
+    useGame.getState().setJokers([eternalA, eternalB]);
+    useGame.getState().applySpectralEffect({ kind: "ankh" });
+    expect(useGame.getState().jokers.map((j) => j.id)).toEqual([a.id, b.id]);
+  });
+
   test("applyEnhancementToSelectedPreviewCards enhances the selected card", () => {
     const preview = createDeck().slice(0, 3);
     const game = useGame.getState();
