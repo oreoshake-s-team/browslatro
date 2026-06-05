@@ -206,6 +206,18 @@ describe("Joker tooltip — stickers (#724)", () => {
       screen.getByTestId("joker-tooltip-sticker-perishable"),
     ).toHaveTextContent(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`);
   });
+
+  test("Perishable sticker row says 'debuffed' once roundsHeld reaches the life threshold (closes #579)", async () => {
+    const user = userEvent.setup();
+    const joker = withStickers([
+      { kind: "perishable", roundsHeld: PERISHABLE_LIFE },
+    ]);
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(
+      screen.getByTestId("joker-tooltip-sticker-perishable"),
+    ).toHaveTextContent(/debuffed/i);
+  });
 });
 
 describe("Joker tooltip — Driver's License enhanced-count progress (#632)", () => {

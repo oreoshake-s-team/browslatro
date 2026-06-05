@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { useGame } from "./game";
-import { MAX_JOKERS, createJokerCatalog, jokerSellValue } from "../items/jokers";
+import {
+  MAX_JOKERS,
+  PERISHABLE_LIFE,
+  createJokerCatalog,
+  hasSticker,
+  isJokerActive,
+  jokerSellValue,
+} from "../items/jokers";
 import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
@@ -456,6 +463,43 @@ describe("game actions slice", () => {
     game.setRemainingHands(0);
     game.handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().remainingHands).toBe(3);
+  });
+
+  test("handleWin ticks the Perishable roundsHeld counter (closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 2 }] }]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const next = useGame.getState().jokers[0].stickers?.[0];
+    expect(next).toEqual({ kind: "perishable", roundsHeld: 3 });
+  });
+
+  test("after PERISHABLE_LIFE handleWin calls, the joker is no longer active (closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 0 }] }]);
+    for (let i = 0; i < PERISHABLE_LIFE; i += 1) {
+      useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    }
+    expect(isJokerActive(useGame.getState().jokers[0])).toBe(false);
+  });
+
+  test("at PERISHABLE_LIFE - 1 ticks, the joker is still active (negative — closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 0 }] }]);
+    for (let i = 0; i < PERISHABLE_LIFE - 1; i += 1) {
+      useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    }
+    expect(isJokerActive(useGame.getState().jokers[0])).toBe(true);
+  });
+
+  test("handleWin does not add a Perishable sticker to a non-stickered joker (negative — closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([base]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(hasSticker(useGame.getState().jokers[0], "perishable")).toBe(false);
   });
 
   test("handleWin awards $0 for Small Blind on Red Stake (#553)", () => {

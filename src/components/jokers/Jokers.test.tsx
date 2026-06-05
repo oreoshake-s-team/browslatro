@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import Jokers from "./Jokers";
 import {
   MAX_JOKERS,
+  PERISHABLE_LIFE,
   createBusinessCardJoker,
   createGluttonousJoker,
   createGreedyJoker,
@@ -605,5 +606,57 @@ describe("Jokers edition rendering", () => {
     expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(
       MAX_JOKERS - 1,
     );
+  });
+});
+
+describe("Jokers UI — Perishable debuffed visual (closes #579)", () => {
+  function withPerishable(roundsHeld: number): Joker {
+    return {
+      ...createPlusFourMultJoker(),
+      stickers: [{ kind: "perishable", roundsHeld }],
+    };
+  }
+
+  test("a perishable joker past its life is rendered with the joker-tile-debuffed class", () => {
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
+      "joker-tile-debuffed",
+    );
+  });
+
+  test("a perishable joker past its life exposes data-debuffed", () => {
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveAttribute(
+      "data-debuffed",
+      "true",
+    );
+  });
+
+  test("a still-active perishable joker has no debuffed class (negative)", () => {
+    const j = withPerishable(PERISHABLE_LIFE - 1);
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).not.toHaveClass(
+      "joker-tile-debuffed",
+    );
+  });
+
+  test("a debuffed perishable joker mentions 'Debuffed' in its accessible name when sellable", () => {
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} onSell={() => {}} />);
+    expect(
+      screen.getByTestId(`joker-tile-filled-${j.id}`),
+    ).toHaveAccessibleName(/Debuffed/);
+  });
+
+  test("a debuffed perishable joker is still sellable via shift-click (no Eternal guard)", () => {
+    const onSell = vi.fn();
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId(`joker-tile-filled-${j.id}`), {
+      shiftKey: true,
+    });
+    expect(onSell).toHaveBeenCalledTimes(1);
   });
 });
