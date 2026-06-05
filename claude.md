@@ -23,7 +23,8 @@ Browlatro is an educational journey meant to help the author brush up on their f
 
 # Testing
 
-- Tests should only have one assertion per test unless it is testing a multistep flow.
+- Unit tests should only have one assertion per test unless they're testing a multistep flow.
+- Full-app integration tests that mount `<App />` and exercise a sequence of user interactions SHOULD use multiple assertions per test when those assertions all describe the same end-state. The mount + userEvent setup is the expensive part (~300ms each); sharing one mount across related assertions cuts wall-clock cost without losing intent. The test name should describe the scenario (e.g. "Round Won modal reward breakdown for a Small Blind win with gold + interest"), not each individual assertion.
 - All tests should be run after major changes.
 - Include "negative" test cases whenever possible.
 - Do not add comments to tests.
