@@ -10,6 +10,7 @@ import {
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
+import JokerStickerBadges from "./JokerStickerBadges";
 import JokerTooltip from "./JokerTooltip";
 
 export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
@@ -243,6 +244,7 @@ export default function Jokers({
                 >
                   <span className="joker-tile-name">{joker.name}</span>
                   <span className="joker-tile-description">{joker.description}</span>
+                  <JokerStickerBadges joker={joker} />
                   {sellable && isDragging && (
                     <span className="joker-tile-sell" aria-hidden="true">
                       Sell ${sellValue}
