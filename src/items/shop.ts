@@ -1,6 +1,13 @@
-import type { Joker, JokerEdition, JokerRarity, RandomSource } from "./jokers";
+import type {
+  Joker,
+  JokerEdition,
+  JokerRarity,
+  RandomSource,
+  StakeStickerOdds,
+} from "./jokers";
 import {
   RENTAL_BASE_PRICE,
+  applyStakeStickersOnRoll,
   hasSticker,
   pickRandomFromCatalog,
   withEdition,
@@ -210,6 +217,31 @@ export function ensureBaseJokerForEdition(
   };
   if (replaceIdx === -1) return [fresh, ...offers];
   return offers.map((offer, idx) => (idx === replaceIdx ? fresh : offer));
+}
+
+export function applyStakeStickersToShopOffers(
+  offers: ReadonlyArray<ShopItem>,
+  odds: StakeStickerOdds | undefined,
+  rng: RandomSource = Math.random,
+): ShopItem[] {
+  if (!odds) return [...offers];
+  return offers.map((offer) => {
+    if (offer.kind === "joker") {
+      const stamped = applyStakeStickersOnRoll(offer.joker, odds, rng);
+      if (stamped === offer.joker) return offer;
+      const price = offer.price === 0 ? 0 : jokerOfferPrice(stamped);
+      return { ...offer, joker: stamped, price };
+    }
+    if (offer.kind === "pack") {
+      const options = offer.pack.options.map((opt) =>
+        opt.kind === "joker"
+          ? { ...opt, joker: applyStakeStickersOnRoll(opt.joker, odds, rng) }
+          : opt,
+      );
+      return { ...offer, pack: { ...offer.pack, options } };
+    }
+    return offer;
+  });
 }
 
 export function rerollCostFor(

@@ -505,6 +505,37 @@ describe("Jokers sell", () => {
   });
 });
 
+describe("Jokers sell — Eternal joker guard (#555)", () => {
+  const eternalJoker: Joker = {
+    ...createBusinessCardJoker(),
+    stickers: [{ kind: "eternal" }],
+  };
+
+  test("an Eternal joker does not show a Sell chip on dragstart (negative)", () => {
+    render(<Jokers jokers={[eternalJoker]} onSell={() => {}} />);
+    fireEvent.dragStart(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
+  });
+
+  test("shift-clicking an Eternal joker does not invoke onSell (negative)", () => {
+    const onSell = vi.fn();
+    render(<Jokers jokers={[eternalJoker]} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId("joker-tile-filled-business-card"), {
+      shiftKey: true,
+    });
+    expect(onSell).not.toHaveBeenCalled();
+  });
+
+  test("an Eternal tile's aria-label does not mention the sell shortcut", () => {
+    render(<Jokers jokers={[eternalJoker]} onSell={() => {}} />);
+    const label =
+      screen
+        .getByTestId("joker-tile-filled-business-card")
+        .getAttribute("aria-label") ?? "";
+    expect(label).not.toMatch(/Shift-click/);
+  });
+});
+
 describe("Jokers edition rendering", () => {
   test("a Foil joker tile carries the foil edition class", () => {
     const j = withEdition(createPlusFourMultJoker(), "foil");

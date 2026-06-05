@@ -23,7 +23,10 @@ export const DEFAULT_STAKE: Stake = "white";
 
 export type StakeModifier =
   | { readonly kind: "red-small-blind-no-reward" }
-  | { readonly kind: "green-ante-scaling" };
+  | { readonly kind: "green-ante-scaling" }
+  | { readonly kind: "black-eternal-roll"; readonly chance: number };
+
+export const BLACK_ETERNAL_ROLL_CHANCE = 0.3;
 
 export interface StakeSpec {
   readonly id: Stake;
@@ -59,8 +62,10 @@ const STAKE_SPECS: ReadonlyArray<StakeSpec> = [
     id: "black",
     name: "Black Stake",
     description: "Shop can roll Eternal Jokers that cannot be sold or destroyed.",
-    implemented: false,
-    modifiers: [],
+    implemented: true,
+    modifiers: [
+      { kind: "black-eternal-roll", chance: BLACK_ETERNAL_ROLL_CHANCE },
+    ],
   },
   {
     id: "blue",
@@ -122,4 +127,21 @@ export function hasStakeModifier(
   kind: StakeModifier["kind"],
 ): boolean {
   return getActiveStakeModifiers(stake).some((m) => m.kind === kind);
+}
+
+import type { StakeStickerOdds } from "./jokers";
+
+export function stakeStickerOdds(stake: Stake): StakeStickerOdds | undefined {
+  const odds: { eternal?: number; perishable?: number; rental?: number } = {};
+  for (const mod of getActiveStakeModifiers(stake)) {
+    if (mod.kind === "black-eternal-roll") odds.eternal = mod.chance;
+  }
+  if (
+    odds.eternal === undefined &&
+    odds.perishable === undefined &&
+    odds.rental === undefined
+  ) {
+    return undefined;
+  }
+  return odds;
 }

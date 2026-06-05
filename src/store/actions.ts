@@ -23,6 +23,7 @@ import {
 } from "../items/jokers";
 import {
   applyEditionToFirstJoker,
+  applyStakeStickersToShopOffers,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
   mergeFreeJokerOffersIntoShop,
@@ -73,7 +74,7 @@ import {
 } from "../run/roundSetup";
 import { calculateInterest } from "../scoring/payout";
 import { BlindValues } from "../constants";
-import { hasStakeModifier } from "../items/stakes";
+import { hasStakeModifier, stakeStickerOdds } from "../items/stakes";
 import type { Blind, Card, Enhancement, Hand, Seal, Suit } from "../cards/types";
 import {
   rollAnteSkipOffers,
@@ -161,10 +162,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const pricedItems = rerollAdjustments.freeShopItems
       ? freshItems.map((o) => ({ ...o, price: 0 }))
       : freshItems;
+    const stampedRerollItems = applyStakeStickersToShopOffers(
+      pricedItems,
+      stakeStickerOdds(s.selectedStake),
+      shopPickerRngConfig.rng,
+    );
     s.setShopOffers((current) => {
       if (!current) return current;
       const existingPacks = current.filter((o) => o.kind === "pack");
-      return [...pricedItems, ...existingPacks];
+      return [...stampedRerollItems, ...existingPacks];
     });
   },
   buyAnteVoucher: (voucherIdx) => {
@@ -216,7 +222,13 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           },
           current,
         );
-        return extra ? [...current, extra] : current;
+        if (!extra) return current;
+        const [stampedExtra] = applyStakeStickersToShopOffers(
+          [extra],
+          stakeStickerOdds(s.selectedStake),
+          shopPickerRngConfig.rng,
+        );
+        return [...current, stampedExtra];
       });
     }
   },
@@ -438,7 +450,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       },
       mergeFreeJokerOffersIntoShop(pricedOffers, freeJokerOffers),
     );
-    s.setShopOffers(editionedOffers);
+    const stamped = applyStakeStickersToShopOffers(
+      editionedOffers,
+      stakeStickerOdds(s.selectedStake),
+      shopPickerRngConfig.rng,
+    );
+    s.setShopOffers(stamped);
     if (shopAdjustments.extraVouchers > 0) {
       s.setCurrentAnteVouchers((prev) => {
         const existing = new Set(prev.map((v) => v.id));
