@@ -66,18 +66,7 @@ describe("Celestial pack open + pick integration", () => {
     );
   }
 
-  test("clicking Open on a pack offer opens the pack modal", async () => {
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await screen.findByTestId("pack-open-close");
-    expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
-  });
-
-  test("opening a pack deducts the pack price from money", async () => {
+  test("clicking Open on a pack offer opens the pack modal, deducts the price from money, and marks the offer Sold after the modal closes", async () => {
     const user = await openShopWithMoney();
     const before = moneyOf();
     const idx = findPackOfferIdx();
@@ -87,17 +76,8 @@ describe("Celestial pack open + pick integration", () => {
     const open = offer.querySelector("button.shop-offer-buy") as HTMLButtonElement;
     await user.click(open);
     await screen.findByTestId("pack-open-close");
+    expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
     expect(moneyOf()).toBe(before - price);
-  });
-
-  test("opening a pack marks the pack offer as Sold", async () => {
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-close"));
     expect(
       screen
@@ -106,7 +86,7 @@ describe("Celestial pack open + pick integration", () => {
     ).toHaveTextContent("Sold");
   });
 
-  test("picking a planet from a Celestial pack does NOT add it to the consumable tray (auto-applied)", async () => {
+  test("picking a planet from a Celestial pack auto-applies it (no consumable added) and upgrades the matching hand's level", async () => {
     shopPickerRngConfig.rng = () => 0.45;
     const user = await openShopWithMoney();
     const consumablesBefore = screen.queryAllByTestId(
@@ -122,18 +102,6 @@ describe("Celestial pack open + pick integration", () => {
     expect(screen.queryAllByTestId(/^consumable-tile-filled-/)).toHaveLength(
       consumablesBefore,
     );
-  });
-
-  test("picking a planet from a Celestial pack upgrades the matching hand's level", async () => {
-    shopPickerRngConfig.rng = () => 0.45;
-    const user = await openShopWithMoney();
-    const idx = findPackOfferIdx();
-    const open = screen
-      .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
-    await user.click(open);
-    await screen.findByTestId("pack-open-close");
-    await user.click(screen.getByTestId("pack-open-pick-0"));
     await user.click(screen.getByRole("button", { name: "Run info" }));
     await screen.findByRole("dialog", { name: "Run Information" });
     const levels = HANDS.map((h) =>
@@ -191,24 +159,12 @@ describe("Mega pack — picked option is removed from list (#647)", () => {
     return user;
   }
 
-  test("after picking option 0, the option-0 pick button is gone from the DOM", async () => {
+  test("after picking option 0, option-0 pick button is gone, other pick buttons stay, and picks-remaining counter shows 1 left", async () => {
     const user = openMegaCelestialPack();
     await screen.findByTestId("pack-open-pick-0");
     await user.click(screen.getByTestId("pack-open-pick-0"));
     expect(screen.queryByTestId("pack-open-pick-0")).not.toBeInTheDocument();
-  });
-
-  test("after picking option 0, the other pick buttons stay rendered", async () => {
-    const user = openMegaCelestialPack();
-    await screen.findByTestId("pack-open-pick-0");
-    await user.click(screen.getByTestId("pack-open-pick-0"));
     expect(screen.getByTestId("pack-open-pick-1")).toBeInTheDocument();
-  });
-
-  test("after picking option 0, the picks-remaining counter shows 1 left", async () => {
-    const user = openMegaCelestialPack();
-    await screen.findByTestId("pack-open-pick-0");
-    await user.click(screen.getByTestId("pack-open-pick-0"));
     expect(screen.getByTestId("pack-open-subtitle")).toHaveTextContent(
       /1 left/,
     );

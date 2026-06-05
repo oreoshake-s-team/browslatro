@@ -26,25 +26,13 @@ test.describe("Stake picker (#695)", () => {
     await page.goto("/");
   });
 
-  test("renders White / Red / Green stake tiles; does not render Black or Gold (implemented:false)", async ({
+  test("renders White / Red / Green / Black stake tiles; does not render Gold (still implemented:false)", async ({
     page,
   }) => {
     await expect(page.getByTestId("new-run-stake-white")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-red")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
-<<<<<<< HEAD
-  });
-
-  test("renders the Black stake tile (implemented in #555)", async ({ page }) => {
     await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
-  });
-
-  test("does not render the Gold stake tile (negative — implemented:false)", async ({
-    page,
-  }) => {
-=======
-    await expect(page.getByTestId("new-run-stake-black")).toHaveCount(0);
->>>>>>> 5e28c62 (chore(tests): apply multi-assert pattern to e2e suite)
     await expect(page.getByTestId("new-run-stake-gold")).toHaveCount(0);
   });
 });
