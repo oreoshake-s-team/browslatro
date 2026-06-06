@@ -763,4 +763,39 @@ describe("useConsumableActions — The Emperor (#618)", () => {
     act(() => result.current.useConsumable(0));
     expect(useGame.getState().consumables).toHaveLength(0);
   });
+
+  describe("with 3 consumable slots (Crystal Ball voucher)", () => {
+    beforeEach(() => {
+      useGame.getState().setOwnedVoucherIds(new Set(["crystal-ball"]));
+    });
+
+    test("with 0 other consumables, adds 2 tarots", () => {
+      useGame.getState().setConsumables([emperorConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(2);
+    });
+
+    test("with 1 other consumable, adds 2 tarots (fills the 2 free slots)", () => {
+      useGame
+        .getState()
+        .setConsumables([emperorConsumable(), hangedManConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+
+    test("with 2 other consumables, adds 1 tarot (only 1 free slot after Emperor consumed)", () => {
+      useGame
+        .getState()
+        .setConsumables([
+          emperorConsumable(),
+          hangedManConsumable(),
+          strengthConsumable(),
+        ]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+  });
 });
