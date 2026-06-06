@@ -43,6 +43,7 @@ import {
   computeStartingDiscards,
   computeStartingHands,
 } from "../run/roundSetup";
+import type { RoundLostInfo } from "../components/game/RoundLostModal";
 
 export interface UseRoundLifecycleParams {
   readonly applyGainedTag: (
@@ -60,7 +61,7 @@ export interface UseRoundLifecycleResult {
     handSizeOverride?: number;
   }) => void;
   readonly startNewGame: () => void;
-  readonly loseGame: () => void;
+  readonly loseGame: (info: RoundLostInfo) => void;
   readonly skipBlind: () => void;
 }
 
@@ -133,6 +134,7 @@ export function useRoundLifecycle({
   const setLuckyMoneyProcIds = useGame((s) => s.setLuckyMoneyProcIds);
   const setScoringEvents = useGame((s) => s.setScoringEvents);
   const setPendingWin = useGame((s) => s.setPendingWin);
+  const setPendingLose = useGame((s) => s.setPendingLose);
 
   const currentHandSize = Math.max(
     1,
@@ -252,10 +254,9 @@ export function useRoundLifecycle({
     setPendingRunSelect(true);
   }
 
-  function loseGame(): void {
+  function loseGame(info: RoundLostInfo): void {
     play("lose");
-    alert("Game Over! Try again.");
-    startNewGame();
+    setPendingLose(info);
   }
 
   function skipBlind(): void {

@@ -598,25 +598,40 @@ describe("Submit Hand win integration", () => {
 });
 
 describe("Losing integration", () => {
-  beforeEach(() => {
-    vi.spyOn(window, "alert").mockImplementation(() => {});
-  });
+  async function dismissRoundLostModal(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await user.click(
+      await screen.findByRole("button", { name: /Try again/ }),
+    );
+  }
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  test("exhausting all hands without reaching the required score shows a game over alert", async () => {
+  test("exhausting all hands without reaching the required score shows the round-lost modal", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
-    expect(window.alert).toHaveBeenCalledWith("Game Over! Try again.");
+    expect(
+      await screen.findByRole("dialog", { name: "Game Over" }),
+    ).toBeInTheDocument();
   });
 
-  test("exhausting all hands without reaching the required score resets the game", async () => {
+  test("the round-lost modal renders the same Round Score the store committed for the final hand (no synchronous-alert staleness)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    const modalScore = Number(
+      (await screen.findByTestId("round-lost-score")).textContent,
+    );
+    expect(modalScore).toBe(useGame.getState().roundScore);
+  });
+
+  test("dismissing the round-lost modal returns the player to the Blind Select screen", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
@@ -624,27 +639,30 @@ describe("Losing integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
+    await dismissRoundLostModal(user);
     await dismissBlindSelect(user);
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
   });
 
-  test("losing and auto-restarting leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
+  test("dismissing the round-lost modal leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
 
-  test("losing and auto-restarting leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
+  test("dismissing the round-lost modal leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
 
@@ -664,6 +682,7 @@ describe("Losing integration", () => {
     await submitOneHighCard(user);
     await submitOneHighCard(user);
     await submitOneHighCard(user);
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
 
@@ -675,6 +694,7 @@ describe("Losing integration", () => {
     await submitOneHighCard(user);
     await submitOneHighCard(user);
     await submitOneHighCard(user);
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
 
@@ -687,6 +707,7 @@ describe("Losing integration", () => {
       await submitOneHighCard(user);
       await submitOneHighCard(user);
       await submitOneHighCard(user);
+      await dismissRoundLostModal(user);
     }
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });

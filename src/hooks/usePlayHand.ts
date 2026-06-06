@@ -60,7 +60,7 @@ import { recordHandPlayed } from "../run/runStats";
 
 export interface UsePlayHandParams {
   readonly stepMs: number;
-  readonly loseGame: () => void;
+  readonly loseGame: (info: { roundScore: number; requiredScore: number }) => void;
   readonly pendingDiscardCountRef: MutableRefObject<number>;
   readonly pendingHandPlayResetRef: MutableRefObject<boolean>;
   readonly skipDrawAfterDiscardRef: MutableRefObject<boolean>;
@@ -273,7 +273,7 @@ export function usePlayHand({
     if (remainingHands > 1) {
       setRemainingHands((prev) => prev - 1);
     } else {
-      loseGame();
+      loseGame({ roundScore: newRoundScore, requiredScore });
     }
   }
 

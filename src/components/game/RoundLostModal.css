@@ -1,0 +1,84 @@
+.round-lost-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.round-lost-modal {
+  background-color: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 12px;
+  padding: 2rem 2.4rem;
+  min-width: 22rem;
+  max-width: 32rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.round-lost-title {
+  margin: 0;
+  font-size: 1.6rem;
+  color: #c92a2a;
+  text-align: center;
+}
+
+.round-lost-stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.round-lost-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.4rem 0.6rem;
+  background-color: white;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+}
+
+.round-lost-stat dt {
+  font-size: 0.9rem;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.round-lost-stat dd {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.round-lost-stat-short dd {
+  color: #c92a2a;
+}
+
+.round-lost-continue {
+  padding: 0.7rem 1.2rem;
+  border: 1px solid #1c7ed6;
+  background-color: #339af0;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.round-lost-continue:hover {
+  background-color: #1c7ed6;
+}
+
+.round-lost-continue:focus-visible {
+  outline: 2px solid #1c7ed6;
+  outline-offset: 2px;
+}

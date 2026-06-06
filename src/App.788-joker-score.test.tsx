@@ -114,7 +114,6 @@ describe("Fix #788 — hand-level joker bonuses apply when scoring.length === 0"
 
   test("round is won (not lost) when +4 Mult joker tips all-debuffed hand over required score on last hand (#788)", () => {
     deckConfig.hand = CLUBS_FLUSH_HAND;
-    const alertSpy = vi.spyOn(window, "alert").mockImplementation(() => {});
     render(<App />);
     seedBossBlindAt([createPlusFourMultJoker()]);
     act(() => {
@@ -122,8 +121,7 @@ describe("Fix #788 — hand-level joker bonuses apply when scoring.length === 0"
       useGame.getState().setRemainingHands(1);
     });
     submitFirstFive();
-    expect(alertSpy).not.toHaveBeenCalled();
+    expect(useGame.getState().pendingLose).toBeNull();
     expect(useGame.getState().pendingWin).not.toBeNull();
-    alertSpy.mockRestore();
   });
 });

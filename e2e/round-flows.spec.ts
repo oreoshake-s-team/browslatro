@@ -135,15 +135,11 @@ test("losing 3 games in a row leaves exactly one chips/multiplier span in the si
 test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", async ({
   page,
 }) => {
-  // The browser-native alert blocks the run loop until accepted.
-  page.on("dialog", (dialog) => dialog.accept());
-
   await page.goto("/");
   await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   await expect(statValue(page, "Hands")).toHaveText("4");
 
-  // Empty submissions don't discard anything, so the hand stays at 8 each time.
   const submit = page.getByRole("button", { name: SUBMIT_BUTTON });
   await submit.click();
   await expect(statValue(page, "Hands")).toHaveText("3");
@@ -157,11 +153,11 @@ test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", as
   await expect(statValue(page, "Hands")).toHaveText("1");
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
-  // 4th submit triggers loseGame() → alert + full game reset.
   await submit.click();
+  await expect(page.getByRole("dialog", { name: "Game Over" })).toBeVisible();
+  await page.getByRole("button", { name: /Try again/ }).click();
   await dismissBlindSelect(page);
 
-  // State resets: back to Ante 1 Small Blind, $4 money, 4 hands.
   await expect(page.getByRole("heading", { name: "Small Blind" })).toBeVisible();
   await expect(statValue(page, "Money")).toHaveText("$4");
   await expect(statValue(page, "Ante")).toHaveText("1");
