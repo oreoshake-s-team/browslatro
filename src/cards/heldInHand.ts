@@ -17,12 +17,30 @@ export function countHeldEnhancement(
   ).length;
 }
 
+export function heldEnhancementIdsWithRedSeal(
+  hand: ReadonlyArray<Card>,
+  submittedIds: ReadonlySet<number>,
+  enhancement: Enhancement,
+): number[] {
+  const ids: number[] = [];
+  for (const card of getHeldInHand(hand, submittedIds)) {
+    if (card.enhancement !== enhancement) continue;
+    ids.push(card.id);
+    if (card.seal === "red") ids.push(card.id);
+  }
+  return ids;
+}
+
 export const STEEL_MULT_FACTOR = 1.5;
 
 export function steelHeldMultiplier(
   hand: ReadonlyArray<Card>,
   submittedIds: ReadonlySet<number>,
 ): number {
-  const count = countHeldEnhancement(hand, submittedIds, "steel");
+  const count = heldEnhancementIdsWithRedSeal(
+    hand,
+    submittedIds,
+    "steel",
+  ).length;
   return STEEL_MULT_FACTOR ** count;
 }

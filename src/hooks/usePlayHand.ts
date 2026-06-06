@@ -49,7 +49,11 @@ import {
   expandRedSealRetriggers,
   planetForHand,
 } from "../cards/seals";
-import { getHeldInHand, steelHeldMultiplier } from "../cards/heldInHand";
+import {
+  getHeldInHand,
+  heldEnhancementIdsWithRedSeal,
+  steelHeldMultiplier,
+} from "../cards/heldInHand";
 import { cardKey } from "../cards/deck";
 import { recordHandPlayed } from "../run/runStats";
 
@@ -190,9 +194,11 @@ export function usePlayHand({
           }
         }
       }
-      const heldGoldIds = dealt.hand
-        .filter((c) => c.enhancement === "gold" && !submittedSelection.has(c.id))
-        .map((c) => c.id);
+      const heldGoldIds = heldEnhancementIdsWithRedSeal(
+        dealt.hand,
+        submittedSelection,
+        "gold",
+      );
       const remainingHandsCount = Math.max(0, remainingHands - 1);
       const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
       const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
@@ -385,9 +391,11 @@ export function usePlayHand({
     }
     setLuckyRollsByScoringIndex(luckyRollsByScoringIndex);
 
-    const heldSteelIds = dealt.hand
-      .filter((c) => c.enhancement === "steel" && !submittedSelection.has(c.id))
-      .map((c) => c.id);
+    const heldSteelIds = heldEnhancementIdsWithRedSeal(
+      dealt.hand,
+      submittedSelection,
+      "steel",
+    );
     const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
     const enhancementXMult = scoring.reduce(
       (m, card) => m * applyCardEnhancement(card).multTimes,

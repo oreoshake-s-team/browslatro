@@ -239,6 +239,7 @@ describe("Blue Seal — held at end of round creates a Planet (#208)", () => {
   });
 });
 
+
 describe("Purple Seal — discard creates a Tarot (#208)", () => {
   test("discarding a Purple-seal card adds a tarot consumable", async () => {
     handFactoryRef.build = () => [
