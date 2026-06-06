@@ -13,6 +13,7 @@ import {
   MAD_JOKER_MULT,
   MAX_JOKERS,
   RANK_PARITY,
+  RENTAL_END_OF_ROUND_DRAIN,
   SLY_JOKER_CHIPS,
   SUIT_MULT_AMOUNT,
   THE_DUO_X_MULT,
@@ -720,6 +721,56 @@ describe("applyEndOfRoundJokers", () => {
     expect(result.moneyEarned).toBe(GOLDEN_JOKER_MONEY);
     expect(result.steps).toHaveLength(1);
     expect(result.steps[0]?.jokerId).toBe("golden-joker");
+  });
+
+  test("subtracts RENTAL_END_OF_ROUND_DRAIN per rental joker (#580)", () => {
+    const rental = {
+      ...createBusinessCardJoker(),
+      stickers: [{ kind: "rental" as const }],
+    };
+    const result = applyEndOfRoundJokers([rental]);
+    expect(result.moneyEarned).toBe(-RENTAL_END_OF_ROUND_DRAIN);
+  });
+
+  test("emits a negative step for each rental joker (#580)", () => {
+    const rental = {
+      ...createBusinessCardJoker(),
+      stickers: [{ kind: "rental" as const }],
+    };
+    const result = applyEndOfRoundJokers([rental]);
+    const rentalStep = result.steps.find((s) =>
+      s.jokerId.endsWith("-rental"),
+    );
+    expect(rentalStep?.moneyEarned).toBe(-RENTAL_END_OF_ROUND_DRAIN);
+  });
+
+  test("a non-rental joker emits no rental drain step (negative)", () => {
+    const result = applyEndOfRoundJokers([createBusinessCardJoker()]);
+    expect(result.steps.some((s) => s.jokerId.endsWith("-rental"))).toBe(false);
+  });
+
+  test("net total combines earnings with rental drains (#580)", () => {
+    const rental = {
+      ...createBusinessCardJoker(),
+      stickers: [{ kind: "rental" as const }],
+    };
+    const result = applyEndOfRoundJokers([createGoldenJoker(), rental]);
+    expect(result.moneyEarned).toBe(
+      GOLDEN_JOKER_MONEY - RENTAL_END_OF_ROUND_DRAIN,
+    );
+  });
+
+  test("rental drain stacks across multiple rental jokers (#580)", () => {
+    const rentalA = {
+      ...createBusinessCardJoker(),
+      stickers: [{ kind: "rental" as const }],
+    };
+    const rentalB = {
+      ...createPlusFourMultJoker(),
+      stickers: [{ kind: "rental" as const }],
+    };
+    const result = applyEndOfRoundJokers([rentalA, rentalB]);
+    expect(result.moneyEarned).toBe(-2 * RENTAL_END_OF_ROUND_DRAIN);
   });
 });
 

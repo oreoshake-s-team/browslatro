@@ -262,4 +262,44 @@ describe("RoundWonModal payout breakdown", () => {
       container.querySelector("[data-testid^='round-won-joker-row-']"),
     ).toBeNull();
   });
+
+  test("renders a negative-amount joker step with a -$N prefix (#580 Rental)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            {
+              jokerId: "business-card-rental",
+              jokerName: "Business Card (Rental)",
+              moneyEarned: -3,
+            },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("round-won-joker-amount-business-card-rental"),
+    ).toHaveTextContent("-$3");
+  });
+
+  test("subtracts a Rental drain from the total (#580)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 5,
+          interest: 0,
+          endOfRoundJokerSteps: [
+            {
+              jokerId: "business-card-rental",
+              jokerName: "Business Card (Rental)",
+              moneyEarned: -3,
+            },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$2");
+  });
 });

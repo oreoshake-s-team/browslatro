@@ -124,7 +124,9 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
                 <dd
                   data-testid={`round-won-joker-amount-${step.jokerId}`}
                 >
-                  +${step.moneyEarned}
+                  {step.moneyEarned < 0
+                    ? `-$${Math.abs(step.moneyEarned)}`
+                    : `+$${step.moneyEarned}`}
                 </dd>
               </div>
             ))}
