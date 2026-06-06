@@ -26,8 +26,8 @@ function tarotById(id: string): TarotCard {
 }
 
 describe("createTarotCatalog", () => {
-  test("contains twenty-one entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement + Emperor + High Priestess)", () => {
-    expect(createTarotCatalog()).toHaveLength(21);
+  test("contains twenty-two entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement + Emperor + High Priestess + Fool)", () => {
+    expect(createTarotCatalog()).toHaveLength(22);
   });
 
   test("has unique ids", () => {
@@ -384,6 +384,28 @@ describe("The High Priestess", () => {
   test("the-high-priestess description names Planet creation", () => {
     expect(tarotById("the-high-priestess").description).toBe(
       "Creates up to 2 random Planets (must have room)",
+    );
+  });
+});
+
+describe("The Fool", () => {
+  test("the-fool is in the catalog with the canonical name", () => {
+    expect(tarotById("the-fool").name).toBe("The Fool");
+  });
+
+  test("the-fool effect kind is copy-last-consumable", () => {
+    expect(tarotById("the-fool").effect.kind).toBe("copy-last-consumable");
+  });
+
+  test("the-fool effect carries no payload (matches Balatro)", () => {
+    expect(tarotById("the-fool").effect).toEqual({
+      kind: "copy-last-consumable",
+    });
+  });
+
+  test("the-fool description names the copy semantics", () => {
+    expect(tarotById("the-fool").description).toBe(
+      "Creates a copy of the last Tarot or Planet card used (must have room)",
     );
   });
 });

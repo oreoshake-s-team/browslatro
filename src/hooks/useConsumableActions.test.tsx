@@ -263,15 +263,9 @@ function blackHoleConsumable(): Consumable {
 }
 
 function foolConsumable(): Consumable {
-  return {
-    kind: "tarot",
-    card: {
-      id: "the-fool",
-      name: "The Fool",
-      description: "test",
-      effect: { kind: "money-multiply", multiplier: 1, bonusCap: 0 },
-    },
-  };
+  const tarot = createTarotCatalog().find((t) => t.id === "the-fool");
+  if (!tarot) throw new Error("The Fool missing from catalog");
+  return { kind: "tarot", card: tarot };
 }
 
 describe("useConsumableActions — lastUsedConsumable tracking (#615)", () => {
@@ -947,5 +941,69 @@ describe("useConsumableActions — The High Priestess (#618)", () => {
       act(() => result.current.useConsumable(0));
       expect(useGame.getState().consumables).toHaveLength(3);
     });
+  });
+});
+
+describe("useConsumableActions — The Fool (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("after using a tarot, The Fool adds a copy of that tarot to the tray", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit, foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toEqual([hermit]);
+  });
+
+  test("after using a planet, The Fool adds a copy of that planet to the tray", () => {
+    const pluto = plutoConsumable();
+    useGame.getState().setConsumables([pluto, foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toEqual([pluto]);
+  });
+
+  test("The Fool with no previously-used consumable is a no-op (consumes the fool)", () => {
+    useGame.getState().setConsumables([foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("The Fool when consumable slots are full is a no-op (consumes the fool, adds nothing)", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit]);
+    const { result: result1 } = renderHook(() => useConsumableActions());
+    act(() => result1.current.useConsumable(0));
+    useGame
+      .getState()
+      .setConsumables([
+        hangedManConsumable(),
+        strengthConsumable(),
+        foolConsumable(),
+      ]);
+    const { result: result2 } = renderHook(() => useConsumableActions());
+    act(() => result2.current.useConsumable(2));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("The Fool used after The Fool does NOT copy The Fool (self-copy guard)", () => {
+    useGame.getState().setConsumables([foolConsumable(), foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("The Fool is consumed regardless (even when no previously-used consumable exists)", () => {
+    useGame.getState().setConsumables([foolConsumable(), hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-fool")).toBe(false);
   });
 });

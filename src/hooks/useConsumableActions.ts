@@ -6,7 +6,7 @@ import {
   createPlanetCatalog,
   type PlanetCard,
 } from "../items/planets";
-import { removeConsumableAt } from "../items/consumables";
+import { addConsumable, removeConsumableAt } from "../items/consumables";
 import { applyAuraToSelectedInHand, duplicateSelectedInHand } from "../items/spectrals";
 import {
   createTarotCatalog,
@@ -203,6 +203,17 @@ export function useConsumableActions(): UseConsumableActionsResult {
       play("pop");
       setJokers((prev) => [...prev, created]);
       consume();
+      return;
+    }
+    if (effect.kind === "copy-last-consumable") {
+      play("pop");
+      consume();
+      const last = useGame.getState().lastUsedConsumable;
+      if (!last) return;
+      if (last.kind === "tarot" && last.card.id === "the-fool") return;
+      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
+      const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      setConsumables((prev) => addConsumable(prev, last, capacity));
       return;
     }
     if (effect.kind === "create-consumables") {
