@@ -17,7 +17,9 @@ import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { play } from "../system/sounds";
 import { canSubmitHand, debuffedHandIds } from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
-import { extraConsumableSlots } from "../../items/vouchers";
+import { MAX_JOKERS } from "../../items/jokers";
+import { deckJokerSlotsDelta } from "../../items/decks";
+import { extraConsumableSlots, extraJokerSlots } from "../../items/vouchers";
 import { fullDeckPile } from "../../cards/deckBuild";
 
 interface GameProps {
@@ -75,6 +77,7 @@ export default function Game({
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const nopeTriggerKey = useGame((s) => s.nopeTriggerKey);
   const sellConsumableAction = useGame((s) => s.sellConsumable);
   const sellJokerAction = useGame((s) => s.sellJoker);
@@ -110,6 +113,12 @@ export default function Game({
   );
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+  const jokerCapacity = Math.max(
+    0,
+    MAX_JOKERS +
+      extraJokerSlots(ownedVoucherIds) +
+      deckJokerSlotsDelta(selectedDeck),
+  );
   const overlayDeckRemaining = useMemo(
     () =>
       fullDeckPile(
@@ -140,6 +149,7 @@ export default function Game({
       <div className="game-top-row">
         <Jokers
           jokers={jokers}
+          capacity={jokerCapacity}
           pulseCounters={jokerPulseCounters}
           onReorder={reorderJokers}
           onSell={sellJoker}

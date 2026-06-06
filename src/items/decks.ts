@@ -20,7 +20,8 @@ export const DEFAULT_DECK: Deck = "red-deck";
 export type DeckModifier =
   | { readonly kind: "starting-money-delta"; readonly amount: number }
   | { readonly kind: "starting-discards-delta"; readonly amount: number }
-  | { readonly kind: "starting-hands-delta"; readonly amount: number };
+  | { readonly kind: "starting-hands-delta"; readonly amount: number }
+  | { readonly kind: "joker-slots-delta"; readonly amount: number };
 
 export interface DeckSpec {
   readonly id: Deck;
@@ -53,7 +54,16 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     modifiers: [{ kind: "starting-hands-delta", amount: 1 }],
   },
   { id: "green-deck", name: "Green Deck", description: "At end of round, +$2 per remaining hand and discard; no interest.", implemented: false, modifiers: [] },
-  { id: "black-deck", name: "Black Deck", description: "+1 joker slot, -1 hand each round.", implemented: false, modifiers: [] },
+  {
+    id: "black-deck",
+    name: "Black Deck",
+    description: "+1 joker slot, -1 hand each round.",
+    implemented: true,
+    modifiers: [
+      { kind: "joker-slots-delta", amount: 1 },
+      { kind: "starting-hands-delta", amount: -1 },
+    ],
+  },
   { id: "magic-deck", name: "Magic Deck", description: "Start with Crystal Ball voucher and 2 copies of The Fool.", implemented: false, modifiers: [] },
   { id: "nebula-deck", name: "Nebula Deck", description: "Start with Telescope voucher; -1 consumable slot.", implemented: false, modifiers: [] },
   { id: "ghost-deck", name: "Ghost Deck", description: "Spectral cards may appear in shop; start with Hex spectral.", implemented: false, modifiers: [] },
@@ -97,3 +107,6 @@ export const deckStartingDiscardsDelta = (deck: Deck): number =>
 
 export const deckStartingHandsDelta = (deck: Deck): number =>
   sumDeckModifier(deck, "starting-hands-delta");
+
+export const deckJokerSlotsDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "joker-slots-delta");

@@ -2,6 +2,7 @@
 import { describe, expect, test } from "vitest";
 import {
   createDeckCatalog,
+  deckJokerSlotsDelta,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
   deckStartingMoneyDelta,
@@ -29,18 +30,32 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red, Yellow, and Blue Decks are implemented", () => {
+  test("Red, Yellow, Blue, and Black Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
-    expect(implemented).toEqual(["red-deck", "yellow-deck", "blue-deck"]);
+    expect(implemented).toEqual([
+      "red-deck",
+      "yellow-deck",
+      "blue-deck",
+      "black-deck",
+    ]);
   });
 
   test("other decks are not yet implemented (negative)", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(12);
+    expect(unimplementedCount).toBe(11);
+  });
+});
+
+describe("Black Deck spec", () => {
+  test("declares the +1 joker slot and -1 hand modifiers", () => {
+    expect(getDeckSpec("black-deck").modifiers).toEqual([
+      { kind: "joker-slots-delta", amount: 1 },
+      { kind: "starting-hands-delta", amount: -1 },
+    ]);
   });
 });
 
@@ -69,7 +84,25 @@ describe("deckStartingHandsDelta", () => {
     expect(deckStartingHandsDelta("blue-deck")).toBe(1);
   });
 
+  test("Black Deck subtracts 1 hand", () => {
+    expect(deckStartingHandsDelta("black-deck")).toBe(-1);
+  });
+
   test("Red Deck does not change starting hands (negative)", () => {
     expect(deckStartingHandsDelta("red-deck")).toBe(0);
+  });
+});
+
+describe("deckJokerSlotsDelta", () => {
+  test("Black Deck adds 1 joker slot", () => {
+    expect(deckJokerSlotsDelta("black-deck")).toBe(1);
+  });
+
+  test("Red Deck does not change joker slots (negative)", () => {
+    expect(deckJokerSlotsDelta("red-deck")).toBe(0);
+  });
+
+  test("Blue Deck does not change joker slots (negative)", () => {
+    expect(deckJokerSlotsDelta("blue-deck")).toBe(0);
   });
 });

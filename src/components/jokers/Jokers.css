@@ -1,7 +1,7 @@
 .jokers {
   position: relative;
   display: flex;
-  flex: 1 1 41rem;
+  flex: 1 1 calc(var(--joker-capacity, 5) * 8.5rem + 5.3rem);
   min-width: 0;
   flex-direction: column;
   align-items: stretch;

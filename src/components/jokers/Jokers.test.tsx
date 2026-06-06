@@ -609,6 +609,20 @@ describe("Jokers edition rendering", () => {
   });
 });
 
+describe("Jokers UI — capacity prop (closes #566)", () => {
+  test("a capacity larger than MAX_JOKERS renders the extra empty slot", () => {
+    render(<Jokers jokers={[]} capacity={MAX_JOKERS + 1} />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(
+      MAX_JOKERS + 1,
+    );
+  });
+
+  test("a capacity equal to MAX_JOKERS matches default behaviour (negative)", () => {
+    render(<Jokers jokers={[]} capacity={MAX_JOKERS} />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(MAX_JOKERS);
+  });
+});
+
 describe("Jokers UI — Perishable debuffed visual (closes #579)", () => {
   function withPerishable(roundsHeld: number): Joker {
     return {

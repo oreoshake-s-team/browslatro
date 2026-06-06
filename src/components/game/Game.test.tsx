@@ -23,6 +23,7 @@ function makeShopProps(): ShopProps {
   return {
     money: 0,
     equippedJokerCount: 0,
+    jokerCapacity: 5,
     consumableCount: 0,
     consumableCapacity: 2,
     offers: [],

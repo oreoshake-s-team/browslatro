@@ -22,7 +22,7 @@ import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
-import { deckStartingMoneyDelta } from "./items/decks";
+import { deckJokerSlotsDelta, deckStartingMoneyDelta } from "./items/decks";
 import {
   pruneTagsByCategory,
   rollAnteSkipOffers,
@@ -60,6 +60,7 @@ import {
   BOSS_REROLL_COST,
   bossRerollsRemaining,
   extraConsumableSlots,
+  extraJokerSlots,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
 } from "./items/vouchers";
@@ -264,6 +265,12 @@ function App() {
 
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+  const jokerCapacity = Math.max(
+    0,
+    MAX_JOKERS +
+      extraJokerSlots(ownedVoucherIds) +
+      deckJokerSlotsDelta(selectedDeck),
+  );
 
 
   function togglePackPreviewCard(cardId: number) {
@@ -379,6 +386,7 @@ function App() {
             ? {
                 money,
                 equippedJokerCount: effectiveJokerCount(jokers),
+                jokerCapacity,
                 consumableCount: consumables.length,
                 consumableCapacity,
                 offers: shopOffers,
@@ -408,7 +416,7 @@ function App() {
                   consumables,
                   consumableCapacity,
                 ),
-                jokerSlotsFull: effectiveJokerCount(jokers) >= MAX_JOKERS,
+                jokerSlotsFull: effectiveJokerCount(jokers) >= jokerCapacity,
                 previewHand: packPreviewHand,
                 previewSelectedIds: packPreviewSelectedIds,
                 pickedIndices: pickedPackOptionIndices,

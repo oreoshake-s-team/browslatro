@@ -1,6 +1,6 @@
 import "./Shop.css";
 import { useState } from "react";
-import { MAX_JOKERS, type JokerEdition } from "../../items/jokers";
+import { type JokerEdition } from "../../items/jokers";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
@@ -14,6 +14,7 @@ import { useEscapeToClose } from "../system/useEscapeToClose";
 export interface ShopProps {
   money: number;
   equippedJokerCount: number;
+  jokerCapacity: number;
   consumableCount: number;
   consumableCapacity: number;
   offers: ReadonlyArray<ShopItem>;
@@ -67,11 +68,12 @@ function resolveBuyState(
   effectivePrice: number,
   money: number,
   equippedJokerCount: number,
+  jokerCapacity: number,
   consumableCount: number,
   consumableCapacity: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
-  if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
+  if (offer.kind === "joker" && equippedJokerCount >= jokerCapacity) {
     return { kind: "slots-full" };
   }
   if (
@@ -109,12 +111,13 @@ function buyButtonLabel(
 function buyButtonTooltip(
   state: BuyButtonState,
   consumableCapacity: number,
+  jokerCapacity: number,
 ): string | undefined {
   switch (state.kind) {
     case "sold":
       return "Already purchased this round";
     case "slots-full":
-      return `Joker slots are full (max ${MAX_JOKERS})`;
+      return `Joker slots are full (max ${jokerCapacity})`;
     case "consumable-slots-full":
       return `Consumable slots are full (max ${consumableCapacity})`;
     case "unaffordable":
@@ -171,6 +174,7 @@ const EDITION_LABEL: Readonly<Record<JokerEdition, string>> = {
 export default function Shop({
   money,
   equippedJokerCount,
+  jokerCapacity,
   consumableCount,
   consumableCapacity,
   offers,
@@ -217,6 +221,7 @@ export default function Shop({
       effectivePrice,
       money,
       equippedJokerCount,
+      jokerCapacity,
       consumableCount,
       consumableCapacity,
     );
@@ -281,7 +286,7 @@ export default function Shop({
           className="shop-offer-buy"
           disabled={disabled || state.kind !== "available"}
           title={
-            disabled ? LOCK_TOOLTIP : buyButtonTooltip(state, consumableCapacity)
+            disabled ? LOCK_TOOLTIP : buyButtonTooltip(state, consumableCapacity, jokerCapacity)
           }
           aria-label={`${label}: ${subject.name}`}
           onClick={() => onBuy(idx)}
