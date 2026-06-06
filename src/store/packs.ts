@@ -18,6 +18,7 @@ export interface PacksState {
   packPicksRemaining: number;
   packPreviewHand: ReadonlyArray<Card>;
   packPreviewSelectedIds: ReadonlySet<number>;
+  packPreviewDisplayOrder: ReadonlyArray<number>;
   pickedPackOptionIndices: ReadonlySet<number>;
   setExtraPackSlots: (update: Updater<number>) => void;
   setPendingForcedPacks: (update: Updater<ReadonlyArray<PackPool>>) => void;
@@ -25,6 +26,7 @@ export interface PacksState {
   setPackPicksRemaining: (update: Updater<number>) => void;
   setPackPreviewHand: (update: Updater<ReadonlyArray<Card>>) => void;
   setPackPreviewSelectedIds: (update: Updater<ReadonlySet<number>>) => void;
+  setPackPreviewDisplayOrder: (update: Updater<ReadonlyArray<number>>) => void;
   setPickedPackOptionIndices: (update: Updater<ReadonlySet<number>>) => void;
   resetPacks: () => void;
 }
@@ -36,6 +38,7 @@ export const createPacksSlice: StateCreator<GameState, [], [], PacksState> = (se
   packPicksRemaining: 0,
   packPreviewHand: [],
   packPreviewSelectedIds: new Set(),
+  packPreviewDisplayOrder: [],
   pickedPackOptionIndices: new Set(),
   setExtraPackSlots: (update) =>
     set((state) => ({ extraPackSlots: resolve(update, state.extraPackSlots) })),
@@ -55,6 +58,10 @@ export const createPacksSlice: StateCreator<GameState, [], [], PacksState> = (se
     set((state) => ({
       packPreviewSelectedIds: resolve(update, state.packPreviewSelectedIds),
     })),
+  setPackPreviewDisplayOrder: (update) =>
+    set((state) => ({
+      packPreviewDisplayOrder: resolve(update, state.packPreviewDisplayOrder),
+    })),
   setPickedPackOptionIndices: (update) =>
     set((state) => ({
       pickedPackOptionIndices: resolve(update, state.pickedPackOptionIndices),
@@ -67,6 +74,7 @@ export const createPacksSlice: StateCreator<GameState, [], [], PacksState> = (se
       packPicksRemaining: 0,
       packPreviewHand: [],
       packPreviewSelectedIds: new Set(),
+      packPreviewDisplayOrder: [],
       pickedPackOptionIndices: new Set(),
     }),
 });

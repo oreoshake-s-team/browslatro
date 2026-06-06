@@ -212,6 +212,9 @@ function App() {
   const setPackPreviewSelectedIds = useGame(
     (state) => state.setPackPreviewSelectedIds,
   );
+  const setPackPreviewDisplayOrder = useGame(
+    (state) => state.setPackPreviewDisplayOrder,
+  );
   const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
@@ -421,6 +424,7 @@ function App() {
                 previewSelectedIds: packPreviewSelectedIds,
                 pickedIndices: pickedPackOptionIndices,
                 onSelectPreviewCard: togglePackPreviewCard,
+                onReorderPreview: setPackPreviewDisplayOrder,
                 onPick: pickFromOpenedPack,
                 onClose: closeOpenedPack,
               }
