@@ -115,6 +115,7 @@ export interface ActionsState {
   applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
   applySealToSelectedPreviewCards: (seal: Seal) => void;
   applySuitToSelectedPreviewCards: (suit: Suit) => void;
+  applyDeathCopyToSelectedPreviewCards: () => void;
   duplicateSelectedPreviewCards: (copies: number) => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
@@ -290,6 +291,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       s.setPackPreviewHand([]);
     }
     s.setPackPreviewSelectedIds(new Set());
+    s.setPackPreviewDisplayOrder([]);
   },
   openPack: (idx) => {
     const s = get();
@@ -310,6 +312,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         s.setOpenedPack(null);
         s.setPackPreviewHand([]);
         s.setPackPreviewSelectedIds(new Set());
+        s.setPackPreviewDisplayOrder([]);
         s.setPickedPackOptionIndices(new Set());
       }
       return remaining;
@@ -321,6 +324,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setPackPicksRemaining(0);
     s.setPackPreviewHand([]);
     s.setPackPreviewSelectedIds(new Set());
+    s.setPackPreviewDisplayOrder([]);
     s.setPickedPackOptionIndices(new Set());
   },
   buyShopOffer: (idx) => {
@@ -671,6 +675,35 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       prev.map((c) =>
         s.packPreviewSelectedIds.has(c.id) ? { ...c, seal } : c,
       ),
+    );
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  applyDeathCopyToSelectedPreviewCards: () => {
+    const s = get();
+    const byId = new Map(s.packPreviewHand.map((c) => [c.id, c]));
+    const seen = new Set<number>();
+    const orderedIds: number[] = [];
+    for (const id of s.packPreviewDisplayOrder) {
+      if (byId.has(id)) {
+        orderedIds.push(id);
+        seen.add(id);
+      }
+    }
+    for (const c of s.packPreviewHand) {
+      if (!seen.has(c.id)) orderedIds.push(c.id);
+    }
+    const selectedInOrder: Card[] = [];
+    for (const id of orderedIds) {
+      if (s.packPreviewSelectedIds.has(id)) {
+        const c = byId.get(id);
+        if (c) selectedInOrder.push(c);
+      }
+    }
+    if (selectedInOrder.length !== 2) return;
+    const [left, right] = selectedInOrder;
+    const copied: Card = { ...right, id: left.id };
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) => (c.id === left.id ? copied : c)),
     );
     s.setPackPreviewSelectedIds(new Set());
   },

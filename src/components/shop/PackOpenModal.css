@@ -150,3 +150,18 @@
   min-width: 0;
 }
 
+.pack-open-preview-card {
+  display: flex;
+  flex: 0 1 var(--card-width);
+  min-width: 0;
+  cursor: grab;
+}
+
+.pack-open-preview-card:active {
+  cursor: grabbing;
+}
+
+.pack-open-preview-card-dragging {
+  opacity: 0.5;
+}
+

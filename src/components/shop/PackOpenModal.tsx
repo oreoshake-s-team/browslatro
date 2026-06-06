@@ -1,5 +1,5 @@
 import "./PackOpenModal.css";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type PackOffer,
   type PackOption,
@@ -12,6 +12,26 @@ import { spectralNeedsTarget } from "../../items/spectrals";
 import Card from "../cards/Card";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
+function applyManualOrder(
+  hand: ReadonlyArray<CardType>,
+  order: ReadonlyArray<number>,
+): CardType[] {
+  const byId = new Map(hand.map((c) => [c.id, c]));
+  const seen = new Set<number>();
+  const out: CardType[] = [];
+  for (const id of order) {
+    const c = byId.get(id);
+    if (c && !seen.has(id)) {
+      out.push(c);
+      seen.add(id);
+    }
+  }
+  for (const c of hand) {
+    if (!seen.has(c.id)) out.push(c);
+  }
+  return out;
+}
+
 export interface PackOpenModalProps {
   pack: PackOffer;
   picksRemaining: number;
@@ -21,6 +41,7 @@ export interface PackOpenModalProps {
   previewHand?: ReadonlyArray<CardType>;
   previewSelectedIds?: ReadonlySet<number>;
   onSelectPreviewCard?: (cardId: number) => void;
+  onReorderPreview?: (orderedIds: ReadonlyArray<number>) => void;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
 }
@@ -119,15 +140,45 @@ export default function PackOpenModal({
   previewHand = [],
   previewSelectedIds,
   onSelectPreviewCard,
+  onReorderPreview,
   onPick,
   onClose,
 }: PackOpenModalProps) {
   useEscapeToClose(onClose, true);
   const [previewSortMode, setPreviewSortMode] = useState<SortMode>("rank");
-  const sortedPreviewHand = useMemo(
-    () => sortCards(previewHand, previewSortMode),
-    [previewHand, previewSortMode],
+  const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
+    null,
   );
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const displayedPreviewHand = useMemo(
+    () =>
+      manualOrder
+        ? applyManualOrder(previewHand, manualOrder)
+        : sortCards(previewHand, previewSortMode),
+    [previewHand, previewSortMode, manualOrder],
+  );
+  useEffect(() => {
+    if (!onReorderPreview) return;
+    onReorderPreview(displayedPreviewHand.map((c) => c.id));
+  }, [displayedPreviewHand, onReorderPreview]);
+
+  function selectPreviewSort(mode: SortMode) {
+    setPreviewSortMode(mode);
+    setManualOrder(null);
+  }
+
+  function reorderPreview(sourceId: number, targetId: number) {
+    if (sourceId === targetId) return;
+    const ids = displayedPreviewHand.map((c) => c.id);
+    const fromIdx = ids.indexOf(sourceId);
+    const toIdx = ids.indexOf(targetId);
+    if (fromIdx < 0 || toIdx < 0) return;
+    const next = ids.slice();
+    next.splice(fromIdx, 1);
+    const insertIdx = toIdx > fromIdx ? toIdx - 1 : toIdx;
+    next.splice(insertIdx, 0, sourceId);
+    setManualOrder(next);
+  }
   const totalPicks = packPickLimit(pack.variant);
   const title = packDisplayName(pack);
   const selectedCount = previewSelectedIds?.size ?? 0;
@@ -222,7 +273,7 @@ export default function PackOpenModal({
                 }`}
                 data-testid="pack-open-preview-sort-rank"
                 aria-pressed={previewSortMode === "rank"}
-                onClick={() => setPreviewSortMode("rank")}
+                onClick={() => selectPreviewSort("rank")}
               >
                 Rank
               </button>
@@ -235,7 +286,7 @@ export default function PackOpenModal({
                 }`}
                 data-testid="pack-open-preview-sort-suit"
                 aria-pressed={previewSortMode === "suit"}
-                onClick={() => setPreviewSortMode("suit")}
+                onClick={() => selectPreviewSort("suit")}
               >
                 Suit
               </button>
@@ -245,17 +296,48 @@ export default function PackOpenModal({
               data-testid="pack-open-preview-hand"
               aria-label="Preview hand"
             >
-              {sortedPreviewHand.map((card) => (
-                <Card
+              {displayedPreviewHand.map((card) => (
+                <div
                   key={card.id}
-                  card={card}
-                  selected={previewSelectedIds?.has(card.id) ?? false}
-                  onToggle={
-                    onSelectPreviewCard
-                      ? () => onSelectPreviewCard(card.id)
-                      : undefined
-                  }
-                />
+                  className={`pack-open-preview-card${
+                    draggingId === card.id ? " pack-open-preview-card-dragging" : ""
+                  }`}
+                  data-testid={`pack-open-preview-card-${card.id}`}
+                  draggable
+                  onDragStart={(e) => {
+                    setDraggingId(card.id);
+                    if (e.dataTransfer) {
+                      e.dataTransfer.effectAllowed = "move";
+                      e.dataTransfer.setData("text/plain", String(card.id));
+                    }
+                  }}
+                  onDragOver={(e) => {
+                    if (draggingId === null) return;
+                    e.preventDefault();
+                    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const raw = e.dataTransfer?.getData("text/plain") ?? "";
+                    const sourceId =
+                      raw && !Number.isNaN(Number(raw))
+                        ? Number(raw)
+                        : draggingId;
+                    if (sourceId !== null) reorderPreview(sourceId, card.id);
+                    setDraggingId(null);
+                  }}
+                  onDragEnd={() => setDraggingId(null)}
+                >
+                  <Card
+                    card={card}
+                    selected={previewSelectedIds?.has(card.id) ?? false}
+                    onToggle={
+                      onSelectPreviewCard
+                        ? () => onSelectPreviewCard(card.id)
+                        : undefined
+                    }
+                  />
+                </div>
               ))}
             </div>
           </>

@@ -1185,3 +1185,79 @@ describe("pending shop modifiers", () => {
     expect(items.every((o) => o.price > 0)).toBe(true);
   });
 });
+
+describe("applyDeathCopyToSelectedPreviewCards (#763)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("is a no-op when fewer than 2 cards are selected (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const same = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(same).toEqual(preview[0]);
+  });
+
+  test("uses store packPreviewHand order when no display order is set: left becomes a copy of right", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const left = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(left?.rank).toBe(preview[1].rank);
+  });
+
+  test("preserves the left card's id after the copy (the new card replaces the old left in place)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const stillExists = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(stillExists).toBeDefined();
+  });
+
+  test("respects packPreviewDisplayOrder: left/right follow the displayed arrangement", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.setPackPreviewDisplayOrder([preview[1].id, preview[0].id, preview[2].id]);
+    game.applyDeathCopyToSelectedPreviewCards();
+    const card1 = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[1].id);
+    expect(card1?.rank).toBe(preview[0].rank);
+  });
+
+  test("clears the preview selection after applying", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("leaves the unselected card untouched (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const untouched = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[2].id);
+    expect(untouched).toEqual(preview[2]);
+  });
+});

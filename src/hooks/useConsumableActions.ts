@@ -48,6 +48,9 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applySuitToSelectedPreviewCards = useGame(
     (s) => s.applySuitToSelectedPreviewCards,
   );
+  const applyDeathCopyToSelectedPreviewCards = useGame(
+    (s) => s.applyDeathCopyToSelectedPreviewCards,
+  );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
@@ -261,7 +264,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
       return;
     }
     if (effect.kind === "death-copy") {
-      if (previewActive) return;
+      if (previewActive) {
+        if (packPreviewSelectedIds.size !== effect.requiredTargets) return;
+        play("pop");
+        applyDeathCopyToSelectedPreviewCards();
+        consume();
+        return;
+      }
       if (selectedIds.size !== effect.requiredTargets) return;
       const hand = useGame.getState().dealt.hand;
       const handById = new Map(hand.map((c) => [c.id, c]));
