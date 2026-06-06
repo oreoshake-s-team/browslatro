@@ -816,3 +816,53 @@ describe("Shop voucher override picker (dev)", () => {
     expect(onSetVoucher).toHaveBeenCalledWith("overstock-plus");
   });
 });
+
+describe("Shop joker sticker badges (#558 / #792)", () => {
+  function perishableJokerOffer(): ShopItem {
+    const joker = createPlusFourMultJoker();
+    return {
+      kind: "joker",
+      joker: { ...joker, stickers: [{ kind: "perishable", roundsHeld: 0 }] },
+      price: 5,
+      sold: false,
+    };
+  }
+
+  function eternalJokerOffer(): ShopItem {
+    const joker = createBusinessCardJoker();
+    return {
+      kind: "joker",
+      joker: { ...joker, stickers: [{ kind: "eternal" }] },
+      price: 5,
+      sold: false,
+    };
+  }
+
+  test("perishable shop joker offer renders the perishable sticker badge", () => {
+    renderShop({ offers: [perishableJokerOffer()] });
+    expect(
+      screen.getByTestId("joker-stickers-plus-four-mult"),
+    ).toBeInTheDocument();
+  });
+
+  test("eternal shop joker offer renders the eternal sticker badge", () => {
+    renderShop({ offers: [eternalJokerOffer()] });
+    expect(
+      screen.getByTestId("joker-stickers-business-card"),
+    ).toBeInTheDocument();
+  });
+
+  test("a vanilla joker offer renders no sticker badges (negative)", () => {
+    renderShop({ offers: [jokerOffer("plus")] });
+    expect(
+      screen.queryByTestId("joker-stickers-plus-four-mult"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("non-joker offers do not render a sticker-badges list", () => {
+    renderShop({ offers: [planetOffer("pluto")] });
+    expect(
+      screen.queryByText("Joker stickers"),
+    ).not.toBeInTheDocument();
+  });
+});
