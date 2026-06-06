@@ -6,12 +6,14 @@ import {
   PERISHABLE_LIFE,
   jokerSellValue,
   jokerStickers,
+  probabilityMultiplierFromJokers,
   type Joker,
   type JokerRarity,
   type JokerSticker,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
 import { countEnhancedInFullDeck } from "../../cards/deckBuild";
+import { formatChanceRatio } from "../cards/cardInfo";
 
 interface JokerTooltipProps {
   id: string;
@@ -32,6 +34,7 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
     : "";
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
+  const effectiveOdds = useEffectiveOdds(joker);
   return createPortal(
     <div id={id} role="tooltip" className="joker-tooltip" style={style}>
       <p className="joker-tooltip-heading">{joker.name}</p>
@@ -42,6 +45,14 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
         {rarityLabel(joker.rarity)}
       </p>
       <p className="joker-tooltip-description">{joker.description}</p>
+      {effectiveOdds && (
+        <p
+          className="joker-tooltip-effective-odds"
+          data-testid="joker-tooltip-effective-odds"
+        >
+          Effective odds: {effectiveOdds}
+        </p>
+      )}
       {progress && (
         <p
           className="joker-tooltip-progress"
@@ -98,4 +109,24 @@ function useEnhancedThresholdProgress(
     cardEnhancementsById,
   );
   return { count, threshold: joker.effect.threshold };
+}
+
+function getJokerBaseChance(joker: Joker): number | null {
+  const e = joker.effect;
+  if (
+    e.kind === "business-card" ||
+    e.kind === "per-suit-chance-x-mult" ||
+    e.kind === "per-held-face-chance-money"
+  ) {
+    return e.chance;
+  }
+  return null;
+}
+
+function useEffectiveOdds(joker: Joker): string | null {
+  const multiplier = useGame((s) => probabilityMultiplierFromJokers(s.jokers));
+  const baseChance = getJokerBaseChance(joker);
+  if (baseChance === null) return null;
+  if (multiplier === 1) return null;
+  return formatChanceRatio(baseChance, multiplier);
 }

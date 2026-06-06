@@ -9,10 +9,14 @@ import {
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
   createBaronJoker,
+  createBloodstoneJoker,
+  createBusinessCardJoker,
   createDriversLicenseJoker,
   createGreedyJoker,
   createJokerStencilJoker,
+  createOopsAllSixesJoker,
   createPlusFourMultJoker,
+  createReservedParkingJoker,
   createTribouletJoker,
   jokerSellValue,
   withEdition,
@@ -351,5 +355,79 @@ describe("Joker tooltip — Driver's License enhanced-count progress (#632)", ()
     ).toHaveTextContent(
       `${DRIVERS_LICENSE_ENHANCED_THRESHOLD} / ${DRIVERS_LICENSE_ENHANCED_THRESHOLD}`,
     );
+  });
+});
+
+describe("Joker tooltip — effective odds with a probability multiplier (#774)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("does not show the effective-odds line for a non-probability joker", async () => {
+    useGame.getState().setJokers([createPlusFourMultJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(
+      screen.queryByTestId("joker-tooltip-effective-odds"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not show the line when no probability-multiplier joker is equipped (negative)", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(
+      screen.queryByTestId("joker-tooltip-effective-odds"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders the effective-odds row for Business Card when Oops! All 6s is equipped", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toBeInTheDocument();
+  });
+
+  test("Business Card with multiplier 2 shows 'guaranteed' (0.5 × 2 clamps to 1)", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toHaveTextContent(/guaranteed/i);
+  });
+
+  test("Bloodstone with multiplier 2 also clamps to 'guaranteed' (0.5 × 2)", async () => {
+    useGame.getState().setJokers([createBloodstoneJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBloodstoneJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-bloodstone"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toHaveTextContent(/guaranteed/i);
+  });
+
+  test("Reserved Parking with multiplier 2 also shows the effective-odds line", async () => {
+    useGame.getState().setJokers([createReservedParkingJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createReservedParkingJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-reserved-parking"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toBeInTheDocument();
+  });
+
+  test("base description is unchanged on a Business Card tooltip with the multiplier active", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/50% chance/);
   });
 });

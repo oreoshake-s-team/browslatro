@@ -10,11 +10,17 @@ export function rollChance(chance: number, rng: () => number): boolean {
   if (chance <= 0) return false;
   if (chance >= 1) return true;
   if (chanceOverrideConfig.force100) return true;
-  const multiplier =
-    chanceOverrideConfig.probabilityMultiplier > 0
-      ? chanceOverrideConfig.probabilityMultiplier
-      : 1;
-  const effective = Math.min(1, chance * multiplier);
+  const effective = effectiveChance(
+    chance,
+    chanceOverrideConfig.probabilityMultiplier,
+  );
   if (effective >= 1) return true;
   return rng() < effective;
+}
+
+export function effectiveChance(baseChance: number, multiplier: number): number {
+  if (baseChance <= 0) return 0;
+  if (baseChance >= 1) return 1;
+  const safeMultiplier = multiplier > 0 ? multiplier : 1;
+  return Math.min(1, baseChance * safeMultiplier);
 }

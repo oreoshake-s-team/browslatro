@@ -15,6 +15,7 @@ import {
 } from "../../cards/enhancements";
 import { GOLD_HELD_BONUS_PER_CARD } from "../../scoring/payout";
 import { STEEL_MULT_FACTOR } from "../../cards/heldInHand";
+import { effectiveChance } from "../../dev/chanceOverride";
 
 const SUIT_LABELS: Record<Suit, string> = {
   spades: "Spades",
@@ -35,24 +36,44 @@ export interface EnhancementInfo {
   readonly description: string;
 }
 
-const oneInN = (chance: number): string => `1-in-${Math.round(1 / chance)}`;
+export function formatChanceRatio(
+  baseChance: number,
+  probabilityMultiplier: number = 1,
+): string {
+  const eff = effectiveChance(baseChance, probabilityMultiplier);
+  if (eff >= 1) return "guaranteed";
+  const denominator = Math.round(1 / baseChance);
+  const numerator = Math.min(
+    denominator,
+    Math.round(eff * denominator),
+  );
+  return numerator === 1
+    ? `1-in-${denominator}`
+    : `${numerator}-in-${denominator}`;
+}
 
-const ENHANCEMENT_INFO: Record<Enhancement, EnhancementInfo> = {
-  bonus: { name: "Bonus", description: `+${BONUS_ENHANCEMENT_CHIPS} Chips when scored` },
-  mult: { name: "Mult", description: `+${MULT_ENHANCEMENT_MULT_DELTA} Mult when scored` },
-  wild: { name: "Wild", description: "Counts as every suit" },
-  glass: {
-    name: "Glass",
-    description: `×${GLASS_ENHANCEMENT_MULT_TIMES} Mult when scored, ${oneInN(GLASS_ENHANCEMENT_DESTROY_CHANCE)} chance to break`,
-  },
-  steel: { name: "Steel", description: `×${STEEL_MULT_FACTOR} Mult while held in hand` },
-  stone: { name: "Stone", description: `+${STONE_ENHANCEMENT_CHIPS} Chips, no rank or suit` },
-  gold: { name: "Gold", description: `Earn +$${GOLD_HELD_BONUS_PER_CARD} if held at end of round` },
-  lucky: {
-    name: "Lucky",
-    description: `${oneInN(LUCKY_ENHANCEMENT_MULT_CHANCE)} chance for +${LUCKY_ENHANCEMENT_MULT_AMOUNT} Mult, ${oneInN(LUCKY_ENHANCEMENT_MONEY_CHANCE)} chance for +$${LUCKY_ENHANCEMENT_MONEY_AMOUNT}`,
-  },
-};
+function buildEnhancementInfo(
+  probabilityMultiplier: number,
+): Record<Enhancement, EnhancementInfo> {
+  return {
+    bonus: { name: "Bonus", description: `+${BONUS_ENHANCEMENT_CHIPS} Chips when scored` },
+    mult: { name: "Mult", description: `+${MULT_ENHANCEMENT_MULT_DELTA} Mult when scored` },
+    wild: { name: "Wild", description: "Counts as every suit" },
+    glass: {
+      name: "Glass",
+      description: `×${GLASS_ENHANCEMENT_MULT_TIMES} Mult when scored, ${formatChanceRatio(GLASS_ENHANCEMENT_DESTROY_CHANCE, probabilityMultiplier)} chance to break`,
+    },
+    steel: { name: "Steel", description: `×${STEEL_MULT_FACTOR} Mult while held in hand` },
+    stone: { name: "Stone", description: `+${STONE_ENHANCEMENT_CHIPS} Chips, no rank or suit` },
+    gold: { name: "Gold", description: `Earn +$${GOLD_HELD_BONUS_PER_CARD} if held at end of round` },
+    lucky: {
+      name: "Lucky",
+      description: `${formatChanceRatio(LUCKY_ENHANCEMENT_MULT_CHANCE, probabilityMultiplier)} chance for +${LUCKY_ENHANCEMENT_MULT_AMOUNT} Mult, ${formatChanceRatio(LUCKY_ENHANCEMENT_MONEY_CHANCE, probabilityMultiplier)} chance for +$${LUCKY_ENHANCEMENT_MONEY_AMOUNT}`,
+    },
+  };
+}
+
+const DEFAULT_ENHANCEMENT_INFO = buildEnhancementInfo(1);
 
 export interface CardInfo {
   readonly rank: string;
@@ -66,8 +87,20 @@ export interface CardInfo {
   readonly edition?: CardEditionInfo;
 }
 
-export function getCardInfo(card: Card): CardInfo {
+export interface GetCardInfoOptions {
+  readonly probabilityMultiplier?: number;
+}
+
+export function getCardInfo(
+  card: Card,
+  options: GetCardInfoOptions = {},
+): CardInfo {
   const isStone = card.enhancement === "stone";
+  const enhancementInfo =
+    options.probabilityMultiplier !== undefined &&
+    options.probabilityMultiplier !== 1
+      ? buildEnhancementInfo(options.probabilityMultiplier)
+      : DEFAULT_ENHANCEMENT_INFO;
   return {
     rank: card.rank,
     suitLabel: SUIT_LABELS[card.suit],
@@ -75,7 +108,7 @@ export function getCardInfo(card: Card): CardInfo {
     suitClass: card.suit,
     chips: isStone ? 0 : getRankChips(card.rank),
     isStone,
-    enhancement: card.enhancement ? ENHANCEMENT_INFO[card.enhancement] : undefined,
+    enhancement: card.enhancement ? enhancementInfo[card.enhancement] : undefined,
     seal: card.seal ? getSealInfo(card.seal) : undefined,
     edition: card.edition ? CARD_EDITION_INFO[card.edition] : undefined,
   };
