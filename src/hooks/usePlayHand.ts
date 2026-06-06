@@ -403,8 +403,8 @@ export function usePlayHand({
       matchingObservatoryPlanets,
     );
     const preHandXMultNoSteel =
-      handJokerResult.xMult * enhancementXMult * perCardXMult * observatoryMult;
-    const totalXMult = preHandXMultNoSteel * steelMult;
+      handJokerResult.xMult * enhancementXMult * perCardXMult;
+    const totalXMult = preHandXMultNoSteel * steelMult * observatoryMult;
 
     const scoringChipsTotal =
       handEntry.chips +
@@ -427,12 +427,25 @@ export function usePlayHand({
     const finalize = () => {
       finalizeHandSubmission(finalScore, submittedSelection, label);
     };
+    const runObservatory = () => {
+      if (observatoryMult !== 1) {
+        setScoringEvents((prev) => [
+          ...prev,
+          {
+            kind: "mult-times",
+            factor: observatoryMult,
+            source: `Observatory: ${matchingObservatoryPlanets} matching Planet${matchingObservatoryPlanets === 1 ? "" : "s"}`,
+          },
+        ]);
+      }
+      finalize();
+    };
     const runHandLevel = () => {
       if (handJokerResult.steps.length === 0) {
-        finalize();
+        runObservatory();
         return;
       }
-      pipeline.handLevelFinalizeRef.current = finalize;
+      pipeline.handLevelFinalizeRef.current = runObservatory;
       setHandLevelSteps(handJokerResult.steps);
       setHandLevelIndex(0);
     };
@@ -497,13 +510,6 @@ export function usePlayHand({
         kind: "mult-times",
         factor: devMultFactor,
         source: "Apply Modifiers (dev)",
-      });
-    }
-    if (observatoryMult !== 1) {
-      submitEvents.push({
-        kind: "mult-times",
-        factor: observatoryMult,
-        source: `Observatory: ${matchingObservatoryPlanets} matching Planet${matchingObservatoryPlanets === 1 ? "" : "s"}`,
       });
     }
     setScoringEvents((prev) => [...prev, ...submitEvents]);
