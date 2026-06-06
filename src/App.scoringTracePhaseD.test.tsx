@@ -136,6 +136,83 @@ describe("Scoring trace — Steel held in hand", () => {
   });
 });
 
+describe("Scoring trace — Red Seal retriggers held-in-hand (#762)", () => {
+  test("emits a second ×1.5 Mult trace event for a Red-sealed held Steel card", async () => {
+    deckConfig.hand = [
+      makeCard("A", "spades"),
+      makeCard("A", "hearts"),
+      makeCard("5", "clubs"),
+      makeCard("7", "diamonds"),
+      makeCard("9", "spades"),
+      makeCard("2", "hearts", { enhancement: "steel", seal: "red" }),
+      makeCard("3", "hearts"),
+      makeCard("4", "hearts"),
+    ];
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    await user.click(cards[0]);
+    await user.click(cards[1]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    const occurrences = logText().split("×1.5 Mult (Steel: 2♥ held)").length - 1;
+    expect(occurrences).toBe(2);
+  });
+
+  test("emits two Gold-held money events for a Red-sealed held Gold card (winning Royal Flush)", async () => {
+    deckConfig.hand = [
+      makeCard("2", "hearts", { enhancement: "gold", seal: "red" }),
+      makeCard("10", "spades"),
+      makeCard("J", "spades"),
+      makeCard("Q", "spades"),
+      makeCard("K", "spades"),
+      makeCard("A", "spades"),
+      makeCard("3", "hearts"),
+      makeCard("4", "hearts"),
+    ];
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < cards.length; i += 1) {
+      const label = cards[i].getAttribute("aria-label") ?? "";
+      if (label.includes("of Spades")) await user.click(cards[i]);
+    }
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    const occurrences =
+      logText().split("+$3 (Gold enhancement: 2♥ held)").length - 1;
+    expect(occurrences).toBe(2);
+  });
+
+  test("a plain held Gold (no Red Seal) emits exactly one Gold-held money event (regression)", async () => {
+    deckConfig.hand = [
+      makeCard("2", "hearts", { enhancement: "gold" }),
+      makeCard("10", "spades"),
+      makeCard("J", "spades"),
+      makeCard("Q", "spades"),
+      makeCard("K", "spades"),
+      makeCard("A", "spades"),
+      makeCard("3", "hearts"),
+      makeCard("4", "hearts"),
+    ];
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    for (let i = 0; i < cards.length; i += 1) {
+      const label = cards[i].getAttribute("aria-label") ?? "";
+      if (label.includes("of Spades")) await user.click(cards[i]);
+    }
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    const occurrences =
+      logText().split("+$3 (Gold enhancement: 2♥ held)").length - 1;
+    expect(occurrences).toBe(1);
+  });
+});
+
 describe("Scoring trace — round payout events", () => {
   test("emits the Small Blind reward after winning the round", async () => {
     deckConfig.hand = [
