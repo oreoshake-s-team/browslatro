@@ -117,15 +117,16 @@ test("post-round shop flow: round-won modal → Continue → shop with 2 items +
 test("losing 3 games in a row leaves exactly one chips/multiplier span in the sidebar HandScore (issue #118)", async ({
   page,
 }) => {
-  page.on("dialog", (dialog) => dialog.accept());
   await page.goto("/");
   await dismissBlindSelect(page);
   const submit = page.getByRole("button", { name: SUBMIT_BUTTON });
+  const tryAgain = page.getByRole("button", { name: /Try again/ });
 
   for (let cycle = 0; cycle < 3; cycle += 1) {
     for (let hand = 0; hand < 4; hand += 1) {
       await submit.click();
     }
+    await tryAgain.click();
     await dismissBlindSelect(page);
     await expect(page.locator(".sidebar .chips")).toHaveCount(1);
     await expect(page.locator(".sidebar .multiplier")).toHaveCount(1);
