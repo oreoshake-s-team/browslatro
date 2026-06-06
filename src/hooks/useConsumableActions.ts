@@ -1,6 +1,11 @@
 import { useGame } from "../store/game";
 import { play } from "../components/system/sounds";
-import { applyPlanetUpgrade } from "../items/planets";
+import {
+  applyPlanetUpgrade,
+  availablePlanets,
+  createPlanetCatalog,
+  type PlanetCard,
+} from "../items/planets";
 import { removeConsumableAt } from "../items/consumables";
 import { applyAuraToSelectedInHand, duplicateSelectedInHand } from "../items/spectrals";
 import {
@@ -206,17 +211,30 @@ export function useConsumableActions(): UseConsumableActionsResult {
       const ownedVoucherIds = useGame.getState().ownedVoucherIds;
       const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
       const rng = tarotRngConfig.rng;
-      const pool: ReadonlyArray<TarotCard> =
+      const tarotPool: ReadonlyArray<TarotCard> =
         effect.consumableKind === "tarot"
           ? createTarotCatalog().filter((t) => t.id !== entry.card.id)
+          : [];
+      const planetPool: ReadonlyArray<PlanetCard> =
+        effect.consumableKind === "planet"
+          ? availablePlanets(
+              createPlanetCatalog(),
+              useGame.getState().handPlayCounts,
+            )
           : [];
       const added: Consumable[] = [];
       for (let i = 0; i < effect.count; i += 1) {
         const current = useGame.getState().consumables;
         if (current.length + added.length >= capacity) break;
-        if (pool.length === 0) break;
-        const pick = pool[Math.floor(rng() * pool.length)];
-        added.push({ kind: "tarot", card: pick });
+        if (effect.consumableKind === "tarot") {
+          if (tarotPool.length === 0) break;
+          const pick = tarotPool[Math.floor(rng() * tarotPool.length)];
+          added.push({ kind: "tarot", card: pick });
+        } else {
+          if (planetPool.length === 0) break;
+          const pick = planetPool[Math.floor(rng() * planetPool.length)];
+          added.push({ kind: "planet", card: pick });
+        }
       }
       if (added.length > 0) {
         setConsumables((prev) => [...prev, ...added]);
