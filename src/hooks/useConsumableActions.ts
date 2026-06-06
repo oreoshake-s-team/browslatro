@@ -9,7 +9,13 @@ import {
   resolveTemperancePayout,
   rollWheelOfFortune,
 } from "../items/tarots";
-import { withEdition } from "../items/jokers";
+import {
+  createJokerCatalog,
+  createRandomJoker,
+  MAX_JOKERS,
+  withEdition,
+} from "../items/jokers";
+import { extraJokerSlots } from "../items/vouchers";
 import { nextCardId } from "../cards/deck";
 import type { Card } from "../cards/types";
 
@@ -174,6 +180,16 @@ export function useConsumableActions(): UseConsumableActionsResult {
       } else {
         triggerNope();
       }
+      consume();
+      return;
+    }
+    if (effect.kind === "create-joker") {
+      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
+      const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+      const created = createRandomJoker(jokers, createJokerCatalog(), capacity);
+      if (!created) return;
+      play("pop");
+      setJokers((prev) => [...prev, created]);
       consume();
       return;
     }

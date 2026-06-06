@@ -7,6 +7,7 @@ import {
   createBusinessCardJoker,
   createJokerByRarity,
   createJokerCatalog,
+  createRandomJoker,
   createJokerStencilJoker,
   createLegendaryJokerCatalog,
   createMisprintJoker,
@@ -218,6 +219,41 @@ describe("createJokerByRarity", () => {
     const catalog = createJokerCatalog();
     const allRare = catalog.filter((j) => j.rarity === "rare");
     const result = createJokerByRarity(allRare, catalog, "rare", 99, fixedRng([0]));
+    expect(result).toBeNull();
+  });
+});
+
+describe("createRandomJoker", () => {
+  test("returns a joker from any rarity when there is room", () => {
+    const result = createRandomJoker([], createJokerCatalog(), 5, fixedRng([0]));
+    expect(result).not.toBeNull();
+  });
+
+  test("returns a joker drawn from the provided catalog", () => {
+    const catalog = createJokerCatalog();
+    const catalogIds = new Set(catalog.map((j) => j.id));
+    const result = createRandomJoker([], catalog, 5, fixedRng([0.5]));
+    expect(result && catalogIds.has(result.id)).toBe(true);
+  });
+
+  test("excludes jokers already equipped", () => {
+    const catalog = createJokerCatalog();
+    const owned = catalog.slice(0, catalog.length - 1);
+    const remaining = catalog[catalog.length - 1];
+    const result = createRandomJoker(owned, catalog, 99, fixedRng([0]));
+    expect(result?.id).toBe(remaining.id);
+  });
+
+  test("returns null when at capacity", () => {
+    const equipped = [createPlusFourMultJoker(), createBusinessCardJoker()];
+    expect(
+      createRandomJoker(equipped, createJokerCatalog(), 2, fixedRng([0])),
+    ).toBeNull();
+  });
+
+  test("returns null when every catalog joker is already owned", () => {
+    const catalog = createJokerCatalog();
+    const result = createRandomJoker(catalog, catalog, 99, fixedRng([0]));
     expect(result).toBeNull();
   });
 });

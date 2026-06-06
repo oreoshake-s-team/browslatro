@@ -142,6 +142,17 @@ export function createJokerByRarity(
   );
 }
 
+export function createRandomJoker(
+  jokers: ReadonlyArray<Joker>,
+  catalog: ReadonlyArray<Joker>,
+  capacity: number,
+  rng: RandomSource = Math.random,
+): Joker | null {
+  if (effectiveJokerCount(jokers) >= capacity) return null;
+  const ownedIds = new Set(jokers.map((j) => j.id));
+  return pickRandomFromCatalog(catalog, (j) => !ownedIds.has(j.id), rng);
+}
+
 export function replaceJokersExceptCopyOf(
   jokers: ReadonlyArray<Joker>,
   idx: number,
