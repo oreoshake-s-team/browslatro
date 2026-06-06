@@ -1,4 +1,4 @@
-import type { Card, Hand, Rank } from "../cards/types";
+import type { Card, Hand, Rank, Suit } from "../cards/types";
 import { HANDS } from "../constants";
 import { cardSuitForEvaluation, isStoneCard } from "../cards/enhancements";
 
@@ -81,12 +81,23 @@ function countByRank(cards: ReadonlyArray<Card>): number[] {
 export interface HandEvalOptions {
   readonly fourFingers?: boolean;
   readonly shortcut?: boolean;
+  readonly smearedSuits?: boolean;
+}
+
+export function mergedSuit(suit: Suit, smearedSuits = false): Suit {
+  if (!smearedSuits) return suit;
+  if (suit === "hearts") return "diamonds";
+  if (suit === "spades") return "clubs";
+  return suit;
 }
 
 function isFlush(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
   const minLen = options.fourFingers ? 4 : 5;
   if (cards.length < minLen || cards.length > 5) return false;
-  const suits = cards.map(cardSuitForEvaluation);
+  const rawSuits = cards.map(cardSuitForEvaluation);
+  const suits = rawSuits.map((s) =>
+    s === null ? null : mergedSuit(s, options.smearedSuits === true),
+  );
   const anchor = suits.find((s) => s !== null);
   if (anchor === undefined) return true;
   return suits.every((s) => s === null || s === anchor);

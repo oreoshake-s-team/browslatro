@@ -377,9 +377,13 @@ export function usePlayHand({
     let perCardXMult = 1;
     let firstFaceAlreadyScoredUpfront = false;
     const luckyRollsByScoringIndex: LuckyRollResult[] = [];
+    const smearedSuitsActive =
+      handEvalOptionsFromJokers(jokers.filter(isJokerActive)).smearedSuits ===
+      true;
     for (let i = 0; i < scoring.length; i += 1) {
       const perCard = applyPerCardJokers(jokers.filter(isJokerActive), scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
+        smearedSuits: smearedSuitsActive,
       });
       perCardAdditiveMult += perCard.additiveMult;
       perCardAdditiveChips += perCard.additiveChips;
