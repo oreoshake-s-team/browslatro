@@ -4,7 +4,12 @@ import PackOpenModal from "./PackOpenModal";
 import type { PackOffer } from "../../items/packs";
 import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
-import { createJokerCatalog } from "../../items/jokers";
+import {
+  PERISHABLE_LIFE,
+  createJokerCatalog,
+  type Joker,
+  type JokerSticker,
+} from "../../items/jokers";
 import { createSpectralCatalog } from "../../items/spectrals";
 
 const PLANETS = createPlanetCatalog();
@@ -1071,5 +1076,111 @@ describe("PackOpenModal — preview-hand reorder (#763)", () => {
     const before = previewCardTestIds();
     dispatchDragSequence(3001, 3001);
     expect(previewCardTestIds()).toEqual(before);
+  });
+});
+
+describe("PackOpenModal — Buffoon pack sticker badges (closes #801)", () => {
+  function stickeredJokerPack(stickers: ReadonlyArray<JokerSticker>): PackOffer {
+    const base = JOKERS[0];
+    const stamped: Joker = { ...base, stickers };
+    return {
+      pool: "buffoon",
+      variant: "normal",
+      options: [{ kind: "joker" as const, joker: stamped }],
+    };
+  }
+
+  test("an Eternal joker option renders the Eternal badge inside the pack tile", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "eternal" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-eternal")).toBeInTheDocument();
+  });
+
+  test("a Perishable joker option renders the countdown badge (P N/5)", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "perishable", roundsHeld: 0 }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-perishable")).toHaveTextContent(
+      `P ${PERISHABLE_LIFE}/${PERISHABLE_LIFE}`,
+    );
+  });
+
+  test("a Rental joker option renders the Rental badge", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "rental" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-rental")).toBeInTheDocument();
+  });
+
+  test("a joker option with both Eternal and Rental renders both badges (composition)", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "eternal" }, { kind: "rental" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-eternal")).toBeInTheDocument();
+    expect(screen.getByTestId("joker-sticker-rental")).toBeInTheDocument();
+  });
+
+  test("a sticker-less joker option renders no badge list (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId(/^joker-sticker-/)).not.toBeInTheDocument();
+  });
+
+  test("Pick button's accessible name mentions attached stickers", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "eternal" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /Pick .*Eternal/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("hovering the option tile shows the sticker description via title attribute", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "perishable", roundsHeld: 2 }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const optionTile = screen
+      .getByTestId("joker-sticker-perishable")
+      .closest(".pack-open-option");
+    expect(optionTile?.getAttribute("title")).toMatch(
+      new RegExp(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`),
+    );
   });
 });
