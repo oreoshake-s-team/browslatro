@@ -117,18 +117,25 @@ describe("hasStakeModifier", () => {
 });
 
 describe("StakeSpec.implemented", () => {
-  test("White, Red, Green, Black, and Blue are implemented", () => {
+  test("White, Red, Green, Black, Blue, and Purple are implemented", () => {
     const implemented = createStakeCatalog()
       .filter((s) => s.implemented)
       .map((s) => s.id);
-    expect(implemented).toEqual(["white", "red", "green", "black", "blue"]);
+    expect(implemented).toEqual([
+      "white",
+      "red",
+      "green",
+      "black",
+      "blue",
+      "purple",
+    ]);
   });
 
-  test("Purple through Gold are not implemented (negative)", () => {
+  test("Orange and Gold are not implemented (negative)", () => {
     const unimplemented = createStakeCatalog()
       .filter((s) => !s.implemented)
       .map((s) => s.id);
-    expect(unimplemented).toEqual(["purple", "orange", "gold"]);
+    expect(unimplemented).toEqual(["orange", "gold"]);
   });
 });
 
@@ -171,6 +178,20 @@ describe("Blue Stake — blue-discard-delta modifier (#556)", () => {
 
   test("higher stakes still carry the blue-discard-delta modifier (cumulative)", () => {
     expect(hasStakeModifier("gold", "blue-discard-delta")).toBe(true);
+  });
+});
+
+describe("Purple Stake — purple-ante-scaling modifier (#557)", () => {
+  test("Purple Stake carries the purple-ante-scaling modifier", () => {
+    expect(hasStakeModifier("purple", "purple-ante-scaling")).toBe(true);
+  });
+
+  test("Blue Stake does not carry the purple-ante-scaling modifier (negative)", () => {
+    expect(hasStakeModifier("blue", "purple-ante-scaling")).toBe(false);
+  });
+
+  test("Purple is cumulative on lower tiers (still carries Green's modifier too)", () => {
+    expect(hasStakeModifier("purple", "green-ante-scaling")).toBe(true);
   });
 });
 

@@ -25,7 +25,8 @@ export type StakeModifier =
   | { readonly kind: "red-small-blind-no-reward" }
   | { readonly kind: "green-ante-scaling" }
   | { readonly kind: "black-eternal-roll"; readonly chance: number }
-  | { readonly kind: "blue-discard-delta"; readonly amount: number };
+  | { readonly kind: "blue-discard-delta"; readonly amount: number }
+  | { readonly kind: "purple-ante-scaling" };
 
 export const BLACK_ETERNAL_ROLL_CHANCE = 0.3;
 export const BLUE_DISCARD_DELTA = -1;
@@ -80,8 +81,8 @@ const STAKE_SPECS: ReadonlyArray<StakeSpec> = [
     id: "purple",
     name: "Purple Stake",
     description: "Required score scales faster per ante (cumulative with Green).",
-    implemented: false,
-    modifiers: [],
+    implemented: true,
+    modifiers: [{ kind: "purple-ante-scaling" }],
   },
   {
     id: "orange",

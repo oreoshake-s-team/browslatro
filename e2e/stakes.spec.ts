@@ -26,7 +26,7 @@ test.describe("Stake picker (#695)", () => {
     await page.goto("/");
   });
 
-  test("renders White / Red / Green / Black / Blue stake tiles; does not render Gold (still implemented:false)", async ({
+  test("renders White / Red / Green / Black / Blue / Purple stake tiles; does not render Gold (still implemented:false)", async ({
     page,
   }) => {
     await expect(page.getByTestId("new-run-stake-white")).toBeVisible();
@@ -34,6 +34,7 @@ test.describe("Stake picker (#695)", () => {
     await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-blue")).toBeVisible();
+    await expect(page.getByTestId("new-run-stake-purple")).toBeVisible();
     await expect(page.getByTestId("new-run-stake-gold")).toHaveCount(0);
   });
 });

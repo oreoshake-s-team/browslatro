@@ -6,7 +6,7 @@ import NewRunScreen from "./NewRunScreen";
 describe("NewRunScreen", () => {
   test("renders one button per implemented stake", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(5);
+    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(6);
   });
 
   test("renders the Black stake tile (implemented in #555)", () => {
@@ -17,6 +17,11 @@ describe("NewRunScreen", () => {
   test("renders the Blue stake tile (implemented in #556)", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-blue")).toBeInTheDocument();
+  });
+
+  test("renders the Purple stake tile (implemented in #557)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-stake-purple")).toBeInTheDocument();
   });
 
   test("renders the Green stake tile (implemented)", () => {
