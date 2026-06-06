@@ -60,6 +60,7 @@ import {
   extraStartingHands,
   interestCapFor,
   pickVouchersForAnte,
+  tarotToSpectralSwapChance,
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
@@ -162,6 +163,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       spectralCatalog: createSpectralCatalog(),
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
+      tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const rerollAdjustments = applyNextShopModifiers(s.pendingShopMods);
@@ -229,6 +231,8 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
             tarotCatalog: createTarotCatalog(),
             spectralCatalog: createSpectralCatalog(),
             editionRateMultiplier: editionRateMultiplier(nextOwnedVoucherIds),
+            tarotToSpectralSwapChance:
+              tarotToSpectralSwapChance(nextOwnedVoucherIds),
             rng: shopPickerRngConfig.rng,
           },
           current,
@@ -443,6 +447,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       extraPackSlots: s.extraPackSlots,
       forcedPackPools: s.pendingForcedPacks,
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
+      tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);
