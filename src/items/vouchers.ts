@@ -31,7 +31,9 @@ export type VoucherId =
   | "glow-up"
   | "omen-globe"
   | "telescope"
-  | "observatory";
+  | "observatory"
+  | "tarot-merchant"
+  | "tarot-tycoon";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -68,6 +70,8 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "omen-globe", name: "Omen Globe", description: "1 in 5 Tarot card rolls in the shop become Spectral cards instead.", cost: VOUCHER_BASE_PRICE, requires: "crystal-ball" },
   { id: "telescope", name: "Telescope", description: "Celestial Packs always contain the Planet card for your most-played hand.", cost: VOUCHER_BASE_PRICE },
   { id: "observatory", name: "Observatory", description: "Each Planet card in your consumable area gives ×1.5 Mult to its specified hand.", cost: VOUCHER_BASE_PRICE, requires: "telescope" },
+  { id: "tarot-merchant", name: "Tarot Merchant", description: "Tarot cards appear 2× as often in the shop.", cost: VOUCHER_BASE_PRICE },
+  { id: "tarot-tycoon", name: "Tarot Tycoon", description: "Tarot cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "tarot-merchant" },
 ];
 
 export const BOSS_REROLL_COST = 10;
@@ -238,4 +242,19 @@ export function tarotToSpectralSwapChance(
   ownedIds: ReadonlySet<VoucherId>,
 ): number {
   return ownedIds.has("omen-globe") ? 0.2 : 0;
+}
+
+export type OfferKindWeightKey = "joker" | "planet" | "tarot";
+
+export type OfferKindWeights = Record<OfferKindWeightKey, number>;
+
+export function offerKindWeights(
+  ownedIds: ReadonlySet<VoucherId>,
+): OfferKindWeights {
+  const tarot = ownedIds.has("tarot-tycoon")
+    ? 4
+    : ownedIds.has("tarot-merchant")
+      ? 2
+      : 1;
+  return { joker: 1, planet: 1, tarot };
 }

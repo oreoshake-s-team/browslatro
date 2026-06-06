@@ -1856,7 +1856,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Clearance Sale shows a discounted joker price and keeps the joker buy enabled", async () => {
-    const user = await openShopWithVoucher(0.15);
+    const user = await openShopWithVoucher(0.1);
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buyButton = screen
       .getByTestId(jokerSlotId)
