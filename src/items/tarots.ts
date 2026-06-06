@@ -141,6 +141,11 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
     name: "The Emperor",
     effect: { kind: "create-consumables", consumableKind: "tarot", count: 2 },
   },
+  {
+    id: "the-high-priestess",
+    name: "The High Priestess",
+    effect: { kind: "create-consumables", consumableKind: "planet", count: 2 },
+  },
 ];
 
 export function createTarotCatalog(): TarotCard[] {

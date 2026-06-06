@@ -799,3 +799,153 @@ describe("useConsumableActions — The Emperor (#618)", () => {
     });
   });
 });
+
+function highPriestessConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-high-priestess");
+  if (!tarot) throw new Error("The High Priestess missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — The High Priestess (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("with both slots free after consuming High Priestess, adds exactly 2 planets", () => {
+    useGame.getState().setConsumables([highPriestessConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with one tarot slot already taken alongside High Priestess, adds exactly 1 planet", () => {
+    useGame
+      .getState()
+      .setConsumables([highPriestessConsumable(), hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots remaining after High Priestess leaves, adds 0 planets", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        highPriestessConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots, The High Priestess is still consumed (wasted, matches Balatro)", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        highPriestessConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-high-priestess")).toBe(false);
+  });
+
+  test("every added consumable is a planet (kind: planet)", () => {
+    useGame.getState().setConsumables([highPriestessConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().consumables;
+    expect(added.every((c) => c.kind === "planet")).toBe(true);
+  });
+
+  test("hidden planets (Planet X / Ceres / Eris) are excluded when their gating hand hasn't been played", () => {
+    const hiddenIds = new Set(["planet-x", "ceres", "eris"]);
+    for (let i = 0; i < 30; i += 1) {
+      useGame.getState().setConsumables([highPriestessConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      const added = useGame.getState().consumables;
+      const anyHidden = added.some(
+        (c) => c.kind === "planet" && hiddenIds.has(c.card.id),
+      );
+      expect(anyHidden).toBe(false);
+    }
+  });
+
+  test("hidden planets (Five of a Kind etc.) become eligible once their hand has been played", () => {
+    useGame.getState().setHandPlayCounts((prev) => ({
+      ...prev,
+      "Five of a Kind": 1,
+      "Flush House": 1,
+      "Flush Five": 1,
+    }));
+    const eligibleHiddenIds = new Set(["planet-x", "ceres", "eris"]);
+    let sawAtLeastOneHidden = false;
+    for (let i = 0; i < 80 && !sawAtLeastOneHidden; i += 1) {
+      useGame.getState().setConsumables([highPriestessConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      const added = useGame.getState().consumables;
+      if (
+        added.some(
+          (c) => c.kind === "planet" && eligibleHiddenIds.has(c.card.id),
+        )
+      ) {
+        sawAtLeastOneHidden = true;
+      }
+    }
+    expect(sawAtLeastOneHidden).toBe(true);
+  });
+
+  test("negative: using The Hanged Man does not add any planet to the tray", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    useGame.getState().setConsumables([hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const anyPlanet = useGame
+      .getState()
+      .consumables.some((c) => c.kind === "planet");
+    expect(anyPlanet).toBe(false);
+  });
+
+  describe("with 3 consumable slots (Crystal Ball voucher)", () => {
+    beforeEach(() => {
+      useGame.getState().setOwnedVoucherIds(new Set(["crystal-ball"]));
+    });
+
+    test("with 0 other consumables, adds 2 planets", () => {
+      useGame.getState().setConsumables([highPriestessConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(2);
+    });
+
+    test("with 1 other consumable, adds 2 planets (fills the 2 free slots)", () => {
+      useGame
+        .getState()
+        .setConsumables([highPriestessConsumable(), hangedManConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+
+    test("with 2 other consumables, adds 1 planet (only 1 free slot after High Priestess consumed)", () => {
+      useGame
+        .getState()
+        .setConsumables([
+          highPriestessConsumable(),
+          hangedManConsumable(),
+          strengthConsumable(),
+        ]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+  });
+});

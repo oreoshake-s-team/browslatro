@@ -26,8 +26,8 @@ function tarotById(id: string): TarotCard {
 }
 
 describe("createTarotCatalog", () => {
-  test("contains twenty entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement + Emperor)", () => {
-    expect(createTarotCatalog()).toHaveLength(20);
+  test("contains twenty-one entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement + Emperor + High Priestess)", () => {
+    expect(createTarotCatalog()).toHaveLength(21);
   });
 
   test("has unique ids", () => {
@@ -367,6 +367,32 @@ describe("The Emperor", () => {
   test("the-emperor description names Tarot creation", () => {
     expect(tarotById("the-emperor").description).toBe(
       "Creates up to 2 random Tarots (must have room)",
+    );
+  });
+});
+
+describe("The High Priestess", () => {
+  test("the-high-priestess is in the catalog with the canonical name", () => {
+    expect(tarotById("the-high-priestess").name).toBe("The High Priestess");
+  });
+
+  test("the-high-priestess effect kind is create-consumables", () => {
+    expect(tarotById("the-high-priestess").effect.kind).toBe(
+      "create-consumables",
+    );
+  });
+
+  test("the-high-priestess creates up to 2 planets (matches Balatro)", () => {
+    expect(tarotById("the-high-priestess").effect).toEqual({
+      kind: "create-consumables",
+      consumableKind: "planet",
+      count: 2,
+    });
+  });
+
+  test("the-high-priestess description names Planet creation", () => {
+    expect(tarotById("the-high-priestess").description).toBe(
+      "Creates up to 2 random Planets (must have room)",
     );
   });
 });
