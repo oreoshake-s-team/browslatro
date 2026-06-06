@@ -1,4 +1,5 @@
 import {
+  OBSERVATORY_MULT_PER_PLANET,
   applyShopDiscount,
   createVoucherCatalog,
   extraConsumableSlots,
@@ -8,6 +9,7 @@ import {
   extraStartingDiscards,
   extraStartingHands,
   interestCapFor,
+  observatoryMultFor,
   pickVoucherForAnte,
   pickVouchersForAnte,
   rerollCostReduction,
@@ -364,5 +366,53 @@ describe("extraJokerSlots", () => {
 
   test("Blank alone grants 0 slots (it's a prereq with no effect)", () => {
     expect(extraJokerSlots(new Set<VoucherId>(["blank"]))).toBe(0);
+  });
+});
+
+describe("Telescope / Observatory voucher catalog (#281)", () => {
+  test("Telescope is in the catalog with no prerequisite", () => {
+    const telescope = createVoucherCatalog().find((v) => v.id === "telescope");
+    expect(telescope?.requires).toBeUndefined();
+  });
+
+  test("Observatory is in the catalog and requires Telescope", () => {
+    const observatory = createVoucherCatalog().find(
+      (v) => v.id === "observatory",
+    );
+    expect(observatory?.requires).toBe("telescope");
+  });
+
+  test("Telescope description mentions most-played hand", () => {
+    const telescope = createVoucherCatalog().find((v) => v.id === "telescope");
+    expect(telescope?.description).toMatch(/most-played/);
+  });
+
+  test("Observatory description mentions ×1.5 Mult", () => {
+    const observatory = createVoucherCatalog().find(
+      (v) => v.id === "observatory",
+    );
+    expect(observatory?.description).toMatch(/1\.5/);
+  });
+});
+
+describe("observatoryMultFor (#281)", () => {
+  test("returns 1 when Observatory is not owned", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(), 3)).toBe(1);
+  });
+
+  test("returns 1 when no held planet matches the played hand (negative)", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 0)).toBe(1);
+  });
+
+  test("returns ×1.5 for a single matching planet", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 1)).toBe(
+      OBSERVATORY_MULT_PER_PLANET,
+    );
+  });
+
+  test("stacks multiplicatively for multiple matching planets", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 2)).toBe(
+      OBSERVATORY_MULT_PER_PLANET ** 2,
+    );
   });
 });

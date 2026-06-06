@@ -116,6 +116,51 @@ describe("rollPackOptions for Celestial", () => {
     });
     expect(opts).toHaveLength(small.length);
   });
+
+  test("guaranteedPlanetId always appears in a Celestial pack roll (#281)", () => {
+    const opts = rollPackOptions({
+      pool: "celestial",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      guaranteedPlanetId: "jupiter",
+      rng: seededRng(6),
+    });
+    const ids = opts.flatMap((o) => (o.kind === "planet" ? [o.planet.id] : []));
+    expect(ids).toContain("jupiter");
+  });
+
+  test("guaranteedPlanetId does not duplicate the guaranteed planet (#281)", () => {
+    const opts = rollPackOptions({
+      pool: "celestial",
+      variant: "jumbo",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      guaranteedPlanetId: "jupiter",
+      rng: seededRng(7),
+    });
+    const ids = opts.flatMap((o) => (o.kind === "planet" ? [o.planet.id] : []));
+    const jupiterCount = ids.filter((id) => id === "jupiter").length;
+    expect(jupiterCount).toBe(1);
+  });
+
+  test("an unknown guaranteedPlanetId falls back to a normal Celestial roll (negative)", () => {
+    const opts = rollPackOptions({
+      pool: "celestial",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      guaranteedPlanetId: "nonexistent-planet",
+      rng: seededRng(8),
+    });
+    expect(opts).toHaveLength(3);
+  });
 });
 
 describe("rollPackVariant", () => {

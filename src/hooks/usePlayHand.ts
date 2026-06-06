@@ -34,6 +34,7 @@ import {
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import { fullDeckPile } from "../cards/deckBuild";
 import { hasStakeModifier } from "../items/stakes";
+import { observatoryMultFor } from "../items/vouchers";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -109,6 +110,7 @@ export function usePlayHand({
   const addedCards = useGame((s) => s.addedCards);
   const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
+  const consumables = useGame((s) => s.consumables);
 
   const requiredScore = requiredChipsForBlind({
     ante,
@@ -406,9 +408,16 @@ export function usePlayHand({
       (m, card) => m * applyCardEnhancement(card).multTimes,
       1,
     );
+    const matchingObservatoryPlanets = consumables.filter(
+      (c) => c.kind === "planet" && c.card.hands.includes(label),
+    ).length;
+    const observatoryMult = observatoryMultFor(
+      ownedVoucherIds,
+      matchingObservatoryPlanets,
+    );
     const preHandXMultNoSteel =
       handJokerResult.xMult * enhancementXMult * perCardXMult;
-    const totalXMult = preHandXMultNoSteel * steelMult;
+    const totalXMult = preHandXMultNoSteel * steelMult * observatoryMult;
 
     const scoringChipsTotal =
       handEntry.chips +
@@ -431,12 +440,25 @@ export function usePlayHand({
     const finalize = () => {
       finalizeHandSubmission(finalScore, submittedSelection, label);
     };
+    const runObservatory = () => {
+      if (observatoryMult !== 1) {
+        setScoringEvents((prev) => [
+          ...prev,
+          {
+            kind: "mult-times",
+            factor: observatoryMult,
+            source: `Observatory: ${matchingObservatoryPlanets} matching Planet${matchingObservatoryPlanets === 1 ? "" : "s"}`,
+          },
+        ]);
+      }
+      finalize();
+    };
     const runHandLevel = () => {
       if (handJokerResult.steps.length === 0) {
-        finalize();
+        runObservatory();
         return;
       }
-      pipeline.handLevelFinalizeRef.current = finalize;
+      pipeline.handLevelFinalizeRef.current = runObservatory;
       setHandLevelSteps(handJokerResult.steps);
       setHandLevelIndex(0);
     };

@@ -40,6 +40,8 @@ import {
   applyPlanetUpgrade,
   availablePlanets,
   createPlanetCatalog,
+  mostPlayedHand,
+  planetForHand,
 } from "../items/planets";
 import { createTarotCatalog } from "../items/tarots";
 import {
@@ -447,10 +449,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setRemainingHands(computeStartingHands(resourceCtx));
     s.setRemainingDiscards(computeStartingDiscards(resourceCtx));
     s.setSoldJokerIdsThisShopVisit([]);
+    const planetsForShop = availablePlanets(createPlanetCatalog(), s.handPlayCounts);
+    const telescopePlanetId = s.ownedVoucherIds.has("telescope")
+      ? planetForHand(planetsForShop, mostPlayedHand(s.handPlayCounts))?.id
+      : undefined;
     const baseOffers = pickShopOffers({
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds: s.jokers.map((j) => j.id),
-      planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
+      planetCatalog: planetsForShop,
       tarotCatalog: createTarotCatalog(),
       spectralCatalog: createSpectralCatalog(),
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
@@ -458,6 +464,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       forcedPackPools: s.pendingForcedPacks,
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
+      guaranteedPlanetId: telescopePlanetId,
       rng: shopPickerRngConfig.rng,
     });
     const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);
