@@ -1,4 +1,5 @@
 import type { Card } from "../../../cards/types";
+import { RENTAL_END_OF_ROUND_DRAIN, hasSticker } from "../stickers";
 import type { Joker } from "../types";
 
 export interface EndOfRoundContext {
@@ -64,6 +65,16 @@ export function applyEndOfRoundJokers(
           moneyEarned: earned,
         });
       }
+    }
+  }
+  for (const joker of jokers) {
+    if (hasSticker(joker, "rental")) {
+      moneyEarned -= RENTAL_END_OF_ROUND_DRAIN;
+      steps.push({
+        jokerId: `${joker.id}-rental`,
+        jokerName: `${joker.name} (Rental)`,
+        moneyEarned: -RENTAL_END_OF_ROUND_DRAIN,
+      });
     }
   }
   return { moneyEarned, steps };
