@@ -8,9 +8,12 @@ import {
   JOKER_EDITION_KINDS,
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
+  createBaronJoker,
   createDriversLicenseJoker,
   createGreedyJoker,
+  createJokerStencilJoker,
   createPlusFourMultJoker,
+  createTribouletJoker,
   jokerSellValue,
   withEdition,
   type Joker,
@@ -217,6 +220,57 @@ describe("Joker tooltip — stickers (#724)", () => {
     expect(
       screen.getByTestId("joker-tooltip-sticker-perishable"),
     ).toHaveTextContent(/debuffed/i);
+  });
+});
+
+describe("Joker tooltip — rarity (#761)", () => {
+  test("renders the rarity row for a common joker", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Common",
+    );
+  });
+
+  test("renders the rarity row for an uncommon joker", async () => {
+    const user = userEvent.setup();
+    const joker = createJokerStencilJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Uncommon",
+    );
+  });
+
+  test("renders the rarity row for a rare joker", async () => {
+    const user = userEvent.setup();
+    const joker = createBaronJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Rare",
+    );
+  });
+
+  test("renders the rarity row for a legendary joker", async () => {
+    const user = userEvent.setup();
+    const joker = createTribouletJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Legendary",
+    );
+  });
+
+  test("applies the rarity-specific CSS class to the rarity row", async () => {
+    const user = userEvent.setup();
+    const joker = createBaronJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveClass(
+      "joker-tooltip-rarity-rare",
+    );
   });
 });
 

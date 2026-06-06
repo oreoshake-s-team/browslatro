@@ -7,6 +7,7 @@ import {
   jokerSellValue,
   jokerStickers,
   type Joker,
+  type JokerRarity,
   type JokerSticker,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
@@ -34,6 +35,12 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
   return createPortal(
     <div id={id} role="tooltip" className="joker-tooltip" style={style}>
       <p className="joker-tooltip-heading">{joker.name}</p>
+      <p
+        className={`joker-tooltip-rarity joker-tooltip-rarity-${joker.rarity}`}
+        data-testid="joker-tooltip-rarity"
+      >
+        {rarityLabel(joker.rarity)}
+      </p>
       <p className="joker-tooltip-description">{joker.description}</p>
       {progress && (
         <p
@@ -61,6 +68,10 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
     </div>,
     document.body,
   );
+}
+
+function rarityLabel(rarity: JokerRarity): string {
+  return rarity.charAt(0).toUpperCase() + rarity.slice(1);
 }
 
 function stickerLine(sticker: JokerSticker): string {
