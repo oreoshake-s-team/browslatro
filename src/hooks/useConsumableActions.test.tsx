@@ -681,3 +681,86 @@ describe("useConsumableActions — Judgement (#618)", () => {
     expect(ownedIds.has(newest.id)).toBe(false);
   });
 });
+
+function emperorConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-emperor");
+  if (!tarot) throw new Error("The Emperor missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — The Emperor (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("with both slots free after consuming Emperor, adds exactly 2 tarots", () => {
+    useGame.getState().setConsumables([emperorConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with one tarot slot already taken alongside Emperor, adds exactly 1 tarot", () => {
+    useGame.getState().setConsumables([emperorConsumable(), hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots remaining after Emperor leaves, adds 0 tarots", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        emperorConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots, The Emperor is still consumed (wasted, matches Balatro)", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        emperorConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-emperor")).toBe(false);
+  });
+
+  test("every added consumable is a valid Tarot from the catalog", () => {
+    useGame.getState().setConsumables([emperorConsumable()]);
+    const validIds = new Set(createTarotCatalog().map((t) => t.id));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().consumables;
+    const allValid = added.every(
+      (c) => c.kind === "tarot" && validIds.has(c.card.id),
+    );
+    expect(allValid).toBe(true);
+  });
+
+  test("none of the added consumables is The Emperor itself (filters self)", () => {
+    useGame.getState().setConsumables([emperorConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-emperor")).toBe(false);
+  });
+
+  test("negative: using The Hanged Man does not add any tarot to the tray", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    useGame.getState().setConsumables([hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
