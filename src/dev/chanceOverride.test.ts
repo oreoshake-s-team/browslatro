@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { afterEach } from "vitest";
-import { chanceOverrideConfig, rollChance } from "./chanceOverride";
+import { chanceOverrideConfig, effectiveChance, rollChance } from "./chanceOverride";
 
 afterEach(() => {
   chanceOverrideConfig.force100 = false;
@@ -94,5 +94,35 @@ describe("rollChance with probabilityMultiplier", () => {
   test("still returns false for chance 0 even when multiplied", () => {
     chanceOverrideConfig.probabilityMultiplier = 10;
     expect(rollChance(0, () => 0)).toBe(false);
+  });
+});
+
+describe("effectiveChance (display-math helper for tooltips)", () => {
+  test("returns the base chance unchanged when multiplier is 1", () => {
+    expect(effectiveChance(0.5, 1)).toBe(0.5);
+  });
+
+  test("scales the base chance by the multiplier when not clamped", () => {
+    expect(effectiveChance(0.3, 2)).toBeCloseTo(0.6);
+  });
+
+  test("clamps the result to 1 when base * multiplier exceeds 1", () => {
+    expect(effectiveChance(0.5, 2)).toBe(1);
+  });
+
+  test("falls back to the base chance when multiplier is 0 (defensive)", () => {
+    expect(effectiveChance(0.5, 0)).toBe(0.5);
+  });
+
+  test("falls back to the base chance when multiplier is negative", () => {
+    expect(effectiveChance(0.5, -2)).toBe(0.5);
+  });
+
+  test("returns 0 for a base chance of 0 regardless of multiplier", () => {
+    expect(effectiveChance(0, 10)).toBe(0);
+  });
+
+  test("returns 1 for a base chance of 1 regardless of multiplier", () => {
+    expect(effectiveChance(1, 0.5)).toBe(1);
   });
 });

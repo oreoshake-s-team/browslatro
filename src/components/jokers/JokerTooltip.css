@@ -77,6 +77,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.joker-tooltip-effective-odds {
+  color: #ffd8a8;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
 .joker-tooltip-sell {
   color: #ffd43b;
   font-weight: 600;
