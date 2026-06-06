@@ -27,6 +27,7 @@ import {
   applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyPerCardJokers,
+  handEvalOptionsFromJokers,
   isFaceCard,
   isJokerActive,
 } from "../items/jokers";
@@ -290,7 +291,10 @@ export function usePlayHand({
       useGame.getState().setMoney(money - moneyPenalty);
     }
 
-    const label = detectHandLabel(playedCards);
+    const label = detectHandLabel(
+      playedCards,
+      handEvalOptionsFromJokers(jokers.filter(isJokerActive)),
+    );
     const isBossRound = blind === 3;
     if (
       isBossRound &&

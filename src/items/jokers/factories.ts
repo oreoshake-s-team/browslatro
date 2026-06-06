@@ -979,6 +979,26 @@ export function createAstronomerJoker(): Joker {
   };
 }
 
+export function createFourFingersJoker(): Joker {
+  return {
+    id: "four-fingers",
+    rarity: "common",
+    name: "Four Fingers",
+    description: "All Flushes and Straights can be made with 4 cards",
+    effect: { kind: "passive-run-stats", fourFingers: true },
+  };
+}
+
+export function createShortcutJoker(): Joker {
+  return {
+    id: "shortcut",
+    rarity: "uncommon",
+    name: "Shortcut",
+    description: "Allows Straights to be made of cards that are 1 rank apart",
+    effect: { kind: "passive-run-stats", shortcut: true },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {

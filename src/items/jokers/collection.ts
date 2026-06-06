@@ -66,6 +66,22 @@ export function hasAstronomerInJokers(
   return false;
 }
 
+export function handEvalOptionsFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): { readonly fourFingers?: boolean; readonly shortcut?: boolean } {
+  let fourFingers = false;
+  let shortcut = false;
+  for (const j of jokers) {
+    if (j.effect.kind !== "passive-run-stats") continue;
+    if (j.effect.fourFingers === true) fourFingers = true;
+    if (j.effect.shortcut === true) shortcut = true;
+  }
+  const out: { fourFingers?: boolean; shortcut?: boolean } = {};
+  if (fourFingers) out.fourFingers = true;
+  if (shortcut) out.shortcut = true;
+  return out;
+}
+
 export function discardsOverrideFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number | null {

@@ -18,6 +18,7 @@ import {
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   extraStartingHandSizeFromJokers,
+  handEvalOptionsFromJokers,
   hasAstronomerInJokers,
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
@@ -689,7 +690,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       return;
     }
     const nextSelected = s.dealt.hand.filter((c) => nextIds.has(c.id));
-    const label = detectHandLabel(nextSelected);
+    const label = detectHandLabel(
+      nextSelected,
+      handEvalOptionsFromJokers(s.jokers),
+    );
     const entry =
       s.blind === 3
         ? bossAdjustHandEntry(s.currentBoss, label, s.handStats[label])

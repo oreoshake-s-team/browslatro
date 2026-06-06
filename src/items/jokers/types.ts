@@ -157,6 +157,8 @@ export type JokerEffect =
       readonly allCardsFace?: boolean;
       readonly allCardsScore?: boolean;
       readonly astronomer?: boolean;
+      readonly fourFingers?: boolean;
+      readonly shortcut?: boolean;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
