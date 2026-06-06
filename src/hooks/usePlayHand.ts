@@ -255,6 +255,7 @@ export function usePlayHand({
           ),
           goldHeldCount: heldGoldIds.length,
           remainingHandsCount,
+          endOfRoundJokerSteps: endOfRoundJokerResult.steps,
         });
       };
       if (heldGoldIds.length === 0) {
