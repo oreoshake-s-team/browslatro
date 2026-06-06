@@ -79,9 +79,19 @@ export function useScoringPipeline({
   const jokers = useGame((s) => s.jokers);
   const dealt = useGame((s) => s.dealt);
 
-  const isScoring =
+  const perCardScoring =
     scoringCards.length > 0 && scoringIndex < scoringCards.length;
-  const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
+  const handLevelScoring =
+    handLevelSteps.length > 0 && handLevelIndex < handLevelSteps.length;
+  const steelScoring =
+    steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length;
+  const goldPhase =
+    goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length;
+  const isScoring =
+    perCardScoring || handLevelScoring || steelScoring || goldPhase;
+  const currentScoringId = perCardScoring
+    ? scoringCards[scoringIndex].id
+    : null;
   const currentGoldScoringId =
     goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
       ? goldScoringIds[goldScoringIndex]

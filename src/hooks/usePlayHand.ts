@@ -346,7 +346,41 @@ export function usePlayHand({
       }),
     ).filter((c) => !playedDebuffedIds.has(c.id));
     if (scoring.length === 0) {
-      const handOnlyScore = handEntry.chips * handEntry.multiplier;
+      const noCardsHandJokerResult = applyHandLevelJokers(
+        jokers.filter(isJokerActive),
+        {
+          playedHandLabel: label,
+          playedCardCount: playedCards.length,
+          scoredCards: [],
+          remainingDiscards,
+          remainingHands,
+          money,
+          heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
+          fullDeck: fullDeckPile(
+            baseDeckCards,
+            destroyedCardIds,
+            addedCards,
+            cardEnhancementsById,
+            cardSealsById,
+          ).remaining,
+          remainingDeck: dealt.remaining,
+          baseDeckSize: baseDeckCards.length,
+        },
+      );
+      const noCardsMatchingObservatoryPlanets = consumables.filter(
+        (c) => c.kind === "planet" && c.card.hands.includes(label),
+      ).length;
+      const noCardsObservatoryMult = observatoryMultFor(
+        ownedVoucherIds,
+        noCardsMatchingObservatoryPlanets,
+      );
+      const noCardsChips =
+        handEntry.chips + noCardsHandJokerResult.additiveChips;
+      const noCardsMult =
+        (handEntry.multiplier + noCardsHandJokerResult.additiveMult) *
+        noCardsHandJokerResult.xMult *
+        noCardsObservatoryMult;
+      const handOnlyScore = Math.floor(noCardsChips * noCardsMult);
       finalizeHandSubmission(handOnlyScore, submittedSelection, label);
       return;
     }
