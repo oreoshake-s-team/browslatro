@@ -159,6 +159,7 @@ export type JokerEffect =
       readonly astronomer?: boolean;
       readonly fourFingers?: boolean;
       readonly shortcut?: boolean;
+      readonly probabilityMultiplier?: number;
     };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";

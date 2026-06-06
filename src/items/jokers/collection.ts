@@ -108,6 +108,22 @@ export function extraStartingHandsFromJokers(
   return total;
 }
 
+export function probabilityMultiplierFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let multiplier = 1;
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.probabilityMultiplier !== undefined &&
+      j.effect.probabilityMultiplier > 0
+    ) {
+      multiplier *= j.effect.probabilityMultiplier;
+    }
+  }
+  return multiplier;
+}
+
 export function pickRandomEquipped(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,

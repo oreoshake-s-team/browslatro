@@ -999,6 +999,21 @@ export function createShortcutJoker(): Joker {
   };
 }
 
+export const OOPS_ALL_SIXES_PROBABILITY_MULTIPLIER = 2;
+
+export function createOopsAllSixesJoker(): Joker {
+  return {
+    id: "oops-all-6s",
+    rarity: "uncommon",
+    name: "Oops! All 6s",
+    description: "Doubles all listed probabilities (e.g. 1 in 3 becomes 2 in 3)",
+    effect: {
+      kind: "passive-run-stats",
+      probabilityMultiplier: OOPS_ALL_SIXES_PROBABILITY_MULTIPLIER,
+    },
+  };
+}
+
 export const YORICK_MULT = 30;
 
 export function createYorickJoker(): Joker {
