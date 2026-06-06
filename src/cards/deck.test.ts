@@ -1,6 +1,8 @@
 // @vitest-environment node
 import {
   SUIT_DISPLAY_ORDER,
+  applyDeckCompositionTransform,
+  applyDeckCompositionTransforms,
   createDeck,
   defaultEnhancementForRank,
   drawCountForRefill,
@@ -337,6 +339,71 @@ describe("SUIT_DISPLAY_ORDER — alternation invariant (issue #114)", () => {
       }
     }
     expect(blacksAdjacent).toEqual([]);
+  });
+});
+
+describe("applyDeckCompositionTransform — drop-face-cards (Abandoned Deck, #570)", () => {
+  test("removes every Jack, Queen, and King", () => {
+    const result = applyDeckCompositionTransform(createDeck(), "drop-face-cards");
+    const facesRemaining = result.filter((c) =>
+      ["J", "Q", "K"].includes(c.rank),
+    );
+    expect(facesRemaining).toEqual([]);
+  });
+
+  test("reduces a full 52-card deck to 40 cards", () => {
+    const result = applyDeckCompositionTransform(createDeck(), "drop-face-cards");
+    expect(result).toHaveLength(40);
+  });
+
+  test("keeps every non-face card intact", () => {
+    const result = applyDeckCompositionTransform(createDeck(), "drop-face-cards");
+    const nonFaceRanks: Array<"2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "10" | "A"> = [
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "A",
+    ];
+    expect(
+      nonFaceRanks.every(
+        (rank) => result.filter((c) => c.rank === rank).length === 4,
+      ),
+    ).toBe(true);
+  });
+
+  test("does not mutate the input array", () => {
+    const deck = createDeck();
+    const snapshot = deck.slice();
+    applyDeckCompositionTransform(deck, "drop-face-cards");
+    expect(deck).toEqual(snapshot);
+  });
+
+  test("aces (a 'face' card in some conventions) are preserved", () => {
+    const result = applyDeckCompositionTransform(createDeck(), "drop-face-cards");
+    expect(result.filter((c) => c.rank === "A")).toHaveLength(4);
+  });
+
+  test("returns an empty array when given no cards (negative)", () => {
+    expect(applyDeckCompositionTransform([], "drop-face-cards")).toEqual([]);
+  });
+});
+
+describe("applyDeckCompositionTransforms — pipeline", () => {
+  test("returns the input unchanged when no transforms are supplied (negative)", () => {
+    const deck = createDeck();
+    expect(applyDeckCompositionTransforms(deck, [])).toEqual(deck);
+  });
+
+  test("applies a drop-face-cards transform from the pipeline", () => {
+    const deck = createDeck();
+    const result = applyDeckCompositionTransforms(deck, ["drop-face-cards"]);
+    expect(result).toHaveLength(40);
   });
 });
 

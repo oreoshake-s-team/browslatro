@@ -96,7 +96,7 @@ describe("NewRunScreen", () => {
 
   test("renders one button per implemented deck", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio", { name: /Deck/i })).toHaveLength(4);
+    expect(screen.getAllByRole("radio", { name: /Deck/i })).toHaveLength(5);
   });
 
   test("initial deck defaults to Red Deck", () => {
