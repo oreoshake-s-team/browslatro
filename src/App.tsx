@@ -20,6 +20,7 @@ import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
+const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
 import { deckJokerSlotsDelta, deckStartingMoneyDelta } from "./items/decks";
@@ -160,7 +161,9 @@ function App() {
   const { applyGainedTag } = useTagDispatcher();
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
-  const loseGameRef = useRef<() => void>(() => {});
+  const loseGameRef = useRef<
+    (info: { roundScore: number; requiredScore: number }) => void
+  >(() => {});
   const {
     submitHand,
     isScoring,
@@ -170,7 +173,7 @@ function App() {
     resetScoring,
   } = usePlayHand({
     stepMs: scoringStepMs,
-    loseGame: () => loseGameRef.current(),
+    loseGame: (info) => loseGameRef.current(info),
     pendingDiscardCountRef,
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
@@ -186,6 +189,8 @@ function App() {
   // the modal is showing. Dismissal triggers handleWin().
   const pendingWin = useGame((state) => state.pendingWin);
   const setPendingWin = useGame((state) => state.setPendingWin);
+  const pendingLose = useGame((state) => state.pendingLose);
+  const setPendingLose = useGame((state) => state.setPendingLose);
 
   const shopOffers = useGame((state) => state.shopOffers);
   const setShopOffers = useGame((state) => state.setShopOffers);
@@ -338,6 +343,11 @@ function App() {
     handleWin(precomputed);
   }
 
+  function dismissRoundLostModal() {
+    setPendingLose(null);
+    startNewGame();
+  }
+
   const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
     ? ({
         "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
@@ -438,6 +448,13 @@ function App() {
         <LazyChunkErrorBoundary>
           <Suspense fallback={null}>
             <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
+      )}
+      {pendingLose && (
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={null}>
+            <RoundLostModal info={pendingLose} onContinue={dismissRoundLostModal} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
