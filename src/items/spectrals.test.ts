@@ -16,6 +16,7 @@ import {
 } from "./spectrals";
 import { nextCardId, resetCardIds } from "../cards/deck";
 import type { Card } from "../cards/types";
+import { sequenceRng } from "../test/rng";
 
 function find(id: SpectralCard["id"]): SpectralCard {
   const card = createSpectralCatalog().find((c) => c.id === id);
@@ -132,15 +133,6 @@ describe("Spectral descriptions", () => {
     expect(find("sigil").description).toMatch(/single random suit/i);
   });
 });
-
-function sequenceRng(values: ReadonlyArray<number>): () => number {
-  let i = 0;
-  return (): number => {
-    const v = values[i % values.length];
-    i += 1;
-    return v;
-  };
-}
 
 describe("makeEnhancedCard", () => {
   beforeEach(() => resetCardIds());

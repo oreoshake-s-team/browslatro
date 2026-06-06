@@ -16,8 +16,8 @@ import {
   createBusinessCardJoker,
   createPlusFourMultJoker,
   type Joker,
-  type RandomSource,
 } from "./jokers";
+import { sequenceRng as fixedRng } from "../test/rng";
 
 function tarotById(id: string): TarotCard {
   const found = createTarotCatalog().find((t) => t.id === id);
@@ -271,15 +271,6 @@ describe("Wheel of Fortune", () => {
     expect(tarotById("wheel-of-fortune").effect.kind).toBe("edition-roll");
   });
 });
-
-function fixedRng(values: ReadonlyArray<number>): RandomSource {
-  let i = 0;
-  return (): number => {
-    const v = values[i % values.length];
-    i += 1;
-    return v;
-  };
-}
 
 describe("rollWheelOfFortune", () => {
   const jokers: ReadonlyArray<Joker> = [

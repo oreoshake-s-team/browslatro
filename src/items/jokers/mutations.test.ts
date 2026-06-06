@@ -21,17 +21,8 @@ import {
   withoutEdition,
   type Joker,
   type JokerRarity,
-  type RandomSource,
 } from "../jokers";
-
-function fixedRng(values: ReadonlyArray<number>): RandomSource {
-  let i = 0;
-  return (): number => {
-    const v = values[i % values.length];
-    i += 1;
-    return v;
-  };
-}
+import { sequenceRng as fixedRng } from "../../test/rng";
 
 describe("JOKER_RARITIES", () => {
   test("lists the four canonical Balatro rarity tiers", () => {
