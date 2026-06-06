@@ -332,6 +332,7 @@ export interface PickShopOffersArgs {
   readonly extraPackSlots?: number;
   readonly forcedPackPools?: ReadonlyArray<PackPool>;
   readonly editionRateMultiplier?: number;
+  readonly tarotToSpectralSwapChance?: number;
   readonly rng?: RandomSource;
 }
 
@@ -375,6 +376,11 @@ function pickOfferByKind(
       return next ? planetOffer(next) : null;
     }
     case "tarot": {
+      const swapChance = args.tarotToSpectralSwapChance ?? 0;
+      if (swapChance > 0 && rollChance(swapChance, rng)) {
+        const spectral = pickOfferByKind("spectral", args, rng, picked);
+        if (spectral) return spectral;
+      }
       const next = pickRandom(args.tarotCatalog, [...picked.tarot], rng);
       return next ? tarotOffer(next) : null;
     }

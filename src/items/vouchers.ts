@@ -28,7 +28,8 @@ export type VoucherId =
   | "directors-cut"
   | "retcon"
   | "hone"
-  | "glow-up";
+  | "glow-up"
+  | "omen-globe";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -62,6 +63,7 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "retcon", name: "Retcon", description: "Reroll the Boss Blind unlimited times. Costs $10 each.", cost: VOUCHER_BASE_PRICE, requires: "directors-cut" },
   { id: "hone", name: "Hone", description: "Foil, Holographic, and Polychrome Jokers appear 2× as often.", cost: VOUCHER_BASE_PRICE },
   { id: "glow-up", name: "Glow Up", description: "Foil, Holographic, and Polychrome Jokers appear 4× as often.", cost: VOUCHER_BASE_PRICE, requires: "hone" },
+  { id: "omen-globe", name: "Omen Globe", description: "1 in 5 Tarot card rolls in the shop become Spectral cards instead.", cost: VOUCHER_BASE_PRICE, requires: "crystal-ball" },
 ];
 
 export const BOSS_REROLL_COST = 10;
@@ -216,4 +218,10 @@ export function editionRateMultiplier(
   if (ownedIds.has("glow-up")) return 4;
   if (ownedIds.has("hone")) return 2;
   return 1;
+}
+
+export function tarotToSpectralSwapChance(
+  ownedIds: ReadonlySet<VoucherId>,
+): number {
+  return ownedIds.has("omen-globe") ? 0.2 : 0;
 }

@@ -454,6 +454,56 @@ describe("pickShopOffers — spectral offer rate", () => {
   });
 });
 
+describe("pickSingleShopOffer — Omen Globe tarot→spectral swap (#278)", () => {
+  function tarotOnlyArgs(rng: RandomSource): Parameters<typeof pickSingleShopOffer>[0] {
+    return {
+      jokerCatalog: [],
+      excludedJokerIds: [],
+      planetCatalog: [],
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    };
+  }
+
+  test("a tarot kind is swapped for a spectral when the swap chance fires", () => {
+    const rng = sequenceRng([0.99, 0.99, 0.0, 0]);
+    const offer = pickSingleShopOffer(
+      { ...tarotOnlyArgs(rng), tarotToSpectralSwapChance: 0.2 },
+      [],
+    );
+    expect(offer?.kind).toBe("spectral");
+  });
+
+  test("a tarot kind stays a tarot when the swap chance does NOT fire", () => {
+    const rng = sequenceRng([0.99, 0.99, 0.99, 0]);
+    const offer = pickSingleShopOffer(
+      { ...tarotOnlyArgs(rng), tarotToSpectralSwapChance: 0.2 },
+      [],
+    );
+    expect(offer?.kind).toBe("tarot");
+  });
+
+  test("without Omen Globe (swap chance 0), a tarot roll always stays a tarot", () => {
+    const rng = sequenceRng([0.99, 0.99, 0]);
+    const offer = pickSingleShopOffer(tarotOnlyArgs(rng), []);
+    expect(offer?.kind).toBe("tarot");
+  });
+
+  test("falls back to a tarot when the swap fires but the spectral catalog is empty", () => {
+    const rng = sequenceRng([0.99, 0.99, 0.0, 0]);
+    const offer = pickSingleShopOffer(
+      {
+        ...tarotOnlyArgs(rng),
+        spectralCatalog: [],
+        tarotToSpectralSwapChance: 0.2,
+      },
+      [],
+    );
+    expect(offer?.kind).toBe("tarot");
+  });
+});
+
 describe("rerollShopOffer — secret planet gating via availablePlanets", () => {
   test("never rerolls into Planet X / Ceres / Eris with empty handPlayCounts", () => {
     const filtered = availablePlanets(createPlanetCatalog(), emptyHandCounts());

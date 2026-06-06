@@ -12,6 +12,7 @@ import {
   pickVouchersForAnte,
   rerollCostReduction,
   shopPriceDiscount,
+  tarotToSpectralSwapChance,
   VOUCHER_BASE_PRICE,
   type Voucher,
   type VoucherId,
@@ -51,6 +52,23 @@ describe("vouchers catalog", () => {
   test("Petroglyph requires Hieroglyph", () => {
     const voucher = createVoucherCatalog().find((v) => v.id === "petroglyph");
     expect(voucher?.requires).toBe("hieroglyph");
+  });
+
+  test("includes the Omen Globe voucher gated by Crystal Ball", () => {
+    const voucher = createVoucherCatalog().find((v) => v.id === "omen-globe");
+    expect(voucher?.requires).toBe("crystal-ball");
+  });
+});
+
+describe("tarotToSpectralSwapChance", () => {
+  test("returns 0 when Omen Globe is not owned", () => {
+    expect(tarotToSpectralSwapChance(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("returns 0.2 when Omen Globe is owned", () => {
+    expect(
+      tarotToSpectralSwapChance(new Set<VoucherId>(["omen-globe"])),
+    ).toBe(0.2);
   });
 });
 
