@@ -256,6 +256,17 @@ describe("createRandomJoker", () => {
     const result = createRandomJoker(catalog, catalog, 99, fixedRng([0]));
     expect(result).toBeNull();
   });
+
+  test("never returns a legendary joker even when present in the catalog", () => {
+    const catalog = [createYorickJoker(), createPlusFourMultJoker()];
+    const result = createRandomJoker([], catalog, 5, fixedRng([0]));
+    expect(result?.id).toBe("plus-four-mult");
+  });
+
+  test("returns null when the catalog contains only legendary jokers", () => {
+    const result = createRandomJoker([], createLegendaryJokerCatalog(), 5, fixedRng([0]));
+    expect(result).toBeNull();
+  });
 });
 
 describe("replaceJokersExceptCopyOf", () => {
