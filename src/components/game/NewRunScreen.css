@@ -138,6 +138,32 @@
 
 .new-run-deck-tile-red-deck { box-shadow: inset 0 -3px 0 #fa5252; }
 .new-run-deck-tile-yellow-deck { box-shadow: inset 0 -3px 0 #ffd43b; }
+.new-run-deck-tile-blue-deck { box-shadow: inset 0 -3px 0 #339af0; }
+.new-run-deck-tile-black-deck {
+  box-shadow:
+    inset 0 -3px 0 #0b0c0d,
+    inset 0 -4px 0 #adb5bd;
+}
+.new-run-deck-tile-checkered-deck {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #f8f9fa 0 6px,
+    #212529 6px 12px
+  );
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 3px;
+}
+.new-run-deck-tile-abandoned-deck {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #868e96 0 6px,
+    transparent 6px 10px
+  );
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 3px;
+}
 
 .new-run-deck-name {
   font-size: 0.95rem;
