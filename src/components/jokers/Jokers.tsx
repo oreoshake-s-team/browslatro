@@ -5,6 +5,7 @@ import {
   MAX_JOKERS,
   canSellJoker,
   effectiveJokerCount,
+  isJokerActive,
   jokerSellValue,
   type Joker,
 } from "../../items/jokers";
@@ -179,17 +180,20 @@ export default function Jokers({
           const isDragging = draggingId === joker.id;
           const sellValue = jokerSellValue(joker);
           const jokerSellable = sellable && canSellJoker(joker);
+          const debuffed = !isJokerActive(joker);
           const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
           const editionClass = joker.edition
             ? ` joker-tile-edition joker-tile-edition-${joker.edition}`
             : "";
+          const debuffedClass = debuffed ? " joker-tile-debuffed" : "";
           const editionLabel = editionInfo
             ? ` ${editionInfo.name} edition: ${editionInfo.description}.`
             : "";
+          const debuffedLabel = debuffed ? " Debuffed — does not score." : "";
           const ariaLabel = jokerSellable
-            ? `${joker.name}. ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
-            : editionInfo || sellable
-              ? `${joker.name}. ${joker.description}.${editionLabel}`
+            ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
+            : editionInfo || sellable || debuffed
+              ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel}`
               : undefined;
           const tooltipId = `${tooltipIdBase}-${joker.id}`;
           const tooltipOpen = tooltipOpenId === joker.id;
@@ -199,13 +203,14 @@ export default function Jokers({
               <li
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
-                }${editionClass}`}
+                }${editionClass}${debuffedClass}`}
                 title={joker.description}
                 aria-label={ariaLabel}
                 aria-describedby={tooltipOpen ? tooltipId : undefined}
                 tabIndex={0}
                 data-testid={`joker-tile-filled-${joker.id}`}
                 data-edition={joker.edition ?? undefined}
+                data-debuffed={debuffed || undefined}
                 draggable={tileDraggable || undefined}
                 aria-grabbed={isDragging || undefined}
                 onMouseEnter={(e) => openTooltip(joker.id, e.currentTarget)}

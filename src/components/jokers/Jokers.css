@@ -52,6 +52,16 @@
   box-sizing: border-box;
 }
 
+.joker-tile-debuffed {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.joker-tile-debuffed .joker-tile-name,
+.joker-tile-debuffed .joker-tile-description {
+  text-decoration: line-through;
+}
+
 .joker-tile-inner {
   display: flex;
   flex-direction: column;

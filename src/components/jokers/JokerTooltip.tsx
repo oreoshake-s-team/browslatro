@@ -65,7 +65,8 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
 
 function stickerLine(sticker: JokerSticker): string {
   if (sticker.kind === "perishable") {
-    const remaining = Math.max(0, PERISHABLE_LIFE - sticker.roundsHeld);
+    if (sticker.roundsHeld >= PERISHABLE_LIFE) return "debuffed";
+    const remaining = PERISHABLE_LIFE - sticker.roundsHeld;
     return `${remaining} of ${PERISHABLE_LIFE} rounds left`;
   }
   return JOKER_STICKER_INFO[sticker.kind].description;
