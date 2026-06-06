@@ -1,4 +1,27 @@
 import type { Card, Enhancement, Rank, Suit } from "./types";
+import type { DeckCompositionTransform } from "../items/decks";
+
+const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
+
+export function applyDeckCompositionTransform(
+  cards: ReadonlyArray<Card>,
+  transform: DeckCompositionTransform,
+): Card[] {
+  switch (transform) {
+    case "drop-face-cards":
+      return cards.filter((c) => !FACE_RANKS.has(c.rank));
+  }
+}
+
+export function applyDeckCompositionTransforms(
+  cards: ReadonlyArray<Card>,
+  transforms: ReadonlyArray<DeckCompositionTransform>,
+): Card[] {
+  return transforms.reduce<Card[]>(
+    (acc, transform) => applyDeckCompositionTransform(acc, transform),
+    cards.slice(),
+  );
+}
 
 export const SUITS: ReadonlyArray<Suit> = [
   "spades",

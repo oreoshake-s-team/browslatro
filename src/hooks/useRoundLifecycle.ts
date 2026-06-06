@@ -15,7 +15,12 @@ import {
   extraHandSize,
   pickVouchersForAnte,
 } from "../items/vouchers";
-import { HAND_SIZE, createDeck, resetCardIds } from "../cards/deck";
+import {
+  HAND_SIZE,
+  applyDeckCompositionTransforms,
+  createDeck,
+  resetCardIds,
+} from "../cards/deck";
 import { initialDeal } from "../cards/deckBuild";
 import {
   extraStartingHandSizeFromJokers,
@@ -30,7 +35,10 @@ import {
   type AnteSkipOffer,
   type TagId,
 } from "../items/tags";
-import { deckStartingMoneyDelta } from "../items/decks";
+import {
+  deckCompositionTransforms,
+  deckStartingMoneyDelta,
+} from "../items/decks";
 import {
   computeStartingDiscards,
   computeStartingHands,
@@ -213,7 +221,12 @@ export function useRoundLifecycle({
     setJokers(initialJokersConfig.factory());
     useGame.getState().resetStats();
     resetCardIds();
-    setBaseDeckCards(createDeck());
+    setBaseDeckCards(
+      applyDeckCompositionTransforms(
+        createDeck(),
+        deckCompositionTransforms(selectedDeck),
+      ),
+    );
     setDestroyedCardIds(new Set());
     setAddedCards([]);
     setCardEnhancementsById(new Map());

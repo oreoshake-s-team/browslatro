@@ -2,6 +2,7 @@
 import { describe, expect, test } from "vitest";
 import {
   createDeckCatalog,
+  deckCompositionTransforms,
   deckJokerSlotsDelta,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
@@ -9,6 +10,7 @@ import {
   getDeckSpec,
   type Deck,
 } from "./decks";
+import { applyDeckCompositionTransforms, createDeck } from "../cards/deck";
 
 describe("createDeckCatalog", () => {
   test("includes all 15 standard Balatro decks", () => {
@@ -30,7 +32,7 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red, Yellow, Blue, and Black Decks are implemented", () => {
+  test("Red, Yellow, Blue, Black, and Abandoned Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
@@ -39,6 +41,7 @@ describe("DeckSpec.implemented", () => {
       "yellow-deck",
       "blue-deck",
       "black-deck",
+      "abandoned-deck",
     ]);
   });
 
@@ -46,7 +49,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(11);
+    expect(unimplementedCount).toBe(10);
   });
 });
 
@@ -90,6 +93,68 @@ describe("deckStartingHandsDelta", () => {
 
   test("Red Deck does not change starting hands (negative)", () => {
     expect(deckStartingHandsDelta("red-deck")).toBe(0);
+  });
+});
+
+describe("Abandoned Deck spec (#570)", () => {
+  test("declares a drop-face-cards deck-composition modifier", () => {
+    expect(getDeckSpec("abandoned-deck").modifiers).toEqual([
+      { kind: "deck-composition", transform: "drop-face-cards" },
+    ]);
+  });
+
+  test("is marked as implemented", () => {
+    expect(getDeckSpec("abandoned-deck").implemented).toBe(true);
+  });
+});
+
+describe("deckCompositionTransforms (#570)", () => {
+  test("Abandoned Deck returns the drop-face-cards transform", () => {
+    expect(deckCompositionTransforms("abandoned-deck")).toEqual([
+      "drop-face-cards",
+    ]);
+  });
+
+  test("Red Deck returns no composition transforms (negative)", () => {
+    expect(deckCompositionTransforms("red-deck")).toEqual([]);
+  });
+
+  test("Black Deck returns no composition transforms (negative)", () => {
+    expect(deckCompositionTransforms("black-deck")).toEqual([]);
+  });
+});
+
+describe("Abandoned Deck initial deck materialization (#570)", () => {
+  test("the deck startNewGame would produce is 40 cards", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("abandoned-deck"),
+    );
+    expect(built).toHaveLength(40);
+  });
+
+  test("the deck startNewGame would produce contains no J/Q/K", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("abandoned-deck"),
+    );
+    expect(built.some((c) => ["J", "Q", "K"].includes(c.rank))).toBe(false);
+  });
+
+  test("Red Deck's initial deck is still 52 cards with face cards intact (negative)", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("red-deck"),
+    );
+    expect(built).toHaveLength(52);
+  });
+
+  test("Red Deck's initial deck still contains 4 Jacks (negative)", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("red-deck"),
+    );
+    expect(built.filter((c) => c.rank === "J")).toHaveLength(4);
   });
 });
 
