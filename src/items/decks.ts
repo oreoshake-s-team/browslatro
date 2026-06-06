@@ -17,7 +17,9 @@ export type Deck =
 
 export const DEFAULT_DECK: Deck = "red-deck";
 
-export type DeckCompositionTransform = "drop-face-cards";
+export type DeckCompositionTransform =
+  | "drop-face-cards"
+  | "spades-and-hearts-only";
 
 export type DeckModifier =
   | { readonly kind: "starting-money-delta"; readonly amount: number }
@@ -80,7 +82,15 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     implemented: true,
     modifiers: [{ kind: "deck-composition", transform: "drop-face-cards" }],
   },
-  { id: "checkered-deck", name: "Checkered Deck", description: "Start with 26 Spades and 26 Hearts.", implemented: false, modifiers: [] },
+  {
+    id: "checkered-deck",
+    name: "Checkered Deck",
+    description: "Start with 26 Spades and 26 Hearts.",
+    implemented: true,
+    modifiers: [
+      { kind: "deck-composition", transform: "spades-and-hearts-only" },
+    ],
+  },
   { id: "zodiac-deck", name: "Zodiac Deck", description: "Start with Tarot Merchant, Planet Merchant, and Overstock vouchers.", implemented: false, modifiers: [] },
   { id: "painted-deck", name: "Painted Deck", description: "+2 hand size, -1 joker slot.", implemented: false, modifiers: [] },
   { id: "anaglyph-deck", name: "Anaglyph Deck", description: "Gain a Double Tag after each Boss Blind defeat.", implemented: false, modifiers: [] },

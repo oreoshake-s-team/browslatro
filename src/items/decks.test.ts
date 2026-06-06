@@ -32,7 +32,7 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red, Yellow, Blue, Black, and Abandoned Decks are implemented", () => {
+  test("Red, Yellow, Blue, Black, Abandoned, and Checkered Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
@@ -42,6 +42,7 @@ describe("DeckSpec.implemented", () => {
       "blue-deck",
       "black-deck",
       "abandoned-deck",
+      "checkered-deck",
     ]);
   });
 
@@ -49,7 +50,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(10);
+    expect(unimplementedCount).toBe(9);
   });
 });
 
@@ -155,6 +156,56 @@ describe("Abandoned Deck initial deck materialization (#570)", () => {
       deckCompositionTransforms("red-deck"),
     );
     expect(built.filter((c) => c.rank === "J")).toHaveLength(4);
+  });
+});
+
+describe("Checkered Deck spec (#571)", () => {
+  test("declares a spades-and-hearts-only deck-composition modifier", () => {
+    expect(getDeckSpec("checkered-deck").modifiers).toEqual([
+      { kind: "deck-composition", transform: "spades-and-hearts-only" },
+    ]);
+  });
+
+  test("is marked as implemented", () => {
+    expect(getDeckSpec("checkered-deck").implemented).toBe(true);
+  });
+});
+
+describe("deckCompositionTransforms — Checkered Deck (#571)", () => {
+  test("Checkered Deck returns the spades-and-hearts-only transform", () => {
+    expect(deckCompositionTransforms("checkered-deck")).toEqual([
+      "spades-and-hearts-only",
+    ]);
+  });
+});
+
+describe("Checkered Deck initial deck materialization (#571)", () => {
+  test("the deck startNewGame would produce is 52 cards (regression — not 40)", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("checkered-deck"),
+    );
+    expect(built).toHaveLength(52);
+  });
+
+  test("the deck startNewGame would produce contains only Spades and Hearts", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("checkered-deck"),
+    );
+    expect(
+      built.every((c) => c.suit === "spades" || c.suit === "hearts"),
+    ).toBe(true);
+  });
+
+  test("Red Deck's initial deck still has the standard 4-suit split (negative)", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("red-deck"),
+    );
+    const clubs = built.filter((c) => c.suit === "clubs").length;
+    const diamonds = built.filter((c) => c.suit === "diamonds").length;
+    expect(clubs + diamonds).toBe(26);
   });
 });
 

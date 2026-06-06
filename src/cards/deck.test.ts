@@ -394,6 +394,82 @@ describe("applyDeckCompositionTransform — drop-face-cards (Abandoned Deck, #57
   });
 });
 
+describe("applyDeckCompositionTransform — spades-and-hearts-only (Checkered Deck, #571)", () => {
+  test("keeps the deck at 52 cards", () => {
+    const result = applyDeckCompositionTransform(
+      createDeck(),
+      "spades-and-hearts-only",
+    );
+    expect(result).toHaveLength(52);
+  });
+
+  test("produces exactly 26 Spades and 26 Hearts", () => {
+    const result = applyDeckCompositionTransform(
+      createDeck(),
+      "spades-and-hearts-only",
+    );
+    const counts = result.reduce<Record<Suit, number>>(
+      (acc, c) => {
+        acc[c.suit] += 1;
+        return acc;
+      },
+      { spades: 0, hearts: 0, diamonds: 0, clubs: 0 },
+    );
+    expect(counts).toEqual({
+      spades: 26,
+      hearts: 26,
+      diamonds: 0,
+      clubs: 0,
+    });
+  });
+
+  test("contains no Clubs", () => {
+    const result = applyDeckCompositionTransform(
+      createDeck(),
+      "spades-and-hearts-only",
+    );
+    expect(result.filter((c) => c.suit === "clubs")).toEqual([]);
+  });
+
+  test("contains no Diamonds", () => {
+    const result = applyDeckCompositionTransform(
+      createDeck(),
+      "spades-and-hearts-only",
+    );
+    expect(result.filter((c) => c.suit === "diamonds")).toEqual([]);
+  });
+
+  test("every rank appears exactly twice as Spades and twice as Hearts", () => {
+    const result = applyDeckCompositionTransform(
+      createDeck(),
+      "spades-and-hearts-only",
+    );
+    const ranksWithExpectedSplit = RANKS.every((rank) => {
+      const spades = result.filter(
+        (c) => c.rank === rank && c.suit === "spades",
+      ).length;
+      const hearts = result.filter(
+        (c) => c.rank === rank && c.suit === "hearts",
+      ).length;
+      return spades === 2 && hearts === 2;
+    });
+    expect(ranksWithExpectedSplit).toBe(true);
+  });
+
+  test("does not mutate the input array", () => {
+    const deck = createDeck();
+    const snapshot = deck.slice();
+    applyDeckCompositionTransform(deck, "spades-and-hearts-only");
+    expect(deck).toEqual(snapshot);
+  });
+
+  test("returns an empty array when given no cards (negative)", () => {
+    expect(
+      applyDeckCompositionTransform([], "spades-and-hearts-only"),
+    ).toEqual([]);
+  });
+});
+
 describe("applyDeckCompositionTransforms — pipeline", () => {
   test("returns the input unchanged when no transforms are supplied (negative)", () => {
     const deck = createDeck();
@@ -404,6 +480,16 @@ describe("applyDeckCompositionTransforms — pipeline", () => {
     const deck = createDeck();
     const result = applyDeckCompositionTransforms(deck, ["drop-face-cards"]);
     expect(result).toHaveLength(40);
+  });
+
+  test("applies a spades-and-hearts-only transform from the pipeline", () => {
+    const deck = createDeck();
+    const result = applyDeckCompositionTransforms(deck, [
+      "spades-and-hearts-only",
+    ]);
+    expect(
+      result.every((c) => c.suit === "spades" || c.suit === "hearts"),
+    ).toBe(true);
   });
 });
 
