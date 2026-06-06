@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import { baseChipsForAnte, requiredChipsForBlind } from "./anteScaling";
-import { BASE_CHIPS, GREEN_STAKE_CHIPS } from "../constants";
+import {
+  BASE_CHIPS,
+  GREEN_STAKE_CHIPS,
+  PURPLE_STAKE_CHIPS,
+} from "../constants";
 import type { BossBlind } from "../items/bosses";
 
 const TEST_BOSS: BossBlind = {
@@ -42,8 +46,8 @@ describe("baseChipsForAnte", () => {
     expect(baseChipsForAnte(5, "black")).toBe(GREEN_STAKE_CHIPS[4]);
   });
 
-  test("Green is cumulative on Gold stake (highest tier)", () => {
-    expect(baseChipsForAnte(8, "gold")).toBe(GREEN_STAKE_CHIPS[7]);
+  test("Green is cumulative on Black stake (still below Purple)", () => {
+    expect(baseChipsForAnte(8, "black")).toBe(GREEN_STAKE_CHIPS[7]);
   });
 });
 
@@ -158,5 +162,100 @@ describe("requiredChipsForBlind — Green stake", () => {
       stake: "green",
     });
     expect(green).toBe(white);
+  });
+});
+
+describe("baseChipsForAnte — Purple stake (#557)", () => {
+  test("returns PURPLE_STAKE_CHIPS for Purple stake", () => {
+    expect(baseChipsForAnte(5, "purple")).toBe(PURPLE_STAKE_CHIPS[4]);
+  });
+
+  test("Purple ante 1 matches the published 300", () => {
+    expect(baseChipsForAnte(1, "purple")).toBe(300);
+  });
+
+  test("Purple ante 8 matches the published 200000", () => {
+    expect(baseChipsForAnte(8, "purple")).toBe(200_000);
+  });
+
+  test("Purple takes precedence over Green at higher tiers (cumulative)", () => {
+    expect(baseChipsForAnte(5, "gold")).toBe(PURPLE_STAKE_CHIPS[4]);
+  });
+});
+
+describe("requiredChipsForBlind — Purple stake (#557)", () => {
+  test("Small Blind ante 8 returns 200000 (PURPLE_STAKE_CHIPS[7])", () => {
+    expect(
+      requiredChipsForBlind({
+        ante: 8,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "purple",
+      }),
+    ).toBe(200_000);
+  });
+
+  test("Purple is strictly greater than Green at every ante from 2..8", () => {
+    for (let ante = 2; ante <= 8; ante++) {
+      const green = requiredChipsForBlind({
+        ante,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "green",
+      });
+      const purple = requiredChipsForBlind({
+        ante,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "purple",
+      });
+      expect(purple).toBeGreaterThan(green);
+    }
+  });
+
+  test("Purple is strictly greater than White at every ante from 2..8", () => {
+    for (let ante = 2; ante <= 8; ante++) {
+      const white = requiredChipsForBlind({
+        ante,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "white",
+      });
+      const purple = requiredChipsForBlind({
+        ante,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "purple",
+      });
+      expect(purple).toBeGreaterThan(white);
+    }
+  });
+
+  test("Purple ante 1 equals White ante 1 (no penalty at the first ante)", () => {
+    const white = requiredChipsForBlind({
+      ante: 1,
+      blind: 1,
+      boss: TEST_BOSS,
+      stake: "white",
+    });
+    const purple = requiredChipsForBlind({
+      ante: 1,
+      blind: 1,
+      boss: TEST_BOSS,
+      stake: "purple",
+    });
+    expect(purple).toBe(white);
+  });
+
+  test("Green-alone (no Purple) still uses GREEN_STAKE_CHIPS at ante 5 (regression)", () => {
+    expect(baseChipsForAnte(5, "green")).toBe(GREEN_STAKE_CHIPS[4]);
+  });
+
+  test("Red stake (no scaling modifiers) still uses BASE_CHIPS at ante 5 (regression)", () => {
+    expect(baseChipsForAnte(5, "red")).toBe(BASE_CHIPS[4]);
+  });
+
+  test("Purple takes precedence over Green when both are active (higher wins, not additive)", () => {
+    expect(baseChipsForAnte(8, "purple")).toBe(PURPLE_STAKE_CHIPS[7]);
   });
 });
