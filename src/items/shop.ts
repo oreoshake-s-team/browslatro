@@ -16,6 +16,7 @@ import {
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import type { TarotCard } from "./tarots";
+import type { OfferKindWeights } from "./vouchers";
 import { JOKER_BASE_PRICE } from "../constants";
 
 export function jokerOfferPrice(joker: Joker): number {
@@ -334,6 +335,7 @@ export interface PickShopOffersArgs {
   readonly editionRateMultiplier?: number;
   readonly tarotToSpectralSwapChance?: number;
   readonly guaranteedPlanetId?: string;
+  readonly kindWeights?: OfferKindWeights;
   readonly rng?: RandomSource;
 }
 
@@ -411,6 +413,45 @@ function recordPicked(picked: PickedOfferIds, offer: ShopItem): void {
   }
 }
 
+function weightFor(
+  weights: OfferKindWeights | undefined,
+  kind: ShopOfferKind,
+): number {
+  if (kind === "spectral") return 0;
+  const w = weights ? weights[kind] : 1;
+  return w > 0 ? w : 0;
+}
+
+function pickWeightedKindOrder(
+  args: PickShopOffersArgs,
+  rng: RandomSource,
+): ReadonlyArray<ShopOfferKind> {
+  const weights = COMMON_OFFER_KINDS.map((k) => weightFor(args.kindWeights, k));
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  if (total <= 0) {
+    const start = Math.floor(rng() * COMMON_OFFER_KINDS.length);
+    return COMMON_OFFER_KINDS.map(
+      (_, i) => COMMON_OFFER_KINDS[(start + i) % COMMON_OFFER_KINDS.length],
+    );
+  }
+  const roll = rng() * total;
+  let acc = 0;
+  let firstIdx = 0;
+  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
+    acc += weights[i];
+    if (roll < acc) {
+      firstIdx = i;
+      break;
+    }
+  }
+  const order: ShopOfferKind[] = [COMMON_OFFER_KINDS[firstIdx]];
+  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
+    if (i === firstIdx) continue;
+    order.push(COMMON_OFFER_KINDS[i]);
+  }
+  return order;
+}
+
 function pickRandomKindOffer(
   args: PickShopOffersArgs,
   rng: RandomSource,
@@ -420,9 +461,8 @@ function pickRandomKindOffer(
     const spectral = pickOfferByKind("spectral", args, rng, picked);
     if (spectral) return spectral;
   }
-  const start = Math.floor(rng() * COMMON_OFFER_KINDS.length);
-  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
-    const kind = COMMON_OFFER_KINDS[(start + i) % COMMON_OFFER_KINDS.length];
+  const order = pickWeightedKindOrder(args, rng);
+  for (const kind of order) {
     const offer = pickOfferByKind(kind, args, rng, picked);
     if (offer) return offer;
   }

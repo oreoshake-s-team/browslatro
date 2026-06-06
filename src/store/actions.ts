@@ -61,6 +61,7 @@ import {
   extraStartingDiscards,
   extraStartingHands,
   interestCapFor,
+  offerKindWeights,
   pickVouchersForAnte,
   tarotToSpectralSwapChance,
   type VoucherId,
@@ -168,6 +169,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
+      kindWeights: offerKindWeights(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const rerollAdjustments = applyNextShopModifiers(s.pendingShopMods);
@@ -237,6 +239,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
             editionRateMultiplier: editionRateMultiplier(nextOwnedVoucherIds),
             tarotToSpectralSwapChance:
               tarotToSpectralSwapChance(nextOwnedVoucherIds),
+            kindWeights: offerKindWeights(nextOwnedVoucherIds),
             rng: shopPickerRngConfig.rng,
           },
           current,
@@ -465,6 +468,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
       guaranteedPlanetId: telescopePlanetId,
+      kindWeights: offerKindWeights(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);
