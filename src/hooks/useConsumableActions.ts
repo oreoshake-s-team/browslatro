@@ -4,10 +4,13 @@ import { applyPlanetUpgrade } from "../items/planets";
 import { removeConsumableAt } from "../items/consumables";
 import { applyAuraToSelectedInHand, duplicateSelectedInHand } from "../items/spectrals";
 import {
+  createTarotCatalog,
   nextRankUp,
   resolveHermitPayout,
   resolveTemperancePayout,
   rollWheelOfFortune,
+  tarotRngConfig,
+  type TarotCard,
 } from "../items/tarots";
 import {
   createJokerCatalog,
@@ -15,7 +18,8 @@ import {
   MAX_JOKERS,
   withEdition,
 } from "../items/jokers";
-import { extraJokerSlots } from "../items/vouchers";
+import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
+import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
 import { nextCardId } from "../cards/deck";
 import type { Card } from "../cards/types";
 
@@ -194,6 +198,29 @@ export function useConsumableActions(): UseConsumableActionsResult {
       play("pop");
       setJokers((prev) => [...prev, created]);
       consume();
+      return;
+    }
+    if (effect.kind === "create-consumables") {
+      play("pop");
+      consume();
+      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
+      const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      const rng = tarotRngConfig.rng;
+      const pool: ReadonlyArray<TarotCard> =
+        effect.consumableKind === "tarot"
+          ? createTarotCatalog().filter((t) => t.id !== entry.card.id)
+          : [];
+      const added: Consumable[] = [];
+      for (let i = 0; i < effect.count; i += 1) {
+        const current = useGame.getState().consumables;
+        if (current.length + added.length >= capacity) break;
+        if (pool.length === 0) break;
+        const pick = pool[Math.floor(rng() * pool.length)];
+        added.push({ kind: "tarot", card: pick });
+      }
+      if (added.length > 0) {
+        setConsumables((prev) => [...prev, ...added]);
+      }
       return;
     }
     if (effect.kind === "destroy-selected") {

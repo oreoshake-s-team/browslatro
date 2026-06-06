@@ -49,6 +49,11 @@ export type TarotEffect =
     }
   | {
       readonly kind: "create-joker";
+    }
+  | {
+      readonly kind: "create-consumables";
+      readonly consumableKind: "tarot" | "planet";
+      readonly count: number;
     };
 
 export interface TarotCard {
@@ -91,6 +96,11 @@ function describe(spec: TarotSpec): string {
   if (effect.kind === "create-joker") {
     return "Create a random Joker";
   }
+  if (effect.kind === "create-consumables") {
+    const noun = effect.consumableKind === "tarot" ? "Tarot" : "Planet";
+    const plural = effect.count === 1 ? noun : `${noun}s`;
+    return `Creates up to ${effect.count} random ${plural} (must have room)`;
+  }
   const targets = effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
   return `Apply ${effect.enhancement} enhancement to ${targets} in hand`;
 }
@@ -126,6 +136,11 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
     effect: { kind: "edition-roll", chance: WHEEL_OF_FORTUNE_CHANCE },
   },
   { id: "judgement", name: "Judgement", effect: { kind: "create-joker" } },
+  {
+    id: "the-emperor",
+    name: "The Emperor",
+    effect: { kind: "create-consumables", consumableKind: "tarot", count: 2 },
+  },
 ];
 
 export function createTarotCatalog(): TarotCard[] {

@@ -26,8 +26,8 @@ function tarotById(id: string): TarotCard {
 }
 
 describe("createTarotCatalog", () => {
-  test("contains nineteen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement)", () => {
-    expect(createTarotCatalog()).toHaveLength(19);
+  test("contains twenty entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement + Emperor)", () => {
+    expect(createTarotCatalog()).toHaveLength(20);
   });
 
   test("has unique ids", () => {
@@ -344,6 +344,30 @@ describe("Judgement", () => {
 
   test("judgement description names random Joker creation", () => {
     expect(tarotById("judgement").description).toBe("Create a random Joker");
+  });
+});
+
+describe("The Emperor", () => {
+  test("the-emperor is in the catalog with the canonical name", () => {
+    expect(tarotById("the-emperor").name).toBe("The Emperor");
+  });
+
+  test("the-emperor effect kind is create-consumables", () => {
+    expect(tarotById("the-emperor").effect.kind).toBe("create-consumables");
+  });
+
+  test("the-emperor creates up to 2 tarots (matches Balatro)", () => {
+    expect(tarotById("the-emperor").effect).toEqual({
+      kind: "create-consumables",
+      consumableKind: "tarot",
+      count: 2,
+    });
+  });
+
+  test("the-emperor description names Tarot creation", () => {
+    expect(tarotById("the-emperor").description).toBe(
+      "Creates up to 2 random Tarots (must have room)",
+    );
   });
 });
 
