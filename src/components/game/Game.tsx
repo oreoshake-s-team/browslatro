@@ -136,6 +136,10 @@ export default function Game({
       cardSealsById,
     ],
   );
+  const inHandRemaining = useMemo(
+    () => remaining.filter((c) => !destroyedCardIds.has(c.id)),
+    [remaining, destroyedCardIds],
+  );
 
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
@@ -195,7 +199,7 @@ export default function Game({
       {!shop && !packOpen && (
         <HandComponent
           hand={hand}
-          remaining={remaining}
+          remaining={inHandRemaining}
           selectedIds={selectedIds}
           discardingIds={discardingIds}
           debuffedIds={debuffedIds}
