@@ -52,6 +52,7 @@ async function buyFirstPackOffer(page: Page): Promise<void> {
     .first();
   await expect(packOffer).toBeVisible();
   await packOffer.locator("button.shop-offer-buy").click();
+  await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
 test.describe("Pack opening flow (#694)", () => {
@@ -143,6 +144,7 @@ test.describe("Pack opening flow (#694)", () => {
       .getByTestId("pack-open-preview-hand")
       .locator(".card")
       .first();
+    await expect(firstPreviewCard).toBeVisible();
     await firstPreviewCard.click();
     await page.locator('[data-consumable-kind="tarot"]').first().click();
     await expect(
@@ -163,6 +165,7 @@ test.describe("Pack opening flow (#694)", () => {
       .getByTestId("pack-open-preview-hand")
       .locator(".card")
       .first();
+    await expect(firstPreviewCard).toBeVisible();
     await firstPreviewCard.click();
     await page.locator('[data-consumable-kind="tarot"]').first().click();
     await expect(
