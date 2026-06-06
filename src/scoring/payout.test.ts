@@ -57,6 +57,14 @@ describe("calculateInterest", () => {
   test("treats a negative wallet as 0 interest", () => {
     expect(calculateInterest(-10)).toBe(0);
   });
+
+  test("would inflate interest if a caller folded end-of-round joker money into the wallet (#620)", () => {
+    const walletBeforeEorJokers = 9;
+    const cloud9Income = 1;
+    const inflated = calculateInterest(walletBeforeEorJokers + cloud9Income);
+    const correct = calculateInterest(walletBeforeEorJokers);
+    expect(inflated - correct).toBe(1);
+  });
 });
 
 describe("countGoldHeldInHand", () => {

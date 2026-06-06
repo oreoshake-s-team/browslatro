@@ -163,9 +163,6 @@ describe("RoundWonModal payout breakdown", () => {
   });
 
   test("interest row uses interestWallet, not walletAtPayout (#353)", () => {
-    // walletAtPayout = $10 (visible total), interestWallet = $7 (excludes
-    // remaining-hands). Interest row label must say "on $7" and the value
-    // must reflect interest computed on $7.
     render(
       <RoundWonModal
         info={buildInfo({
@@ -178,5 +175,91 @@ describe("RoundWonModal payout breakdown", () => {
     );
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent("$7");
     expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
+  });
+
+  test("renders a row for each end-of-round joker step (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-joker-amount-cloud-9")).toHaveTextContent(
+      "+$4",
+    );
+  });
+
+  test("labels each end-of-round joker row with the joker name (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-joker-label-cloud-9")).toHaveTextContent(
+      "Cloud 9",
+    );
+  });
+
+  test("renders multiple end-of-round joker rows when several jokers paid out (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+            {
+              jokerId: "delayed-gratification",
+              jokerName: "Delayed Gratification",
+              moneyEarned: 6,
+            },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("round-won-joker-amount-delayed-gratification"),
+    ).toHaveTextContent("+$6");
+  });
+
+  test("includes end-of-round joker payouts in the total (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 3,
+          interest: 1,
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$8");
+  });
+
+  test("does not render any joker rows when no end-of-round jokers paid out (negative, #620)", () => {
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.queryByTestId("round-won-joker-row-cloud-9")).not.toBeInTheDocument();
+  });
+
+  test("does not render any joker rows when endOfRoundJokerSteps is an empty array (negative, #620)", () => {
+    const { container } = render(
+      <RoundWonModal
+        info={buildInfo({ endOfRoundJokerSteps: [] })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      container.querySelector("[data-testid^='round-won-joker-row-']"),
+    ).toBeNull();
   });
 });
