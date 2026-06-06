@@ -9,7 +9,14 @@ import {
 import type { Card as CardType } from "../../cards/types";
 import { sortCards, type SortMode } from "../../cards/deck";
 import { spectralNeedsTarget } from "../../items/spectrals";
+import {
+  JOKER_STICKER_INFO,
+  PERISHABLE_LIFE,
+  jokerStickers,
+  type Joker,
+} from "../../items/jokers";
 import Card from "../cards/Card";
+import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 function applyManualOrder(
@@ -54,6 +61,27 @@ interface OptionView {
   readonly needsConsumableSlot: boolean;
   readonly needsJokerSlot: boolean;
   readonly requiresPreviewSelection?: { readonly maxTargets: 1 | 2 | 3 };
+  readonly joker?: Joker;
+}
+
+function stickerSummary(joker: Joker): string {
+  return jokerStickers(joker)
+    .map((s) => JOKER_STICKER_INFO[s.kind].name)
+    .join(", ");
+}
+
+function stickerTooltip(joker: Joker): string {
+  return jokerStickers(joker)
+    .map((s) => {
+      const info = JOKER_STICKER_INFO[s.kind];
+      if (s.kind === "perishable") {
+        if (s.roundsHeld >= PERISHABLE_LIFE) return `${info.name} — debuffed`;
+        const remaining = PERISHABLE_LIFE - s.roundsHeld;
+        return `${info.name} — ${remaining} of ${PERISHABLE_LIFE} rounds left`;
+      }
+      return `${info.name} — ${info.description}`;
+    })
+    .join("\n");
 }
 
 function describeOption(option: PackOption): OptionView | null {
@@ -90,6 +118,7 @@ function describeOption(option: PackOption): OptionView | null {
       description: option.joker.description,
       needsConsumableSlot: false,
       needsJokerSlot: true,
+      joker: option.joker,
     };
   }
   if (option.kind === "spectral") {
@@ -234,20 +263,36 @@ export default function PackOpenModal({
                         ? `Select 1–${sel.maxTargets} cards in the preview hand first`
                         : `Too many cards selected (max ${sel.maxTargets})`
                     : undefined;
+            const stickerNames =
+              view.joker && jokerStickers(view.joker).length > 0
+                ? stickerSummary(view.joker)
+                : "";
+            const stickerHover =
+              view.joker && jokerStickers(view.joker).length > 0
+                ? stickerTooltip(view.joker)
+                : undefined;
+            const pickAriaLabel = stickerNames
+              ? `Pick ${view.name} (${stickerNames})`
+              : `Pick ${view.name}`;
             return (
-              <li key={`${view.id}-${idx}`} className="pack-open-option">
+              <li
+                key={`${view.id}-${idx}`}
+                className="pack-open-option"
+                title={stickerHover}
+              >
                 <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
                 <span className="pack-open-option-name">{view.name}</span>
                 <span className="pack-open-option-description">
                   {view.description}
                 </span>
+                {view.joker && <JokerStickerBadges joker={view.joker} />}
                 <button
                   type="button"
                   className="pack-open-option-pick"
                   data-testid={`pack-open-pick-${idx}`}
                   disabled={disabled}
                   title={tooltip}
-                  aria-label={`Pick ${view.name}`}
+                  aria-label={pickAriaLabel}
                   onClick={() => onPick(idx)}
                 >
                   Pick
