@@ -57,6 +57,7 @@ function renderShop(
     <Shop
       money={10}
       equippedJokerCount={0}
+      jokerCapacity={MAX_JOKERS}
       consumableCount={0}
       consumableCapacity={2}
       offers={[jokerOffer("plus"), planetOffer("pluto")]}
@@ -245,6 +246,25 @@ describe("Shop", () => {
     expect(
       screen.getAllByRole("button", { name: /Slots full/ })[0],
     ).toBeDisabled();
+  });
+
+  test("the joker buy button tooltip shows the correct capacity", () => {
+    renderShop({ equippedJokerCount: MAX_JOKERS });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).toHaveAttribute(
+      "title",
+      `Joker slots are full (max ${MAX_JOKERS})`,
+    );
+  });
+
+  test("the joker buy button stays enabled when jokerCapacity exceeds MAX_JOKERS", () => {
+    renderShop({ equippedJokerCount: MAX_JOKERS, jokerCapacity: MAX_JOKERS + 1 });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).not.toBeDisabled();
   });
 
   test("the planet buy button is disabled when the player can't afford the planet price", () => {

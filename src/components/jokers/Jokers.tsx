@@ -155,6 +155,7 @@ export default function Jokers({
       className={`jokers${showDropZone ? " jokers-consumable-target" : ""}${
         dropZone.hover ? " jokers-consumable-hover" : ""
       }`}
+      style={{ "--joker-capacity": capacity } as React.CSSProperties}
       aria-label="Equipped jokers"
       data-consumable-drop-active={showDropZone || undefined}
       onDragOver={dropZone.onDragOver}
