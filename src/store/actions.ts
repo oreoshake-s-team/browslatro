@@ -746,8 +746,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       return;
     }
     const nextSelected = s.dealt.hand.filter((c) => nextIds.has(c.id));
+    const visibleSelected = nextSelected.filter((c) => c.faceDown !== true);
+    if (visibleSelected.length === 0) {
+      s.setSelectedHand(null);
+      s.setChips(0);
+      s.setMultiplier(0);
+      return;
+    }
     const label = detectHandLabel(
-      nextSelected,
+      visibleSelected,
       handEvalOptionsFromJokers(s.jokers),
     );
     const entry =
