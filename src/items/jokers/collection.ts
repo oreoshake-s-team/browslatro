@@ -66,6 +66,20 @@ export function hasAstronomerInJokers(
   return false;
 }
 
+export function hasChaosTheClownInJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.chaosTheClown === true
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function handEvalOptionsFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): {

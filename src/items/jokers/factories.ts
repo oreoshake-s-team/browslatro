@@ -979,6 +979,16 @@ export function createAstronomerJoker(): Joker {
   };
 }
 
+export function createChaosTheClownJoker(): Joker {
+  return {
+    id: "chaos-the-clown",
+    rarity: "common",
+    name: "Chaos the Clown",
+    description: "1 free Reroll per shop",
+    effect: { kind: "passive-run-stats", chaosTheClown: true },
+  };
+}
+
 export function createFourFingersJoker(): Joker {
   return {
     id: "four-fingers",
