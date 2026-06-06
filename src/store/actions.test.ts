@@ -15,6 +15,7 @@ import { packPickLimit, type PackOffer } from "../items/packs";
 import { createDeck } from "../cards/deck";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
+import { applyBossFaceDown, createBossCatalog } from "../items/bosses";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -1023,6 +1024,87 @@ describe("game actions slice", () => {
     game.toggleCard(hand[0]);
     game.toggleCard(hand[1]);
     expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("toggleCard does not leak label when only face-down cards are selected (#764)", () => {
+    const base = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const hand = base.map((c) => ({ ...c, faceDown: true }));
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand).toBeNull();
+  });
+
+  test("toggleCard zeroes chips and mult when only face-down cards are selected (#764)", () => {
+    const base = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const hand = base.map((c) => ({ ...c, faceDown: true }));
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    const state = useGame.getState();
+    expect([state.chips, state.multiplier]).toEqual([0, 0]);
+  });
+
+  test("toggleCard does not preview Pair when a face-down card would complete it (#764)", () => {
+    const fives = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 1);
+    const seven = createDeck().find((c) => c.rank === "7");
+    if (!seven) throw new Error("expected a 7 in the base deck");
+    const hand = [{ ...fives[0], faceDown: true }, seven];
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand?.label).toBe("High Card");
+  });
+
+  test("toggleCard still previews Pair when two face-up cards match (#764 regression)", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("toggleCard previews label using only face-up cards when mixed with face-down (#764)", () => {
+    const fives = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const seven = createDeck().find((c) => c.rank === "7");
+    if (!seven) throw new Error("expected a 7 in the base deck");
+    const hand = [fives[0], fives[1], { ...seven, faceDown: true }];
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    game.toggleCard(hand[2]);
+    expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("toggleCard hides preview after The House flips initial hand face-down (#764)", () => {
+    const house = createBossCatalog().find((b) => b.id === "the-house");
+    if (!house) throw new Error("expected The House in the boss catalog");
+    const fives = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const hand = applyBossFaceDown(fives, house, true, "initial");
+    const game = useGame.getState();
+    game.setBlind(3);
+    game.setCurrentBoss(house);
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand).toBeNull();
   });
 
   test("toggleCard halves chips on blind 3 against The Flint", () => {
