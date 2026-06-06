@@ -26,10 +26,12 @@ export type StakeModifier =
   | { readonly kind: "green-ante-scaling" }
   | { readonly kind: "black-eternal-roll"; readonly chance: number }
   | { readonly kind: "blue-discard-delta"; readonly amount: number }
-  | { readonly kind: "purple-ante-scaling" };
+  | { readonly kind: "purple-ante-scaling" }
+  | { readonly kind: "orange-perishable-roll"; readonly chance: number };
 
 export const BLACK_ETERNAL_ROLL_CHANCE = 0.3;
 export const BLUE_DISCARD_DELTA = -1;
+export const ORANGE_PERISHABLE_ROLL_CHANCE = 0.3;
 
 export interface StakeSpec {
   readonly id: Stake;
@@ -87,9 +89,15 @@ const STAKE_SPECS: ReadonlyArray<StakeSpec> = [
   {
     id: "orange",
     name: "Orange Stake",
-    description: "Booster Packs cost $1 more per ante.",
-    implemented: false,
-    modifiers: [],
+    description:
+      "Shop and Booster Pack Jokers may roll Perishable (debuffed after a few rounds).",
+    implemented: true,
+    modifiers: [
+      {
+        kind: "orange-perishable-roll",
+        chance: ORANGE_PERISHABLE_ROLL_CHANCE,
+      },
+    ],
   },
   {
     id: "gold",
@@ -146,6 +154,7 @@ export function stakeStickerOdds(stake: Stake): StakeStickerOdds | undefined {
   const odds: { eternal?: number; perishable?: number; rental?: number } = {};
   for (const mod of getActiveStakeModifiers(stake)) {
     if (mod.kind === "black-eternal-roll") odds.eternal = mod.chance;
+    if (mod.kind === "orange-perishable-roll") odds.perishable = mod.chance;
   }
   if (
     odds.eternal === undefined &&

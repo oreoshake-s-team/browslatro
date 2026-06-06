@@ -9,6 +9,7 @@ import {
   type Voucher,
   type VoucherId,
 } from "../../items/vouchers";
+import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export interface ShopProps {
@@ -273,6 +274,9 @@ export default function Shop({
           )}
         </span>
         <span className="shop-offer-description">{subject.description}</span>
+        {offer.kind === "joker" && (
+          <JokerStickerBadges joker={offer.joker} />
+        )}
         <span className="shop-offer-price">
           {isFree ? (
             <span className="shop-offer-price-free">FREE</span>

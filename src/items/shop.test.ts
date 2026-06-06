@@ -11,6 +11,7 @@ import type { HandLabel } from "../scoring/handEvaluator";
 import { HANDS, JOKER_BASE_PRICE } from "../constants";
 import { RENTAL_BASE_PRICE } from "./jokers";
 import { createSpectralCatalog } from "./spectrals";
+import { stakeStickerOdds } from "./stakes";
 import { createTarotCatalog } from "./tarots";
 import {
   SHOP_OFFER_SLOTS,
@@ -1104,6 +1105,65 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     };
     const stamped = applyStakeStickersToShopOffers([offer], { eternal: 1 }, () => 0);
     expect(stamped[0]).toEqual(offer);
+  });
+
+  test("stamps Perishable onto a shop joker offer when the roll succeeds (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { perishable: 1 },
+      () => 0,
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers).toEqual([{ kind: "perishable", roundsHeld: 0 }]);
+  });
+
+  test("stamps Perishable on a Buffoon pack's joker option when the roll succeeds (#558)", () => {
+    const offers = [packOfferWithJokerOption("p1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { perishable: 1 },
+      () => 0,
+    );
+    const opt = stamped[0].kind === "pack" ? stamped[0].pack.options[0] : null;
+    expect(opt && opt.kind === "joker" ? opt.joker.stickers : null).toEqual([
+      { kind: "perishable", roundsHeld: 0 },
+    ]);
+  });
+
+  test("does not stamp Perishable when the roll fails (negative) (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { perishable: 0.3 },
+      () => 0.9,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
+      .toBeUndefined();
+  });
+
+  test("at Orange Stake, shop joker rolls receive Perishable when the perishable roll hits (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("orange"),
+      sequenceRng([0.99, 0]),
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers?.some((s) => s.kind === "perishable")).toBe(true);
+  });
+
+  test("at White Stake, shop joker rolls never receive Perishable (negative) (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("white"),
+      () => 0,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
+      .toBeUndefined();
   });
 });
 

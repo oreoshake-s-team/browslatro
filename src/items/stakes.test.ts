@@ -117,7 +117,7 @@ describe("hasStakeModifier", () => {
 });
 
 describe("StakeSpec.implemented", () => {
-  test("White, Red, Green, Black, Blue, and Purple are implemented", () => {
+  test("White, Red, Green, Black, Blue, Purple, and Orange are implemented", () => {
     const implemented = createStakeCatalog()
       .filter((s) => s.implemented)
       .map((s) => s.id);
@@ -128,14 +128,15 @@ describe("StakeSpec.implemented", () => {
       "black",
       "blue",
       "purple",
+      "orange",
     ]);
   });
 
-  test("Orange and Gold are not implemented (negative)", () => {
+  test("Gold is not implemented (negative)", () => {
     const unimplemented = createStakeCatalog()
       .filter((s) => !s.implemented)
       .map((s) => s.id);
-    expect(unimplemented).toEqual(["orange", "gold"]);
+    expect(unimplemented).toEqual(["gold"]);
   });
 });
 
@@ -195,6 +196,31 @@ describe("Purple Stake — purple-ante-scaling modifier (#557)", () => {
   });
 });
 
+describe("Orange Stake — orange-perishable-roll modifier (#558)", () => {
+  test("Orange Stake carries the orange-perishable-roll modifier", () => {
+    expect(hasStakeModifier("orange", "orange-perishable-roll")).toBe(true);
+  });
+
+  test("Purple Stake does not carry the orange-perishable-roll modifier (negative)", () => {
+    expect(hasStakeModifier("purple", "orange-perishable-roll")).toBe(false);
+  });
+
+  test("the modifier's chance defaults to ORANGE_PERISHABLE_ROLL_CHANCE", () => {
+    const mod = getActiveStakeModifiers("orange").find(
+      (m) => m.kind === "orange-perishable-roll",
+    );
+    expect(mod && "chance" in mod ? mod.chance : null).toBeCloseTo(0.3);
+  });
+
+  test("higher stakes still carry the orange-perishable-roll modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "orange-perishable-roll")).toBe(true);
+  });
+
+  test("Orange is cumulative on lower tiers (still carries Black's eternal-roll too)", () => {
+    expect(hasStakeModifier("orange", "black-eternal-roll")).toBe(true);
+  });
+});
+
 describe("stakeStartingDiscardsDelta", () => {
   test("returns 0 for stakes below Blue", () => {
     expect(stakeStartingDiscardsDelta("black")).toBe(0);
@@ -214,11 +240,31 @@ describe("stakeStickerOdds", () => {
     expect(stakeStickerOdds("green")).toBeUndefined();
   });
 
+  test("returns undefined at White Stake (regression)", () => {
+    expect(stakeStickerOdds("white")).toBeUndefined();
+  });
+
   test("returns eternal odds at Black Stake", () => {
     expect(stakeStickerOdds("black")?.eternal).toBeCloseTo(0.3);
   });
 
+  test("does not return perishable odds at Black Stake (negative)", () => {
+    expect(stakeStickerOdds("black")?.perishable).toBeUndefined();
+  });
+
   test("returns eternal odds at Gold Stake too (cumulative)", () => {
     expect(stakeStickerOdds("gold")?.eternal).toBeCloseTo(0.3);
+  });
+
+  test("returns perishable odds at Orange Stake", () => {
+    expect(stakeStickerOdds("orange")?.perishable).toBeCloseTo(0.3);
+  });
+
+  test("continues to return eternal odds at Orange Stake (cumulative with Black)", () => {
+    expect(stakeStickerOdds("orange")?.eternal).toBeCloseTo(0.3);
+  });
+
+  test("returns perishable odds at Gold Stake too (cumulative)", () => {
+    expect(stakeStickerOdds("gold")?.perishable).toBeCloseTo(0.3);
   });
 });
