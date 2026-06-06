@@ -91,6 +91,7 @@ export const STUNTMAN_HAND_SIZE = -2;
 export const CREDIT_CARD_DEBT_FLOOR = 20;
 export const BURGLAR_HANDS = 3;
 export const BURGLAR_DISCARDS_OVERRIDE = 0;
+export const SPARE_TROUSERS_MULT_PER_TWO_PAIR = 2;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

@@ -347,6 +347,36 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "per-hand-play-count-mult": {
+        const counts = context.handPlayCounts;
+        const label = context.playedHandLabel;
+        if (counts !== undefined && label !== undefined) {
+          const bonus = counts[label];
+          if (bonus > 0) {
+            additiveMult += bonus;
+            fired.push(joker.id);
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveMult: bonus,
+            });
+          }
+        }
+        break;
+      }
+      case "on-hand-type-stack-mult": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: bonus,
+          });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
