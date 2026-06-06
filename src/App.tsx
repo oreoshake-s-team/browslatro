@@ -53,6 +53,7 @@ import {
   MAX_JOKERS,
   effectiveJokerCount,
   initialJokersConfig,
+  probabilityMultiplierFromJokers,
 } from "./items/jokers";
 import {
   applyShopDiscount,
@@ -134,6 +135,13 @@ function App() {
     if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
+  useEffect(() => {
+    chanceOverrideConfig.probabilityMultiplier =
+      probabilityMultiplierFromJokers(jokers);
+    return () => {
+      chanceOverrideConfig.probabilityMultiplier = 1;
+    };
+  }, [jokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
   const handStats = useGame((state) => state.handStats);
   const {

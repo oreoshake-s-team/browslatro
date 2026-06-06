@@ -46,6 +46,7 @@ export {
   pickRandomEquipped,
   pickRandomFromCatalog,
   polychromeRandomJokerDestroyOthers,
+  probabilityMultiplierFromJokers,
   replaceJokersExceptCopyOf,
 } from "./jokers/collection";
 export * from "./jokers/factories";

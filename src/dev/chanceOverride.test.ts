@@ -4,6 +4,7 @@ import { chanceOverrideConfig, rollChance } from "./chanceOverride";
 
 afterEach(() => {
   chanceOverrideConfig.force100 = false;
+  chanceOverrideConfig.probabilityMultiplier = 1;
 });
 
 describe("rollChance", () => {
@@ -55,5 +56,43 @@ describe("rollChance with force100 override", () => {
 describe("chanceOverrideConfig defaults", () => {
   test("force100 starts false (no global side effects across imports)", () => {
     expect(chanceOverrideConfig.force100).toBe(false);
+  });
+
+  test("probabilityMultiplier starts at 1 (identity — no doubling)", () => {
+    expect(chanceOverrideConfig.probabilityMultiplier).toBe(1);
+  });
+});
+
+describe("rollChance with probabilityMultiplier", () => {
+  test("doubles the effective chance so an rng at 0.5 trips a 0.3 base chance", () => {
+    chanceOverrideConfig.probabilityMultiplier = 2;
+    expect(rollChance(0.3, () => 0.5)).toBe(true);
+  });
+
+  test("still misses when rng exceeds the doubled chance (0.3 * 2 = 0.6, rng 0.7)", () => {
+    chanceOverrideConfig.probabilityMultiplier = 2;
+    expect(rollChance(0.3, () => 0.7)).toBe(false);
+  });
+
+  test("clamps the effective chance at 1.0 (0.8 * 2 = 1.6 → guaranteed)", () => {
+    chanceOverrideConfig.probabilityMultiplier = 2;
+    expect(rollChance(0.8, () => 0.99)).toBe(true);
+  });
+
+  test("does not consume the rng once the doubled chance clamps to 1", () => {
+    chanceOverrideConfig.probabilityMultiplier = 2;
+    const rng = vi.fn(() => 0.99);
+    rollChance(0.8, rng);
+    expect(rng).not.toHaveBeenCalled();
+  });
+
+  test("falls back to identity when set to 0 (defensive against bad inputs)", () => {
+    chanceOverrideConfig.probabilityMultiplier = 0;
+    expect(rollChance(0.5, () => 0.4)).toBe(true);
+  });
+
+  test("still returns false for chance 0 even when multiplied", () => {
+    chanceOverrideConfig.probabilityMultiplier = 10;
+    expect(rollChance(0, () => 0)).toBe(false);
   });
 });
