@@ -74,6 +74,23 @@ describe("deserializeRun", () => {
     expect([...decoded.inner.ids]).toEqual([7, 8]);
   });
 
+  test("round-trips a joker's state.value counter intact (#804 — Spare Trousers state)", () => {
+    const jokers = [
+      {
+        id: "spare-trousers",
+        name: "Spare Trousers",
+        description: "...",
+        rarity: "uncommon" as const,
+        effect: { kind: "on-hand-type-stack-mult" as const, requires: "Two Pair" as const, amount: 2 },
+        state: { kind: "counter" as const, value: 8 },
+      },
+    ];
+    const decoded = deserializeRun(serializeRun({ jokers })) as {
+      jokers: ReadonlyArray<{ state: { kind: string; value: number } }>;
+    };
+    expect(decoded.jokers[0].state).toEqual({ kind: "counter", value: 8 });
+  });
+
   test("rejects snapshots with an unsupported schemaVersion", () => {
     expect(() =>
       deserializeRun({

@@ -162,7 +162,16 @@ export type JokerEffect =
       readonly shortcut?: boolean;
       readonly smearedSuits?: boolean;
       readonly probabilityMultiplier?: number;
+    }
+  | { readonly kind: "per-hand-play-count-mult" }
+  | {
+      readonly kind: "on-hand-type-stack-mult";
+      readonly requires: HandLabel;
+      readonly amount: number;
     };
+
+export type JokerStateValue =
+  | { readonly kind: "counter"; readonly value: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -188,4 +197,5 @@ export interface Joker {
   readonly rarity: JokerRarity;
   readonly edition?: JokerEdition;
   readonly stickers?: ReadonlyArray<JokerSticker>;
+  readonly state?: JokerStateValue;
 }

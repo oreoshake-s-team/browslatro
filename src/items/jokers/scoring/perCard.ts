@@ -205,6 +205,8 @@ export function applyPerCardJokers(
       case "passive-run-stats":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "per-hand-play-count-mult":
+      case "on-hand-type-stack-mult":
         break;
       default:
         assertNeverEffect(effect);

@@ -63,6 +63,7 @@ import {
   SHOOT_THE_MOON_RANKS,
   SLY_JOKER_CHIPS,
   SMILEY_FACE_MULT,
+  SPARE_TROUSERS_MULT_PER_TWO_PAIR,
   STEEL_JOKER_X_MULT_PER_STEEL,
   STONE_JOKER_CHIPS_PER_STONE,
   STUNTMAN_CHIPS,
@@ -946,6 +947,32 @@ export function createBurglarJoker(): Joker {
       hands: BURGLAR_HANDS,
       discardsOverride: BURGLAR_DISCARDS_OVERRIDE,
     },
+  };
+}
+
+export function createSupernovaJoker(): Joker {
+  return {
+    id: "supernova",
+    rarity: "common",
+    name: "Supernova",
+    description:
+      "Adds the number of times your played hand has been played this run to Mult",
+    effect: { kind: "per-hand-play-count-mult" },
+  };
+}
+
+export function createSpareTrousersJoker(): Joker {
+  return {
+    id: "spare-trousers",
+    rarity: "uncommon",
+    name: "Spare Trousers",
+    description: `This Joker gains +${SPARE_TROUSERS_MULT_PER_TWO_PAIR} Mult if played hand contains a Two Pair`,
+    effect: {
+      kind: "on-hand-type-stack-mult",
+      requires: "Two Pair",
+      amount: SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }
 

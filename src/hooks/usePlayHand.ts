@@ -26,6 +26,7 @@ import {
   allCardsScoreFromJokers,
   applyEndOfRoundJokers,
   applyHandLevelJokers,
+  applyHandPlayedToJokerStates,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -150,6 +151,8 @@ export function usePlayHand({
   const setHandLevelIndex = useGame((s) => s.setHandLevelIndex);
   const setRemainingHands = useGame((s) => s.setRemainingHands);
   const setPendingWin = useGame((s) => s.setPendingWin);
+  const setJokers = useGame((s) => s.setJokers);
+  const handPlayCounts = useGame((s) => s.handPlayCounts);
 
   function finalizeHandSubmission(
     score: number,
@@ -315,6 +318,7 @@ export function usePlayHand({
     pendingHandPlayResetRef.current = true;
 
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
+    setJokers((prev) => applyHandPlayedToJokerStates(prev, label));
     setRunStats(recordHandPlayed);
     setHandHistoryThisRound((prev) => [...prev, label]);
     setPlayedCardKeysThisAnte((prev) => {
@@ -365,6 +369,10 @@ export function usePlayHand({
           ).remaining,
           remainingDeck: dealt.remaining,
           baseDeckSize: baseDeckCards.length,
+          handPlayCounts: {
+            ...handPlayCounts,
+            [label]: handPlayCounts[label] + 1,
+          },
         },
       );
       const noCardsMatchingObservatoryPlanets = consumables.filter(
@@ -395,6 +403,10 @@ export function usePlayHand({
       cardEnhancementsById,
       cardSealsById,
     ).remaining;
+    const handPlayCountsWithThisHand = {
+      ...handPlayCounts,
+      [label]: handPlayCounts[label] + 1,
+    };
     const handJokerResult = applyHandLevelJokers(jokers.filter(isJokerActive), {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
@@ -406,6 +418,7 @@ export function usePlayHand({
       fullDeck: handLevelFullDeck,
       remainingDeck: dealt.remaining,
       baseDeckSize: baseDeckCards.length,
+      handPlayCounts: handPlayCountsWithThisHand,
     });
 
     let perCardAdditiveMult = 0;
