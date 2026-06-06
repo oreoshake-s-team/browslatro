@@ -9,6 +9,7 @@ import {
   effectiveJokerCount,
   type Joker,
 } from "../../items/jokers";
+import { deckJokerSlotsDelta } from "../../items/decks";
 import { extraJokerSlots } from "../../items/vouchers";
 import JokerTooltip from "../jokers/JokerTooltip";
 
@@ -18,7 +19,13 @@ export default function ModifierJokerPicker() {
   const jokers = useGame((s) => s.jokers);
   const setJokers = useGame((s) => s.setJokers);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
-  const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
+  const capacity = Math.max(
+    0,
+    MAX_JOKERS +
+      extraJokerSlots(ownedVoucherIds) +
+      deckJokerSlotsDelta(selectedDeck),
+  );
   const isFull = effectiveJokerCount(jokers) >= capacity;
 
   const sortedCatalog = useMemo<ReadonlyArray<Joker>>(

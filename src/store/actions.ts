@@ -71,6 +71,7 @@ import {
   applySealOverrides,
   fullDeckPile,
 } from "../cards/deckBuild";
+import { deckJokerSlotsDelta } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -330,7 +331,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (offer.kind === "joker") {
       if (
         effectiveJokerCount(s.jokers) >=
-        MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds)
+        Math.max(
+          0,
+          MAX_JOKERS +
+            extraJokerSlots(s.ownedVoucherIds) +
+            deckJokerSlotsDelta(s.selectedDeck),
+        )
       ) {
         return false;
       }
@@ -558,7 +564,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "create-joker-by-rarity": {
-        const capacity = MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds);
+        const capacity = Math.max(
+          0,
+          MAX_JOKERS +
+            extraJokerSlots(s.ownedVoucherIds) +
+            deckJokerSlotsDelta(s.selectedDeck),
+        );
         const created = createJokerByRarity(
           s.jokers,
           createJokerCatalog(),
@@ -591,7 +602,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "create-legendary": {
-        const capacity = MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds);
+        const capacity = Math.max(
+          0,
+          MAX_JOKERS +
+            extraJokerSlots(s.ownedVoucherIds) +
+            deckJokerSlotsDelta(s.selectedDeck),
+        );
         const created = createJokerByRarity(
           s.jokers,
           createLegendaryJokerCatalog(),

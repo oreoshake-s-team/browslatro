@@ -138,3 +138,23 @@ describe("computeStartingHands — Burglar +3 hands (#709)", () => {
     expect(withBurglar - baseline).toBe(3);
   });
 });
+
+describe("computeStartingHands — Black Deck -1 hand (#566)", () => {
+  test("Black Deck subtracts 1 from base starting hands", () => {
+    const baseline = computeStartingHands({
+      blind: 1,
+      boss: null,
+      ownedVoucherIds: NO_VOUCHERS,
+      deck: "red-deck",
+      jokers: [],
+    });
+    const withBlack = computeStartingHands({
+      blind: 1,
+      boss: null,
+      ownedVoucherIds: NO_VOUCHERS,
+      deck: "black-deck",
+      jokers: [],
+    });
+    expect(baseline - withBlack).toBe(1);
+  });
+});

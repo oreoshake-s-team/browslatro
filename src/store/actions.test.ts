@@ -399,6 +399,32 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
   });
 
+  test("buyShopOffer allows MAX_JOKERS + 1 jokers when Black Deck is selected (closes #566)", () => {
+    const catalog = createJokerCatalog();
+    const game = useGame.getState();
+    game.setSelectedDeck("black-deck");
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: catalog[MAX_JOKERS], price: 1, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS + 1);
+  });
+
+  test("buyShopOffer with Red Deck still caps at MAX_JOKERS (negative)", () => {
+    const catalog = createJokerCatalog();
+    const game = useGame.getState();
+    game.setSelectedDeck("red-deck");
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: catalog[MAX_JOKERS], price: 1, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
+  });
+
   test("handleWin increments the round counter", () => {
     useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().round).toBe(2);

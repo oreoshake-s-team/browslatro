@@ -19,6 +19,7 @@ export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
 interface JokersProps {
   jokers: ReadonlyArray<Joker>;
+  capacity?: number;
   pulseCounters?: Readonly<Record<string, number>>;
   onReorder?: (orderedIds: ReadonlyArray<string>) => void;
   onSell?: (index: number) => void;
@@ -30,6 +31,7 @@ interface JokersProps {
 
 export default function Jokers({
   jokers,
+  capacity = MAX_JOKERS,
   pulseCounters,
   onReorder,
   onSell,
@@ -49,7 +51,7 @@ export default function Jokers({
     onDrop: onConsumableDrop,
   });
   const listRef = useRef<HTMLUListElement | null>(null);
-  const emptyCount = Math.max(0, MAX_JOKERS - effectiveJokerCount(jokers));
+  const emptyCount = Math.max(0, capacity - effectiveJokerCount(jokers));
   const reorderable = Boolean(onReorder);
   const sellable = Boolean(onSell);
   const tileDraggable = reorderable || sellable;
