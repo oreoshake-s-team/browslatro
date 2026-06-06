@@ -26,8 +26,8 @@ function tarotById(id: string): TarotCard {
 }
 
 describe("createTarotCatalog", () => {
-  test("contains eighteen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World)", () => {
-    expect(createTarotCatalog()).toHaveLength(18);
+  test("contains nineteen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement)", () => {
+    expect(createTarotCatalog()).toHaveLength(19);
   });
 
   test("has unique ids", () => {
@@ -326,6 +326,24 @@ describe("rollWheelOfFortune", () => {
     } finally {
       chanceOverrideConfig.force100 = false;
     }
+  });
+});
+
+describe("Judgement", () => {
+  test("judgement is in the catalog", () => {
+    expect(tarotById("judgement").name).toBe("Judgement");
+  });
+
+  test("judgement effect kind is create-joker", () => {
+    expect(tarotById("judgement").effect.kind).toBe("create-joker");
+  });
+
+  test("judgement effect carries no payload (any-rarity, matches Balatro)", () => {
+    expect(tarotById("judgement").effect).toEqual({ kind: "create-joker" });
+  });
+
+  test("judgement description names random Joker creation", () => {
+    expect(tarotById("judgement").description).toBe("Create a random Joker");
   });
 });
 

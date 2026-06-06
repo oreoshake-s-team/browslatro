@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { useConsumableActions } from "./useConsumableActions";
 import { useGame } from "../store/game";
 import { createTarotCatalog } from "../items/tarots";
+import { MAX_JOKERS, createJokerCatalog } from "../items/jokers";
 import type { Consumable } from "../items/consumables";
 import type { Card } from "../cards/types";
 
@@ -625,5 +626,58 @@ describe("useConsumableActions — Death", () => {
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
     expect(useGame.getState().dealt.hand[0]?.rank).toBe("K");
+  });
+});
+
+function judgementConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "judgement");
+  if (!tarot) throw new Error("Judgement missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — Judgement (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([judgementConsumable()]);
+    useGame.getState().setJokers([]);
+  });
+
+  test("using Judgement adds a joker to the equipped row", () => {
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().jokers.length).toBe(1);
+  });
+
+  test("using Judgement consumes the tarot from the consumable list", () => {
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("at joker capacity, Judgement is a no-op and the tarot is NOT consumed (matches Balatro)", () => {
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, MAX_JOKERS));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("at joker capacity, no extra joker is added (negative)", () => {
+    const catalog = createJokerCatalog();
+    const equipped = catalog.slice(0, MAX_JOKERS);
+    useGame.getState().setJokers(equipped);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().jokers.length).toBe(MAX_JOKERS);
+  });
+
+  test("the created joker is not a duplicate of any already-equipped joker", () => {
+    const catalog = createJokerCatalog();
+    const ownedIds = new Set(catalog.slice(0, 3).map((j) => j.id));
+    useGame.getState().setJokers(catalog.slice(0, 3));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const newest = useGame.getState().jokers[useGame.getState().jokers.length - 1];
+    expect(ownedIds.has(newest.id)).toBe(false);
   });
 });

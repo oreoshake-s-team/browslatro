@@ -35,6 +35,7 @@ export {
   allCardsScoreFromJokers,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
+  createRandomJoker,
   discardsOverrideFromJokers,
   effectiveJokerCount,
   extraDebtFloorFromJokers,

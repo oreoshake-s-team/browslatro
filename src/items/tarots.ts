@@ -46,6 +46,9 @@ export type TarotEffect =
       readonly kind: "convert-suit";
       readonly suit: Suit;
       readonly maxTargets: 3;
+    }
+  | {
+      readonly kind: "create-joker";
     };
 
 export interface TarotCard {
@@ -85,6 +88,9 @@ function describe(spec: TarotSpec): string {
   if (effect.kind === "convert-suit") {
     return `Convert up to ${effect.maxTargets} cards in hand to ${SUIT_DISPLAY[effect.suit]}`;
   }
+  if (effect.kind === "create-joker") {
+    return "Create a random Joker";
+  }
   const targets = effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
   return `Apply ${effect.enhancement} enhancement to ${targets} in hand`;
 }
@@ -119,6 +125,7 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
     name: "Wheel of Fortune",
     effect: { kind: "edition-roll", chance: WHEEL_OF_FORTUNE_CHANCE },
   },
+  { id: "judgement", name: "Judgement", effect: { kind: "create-joker" } },
 ];
 
 export function createTarotCatalog(): TarotCard[] {
