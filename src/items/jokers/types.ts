@@ -157,6 +157,7 @@ export type JokerEffect =
       readonly allCardsFace?: boolean;
       readonly allCardsScore?: boolean;
       readonly astronomer?: boolean;
+      readonly chaosTheClown?: boolean;
       readonly fourFingers?: boolean;
       readonly shortcut?: boolean;
       readonly smearedSuits?: boolean;

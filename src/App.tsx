@@ -52,6 +52,7 @@ import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import {
   MAX_JOKERS,
   effectiveJokerCount,
+  hasChaosTheClownInJokers,
   initialJokersConfig,
   probabilityMultiplierFromJokers,
 } from "./items/jokers";
@@ -402,6 +403,7 @@ function App() {
                 onNext: closeShopAndStartNextRound,
                 extraRerollReduction:
                   applyNextShopModifiers(pendingShopMods).rerollReduction,
+                freeFirstReroll: hasChaosTheClownInJokers(jokers),
                 voucherOptions: VOUCHER_CATALOG,
                 onSetVoucher: (id) => {
                   const next = VOUCHER_CATALOG.find((v) => v.id === id);

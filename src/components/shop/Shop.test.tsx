@@ -432,6 +432,46 @@ describe("Shop", () => {
         "Reroll ($1)",
       );
     });
+
+    describe("freeFirstReroll (Chaos the Clown)", () => {
+      test("first reroll shows $0 when Chaos is equipped", () => {
+        renderShop({ freeFirstReroll: true });
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).toHaveTextContent("Reroll ($0)");
+      });
+
+      test("first reroll shows the normal $5 cost when Chaos is NOT equipped (negative)", () => {
+        renderShop({ freeFirstReroll: false });
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).toHaveTextContent("Reroll ($5)");
+      });
+
+      test("clicking the first reroll with Chaos invokes onReroll with cost 0", async () => {
+        const user = userEvent.setup();
+        const onReroll = vi.fn();
+        renderShop({ freeFirstReroll: true, money: 0, onReroll });
+        await user.click(screen.getByRole("button", { name: /Reroll/ }));
+        expect(onReroll).toHaveBeenCalledWith(0);
+      });
+
+      test("the player can take the first free reroll with $0 in the bank", () => {
+        renderShop({ freeFirstReroll: true, money: 0 });
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).not.toBeDisabled();
+      });
+
+      test("after taking the free first reroll, the next reroll resumes the normal $6 cost", async () => {
+        const user = userEvent.setup();
+        renderShop({ freeFirstReroll: true, money: 20 });
+        await user.click(screen.getByRole("button", { name: /Reroll/ }));
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).toHaveTextContent("Reroll ($6)");
+      });
+    });
   });
 
   describe("voucher slot", () => {
