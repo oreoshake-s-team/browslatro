@@ -999,6 +999,17 @@ export function createShortcutJoker(): Joker {
   };
 }
 
+export function createSmearedJoker(): Joker {
+  return {
+    id: "smeared",
+    rarity: "uncommon",
+    name: "Smeared Joker",
+    description:
+      "Hearts and Diamonds count as the same suit. Spades and Clubs count as the same suit.",
+    effect: { kind: "passive-run-stats", smearedSuits: true },
+  };
+}
+
 export const OOPS_ALL_SIXES_PROBABILITY_MULTIPLIER = 2;
 
 export function createOopsAllSixesJoker(): Joker {

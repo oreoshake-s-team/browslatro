@@ -13,7 +13,12 @@ import {
   rollEnhancementChance,
 } from "../cards/enhancements";
 import { goldSealMoney } from "../cards/seals";
-import { applyPerCardJokers, isFaceCard } from "../items/jokers";
+import {
+  applyPerCardJokers,
+  handEvalOptionsFromJokers,
+  isFaceCard,
+  isJokerActive,
+} from "../items/jokers";
 import { CARD_EDITION_INFO, applyCardEdition } from "../cards/editions";
 import { GOLD_HELD_BONUS_PER_CARD } from "../scoring/payout";
 import { STEEL_MULT_FACTOR } from "../cards/heldInHand";
@@ -207,11 +212,14 @@ export function useScoringPipeline({
       const firstFaceAlreadyScored = scoringCards
         .slice(0, stepIdx)
         .some(isFaceCard);
+      const smearedSuits =
+        handEvalOptionsFromJokers(jokers.filter(isJokerActive)).smearedSuits ===
+        true;
       const cardJokerResult = applyPerCardJokers(
         jokers,
         stepCard,
         Math.random,
-        { firstFaceAlreadyScored },
+        { firstFaceAlreadyScored, smearedSuits },
       );
       if (cardJokerResult.moneyEarned > 0) {
         useGame.getState().earn(cardJokerResult.moneyEarned);

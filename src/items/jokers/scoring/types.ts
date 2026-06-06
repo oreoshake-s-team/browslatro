@@ -47,6 +47,7 @@ export interface JokerCardResult {
 
 export interface PerCardContext {
   readonly firstFaceAlreadyScored?: boolean;
+  readonly smearedSuits?: boolean;
 }
 
 export interface HandLevelContext {
