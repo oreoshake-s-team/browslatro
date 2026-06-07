@@ -28,6 +28,9 @@ export interface RoundWonInfo {
   readonly interest: number;
   readonly goldHeldCount: number;
   readonly remainingHandsCount: number;
+  readonly remainingDiscardsCount?: number;
+  readonly remainingHandsBonusPerUnit?: number;
+  readonly usesHandsAndDiscardsBonus?: boolean;
   readonly endOfRoundJokerSteps?: ReadonlyArray<RoundWonJokerPayoutStep>;
 }
 
@@ -45,18 +48,26 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     interest,
     goldHeldCount,
     remainingHandsCount,
+    remainingDiscardsCount = 0,
+    remainingHandsBonusPerUnit = REMAINING_HAND_BONUS,
+    usesHandsAndDiscardsBonus = false,
     endOfRoundJokerSteps,
   } = info;
   const beatBy = roundScore - requiredScore;
   const goldBonus = goldHeldCount * GOLD_HELD_BONUS_PER_CARD;
-  const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
+  const bonusUnits = usesHandsAndDiscardsBonus
+    ? remainingHandsCount + remainingDiscardsCount
+    : remainingHandsCount;
+  const remainingHandsBonus = bonusUnits * remainingHandsBonusPerUnit;
   const jokerSteps = endOfRoundJokerSteps ?? [];
   const jokerTotal = jokerSteps.reduce((sum, step) => sum + step.moneyEarned, 0);
   const total =
     baseReward + interest + goldBonus + remainingHandsBonus + jokerTotal;
   const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${interestWallet}`;
   const goldLabel = `Gold cards (${goldHeldCount} × $${GOLD_HELD_BONUS_PER_CARD})`;
-  const handsLabel = `Remaining hands (${remainingHandsCount} × $${REMAINING_HAND_BONUS})`;
+  const handsLabel = usesHandsAndDiscardsBonus
+    ? `Remaining hands + discards (${bonusUnits} × $${remainingHandsBonusPerUnit})`
+    : `Remaining hands (${bonusUnits} × $${remainingHandsBonusPerUnit})`;
   useEscapeToClose(onContinue, true);
 
   return createPortal(
@@ -100,16 +111,18 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
                 <dd data-testid="round-won-gold">+${goldBonus}</dd>
               </div>
             )}
-            {remainingHandsCount > 0 && (
+            {bonusUnits > 0 && (
               <div className="round-won-payout-row">
                 <dt data-testid="round-won-hands-label">{handsLabel}</dt>
                 <dd data-testid="round-won-hands">+${remainingHandsBonus}</dd>
               </div>
             )}
-            <div className="round-won-payout-row">
-              <dt data-testid="round-won-interest-label">{interestLabel}</dt>
-              <dd data-testid="round-won-interest">+${interest}</dd>
-            </div>
+            {!usesHandsAndDiscardsBonus && (
+              <div className="round-won-payout-row">
+                <dt data-testid="round-won-interest-label">{interestLabel}</dt>
+                <dd data-testid="round-won-interest">+${interest}</dd>
+              </div>
+            )}
             {jokerSteps.map((step) => (
               <div
                 key={step.jokerId}

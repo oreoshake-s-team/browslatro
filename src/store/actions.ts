@@ -75,7 +75,7 @@ import {
   applySealOverrides,
   fullDeckPile,
 } from "../cards/deckBuild";
-import { deckJokerSlotsDelta } from "../items/decks";
+import { deckJokerSlotsDelta, deckSuppressesInterest } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -386,7 +386,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const interestBefore = precomputed?.interestWallet ?? s.money;
     const interest =
       precomputed?.interest ??
-      calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds));
+      (deckSuppressesInterest(s.selectedDeck)
+        ? 0
+        : calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds)));
     s.earn(blindReward + interest);
     if (blindReward > 0) {
       s.setScoringEvents((prev) => [

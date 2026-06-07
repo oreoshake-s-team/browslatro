@@ -61,3 +61,45 @@ test.describe("New-run screen — deck selection (#561, #562, #564)", () => {
     await expect(statValue(page, "Discards")).toHaveText("3");
   });
 });
+
+test.describe("New-run screen — Green Deck (#818)", () => {
+  const HAND_CARDS = '[aria-label="Your hand"] .card';
+  const SUBMIT_BUTTON = /^Submit Hand/;
+  const CONTINUE_BUTTON = /Continue/;
+
+  async function selectGreenAndPlayWinningRound(page: Page): Promise<void> {
+    await page.goto("/");
+    await page.getByTestId("new-run-deck-green-deck").click();
+    await page.getByTestId("new-run-confirm").click();
+    await page.getByTestId("blind-select-play").click();
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator(HAND_CARDS).nth(i).click();
+    }
+    await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+  }
+
+  test("Round Won modal labels the bonus row as hands + discards (6 × $2)", async ({
+    page,
+  }) => {
+    await selectGreenAndPlayWinningRound(page);
+    await expect(page.getByTestId("round-won-hands-label")).toHaveText(
+      /Remaining hands \+ discards \(6 × \$2\)/,
+    );
+    await expect(page.getByTestId("round-won-hands")).toHaveText("+$12");
+  });
+
+  test("Round Won modal omits the interest row entirely on Green Deck", async ({
+    page,
+  }) => {
+    await selectGreenAndPlayWinningRound(page);
+    await expect(page.getByTestId("round-won-interest")).toHaveCount(0);
+  });
+
+  test("Continuing past the Round Won modal credits $3 base + $12 bonus over the $4 start = $19 wallet", async ({
+    page,
+  }) => {
+    await selectGreenAndPlayWinningRound(page);
+    await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+    await expect(statValue(page, "Money")).toHaveText("$19");
+  });
+});
