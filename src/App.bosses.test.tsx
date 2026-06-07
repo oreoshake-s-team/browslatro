@@ -571,4 +571,36 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
     const remainingAfter = useGame.getState().dealt.remaining.length;
     expect(remainingBefore - remainingAfter).toBe(1);
   });
+
+  test("The Hook picks its 2 discards from the pre-refill remainder, never from newly-drawn cards", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-hook"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const dealtBefore = useGame.getState().dealt;
+    const handBeforeIds = new Set(dealtBefore.hand.map((c) => c.id));
+    const totalDraw = 3;
+    const refillPoolIds = new Set(
+      dealtBefore.remaining.slice(0, totalDraw).map((c) => c.id),
+    );
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    flushDiscardAnimation();
+    const handAfterIds = new Set(
+      useGame.getState().dealt.hand.map((c) => c.id),
+    );
+    const droppedFromHand = Array.from(handBeforeIds).filter(
+      (id) => !handAfterIds.has(id),
+    );
+    expect(droppedFromHand).toHaveLength(totalDraw);
+    for (const id of droppedFromHand) {
+      expect(refillPoolIds.has(id)).toBe(false);
+    }
+  });
 });

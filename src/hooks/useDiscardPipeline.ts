@@ -77,10 +77,19 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     const wasHandPlayReset = pendingHandPlayResetRef.current;
     const skippedDraw = skipDrawAfterDiscardRef.current;
     const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
-    let nextHand: Card[];
+    const hookCount =
+      wasHandPlayReset && !skippedDraw && blind === 3
+        ? bossPostPlayDiscardCount(currentBoss)
+        : 0;
+    const hookIds =
+      hookCount > 0
+        ? pickHookDiscardIds(kept, new Set(), hookCount, hookRngConfig.rng)
+        : [];
+    const deferRefillForHook = hookIds.length > 0;
     if (skippedDraw) {
       skipDrawAfterDiscardRef.current = false;
-      nextHand = kept;
+      setDealt({ hand: kept, remaining: dealt.remaining });
+    } else if (deferRefillForHook) {
       setDealt({ hand: kept, remaining: dealt.remaining });
     } else {
       const effectiveHandSize =
@@ -98,8 +107,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
         blind === 3,
         "refill",
       );
-      nextHand = [...kept, ...drawnWithFaceDown];
-      setDealt({ hand: nextHand, remaining: newRemaining });
+      setDealt({ hand: [...kept, ...drawnWithFaceDown], remaining: newRemaining });
     }
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
@@ -110,22 +118,8 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
       pendingHandPlayResetRef.current = false;
       setHandPlaySignal((prev) => prev + 1);
     }
-    if (
-      wasHandPlayReset &&
-      !skippedDraw &&
-      blind === 3 &&
-      bossPostPlayDiscardCount(currentBoss) > 0
-    ) {
-      const hookCount = bossPostPlayDiscardCount(currentBoss);
-      const hookIds = pickHookDiscardIds(
-        nextHand,
-        new Set(),
-        hookCount,
-        hookRngConfig.rng,
-      );
-      if (hookIds.length > 0) {
-        runDiscard(new Set(hookIds));
-      }
+    if (deferRefillForHook) {
+      runDiscard(new Set(hookIds));
     }
   }
 
