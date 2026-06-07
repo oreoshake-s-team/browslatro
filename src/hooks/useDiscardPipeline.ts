@@ -5,6 +5,7 @@ import {
   applyBossFaceDown,
   bossHandSize,
   bossPostPlayDiscardCount,
+  bossRefillCountOverride,
   hookRngConfig,
   pickHookDiscardIds,
 } from "../items/bosses";
@@ -94,9 +95,14 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     } else {
       const effectiveHandSize =
         blind === 3 ? bossHandSize(currentBoss, currentHandSize) : currentHandSize;
-      const drawCount = drawCountForRefill(
-        effectiveHandSize,
-        kept.length,
+      const drawCount = bossRefillCountOverride(
+        currentBoss,
+        blind === 3,
+        drawCountForRefill(
+          effectiveHandSize,
+          kept.length,
+          dealt.remaining.length,
+        ),
         dealt.remaining.length,
       );
       const drawn = dealt.remaining.slice(0, drawCount);
