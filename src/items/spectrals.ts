@@ -56,6 +56,7 @@ export interface SpectralCard {
   readonly name: string;
   readonly description: string;
   readonly effect: SpectralEffect;
+  readonly hidden?: boolean;
 }
 
 type SpectralSpec = Omit<SpectralCard, "description">;
@@ -191,7 +192,7 @@ function describe(spec: SpectralSpec): string {
 }
 
 const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
-  { id: "black-hole", name: "Black Hole", effect: { kind: "black-hole" } },
+  { id: "black-hole", name: "Black Hole", effect: { kind: "black-hole" }, hidden: true },
   {
     id: "immolate",
     name: "Immolate",
@@ -280,9 +281,36 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     id: "soul",
     name: "The Soul",
     effect: { kind: "create-legendary" },
+    hidden: true,
   },
 ];
 
 export function createSpectralCatalog(): SpectralCard[] {
   return SPECTRAL_SPECS.map((spec) => ({ ...spec, description: describe(spec) }));
+}
+
+export function createPoolSpectralCatalog(): SpectralCard[] {
+  return createSpectralCatalog().filter((s) => !s.hidden);
+}
+
+export const HIDDEN_SPECTRAL_REPLACE_CHANCE = 0.003;
+
+export function hiddenSpectralForRoll(
+  roll: number,
+  catalog: ReadonlyArray<SpectralCard>,
+): SpectralCard | null {
+  if (roll < HIDDEN_SPECTRAL_REPLACE_CHANCE) {
+    return catalog.find((s) => s.id === "black-hole") ?? null;
+  }
+  if (roll < HIDDEN_SPECTRAL_REPLACE_CHANCE * 2) {
+    return catalog.find((s) => s.id === "soul") ?? null;
+  }
+  return null;
+}
+
+export function rollHiddenSpectralReplacement(
+  rng: SpectralRandomSource,
+  catalog: ReadonlyArray<SpectralCard>,
+): SpectralCard | null {
+  return hiddenSpectralForRoll(rng(), catalog);
 }

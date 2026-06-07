@@ -2,14 +2,17 @@ import {
   CRYPTID_COPY_COUNT,
   FAMILIAR_ADD_COUNT,
   GRIM_ADD_COUNT,
+  HIDDEN_SPECTRAL_REPLACE_CHANCE,
   INCANTATION_ADD_COUNT,
   IMMOLATE_DESTROY_COUNT,
   IMMOLATE_MONEY_GAIN,
   SPECTRAL_BASE_PRICE,
   applyAuraToSelectedInHand,
+  createPoolSpectralCatalog,
   createSpectralCatalog,
   duplicateSelectedInHand,
   makeEnhancedCard,
+  rollHiddenSpectralReplacement,
   spectralNeedsTarget,
   transmuteHand,
   type SpectralCard,
@@ -527,5 +530,76 @@ describe("applyAuraToSelectedInHand", () => {
     const a = mkCard();
     applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0]));
     expect(a.edition).toBeUndefined();
+  });
+});
+
+describe("Hidden-rarity spectrals", () => {
+  test("Black Hole is marked hidden", () => {
+    expect(find("black-hole").hidden).toBe(true);
+  });
+
+  test("The Soul is marked hidden", () => {
+    expect(find("soul").hidden).toBe(true);
+  });
+
+  test("createPoolSpectralCatalog excludes Black Hole", () => {
+    expect(
+      createPoolSpectralCatalog().some((s) => s.id === "black-hole"),
+    ).toBe(false);
+  });
+
+  test("createPoolSpectralCatalog excludes The Soul", () => {
+    expect(createPoolSpectralCatalog().some((s) => s.id === "soul")).toBe(false);
+  });
+
+  test("createPoolSpectralCatalog has fewer entries than the full catalog", () => {
+    expect(createPoolSpectralCatalog().length).toBe(
+      createSpectralCatalog().length - 2,
+    );
+  });
+
+  test("createSpectralCatalog still contains both hidden spectrals", () => {
+    const ids = createSpectralCatalog().map((s) => s.id);
+    expect(ids).toEqual(expect.arrayContaining(["black-hole", "soul"]));
+  });
+
+  test("HIDDEN_SPECTRAL_REPLACE_CHANCE is 0.003", () => {
+    expect(HIDDEN_SPECTRAL_REPLACE_CHANCE).toBe(0.003);
+  });
+});
+
+describe("rollHiddenSpectralReplacement", () => {
+  const catalog = createSpectralCatalog();
+
+  test("returns null when the roll misses", () => {
+    expect(rollHiddenSpectralReplacement(sequenceRng([0.5]), catalog)).toBeNull();
+  });
+
+  test("returns Black Hole when the roll lands in the first 0.3% slice", () => {
+    const r = rollHiddenSpectralReplacement(sequenceRng([0.001]), catalog);
+    expect(r?.id).toBe("black-hole");
+  });
+
+  test("returns The Soul when the roll lands in the 0.3-0.6% slice", () => {
+    const r = rollHiddenSpectralReplacement(sequenceRng([0.004]), catalog);
+    expect(r?.id).toBe("soul");
+  });
+
+  test("Black Hole wins on the boundary value 0 (mutual exclusion)", () => {
+    const r = rollHiddenSpectralReplacement(sequenceRng([0]), catalog);
+    expect(r?.id).toBe("black-hole");
+  });
+
+  test("returns null when roll value equals the cumulative threshold (negative)", () => {
+    const r = rollHiddenSpectralReplacement(
+      sequenceRng([HIDDEN_SPECTRAL_REPLACE_CHANCE * 2]),
+      catalog,
+    );
+    expect(r).toBeNull();
+  });
+
+  test("returns null when catalog has no hidden spectrals (negative)", () => {
+    const empty = catalog.filter((s) => !s.hidden);
+    expect(rollHiddenSpectralReplacement(sequenceRng([0.001]), empty)).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 import type { PlanetCard } from "./planets";
 import type { TarotCard } from "./tarots";
 import type { SpectralCard } from "./spectrals";
+import { hiddenSpectralForRoll } from "./spectrals";
 import type { Joker, RandomSource } from "./jokers";
 import type { Card, Enhancement } from "../cards/types";
 import { ENHANCEMENT_KINDS } from "../cards/enhancements";
@@ -151,10 +152,7 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
     }));
   }
   if (args.pool === "arcana") {
-    return drawWithoutReplacement(args.tarotCatalog, want, args.rng).map((tarot) => ({
-      kind: "tarot" as const,
-      tarot,
-    }));
+    return drawArcanaWithHiddenSpectrals(args, want);
   }
   if (args.pool === "buffoon") {
     const excluded = new Set(args.excludedJokerIds ?? []);
@@ -165,10 +163,7 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
     }));
   }
   if (args.pool === "spectral") {
-    return drawWithoutReplacement(args.spectralCatalog, want, args.rng).map((spectral) => ({
-      kind: "spectral" as const,
-      spectral,
-    }));
+    return drawSpectralPoolWithHiddenSpectrals(args, want);
   }
   if (args.pool === "standard") {
     const out: PackOption[] = [];
@@ -198,6 +193,48 @@ export function rollStandardCard(rng: RandomSource): Card {
     ...(enhancement !== undefined ? { enhancement } : {}),
     ...(seal !== undefined ? { seal } : {}),
   };
+}
+
+function drawArcanaWithHiddenSpectrals(
+  args: RollPackOptionsArgs,
+  want: number,
+): ReadonlyArray<PackOption> {
+  const tarotPool = [...args.tarotCatalog];
+  const out: PackOption[] = [];
+  for (let i = 0; i < want; i += 1) {
+    const roll = args.rng();
+    const hidden = hiddenSpectralForRoll(roll, args.spectralCatalog);
+    if (hidden) {
+      out.push({ kind: "spectral", spectral: hidden });
+      continue;
+    }
+    if (tarotPool.length === 0) break;
+    const idx = Math.floor(roll * tarotPool.length);
+    out.push({ kind: "tarot", tarot: tarotPool[idx] });
+    tarotPool.splice(idx, 1);
+  }
+  return out;
+}
+
+function drawSpectralPoolWithHiddenSpectrals(
+  args: RollPackOptionsArgs,
+  want: number,
+): ReadonlyArray<PackOption> {
+  const pool = args.spectralCatalog.filter((s) => !s.hidden);
+  const out: PackOption[] = [];
+  for (let i = 0; i < want; i += 1) {
+    const roll = args.rng();
+    const hidden = hiddenSpectralForRoll(roll, args.spectralCatalog);
+    if (hidden) {
+      out.push({ kind: "spectral", spectral: hidden });
+      continue;
+    }
+    if (pool.length === 0) break;
+    const idx = Math.floor(roll * pool.length);
+    out.push({ kind: "spectral", spectral: pool[idx] });
+    pool.splice(idx, 1);
+  }
+  return out;
 }
 
 function drawWithoutReplacement<T>(
