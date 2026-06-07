@@ -457,3 +457,150 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
     ).toHaveLength(0);
   });
 });
+
+describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
+  function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
+    let callIdx = 0;
+    const recent = new Set<string>();
+    return () => {
+      const id = idsPerAnte[callIdx];
+      const ante = callIdx + 1;
+      const eligible = createBossCatalog().filter((b) => ante >= b.anteMin);
+      const fresh = eligible.filter((b) => !recent.has(b.id));
+      const pool = fresh.length > 0 ? fresh : eligible;
+      const idx = pool.findIndex((b) => b.id === id);
+      if (idx < 0) {
+        throw new Error(`${id} not in pool for ante ${ante}`);
+      }
+      callIdx += 1;
+      recent.add(id);
+      return idx / pool.length + 0.0001;
+    };
+  }
+
+  async function advanceToBossBlindAfterStartingTheRound(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/^Win$/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
+    await user.click(screen.getByText(/^Win$/));
+    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
+  }
+
+  function flushDiscardAnimation(): void {
+    for (let i = 0; i < 60; i += 1) {
+      if (vi.getTimerCount() === 0) break;
+      act(() => {
+        vi.runOnlyPendingTimers();
+      });
+    }
+    Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    )
+      .filter((btn) => btn.classList.contains("card-discarding"))
+      .forEach((btn) => fireEvent.animationEnd(btn));
+  }
+
+  test("playing a hand on The Hook removes 2 extra random held cards (deck shrinks by played + 2)", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-hook"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    expect(screen.getByRole("heading", { name: "The Hook" })).toBeInTheDocument();
+    const dealtBefore = useGame.getState().dealt;
+    const remainingBefore = dealtBefore.remaining.length;
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    flushDiscardAnimation();
+    const remainingAfter = useGame.getState().dealt.remaining.length;
+    expect(remainingBefore - remainingAfter).toBe(3);
+  });
+
+  test("The Hook does NOT decrement the discard counter when it fires", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-hook"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const discardsBefore = useGame.getState().remainingDiscards;
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    flushDiscardAnimation();
+    const discardsAfter = useGame.getState().remainingDiscards;
+    expect(discardsAfter).toBe(discardsBefore);
+  });
+
+  test("The Hook displays its boss name in the boss-blind banner", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-hook"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    expect(screen.getByRole("heading", { name: "The Hook" })).toBeInTheDocument();
+  });
+
+  test("a non-Hook boss does NOT discard extra cards after a played hand (negative)", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-manacle"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const remainingBefore = useGame.getState().dealt.remaining.length;
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    const remainingAfter = useGame.getState().dealt.remaining.length;
+    expect(remainingBefore - remainingAfter).toBe(1);
+  });
+
+  test("The Hook picks its 2 discards from the pre-refill remainder, never from newly-drawn cards", async () => {
+    bossPickerRngConfig.rng = mkBossRng(["the-hook"]);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await advanceToBossBlindAfterStartingTheRound(user);
+    const dealtBefore = useGame.getState().dealt;
+    const handBeforeIds = new Set(dealtBefore.hand.map((c) => c.id));
+    const totalDraw = 3;
+    const refillPoolIds = new Set(
+      dealtBefore.remaining.slice(0, totalDraw).map((c) => c.id),
+    );
+    const cards = Array.from(
+      screen
+        .getByLabelText("Your hand")
+        .querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+    flushDiscardAnimation();
+    const handAfterIds = new Set(
+      useGame.getState().dealt.hand.map((c) => c.id),
+    );
+    const droppedFromHand = Array.from(handBeforeIds).filter(
+      (id) => !handAfterIds.has(id),
+    );
+    expect(droppedFromHand).toHaveLength(totalDraw);
+    for (const id of droppedFromHand) {
+      expect(refillPoolIds.has(id)).toBe(false);
+    }
+  });
+});

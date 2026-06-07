@@ -28,7 +28,8 @@ export type BossEffect =
   | { readonly kind: "face-down-initial" }
   | { readonly kind: "face-down-on-refill" }
   | { readonly kind: "face-down-chance"; readonly oneIn: number }
-  | { readonly kind: "face-down-faces" };
+  | { readonly kind: "face-down-faces" }
+  | { readonly kind: "post-play-random-held-discard"; readonly count: number };
 
 export interface BossBlind {
   readonly id: string;
@@ -199,6 +200,14 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     scoreMultiplier: 2,
     anteMin: 2,
     effect: { kind: "face-down-faces" },
+  },
+  {
+    id: "the-hook",
+    name: "The Hook",
+    description: "Discards 2 random cards per hand played.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "post-play-random-held-discard", count: 2 },
   },
 ];
 
@@ -381,6 +390,33 @@ export function applyBossFaceDown(
     return faceDown ? { ...c, faceDown: true } : c;
   });
 }
+
+export function bossPostPlayDiscardCount(boss: BossBlind | null): number {
+  if (!boss || boss.effect.kind !== "post-play-random-held-discard") return 0;
+  return boss.effect.count;
+}
+
+export function pickHookDiscardIds(
+  hand: ReadonlyArray<Card>,
+  submittedSelection: ReadonlySet<number>,
+  count: number,
+  rng: () => number = Math.random,
+): number[] {
+  const candidates = hand
+    .filter((c) => !submittedSelection.has(c.id))
+    .map((c) => c.id);
+  const picked: number[] = [];
+  const pool = candidates.slice();
+  const target = Math.min(count, pool.length);
+  for (let i = 0; i < target; i += 1) {
+    const idx = Math.floor(rng() * pool.length);
+    picked.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+  return picked;
+}
+
+export const hookRngConfig = createRngConfig(Math.random);
 
 export function bossAdjustHandEntry(
   boss: BossBlind | null,

@@ -7,6 +7,7 @@ import {
   bossBlocksHandLabel,
   bossHandSize,
   bossMoneyPenaltyPerCard,
+  bossPostPlayDiscardCount,
   bossRequiredCardCount,
   bossStartingDiscards,
   bossStartingHands,
@@ -15,6 +16,7 @@ import {
   debuffedHandIds,
   isCardDebuffedByBoss,
   pickBossForAnte,
+  pickHookDiscardIds,
   type BossBlind,
 } from "./bosses";
 import type { Card, Hand } from "../cards/types";
@@ -539,5 +541,87 @@ describe("applyBossFaceDown", () => {
     expect(
       applyBossFaceDown(sample, wall, true, "initial").some((c) => c.faceDown),
     ).toBe(false);
+  });
+});
+
+describe("Phase 5 boss catalog — The Hook (#810)", () => {
+  test("the-hook has the post-play-random-held-discard effect with count 2", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook");
+    expect(hook?.effect).toEqual({
+      kind: "post-play-random-held-discard",
+      count: 2,
+    });
+  });
+
+  test("the-hook is available from ante 1", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook");
+    expect(hook?.anteMin).toBe(1);
+  });
+
+  test("the-hook applies the standard 2x score multiplier", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook");
+    expect(hook?.scoreMultiplier).toBe(2);
+  });
+});
+
+describe("bossPostPlayDiscardCount", () => {
+  test("returns 2 for The Hook", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook")!;
+    expect(bossPostPlayDiscardCount(hook)).toBe(2);
+  });
+
+  test("returns 0 for a non-hook boss", () => {
+    const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+    expect(bossPostPlayDiscardCount(wall)).toBe(0);
+  });
+
+  test("returns 0 when boss is null", () => {
+    expect(bossPostPlayDiscardCount(null)).toBe(0);
+  });
+});
+
+describe("pickHookDiscardIds", () => {
+  const buildHand = (count: number): ReadonlyArray<Card> =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i + 1,
+      rank: "5" as const,
+      suit: "clubs" as const,
+    }));
+
+  test("returns the first N ids when rng is always 0 (deterministic head pick)", () => {
+    const hand = buildHand(5);
+    expect(pickHookDiscardIds(hand, new Set(), 2, () => 0)).toEqual([1, 2]);
+  });
+
+  test("excludes the submitted selection from the candidate pool", () => {
+    const hand = buildHand(5);
+    expect(
+      pickHookDiscardIds(hand, new Set([1, 2]), 2, () => 0),
+    ).toEqual([3, 4]);
+  });
+
+  test("caps the picked count at the candidate pool size", () => {
+    const hand = buildHand(3);
+    expect(
+      pickHookDiscardIds(hand, new Set([1, 2]), 2, () => 0),
+    ).toEqual([3]);
+  });
+
+  test("returns an empty array when no non-played cards remain", () => {
+    const hand = buildHand(2);
+    expect(pickHookDiscardIds(hand, new Set([1, 2]), 2, () => 0)).toEqual([]);
+  });
+
+  test("never picks the same id twice (no replacement)", () => {
+    const hand = buildHand(4);
+    const picked = pickHookDiscardIds(hand, new Set(), 2, () => 0.5);
+    expect(new Set(picked).size).toBe(picked.length);
+  });
+
+  test("uses the provided rng deterministically", () => {
+    const hand = buildHand(4);
+    const rng = vi.fn().mockReturnValueOnce(0.75).mockReturnValueOnce(0);
+    const picked = pickHookDiscardIds(hand, new Set(), 2, rng);
+    expect(picked).toEqual([4, 1]);
   });
 });
