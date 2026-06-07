@@ -54,6 +54,9 @@ export type TarotEffect =
       readonly kind: "create-consumables";
       readonly consumableKind: "tarot" | "planet";
       readonly count: number;
+    }
+  | {
+      readonly kind: "copy-last-consumable";
     };
 
 export interface TarotCard {
@@ -101,6 +104,9 @@ function describe(spec: TarotSpec): string {
     const plural = effect.count === 1 ? noun : `${noun}s`;
     return `Creates up to ${effect.count} random ${plural} (must have room)`;
   }
+  if (effect.kind === "copy-last-consumable") {
+    return "Creates a copy of the last Tarot or Planet card used (must have room)";
+  }
   const targets = effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
   return `Apply ${effect.enhancement} enhancement to ${targets} in hand`;
 }
@@ -146,6 +152,7 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
     name: "The High Priestess",
     effect: { kind: "create-consumables", consumableKind: "planet", count: 2 },
   },
+  { id: "the-fool", name: "The Fool", effect: { kind: "copy-last-consumable" } },
 ];
 
 export function createTarotCatalog(): TarotCard[] {
