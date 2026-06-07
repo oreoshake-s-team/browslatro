@@ -377,6 +377,21 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveChips += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveChips: bonus,
+          });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":

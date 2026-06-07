@@ -91,6 +91,23 @@ describe("deserializeRun", () => {
     expect(decoded.jokers[0].state).toEqual({ kind: "counter", value: 8 });
   });
 
+  test("round-trips a Wee Joker's chips-counter state intact (#825 — on-played-rank-stack-chips)", () => {
+    const jokers = [
+      {
+        id: "wee-joker",
+        name: "Wee Joker",
+        description: "...",
+        rarity: "rare" as const,
+        effect: { kind: "on-played-rank-stack-chips" as const, ranks: ["2"] as const, amount: 8 },
+        state: { kind: "counter" as const, value: 24 },
+      },
+    ];
+    const decoded = deserializeRun(serializeRun({ jokers })) as {
+      jokers: ReadonlyArray<{ state: { kind: string; value: number } }>;
+    };
+    expect(decoded.jokers[0].state).toEqual({ kind: "counter", value: 24 });
+  });
+
   test("rejects snapshots with an unsupported schemaVersion", () => {
     expect(() =>
       deserializeRun({

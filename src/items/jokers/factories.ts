@@ -63,7 +63,10 @@ import {
   SHOOT_THE_MOON_RANKS,
   SLY_JOKER_CHIPS,
   SMILEY_FACE_MULT,
+  RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+  SQUARE_JOKER_CARD_COUNT,
+  SQUARE_JOKER_CHIPS_PER_FOUR_CARD,
   STEEL_JOKER_X_MULT_PER_STEEL,
   STONE_JOKER_CHIPS_PER_STONE,
   STUNTMAN_CHIPS,
@@ -83,6 +86,7 @@ import {
   WALKIE_TALKIE_CHIPS,
   WALKIE_TALKIE_MULT,
   WALKIE_TALKIE_RANKS,
+  WEE_JOKER_CHIPS_PER_TWO,
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
 } from "./constants";
@@ -971,6 +975,51 @@ export function createSpareTrousersJoker(): Joker {
       kind: "on-hand-type-stack-mult",
       requires: "Two Pair",
       amount: SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createRunnerJoker(): Joker {
+  return {
+    id: "runner",
+    rarity: "common",
+    name: "Runner",
+    description: `This Joker gains +${RUNNER_CHIPS_PER_STRAIGHT} Chips if played hand contains a Straight`,
+    effect: {
+      kind: "on-hand-type-stack-chips",
+      requires: "Straight",
+      amount: RUNNER_CHIPS_PER_STRAIGHT,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createSquareJokerJoker(): Joker {
+  return {
+    id: "square-joker",
+    rarity: "common",
+    name: "Square Joker",
+    description: `This Joker gains +${SQUARE_JOKER_CHIPS_PER_FOUR_CARD} Chips if played hand has exactly ${SQUARE_JOKER_CARD_COUNT} cards`,
+    effect: {
+      kind: "on-played-card-count-stack-chips",
+      count: SQUARE_JOKER_CARD_COUNT,
+      amount: SQUARE_JOKER_CHIPS_PER_FOUR_CARD,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createWeeJokerJoker(): Joker {
+  return {
+    id: "wee-joker",
+    rarity: "rare",
+    name: "Wee Joker",
+    description: `This Joker gains +${WEE_JOKER_CHIPS_PER_TWO} Chips per played 2`,
+    effect: {
+      kind: "on-played-rank-stack-chips",
+      ranks: ["2"],
+      amount: WEE_JOKER_CHIPS_PER_TWO,
     },
     state: { kind: "counter", value: 0 },
   };

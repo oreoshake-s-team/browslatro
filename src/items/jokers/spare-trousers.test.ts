@@ -28,7 +28,7 @@ describe("Spare Trousers joker (#804)", () => {
   test("applyHandPlayedToJokerStates bumps state by SPARE_TROUSERS_MULT_PER_TWO_PAIR after a Two Pair", () => {
     const [updated] = applyHandPlayedToJokerStates(
       [createSpareTrousersJoker()],
-      "Two Pair",
+      { playedHandLabel: "Two Pair", playedCardCount: 4, scoredCards: [] },
     );
     expect(updated.state).toEqual({
       kind: "counter",
@@ -49,9 +49,21 @@ describe("Spare Trousers joker (#804)", () => {
 
   test("scales across multiple Two Pair plays", () => {
     let jokers = [createSpareTrousersJoker()];
-    jokers = applyHandPlayedToJokerStates(jokers, "Two Pair");
-    jokers = applyHandPlayedToJokerStates(jokers, "Two Pair");
-    jokers = applyHandPlayedToJokerStates(jokers, "Two Pair");
+    jokers = applyHandPlayedToJokerStates(jokers, {
+      playedHandLabel: "Two Pair",
+      playedCardCount: 4,
+      scoredCards: [],
+    });
+    jokers = applyHandPlayedToJokerStates(jokers, {
+      playedHandLabel: "Two Pair",
+      playedCardCount: 4,
+      scoredCards: [],
+    });
+    jokers = applyHandPlayedToJokerStates(jokers, {
+      playedHandLabel: "Two Pair",
+      playedCardCount: 4,
+      scoredCards: [],
+    });
     expect(jokers[0].state).toEqual({
       kind: "counter",
       value: SPARE_TROUSERS_MULT_PER_TWO_PAIR * 3,
@@ -60,16 +72,28 @@ describe("Spare Trousers joker (#804)", () => {
 
   test("non-Two-Pair hands do not increment state (negative)", () => {
     let jokers = [createSpareTrousersJoker()];
-    jokers = applyHandPlayedToJokerStates(jokers, "High Card");
-    jokers = applyHandPlayedToJokerStates(jokers, "Pair");
-    jokers = applyHandPlayedToJokerStates(jokers, "Three of a Kind");
+    jokers = applyHandPlayedToJokerStates(jokers, {
+      playedHandLabel: "High Card",
+      playedCardCount: 1,
+      scoredCards: [],
+    });
+    jokers = applyHandPlayedToJokerStates(jokers, {
+      playedHandLabel: "Pair",
+      playedCardCount: 2,
+      scoredCards: [],
+    });
+    jokers = applyHandPlayedToJokerStates(jokers, {
+      playedHandLabel: "Three of a Kind",
+      playedCardCount: 3,
+      scoredCards: [],
+    });
     expect(jokers[0].state).toEqual({ kind: "counter", value: 0 });
   });
 
   test("Full House does not increment state (negative — matches Balatro's hand-contains rules, Two Pair is not in Full House's contains-set)", () => {
     const [updated] = applyHandPlayedToJokerStates(
       [createSpareTrousersJoker()],
-      "Full House",
+      { playedHandLabel: "Full House", playedCardCount: 5, scoredCards: [] },
     );
     expect(updated.state).toEqual({ kind: "counter", value: 0 });
   });

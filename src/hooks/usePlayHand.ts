@@ -338,7 +338,6 @@ export function usePlayHand({
     pendingHandPlayResetRef.current = true;
 
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
-    setJokers((prev) => applyHandPlayedToJokerStates(prev, label));
     setRunStats(recordHandPlayed);
     setHandHistoryThisRound((prev) => [...prev, label]);
     setPlayedCardKeysThisAnte((prev) => {
@@ -369,6 +368,13 @@ export function usePlayHand({
         allCardsScore: allCardsScoreFromJokers(jokers),
       }),
     ).filter((c) => !playedDebuffedIds.has(c.id));
+    setJokers((prev) =>
+      applyHandPlayedToJokerStates(prev, {
+        playedHandLabel: label,
+        playedCardCount: playedCards.length,
+        scoredCards: scoring,
+      }),
+    );
     if (scoring.length === 0) {
       const noCardsHandJokerResult = applyHandLevelJokers(
         jokers.filter(isJokerActive),
