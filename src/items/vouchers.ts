@@ -35,7 +35,9 @@ export type VoucherId =
   | "tarot-merchant"
   | "tarot-tycoon"
   | "planet-merchant"
-  | "planet-tycoon";
+  | "planet-tycoon"
+  | "magic-trick"
+  | "illusion";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -76,6 +78,8 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "tarot-tycoon", name: "Tarot Tycoon", description: "Tarot cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "tarot-merchant" },
   { id: "planet-merchant", name: "Planet Merchant", description: "Planet cards appear 2× as often in the shop.", cost: VOUCHER_BASE_PRICE },
   { id: "planet-tycoon", name: "Planet Tycoon", description: "Planet cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "planet-merchant" },
+  { id: "magic-trick", name: "Magic Trick", description: "Playing cards can be purchased from the shop.", cost: VOUCHER_BASE_PRICE },
+  { id: "illusion", name: "Illusion", description: "Playing cards in shop may have an Enhancement, Edition, and/or a Seal.", cost: VOUCHER_BASE_PRICE, requires: "magic-trick" },
 ];
 
 export const BOSS_REROLL_COST = 10;
@@ -248,9 +252,23 @@ export function tarotToSpectralSwapChance(
   return ownedIds.has("omen-globe") ? 0.2 : 0;
 }
 
-export type OfferKindWeightKey = "joker" | "planet" | "tarot";
+export function magicTrickEnabled(ownedIds: ReadonlySet<VoucherId>): boolean {
+  return ownedIds.has("magic-trick");
+}
+
+export function illusionEnabled(ownedIds: ReadonlySet<VoucherId>): boolean {
+  return ownedIds.has("illusion");
+}
+
+export type OfferKindWeightKey =
+  | "joker"
+  | "planet"
+  | "tarot"
+  | "playing-card";
 
 export type OfferKindWeights = Record<OfferKindWeightKey, number>;
+
+export const PLAYING_CARD_OFFER_WEIGHT = 1;
 
 export function offerKindWeights(
   ownedIds: ReadonlySet<VoucherId>,
@@ -265,5 +283,8 @@ export function offerKindWeights(
     : ownedIds.has("planet-merchant")
       ? 2
       : 1;
-  return { joker: 1, planet, tarot };
+  const playingCard = magicTrickEnabled(ownedIds)
+    ? PLAYING_CARD_OFFER_WEIGHT
+    : 0;
+  return { joker: 1, planet, tarot, "playing-card": playingCard };
 }

@@ -8,8 +8,11 @@ import {
   extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
+  illusionEnabled,
   interestCapFor,
+  magicTrickEnabled,
   observatoryMultFor,
+  offerKindWeights,
   pickVoucherForAnte,
   pickVouchersForAnte,
   rerollCostReduction,
@@ -414,5 +417,71 @@ describe("observatoryMultFor (#281)", () => {
     expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 2)).toBe(
       OBSERVATORY_MULT_PER_PLANET ** 2,
     );
+  });
+});
+
+describe("Magic Trick / Illusion voucher catalog (#282)", () => {
+  test("Magic Trick is in the catalog with no prerequisite", () => {
+    const magicTrick = createVoucherCatalog().find(
+      (v) => v.id === "magic-trick",
+    );
+    expect(magicTrick?.requires).toBeUndefined();
+  });
+
+  test("Illusion is in the catalog and requires Magic Trick", () => {
+    const illusion = createVoucherCatalog().find((v) => v.id === "illusion");
+    expect(illusion?.requires).toBe("magic-trick");
+  });
+
+  test("Magic Trick description mentions playing cards in the shop", () => {
+    const magicTrick = createVoucherCatalog().find(
+      (v) => v.id === "magic-trick",
+    );
+    expect(magicTrick?.description.toLowerCase()).toMatch(/playing cards/);
+  });
+
+  test("Illusion description mentions enhancement, edition, and/or seal", () => {
+    const illusion = createVoucherCatalog().find((v) => v.id === "illusion");
+    expect(illusion?.description.toLowerCase()).toMatch(
+      /enhancement.*edition.*seal/,
+    );
+  });
+});
+
+describe("magicTrickEnabled (#282)", () => {
+  test("returns false when Magic Trick is not owned", () => {
+    expect(magicTrickEnabled(new Set<VoucherId>())).toBe(false);
+  });
+
+  test("returns true when Magic Trick is owned", () => {
+    expect(magicTrickEnabled(new Set<VoucherId>(["magic-trick"]))).toBe(true);
+  });
+});
+
+describe("illusionEnabled (#282)", () => {
+  test("returns false when Illusion is not owned", () => {
+    expect(illusionEnabled(new Set<VoucherId>())).toBe(false);
+  });
+
+  test("returns true when Illusion is owned", () => {
+    expect(illusionEnabled(new Set<VoucherId>(["illusion"]))).toBe(true);
+  });
+});
+
+describe("offerKindWeights — playing-card weight (#282)", () => {
+  test("playing-card weight is 0 when Magic Trick is not owned", () => {
+    expect(offerKindWeights(new Set<VoucherId>())["playing-card"]).toBe(0);
+  });
+
+  test("playing-card weight is positive when Magic Trick is owned", () => {
+    expect(
+      offerKindWeights(new Set<VoucherId>(["magic-trick"]))["playing-card"],
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("voucher catalog count (#282)", () => {
+  test("catalog contains exactly the expected number of vouchers", () => {
+    expect(createVoucherCatalog()).toHaveLength(32);
   });
 });

@@ -60,6 +60,7 @@ import {
   extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
+  illusionEnabled,
   interestCapFor,
   offerKindWeights,
   pickVouchersForAnte,
@@ -170,6 +171,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
       kindWeights: offerKindWeights(s.ownedVoucherIds),
+      illusionEnabled: illusionEnabled(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const rerollAdjustments = applyNextShopModifiers(s.pendingShopMods);
@@ -240,6 +242,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
             tarotToSpectralSwapChance:
               tarotToSpectralSwapChance(nextOwnedVoucherIds),
             kindWeights: offerKindWeights(nextOwnedVoucherIds),
+            illusionEnabled: illusionEnabled(nextOwnedVoucherIds),
             rng: shopPickerRngConfig.rng,
           },
           current,
@@ -359,6 +362,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       s.markOfferSold(idx);
       return true;
     }
+    if (offer.kind === "playing-card") {
+      s.spend(price);
+      s.setAddedCards((prev) => [...prev, offer.card]);
+      s.markOfferSold(idx);
+      return true;
+    }
     const consumableCapacity =
       MAX_CONSUMABLE_SLOTS + extraConsumableSlots(s.ownedVoucherIds);
     if (!hasFreeConsumableSlot(s.consumables, consumableCapacity)) return false;
@@ -471,6 +480,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
       guaranteedPlanetId: telescopePlanetId,
       kindWeights: offerKindWeights(s.ownedVoucherIds),
+      illusionEnabled: illusionEnabled(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);

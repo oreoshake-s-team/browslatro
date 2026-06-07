@@ -1,5 +1,10 @@
 import "./Shop.css";
 import { useState } from "react";
+import type {
+  CardEdition,
+  Enhancement,
+  Seal,
+} from "../../cards/types";
 import { type JokerEdition } from "../../items/jokers";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
@@ -129,6 +134,53 @@ function buyButtonTooltip(
   }
 }
 
+const SUIT_GLYPH: Record<string, string> = {
+  spades: "♠",
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+};
+
+const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
+  bonus: "Bonus",
+  mult: "Mult",
+  wild: "Wild",
+  glass: "Glass",
+  steel: "Steel",
+  stone: "Stone",
+  gold: "Gold",
+  lucky: "Lucky",
+};
+
+const CARD_EDITION_LABEL: Record<CardEdition, string> = {
+  foil: "Foil",
+  holographic: "Holographic",
+  polychrome: "Polychrome",
+};
+
+const SEAL_LABEL: Record<Seal, string> = {
+  gold: "Gold Seal",
+  red: "Red Seal",
+  blue: "Blue Seal",
+  purple: "Purple Seal",
+};
+
+function playingCardSummary(card: import("../../cards/types").Card): {
+  readonly name: string;
+  readonly description: string;
+} {
+  const name = `${card.rank}${SUIT_GLYPH[card.suit] ?? ""}`;
+  const traits: string[] = [];
+  if (card.enhancement) traits.push(`${card.enhancement} enhancement`);
+  if (card.edition) traits.push(`${card.edition} edition`);
+  if (card.seal) traits.push(`${card.seal} seal`);
+  const description =
+    traits.length === 0
+      ? "Adds this playing card to your deck."
+      : `Adds this playing card with ${traits.join(", ")} to your deck.`;
+  return { name, description };
+}
+
 function offerSubject(offer: ShopItem): {
   readonly id: string;
   readonly name: string;
@@ -143,6 +195,14 @@ function offerSubject(offer: ShopItem): {
       return offer.tarot;
     case "spectral":
       return offer.spectral;
+    case "playing-card": {
+      const summary = playingCardSummary(offer.card);
+      return {
+        id: `playing-card-${offer.card.id}`,
+        name: summary.name,
+        description: summary.description,
+      };
+    }
     case "pack": {
       const optionCount = packOptionsCount(offer.pack.pool, offer.pack.variant);
       const pickCount = packPickLimit(offer.pack.variant);
@@ -163,6 +223,7 @@ const OFFER_KIND_BADGE: Readonly<
   planet: { icon: "🪐", label: "Planet" },
   tarot: { icon: "🔮", label: "Tarot" },
   spectral: { icon: "👻", label: "Spectral" },
+  "playing-card": { icon: "♠", label: "Card" },
   pack: { icon: "🎁", label: "Pack" },
 };
 
@@ -234,10 +295,18 @@ export default function Shop({
     const subject = offerSubject(offer);
     const badge = OFFER_KIND_BADGE[offer.kind];
     const edition = offer.kind === "joker" ? offer.joker.edition : undefined;
+    const card = offer.kind === "playing-card" ? offer.card : undefined;
+    const cardEnhancement = card?.enhancement ?? undefined;
+    const cardEdition = card?.edition ?? undefined;
+    const cardSeal = card?.seal ?? undefined;
+    const playingCardEnhanced = Boolean(
+      cardEnhancement || cardEdition || cardSeal,
+    );
     const isFree = !offer.sold && effectivePrice === 0;
     const modifierClasses = [
       offer.sold && "shop-offer-sold",
       edition && "shop-offer-editioned",
+      playingCardEnhanced && "shop-offer-playing-card-enhanced",
       isFree && "shop-offer-free",
     ]
       .filter(Boolean)
@@ -251,6 +320,9 @@ export default function Shop({
         data-testid={`shop-offer-${idx}`}
         data-offer-kind={offer.kind}
         data-edition={edition}
+        data-card-enhancement={cardEnhancement}
+        data-card-edition={cardEdition}
+        data-card-seal={cardSeal}
         data-pack-pool={offer.kind === "pack" ? offer.pack.pool : undefined}
       >
         <span
@@ -270,6 +342,30 @@ export default function Shop({
               data-testid={`shop-edition-${idx}`}
             >
               {EDITION_LABEL[edition]}
+            </span>
+          )}
+          {cardEnhancement && (
+            <span
+              className={`shop-offer-card-badge shop-offer-card-enhancement-badge shop-offer-card-enhancement-${cardEnhancement}`}
+              data-testid={`shop-card-enhancement-${idx}`}
+            >
+              {ENHANCEMENT_LABEL[cardEnhancement]}
+            </span>
+          )}
+          {cardEdition && (
+            <span
+              className={`shop-offer-card-badge shop-offer-card-edition-badge shop-offer-card-edition-${cardEdition}`}
+              data-testid={`shop-card-edition-${idx}`}
+            >
+              {CARD_EDITION_LABEL[cardEdition]}
+            </span>
+          )}
+          {cardSeal && (
+            <span
+              className={`shop-offer-card-badge shop-offer-card-seal-badge shop-offer-card-seal-${cardSeal}`}
+              data-testid={`shop-card-seal-${idx}`}
+            >
+              {SEAL_LABEL[cardSeal]}
             </span>
           )}
         </span>

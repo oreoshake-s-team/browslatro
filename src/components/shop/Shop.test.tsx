@@ -866,3 +866,89 @@ describe("Shop joker sticker badges (#558 / #792)", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("Shop playing-card offer visual modifiers (#282)", () => {
+  function playingCardOffer(
+    overrides: Partial<import("../../cards/types").Card> = {},
+  ): ShopItem {
+    return {
+      kind: "playing-card",
+      card: { id: 1, rank: "A", suit: "spades", ...overrides },
+      price: 4,
+      sold: false,
+    };
+  }
+
+  test("a plain playing-card offer has no enhanced modifier class (negative)", () => {
+    renderShop({ offers: [playingCardOffer()] });
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveClass(
+      "shop-offer-playing-card-enhanced",
+    );
+  });
+
+  test("a plain playing-card offer has no data-card-enhancement attribute (negative)", () => {
+    renderShop({ offers: [playingCardOffer()] });
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveAttribute(
+      "data-card-enhancement",
+    );
+  });
+
+  test("a plain playing-card offer renders no enhancement badge (negative)", () => {
+    renderShop({ offers: [playingCardOffer()] });
+    expect(
+      screen.queryByTestId("shop-card-enhancement-0"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("an enhanced playing-card offer carries the shop-offer-playing-card-enhanced class", () => {
+    renderShop({ offers: [playingCardOffer({ enhancement: "gold" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass(
+      "shop-offer-playing-card-enhanced",
+    );
+  });
+
+  test("an enhanced playing-card offer exposes the enhancement via data-card-enhancement", () => {
+    renderShop({ offers: [playingCardOffer({ enhancement: "mult" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-card-enhancement",
+      "mult",
+    );
+  });
+
+  test("an enhanced playing-card offer renders a human-readable enhancement badge", () => {
+    renderShop({ offers: [playingCardOffer({ enhancement: "steel" })] });
+    expect(screen.getByTestId("shop-card-enhancement-0")).toHaveTextContent(
+      "Steel",
+    );
+  });
+
+  test("an editioned playing-card offer exposes the edition via data-card-edition", () => {
+    renderShop({ offers: [playingCardOffer({ edition: "holographic" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-card-edition",
+      "holographic",
+    );
+  });
+
+  test("an editioned playing-card offer renders a human-readable edition badge", () => {
+    renderShop({ offers: [playingCardOffer({ edition: "polychrome" })] });
+    expect(screen.getByTestId("shop-card-edition-0")).toHaveTextContent(
+      "Polychrome",
+    );
+  });
+
+  test("a sealed playing-card offer exposes the seal via data-card-seal", () => {
+    renderShop({ offers: [playingCardOffer({ seal: "gold" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-card-seal",
+      "gold",
+    );
+  });
+
+  test("a sealed playing-card offer renders a human-readable seal badge", () => {
+    renderShop({ offers: [playingCardOffer({ seal: "purple" })] });
+    expect(screen.getByTestId("shop-card-seal-0")).toHaveTextContent(
+      "Purple Seal",
+    );
+  });
+});

@@ -14,6 +14,8 @@ import { createSpectralCatalog } from "./spectrals";
 import { stakeStickerOdds } from "./stakes";
 import { createTarotCatalog } from "./tarots";
 import {
+  ILLUSION_MODIFIER_CHANCE,
+  PLAYING_CARD_BASE_PRICE,
   SHOP_OFFER_SLOTS,
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
@@ -32,8 +34,10 @@ import {
   pickSingleShopOffer,
   rerollCostFor,
   rerollShopOffer,
+  rollPlayingCardOffer,
   type ShopItem,
 } from "./shop";
+import { offerKindWeights } from "./vouchers";
 import { chanceOverrideConfig } from "../dev/chanceOverride";
 import { mulberry32, sequenceRng } from "../test/rng";
 
@@ -269,6 +273,8 @@ function offerSubjectId(offer: ShopItem): string {
       return offer.tarot.id;
     case "spectral":
       return offer.spectral.id;
+    case "playing-card":
+      return `playing-card-${offer.card.id}`;
     case "pack":
       return `pack-${offer.pack.pool}-${offer.pack.variant}`;
   }
@@ -1310,5 +1316,141 @@ describe("Telescope: guaranteedPlanetId on forced Celestial pack (#281)", () => 
           )
         : [];
     expect(ids).not.toContain("jupiter");
+  });
+});
+
+describe("rollPlayingCardOffer (#282)", () => {
+  test("returns a playing-card offer with the base price by default", () => {
+    const offer = rollPlayingCardOffer(mulberry32(1));
+    expect(offer.kind).toBe("playing-card");
+    expect(offer.price).toBe(PLAYING_CARD_BASE_PRICE);
+  });
+
+  test("the rolled card has a valid rank and suit", () => {
+    const offer = rollPlayingCardOffer(mulberry32(1));
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(offer.card.rank).toMatch(/^(2|3|4|5|6|7|8|9|10|J|Q|K|A)$/);
+  });
+
+  test("the rolled card has no enhancement, edition, or seal by default", () => {
+    const offer = rollPlayingCardOffer(mulberry32(1));
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(
+      offer.card.enhancement === undefined &&
+        offer.card.edition === undefined &&
+        offer.card.seal === undefined,
+    ).toBe(true);
+  });
+
+  test("with illusion enabled and forced rolls failing, no modifiers are added", () => {
+    const offer = rollPlayingCardOffer(
+      sequenceRng([0.5, 0.5, 0.99, 0.99, 0.99]),
+      { illusionEnabled: true },
+    );
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(
+      offer.card.enhancement === undefined &&
+        offer.card.edition === undefined &&
+        offer.card.seal === undefined,
+    ).toBe(true);
+  });
+
+  test("with illusion enabled and forced rolls passing, all three modifiers are added", () => {
+    const lowChance = ILLUSION_MODIFIER_CHANCE / 2;
+    const offer = rollPlayingCardOffer(
+      sequenceRng([0.5, 0.5, lowChance, 0, lowChance, 0, lowChance, 0]),
+      { illusionEnabled: true },
+    );
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(
+      offer.card.enhancement !== undefined &&
+        offer.card.edition !== undefined &&
+        offer.card.seal !== undefined,
+    ).toBe(true);
+  });
+
+  test("ILLUSION_MODIFIER_CHANCE is a tunable rate between 0 and 1", () => {
+    expect(ILLUSION_MODIFIER_CHANCE).toBeGreaterThan(0);
+    expect(ILLUSION_MODIFIER_CHANCE).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("pickShopItemOffers — Magic Trick playing-card offers (#282)", () => {
+  test("with Magic Trick NOT owned, never produces a playing-card offer (negative)", () => {
+    let sawPlayingCard = false;
+    for (let seed = 1; seed <= 50; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        kindWeights: offerKindWeights(new Set()),
+      });
+      if (offers.some((o) => o.kind === "playing-card")) {
+        sawPlayingCard = true;
+        break;
+      }
+    }
+    expect(sawPlayingCard).toBe(false);
+  });
+
+  test("with Magic Trick owned, can produce a playing-card offer across seeds", () => {
+    let sawPlayingCard = false;
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        extraSlots: 4,
+        kindWeights: offerKindWeights(new Set(["magic-trick"])),
+      });
+      if (offers.some((o) => o.kind === "playing-card")) {
+        sawPlayingCard = true;
+        break;
+      }
+    }
+    expect(sawPlayingCard).toBe(true);
+  });
+
+  test("with Magic Trick owned but Illusion NOT owned, playing-card offers carry no modifiers (negative)", () => {
+    let sawModified = false;
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        extraSlots: 4,
+        kindWeights: offerKindWeights(new Set(["magic-trick"])),
+        illusionEnabled: false,
+      });
+      for (const o of offers) {
+        if (o.kind !== "playing-card") continue;
+        if (
+          o.card.enhancement !== undefined ||
+          o.card.edition !== undefined ||
+          o.card.seal !== undefined
+        ) {
+          sawModified = true;
+        }
+      }
+    }
+    expect(sawModified).toBe(false);
+  });
+
+  test("with Illusion enabled, playing-card offers can roll an enhancement/edition/seal across seeds", () => {
+    let sawModified = false;
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        extraSlots: 4,
+        kindWeights: offerKindWeights(new Set(["magic-trick", "illusion"])),
+        illusionEnabled: true,
+      });
+      for (const o of offers) {
+        if (o.kind !== "playing-card") continue;
+        if (
+          o.card.enhancement !== undefined ||
+          o.card.edition !== undefined ||
+          o.card.seal !== undefined
+        ) {
+          sawModified = true;
+        }
+      }
+      if (sawModified) break;
+    }
+    expect(sawModified).toBe(true);
   });
 });

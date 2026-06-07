@@ -78,6 +78,7 @@ describe("offerKindWeights", () => {
       joker: 1,
       planet: 1,
       tarot: 1,
+      "playing-card": 0,
     });
   });
 

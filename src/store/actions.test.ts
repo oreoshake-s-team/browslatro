@@ -426,6 +426,64 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
   });
 
+  test("buyShopOffer appends a plain Magic Trick playing-card to addedCards (#282)", () => {
+    const game = useGame.getState();
+    const card = { id: 999, rank: "K" as const, suit: "spades" as const };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(
+      useGame.getState().addedCards.some((c) => c.id === 999),
+    ).toBe(true);
+  });
+
+  test("buyShopOffer preserves enhancement/edition/seal from an Illusion playing-card offer (#282)", () => {
+    const game = useGame.getState();
+    const card = {
+      id: 1000,
+      rank: "5" as const,
+      suit: "hearts" as const,
+      enhancement: "mult" as const,
+      edition: "foil" as const,
+      seal: "gold" as const,
+    };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    const added = useGame.getState().addedCards.find((c) => c.id === 1000);
+    expect(
+      added?.enhancement === "mult" &&
+        added?.edition === "foil" &&
+        added?.seal === "gold",
+    ).toBe(true);
+  });
+
+  test("buyShopOffer marks a playing-card offer sold after purchase (#282)", () => {
+    const game = useGame.getState();
+    const card = { id: 1001, rank: "3" as const, suit: "diamonds" as const };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    const offers = useGame.getState().shopOffers;
+    expect(offers?.[0]?.sold).toBe(true);
+  });
+
+  test("buyShopOffer for a playing-card returns false when unaffordable (#282, negative)", () => {
+    const game = useGame.getState();
+    const card = { id: 1002, rank: "A" as const, suit: "clubs" as const };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(1);
+    expect(game.buyShopOffer(0)).toBe(false);
+  });
+
   test("handleWin increments the round counter", () => {
     useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().round).toBe(2);
