@@ -44,6 +44,7 @@
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.45);
   z-index: 150;
+  pointer-events: none;
 }
 
 .lazy-chunk-spinner--overlay .lazy-chunk-spinner__panel {
@@ -57,6 +58,7 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
   color: #e9ecef;
   font-size: 1rem;
+  pointer-events: auto;
 }
 
 @keyframes lazy-chunk-spinner-spin {
