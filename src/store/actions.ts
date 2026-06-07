@@ -75,6 +75,7 @@ import {
   applyEnhancementOverrides,
   applySealOverrides,
   fullDeckPile,
+  initialDeal,
 } from "../cards/deckBuild";
 import { deckJokerSlotsDelta, deckSuppressesInterest } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
@@ -273,14 +274,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setOpenedPack(pack);
     s.setPackPicksRemaining(packPickLimit(pack.variant));
     s.setPickedPackOptionIndices(new Set());
+    const currentHandSize = Math.max(
+      1,
+      HAND_SIZE +
+        s.handSizeModifier +
+        extraHandSize(s.ownedVoucherIds) +
+        extraStartingHandSizeFromJokers(s.jokers),
+    );
     if (pack.pool === "arcana" || pack.pool === "spectral") {
-      const currentHandSize = Math.max(
-        1,
-        HAND_SIZE +
-          s.handSizeModifier +
-          extraHandSize(s.ownedVoucherIds) +
-          extraStartingHandSizeFromJokers(s.jokers),
-      );
       const survivingBase = s.baseDeckCards.filter(
         (c) => !s.destroyedCardIds.has(c.id),
       );
@@ -297,6 +298,17 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       );
     } else {
       s.setPackPreviewHand([]);
+      if (s.dealt.hand.length === 0) {
+        const fresh = initialDeal(
+          s.baseDeckCards,
+          s.destroyedCardIds,
+          currentHandSize,
+          s.addedCards,
+          s.cardEnhancementsById,
+          s.cardSealsById,
+        );
+        s.setDealt(fresh);
+      }
     }
     s.setPackPreviewSelectedIds(new Set());
     s.setPackPreviewDisplayOrder([]);
