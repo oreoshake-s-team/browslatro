@@ -129,6 +129,29 @@ function buyButtonTooltip(
   }
 }
 
+const SUIT_GLYPH: Record<string, string> = {
+  spades: "♠",
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+};
+
+function playingCardSummary(card: import("../../cards/types").Card): {
+  readonly name: string;
+  readonly description: string;
+} {
+  const name = `${card.rank}${SUIT_GLYPH[card.suit] ?? ""}`;
+  const traits: string[] = [];
+  if (card.enhancement) traits.push(`${card.enhancement} enhancement`);
+  if (card.edition) traits.push(`${card.edition} edition`);
+  if (card.seal) traits.push(`${card.seal} seal`);
+  const description =
+    traits.length === 0
+      ? "Adds this playing card to your deck."
+      : `Adds this playing card with ${traits.join(", ")} to your deck.`;
+  return { name, description };
+}
+
 function offerSubject(offer: ShopItem): {
   readonly id: string;
   readonly name: string;
@@ -143,6 +166,14 @@ function offerSubject(offer: ShopItem): {
       return offer.tarot;
     case "spectral":
       return offer.spectral;
+    case "playing-card": {
+      const summary = playingCardSummary(offer.card);
+      return {
+        id: `playing-card-${offer.card.id}`,
+        name: summary.name,
+        description: summary.description,
+      };
+    }
     case "pack": {
       const optionCount = packOptionsCount(offer.pack.pool, offer.pack.variant);
       const pickCount = packPickLimit(offer.pack.variant);
@@ -163,6 +194,7 @@ const OFFER_KIND_BADGE: Readonly<
   planet: { icon: "🪐", label: "Planet" },
   tarot: { icon: "🔮", label: "Tarot" },
   spectral: { icon: "👻", label: "Spectral" },
+  "playing-card": { icon: "♠", label: "Card" },
   pack: { icon: "🎁", label: "Pack" },
 };
 

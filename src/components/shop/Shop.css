@@ -228,6 +228,12 @@
   background-color: #e6fcf5;
 }
 
+.shop-offer-playing-card {
+  border-color: #ffd43b;
+  border-left-color: #f08c00;
+  background-color: #fff9db;
+}
+
 .shop-offer-sold {
   opacity: 0.6;
   filter: grayscale(0.5);
