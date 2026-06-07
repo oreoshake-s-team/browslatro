@@ -1146,6 +1146,64 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
       .toBeUndefined();
   });
+
+  test("at Gold Stake, shop joker rolls receive Rental when only the rental roll hits (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers?.some((s) => s.kind === "rental")).toBe(true);
+  });
+
+  test("at Gold Stake, a rental shop joker is priced at RENTAL_BASE_PRICE (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].price).toBe(RENTAL_BASE_PRICE);
+  });
+
+  test("at Orange Stake, shop joker rolls never receive Rental (negative) (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("orange"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers?.some((s) => s.kind === "rental") ?? false).toBe(false);
+  });
+
+  test("at Gold Stake, shop joker rolls do not receive Rental when every roll misses (negative) (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0.99]),
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
+      .toBeUndefined();
+  });
+
+  test("at Gold Stake, Buffoon pack joker options can receive Rental (#559)", () => {
+    const offers = [packOfferWithJokerOption("p1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    const opt = stamped[0].kind === "pack" ? stamped[0].pack.options[0] : null;
+    expect(opt && opt.kind === "joker" ? opt.joker.stickers : null).toEqual([
+      { kind: "rental" },
+    ]);
+  });
 });
 
 describe("applyAstronomerPricing (#741)", () => {

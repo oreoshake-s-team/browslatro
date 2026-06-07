@@ -27,11 +27,13 @@ export type StakeModifier =
   | { readonly kind: "black-eternal-roll"; readonly chance: number }
   | { readonly kind: "blue-discard-delta"; readonly amount: number }
   | { readonly kind: "purple-ante-scaling" }
-  | { readonly kind: "orange-perishable-roll"; readonly chance: number };
+  | { readonly kind: "orange-perishable-roll"; readonly chance: number }
+  | { readonly kind: "gold-rental-roll"; readonly chance: number };
 
 export const BLACK_ETERNAL_ROLL_CHANCE = 0.3;
 export const BLUE_DISCARD_DELTA = -1;
 export const ORANGE_PERISHABLE_ROLL_CHANCE = 0.3;
+export const GOLD_RENTAL_ROLL_CHANCE = 0.3;
 
 export interface StakeSpec {
   readonly id: Stake;
@@ -102,9 +104,15 @@ const STAKE_SPECS: ReadonlyArray<StakeSpec> = [
   {
     id: "gold",
     name: "Gold Stake",
-    description: "-1 hand size.",
-    implemented: false,
-    modifiers: [],
+    description:
+      "Shop and Booster Pack Jokers may roll Rental (costs $1, drains $3 at end of round).",
+    implemented: true,
+    modifiers: [
+      {
+        kind: "gold-rental-roll",
+        chance: GOLD_RENTAL_ROLL_CHANCE,
+      },
+    ],
   },
 ];
 
@@ -155,6 +163,7 @@ export function stakeStickerOdds(stake: Stake): StakeStickerOdds | undefined {
   for (const mod of getActiveStakeModifiers(stake)) {
     if (mod.kind === "black-eternal-roll") odds.eternal = mod.chance;
     if (mod.kind === "orange-perishable-roll") odds.perishable = mod.chance;
+    if (mod.kind === "gold-rental-roll") odds.rental = mod.chance;
   }
   if (
     odds.eternal === undefined &&

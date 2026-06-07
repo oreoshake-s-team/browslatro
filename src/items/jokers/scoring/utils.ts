@@ -1,5 +1,6 @@
 import type { Card, Rank } from "../../../cards/types";
 import { JOKER_SELL_VALUE } from "../constants";
+import { RENTAL_BASE_PRICE, hasSticker } from "../stickers";
 import type { Joker } from "../types";
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
@@ -27,7 +28,8 @@ export function isFaceCardWith(
   return allCardsAreFaceFromJokers(jokers);
 }
 
-export function jokerSellValue(_joker: Joker): number {
+export function jokerSellValue(joker: Joker): number {
+  if (hasSticker(joker, "rental")) return RENTAL_BASE_PRICE;
   return JOKER_SELL_VALUE;
 }
 
