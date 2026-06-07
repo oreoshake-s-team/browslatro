@@ -95,6 +95,13 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         } else {
           triggerNope();
         }
+      } else {
+        if (packPreviewHand.length > 0) return;
+        if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+        play("pop");
+        setConsumables((prev) =>
+          addConsumable(prev, { kind: "tarot", card: option.tarot }, consumableCapacity),
+        );
       }
     } else if (option.kind === "joker") {
       if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
