@@ -3,10 +3,12 @@ import { describe, expect, test } from "vitest";
 import {
   createDeckCatalog,
   deckCompositionTransforms,
+  deckEndOfRoundBonusPerRemainingHandAndDiscard,
   deckJokerSlotsDelta,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
   deckStartingMoneyDelta,
+  deckSuppressesInterest,
   getDeckSpec,
   type Deck,
 } from "./decks";
@@ -32,7 +34,7 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red, Yellow, Blue, Black, Abandoned, and Checkered Decks are implemented", () => {
+  test("Red, Yellow, Blue, Green, Black, Abandoned, and Checkered Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
@@ -40,6 +42,7 @@ describe("DeckSpec.implemented", () => {
       "red-deck",
       "yellow-deck",
       "blue-deck",
+      "green-deck",
       "black-deck",
       "abandoned-deck",
       "checkered-deck",
@@ -50,7 +53,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(9);
+    expect(unimplementedCount).toBe(8);
   });
 });
 
@@ -220,5 +223,51 @@ describe("deckJokerSlotsDelta", () => {
 
   test("Blue Deck does not change joker slots (negative)", () => {
     expect(deckJokerSlotsDelta("blue-deck")).toBe(0);
+  });
+});
+
+describe("Green Deck spec (#818)", () => {
+  test("declares the +$2 end-of-round and no-interest modifiers", () => {
+    expect(getDeckSpec("green-deck").modifiers).toEqual([
+      {
+        kind: "end-of-round-bonus-per-remaining-hand-and-discard",
+        amount: 2,
+      },
+      { kind: "no-interest" },
+    ]);
+  });
+
+  test("is marked as implemented", () => {
+    expect(getDeckSpec("green-deck").implemented).toBe(true);
+  });
+});
+
+describe("deckEndOfRoundBonusPerRemainingHandAndDiscard (#818)", () => {
+  test("Green Deck returns $2", () => {
+    expect(deckEndOfRoundBonusPerRemainingHandAndDiscard("green-deck")).toBe(2);
+  });
+
+  test("Red Deck returns $0 (negative)", () => {
+    expect(deckEndOfRoundBonusPerRemainingHandAndDiscard("red-deck")).toBe(0);
+  });
+
+  test("Yellow Deck returns $0 (negative)", () => {
+    expect(deckEndOfRoundBonusPerRemainingHandAndDiscard("yellow-deck")).toBe(
+      0,
+    );
+  });
+});
+
+describe("deckSuppressesInterest (#818)", () => {
+  test("Green Deck suppresses interest", () => {
+    expect(deckSuppressesInterest("green-deck")).toBe(true);
+  });
+
+  test("Red Deck does not suppress interest (negative)", () => {
+    expect(deckSuppressesInterest("red-deck")).toBe(false);
+  });
+
+  test("Yellow Deck does not suppress interest (negative)", () => {
+    expect(deckSuppressesInterest("yellow-deck")).toBe(false);
   });
 });

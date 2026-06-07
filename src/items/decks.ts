@@ -27,6 +27,11 @@ export type DeckModifier =
   | { readonly kind: "starting-hands-delta"; readonly amount: number }
   | { readonly kind: "joker-slots-delta"; readonly amount: number }
   | {
+      readonly kind: "end-of-round-bonus-per-remaining-hand-and-discard";
+      readonly amount: number;
+    }
+  | { readonly kind: "no-interest" }
+  | {
       readonly kind: "deck-composition";
       readonly transform: DeckCompositionTransform;
     };
@@ -61,7 +66,17 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     implemented: true,
     modifiers: [{ kind: "starting-hands-delta", amount: 1 }],
   },
-  { id: "green-deck", name: "Green Deck", description: "At end of round, +$2 per remaining hand and discard; no interest.", implemented: false, modifiers: [] },
+  {
+    id: "green-deck",
+    name: "Green Deck",
+    description:
+      "At end of round, +$2 per remaining hand and discard; no interest.",
+    implemented: true,
+    modifiers: [
+      { kind: "end-of-round-bonus-per-remaining-hand-and-discard", amount: 2 },
+      { kind: "no-interest" },
+    ],
+  },
   {
     id: "black-deck",
     name: "Black Deck",
@@ -136,6 +151,14 @@ export const deckStartingHandsDelta = (deck: Deck): number =>
 
 export const deckJokerSlotsDelta = (deck: Deck): number =>
   sumDeckModifier(deck, "joker-slots-delta");
+
+export const deckEndOfRoundBonusPerRemainingHandAndDiscard = (
+  deck: Deck,
+): number =>
+  sumDeckModifier(deck, "end-of-round-bonus-per-remaining-hand-and-discard");
+
+export const deckSuppressesInterest = (deck: Deck): boolean =>
+  getActiveDeckModifiers(deck).some((m) => m.kind === "no-interest");
 
 export function deckCompositionTransforms(
   deck: Deck,

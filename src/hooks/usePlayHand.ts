@@ -33,6 +33,10 @@ import {
   isJokerActive,
 } from "../items/jokers";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
+import {
+  deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckSuppressesInterest,
+} from "../items/decks";
 import { fullDeckPile } from "../cards/deckBuild";
 import { hasStakeModifier } from "../items/stakes";
 import { observatoryMultFor } from "../items/vouchers";
@@ -112,6 +116,7 @@ export function usePlayHand({
   const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
   const consumables = useGame((s) => s.consumables);
+  const selectedDeck = useGame((s) => s.selectedDeck);
 
   const requiredScore = requiredChipsForBlind({
     ante,
@@ -205,7 +210,15 @@ export function usePlayHand({
         "gold",
       );
       const remainingHandsCount = Math.max(0, remainingHands - 1);
-      const remainingHandsBonus = remainingHandsCount * REMAINING_HAND_BONUS;
+      const greenDeckBonusPerUnit =
+        deckEndOfRoundBonusPerRemainingHandAndDiscard(selectedDeck);
+      const usesGreenDeckBonus = greenDeckBonusPerUnit > 0;
+      const remainingHandsBonus = usesGreenDeckBonus
+        ? (remainingHandsCount + remainingDiscards) * greenDeckBonusPerUnit
+        : remainingHandsCount * REMAINING_HAND_BONUS;
+      const remainingHandsBonusSource = usesGreenDeckBonus
+        ? `Remaining hands + discards × $${greenDeckBonusPerUnit}`
+        : `Remaining hands × $${REMAINING_HAND_BONUS}`;
       const postGoldWallet = money + heldGoldIds.length * GOLD_HELD_BONUS_PER_CARD;
       const postBonusesWallet = postGoldWallet + remainingHandsBonus;
       const fullDeck = fullDeckPile(
@@ -230,7 +243,7 @@ export function usePlayHand({
             {
               kind: "money-delta",
               amount: remainingHandsBonus,
-              source: `Remaining hands × $${REMAINING_HAND_BONUS}`,
+              source: remainingHandsBonusSource,
             },
           ]);
         }
@@ -254,12 +267,19 @@ export function usePlayHand({
           baseReward: smallBlindSkipped ? 0 : blind + 2,
           walletAtPayout: postJokerWallet,
           interestWallet: postGoldWallet,
-          interest: calculateInterest(
-            postGoldWallet,
-            interestCapFor(ownedVoucherIds),
-          ),
+          interest: deckSuppressesInterest(selectedDeck)
+            ? 0
+            : calculateInterest(
+                postGoldWallet,
+                interestCapFor(ownedVoucherIds),
+              ),
           goldHeldCount: heldGoldIds.length,
           remainingHandsCount,
+          remainingDiscardsCount: remainingDiscards,
+          remainingHandsBonusPerUnit: usesGreenDeckBonus
+            ? greenDeckBonusPerUnit
+            : REMAINING_HAND_BONUS,
+          usesHandsAndDiscardsBonus: usesGreenDeckBonus,
           endOfRoundJokerSteps: endOfRoundJokerResult.steps,
         });
       };

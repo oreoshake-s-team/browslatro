@@ -303,3 +303,83 @@ describe("RoundWonModal payout breakdown", () => {
     expect(screen.getByTestId("round-won-total")).toHaveTextContent("$2");
   });
 });
+
+describe("RoundWonModal — Green Deck payout (closes #818)", () => {
+  test("renders the combined hands+discards bonus row when usesHandsAndDiscardsBonus is true", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          remainingHandsCount: 3,
+          remainingDiscardsCount: 2,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent(
+      "Remaining hands + discards (5 × $2)",
+    );
+    expect(screen.getByTestId("round-won-hands")).toHaveTextContent("+$10");
+  });
+
+  test("suppresses the interest row entirely when usesHandsAndDiscardsBonus is true", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          remainingHandsCount: 1,
+          remainingDiscardsCount: 0,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+          interest: 0,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.queryByTestId("round-won-interest")).not.toBeInTheDocument();
+  });
+
+  test("falls back to default 'Remaining hands' label when the flag is omitted (negative)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({ remainingHandsCount: 2 })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent(
+      "Remaining hands (2 × $1)",
+    );
+  });
+
+  test("total includes the (hands + discards) × $2 bonus", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 3,
+          interest: 0,
+          remainingHandsCount: 2,
+          remainingDiscardsCount: 3,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$13");
+  });
+
+  test("hides the bonus row when bonusUnits is zero on Green Deck (negative)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          remainingHandsCount: 0,
+          remainingDiscardsCount: 0,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.queryByTestId("round-won-hands")).not.toBeInTheDocument();
+  });
+});
