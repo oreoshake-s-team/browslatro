@@ -33,7 +33,9 @@ export type VoucherId =
   | "telescope"
   | "observatory"
   | "tarot-merchant"
-  | "tarot-tycoon";
+  | "tarot-tycoon"
+  | "planet-merchant"
+  | "planet-tycoon";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -72,6 +74,8 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "observatory", name: "Observatory", description: "Each Planet card in your consumable area gives ×1.5 Mult to its specified hand.", cost: VOUCHER_BASE_PRICE, requires: "telescope" },
   { id: "tarot-merchant", name: "Tarot Merchant", description: "Tarot cards appear 2× as often in the shop.", cost: VOUCHER_BASE_PRICE },
   { id: "tarot-tycoon", name: "Tarot Tycoon", description: "Tarot cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "tarot-merchant" },
+  { id: "planet-merchant", name: "Planet Merchant", description: "Planet cards appear 2× as often in the shop.", cost: VOUCHER_BASE_PRICE },
+  { id: "planet-tycoon", name: "Planet Tycoon", description: "Planet cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "planet-merchant" },
 ];
 
 export const BOSS_REROLL_COST = 10;
@@ -256,5 +260,10 @@ export function offerKindWeights(
     : ownedIds.has("tarot-merchant")
       ? 2
       : 1;
-  return { joker: 1, planet: 1, tarot };
+  const planet = ownedIds.has("planet-tycoon")
+    ? 4
+    : ownedIds.has("planet-merchant")
+      ? 2
+      : 1;
+  return { joker: 1, planet, tarot };
 }
