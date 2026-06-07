@@ -395,8 +395,134 @@
   color: #212529;
 }
 
+.shop-offer-playing-card-enhanced {
+  border-color: #b197fc;
+  border-left-color: #5f3dc4;
+  background: linear-gradient(135deg, #fff9db 0%, #f3f0ff 65%, #fff3bf 100%);
+  box-shadow: 0 0 10px rgba(177, 151, 252, 0.5);
+}
+
+.shop-offer-playing-card[data-card-edition="foil"] {
+  border-color: #4dabf7;
+  border-left-color: #1864ab;
+  box-shadow: 0 0 10px rgba(77, 171, 247, 0.55);
+  background: linear-gradient(135deg, #e7f5ff 0%, #fff9db 100%);
+}
+
+.shop-offer-playing-card[data-card-edition="holographic"] {
+  border-color: #cc5de8;
+  border-left-color: #862e9c;
+  box-shadow: 0 0 10px rgba(204, 93, 232, 0.55);
+  background: linear-gradient(135deg, #f8f0fc 0%, #fff9db 50%, #e3fafc 100%);
+}
+
+.shop-offer-playing-card[data-card-edition="polychrome"] {
+  border-color: #ff8787;
+  border-left-color: #c92a2a;
+  box-shadow: 0 0 12px rgba(255, 135, 135, 0.6);
+  background: linear-gradient(
+    135deg,
+    #ffe8cc 0%,
+    #fff3bf 25%,
+    #d3f9d8 50%,
+    #d0ebff 75%,
+    #f3d9fa 100%
+  );
+}
+
+.shop-offer-card-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+  background-color: #f1f3f5;
+  color: #343a40;
+}
+
+.shop-offer-card-enhancement-bonus {
+  background-color: #4dabf7;
+  color: #fff;
+}
+
+.shop-offer-card-enhancement-mult {
+  background-color: #ff6b6b;
+  color: #fff;
+}
+
+.shop-offer-card-enhancement-wild {
+  background-color: #cc5de8;
+  color: #fff;
+}
+
+.shop-offer-card-enhancement-glass {
+  background-color: #66d9e8;
+  color: #1a2540;
+}
+
+.shop-offer-card-enhancement-steel {
+  background-color: #adb5bd;
+  color: #212529;
+}
+
+.shop-offer-card-enhancement-stone {
+  background-color: #fab005;
+  color: #3b2300;
+}
+
+.shop-offer-card-enhancement-gold {
+  background-color: #ffd43b;
+  color: #5c3c00;
+}
+
+.shop-offer-card-enhancement-lucky {
+  background-color: #51cf66;
+  color: #1a3d20;
+}
+
+.shop-offer-card-edition-foil {
+  background-color: #4dabf7;
+  color: #fff;
+}
+
+.shop-offer-card-edition-holographic {
+  background-color: #cc5de8;
+  color: #fff;
+}
+
+.shop-offer-card-edition-polychrome {
+  background: linear-gradient(90deg, #ff8787, #ffd43b, #51cf66, #4dabf7, #cc5de8);
+  color: #fff;
+}
+
+.shop-offer-card-seal-gold {
+  background-color: #ffd43b;
+  color: #5c3c00;
+}
+
+.shop-offer-card-seal-red {
+  background-color: #ff6b6b;
+  color: #fff;
+}
+
+.shop-offer-card-seal-blue {
+  background-color: #4dabf7;
+  color: #fff;
+}
+
+.shop-offer-card-seal-purple {
+  background-color: #b197fc;
+  color: #fff;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .shop-offer[data-edition] {
+  .shop-offer[data-edition],
+  .shop-offer-playing-card-enhanced,
+  .shop-offer-playing-card[data-card-edition] {
     box-shadow: none;
   }
 }
