@@ -482,6 +482,6 @@ describe("offerKindWeights — playing-card weight (#282)", () => {
 
 describe("voucher catalog count (#282)", () => {
   test("catalog contains exactly the expected number of vouchers", () => {
-    expect(createVoucherCatalog()).toHaveLength(30);
+    expect(createVoucherCatalog()).toHaveLength(32);
   });
 });

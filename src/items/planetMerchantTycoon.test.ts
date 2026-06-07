@@ -89,13 +89,14 @@ describe("offerKindWeights — Planet Merchant / Tycoon", () => {
       joker: 1,
       planet: 2,
       tarot: 1,
+      "playing-card": 0,
     });
   });
 
   test("planet-merchant + planet-tycoon quadruple the planet weight", () => {
     expect(
       offerKindWeights(ownedSet(["planet-merchant", "planet-tycoon"])),
-    ).toEqual({ joker: 1, planet: 4, tarot: 1 });
+    ).toEqual({ joker: 1, planet: 4, tarot: 1, "playing-card": 0 });
   });
 
   test("planet-tycoon without planet-merchant still yields 4× (tycoon flag dominates)", () => {
