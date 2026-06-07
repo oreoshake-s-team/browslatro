@@ -215,6 +215,95 @@ describe("Game", () => {
       expect(deckPileCount()).toBe(7);
     });
   });
+
+  describe("in-hand deck pile filters destroyedCardIds (closes #803)", () => {
+    test("baseline count reflects dealt.remaining when no ids are destroyed", () => {
+      const base = makeCards(1, 40);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: makeCards(1, 10) },
+      });
+      renderGame();
+      expect(deckPileCount()).toBe(10);
+    });
+
+    test("count drops synchronously when destroyedCardIds grows mid-round", () => {
+      const base = makeCards(1, 40);
+      useGame.setState({
+        baseDeckCards: base,
+        dealt: { hand: [], remaining: makeCards(1, 10) },
+      });
+      const { rerender } = render(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+        />,
+      );
+      expect(deckPileCount()).toBe(10);
+      useGame.setState({ destroyedCardIds: new Set([1, 2]) });
+      rerender(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+        />,
+      );
+      expect(deckPileCount()).toBe(8);
+    });
+
+    test("Remaining Cards modal omits destroyed cards' [data-card-id]", async () => {
+      const user = userEvent.setup();
+      useGame.setState({
+        baseDeckCards: makeCards(1, 40),
+        dealt: { hand: [], remaining: makeCards(1, 5) },
+        destroyedCardIds: new Set([2]),
+      });
+      renderGame();
+      await user.click(screen.getByLabelText(/^Deck \(4 cards remaining\)$/));
+      expect(
+        document.querySelector('.deck-modal [data-card-id="2"]'),
+      ).toBeNull();
+    });
+
+    test("does not drop ids that are not in destroyedCardIds (negative)", () => {
+      useGame.setState({
+        baseDeckCards: makeCards(1, 40),
+        dealt: { hand: [], remaining: makeCards(1, 10) },
+        destroyedCardIds: new Set([999]),
+      });
+      renderGame();
+      expect(deckPileCount()).toBe(10);
+    });
+
+    test("count delta equals -N after destroyedCardIds gains N overlapping ids", () => {
+      useGame.setState({
+        baseDeckCards: makeCards(1, 40),
+        dealt: { hand: [], remaining: makeCards(1, 10) },
+      });
+      const { rerender } = render(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+        />,
+      );
+      const before = deckPileCount();
+      useGame.setState({ destroyedCardIds: new Set([3, 4, 5]) });
+      rerender(
+        <Game
+          onSubmitHand={vi.fn()}
+          onDiscard={vi.fn()}
+          canDiscard={true}
+          onCardDiscardEnd={vi.fn()}
+        />,
+      );
+      expect(deckPileCount()).toBe(before - 3);
+    });
+  });
 });
 
 describe("Submit Hand button — inline current hand readout (#745)", () => {
