@@ -139,6 +139,7 @@
 .new-run-deck-tile-red-deck { box-shadow: inset 0 -3px 0 #fa5252; }
 .new-run-deck-tile-yellow-deck { box-shadow: inset 0 -3px 0 #ffd43b; }
 .new-run-deck-tile-blue-deck { box-shadow: inset 0 -3px 0 #339af0; }
+.new-run-deck-tile-green-deck { box-shadow: inset 0 -3px 0 #51cf66; }
 .new-run-deck-tile-black-deck {
   box-shadow:
     inset 0 -3px 0 #0b0c0d,
