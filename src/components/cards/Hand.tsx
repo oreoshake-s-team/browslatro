@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useReducer, useRef } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
@@ -25,6 +25,60 @@ function applyManualOrder(
     result.push(card);
   });
   return result;
+}
+
+interface HandUiState {
+  readonly sortMode: SortMode;
+  readonly manualOrder: ReadonlyArray<number> | null;
+  readonly draggingId: number | null;
+  readonly dragOverGap: number | null;
+}
+
+type HandUiAction =
+  | { readonly type: "selectSort"; readonly mode: SortMode }
+  | { readonly type: "resetManualOrder" }
+  | { readonly type: "reorder"; readonly order: ReadonlyArray<number> }
+  | { readonly type: "dragStart"; readonly id: number }
+  | { readonly type: "setDragOverGap"; readonly gap: number }
+  | { readonly type: "clearDragOverGap"; readonly gap: number }
+  | { readonly type: "endDrag" };
+
+const initialHandUiState: HandUiState = {
+  sortMode: "rank",
+  manualOrder: null,
+  draggingId: null,
+  dragOverGap: null,
+};
+
+function handUiReducer(state: HandUiState, action: HandUiAction): HandUiState {
+  switch (action.type) {
+    // Choosing a sort always abandons any manual arrangement.
+    case "selectSort":
+      return { ...state, sortMode: action.mode, manualOrder: null };
+    case "resetManualOrder":
+      return state.manualOrder === null
+        ? state
+        : { ...state, manualOrder: null };
+    case "reorder":
+      return { ...state, manualOrder: action.order };
+    case "dragStart":
+      return { ...state, draggingId: action.id };
+    case "setDragOverGap":
+      return state.dragOverGap === action.gap
+        ? state
+        : { ...state, dragOverGap: action.gap };
+    case "clearDragOverGap":
+      return state.dragOverGap === action.gap
+        ? { ...state, dragOverGap: null }
+        : state;
+    // Ending a drag clears both drag-tracking fields atomically.
+    case "endDrag":
+      return state.draggingId === null && state.dragOverGap === null
+        ? state
+        : { ...state, draggingId: null, dragOverGap: null };
+    default:
+      return state;
+  }
 }
 
 interface HandProps {
@@ -70,19 +124,15 @@ export default function Hand({
   jokerDropEnabled,
   onJokerSellDrop,
 }: HandProps) {
-  const [sortMode, setSortMode] = useState<SortMode>("rank");
-  const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
-    null,
-  );
-  const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOverGap, setDragOverGap] = useState<number | null>(null);
+  const [{ sortMode, manualOrder, draggingId, dragOverGap }, dispatch] =
+    useReducer(handUiReducer, initialHandUiState);
   const handCardsRef = useRef<HTMLDivElement | null>(null);
   const lastHandPlaySignalRef = useRef<number>(handPlaySignal);
 
   useEffect(() => {
     if (lastHandPlaySignalRef.current === handPlaySignal) return;
     lastHandPlaySignalRef.current = handPlaySignal;
-    setManualOrder(null);
+    dispatch({ type: "resetManualOrder" });
   }, [handPlaySignal]);
 
   const displayedHand = useMemo(
@@ -97,8 +147,7 @@ export default function Hand({
   }, [displayedHand, onDisplayOrderChange]);
 
   function selectSort(mode: SortMode) {
-    setSortMode(mode);
-    setManualOrder(null);
+    dispatch({ type: "selectSort", mode });
   }
 
   // Gap indices run 0..N where N = hand size; gap K is "before card K"
@@ -117,16 +166,15 @@ export default function Hand({
     next.splice(fromIdx, 1);
     const insertIdx = gapIdx > fromIdx ? gapIdx - 1 : gapIdx;
     next.splice(insertIdx, 0, sourceId);
-    setManualOrder(next);
+    dispatch({ type: "reorder", order: next });
   }
 
   function endDrag() {
-    setDraggingId(null);
-    setDragOverGap(null);
+    dispatch({ type: "endDrag" });
   }
 
   function handleDragStart(cardId: number, e: React.DragEvent<HTMLDivElement>) {
-    setDraggingId(cardId);
+    dispatch({ type: "dragStart", id: cardId });
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", String(cardId));
@@ -140,11 +188,11 @@ export default function Hand({
     if (draggingId === null) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    if (dragOverGap !== gapIdx) setDragOverGap(gapIdx);
+    dispatch({ type: "setDragOverGap", gap: gapIdx });
   }
 
   function handleGapDragLeave(gapIdx: number) {
-    if (dragOverGap === gapIdx) setDragOverGap(null);
+    dispatch({ type: "clearDragOverGap", gap: gapIdx });
   }
 
   function handleGapDrop(
@@ -200,7 +248,7 @@ export default function Hand({
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     const gap = gapNearestToClientX(e.clientX);
-    if (gap !== null && dragOverGap !== gap) setDragOverGap(gap);
+    if (gap !== null) dispatch({ type: "setDragOverGap", gap });
   }
 
   function handleHandDrop(e: React.DragEvent<HTMLDivElement>) {
