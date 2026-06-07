@@ -6,7 +6,7 @@ import NewRunScreen from "./NewRunScreen";
 describe("NewRunScreen", () => {
   test("renders one button per implemented stake", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(7);
+    expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(8);
   });
 
   test("renders the Black stake tile (implemented in #555)", () => {
@@ -29,14 +29,14 @@ describe("NewRunScreen", () => {
     expect(screen.getByTestId("new-run-stake-orange")).toBeInTheDocument();
   });
 
+  test("renders the Gold stake tile (implemented in #559)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-stake-gold")).toBeInTheDocument();
+  });
+
   test("renders the Green stake tile (implemented)", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-green")).toBeInTheDocument();
-  });
-
-  test("does not render unimplemented stakes like Gold (negative)", () => {
-    render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.queryByTestId("new-run-stake-gold")).not.toBeInTheDocument();
   });
 
   test("renders the Red stake tile (implemented)", () => {

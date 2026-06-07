@@ -13,6 +13,7 @@ import {
   MAD_JOKER_MULT,
   MAX_JOKERS,
   RANK_PARITY,
+  RENTAL_BASE_PRICE,
   RENTAL_END_OF_ROUND_DRAIN,
   SLY_JOKER_CHIPS,
   SUIT_MULT_AMOUNT,
@@ -73,8 +74,16 @@ beforeEach(() => {
 });
 
 describe("jokerSellValue", () => {
-  test("returns JOKER_SELL_VALUE for any joker", () => {
+  test("returns JOKER_SELL_VALUE for a non-rental joker", () => {
     expect(jokerSellValue(createPlusFourMultJoker())).toBe(JOKER_SELL_VALUE);
+  });
+
+  test("returns RENTAL_BASE_PRICE for a rental joker", () => {
+    const rental: Joker = {
+      ...createPlusFourMultJoker(),
+      stickers: [{ kind: "rental" }],
+    };
+    expect(jokerSellValue(rental)).toBe(RENTAL_BASE_PRICE);
   });
 });
 

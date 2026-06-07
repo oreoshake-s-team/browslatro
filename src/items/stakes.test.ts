@@ -117,7 +117,7 @@ describe("hasStakeModifier", () => {
 });
 
 describe("StakeSpec.implemented", () => {
-  test("White, Red, Green, Black, Blue, Purple, and Orange are implemented", () => {
+  test("all 8 canonical stakes are implemented", () => {
     const implemented = createStakeCatalog()
       .filter((s) => s.implemented)
       .map((s) => s.id);
@@ -129,14 +129,15 @@ describe("StakeSpec.implemented", () => {
       "blue",
       "purple",
       "orange",
+      "gold",
     ]);
   });
 
-  test("Gold is not implemented (negative)", () => {
+  test("no stakes remain unimplemented (negative)", () => {
     const unimplemented = createStakeCatalog()
       .filter((s) => !s.implemented)
       .map((s) => s.id);
-    expect(unimplemented).toEqual(["gold"]);
+    expect(unimplemented).toEqual([]);
   });
 });
 
@@ -221,6 +222,39 @@ describe("Orange Stake — orange-perishable-roll modifier (#558)", () => {
   });
 });
 
+describe("Gold Stake — gold-rental-roll modifier (#559)", () => {
+  test("Gold Stake carries the gold-rental-roll modifier", () => {
+    expect(hasStakeModifier("gold", "gold-rental-roll")).toBe(true);
+  });
+
+  test("Orange Stake does not carry the gold-rental-roll modifier (negative)", () => {
+    expect(hasStakeModifier("orange", "gold-rental-roll")).toBe(false);
+  });
+
+  test("the modifier's chance defaults to GOLD_RENTAL_ROLL_CHANCE (0.3)", () => {
+    const mod = getActiveStakeModifiers("gold").find(
+      (m) => m.kind === "gold-rental-roll",
+    );
+    expect(mod && "chance" in mod ? mod.chance : null).toBeCloseTo(0.3);
+  });
+
+  test("Gold inherits Orange's perishable-roll modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "orange-perishable-roll")).toBe(true);
+  });
+
+  test("Gold inherits Black's eternal-roll modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "black-eternal-roll")).toBe(true);
+  });
+
+  test("Gold inherits Blue's discard-delta modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "blue-discard-delta")).toBe(true);
+  });
+
+  test("Gold inherits Purple's ante-scaling modifier (cumulative)", () => {
+    expect(hasStakeModifier("gold", "purple-ante-scaling")).toBe(true);
+  });
+});
+
 describe("stakeStartingDiscardsDelta", () => {
   test("returns 0 for stakes below Blue", () => {
     expect(stakeStartingDiscardsDelta("black")).toBe(0);
@@ -266,5 +300,17 @@ describe("stakeStickerOdds", () => {
 
   test("returns perishable odds at Gold Stake too (cumulative)", () => {
     expect(stakeStickerOdds("gold")?.perishable).toBeCloseTo(0.3);
+  });
+
+  test("does not return rental odds at Orange Stake (negative)", () => {
+    expect(stakeStickerOdds("orange")?.rental).toBeUndefined();
+  });
+
+  test("returns rental odds at Gold Stake", () => {
+    expect(stakeStickerOdds("gold")?.rental).toBeCloseTo(0.3);
+  });
+
+  test("continues to return eternal odds at Gold Stake (cumulative with Black)", () => {
+    expect(stakeStickerOdds("gold")?.eternal).toBeCloseTo(0.3);
   });
 });
