@@ -242,14 +242,48 @@
 }
 
 .new-run-stake-description {
+  list-style: none;
   margin: 0;
-  font-size: 0.95rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
   color: #ced4da;
   min-height: 2.6em;
 }
 
-.new-run-stake-description strong {
-  color: #ffd43b;
+.new-run-stake-effect {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.new-run-stake-effect-selected {
+  background-color: rgba(255, 212, 59, 0.1);
+  outline: 1px solid rgba(255, 212, 59, 0.4);
+}
+
+.new-run-stake-effect-name {
+  font-weight: 600;
+  text-align: right;
+}
+
+.new-run-stake-effect-name-white { color: #f8f9fa; }
+.new-run-stake-effect-name-red { color: #fa5252; }
+.new-run-stake-effect-name-green { color: #51cf66; }
+.new-run-stake-effect-name-black { color: #adb5bd; }
+.new-run-stake-effect-name-blue { color: #339af0; }
+.new-run-stake-effect-name-purple { color: #cc5de8; }
+.new-run-stake-effect-name-orange { color: #ff922b; }
+.new-run-stake-effect-name-gold { color: #ffd43b; }
+
+.new-run-stake-effect-text {
+  color: #ced4da;
 }
 
 .new-run-actions {
