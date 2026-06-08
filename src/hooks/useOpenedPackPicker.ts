@@ -13,11 +13,13 @@ import {
 } from "../items/tarots";
 import {
   MAX_JOKERS,
+  createJokerCatalog,
+  createRandomJoker,
   effectiveJokerCount,
   withEdition,
 } from "../items/jokers";
 import { spectralNeedsTarget } from "../items/spectrals";
-import { extraConsumableSlots } from "../items/vouchers";
+import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
 
 export interface UseOpenedPackPickerResult {
   readonly pickFromOpenedPack: (optionIdx: number) => void;
@@ -95,6 +97,12 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         } else {
           triggerNope();
         }
+      } else if (effect.kind === "create-joker") {
+        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        const created = createRandomJoker(jokers, createJokerCatalog(), capacity);
+        if (!created) return;
+        play("pop");
+        setJokers((prev) => [...prev, created]);
       } else {
         if (packPreviewHand.length > 0) return;
         if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
