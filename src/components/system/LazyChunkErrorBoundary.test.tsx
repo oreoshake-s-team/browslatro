@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, vi } from "vitest";
 import type { ReactElement } from "react";
 import LazyChunkErrorBoundary, {
@@ -65,31 +64,7 @@ describe("LazyChunkErrorBoundary", () => {
     expect(screen.getByTestId("healthy-child")).toBeInTheDocument();
   });
 
-  test("renders the reload prompt when a chunk-load error is thrown", () => {
-    const err = new TypeError(
-      "Failed to fetch dynamically imported module: https://example.com/assets/RoundWonModal-XYZ.js",
-    );
-    render(
-      <LazyChunkErrorBoundary>
-        <Thrower error={err} />
-      </LazyChunkErrorBoundary>,
-    );
-    expect(screen.getByTestId("lazy-chunk-error")).toBeInTheDocument();
-  });
-
-  test("the reload prompt is accessible as an alertdialog", () => {
-    const err = new TypeError("Importing a module script failed.");
-    render(
-      <LazyChunkErrorBoundary>
-        <Thrower error={err} />
-      </LazyChunkErrorBoundary>,
-    );
-    expect(screen.getByRole("alertdialog")).toHaveAccessibleName(
-      "A new version is available",
-    );
-  });
-
-  test("clicking Reload invokes the onReload callback", async () => {
+  test("invokes onReload immediately when a chunk-load error is thrown", () => {
     const onReload = vi.fn();
     const err = new TypeError(
       "Failed to fetch dynamically imported module: https://example.com/assets/x.js",
@@ -99,8 +74,31 @@ describe("LazyChunkErrorBoundary", () => {
         <Thrower error={err} />
       </LazyChunkErrorBoundary>,
     );
-    await userEvent.click(screen.getByTestId("lazy-chunk-error-reload"));
     expect(onReload).toHaveBeenCalledTimes(1);
+  });
+
+  test("renders nothing in place of the crashed subtree on a chunk-load error", () => {
+    const onReload = vi.fn();
+    const err = new TypeError("Importing a module script failed.");
+    const { container } = render(
+      <LazyChunkErrorBoundary onReload={onReload}>
+        <Thrower error={err} />
+      </LazyChunkErrorBoundary>,
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  test("does not invoke onReload for unrelated runtime errors (negative)", () => {
+    const onReload = vi.fn();
+    const err = new TypeError("Cannot read property 'x' of undefined");
+    expect(() =>
+      render(
+        <LazyChunkErrorBoundary onReload={onReload}>
+          <Thrower error={err} />
+        </LazyChunkErrorBoundary>,
+      ),
+    ).toThrow(err);
+    expect(onReload).not.toHaveBeenCalled();
   });
 
   test("re-throws non-chunk errors so an outer boundary can handle them", () => {
