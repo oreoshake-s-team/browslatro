@@ -210,6 +210,8 @@ export function applyPerCardJokers(
       case "on-hand-type-stack-chips":
       case "on-played-card-count-stack-chips":
       case "on-played-rank-stack-chips":
+      case "on-no-face-stack-mult":
+      case "every-n-hands-xmult":
         break;
       default:
         assertNeverEffect(effect);

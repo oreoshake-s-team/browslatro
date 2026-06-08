@@ -96,6 +96,9 @@ export const RUNNER_CHIPS_PER_STRAIGHT = 15;
 export const SQUARE_JOKER_CARD_COUNT = 4;
 export const SQUARE_JOKER_CHIPS_PER_FOUR_CARD = 4;
 export const WEE_JOKER_CHIPS_PER_TWO = 8;
+export const RIDE_THE_BUS_MULT_PER_FACELESS_HAND = 1;
+export const LOYALTY_CARD_HANDS_PER_TRIGGER = 6;
+export const LOYALTY_CARD_X_MULT = 4;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
