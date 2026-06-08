@@ -86,7 +86,7 @@ describe("NewRunScreen", () => {
     ).toHaveLength(1);
   });
 
-  test("Red selected shows White then Red, in stake order (closes #833)", async () => {
+  test("Red selected shows Red on top then White below (selected-first order, closes #833)", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-red"));
@@ -94,12 +94,12 @@ describe("NewRunScreen", () => {
       .getByTestId("new-run-stake-description")
       .querySelectorAll("li");
     expect(Array.from(entries).map((el) => el.getAttribute("data-testid"))).toEqual([
-      "new-run-stake-effect-white",
       "new-run-stake-effect-red",
+      "new-run-stake-effect-white",
     ]);
   });
 
-  test("Gold selected shows all 8 cumulative effects in STAKE_ORDER (closes #833)", async () => {
+  test("Gold selected shows all 8 cumulative effects, gold-first then descending (closes #833)", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-gold"));
@@ -107,14 +107,14 @@ describe("NewRunScreen", () => {
       .getByTestId("new-run-stake-description")
       .querySelectorAll("li");
     expect(Array.from(entries).map((el) => el.getAttribute("data-testid"))).toEqual([
-      "new-run-stake-effect-white",
-      "new-run-stake-effect-red",
-      "new-run-stake-effect-green",
-      "new-run-stake-effect-black",
-      "new-run-stake-effect-blue",
-      "new-run-stake-effect-purple",
-      "new-run-stake-effect-orange",
       "new-run-stake-effect-gold",
+      "new-run-stake-effect-orange",
+      "new-run-stake-effect-purple",
+      "new-run-stake-effect-blue",
+      "new-run-stake-effect-black",
+      "new-run-stake-effect-green",
+      "new-run-stake-effect-red",
+      "new-run-stake-effect-white",
     ]);
   });
 

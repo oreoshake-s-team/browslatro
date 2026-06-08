@@ -174,7 +174,7 @@ export default function NewRunScreen({
             aria-live="polite"
             aria-label="Active stake effects"
           >
-            {getActiveStakes(stake).map((id) => {
+            {getActiveStakes(stake).slice().reverse().map((id) => {
               const spec = getStakeSpec(id);
               const isSelected = id === stake;
               return (
