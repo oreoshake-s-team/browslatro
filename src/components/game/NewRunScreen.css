@@ -171,17 +171,6 @@
   text-align: center;
 }
 
-.new-run-deck-description {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #ced4da;
-  min-height: 2.6em;
-}
-
-.new-run-deck-description strong {
-  color: #ffd43b;
-}
-
 .new-run-stake-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));

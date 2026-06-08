@@ -274,4 +274,73 @@ describe("NewRunScreen", () => {
     await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
     expect(screen.getByTestId("new-run-preview-hands")).toHaveTextContent("4");
   });
+
+  describe("deck tooltip on hover/focus (#835)", () => {
+    test("no static deck description paragraph is rendered (replaced by hover tooltip)", () => {
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      expect(
+        screen.queryByTestId("new-run-deck-description"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("hovering a deck tile opens a tooltip with that deck's description", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/Yellow Deck/);
+    });
+
+    test("the hovered tooltip carries the deck's effect description", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/extra/i);
+    });
+
+    test("hovering a different deck swaps the tooltip text", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      await user.unhover(screen.getByTestId("new-run-deck-yellow-deck"));
+      await user.hover(screen.getByTestId("new-run-deck-blue-deck"));
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/Blue Deck/);
+    });
+
+    test("focusing a deck tile via keyboard opens the tooltip", () => {
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      const tile = screen.getByTestId("new-run-deck-red-deck");
+      fireEvent.focus(tile);
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/Red Deck/);
+    });
+
+    test("Escape closes an open tooltip (negative)", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      expect(screen.getByRole("tooltip")).toBeInTheDocument();
+      fireEvent.keyDown(window, { key: "Escape" });
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    test("unhover closes the tooltip (negative)", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      const tile = screen.getByTestId("new-run-deck-yellow-deck");
+      await user.hover(tile);
+      await user.unhover(tile);
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    test("clicking a tile still selects it (selection unaffected by tooltip wiring)", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(<NewRunScreen onConfirm={onConfirm} />);
+      await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
+      await user.click(screen.getByTestId("new-run-confirm"));
+      expect(onConfirm).toHaveBeenCalledWith({
+        stake: "white",
+        deck: "yellow-deck",
+      });
+    });
+  });
 });
