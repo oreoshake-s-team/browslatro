@@ -1,5 +1,6 @@
 import type { Card } from "../../cards/types";
 import { handContains, type HandLabel } from "../../scoring/handEvaluator";
+import { isFaceCardWith } from "./scoring/utils";
 import type { Joker, JokerStateValue } from "./types";
 
 function counterState(value: number): JokerStateValue {
@@ -42,6 +43,14 @@ export function applyHandPlayedToJokerStates(
           ...joker,
           state: counterState(prevCount(joker) + effect.amount * matches),
         };
+      }
+      case "on-no-face-stack-mult": {
+        const anyFace = ctx.scoredCards.some((c) => isFaceCardWith(c, jokers));
+        if (anyFace) return { ...joker, state: counterState(0) };
+        return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
+      }
+      case "every-n-hands-xmult": {
+        return { ...joker, state: counterState(prevCount(joker) + 1) };
       }
       default:
         return joker;
