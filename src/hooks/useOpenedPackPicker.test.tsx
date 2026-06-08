@@ -226,3 +226,48 @@ describe("pickFromOpenedPack — existing handled effect-kind regressions", () =
     expect(useGame.getState().packPicksRemaining).toBe(2);
   });
 });
+
+describe("pickFromOpenedPack — Judgement (create-joker) fires immediately (fix #841)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("picking Judgement from an Arcana pack adds a joker to the equipped row", () => {
+    openPack([tarotOption("judgement")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().jokers).toHaveLength(1);
+  });
+
+  test("picking Judgement decrements packPicksRemaining", () => {
+    openPack([tarotOption("judgement")], [], 2);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(1);
+  });
+
+  test("picking Judgement does NOT add the tarot to the consumable tray (negative)", () => {
+    openPack([tarotOption("judgement")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("Judgement at MAX_JOKERS capacity does NOT decrement packPicksRemaining (negative)", () => {
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, 5));
+    openPack([tarotOption("judgement")], [], 2);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(2);
+  });
+
+  test("Judgement at MAX_JOKERS capacity does NOT add a joker (negative)", () => {
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, 5));
+    openPack([tarotOption("judgement")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().jokers).toHaveLength(5);
+  });
+});
