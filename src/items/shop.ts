@@ -15,6 +15,7 @@ import {
 } from "./jokers";
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
+import { hiddenSpectralForRoll } from "./spectrals";
 import type { TarotCard } from "./tarots";
 import type { OfferKindWeights } from "./vouchers";
 import { JOKER_BASE_PRICE } from "../constants";
@@ -436,8 +437,17 @@ function pickOfferByKind(
       return next ? tarotOffer(next) : null;
     }
     case "spectral": {
-      const next = pickRandom(args.spectralCatalog, [...picked.spectral], rng);
-      return next ? spectralOffer(next) : null;
+      const roll = rng();
+      const hidden = hiddenSpectralForRoll(roll, args.spectralCatalog);
+      if (hidden && !picked.spectral.has(hidden.id)) {
+        return spectralOffer(hidden);
+      }
+      const pool = args.spectralCatalog.filter((s) => !s.hidden);
+      const excludedIds = new Set(picked.spectral);
+      const eligible = pool.filter((s) => !excludedIds.has(s.id));
+      if (eligible.length === 0) return null;
+      const idx = Math.floor(roll * eligible.length);
+      return spectralOffer(eligible[idx]);
     }
     case "playing-card": {
       return rollPlayingCardOffer(rng, {

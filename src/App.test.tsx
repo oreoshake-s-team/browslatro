@@ -7,7 +7,7 @@ import {
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
-import { createSpectralCatalog } from "./items/spectrals";
+import { createPoolSpectralCatalog, createSpectralCatalog } from "./items/spectrals";
 import { voucherPickerRngConfig, type VoucherId } from "./items/vouchers";
 import { createPlanetCatalog } from "./items/planets";
 import {
@@ -3344,14 +3344,25 @@ describe("Double tag", () => {
   });
 });
 
+function spectralPickerRng(values: ReadonlyArray<number>): () => number {
+  let i = 0;
+  return () => {
+    const v = i < values.length ? values[i] : 0.5;
+    i += 1;
+    return v;
+  };
+}
+
 describe("Ectoplasm spectral", () => {
   test("picking Ectoplasm from a Spectral pack adds Negative to a joker", async () => {
     const originalFactory = initialJokersConfig.factory;
     initialJokersConfig.factory = () => [createGreedyJoker()];
     tagOfferRngConfig.rng = rngForTag("ethereal");
-    const spectrals = createSpectralCatalog();
-    const ectoplasmIdx = spectrals.findIndex((s) => s.id === "ectoplasm");
-    shopPickerRngConfig.rng = () => ectoplasmIdx / spectrals.length + 1e-9;
+    const pool = createPoolSpectralCatalog();
+    const ectoplasmIdx = pool.findIndex((s) => s.id === "ectoplasm");
+    shopPickerRngConfig.rng = spectralPickerRng([
+      ectoplasmIdx / pool.length + 1e-9,
+    ]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     initialJokersConfig.factory = originalFactory;
@@ -3364,9 +3375,11 @@ describe("Ectoplasm spectral", () => {
 describe("Ouija spectral", () => {
   test("picking Ouija from a Spectral pack converts the hand to one rank", async () => {
     tagOfferRngConfig.rng = rngForTag("ethereal");
-    const spectrals = createSpectralCatalog();
-    const ouijaIdx = spectrals.findIndex((s) => s.id === "ouija");
-    shopPickerRngConfig.rng = () => ouijaIdx / spectrals.length + 1e-9;
+    const pool = createPoolSpectralCatalog();
+    const ouijaIdx = pool.findIndex((s) => s.id === "ouija");
+    shopPickerRngConfig.rng = spectralPickerRng([
+      ouijaIdx / pool.length + 1e-9,
+    ]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
@@ -3379,11 +3392,9 @@ describe("Ouija spectral", () => {
 });
 
 describe("The Soul spectral", () => {
-  test("picking The Soul from a Spectral pack creates a Legendary joker", async () => {
+  test("Soul replaces the first slot when its replacement roll hits", async () => {
     tagOfferRngConfig.rng = rngForTag("ethereal");
-    const spectrals = createSpectralCatalog();
-    const soulIdx = spectrals.findIndex((s) => s.id === "soul");
-    shopPickerRngConfig.rng = () => soulIdx / spectrals.length + 1e-9;
+    shopPickerRngConfig.rng = spectralPickerRng([0.004, 0.5]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const before = screen.queryAllByTestId(/^joker-tile-filled-/).length;

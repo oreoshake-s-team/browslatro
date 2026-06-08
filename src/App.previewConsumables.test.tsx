@@ -51,6 +51,7 @@ async function openPoolPack(
 describe("Spectral packs show a preview hand (#401)", () => {
   test("opening a forced Spectral pack renders a preview hand", async () => {
     mockShuffleConfig.useIdentity = true;
+    shopPickerRngConfig.rng = () => 0.5;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
