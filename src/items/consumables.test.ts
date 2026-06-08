@@ -197,13 +197,22 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 1)).toBeNull();
   });
 
-  test("previewMode blocks a duplicate-selected spectral even with 1 selected", () => {
+  test("previewMode allows a duplicate-selected spectral with a valid preview selection (closes #843)", () => {
     const cryptid = createSpectralCatalog().find(
       (s) => s.effect.kind === "duplicate-selected",
     );
     if (!cryptid) throw new Error("no duplicate-selected spectral in catalog");
     const c: Consumable = { kind: "spectral", card: cryptid };
-    expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
+    expect(consumableUseBlock(c, 1, true)).toBeNull();
+  });
+
+  test("previewMode blocks a duplicate-selected spectral with zero preview selection", () => {
+    const cryptid = createSpectralCatalog().find(
+      (s) => s.effect.kind === "duplicate-selected",
+    );
+    if (!cryptid) throw new Error("no duplicate-selected spectral in catalog");
+    const c: Consumable = { kind: "spectral", card: cryptid };
+    expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
   });
 
   test("previewMode allows an enhancement tarot with a valid preview selection", () => {
@@ -277,13 +286,22 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 2)).toBeNull();
   });
 
-  test("previewMode blocks The Hanged Man even with a valid selection", () => {
+  test("previewMode allows The Hanged Man with a valid preview selection (closes #843)", () => {
     const hangedMan = createTarotCatalog().find(
       (t) => t.id === "the-hanged-man",
     );
     if (!hangedMan) throw new Error("no hanged-man in catalog");
     const c: Consumable = { kind: "tarot", card: hangedMan };
-    expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
+    expect(consumableUseBlock(c, 1, true)).toBeNull();
+  });
+
+  test("previewMode blocks The Hanged Man with zero preview selection", () => {
+    const hangedMan = createTarotCatalog().find(
+      (t) => t.id === "the-hanged-man",
+    );
+    if (!hangedMan) throw new Error("no hanged-man in catalog");
+    const c: Consumable = { kind: "tarot", card: hangedMan };
+    expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
   });
 
   test("consumableUseBlock blocks Strength with zero selection", () => {
@@ -307,10 +325,17 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 2)).toBeNull();
   });
 
-  test("previewMode blocks Strength even with a valid selection", () => {
+  test("previewMode allows Strength with a valid preview selection (closes #843)", () => {
     const strength = createTarotCatalog().find((t) => t.id === "strength");
     if (!strength) throw new Error("no strength in catalog");
     const c: Consumable = { kind: "tarot", card: strength };
-    expect(consumableUseBlock(c, 1, true)).toMatch(/pack/);
+    expect(consumableUseBlock(c, 1, true)).toBeNull();
+  });
+
+  test("previewMode blocks Strength with zero preview selection", () => {
+    const strength = createTarotCatalog().find((t) => t.id === "strength");
+    if (!strength) throw new Error("no strength in catalog");
+    const c: Consumable = { kind: "tarot", card: strength };
+    expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
   });
 });

@@ -43,7 +43,8 @@ import {
   mostPlayedHand,
   planetForHand,
 } from "../items/planets";
-import { createTarotCatalog } from "../items/tarots";
+import { createTarotCatalog, nextRankUp } from "../items/tarots";
+import { pickRandomCardEdition } from "../cards/editions";
 import {
   createSpectralCatalog,
   transmuteHand,
@@ -121,6 +122,9 @@ export interface ActionsState {
   applySuitToSelectedPreviewCards: (suit: Suit) => void;
   applyDeathCopyToSelectedPreviewCards: () => void;
   duplicateSelectedPreviewCards: (copies: number) => void;
+  destroySelectedPreviewCards: () => void;
+  rankUpSelectedPreviewCards: () => void;
+  applyAuraSelectedPreviewCards: () => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
   rerollBoss: () => boolean;
@@ -754,6 +758,58 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     }
     s.setAddedCards((prev) => [...prev, ...additions]);
     s.setPackPreviewHand((prev) => [...prev, ...additions]);
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  destroySelectedPreviewCards: () => {
+    const s = get();
+    const ids = new Set<number>();
+    for (const c of s.packPreviewHand) {
+      if (s.packPreviewSelectedIds.has(c.id)) ids.add(c.id);
+    }
+    if (ids.size === 0) return;
+    s.setDestroyedCardIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) next.add(id);
+      return next;
+    });
+    s.setPackPreviewHand((prev) => prev.filter((c) => !ids.has(c.id)));
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  rankUpSelectedPreviewCards: () => {
+    const s = get();
+    const oldIds = new Set<number>();
+    const replacements: Card[] = [];
+    for (const c of s.packPreviewHand) {
+      if (!s.packPreviewSelectedIds.has(c.id)) continue;
+      oldIds.add(c.id);
+      replacements.push({ ...c, id: nextCardId(), rank: nextRankUp(c.rank) });
+    }
+    if (replacements.length === 0) return;
+    s.setDestroyedCardIds((prev) => {
+      const next = new Set(prev);
+      for (const id of oldIds) next.add(id);
+      return next;
+    });
+    s.setAddedCards((prev) => [...prev, ...replacements]);
+    const replacementByOldId = new Map<number, Card>();
+    const originalIds = [...oldIds];
+    originalIds.forEach((id, i) => replacementByOldId.set(id, replacements[i]));
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) => replacementByOldId.get(c.id) ?? c),
+    );
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  applyAuraSelectedPreviewCards: () => {
+    const s = get();
+    const ids = s.packPreviewSelectedIds;
+    if (ids.size === 0) return;
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        ids.has(c.id)
+          ? { ...c, edition: pickRandomCardEdition(Math.random) }
+          : c,
+      ),
+    );
     s.setPackPreviewSelectedIds(new Set());
   },
   toggleCard: (card) => {

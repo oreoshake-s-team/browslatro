@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { useConsumableActions } from "./useConsumableActions";
 import { useGame } from "../store/game";
 import { createTarotCatalog } from "../items/tarots";
+import { createSpectralCatalog } from "../items/spectrals";
 import { MAX_JOKERS, createJokerCatalog } from "../items/jokers";
 import type { Consumable } from "../items/consumables";
 import type { Card } from "../cards/types";
@@ -1005,5 +1006,149 @@ describe("useConsumableActions — The Fool (#618)", () => {
     act(() => result.current.useConsumable(0));
     const ids = useGame.getState().consumables.map((c) => c.card.id);
     expect(ids.includes("the-fool")).toBe(false);
+  });
+});
+
+function setPackPreview(cards: ReadonlyArray<Card>, selectedIds: ReadonlyArray<number>): void {
+  useGame.getState().setOpenedPack({
+    pool: "arcana",
+    variant: "normal",
+    options: [],
+  });
+  useGame.getState().setPackPreviewHand([...cards]);
+  useGame.getState().setPackPreviewSelectedIds(new Set(selectedIds));
+}
+
+describe("useConsumableActions — The Hanged Man on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([hangedManConsumable()]);
+  });
+
+  test("destroys selected preview cards from packPreviewHand", () => {
+    const cards: ReadonlyArray<Card> = [
+      { id: 1, rank: "9", suit: "diamonds" },
+      { id: 2, rank: "8", suit: "hearts" },
+      { id: 3, rank: "7", suit: "clubs" },
+    ];
+    setPackPreview(cards, [1, 2]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand.map((c) => c.id)).toEqual([3]);
+  });
+
+  test("adds destroyed ids to destroyedCardIds (deck persistence)", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, [1]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().destroyedCardIds.has(1)).toBe(true);
+  });
+
+  test("consumes the tarot from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, [1]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("does not dismiss the pack modal (openedPack persists)", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, [1]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().openedPack).not.toBeNull();
+  });
+
+  test("with 0 preview selection is a no-op and the tarot stays (negative)", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, []);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+});
+
+describe("useConsumableActions — Strength on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([strengthConsumable()]);
+  });
+
+  test("rank-ups the selected preview card", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 5, rank: "8", suit: "hearts" }];
+    setPackPreview(cards, [5]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const newCard = useGame.getState().packPreviewHand[0];
+    expect(newCard?.rank).toBe("9");
+  });
+
+  test("consumes the tarot from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 5, rank: "8", suit: "hearts" }];
+    setPackPreview(cards, [5]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+function cryptidConsumable(): Consumable {
+  const spec = createSpectralCatalog().find((s) => s.id === "cryptid");
+  if (!spec) throw new Error("Cryptid missing from catalog");
+  return { kind: "spectral", card: spec };
+}
+
+describe("useConsumableActions — Cryptid on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([cryptidConsumable()]);
+  });
+
+  test("duplicates the selected preview card", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 7, rank: "K", suit: "spades" }];
+    setPackPreview(cards, [7]);
+    const { result } = renderHook(() => useConsumableActions());
+    const before = useGame.getState().packPreviewHand.length;
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand.length).toBeGreaterThan(before);
+  });
+
+  test("consumes the spectral from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 7, rank: "K", suit: "spades" }];
+    setPackPreview(cards, [7]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+function auraConsumable(): Consumable {
+  const spec = createSpectralCatalog().find((s) => s.id === "aura");
+  if (!spec) throw new Error("Aura missing from catalog");
+  return { kind: "spectral", card: spec };
+}
+
+describe("useConsumableActions — Aura on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([auraConsumable()]);
+  });
+
+  test("applies an edition to the selected preview card", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 9, rank: "A", suit: "diamonds" }];
+    setPackPreview(cards, [9]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand[0]?.edition).toBeDefined();
+  });
+
+  test("consumes the spectral from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 9, rank: "A", suit: "diamonds" }];
+    setPackPreview(cards, [9]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
   });
 });
