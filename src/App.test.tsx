@@ -713,6 +713,63 @@ describe("Losing integration", () => {
   });
 });
 
+describe("Game Won integration (#384)", () => {
+  async function winFinalAnteBoss(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setBlind(3);
+    });
+    await user.click(screen.getByText(/^Win$/));
+  }
+
+  test("winning the Ante 8 Boss Blind shows the You Win! dialog", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    expect(
+      await screen.findByRole("dialog", { name: "You Win!" }),
+    ).toBeInTheDocument();
+  });
+
+  test("winning the Ante 8 Boss Blind does NOT open a shop", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    await screen.findByRole("dialog", { name: "You Win!" });
+    expect(screen.queryByRole("heading", { name: /^Shop$/ })).not.toBeInTheDocument();
+  });
+
+  test("winning the Ante 8 Boss Blind does NOT advance the ante past 8", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    await screen.findByRole("dialog", { name: "You Win!" });
+    expect(useGame.getState().ante).toBe(8);
+  });
+
+  test("clicking 'Start a new run' from the You Win! dialog returns the player to the New Run select screen", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    await screen.findByRole("dialog", { name: "You Win!" });
+    await user.click(screen.getByTestId("game-won-new-run"));
+    expect(screen.getByTestId("new-run-confirm")).toBeInTheDocument();
+  });
+
+  test("winning a pre-final-ante Boss Blind still advances to the next ante and does NOT show the You Win! dialog (negative)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(7);
+      useGame.getState().setBlind(3);
+    });
+    await user.click(screen.getByText(/^Win$/));
+    expect(
+      screen.queryByRole("dialog", { name: "You Win!" }),
+    ).not.toBeInTheDocument();
+    expect(useGame.getState().ante).toBe(8);
+  });
+});
+
 describe("High visibility preference integration", () => {
   beforeEach(resetHighVisibility);
   afterEach(resetHighVisibility);

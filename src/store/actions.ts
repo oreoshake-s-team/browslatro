@@ -84,7 +84,7 @@ import {
   computeStartingHands,
 } from "../run/roundSetup";
 import { calculateInterest } from "../scoring/payout";
-import { BlindValues } from "../constants";
+import { BlindValues, FINAL_ANTE } from "../constants";
 import { hasStakeModifier, stakeStickerOdds } from "../items/stakes";
 import type { Blind, Card, Enhancement, Hand, Seal, Suit } from "../cards/types";
 import {
@@ -426,6 +426,16 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       if (tagPayout > 0) {
         s.earn(tagPayout);
         s.setPendingTags([]);
+      }
+      if (s.ante === FINAL_ANTE) {
+        const post = get();
+        s.setPendingGameWon({
+          finalAnte: s.ante,
+          finalMoney: post.money,
+          handsPlayed: post.runStats.handsPlayed,
+          blindsSkipped: post.runStats.blindsSkipped,
+        });
+        return;
       }
       const nextAnte = s.ante + 1;
       s.setAnte(nextAnte);

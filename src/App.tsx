@@ -22,6 +22,7 @@ import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
 import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
+const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
 import { deckJokerSlotsDelta, deckStartingMoneyDelta } from "./items/decks";
@@ -191,6 +192,8 @@ function App() {
   const pendingWin = useGame((state) => state.pendingWin);
   const setPendingWin = useGame((state) => state.setPendingWin);
   const pendingLose = useGame((state) => state.pendingLose);
+  const pendingGameWon = useGame((state) => state.pendingGameWon);
+  const setPendingGameWon = useGame((state) => state.setPendingGameWon);
   const setPendingLose = useGame((state) => state.setPendingLose);
 
   const shopOffers = useGame((state) => state.shopOffers);
@@ -349,6 +352,11 @@ function App() {
     startNewGame();
   }
 
+  function dismissGameWonScreen() {
+    setPendingGameWon(null);
+    startNewGame();
+  }
+
   const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
     ? ({
         "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
@@ -456,6 +464,13 @@ function App() {
         <LazyChunkErrorBoundary>
           <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <RoundLostModal info={pendingLose} onContinue={dismissRoundLostModal} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
+      )}
+      {pendingGameWon && (
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
+            <GameWonScreen info={pendingGameWon} onNewRun={dismissGameWonScreen} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
