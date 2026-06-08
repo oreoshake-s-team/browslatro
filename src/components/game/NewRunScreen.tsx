@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 import {
   DEFAULT_STAKE,
   createStakeCatalog,
+  getActiveStakes,
+  getStakeSpec,
   type Stake,
 } from "../../items/stakes";
 import {
@@ -34,7 +36,6 @@ export default function NewRunScreen({
 }: NewRunScreenProps) {
   const [stake, setStake] = useState<Stake>(initialStake);
   const [deck, setDeck] = useState<Deck>(initialDeck);
-  const selectedStakeSpec = STAKES.find((s) => s.id === stake) ?? STAKES[0];
   const selectedDeckSpec = DECKS.find((d) => d.id === deck) ?? DECKS[0];
 
   const resourceCtx = {
@@ -167,13 +168,32 @@ export default function NewRunScreen({
               );
             })}
           </div>
-          <p
+          <ul
             className="new-run-stake-description"
             data-testid="new-run-stake-description"
             aria-live="polite"
+            aria-label="Active stake effects"
           >
-            <strong>{selectedStakeSpec.name}:</strong> {selectedStakeSpec.description}
-          </p>
+            {getActiveStakes(stake).slice().reverse().map((id) => {
+              const spec = getStakeSpec(id);
+              const isSelected = id === stake;
+              return (
+                <li
+                  key={id}
+                  className={`new-run-stake-effect new-run-stake-effect-${id}${
+                    isSelected ? " new-run-stake-effect-selected" : ""
+                  }`}
+                  data-testid={`new-run-stake-effect-${id}`}
+                  data-selected={isSelected || undefined}
+                >
+                  <span className={`new-run-stake-effect-name new-run-stake-effect-name-${id}`}>
+                    {spec.name}
+                  </span>
+                  <span className="new-run-stake-effect-text">{spec.description}</span>
+                </li>
+              );
+            })}
+          </ul>
         </section>
         <div className="new-run-actions">
           <button
