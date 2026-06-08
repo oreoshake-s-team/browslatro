@@ -323,10 +323,8 @@ export function usePlayHand({
       useGame.getState().setMoney(money - moneyPenalty);
     }
 
-    const label = detectHandLabel(
-      playedCards,
-      handEvalOptionsFromJokers(jokers.filter(isJokerActive)),
-    );
+    const evalOptions = handEvalOptionsFromJokers(jokers.filter(isJokerActive));
+    const label = detectHandLabel(playedCards, evalOptions);
     const isBossRound = blind === 3;
     if (
       isBossRound &&
@@ -366,6 +364,7 @@ export function usePlayHand({
     const scoring = expandRedSealRetriggers(
       getScoringCards(playedCards, label, {
         allCardsScore: allCardsScoreFromJokers(jokers),
+        evalOptions,
       }),
     ).filter((c) => !playedDebuffedIds.has(c.id));
     setJokers((prev) =>
