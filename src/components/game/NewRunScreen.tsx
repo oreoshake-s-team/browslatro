@@ -1,6 +1,7 @@
 import "./NewRunScreen.css";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
+import DeckTooltip from "./DeckTooltip";
 import {
   DEFAULT_STAKE,
   createStakeCatalog,
@@ -36,7 +37,28 @@ export default function NewRunScreen({
 }: NewRunScreenProps) {
   const [stake, setStake] = useState<Stake>(initialStake);
   const [deck, setDeck] = useState<Deck>(initialDeck);
-  const selectedDeckSpec = DECKS.find((d) => d.id === deck) ?? DECKS[0];
+  const deckTooltipIdBase = useId();
+  const [deckTooltip, setDeckTooltip] = useState<{
+    readonly id: Deck;
+    readonly rect: DOMRect;
+  } | null>(null);
+
+  useEffect(() => {
+    if (deckTooltip === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setDeckTooltip(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [deckTooltip]);
+
+  function openDeckTooltip(id: Deck, el: HTMLElement) {
+    setDeckTooltip({ id, rect: el.getBoundingClientRect() });
+  }
+
+  function closeDeckTooltip(id: Deck) {
+    setDeckTooltip((prev) => (prev?.id === id ? null : prev));
+  }
 
   const resourceCtx = {
     blind: 1 as const,
@@ -108,6 +130,8 @@ export default function NewRunScreen({
           >
             {DECKS.map((spec) => {
               const isSelected = spec.id === deck;
+              const tooltipId = `${deckTooltipIdBase}-${spec.id}`;
+              const open = deckTooltip?.id === spec.id;
               return (
                 <div key={spec.id} className="new-run-deck-cell">
                   <button
@@ -119,21 +143,26 @@ export default function NewRunScreen({
                     }`}
                     data-testid={`new-run-deck-${spec.id}`}
                     data-selected={isSelected || undefined}
+                    aria-describedby={open ? tooltipId : undefined}
+                    onMouseEnter={(e) => openDeckTooltip(spec.id, e.currentTarget)}
+                    onMouseLeave={() => closeDeckTooltip(spec.id)}
+                    onFocus={(e) => openDeckTooltip(spec.id, e.currentTarget)}
+                    onBlur={() => closeDeckTooltip(spec.id)}
                     onClick={() => setDeck(spec.id)}
                   >
                     <span className="new-run-deck-name">{spec.name}</span>
+                    {open && deckTooltip && (
+                      <DeckTooltip
+                        id={tooltipId}
+                        spec={spec}
+                        anchorRect={deckTooltip.rect}
+                      />
+                    )}
                   </button>
                 </div>
               );
             })}
           </div>
-          <p
-            className="new-run-deck-description"
-            data-testid="new-run-deck-description"
-            aria-live="polite"
-          >
-            <strong>{selectedDeckSpec.name}:</strong> {selectedDeckSpec.description}
-          </p>
         </section>
         <section
           className="new-run-section new-run-section-stake"
