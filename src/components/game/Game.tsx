@@ -8,6 +8,7 @@ import Consumables from "../consumables/Consumables";
 import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
+import LazyChunkSpinner from "../system/LazyChunkSpinner";
 const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
 const NopeAnimation = lazy(() => import("./NopeAnimation"));
@@ -187,12 +188,12 @@ export default function Game({
         )}
       </div>
       {packOpen && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <PackOpenModal {...packOpen} />
         </Suspense>
       )}
       {shop && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LazyChunkSpinner />}>
           <Shop {...shop} disabled={!!packOpen} />
         </Suspense>
       )}
@@ -264,7 +265,7 @@ export default function Game({
         </div>
       )}
       <ModifierPanel />
-      <Suspense fallback={null}>
+      <Suspense fallback={<LazyChunkSpinner />}>
         <NopeAnimation triggerKey={nopeTriggerKey} />
       </Suspense>
     </main>

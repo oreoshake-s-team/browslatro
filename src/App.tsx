@@ -18,6 +18,7 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
+import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
 import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
@@ -446,14 +447,14 @@ function App() {
       />
       {pendingWin && (
         <LazyChunkErrorBoundary>
-          <Suspense fallback={null}>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
       {pendingLose && (
         <LazyChunkErrorBoundary>
-          <Suspense fallback={null}>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <RoundLostModal info={pendingLose} onContinue={dismissRoundLostModal} />
           </Suspense>
         </LazyChunkErrorBoundary>
@@ -472,7 +473,7 @@ function App() {
       )}
       {pendingJokerGrantIds.length > 0 && (
         <LazyChunkErrorBoundary>
-          <Suspense fallback={null}>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <JokerGrantAcknowledge
               jokers={pendingJokerGrantIds.flatMap((id) => {
                 const j = jokers.find((joker) => joker.id === id);
@@ -488,7 +489,7 @@ function App() {
         openedPack === null &&
         pendingJokerGrantIds.length === 0 && (
           <LazyChunkErrorBoundary>
-            <Suspense fallback={null}>
+            <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
               <BlindSelectScreenLazy
                 ante={ante}
                 currentBlind={blind}

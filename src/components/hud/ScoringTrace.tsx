@@ -1,6 +1,7 @@
 import { Suspense, lazy, useCallback, useState } from "react";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
+import LazyChunkSpinner from "../system/LazyChunkSpinner";
 import "./ScoringTrace.css";
 
 const ScoringTraceModal = lazy(() => import("./ScoringTraceModal"));
@@ -37,7 +38,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
         <ScoringTraceContent events={events} />
       </div>
       {isExpanded ? (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <ScoringTraceModal events={events} onClose={close} />
         </Suspense>
       ) : null}
