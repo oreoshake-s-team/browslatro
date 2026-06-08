@@ -92,6 +92,10 @@ export const CREDIT_CARD_DEBT_FLOOR = 20;
 export const BURGLAR_HANDS = 3;
 export const BURGLAR_DISCARDS_OVERRIDE = 0;
 export const SPARE_TROUSERS_MULT_PER_TWO_PAIR = 2;
+export const RUNNER_CHIPS_PER_STRAIGHT = 15;
+export const SQUARE_JOKER_CARD_COUNT = 4;
+export const SQUARE_JOKER_CHIPS_PER_FOUR_CARD = 4;
+export const WEE_JOKER_CHIPS_PER_TWO = 8;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

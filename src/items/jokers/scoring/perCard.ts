@@ -207,6 +207,9 @@ export function applyPerCardJokers(
       case "on-first-discard-of-round-money-when-size":
       case "per-hand-play-count-mult":
       case "on-hand-type-stack-mult":
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips":
         break;
       default:
         assertNeverEffect(effect);

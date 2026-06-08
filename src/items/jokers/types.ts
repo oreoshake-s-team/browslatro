@@ -168,6 +168,21 @@ export type JokerEffect =
       readonly kind: "on-hand-type-stack-mult";
       readonly requires: HandLabel;
       readonly amount: number;
+    }
+  | {
+      readonly kind: "on-hand-type-stack-chips";
+      readonly requires: HandLabel;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-played-card-count-stack-chips";
+      readonly count: number;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-played-rank-stack-chips";
+      readonly ranks: ReadonlyArray<Rank>;
+      readonly amount: number;
     };
 
 export type JokerStateValue =

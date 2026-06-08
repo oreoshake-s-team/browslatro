@@ -51,6 +51,7 @@ import {
   createRaisedFistJoker,
   createReservedParkingJoker,
   createRoughGemJoker,
+  createRunnerJoker,
   createScaryFaceJoker,
   createScholarJoker,
   createSeeingDoubleJoker,
@@ -61,6 +62,7 @@ import {
   createSmileyFaceJoker,
   createSpareTrousersJoker,
   createSplashJoker,
+  createSquareJokerJoker,
   createSteelJoker,
   createStoneJoker,
   createStuntmanJoker,
@@ -75,6 +77,7 @@ import {
   createTribouletJoker,
   createTroubadourJoker,
   createWalkieTalkieJoker,
+  createWeeJokerJoker,
   createWilyJoker,
   createWrathfulJoker,
   createYorickJoker,
@@ -170,5 +173,8 @@ export function createJokerCatalog(): Joker[] {
     createOopsAllSixesJoker(),
     createSupernovaJoker(),
     createSpareTrousersJoker(),
+    createRunnerJoker(),
+    createSquareJokerJoker(),
+    createWeeJokerJoker(),
   ];
 }
