@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test } from "vitest";
 import ModifierPanel from "./ModifierPanel";
@@ -85,6 +85,40 @@ describe("ModifierPanel", () => {
     const before = useGame.getState().handSizeModifier;
     await user.click(screen.getByText(/Hand \+1/));
     expect(useGame.getState().handSizeModifier).toBe(before + 1);
+  });
+
+  test("Ante +1 button increments ante by 1 (closes #844)", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPanel />);
+    await openModifiers(user);
+    act(() => useGame.getState().setAnte(3));
+    await user.click(screen.getByText(/Ante \+1/));
+    expect(useGame.getState().ante).toBe(4);
+  });
+
+  test("Ante −1 button decrements ante by 1 (closes #844)", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPanel />);
+    await openModifiers(user);
+    act(() => useGame.getState().setAnte(4));
+    await user.click(screen.getByText(/Ante −1/));
+    expect(useGame.getState().ante).toBe(3);
+  });
+
+  test("Ante +1 is disabled on the final ante (negative — closes #844)", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPanel />);
+    await openModifiers(user);
+    act(() => useGame.getState().setAnte(8));
+    expect(screen.getByText(/Ante \+1/)).toBeDisabled();
+  });
+
+  test("Ante −1 is disabled on ante 1 (negative — closes #844)", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPanel />);
+    await openModifiers(user);
+    act(() => useGame.getState().setAnte(1));
+    expect(screen.getByText(/Ante −1/)).toBeDisabled();
   });
 
   test("Force Probabilities toggles the flag", async () => {
