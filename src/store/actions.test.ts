@@ -16,6 +16,7 @@ import { createDeck } from "../cards/deck";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
 import { applyBossFaceDown, createBossCatalog } from "../items/bosses";
+import { FINAL_ANTE } from "../constants";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -585,6 +586,56 @@ describe("game actions slice", () => {
     game.setJokers([base]);
     game.handleWin({ interest: 0, interestWallet: 0 });
     expect(hasSticker(useGame.getState().jokers[0], "perishable")).toBe(false);
+  });
+
+  test("handleWin on the final-ante Boss Blind sets pendingGameWon (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().pendingGameWon).not.toBeNull();
+  });
+
+  test("handleWin on the final-ante Boss Blind does NOT advance ante past the final ante (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(FINAL_ANTE);
+  });
+
+  test("handleWin on the final-ante Boss Blind does NOT populate shopOffers (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setShopOffers(null);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().shopOffers).toBeNull();
+  });
+
+  test("handleWin on a pre-final Boss Blind advances ante and leaves pendingGameWon null (negative — closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE - 1);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(FINAL_ANTE);
+    expect(useGame.getState().pendingGameWon).toBeNull();
+  });
+
+  test("pendingGameWon snapshot carries finalAnte, money, hands played, and skips (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setMoney(0);
+    game.setRunStats({ handsPlayed: 17, unusedDiscards: 4, blindsSkipped: 2 });
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const snap = useGame.getState().pendingGameWon;
+    expect(snap).toEqual({
+      finalAnte: FINAL_ANTE,
+      finalMoney: useGame.getState().money,
+      handsPlayed: 17,
+      blindsSkipped: 2,
+    });
   });
 
   test("handleWin awards $0 for Small Blind on Red Stake (#553)", () => {
