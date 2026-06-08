@@ -330,6 +330,20 @@ describe("The Serpent — fixed refill count (#811)", () => {
     expect(useGame.getState().dealt.hand.length).toBe(7);
   });
 
+  test("discarding 1 card under The Serpent grows the hand to 10 (8 − 1 + 3), exceeding normal hand size", () => {
+    setupSerpentRound([1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15, 16]);
+    useGame.getState().setSelectedIds(new Set([1]));
+    useGame.getState().setRemainingDiscards(3);
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+    });
+
+    expect(useGame.getState().dealt.hand.length).toBe(10);
+  });
+
   test("clamps the Serpent refill to remaining deck size when deck has fewer than 3 cards", () => {
     setupSerpentRound([1, 2, 3, 4, 5, 6, 7, 8], [9, 10]);
     useGame.getState().setSelectedIds(new Set([1, 2, 3, 4]));
