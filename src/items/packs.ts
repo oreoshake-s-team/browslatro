@@ -9,6 +9,56 @@ import { SEAL_KINDS } from "../cards/seals";
 import { RANKS, SUITS, nextCardId } from "../cards/deck";
 import { rollChance } from "../dev/chanceOverride";
 
+const FORCE_PACK_TAROT_IDS_KEY = "browslatro:forcePackTarotIds";
+const FORCE_PACK_SPECTRAL_IDS_KEY = "browslatro:forcePackSpectralIds";
+const FORCE_PACK_VARIANT_KEY = "browslatro:forcePackVariant";
+
+function readForcedPackVariant(): PackVariant | null {
+  try {
+    const raw = window.localStorage.getItem(FORCE_PACK_VARIANT_KEY);
+    if (raw === "normal" || raw === "jumbo" || raw === "mega") return raw;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function readForcedIdsFromStorage(key: string): ReadonlyArray<string> {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    return raw.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function readForcedPackTarotIds(
+  catalog: ReadonlyArray<TarotCard>,
+): ReadonlyArray<TarotCard> {
+  const ids = readForcedIdsFromStorage(FORCE_PACK_TAROT_IDS_KEY);
+  if (ids.length === 0) return [];
+  const out: TarotCard[] = [];
+  for (const id of ids) {
+    const tarot = catalog.find((t) => t.id === id);
+    if (tarot) out.push(tarot);
+  }
+  return out;
+}
+
+function readForcedPackSpectralIds(
+  catalog: ReadonlyArray<SpectralCard>,
+): ReadonlyArray<SpectralCard> {
+  const ids = readForcedIdsFromStorage(FORCE_PACK_SPECTRAL_IDS_KEY);
+  if (ids.length === 0) return [];
+  const out: SpectralCard[] = [];
+  for (const id of ids) {
+    const spectral = catalog.find((s) => s.id === id);
+    if (spectral) out.push(spectral);
+  }
+  return out;
+}
+
 export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral" | "standard";
 
 export const STANDARD_ENHANCEMENT_CHANCE = 0.4;
@@ -131,6 +181,20 @@ export interface RollPackOptionsArgs {
 
 export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOption> {
   const want = packOptionsCount(args.pool, args.variant);
+  if (args.pool === "arcana") {
+    const forced = readForcedPackTarotIds(args.tarotCatalog);
+    if (forced.length > 0) {
+      const sliced = forced.slice(0, want);
+      return sliced.map((tarot) => ({ kind: "tarot" as const, tarot }));
+    }
+  }
+  if (args.pool === "spectral") {
+    const forced = readForcedPackSpectralIds(args.spectralCatalog);
+    if (forced.length > 0) {
+      const sliced = forced.slice(0, want);
+      return sliced.map((spectral) => ({ kind: "spectral" as const, spectral }));
+    }
+  }
   if (args.pool === "celestial") {
     const guaranteed = args.guaranteedPlanetId
       ? args.planetCatalog.find((p) => p.id === args.guaranteedPlanetId) ?? null
@@ -264,7 +328,7 @@ export interface RollPackArgs {
 
 export function rollPack(args: RollPackArgs): PackOffer {
   const pool = rollPackPool(args.rng);
-  const variant = rollPackVariant(args.rng);
+  const variant = readForcedPackVariant() ?? rollPackVariant(args.rng);
   const options = rollPackOptions({
     pool,
     variant,
