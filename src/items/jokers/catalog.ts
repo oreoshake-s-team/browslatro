@@ -9,7 +9,9 @@ import {
   createBlackboardJoker,
   createBloodstoneJoker,
   createBlueJoker,
+  createBlueprintJoker,
   createBootstrapsJoker,
+  createBrainstormJoker,
   createBullJoker,
   createBurglarJoker,
   createBusinessCardJoker,
@@ -180,5 +182,7 @@ export function createJokerCatalog(): Joker[] {
     createWeeJokerJoker(),
     createRideTheBusJoker(),
     createLoyaltyCardJoker(),
+    createBlueprintJoker(),
+    createBrainstormJoker(),
   ];
 }
