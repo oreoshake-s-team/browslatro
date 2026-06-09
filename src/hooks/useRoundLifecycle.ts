@@ -21,7 +21,7 @@ import {
   createDeck,
   resetCardIds,
 } from "../cards/deck";
-import { initialDeal } from "../cards/deckBuild";
+import { fullDeckPile, initialDeal } from "../cards/deckBuild";
 import {
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
@@ -100,14 +100,11 @@ export function useRoundLifecycle({
   );
   const pendingDouble = useGame((s) => s.pendingDouble);
   const setPendingDouble = useGame((s) => s.setPendingDouble);
-  const setExtraPackSlots = useGame((s) => s.setExtraPackSlots);
-  const setPendingForcedPacks = useGame((s) => s.setPendingForcedPacks);
   const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
   const setDevMultBonus = useGame((s) => s.setDevMultBonus);
   const setDevMultFactor = useGame((s) => s.setDevMultFactor);
   const setForceProbabilities = useGame((s) => s.setForceProbabilities);
   const setJokers = useGame((s) => s.setJokers);
-  const setConsumables = useGame((s) => s.setConsumables);
   const setPendingTags = useGame((s) => s.setPendingTags);
   const runStats = useGame((s) => s.runStats);
   const setRunStats = useGame((s) => s.setRunStats);
@@ -214,8 +211,6 @@ export function useRoundLifecycle({
     setHandSizeModifier(0);
     setPendingNextRoundHandSize(0);
     setPendingDouble(false);
-    setExtraPackSlots(0);
-    setPendingForcedPacks([]);
     setDevChipsBonus(0);
     setDevMultBonus(0);
     setDevMultFactor(1);
@@ -223,17 +218,16 @@ export function useRoundLifecycle({
     setJokers(initialJokersConfig.factory());
     useGame.getState().resetStats();
     resetCardIds();
-    setBaseDeckCards(
-      applyDeckCompositionTransforms(
-        createDeck(),
-        deckCompositionTransforms(selectedDeck),
-      ),
+    const freshBaseDeck = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms(selectedDeck),
     );
+    setBaseDeckCards(freshBaseDeck);
     setDestroyedCardIds(new Set());
     setAddedCards([]);
     setCardEnhancementsById(new Map());
     setCardSealsById(new Map());
-    setConsumables([]);
+    setDealt(fullDeckPile(freshBaseDeck));
     useGame.getState().resetVouchers();
     setCurrentAnteVouchers(
       pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
@@ -250,6 +244,17 @@ export function useRoundLifecycle({
     setPendingShopMods([]);
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
+    const store = useGame.getState();
+    store.resetConsumables();
+    store.resetHand();
+    store.resetShop();
+    store.resetPacks();
+    store.resetScoring();
+    store.resetAnimations();
+    store.resetLastUsedConsumable();
+    store.setHandPlaySignal(0);
+    resetDiscardPipeline();
+    resetScoring();
     setPendingBlindSelect(true);
     setPendingRunSelect(true);
   }

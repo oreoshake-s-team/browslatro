@@ -1,0 +1,167 @@
+import { renderHook, act } from "@testing-library/react";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { useRoundLifecycle } from "./useRoundLifecycle";
+import { useGame } from "../store/game";
+import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
+import type { Card } from "../cards/types";
+
+function card(id: number): Card {
+  return { id, rank: "5", suit: "clubs" };
+}
+
+function seedResidue(): void {
+  const s = useGame.getState();
+  s.setDealt({
+    hand: [card(1), card(2), card(3)],
+    remaining: [card(4), card(5)],
+  });
+  s.setChips(120);
+  s.setMultiplier(15);
+  s.setRoundScore(800);
+  s.setScoringEvents([{ kind: "chips-delta", amount: 10, source: "test" }]);
+  s.setRemainingHands(0);
+  s.setRemainingDiscards(0);
+  s.setDiscardsUsedThisRound(3);
+  s.setSelectedIds(new Set([1, 2]));
+  s.setHandDisplayOrder([3, 2, 1]);
+  s.setDiscardingIds(new Set([1]));
+  s.setShopOffers([]);
+  s.setExtraPackSlots(2);
+  s.setPackPicksRemaining(3);
+  s.setPendingForcedPacks(["arcana"]);
+  s.setPackPreviewHand([card(9)]);
+  s.triggerNope();
+  s.setHandPlaySignal(7);
+  s.setDraggingConsumableIndex(0);
+}
+
+function runStartNewGame(): void {
+  const { result } = renderHook(() =>
+    useRoundLifecycle({
+      applyGainedTag: vi.fn(),
+      resetScoring: vi.fn(),
+      resetDiscardPipeline: vi.fn(),
+    }),
+  );
+  act(() => result.current.startNewGame());
+}
+
+describe("useRoundLifecycle.startNewGame board reset (closes #851)", () => {
+  beforeEach(() => {
+    seedResidue();
+  });
+
+  test("clears the on-screen hand", () => {
+    runStartNewGame();
+    expect(useGame.getState().dealt.hand.length).toBe(0);
+  });
+
+  test("refills the deck pile to a full 52-card deck", () => {
+    runStartNewGame();
+    expect(useGame.getState().dealt.remaining.length).toBe(52);
+  });
+
+  test("resets the chip counter", () => {
+    runStartNewGame();
+    expect(useGame.getState().chips).toBe(0);
+  });
+
+  test("resets the multiplier", () => {
+    runStartNewGame();
+    expect(useGame.getState().multiplier).toBe(0);
+  });
+
+  test("resets the round score", () => {
+    runStartNewGame();
+    expect(useGame.getState().roundScore).toBe(0);
+  });
+
+  test("clears the scoring trace events", () => {
+    runStartNewGame();
+    expect(useGame.getState().scoringEvents.length).toBe(0);
+  });
+
+  test("resets remaining hands to the starting count", () => {
+    runStartNewGame();
+    expect(useGame.getState().remainingHands).toBe(STARTING_HANDS);
+  });
+
+  test("resets remaining discards to the starting count", () => {
+    runStartNewGame();
+    expect(useGame.getState().remainingDiscards).toBe(STARTING_DISCARDS);
+  });
+
+  test("resets discards used this round", () => {
+    runStartNewGame();
+    expect(useGame.getState().discardsUsedThisRound).toBe(0);
+  });
+
+  test("clears the card selection", () => {
+    runStartNewGame();
+    expect(useGame.getState().selectedIds.size).toBe(0);
+  });
+
+  test("clears the dealt-card display order", () => {
+    runStartNewGame();
+    expect(useGame.getState().handDisplayOrder.length).toBe(0);
+  });
+
+  test("clears in-flight discarding ids", () => {
+    runStartNewGame();
+    expect(useGame.getState().discardingIds.size).toBe(0);
+  });
+
+  test("clears shop offers", () => {
+    runStartNewGame();
+    expect(useGame.getState().shopOffers).toBeNull();
+  });
+
+  test("clears extra pack slots", () => {
+    runStartNewGame();
+    expect(useGame.getState().extraPackSlots).toBe(0);
+  });
+
+  test("clears pending pack picks", () => {
+    runStartNewGame();
+    expect(useGame.getState().packPicksRemaining).toBe(0);
+  });
+
+  test("clears pending forced packs", () => {
+    runStartNewGame();
+    expect(useGame.getState().pendingForcedPacks.length).toBe(0);
+  });
+
+  test("clears the pack preview hand", () => {
+    runStartNewGame();
+    expect(useGame.getState().packPreviewHand.length).toBe(0);
+  });
+
+  test("resets the nope animation key", () => {
+    runStartNewGame();
+    expect(useGame.getState().nopeTriggerKey).toBe(0);
+  });
+
+  test("resets the hand-play signal", () => {
+    runStartNewGame();
+    expect(useGame.getState().handPlaySignal).toBe(0);
+  });
+
+  test("clears a dragging consumable index", () => {
+    runStartNewGame();
+    expect(useGame.getState().draggingConsumableIndex).toBeNull();
+  });
+});
+
+describe("useRoundLifecycle.startNewGame preserves the run selection (#851)", () => {
+  test("does NOT reset the chosen deck back to the default", () => {
+    useGame.getState().setSelectedDeck("blue-deck");
+    runStartNewGame();
+    expect(useGame.getState().selectedDeck).toBe("blue-deck");
+  });
+
+  test("does NOT reset the chosen stake back to the default", () => {
+    useGame.getState().setSelectedStake("red");
+    runStartNewGame();
+    expect(useGame.getState().selectedStake).toBe("red");
+  });
+});
