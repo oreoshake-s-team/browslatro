@@ -16,6 +16,7 @@ import {
   pickBossForAnte,
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
+import { readSeededConsumables } from "./dev/seedConsumables";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
@@ -202,6 +203,12 @@ function App() {
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
   const consumables = useGame((state) => state.consumables);
+  const setConsumables = useGame((state) => state.setConsumables);
+  useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
+    const seeded = readSeededConsumables();
+    if (seeded.length > 0) setConsumables(seeded);
+  }, [setConsumables]);
   const openedPack = useGame((state) => state.openedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);

@@ -8,6 +8,7 @@ import {
   packOptionsCount,
   packPickLimit,
   packPrice,
+  readForcedPackPools,
   rollPack,
   rollPackForPool,
   rollPackOptions,
@@ -686,6 +687,36 @@ describe("rollPackForPool", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("readForcedPackPools (dev flag, #856)", () => {
+  function stubForcedPools(value: string | null) {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackPool" ? value : null,
+      },
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("returns the pools listed in the flag", () => {
+    stubForcedPools("arcana,spectral");
+    expect(readForcedPackPools()).toEqual(["arcana", "spectral"]);
+  });
+
+  test("drops tokens that are not valid pack pools", () => {
+    stubForcedPools("arcana,bogus");
+    expect(readForcedPackPools()).toEqual(["arcana"]);
+  });
+
+  test("returns an empty list when the flag is unset", () => {
+    stubForcedPools(null);
+    expect(readForcedPackPools()).toEqual([]);
   });
 });
 

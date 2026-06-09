@@ -707,6 +707,49 @@ describe("pickShopOffers — forcedPackPools (dev queue)", () => {
   });
 });
 
+describe("pickShopOffers — browslatro:forcePackPool localStorage flag (#856)", () => {
+  function packs(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
+    return offers.filter((o) => o.kind === "pack");
+  }
+
+  function stubForcedPool(value: string | null) {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackPool" ? value : null,
+      },
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("a pool set via the flag is forced into the shop", () => {
+    stubForcedPool("spectral");
+    const offers = pickShopOffers(baseArgs(mulberry32(8)));
+    const first = packs(offers)[0];
+    expect(first?.kind === "pack" && first.pack.pool).toBe("spectral");
+  });
+
+  test("flag pools come before pools forced via args", () => {
+    stubForcedPool("celestial");
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(9)),
+      forcedPackPools: ["arcana"],
+    });
+    const pools = packs(offers).map((o) => o.kind === "pack" && o.pack.pool);
+    expect(pools.slice(0, 2)).toEqual(["celestial", "arcana"]);
+  });
+
+  test("an invalid flag value leaves the shop unchanged (negative)", () => {
+    const baseline = pickShopOffers(baseArgs(mulberry32(10)));
+    stubForcedPool("not-a-pool");
+    const offers = pickShopOffers(baseArgs(mulberry32(10)));
+    expect(packs(offers).length).toBe(packs(baseline).length);
+  });
+});
+
 describe("buildFreeJokerOffers", () => {
   const catalog = createJokerCatalog();
 

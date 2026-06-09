@@ -12,25 +12,13 @@ async function setDeterministic(page: Page): Promise<void> {
   });
 }
 
-async function openDetails(page: Page, text: RegExp): Promise<void> {
-  const summary = page.getByText(text).first();
-  await expect(summary).toBeVisible();
-  const details = summary.locator("xpath=ancestor::details[1]");
-  await details.evaluate((el) => {
-    (el as HTMLDetailsElement).open = true;
-  });
-  await expect(details).toHaveAttribute("open", "");
-}
-
 async function forcePackPool(
   page: Page,
   pool: "standard" | "arcana" | "buffoon" | "spectral" | "celestial",
 ): Promise<void> {
-  await openDetails(page, /Apply modifiers/);
-  await openDetails(page, /Force a Pack pool in next shop/);
-  const button = page.getByTestId(`force-pack-${pool}`);
-  await expect(button).toBeVisible();
-  await button.dispatchEvent("click");
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:forcePackPool", value);
+  }, pool);
 }
 
 async function forcePackTarots(
@@ -88,9 +76,9 @@ async function setupArcanaPackWith(
   await setDeterministic(page);
   await forcePackTarots(page, tarotIds);
   await forcePackVariant(page, variant);
+  await forcePackPool(page, "arcana");
   await page.goto("/");
   await page.getByTestId("new-run-confirm").click();
-  await forcePackPool(page, "arcana");
   await winRound1AndOpenShop(page);
   await buyFirstPackOffer(page);
 }
@@ -103,9 +91,9 @@ async function setupSpectralPackWith(
   await setDeterministic(page);
   await forcePackSpectrals(page, spectralIds);
   await forcePackVariant(page, variant);
+  await forcePackPool(page, "spectral");
   await page.goto("/");
   await page.getByTestId("new-run-confirm").click();
-  await forcePackPool(page, "spectral");
   await winRound1AndOpenShop(page);
   await buyFirstPackOffer(page);
 }
@@ -285,9 +273,9 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     // Use a non-preview pool to confirm the tray-fallthrough path stays intact.
     await setDeterministic(page);
     await forcePackTarots(page, ["the-hanged-man"]);
+    await forcePackPool(page, "standard");
     await page.goto("/");
     await page.getByTestId("new-run-confirm").click();
-    await forcePackPool(page, "standard");
     await winRound1AndOpenShop(page);
     // No buy: Standard pack doesn't carry tarots; this test only validates that
     // the forcing flag doesn't leak across pools. Existence assertion is the

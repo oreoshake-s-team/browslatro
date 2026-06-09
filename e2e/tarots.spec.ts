@@ -9,18 +9,10 @@ async function setDeterministic(page: Page): Promise<void> {
   });
 }
 
-async function openDetails(page: Page, text: RegExp): Promise<void> {
-  const summary = page.getByText(text).first();
-  const detailsOpen = await summary
-    .locator("xpath=ancestor::details[1]")
-    .evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) await summary.click();
-}
-
 async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
-  await openDetails(page, /Apply modifiers/);
-  await openDetails(page, /Add a specific Tarot/);
-  await page.locator(`button[data-tarot-id="${tarotId}"]`).click();
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:seedTarotIds", value);
+  }, tarotId);
 }
 
 async function startRound(page: Page): Promise<void> {
@@ -32,8 +24,8 @@ async function enterRoundWithTarot(
   page: Page,
   tarotId: string,
 ): Promise<void> {
-  await startRound(page);
   await addTarotToTray(page, tarotId);
+  await startRound(page);
   await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 }
