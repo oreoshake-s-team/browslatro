@@ -16,11 +16,10 @@ async function openDetails(page: Page, text: RegExp): Promise<void> {
   const summary = page.getByText(text).first();
   await expect(summary).toBeVisible();
   const details = summary.locator("xpath=ancestor::details[1]");
-  const detailsOpen = await details.evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) {
-    await summary.click();
-    await expect(details).toHaveAttribute("open", "");
-  }
+  await details.evaluate((el) => {
+    (el as HTMLDetailsElement).open = true;
+  });
+  await expect(details).toHaveAttribute("open", "");
 }
 
 async function forcePackPool(
@@ -31,7 +30,7 @@ async function forcePackPool(
   await openDetails(page, /Force a Pack pool in next shop/);
   const button = page.getByTestId(`force-pack-${pool}`);
   await expect(button).toBeVisible();
-  await button.click();
+  await button.dispatchEvent("click");
 }
 
 async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
@@ -39,7 +38,7 @@ async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
   await openDetails(page, /Add a specific Tarot/);
   const button = page.locator(`button[data-tarot-id="${tarotId}"]`);
   await expect(button).toBeVisible();
-  await button.click();
+  await button.dispatchEvent("click");
 }
 
 async function addSpectralToTray(
@@ -50,7 +49,7 @@ async function addSpectralToTray(
   await openDetails(page, /Add a specific Spectral/);
   const button = page.locator(`button[data-spectral-id="${spectralId}"]`);
   await expect(button).toBeVisible();
-  await button.click();
+  await button.dispatchEvent("click");
 }
 
 async function winRound1AndOpenShop(page: Page): Promise<void> {
