@@ -304,3 +304,100 @@ describe("The Hook — post-play random held discard (#810)", () => {
     expect(useGame.getState().discardingIds.size).toBe(0);
   });
 });
+
+describe("The Serpent — fixed refill count (#811)", () => {
+  function setupSerpentRound(handIds: ReadonlyArray<number>, remainingIds: ReadonlyArray<number>) {
+    const serpent = createBossCatalog().find((b) => b.id === "the-serpent")!;
+    useGame.getState().setCurrentBoss(serpent);
+    useGame.getState().setBlind(3);
+    useGame.getState().setDealt(buildDeal(handIds, remainingIds));
+  }
+
+  test("discarding 4 cards refills exactly 3 cards regardless of effective hand size", () => {
+    setupSerpentRound([1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15, 16]);
+    useGame.getState().setSelectedIds(new Set([1, 2, 3, 4]));
+    useGame.getState().setRemainingDiscards(3);
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+      result.current.handleCardDiscardEnd(card(2));
+      result.current.handleCardDiscardEnd(card(3));
+      result.current.handleCardDiscardEnd(card(4));
+    });
+
+    expect(useGame.getState().dealt.hand.length).toBe(7);
+  });
+
+  test("discarding 1 card under The Serpent grows the hand to 10 (8 − 1 + 3), exceeding normal hand size", () => {
+    setupSerpentRound([1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12, 13, 14, 15, 16]);
+    useGame.getState().setSelectedIds(new Set([1]));
+    useGame.getState().setRemainingDiscards(3);
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+    });
+
+    expect(useGame.getState().dealt.hand.length).toBe(10);
+  });
+
+  test("clamps the Serpent refill to remaining deck size when deck has fewer than 3 cards", () => {
+    setupSerpentRound([1, 2, 3, 4, 5, 6, 7, 8], [9, 10]);
+    useGame.getState().setSelectedIds(new Set([1, 2, 3, 4]));
+    useGame.getState().setRemainingDiscards(3);
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+      result.current.handleCardDiscardEnd(card(2));
+      result.current.handleCardDiscardEnd(card(3));
+      result.current.handleCardDiscardEnd(card(4));
+    });
+
+    expect(useGame.getState().dealt.hand.length).toBe(6);
+  });
+
+  test("a non-Serpent boss refills to hand-size as usual (negative)", () => {
+    const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+    useGame.getState().setCurrentBoss(wall);
+    useGame.getState().setBlind(3);
+    useGame.getState().setDealt(buildDeal([1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12]));
+    useGame.getState().setSelectedIds(new Set([1, 2, 3, 4]));
+    useGame.getState().setRemainingDiscards(3);
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+      result.current.handleCardDiscardEnd(card(2));
+      result.current.handleCardDiscardEnd(card(3));
+      result.current.handleCardDiscardEnd(card(4));
+    });
+
+    expect(useGame.getState().dealt.hand.length).toBe(8);
+  });
+
+  test("does NOT override the refill on a non-boss blind even when currentBoss is The Serpent", () => {
+    const serpent = createBossCatalog().find((b) => b.id === "the-serpent")!;
+    useGame.getState().setCurrentBoss(serpent);
+    useGame.getState().setBlind(1);
+    useGame.getState().setDealt(buildDeal([1, 2, 3, 4, 5, 6, 7, 8], [9, 10, 11, 12]));
+    useGame.getState().setSelectedIds(new Set([1, 2, 3, 4]));
+    useGame.getState().setRemainingDiscards(3);
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+      result.current.handleCardDiscardEnd(card(2));
+      result.current.handleCardDiscardEnd(card(3));
+      result.current.handleCardDiscardEnd(card(4));
+    });
+
+    expect(useGame.getState().dealt.hand.length).toBe(8);
+  });
+});

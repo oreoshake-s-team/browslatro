@@ -20,6 +20,7 @@ import {
   bossBlocksHandLabel,
   bossMoneyPenaltyPerCard,
   bossRequiredCardCount,
+  bossShouldZeroWallet,
   debuffedHandIds,
 } from "../items/bosses";
 import {
@@ -336,6 +337,29 @@ export function usePlayHand({
     pendingHandPlayResetRef.current = true;
 
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
+    const handPlayCountsAfterThisHand = {
+      ...handPlayCounts,
+      [label]: handPlayCounts[label] + 1,
+    };
+    if (
+      bossShouldZeroWallet(
+        currentBoss,
+        isBossRound,
+        label,
+        handPlayCountsAfterThisHand,
+      )
+    ) {
+      const moneyBeforeWipe = useGame.getState().money;
+      useGame.getState().setMoney(0);
+      setScoringEvents((prev) => [
+        ...prev,
+        {
+          kind: "money-delta",
+          amount: -moneyBeforeWipe,
+          source: currentBoss?.name ?? "The Ox",
+        },
+      ]);
+    }
     setRunStats(recordHandPlayed);
     setHandHistoryThisRound((prev) => [...prev, label]);
     setPlayedCardKeysThisAnte((prev) => {
