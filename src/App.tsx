@@ -357,6 +357,8 @@ function App() {
     startNewGame();
   }
 
+  const continueEndless = useGame((s) => s.continueEndless);
+
   const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
     ? ({
         "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
@@ -470,7 +472,11 @@ function App() {
       {pendingGameWon && (
         <LazyChunkErrorBoundary>
           <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
-            <GameWonScreen info={pendingGameWon} onNewRun={dismissGameWonScreen} />
+            <GameWonScreen
+              info={pendingGameWon}
+              onNewRun={dismissGameWonScreen}
+              onEndless={continueEndless}
+            />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}

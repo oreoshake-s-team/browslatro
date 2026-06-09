@@ -26,6 +26,7 @@ export interface ProgressionState {
   pendingRunSelect: boolean;
   pendingTags: ReadonlyArray<TagId>;
   pendingGameWon: GameWonInfo | null;
+  endlessMode: boolean;
   setBlind: (update: Updater<Blind>) => void;
   setRound: (update: Updater<number>) => void;
   setAnte: (update: Updater<number>) => void;
@@ -33,6 +34,7 @@ export interface ProgressionState {
   setPendingRunSelect: (update: Updater<boolean>) => void;
   setPendingTags: (update: Updater<ReadonlyArray<TagId>>) => void;
   setPendingGameWon: (update: Updater<GameWonInfo | null>) => void;
+  setEndlessMode: (update: Updater<boolean>) => void;
   resetProgression: () => void;
 }
 
@@ -44,6 +46,7 @@ export const createProgressionSlice: StateCreator<GameState, [], [], Progression
   pendingRunSelect: true,
   pendingTags: [],
   pendingGameWon: null,
+  endlessMode: false,
   setBlind: (update) => set((state) => ({ blind: resolve(update, state.blind) })),
   setRound: (update) => set((state) => ({ round: resolve(update, state.round) })),
   setAnte: (update) => set((state) => ({ ante: resolve(update, state.ante) })),
@@ -59,6 +62,8 @@ export const createProgressionSlice: StateCreator<GameState, [], [], Progression
     set((state) => ({ pendingTags: resolve(update, state.pendingTags) })),
   setPendingGameWon: (update) =>
     set((state) => ({ pendingGameWon: resolve(update, state.pendingGameWon) })),
+  setEndlessMode: (update) =>
+    set((state) => ({ endlessMode: resolve(update, state.endlessMode) })),
   resetProgression: () =>
     set({
       blind: 1,
@@ -68,5 +73,6 @@ export const createProgressionSlice: StateCreator<GameState, [], [], Progression
       pendingRunSelect: true,
       pendingTags: [],
       pendingGameWon: null,
+      endlessMode: false,
     }),
 });
