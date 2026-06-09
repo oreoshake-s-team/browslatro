@@ -1,6 +1,7 @@
 import type { Card } from "../../../cards/types";
 import { RENTAL_END_OF_ROUND_DRAIN, hasSticker } from "../stickers";
 import type { Joker } from "../types";
+import { isJokerActive } from "../stickers";
 
 export interface EndOfRoundContext {
   readonly remainingDiscards?: number;
@@ -20,9 +21,10 @@ export interface EndOfRoundResult {
 }
 
 export function applyEndOfRoundJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   context: EndOfRoundContext = {},
 ): EndOfRoundResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   const steps: EndOfRoundStep[] = [];
   for (const joker of jokers) {

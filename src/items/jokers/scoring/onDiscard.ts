@@ -1,6 +1,7 @@
 import type { Card } from "../../../cards/types";
 import type { Joker } from "../types";
 import { isFaceCardWith } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export interface OnDiscardContext {
   readonly discardsUsedThisRound?: number;
@@ -19,10 +20,11 @@ export interface OnDiscardResult {
 }
 
 export function applyOnDiscardJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   discardedCards: ReadonlyArray<Card>,
   context: OnDiscardContext = {},
 ): OnDiscardResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   const steps: OnDiscardStep[] = [];
   for (const joker of jokers) {

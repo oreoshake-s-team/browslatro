@@ -31,7 +31,6 @@ import {
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
-  isJokerActive,
 } from "../items/jokers";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import {
@@ -229,7 +228,7 @@ export function usePlayHand({
         cardEnhancementsById,
         cardSealsById,
       ).remaining;
-      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers.filter(isJokerActive), {
+      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
         discardsUsedThisRound,
         fullDeck,
@@ -324,7 +323,7 @@ export function usePlayHand({
       useGame.getState().setMoney(money - moneyPenalty);
     }
 
-    const evalOptions = handEvalOptionsFromJokers(jokers.filter(isJokerActive));
+    const evalOptions = handEvalOptionsFromJokers(jokers);
     const label = detectHandLabel(playedCards, evalOptions);
     const isBossRound = blind === 3;
     if (
@@ -400,7 +399,7 @@ export function usePlayHand({
     );
     if (scoring.length === 0) {
       const noCardsHandJokerResult = applyHandLevelJokers(
-        jokers.filter(isJokerActive),
+        jokers,
         {
           playedHandLabel: label,
           playedCardCount: playedCards.length,
@@ -456,7 +455,7 @@ export function usePlayHand({
       ...handPlayCounts,
       [label]: handPlayCounts[label] + 1,
     };
-    const handJokerResult = applyHandLevelJokers(jokers.filter(isJokerActive), {
+    const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
       scoredCards: scoring,
@@ -476,10 +475,10 @@ export function usePlayHand({
     let firstFaceAlreadyScoredUpfront = false;
     const luckyRollsByScoringIndex: LuckyRollResult[] = [];
     const smearedSuitsActive =
-      handEvalOptionsFromJokers(jokers.filter(isJokerActive)).smearedSuits ===
+      handEvalOptionsFromJokers(jokers).smearedSuits ===
       true;
     for (let i = 0; i < scoring.length; i += 1) {
-      const perCard = applyPerCardJokers(jokers.filter(isJokerActive), scoring[i], Math.random, {
+      const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
         smearedSuits: smearedSuitsActive,
       });

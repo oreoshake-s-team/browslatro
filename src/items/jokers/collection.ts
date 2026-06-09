@@ -1,5 +1,5 @@
 import { cloneJoker, withEdition } from "./editions";
-import { canDestroyJoker } from "./stickers";
+import { canDestroyJoker, isJokerActive } from "./stickers";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -81,12 +81,13 @@ export function hasChaosTheClownInJokers(
 }
 
 export function handEvalOptionsFromJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
 ): {
   readonly fourFingers?: boolean;
   readonly shortcut?: boolean;
   readonly smearedSuits?: boolean;
 } {
+  const jokers = allJokers.filter(isJokerActive);
   let fourFingers = false;
   let shortcut = false;
   let smearedSuits = false;

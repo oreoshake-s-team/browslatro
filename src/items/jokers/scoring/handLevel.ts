@@ -16,11 +16,13 @@ import type {
   JokerHandResult,
 } from "./types";
 import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export function applyHandLevelJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   context: HandLevelContext = {},
 ): JokerHandResult {
+  const jokers = allJokers.filter(isJokerActive);
   let additiveMult = 0;
   let additiveChips = 0;
   let xMult = 1;
