@@ -221,16 +221,6 @@ export default function Game({
           onJokerSellDrop={dragController.onJokerDropOnDeck}
         />
       )}
-      {packOpen && (
-        <Suspense fallback={null}>
-          <PackOpenModal {...packOpen} />
-        </Suspense>
-      )}
-      {shop && (
-        <Suspense fallback={null}>
-          <Shop {...shop} disabled={!!packOpen} />
-        </Suspense>
-      )}
       {!shop && !packOpen && (
         <div className="submit-hand">
           <div className="play-actions">

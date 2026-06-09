@@ -2747,7 +2747,6 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
     const region = document
       .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
     expect(region).not.toHaveAttribute("aria-modal");
-    expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
     expect(screen.getByLabelText("Consumable slots")).toBeInTheDocument();
     expect(nonPackBuyButtons().every((b) => b.disabled)).toBe(true);
