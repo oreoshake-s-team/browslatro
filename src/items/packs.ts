@@ -346,7 +346,7 @@ export function rollPack(args: RollPackArgs): PackOffer {
 export function rollPackForPool(
   pool: PackPool,
   args: RollPackArgs,
-  variant: PackVariant = "normal",
+  variant: PackVariant = readForcedPackVariant() ?? "normal",
 ): PackOffer {
   const options = rollPackOptions({
     pool,

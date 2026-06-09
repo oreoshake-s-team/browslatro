@@ -14,10 +14,12 @@ async function setDeterministic(page: Page): Promise<void> {
 
 async function openDetails(page: Page, text: RegExp): Promise<void> {
   const summary = page.getByText(text).first();
-  const detailsOpen = await summary
-    .locator("xpath=ancestor::details[1]")
-    .evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) await summary.click();
+  await expect(summary).toBeVisible();
+  const details = summary.locator("xpath=ancestor::details[1]");
+  await details.evaluate((el) => {
+    (el as HTMLDetailsElement).open = true;
+  });
+  await expect(details).toHaveAttribute("open", "");
 }
 
 async function forcePackPool(
@@ -26,7 +28,9 @@ async function forcePackPool(
 ): Promise<void> {
   await openDetails(page, /Apply modifiers/);
   await openDetails(page, /Force a Pack pool in next shop/);
-  await page.getByTestId(`force-pack-${pool}`).click();
+  const button = page.getByTestId(`force-pack-${pool}`);
+  await expect(button).toBeVisible();
+  await button.dispatchEvent("click");
 }
 
 async function forcePackTarots(
@@ -110,14 +114,6 @@ function pickButton(page: Page, idx: number) {
   return page.getByTestId(`pack-open-pick-${idx}`);
 }
 
-// The 7 test.skip cases below exercise preview-state mutations that fire
-// correctly at the unit level (see src/hooks/useOpenedPackPicker.test.tsx),
-// but their assertions on the post-pick preview DOM are timing-fragile in
-// e2e — the mega-variant pack modal occasionally closes before the second
-// pick can be observed. Unit-test coverage is the source of truth for
-// effect correctness; these e2e cases are kept as a TODO scaffold so the
-// scenarios stay documented for later hardening.
-
 test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
   test("Judgement (create-joker) adds a random Joker to the equipped row", async ({
     page,
@@ -168,7 +164,7 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     await expect(page.getByTestId("pack-open-subtitle")).toBeHidden();
   });
 
-  test.skip("The Magician (apply-enhancement) on a selected preview card adds the lucky enhancement", async ({
+  test("The Magician (apply-enhancement) on a selected preview card adds the lucky enhancement", async ({
     page,
   }) => {
     await setupArcanaPackWith(page, ["the-magician", "the-hermit"], "mega");
@@ -185,7 +181,7 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     await expect(lucky).toHaveCount(before + 1);
   });
 
-  test.skip("The Sun (convert-suit) increases hearts count on the preview after picking", async ({
+  test("The Sun (convert-suit) increases hearts count on the preview after picking", async ({
     page,
   }) => {
     await setupArcanaPackWith(page, ["the-sun", "the-hermit"], "mega");
@@ -202,7 +198,7 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     await expect(heartCards).toHaveCount(before + 1);
   });
 
-  test.skip("The Star (convert-suit) increases diamonds count on the preview after picking", async ({
+  test("The Star (convert-suit) increases diamonds count on the preview after picking", async ({
     page,
   }) => {
     await setupArcanaPackWith(page, ["the-star", "the-hermit"], "mega");
@@ -219,7 +215,7 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     await expect(diamondCards).toHaveCount(before + 1);
   });
 
-  test.skip("The Hanged Man (destroy-selected) removes a selected preview card", async ({
+  test("The Hanged Man (destroy-selected) removes a selected preview card", async ({
     page,
   }) => {
     await setupArcanaPackWith(page, ["the-hanged-man", "the-hermit"], "mega");
@@ -230,7 +226,7 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     await expect(previewHand.locator(".card")).toHaveCount(before - 1);
   });
 
-  test.skip("Strength (rank-up-selected) bumps the rank of a selected preview card", async ({
+  test("Strength (rank-up-selected) bumps the rank of a selected preview card", async ({
     page,
   }) => {
     await setupArcanaPackWith(page, ["strength", "the-hermit"], "mega");
@@ -251,7 +247,7 @@ test.describe("Pack-pick: tarot effects fire correctly (#850)", () => {
     expect(after).not.toBe(before);
   });
 
-  test.skip("Death (death-copy) copies the right preview card onto the left", async ({
+  test("Death (death-copy) copies the right preview card onto the left", async ({
     page,
   }) => {
     await setupArcanaPackWith(page, ["death", "the-hermit"], "mega");
@@ -327,7 +323,7 @@ test.describe("Pack-pick: spectral effects fire correctly (#850)", () => {
     ).toHaveCount(1);
   });
 
-  test.skip("Cryptid (duplicate-selected) duplicates a selected preview card", async ({
+  test("Cryptid (duplicate-selected) duplicates a selected preview card", async ({
     page,
   }) => {
     await setupSpectralPackWith(page, ["cryptid", "black-hole"], "mega");
