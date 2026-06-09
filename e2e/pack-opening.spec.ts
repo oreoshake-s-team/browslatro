@@ -35,6 +35,15 @@ async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
   await page.locator(`button[data-tarot-id="${tarotId}"]`).click();
 }
 
+async function addSpectralToTray(
+  page: Page,
+  spectralId: string,
+): Promise<void> {
+  await openDetails(page, /Apply modifiers/);
+  await openDetails(page, /Add a specific Spectral/);
+  await page.locator(`button[data-spectral-id="${spectralId}"]`).click();
+}
+
 async function winRound1AndOpenShop(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
@@ -196,5 +205,43 @@ test.describe("Pack opening flow (#694)", () => {
         ),
       )
       .toBe(before + 1);
+  });
+});
+
+test.describe("Consumables usable while a Standard pack is open (#821)", () => {
+  test.beforeEach(async ({ page }) => {
+    await setDeterministic(page);
+    await page.goto("/");
+    await page.getByTestId("new-run-confirm").click();
+  });
+
+  test("Strength tarot applied to a hand card mid-Standard-pack consumes the tarot and keeps the modal open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addTarotToTray(page, "strength");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.locator(HAND_CARDS).first()).toBeVisible();
+    await page.locator(HAND_CARDS).first().click();
+    await page.locator('[data-consumable-kind="tarot"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="tarot"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+  });
+
+  test("Black Hole spectral used mid-Standard-pack consumes the spectral and keeps the modal open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addSpectralToTray(page, "black-hole");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await page.locator('[data-consumable-kind="spectral"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="spectral"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
   });
 });
