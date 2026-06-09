@@ -18,6 +18,11 @@ import {
   type Joker,
 } from "../items/jokers";
 import {
+  DEFAULT_STAKE,
+  stakeStartingDiscardsDelta,
+  type Stake,
+} from "../items/stakes";
+import {
   extraStartingDiscards,
   extraStartingHands,
   type VoucherId,
@@ -29,6 +34,7 @@ export interface StartingResourceContext {
   readonly ownedVoucherIds: ReadonlySet<VoucherId>;
   readonly deck: Deck;
   readonly jokers: ReadonlyArray<Joker>;
+  readonly stake?: Stake;
 }
 
 export function computeStartingHands(ctx: StartingResourceContext): number {
@@ -57,6 +63,7 @@ export function computeStartingDiscards(ctx: StartingResourceContext): number {
     base +
       extraStartingDiscards(ctx.ownedVoucherIds) +
       extraStartingDiscardsFromJokers(ctx.jokers) +
-      deckStartingDiscardsDelta(ctx.deck),
+      deckStartingDiscardsDelta(ctx.deck) +
+      stakeStartingDiscardsDelta(ctx.stake ?? DEFAULT_STAKE),
   );
 }

@@ -57,6 +57,7 @@ function renderShop(
     <Shop
       money={10}
       equippedJokerCount={0}
+      jokerCapacity={MAX_JOKERS}
       consumableCount={0}
       consumableCapacity={2}
       offers={[jokerOffer("plus"), planetOffer("pluto")]}
@@ -247,6 +248,25 @@ describe("Shop", () => {
     ).toBeDisabled();
   });
 
+  test("the joker buy button tooltip shows the correct capacity", () => {
+    renderShop({ equippedJokerCount: MAX_JOKERS });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).toHaveAttribute(
+      "title",
+      `Joker slots are full (max ${MAX_JOKERS})`,
+    );
+  });
+
+  test("the joker buy button stays enabled when jokerCapacity exceeds MAX_JOKERS", () => {
+    renderShop({ equippedJokerCount: MAX_JOKERS, jokerCapacity: MAX_JOKERS + 1 });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).not.toBeDisabled();
+  });
+
   test("the planet buy button is disabled when the player can't afford the planet price", () => {
     renderShop({ money: 2 });
     const planetBuy = screen
@@ -411,6 +431,46 @@ describe("Shop", () => {
       expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(
         "Reroll ($1)",
       );
+    });
+
+    describe("freeFirstReroll (Chaos the Clown)", () => {
+      test("first reroll shows $0 when Chaos is equipped", () => {
+        renderShop({ freeFirstReroll: true });
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).toHaveTextContent("Reroll ($0)");
+      });
+
+      test("first reroll shows the normal $5 cost when Chaos is NOT equipped (negative)", () => {
+        renderShop({ freeFirstReroll: false });
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).toHaveTextContent("Reroll ($5)");
+      });
+
+      test("clicking the first reroll with Chaos invokes onReroll with cost 0", async () => {
+        const user = userEvent.setup();
+        const onReroll = vi.fn();
+        renderShop({ freeFirstReroll: true, money: 0, onReroll });
+        await user.click(screen.getByRole("button", { name: /Reroll/ }));
+        expect(onReroll).toHaveBeenCalledWith(0);
+      });
+
+      test("the player can take the first free reroll with $0 in the bank", () => {
+        renderShop({ freeFirstReroll: true, money: 0 });
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).not.toBeDisabled();
+      });
+
+      test("after taking the free first reroll, the next reroll resumes the normal $6 cost", async () => {
+        const user = userEvent.setup();
+        renderShop({ freeFirstReroll: true, money: 20 });
+        await user.click(screen.getByRole("button", { name: /Reroll/ }));
+        expect(
+          screen.getByRole("button", { name: /Reroll/ }),
+        ).toHaveTextContent("Reroll ($6)");
+      });
     });
   });
 
@@ -754,5 +814,141 @@ describe("Shop voucher override picker (dev)", () => {
       "overstock-plus",
     );
     expect(onSetVoucher).toHaveBeenCalledWith("overstock-plus");
+  });
+});
+
+describe("Shop joker sticker badges (#558 / #792)", () => {
+  function perishableJokerOffer(): ShopItem {
+    const joker = createPlusFourMultJoker();
+    return {
+      kind: "joker",
+      joker: { ...joker, stickers: [{ kind: "perishable", roundsHeld: 0 }] },
+      price: 5,
+      sold: false,
+    };
+  }
+
+  function eternalJokerOffer(): ShopItem {
+    const joker = createBusinessCardJoker();
+    return {
+      kind: "joker",
+      joker: { ...joker, stickers: [{ kind: "eternal" }] },
+      price: 5,
+      sold: false,
+    };
+  }
+
+  test("perishable shop joker offer renders the perishable sticker badge", () => {
+    renderShop({ offers: [perishableJokerOffer()] });
+    expect(
+      screen.getByTestId("joker-stickers-plus-four-mult"),
+    ).toBeInTheDocument();
+  });
+
+  test("eternal shop joker offer renders the eternal sticker badge", () => {
+    renderShop({ offers: [eternalJokerOffer()] });
+    expect(
+      screen.getByTestId("joker-stickers-business-card"),
+    ).toBeInTheDocument();
+  });
+
+  test("a vanilla joker offer renders no sticker badges (negative)", () => {
+    renderShop({ offers: [jokerOffer("plus")] });
+    expect(
+      screen.queryByTestId("joker-stickers-plus-four-mult"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("non-joker offers do not render a sticker-badges list", () => {
+    renderShop({ offers: [planetOffer("pluto")] });
+    expect(
+      screen.queryByText("Joker stickers"),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("Shop playing-card offer visual modifiers (#282)", () => {
+  function playingCardOffer(
+    overrides: Partial<import("../../cards/types").Card> = {},
+  ): ShopItem {
+    return {
+      kind: "playing-card",
+      card: { id: 1, rank: "A", suit: "spades", ...overrides },
+      price: 4,
+      sold: false,
+    };
+  }
+
+  test("a plain playing-card offer has no enhanced modifier class (negative)", () => {
+    renderShop({ offers: [playingCardOffer()] });
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveClass(
+      "shop-offer-playing-card-enhanced",
+    );
+  });
+
+  test("a plain playing-card offer has no data-card-enhancement attribute (negative)", () => {
+    renderShop({ offers: [playingCardOffer()] });
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveAttribute(
+      "data-card-enhancement",
+    );
+  });
+
+  test("a plain playing-card offer renders no enhancement badge (negative)", () => {
+    renderShop({ offers: [playingCardOffer()] });
+    expect(
+      screen.queryByTestId("shop-card-enhancement-0"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("an enhanced playing-card offer carries the shop-offer-playing-card-enhanced class", () => {
+    renderShop({ offers: [playingCardOffer({ enhancement: "gold" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass(
+      "shop-offer-playing-card-enhanced",
+    );
+  });
+
+  test("an enhanced playing-card offer exposes the enhancement via data-card-enhancement", () => {
+    renderShop({ offers: [playingCardOffer({ enhancement: "mult" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-card-enhancement",
+      "mult",
+    );
+  });
+
+  test("an enhanced playing-card offer renders a human-readable enhancement badge", () => {
+    renderShop({ offers: [playingCardOffer({ enhancement: "steel" })] });
+    expect(screen.getByTestId("shop-card-enhancement-0")).toHaveTextContent(
+      "Steel",
+    );
+  });
+
+  test("an editioned playing-card offer exposes the edition via data-card-edition", () => {
+    renderShop({ offers: [playingCardOffer({ edition: "holographic" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-card-edition",
+      "holographic",
+    );
+  });
+
+  test("an editioned playing-card offer renders a human-readable edition badge", () => {
+    renderShop({ offers: [playingCardOffer({ edition: "polychrome" })] });
+    expect(screen.getByTestId("shop-card-edition-0")).toHaveTextContent(
+      "Polychrome",
+    );
+  });
+
+  test("a sealed playing-card offer exposes the seal via data-card-seal", () => {
+    renderShop({ offers: [playingCardOffer({ seal: "gold" })] });
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-card-seal",
+      "gold",
+    );
+  });
+
+  test("a sealed playing-card offer renders a human-readable seal badge", () => {
+    renderShop({ offers: [playingCardOffer({ seal: "purple" })] });
+    expect(screen.getByTestId("shop-card-seal-0")).toHaveTextContent(
+      "Purple Seal",
+    );
   });
 });

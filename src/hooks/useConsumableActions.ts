@@ -1,15 +1,30 @@
 import { useGame } from "../store/game";
 import { play } from "../components/system/sounds";
-import { applyPlanetUpgrade } from "../items/planets";
-import { removeConsumableAt } from "../items/consumables";
+import {
+  applyPlanetUpgrade,
+  availablePlanets,
+  createPlanetCatalog,
+  type PlanetCard,
+} from "../items/planets";
+import { addConsumable, removeConsumableAt } from "../items/consumables";
 import { applyAuraToSelectedInHand, duplicateSelectedInHand } from "../items/spectrals";
 import {
+  createTarotCatalog,
   nextRankUp,
   resolveHermitPayout,
   resolveTemperancePayout,
   rollWheelOfFortune,
+  tarotRngConfig,
+  type TarotCard,
 } from "../items/tarots";
-import { withEdition } from "../items/jokers";
+import {
+  createJokerCatalog,
+  createRandomJoker,
+  MAX_JOKERS,
+  withEdition,
+} from "../items/jokers";
+import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
+import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
 import { nextCardId } from "../cards/deck";
 import type { Card } from "../cards/types";
 
@@ -42,10 +57,26 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applySuitToSelectedPreviewCards = useGame(
     (s) => s.applySuitToSelectedPreviewCards,
   );
+  const applyDeathCopyToSelectedPreviewCards = useGame(
+    (s) => s.applyDeathCopyToSelectedPreviewCards,
+  );
+  const destroySelectedPreviewCards = useGame(
+    (s) => s.destroySelectedPreviewCards,
+  );
+  const rankUpSelectedPreviewCards = useGame(
+    (s) => s.rankUpSelectedPreviewCards,
+  );
+  const applyAuraSelectedPreviewCards = useGame(
+    (s) => s.applyAuraSelectedPreviewCards,
+  );
+  const duplicateSelectedPreviewCards = useGame(
+    (s) => s.duplicateSelectedPreviewCards,
+  );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
+  const handDisplayOrder = useGame((s) => s.handDisplayOrder);
 
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
@@ -114,7 +145,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
         return;
       }
       if (spectralEffect.kind === "duplicate-selected") {
-        if (previewActive) return;
+        if (previewActive) {
+          if (packPreviewSelectedIds.size !== spectralEffect.maxTargets) return;
+          play("pop");
+          duplicateSelectedPreviewCards(spectralEffect.copies);
+          consume();
+          return;
+        }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
         setDealt((prev) => ({
@@ -129,7 +166,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
         return;
       }
       if (spectralEffect.kind === "aura") {
-        if (previewActive) return;
+        if (previewActive) {
+          if (packPreviewSelectedIds.size !== spectralEffect.maxTargets) return;
+          play("pop");
+          applyAuraSelectedPreviewCards();
+          consume();
+          return;
+        }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
         setDealt((prev) => ({
@@ -176,8 +219,76 @@ export function useConsumableActions(): UseConsumableActionsResult {
       consume();
       return;
     }
+    if (effect.kind === "create-joker") {
+      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
+      const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+      const created = createRandomJoker(jokers, createJokerCatalog(), capacity);
+      if (!created) return;
+      play("pop");
+      setJokers((prev) => [...prev, created]);
+      consume();
+      return;
+    }
+    if (effect.kind === "copy-last-consumable") {
+      play("pop");
+      consume();
+      const last = useGame.getState().lastUsedConsumable;
+      if (!last) return;
+      if (last.kind === "tarot" && last.card.id === "the-fool") return;
+      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
+      const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      setConsumables((prev) => addConsumable(prev, last, capacity));
+      return;
+    }
+    if (effect.kind === "create-consumables") {
+      play("pop");
+      consume();
+      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
+      const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      const rng = tarotRngConfig.rng;
+      const tarotPool: ReadonlyArray<TarotCard> =
+        effect.consumableKind === "tarot"
+          ? createTarotCatalog().filter((t) => t.id !== entry.card.id)
+          : [];
+      const planetPool: ReadonlyArray<PlanetCard> =
+        effect.consumableKind === "planet"
+          ? availablePlanets(
+              createPlanetCatalog(),
+              useGame.getState().handPlayCounts,
+            )
+          : [];
+      const added: Consumable[] = [];
+      for (let i = 0; i < effect.count; i += 1) {
+        const current = useGame.getState().consumables;
+        if (current.length + added.length >= capacity) break;
+        if (effect.consumableKind === "tarot") {
+          if (tarotPool.length === 0) break;
+          const pick = tarotPool[Math.floor(rng() * tarotPool.length)];
+          added.push({ kind: "tarot", card: pick });
+        } else {
+          if (planetPool.length === 0) break;
+          const pick = planetPool[Math.floor(rng() * planetPool.length)];
+          added.push({ kind: "planet", card: pick });
+        }
+      }
+      if (added.length > 0) {
+        setConsumables((prev) => [...prev, ...added]);
+      }
+      return;
+    }
     if (effect.kind === "destroy-selected") {
-      if (previewActive) return;
+      if (previewActive) {
+        if (
+          packPreviewSelectedIds.size === 0 ||
+          packPreviewSelectedIds.size > effect.maxTargets
+        ) {
+          return;
+        }
+        play("pop");
+        destroySelectedPreviewCards();
+        consume();
+        return;
+      }
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
       const destroyedIds = new Set<number>();
@@ -243,8 +354,58 @@ export function useConsumableActions(): UseConsumableActionsResult {
       consume();
       return;
     }
+    if (effect.kind === "death-copy") {
+      if (previewActive) {
+        if (packPreviewSelectedIds.size !== effect.requiredTargets) return;
+        play("pop");
+        applyDeathCopyToSelectedPreviewCards();
+        consume();
+        return;
+      }
+      if (selectedIds.size !== effect.requiredTargets) return;
+      const hand = useGame.getState().dealt.hand;
+      const handById = new Map(hand.map((c) => [c.id, c]));
+      const seen = new Set<number>();
+      const orderedHand: Card[] = [];
+      for (const id of handDisplayOrder) {
+        const c = handById.get(id);
+        if (c) {
+          orderedHand.push(c);
+          seen.add(id);
+        }
+      }
+      for (const c of hand) {
+        if (!seen.has(c.id)) orderedHand.push(c);
+      }
+      const selectedInOrder = orderedHand.filter((c) => selectedIds.has(c.id));
+      if (selectedInOrder.length !== 2) return;
+      const [left, right] = selectedInOrder;
+      play("pop");
+      const copied: Card = { ...right, id: left.id };
+      setDealt((prev) => ({
+        hand: prev.hand.map((c) => (c.id === left.id ? copied : c)),
+        remaining: prev.remaining,
+      }));
+      setSelectedIds(new Set());
+      setSelectedHand(null);
+      setChips(0);
+      setMultiplier(0);
+      consume();
+      return;
+    }
     if (effect.kind === "rank-up-selected") {
-      if (previewActive) return;
+      if (previewActive) {
+        if (
+          packPreviewSelectedIds.size === 0 ||
+          packPreviewSelectedIds.size > effect.maxTargets
+        ) {
+          return;
+        }
+        play("pop");
+        rankUpSelectedPreviewCards();
+        consume();
+        return;
+      }
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
       const oldIds = new Set<number>();

@@ -349,6 +349,77 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "per-hand-play-count-mult": {
+        const counts = context.handPlayCounts;
+        const label = context.playedHandLabel;
+        if (counts !== undefined && label !== undefined) {
+          const bonus = counts[label];
+          if (bonus > 0) {
+            additiveMult += bonus;
+            fired.push(joker.id);
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveMult: bonus,
+            });
+          }
+        }
+        break;
+      }
+      case "on-hand-type-stack-mult": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: bonus,
+          });
+        }
+        break;
+      }
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveChips += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveChips: bonus,
+          });
+        }
+        break;
+      }
+      case "on-no-face-stack-mult": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: bonus,
+          });
+        }
+        break;
+      }
+      case "every-n-hands-xmult": {
+        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (counter > 0 && counter % effect.n === 0) {
+          xMult *= effect.xmult;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.xmult,
+          });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":

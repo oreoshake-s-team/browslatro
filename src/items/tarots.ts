@@ -39,9 +39,24 @@ export type TarotEffect =
       readonly maxTargets: 1 | 2 | 3;
     }
   | {
+      readonly kind: "death-copy";
+      readonly requiredTargets: 2;
+    }
+  | {
       readonly kind: "convert-suit";
       readonly suit: Suit;
       readonly maxTargets: 3;
+    }
+  | {
+      readonly kind: "create-joker";
+    }
+  | {
+      readonly kind: "create-consumables";
+      readonly consumableKind: "tarot" | "planet";
+      readonly count: number;
+    }
+  | {
+      readonly kind: "copy-last-consumable";
     };
 
 export interface TarotCard {
@@ -75,8 +90,22 @@ function describe(spec: TarotSpec): string {
       effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
     return `Increase rank of ${targets} in hand by 1`;
   }
+  if (effect.kind === "death-copy") {
+    return `Select ${effect.requiredTargets} cards in hand: left card becomes a copy of the right`;
+  }
   if (effect.kind === "convert-suit") {
     return `Convert up to ${effect.maxTargets} cards in hand to ${SUIT_DISPLAY[effect.suit]}`;
+  }
+  if (effect.kind === "create-joker") {
+    return "Create a random Joker";
+  }
+  if (effect.kind === "create-consumables") {
+    const noun = effect.consumableKind === "tarot" ? "Tarot" : "Planet";
+    const plural = effect.count === 1 ? noun : `${noun}s`;
+    return `Creates up to ${effect.count} random ${plural} (must have room)`;
+  }
+  if (effect.kind === "copy-last-consumable") {
+    return "Creates a copy of the last Tarot or Planet card used (must have room)";
   }
   const targets = effect.maxTargets === 1 ? "1 card" : `up to ${effect.maxTargets} cards`;
   return `Apply ${effect.enhancement} enhancement to ${targets} in hand`;
@@ -100,6 +129,7 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
   { id: "the-tower", name: "The Tower", effect: { kind: "apply-enhancement", enhancement: "stone", maxTargets: 1 } },
   { id: "the-hanged-man", name: "The Hanged Man", effect: { kind: "destroy-selected", maxTargets: 2 } },
   { id: "strength", name: "Strength", effect: { kind: "rank-up-selected", maxTargets: 2 } },
+  { id: "death", name: "Death", effect: { kind: "death-copy", requiredTargets: 2 } },
   { id: "the-star", name: "The Star", effect: { kind: "convert-suit", suit: "diamonds", maxTargets: 3 } },
   { id: "the-moon", name: "The Moon", effect: { kind: "convert-suit", suit: "clubs", maxTargets: 3 } },
   { id: "the-sun", name: "The Sun", effect: { kind: "convert-suit", suit: "hearts", maxTargets: 3 } },
@@ -111,6 +141,18 @@ const TAROT_SPECS: ReadonlyArray<TarotSpec> = [
     name: "Wheel of Fortune",
     effect: { kind: "edition-roll", chance: WHEEL_OF_FORTUNE_CHANCE },
   },
+  { id: "judgement", name: "Judgement", effect: { kind: "create-joker" } },
+  {
+    id: "the-emperor",
+    name: "The Emperor",
+    effect: { kind: "create-consumables", consumableKind: "tarot", count: 2 },
+  },
+  {
+    id: "the-high-priestess",
+    name: "The High Priestess",
+    effect: { kind: "create-consumables", consumableKind: "planet", count: 2 },
+  },
+  { id: "the-fool", name: "The Fool", effect: { kind: "copy-last-consumable" } },
 ];
 
 export function createTarotCatalog(): TarotCard[] {

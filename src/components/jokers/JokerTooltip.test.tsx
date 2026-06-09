@@ -8,9 +8,16 @@ import {
   JOKER_EDITION_KINDS,
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
+  createBaronJoker,
+  createBloodstoneJoker,
+  createBusinessCardJoker,
   createDriversLicenseJoker,
   createGreedyJoker,
+  createJokerStencilJoker,
+  createOopsAllSixesJoker,
   createPlusFourMultJoker,
+  createReservedParkingJoker,
+  createTribouletJoker,
   jokerSellValue,
   withEdition,
   type Joker,
@@ -206,6 +213,69 @@ describe("Joker tooltip — stickers (#724)", () => {
       screen.getByTestId("joker-tooltip-sticker-perishable"),
     ).toHaveTextContent(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`);
   });
+
+  test("Perishable sticker row says 'debuffed' once roundsHeld reaches the life threshold (closes #579)", async () => {
+    const user = userEvent.setup();
+    const joker = withStickers([
+      { kind: "perishable", roundsHeld: PERISHABLE_LIFE },
+    ]);
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(
+      screen.getByTestId("joker-tooltip-sticker-perishable"),
+    ).toHaveTextContent(/debuffed/i);
+  });
+});
+
+describe("Joker tooltip — rarity (#761)", () => {
+  test("renders the rarity row for a common joker", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Common",
+    );
+  });
+
+  test("renders the rarity row for an uncommon joker", async () => {
+    const user = userEvent.setup();
+    const joker = createJokerStencilJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Uncommon",
+    );
+  });
+
+  test("renders the rarity row for a rare joker", async () => {
+    const user = userEvent.setup();
+    const joker = createBaronJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Rare",
+    );
+  });
+
+  test("renders the rarity row for a legendary joker", async () => {
+    const user = userEvent.setup();
+    const joker = createTribouletJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveTextContent(
+      "Legendary",
+    );
+  });
+
+  test("applies the rarity-specific CSS class to the rarity row", async () => {
+    const user = userEvent.setup();
+    const joker = createBaronJoker();
+    render(<Jokers jokers={[joker]} />);
+    await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
+    expect(screen.getByTestId("joker-tooltip-rarity")).toHaveClass(
+      "joker-tooltip-rarity-rare",
+    );
+  });
 });
 
 describe("Joker tooltip — Driver's License enhanced-count progress (#632)", () => {
@@ -285,5 +355,79 @@ describe("Joker tooltip — Driver's License enhanced-count progress (#632)", ()
     ).toHaveTextContent(
       `${DRIVERS_LICENSE_ENHANCED_THRESHOLD} / ${DRIVERS_LICENSE_ENHANCED_THRESHOLD}`,
     );
+  });
+});
+
+describe("Joker tooltip — effective odds with a probability multiplier (#774)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("does not show the effective-odds line for a non-probability joker", async () => {
+    useGame.getState().setJokers([createPlusFourMultJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(
+      screen.queryByTestId("joker-tooltip-effective-odds"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("does not show the line when no probability-multiplier joker is equipped (negative)", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(
+      screen.queryByTestId("joker-tooltip-effective-odds"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders the effective-odds row for Business Card when Oops! All 6s is equipped", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toBeInTheDocument();
+  });
+
+  test("Business Card with multiplier 2 shows 'guaranteed' (0.5 × 2 clamps to 1)", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toHaveTextContent(/guaranteed/i);
+  });
+
+  test("Bloodstone with multiplier 2 also clamps to 'guaranteed' (0.5 × 2)", async () => {
+    useGame.getState().setJokers([createBloodstoneJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBloodstoneJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-bloodstone"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toHaveTextContent(/guaranteed/i);
+  });
+
+  test("Reserved Parking with multiplier 2 also shows the effective-odds line", async () => {
+    useGame.getState().setJokers([createReservedParkingJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createReservedParkingJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-reserved-parking"));
+    expect(
+      screen.getByTestId("joker-tooltip-effective-odds"),
+    ).toBeInTheDocument();
+  });
+
+  test("base description is unchanged on a Business Card tooltip with the multiplier active", async () => {
+    useGame.getState().setJokers([createBusinessCardJoker(), createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBusinessCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/50% chance/);
   });
 });

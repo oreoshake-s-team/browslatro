@@ -28,7 +28,16 @@ export type VoucherId =
   | "directors-cut"
   | "retcon"
   | "hone"
-  | "glow-up";
+  | "glow-up"
+  | "omen-globe"
+  | "telescope"
+  | "observatory"
+  | "tarot-merchant"
+  | "tarot-tycoon"
+  | "planet-merchant"
+  | "planet-tycoon"
+  | "magic-trick"
+  | "illusion";
 
 export interface Voucher {
   readonly id: VoucherId;
@@ -62,9 +71,28 @@ export const VOUCHER_CATALOG: ReadonlyArray<Voucher> = [
   { id: "retcon", name: "Retcon", description: "Reroll the Boss Blind unlimited times. Costs $10 each.", cost: VOUCHER_BASE_PRICE, requires: "directors-cut" },
   { id: "hone", name: "Hone", description: "Foil, Holographic, and Polychrome Jokers appear 2× as often.", cost: VOUCHER_BASE_PRICE },
   { id: "glow-up", name: "Glow Up", description: "Foil, Holographic, and Polychrome Jokers appear 4× as often.", cost: VOUCHER_BASE_PRICE, requires: "hone" },
+  { id: "omen-globe", name: "Omen Globe", description: "1 in 5 Tarot card rolls in the shop become Spectral cards instead.", cost: VOUCHER_BASE_PRICE, requires: "crystal-ball" },
+  { id: "telescope", name: "Telescope", description: "Celestial Packs always contain the Planet card for your most-played hand.", cost: VOUCHER_BASE_PRICE },
+  { id: "observatory", name: "Observatory", description: "Each Planet card in your consumable area gives ×1.5 Mult to its specified hand.", cost: VOUCHER_BASE_PRICE, requires: "telescope" },
+  { id: "tarot-merchant", name: "Tarot Merchant", description: "Tarot cards appear 2× as often in the shop.", cost: VOUCHER_BASE_PRICE },
+  { id: "tarot-tycoon", name: "Tarot Tycoon", description: "Tarot cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "tarot-merchant" },
+  { id: "planet-merchant", name: "Planet Merchant", description: "Planet cards appear 2× as often in the shop.", cost: VOUCHER_BASE_PRICE },
+  { id: "planet-tycoon", name: "Planet Tycoon", description: "Planet cards appear 4× as often in the shop.", cost: VOUCHER_BASE_PRICE, requires: "planet-merchant" },
+  { id: "magic-trick", name: "Magic Trick", description: "Playing cards can be purchased from the shop.", cost: VOUCHER_BASE_PRICE },
+  { id: "illusion", name: "Illusion", description: "Playing cards in shop may have an Enhancement, Edition, and/or a Seal.", cost: VOUCHER_BASE_PRICE, requires: "magic-trick" },
 ];
 
 export const BOSS_REROLL_COST = 10;
+
+export const OBSERVATORY_MULT_PER_PLANET = 1.5;
+
+export function observatoryMultFor(
+  ownedIds: ReadonlySet<VoucherId>,
+  matchingPlanetCount: number,
+): number {
+  if (!ownedIds.has("observatory") || matchingPlanetCount <= 0) return 1;
+  return Math.pow(OBSERVATORY_MULT_PER_PLANET, matchingPlanetCount);
+}
 
 export function createVoucherCatalog(): ReadonlyArray<Voucher> {
   return VOUCHER_CATALOG;
@@ -216,4 +244,47 @@ export function editionRateMultiplier(
   if (ownedIds.has("glow-up")) return 4;
   if (ownedIds.has("hone")) return 2;
   return 1;
+}
+
+export function tarotToSpectralSwapChance(
+  ownedIds: ReadonlySet<VoucherId>,
+): number {
+  return ownedIds.has("omen-globe") ? 0.2 : 0;
+}
+
+export function magicTrickEnabled(ownedIds: ReadonlySet<VoucherId>): boolean {
+  return ownedIds.has("magic-trick");
+}
+
+export function illusionEnabled(ownedIds: ReadonlySet<VoucherId>): boolean {
+  return ownedIds.has("illusion");
+}
+
+export type OfferKindWeightKey =
+  | "joker"
+  | "planet"
+  | "tarot"
+  | "playing-card";
+
+export type OfferKindWeights = Record<OfferKindWeightKey, number>;
+
+export const PLAYING_CARD_OFFER_WEIGHT = 1;
+
+export function offerKindWeights(
+  ownedIds: ReadonlySet<VoucherId>,
+): OfferKindWeights {
+  const tarot = ownedIds.has("tarot-tycoon")
+    ? 4
+    : ownedIds.has("tarot-merchant")
+      ? 2
+      : 1;
+  const planet = ownedIds.has("planet-tycoon")
+    ? 4
+    : ownedIds.has("planet-merchant")
+      ? 2
+      : 1;
+  const playingCard = magicTrickEnabled(ownedIds)
+    ? PLAYING_CARD_OFFER_WEIGHT
+    : 0;
+  return { joker: 1, planet, tarot, "playing-card": playingCard };
 }

@@ -1,5 +1,5 @@
 import { cloneJoker, withEdition } from "./editions";
-import { canDestroyJoker } from "./stickers";
+import { canDestroyJoker, isJokerActive } from "./stickers";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -55,6 +55,59 @@ export function allCardsScoreFromJokers(
   return false;
 }
 
+export function hasAstronomerInJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.astronomer === true) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function hasChaosTheClownInJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.chaosTheClown === true
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function handEvalOptionsFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): {
+  readonly fourFingers?: boolean;
+  readonly shortcut?: boolean;
+  readonly smearedSuits?: boolean;
+} {
+  const jokers = allJokers.filter(isJokerActive);
+  let fourFingers = false;
+  let shortcut = false;
+  let smearedSuits = false;
+  for (const j of jokers) {
+    if (j.effect.kind !== "passive-run-stats") continue;
+    if (j.effect.fourFingers === true) fourFingers = true;
+    if (j.effect.shortcut === true) shortcut = true;
+    if (j.effect.smearedSuits === true) smearedSuits = true;
+  }
+  const out: {
+    fourFingers?: boolean;
+    shortcut?: boolean;
+    smearedSuits?: boolean;
+  } = {};
+  if (fourFingers) out.fourFingers = true;
+  if (shortcut) out.shortcut = true;
+  if (smearedSuits) out.smearedSuits = true;
+  return out;
+}
+
 export function discardsOverrideFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number | null {
@@ -79,6 +132,22 @@ export function extraStartingHandsFromJokers(
     }
   }
   return total;
+}
+
+export function probabilityMultiplierFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let multiplier = 1;
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.probabilityMultiplier !== undefined &&
+      j.effect.probabilityMultiplier > 0
+    ) {
+      multiplier *= j.effect.probabilityMultiplier;
+    }
+  }
+  return multiplier;
 }
 
 export function pickRandomEquipped(
@@ -111,6 +180,21 @@ export function createJokerByRarity(
   return pickRandomFromCatalog(
     catalog,
     (j) => j.rarity === rarity && !ownedIds.has(j.id),
+    rng,
+  );
+}
+
+export function createRandomJoker(
+  jokers: ReadonlyArray<Joker>,
+  catalog: ReadonlyArray<Joker>,
+  capacity: number,
+  rng: RandomSource = Math.random,
+): Joker | null {
+  if (effectiveJokerCount(jokers) >= capacity) return null;
+  const ownedIds = new Set(jokers.map((j) => j.id));
+  return pickRandomFromCatalog(
+    catalog,
+    (j) => j.rarity !== "legendary" && !ownedIds.has(j.id),
     rng,
   );
 }

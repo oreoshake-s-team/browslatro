@@ -163,9 +163,6 @@ describe("RoundWonModal payout breakdown", () => {
   });
 
   test("interest row uses interestWallet, not walletAtPayout (#353)", () => {
-    // walletAtPayout = $10 (visible total), interestWallet = $7 (excludes
-    // remaining-hands). Interest row label must say "on $7" and the value
-    // must reflect interest computed on $7.
     render(
       <RoundWonModal
         info={buildInfo({
@@ -178,5 +175,211 @@ describe("RoundWonModal payout breakdown", () => {
     );
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent("$7");
     expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
+  });
+
+  test("renders a row for each end-of-round joker step (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-joker-amount-cloud-9")).toHaveTextContent(
+      "+$4",
+    );
+  });
+
+  test("labels each end-of-round joker row with the joker name (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-joker-label-cloud-9")).toHaveTextContent(
+      "Cloud 9",
+    );
+  });
+
+  test("renders multiple end-of-round joker rows when several jokers paid out (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+            {
+              jokerId: "delayed-gratification",
+              jokerName: "Delayed Gratification",
+              moneyEarned: 6,
+            },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("round-won-joker-amount-delayed-gratification"),
+    ).toHaveTextContent("+$6");
+  });
+
+  test("includes end-of-round joker payouts in the total (#620)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 3,
+          interest: 1,
+          endOfRoundJokerSteps: [
+            { jokerId: "cloud-9", jokerName: "Cloud 9", moneyEarned: 4 },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$8");
+  });
+
+  test("does not render any joker rows when no end-of-round jokers paid out (negative, #620)", () => {
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.queryByTestId("round-won-joker-row-cloud-9")).not.toBeInTheDocument();
+  });
+
+  test("does not render any joker rows when endOfRoundJokerSteps is an empty array (negative, #620)", () => {
+    const { container } = render(
+      <RoundWonModal
+        info={buildInfo({ endOfRoundJokerSteps: [] })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      container.querySelector("[data-testid^='round-won-joker-row-']"),
+    ).toBeNull();
+  });
+
+  test("renders a negative-amount joker step with a -$N prefix (#580 Rental)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          endOfRoundJokerSteps: [
+            {
+              jokerId: "business-card-rental",
+              jokerName: "Business Card (Rental)",
+              moneyEarned: -3,
+            },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("round-won-joker-amount-business-card-rental"),
+    ).toHaveTextContent("-$3");
+  });
+
+  test("subtracts a Rental drain from the total (#580)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 5,
+          interest: 0,
+          endOfRoundJokerSteps: [
+            {
+              jokerId: "business-card-rental",
+              jokerName: "Business Card (Rental)",
+              moneyEarned: -3,
+            },
+          ],
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$2");
+  });
+});
+
+describe("RoundWonModal — Green Deck payout (closes #818)", () => {
+  test("renders the combined hands+discards bonus row when usesHandsAndDiscardsBonus is true", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          remainingHandsCount: 3,
+          remainingDiscardsCount: 2,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent(
+      "Remaining hands + discards (5 × $2)",
+    );
+    expect(screen.getByTestId("round-won-hands")).toHaveTextContent("+$10");
+  });
+
+  test("suppresses the interest row entirely when usesHandsAndDiscardsBonus is true", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          remainingHandsCount: 1,
+          remainingDiscardsCount: 0,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+          interest: 0,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.queryByTestId("round-won-interest")).not.toBeInTheDocument();
+  });
+
+  test("falls back to default 'Remaining hands' label when the flag is omitted (negative)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({ remainingHandsCount: 2 })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-hands-label")).toHaveTextContent(
+      "Remaining hands (2 × $1)",
+    );
+  });
+
+  test("total includes the (hands + discards) × $2 bonus", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          baseReward: 3,
+          interest: 0,
+          remainingHandsCount: 2,
+          remainingDiscardsCount: 3,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$13");
+  });
+
+  test("hides the bonus row when bonusUnits is zero on Green Deck (negative)", () => {
+    render(
+      <RoundWonModal
+        info={buildInfo({
+          remainingHandsCount: 0,
+          remainingDiscardsCount: 0,
+          remainingHandsBonusPerUnit: 2,
+          usesHandsAndDiscardsBonus: true,
+        })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.queryByTestId("round-won-hands")).not.toBeInTheDocument();
   });
 });

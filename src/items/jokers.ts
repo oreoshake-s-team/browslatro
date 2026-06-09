@@ -35,15 +35,20 @@ export {
   allCardsScoreFromJokers,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
+  createRandomJoker,
   discardsOverrideFromJokers,
   effectiveJokerCount,
   extraDebtFloorFromJokers,
   extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
   extraStartingHandsFromJokers,
+  handEvalOptionsFromJokers,
+  hasAstronomerInJokers,
+  hasChaosTheClownInJokers,
   pickRandomEquipped,
   pickRandomFromCatalog,
   polychromeRandomJokerDestroyOthers,
+  probabilityMultiplierFromJokers,
   replaceJokersExceptCopyOf,
 } from "./jokers/collection";
 export * from "./jokers/factories";
@@ -80,3 +85,5 @@ export type {
 } from "./jokers/scoring/onDiscard";
 export { applyOnDiscardJokers } from "./jokers/scoring/onDiscard";
 export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
+export { applyHandPlayedToJokerStates } from "./jokers/state";
+export type { JokerStateValue } from "./jokers/types";

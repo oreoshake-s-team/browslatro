@@ -1,10 +1,18 @@
 import type { Blind } from "../cards/types";
-import { BASE_CHIPS, BLIND_MULTIPLIERS, GREEN_STAKE_CHIPS } from "../constants";
+import {
+  BASE_CHIPS,
+  BLIND_MULTIPLIERS,
+  GREEN_STAKE_CHIPS,
+  PURPLE_STAKE_CHIPS,
+} from "../constants";
 import type { BossBlind } from "../items/bosses";
 import { hasStakeModifier, type Stake } from "../items/stakes";
 
 export function baseChipsForAnte(ante: number, stake?: Stake): number {
   const index = ante - 1;
+  if (stake && hasStakeModifier(stake, "purple-ante-scaling")) {
+    return PURPLE_STAKE_CHIPS[index];
+  }
   if (stake && hasStakeModifier(stake, "green-ante-scaling")) {
     return GREEN_STAKE_CHIPS[index];
   }

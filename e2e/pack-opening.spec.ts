@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^Submit Hand$/;
+const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const SHOP_HEADING = /Shop/;
 
@@ -14,10 +14,12 @@ async function setDeterministic(page: Page): Promise<void> {
 
 async function openDetails(page: Page, text: RegExp): Promise<void> {
   const summary = page.getByText(text).first();
-  const detailsOpen = await summary
-    .locator("xpath=ancestor::details[1]")
-    .evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) await summary.click();
+  await expect(summary).toBeVisible();
+  const details = summary.locator("xpath=ancestor::details[1]");
+  await details.evaluate((el) => {
+    (el as HTMLDetailsElement).open = true;
+  });
+  await expect(details).toHaveAttribute("open", "");
 }
 
 async function forcePackPool(
@@ -26,13 +28,28 @@ async function forcePackPool(
 ): Promise<void> {
   await openDetails(page, /Apply modifiers/);
   await openDetails(page, /Force a Pack pool in next shop/);
-  await page.getByTestId(`force-pack-${pool}`).click();
+  const button = page.getByTestId(`force-pack-${pool}`);
+  await expect(button).toBeVisible();
+  await button.dispatchEvent("click");
 }
 
 async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
   await openDetails(page, /Apply modifiers/);
   await openDetails(page, /Add a specific Tarot/);
-  await page.locator(`button[data-tarot-id="${tarotId}"]`).click();
+  const button = page.locator(`button[data-tarot-id="${tarotId}"]`);
+  await expect(button).toBeVisible();
+  await button.dispatchEvent("click");
+}
+
+async function addSpectralToTray(
+  page: Page,
+  spectralId: string,
+): Promise<void> {
+  await openDetails(page, /Apply modifiers/);
+  await openDetails(page, /Add a specific Spectral/);
+  const button = page.locator(`button[data-spectral-id="${spectralId}"]`);
+  await expect(button).toBeVisible();
+  await button.dispatchEvent("click");
 }
 
 async function winRound1AndOpenShop(page: Page): Promise<void> {
@@ -52,6 +69,7 @@ async function buyFirstPackOffer(page: Page): Promise<void> {
     .first();
   await expect(packOffer).toBeVisible();
   await packOffer.locator("button.shop-offer-buy").click();
+  await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
 test.describe("Pack opening flow (#694)", () => {
@@ -143,6 +161,7 @@ test.describe("Pack opening flow (#694)", () => {
       .getByTestId("pack-open-preview-hand")
       .locator(".card")
       .first();
+    await expect(firstPreviewCard).toBeVisible();
     await firstPreviewCard.click();
     await page.locator('[data-consumable-kind="tarot"]').first().click();
     await expect(
@@ -163,6 +182,7 @@ test.describe("Pack opening flow (#694)", () => {
       .getByTestId("pack-open-preview-hand")
       .locator(".card")
       .first();
+    await expect(firstPreviewCard).toBeVisible();
     await firstPreviewCard.click();
     await page.locator('[data-consumable-kind="tarot"]').first().click();
     await expect(
@@ -170,5 +190,66 @@ test.describe("Pack opening flow (#694)", () => {
         .getByTestId("pack-open-preview-hand")
         .locator(".card.card-enhancement-wild"),
     ).toHaveCount(1);
+  });
+
+  test("Standard pack: picking a card increments the shop overlay deck pile count (closes #747)", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await winRound1AndOpenShop(page);
+    const deckPile = page.locator(".game-overlay-deck .deck-pile");
+    await expect(deckPile).toBeVisible();
+    const before = Number(
+      (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+    );
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await page.getByTestId("pack-open-pick-0").click();
+    await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
+    await expect
+      .poll(async () =>
+        Number(
+          (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+        ),
+      )
+      .toBe(before + 1);
+  });
+});
+
+test.describe("Consumables usable while a Standard pack is open (#821)", () => {
+  test.beforeEach(async ({ page }) => {
+    await setDeterministic(page);
+    await page.goto("/");
+    await page.getByTestId("new-run-confirm").click();
+  });
+
+  test("Strength tarot applied to a hand card mid-Standard-pack consumes the tarot and keeps the modal open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addTarotToTray(page, "strength");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.locator(HAND_CARDS).first()).toBeVisible();
+    await page.locator(HAND_CARDS).first().click();
+    await page.locator('[data-consumable-kind="tarot"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="tarot"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+  });
+
+  test("Black Hole spectral used mid-Standard-pack consumes the spectral and keeps the modal open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addSpectralToTray(page, "black-hole");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await page.locator('[data-consumable-kind="spectral"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="spectral"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
   });
 });

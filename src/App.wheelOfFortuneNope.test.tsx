@@ -88,6 +88,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
   async function openArcanaPackWithWheelOfFortune(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
+    shopPickerRngConfig.rng = () => 0.5;
     useGame.getState().setPendingForcedPacks((prev) => [...prev, "arcana"]);
     await user.click(screen.getByText(/^Win$/));
     await screen.findByTestId("shop-money");

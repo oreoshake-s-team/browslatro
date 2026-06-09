@@ -1,6 +1,11 @@
 import "./Shop.css";
 import { useState } from "react";
-import { MAX_JOKERS, type JokerEdition } from "../../items/jokers";
+import type {
+  CardEdition,
+  Enhancement,
+  Seal,
+} from "../../cards/types";
+import { type JokerEdition } from "../../items/jokers";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
@@ -9,11 +14,13 @@ import {
   type Voucher,
   type VoucherId,
 } from "../../items/vouchers";
+import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 export interface ShopProps {
   money: number;
   equippedJokerCount: number;
+  jokerCapacity: number;
   consumableCount: number;
   consumableCapacity: number;
   offers: ReadonlyArray<ShopItem>;
@@ -28,6 +35,7 @@ export interface ShopProps {
   onSetVoucher?: (id: string) => void;
   disabled?: boolean;
   extraRerollReduction?: number;
+  freeFirstReroll?: boolean;
 }
 
 const LOCK_TOOLTIP = "Finish picking from the pack first";
@@ -67,11 +75,12 @@ function resolveBuyState(
   effectivePrice: number,
   money: number,
   equippedJokerCount: number,
+  jokerCapacity: number,
   consumableCount: number,
   consumableCapacity: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
-  if (offer.kind === "joker" && equippedJokerCount >= MAX_JOKERS) {
+  if (offer.kind === "joker" && equippedJokerCount >= jokerCapacity) {
     return { kind: "slots-full" };
   }
   if (
@@ -109,12 +118,13 @@ function buyButtonLabel(
 function buyButtonTooltip(
   state: BuyButtonState,
   consumableCapacity: number,
+  jokerCapacity: number,
 ): string | undefined {
   switch (state.kind) {
     case "sold":
       return "Already purchased this round";
     case "slots-full":
-      return `Joker slots are full (max ${MAX_JOKERS})`;
+      return `Joker slots are full (max ${jokerCapacity})`;
     case "consumable-slots-full":
       return `Consumable slots are full (max ${consumableCapacity})`;
     case "unaffordable":
@@ -122,6 +132,53 @@ function buyButtonTooltip(
     case "available":
       return undefined;
   }
+}
+
+const SUIT_GLYPH: Record<string, string> = {
+  spades: "♠",
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+};
+
+const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
+  bonus: "Bonus",
+  mult: "Mult",
+  wild: "Wild",
+  glass: "Glass",
+  steel: "Steel",
+  stone: "Stone",
+  gold: "Gold",
+  lucky: "Lucky",
+};
+
+const CARD_EDITION_LABEL: Record<CardEdition, string> = {
+  foil: "Foil",
+  holographic: "Holographic",
+  polychrome: "Polychrome",
+};
+
+const SEAL_LABEL: Record<Seal, string> = {
+  gold: "Gold Seal",
+  red: "Red Seal",
+  blue: "Blue Seal",
+  purple: "Purple Seal",
+};
+
+function playingCardSummary(card: import("../../cards/types").Card): {
+  readonly name: string;
+  readonly description: string;
+} {
+  const name = `${card.rank}${SUIT_GLYPH[card.suit] ?? ""}`;
+  const traits: string[] = [];
+  if (card.enhancement) traits.push(`${card.enhancement} enhancement`);
+  if (card.edition) traits.push(`${card.edition} edition`);
+  if (card.seal) traits.push(`${card.seal} seal`);
+  const description =
+    traits.length === 0
+      ? "Adds this playing card to your deck."
+      : `Adds this playing card with ${traits.join(", ")} to your deck.`;
+  return { name, description };
 }
 
 function offerSubject(offer: ShopItem): {
@@ -138,6 +195,14 @@ function offerSubject(offer: ShopItem): {
       return offer.tarot;
     case "spectral":
       return offer.spectral;
+    case "playing-card": {
+      const summary = playingCardSummary(offer.card);
+      return {
+        id: `playing-card-${offer.card.id}`,
+        name: summary.name,
+        description: summary.description,
+      };
+    }
     case "pack": {
       const optionCount = packOptionsCount(offer.pack.pool, offer.pack.variant);
       const pickCount = packPickLimit(offer.pack.variant);
@@ -158,6 +223,7 @@ const OFFER_KIND_BADGE: Readonly<
   planet: { icon: "🪐", label: "Planet" },
   tarot: { icon: "🔮", label: "Tarot" },
   spectral: { icon: "👻", label: "Spectral" },
+  "playing-card": { icon: "♠", label: "Card" },
   pack: { icon: "🎁", label: "Pack" },
 };
 
@@ -171,6 +237,7 @@ const EDITION_LABEL: Readonly<Record<JokerEdition, string>> = {
 export default function Shop({
   money,
   equippedJokerCount,
+  jokerCapacity,
   consumableCount,
   consumableCapacity,
   offers,
@@ -185,6 +252,7 @@ export default function Shop({
   onSetVoucher,
   disabled = false,
   extraRerollReduction = 0,
+  freeFirstReroll = false,
 }: ShopProps) {
   useEscapeToClose(onNext, !disabled);
   const canOverrideVoucher =
@@ -192,10 +260,12 @@ export default function Shop({
     voucherOptions.length > 0 &&
     Boolean(onSetVoucher);
   const [rerollCount, setRerollCount] = useState(0);
-  const currentRerollCost = rerollCostFor(
+  const baseRerollCost = rerollCostFor(
     rerollCount,
     rerollCostReduction(ownedVoucherIds) + extraRerollReduction,
   );
+  const isFreeFirstReroll = freeFirstReroll && rerollCount === 0;
+  const currentRerollCost = isFreeFirstReroll ? 0 : baseRerollCost;
   const canAffordReroll = money >= currentRerollCost;
   const rerollTooltip = disabled
     ? LOCK_TOOLTIP
@@ -217,6 +287,7 @@ export default function Shop({
       effectivePrice,
       money,
       equippedJokerCount,
+      jokerCapacity,
       consumableCount,
       consumableCapacity,
     );
@@ -224,10 +295,18 @@ export default function Shop({
     const subject = offerSubject(offer);
     const badge = OFFER_KIND_BADGE[offer.kind];
     const edition = offer.kind === "joker" ? offer.joker.edition : undefined;
+    const card = offer.kind === "playing-card" ? offer.card : undefined;
+    const cardEnhancement = card?.enhancement ?? undefined;
+    const cardEdition = card?.edition ?? undefined;
+    const cardSeal = card?.seal ?? undefined;
+    const playingCardEnhanced = Boolean(
+      cardEnhancement || cardEdition || cardSeal,
+    );
     const isFree = !offer.sold && effectivePrice === 0;
     const modifierClasses = [
       offer.sold && "shop-offer-sold",
       edition && "shop-offer-editioned",
+      playingCardEnhanced && "shop-offer-playing-card-enhanced",
       isFree && "shop-offer-free",
     ]
       .filter(Boolean)
@@ -241,6 +320,9 @@ export default function Shop({
         data-testid={`shop-offer-${idx}`}
         data-offer-kind={offer.kind}
         data-edition={edition}
+        data-card-enhancement={cardEnhancement}
+        data-card-edition={cardEdition}
+        data-card-seal={cardSeal}
         data-pack-pool={offer.kind === "pack" ? offer.pack.pool : undefined}
       >
         <span
@@ -262,8 +344,35 @@ export default function Shop({
               {EDITION_LABEL[edition]}
             </span>
           )}
+          {cardEnhancement && (
+            <span
+              className={`shop-offer-card-badge shop-offer-card-enhancement-badge shop-offer-card-enhancement-${cardEnhancement}`}
+              data-testid={`shop-card-enhancement-${idx}`}
+            >
+              {ENHANCEMENT_LABEL[cardEnhancement]}
+            </span>
+          )}
+          {cardEdition && (
+            <span
+              className={`shop-offer-card-badge shop-offer-card-edition-badge shop-offer-card-edition-${cardEdition}`}
+              data-testid={`shop-card-edition-${idx}`}
+            >
+              {CARD_EDITION_LABEL[cardEdition]}
+            </span>
+          )}
+          {cardSeal && (
+            <span
+              className={`shop-offer-card-badge shop-offer-card-seal-badge shop-offer-card-seal-${cardSeal}`}
+              data-testid={`shop-card-seal-${idx}`}
+            >
+              {SEAL_LABEL[cardSeal]}
+            </span>
+          )}
         </span>
         <span className="shop-offer-description">{subject.description}</span>
+        {offer.kind === "joker" && (
+          <JokerStickerBadges joker={offer.joker} />
+        )}
         <span className="shop-offer-price">
           {isFree ? (
             <span className="shop-offer-price-free">FREE</span>
@@ -281,7 +390,7 @@ export default function Shop({
           className="shop-offer-buy"
           disabled={disabled || state.kind !== "available"}
           title={
-            disabled ? LOCK_TOOLTIP : buyButtonTooltip(state, consumableCapacity)
+            disabled ? LOCK_TOOLTIP : buyButtonTooltip(state, consumableCapacity, jokerCapacity)
           }
           aria-label={`${label}: ${subject.name}`}
           onClick={() => onBuy(idx)}

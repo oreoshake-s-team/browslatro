@@ -123,4 +123,33 @@ test.describe("Tarots in-hand (#696)", () => {
     await tarotTile(page).click();
     await expect(page.locator('[data-consumable-kind="tarot"]')).toHaveCount(1);
   });
+
+  test("Death: with 2 cards selected, the left card's rank changes to match the right (#617)", async ({
+    page,
+  }) => {
+    await enterRoundWithTarot(page, "death");
+    const left = handCardAt(page, 0);
+    const right = handCardAt(page, 1);
+    const rightRankBefore =
+      (await right.locator(".card-rank").first().textContent()) ?? "";
+    const leftRankBefore =
+      (await left.locator(".card-rank").first().textContent()) ?? "";
+    expect(rightRankBefore).not.toBe(leftRankBefore);
+    await left.click();
+    await right.click();
+    await tarotTile(page).click();
+    const leftRankAfter =
+      (await handCardAt(page, 0).locator(".card-rank").first().textContent()) ??
+      "";
+    expect(leftRankAfter).toBe(rightRankBefore);
+  });
+
+  test("Death with only 1 card selected is a no-op (consumable stays in tray) — negative", async ({
+    page,
+  }) => {
+    await enterRoundWithTarot(page, "death");
+    await handCardAt(page, 0).click();
+    await tarotTile(page).click();
+    await expect(page.locator('[data-consumable-kind="tarot"]')).toHaveCount(1);
+  });
 });

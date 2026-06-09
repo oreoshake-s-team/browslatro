@@ -1,5 +1,6 @@
 import type { Card } from "../../../cards/types";
 import type { HandLabel } from "../../../scoring/handEvaluator";
+import type { HandPlayCounts } from "../../../components/hud/handPlayCounts";
 import type { RandomSource } from "../types";
 
 export interface JokerScoringResult {
@@ -47,6 +48,7 @@ export interface JokerCardResult {
 
 export interface PerCardContext {
   readonly firstFaceAlreadyScored?: boolean;
+  readonly smearedSuits?: boolean;
 }
 
 export interface HandLevelContext {
@@ -61,4 +63,5 @@ export interface HandLevelContext {
   readonly fullDeck?: ReadonlyArray<Card>;
   readonly remainingDeck?: ReadonlyArray<Card>;
   readonly baseDeckSize?: number;
+  readonly handPlayCounts?: HandPlayCounts;
 }

@@ -63,18 +63,16 @@ export function applyStakeStickersOnRoll(
   rng: RandomSource = Math.random,
 ): Joker {
   if (!odds) return joker;
-  const stickers: JokerSticker[] = [];
+  let rolled: JokerSticker | null = null;
   if (odds.eternal !== undefined && rng() < odds.eternal) {
-    stickers.push({ kind: "eternal" });
+    rolled = { kind: "eternal" };
+  } else if (odds.perishable !== undefined && rng() < odds.perishable) {
+    rolled = { kind: "perishable", roundsHeld: 0 };
+  } else if (odds.rental !== undefined && rng() < odds.rental) {
+    rolled = { kind: "rental" };
   }
-  if (odds.perishable !== undefined && rng() < odds.perishable) {
-    stickers.push({ kind: "perishable", roundsHeld: 0 });
-  }
-  if (odds.rental !== undefined && rng() < odds.rental) {
-    stickers.push({ kind: "rental" });
-  }
-  if (stickers.length === 0) return joker;
-  return { ...joker, stickers: [...jokerStickers(joker), ...stickers] };
+  if (rolled === null) return joker;
+  return { ...joker, stickers: [...jokerStickers(joker), rolled] };
 }
 
 export function tickPerishableRounds(jokers: ReadonlyArray<Joker>): Joker[] {

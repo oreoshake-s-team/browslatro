@@ -17,10 +17,24 @@ export type Deck =
 
 export const DEFAULT_DECK: Deck = "red-deck";
 
+export type DeckCompositionTransform =
+  | "drop-face-cards"
+  | "spades-and-hearts-only";
+
 export type DeckModifier =
   | { readonly kind: "starting-money-delta"; readonly amount: number }
   | { readonly kind: "starting-discards-delta"; readonly amount: number }
-  | { readonly kind: "starting-hands-delta"; readonly amount: number };
+  | { readonly kind: "starting-hands-delta"; readonly amount: number }
+  | { readonly kind: "joker-slots-delta"; readonly amount: number }
+  | {
+      readonly kind: "end-of-round-bonus-per-remaining-hand-and-discard";
+      readonly amount: number;
+    }
+  | { readonly kind: "no-interest" }
+  | {
+      readonly kind: "deck-composition";
+      readonly transform: DeckCompositionTransform;
+    };
 
 export interface DeckSpec {
   readonly id: Deck;
@@ -52,13 +66,46 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     implemented: true,
     modifiers: [{ kind: "starting-hands-delta", amount: 1 }],
   },
-  { id: "green-deck", name: "Green Deck", description: "At end of round, +$2 per remaining hand and discard; no interest.", implemented: false, modifiers: [] },
-  { id: "black-deck", name: "Black Deck", description: "+1 joker slot, -1 hand each round.", implemented: false, modifiers: [] },
+  {
+    id: "green-deck",
+    name: "Green Deck",
+    description:
+      "At end of round, +$2 per remaining hand and discard; no interest.",
+    implemented: true,
+    modifiers: [
+      { kind: "end-of-round-bonus-per-remaining-hand-and-discard", amount: 2 },
+      { kind: "no-interest" },
+    ],
+  },
+  {
+    id: "black-deck",
+    name: "Black Deck",
+    description: "+1 joker slot, -1 hand each round.",
+    implemented: true,
+    modifiers: [
+      { kind: "joker-slots-delta", amount: 1 },
+      { kind: "starting-hands-delta", amount: -1 },
+    ],
+  },
   { id: "magic-deck", name: "Magic Deck", description: "Start with Crystal Ball voucher and 2 copies of The Fool.", implemented: false, modifiers: [] },
   { id: "nebula-deck", name: "Nebula Deck", description: "Start with Telescope voucher; -1 consumable slot.", implemented: false, modifiers: [] },
   { id: "ghost-deck", name: "Ghost Deck", description: "Spectral cards may appear in shop; start with Hex spectral.", implemented: false, modifiers: [] },
-  { id: "abandoned-deck", name: "Abandoned Deck", description: "Start run with no face cards in deck.", implemented: false, modifiers: [] },
-  { id: "checkered-deck", name: "Checkered Deck", description: "Start with 26 Spades and 26 Hearts.", implemented: false, modifiers: [] },
+  {
+    id: "abandoned-deck",
+    name: "Abandoned Deck",
+    description: "Start run with no face cards (J, Q, K) in deck.",
+    implemented: true,
+    modifiers: [{ kind: "deck-composition", transform: "drop-face-cards" }],
+  },
+  {
+    id: "checkered-deck",
+    name: "Checkered Deck",
+    description: "Start with 26 Spades and 26 Hearts.",
+    implemented: true,
+    modifiers: [
+      { kind: "deck-composition", transform: "spades-and-hearts-only" },
+    ],
+  },
   { id: "zodiac-deck", name: "Zodiac Deck", description: "Start with Tarot Merchant, Planet Merchant, and Overstock vouchers.", implemented: false, modifiers: [] },
   { id: "painted-deck", name: "Painted Deck", description: "+2 hand size, -1 joker slot.", implemented: false, modifiers: [] },
   { id: "anaglyph-deck", name: "Anaglyph Deck", description: "Gain a Double Tag after each Boss Blind defeat.", implemented: false, modifiers: [] },
@@ -80,12 +127,16 @@ export function getActiveDeckModifiers(deck: Deck): ReadonlyArray<DeckModifier> 
   return getDeckSpec(deck).modifiers;
 }
 
-function sumDeckModifier<K extends DeckModifier["kind"]>(
+type AmountDeckModifier = Extract<DeckModifier, { amount: number }>;
+
+function sumDeckModifier<K extends AmountDeckModifier["kind"]>(
   deck: Deck,
   kind: K,
 ): number {
   return getActiveDeckModifiers(deck)
-    .filter((m): m is Extract<DeckModifier, { kind: K }> => m.kind === kind)
+    .filter(
+      (m): m is Extract<AmountDeckModifier, { kind: K }> => m.kind === kind,
+    )
     .reduce((sum, m) => sum + m.amount, 0);
 }
 
@@ -97,3 +148,25 @@ export const deckStartingDiscardsDelta = (deck: Deck): number =>
 
 export const deckStartingHandsDelta = (deck: Deck): number =>
   sumDeckModifier(deck, "starting-hands-delta");
+
+export const deckJokerSlotsDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "joker-slots-delta");
+
+export const deckEndOfRoundBonusPerRemainingHandAndDiscard = (
+  deck: Deck,
+): number =>
+  sumDeckModifier(deck, "end-of-round-bonus-per-remaining-hand-and-discard");
+
+export const deckSuppressesInterest = (deck: Deck): boolean =>
+  getActiveDeckModifiers(deck).some((m) => m.kind === "no-interest");
+
+export function deckCompositionTransforms(
+  deck: Deck,
+): ReadonlyArray<DeckCompositionTransform> {
+  return getActiveDeckModifiers(deck)
+    .filter(
+      (m): m is Extract<DeckModifier, { kind: "deck-composition" }> =>
+        m.kind === "deck-composition",
+    )
+    .map((m) => m.transform);
+}

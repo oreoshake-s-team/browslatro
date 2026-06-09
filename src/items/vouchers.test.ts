@@ -1,4 +1,5 @@
 import {
+  OBSERVATORY_MULT_PER_PLANET,
   applyShopDiscount,
   createVoucherCatalog,
   extraConsumableSlots,
@@ -7,11 +8,16 @@ import {
   extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
+  illusionEnabled,
   interestCapFor,
+  magicTrickEnabled,
+  observatoryMultFor,
+  offerKindWeights,
   pickVoucherForAnte,
   pickVouchersForAnte,
   rerollCostReduction,
   shopPriceDiscount,
+  tarotToSpectralSwapChance,
   VOUCHER_BASE_PRICE,
   type Voucher,
   type VoucherId,
@@ -51,6 +57,23 @@ describe("vouchers catalog", () => {
   test("Petroglyph requires Hieroglyph", () => {
     const voucher = createVoucherCatalog().find((v) => v.id === "petroglyph");
     expect(voucher?.requires).toBe("hieroglyph");
+  });
+
+  test("includes the Omen Globe voucher gated by Crystal Ball", () => {
+    const voucher = createVoucherCatalog().find((v) => v.id === "omen-globe");
+    expect(voucher?.requires).toBe("crystal-ball");
+  });
+});
+
+describe("tarotToSpectralSwapChance", () => {
+  test("returns 0 when Omen Globe is not owned", () => {
+    expect(tarotToSpectralSwapChance(new Set<VoucherId>())).toBe(0);
+  });
+
+  test("returns 0.2 when Omen Globe is owned", () => {
+    expect(
+      tarotToSpectralSwapChance(new Set<VoucherId>(["omen-globe"])),
+    ).toBe(0.2);
   });
 });
 
@@ -346,5 +369,119 @@ describe("extraJokerSlots", () => {
 
   test("Blank alone grants 0 slots (it's a prereq with no effect)", () => {
     expect(extraJokerSlots(new Set<VoucherId>(["blank"]))).toBe(0);
+  });
+});
+
+describe("Telescope / Observatory voucher catalog (#281)", () => {
+  test("Telescope is in the catalog with no prerequisite", () => {
+    const telescope = createVoucherCatalog().find((v) => v.id === "telescope");
+    expect(telescope?.requires).toBeUndefined();
+  });
+
+  test("Observatory is in the catalog and requires Telescope", () => {
+    const observatory = createVoucherCatalog().find(
+      (v) => v.id === "observatory",
+    );
+    expect(observatory?.requires).toBe("telescope");
+  });
+
+  test("Telescope description mentions most-played hand", () => {
+    const telescope = createVoucherCatalog().find((v) => v.id === "telescope");
+    expect(telescope?.description).toMatch(/most-played/);
+  });
+
+  test("Observatory description mentions ×1.5 Mult", () => {
+    const observatory = createVoucherCatalog().find(
+      (v) => v.id === "observatory",
+    );
+    expect(observatory?.description).toMatch(/1\.5/);
+  });
+});
+
+describe("observatoryMultFor (#281)", () => {
+  test("returns 1 when Observatory is not owned", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(), 3)).toBe(1);
+  });
+
+  test("returns 1 when no held planet matches the played hand (negative)", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 0)).toBe(1);
+  });
+
+  test("returns ×1.5 for a single matching planet", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 1)).toBe(
+      OBSERVATORY_MULT_PER_PLANET,
+    );
+  });
+
+  test("stacks multiplicatively for multiple matching planets", () => {
+    expect(observatoryMultFor(new Set<VoucherId>(["observatory"]), 2)).toBe(
+      OBSERVATORY_MULT_PER_PLANET ** 2,
+    );
+  });
+});
+
+describe("Magic Trick / Illusion voucher catalog (#282)", () => {
+  test("Magic Trick is in the catalog with no prerequisite", () => {
+    const magicTrick = createVoucherCatalog().find(
+      (v) => v.id === "magic-trick",
+    );
+    expect(magicTrick?.requires).toBeUndefined();
+  });
+
+  test("Illusion is in the catalog and requires Magic Trick", () => {
+    const illusion = createVoucherCatalog().find((v) => v.id === "illusion");
+    expect(illusion?.requires).toBe("magic-trick");
+  });
+
+  test("Magic Trick description mentions playing cards in the shop", () => {
+    const magicTrick = createVoucherCatalog().find(
+      (v) => v.id === "magic-trick",
+    );
+    expect(magicTrick?.description.toLowerCase()).toMatch(/playing cards/);
+  });
+
+  test("Illusion description mentions enhancement, edition, and/or seal", () => {
+    const illusion = createVoucherCatalog().find((v) => v.id === "illusion");
+    expect(illusion?.description.toLowerCase()).toMatch(
+      /enhancement.*edition.*seal/,
+    );
+  });
+});
+
+describe("magicTrickEnabled (#282)", () => {
+  test("returns false when Magic Trick is not owned", () => {
+    expect(magicTrickEnabled(new Set<VoucherId>())).toBe(false);
+  });
+
+  test("returns true when Magic Trick is owned", () => {
+    expect(magicTrickEnabled(new Set<VoucherId>(["magic-trick"]))).toBe(true);
+  });
+});
+
+describe("illusionEnabled (#282)", () => {
+  test("returns false when Illusion is not owned", () => {
+    expect(illusionEnabled(new Set<VoucherId>())).toBe(false);
+  });
+
+  test("returns true when Illusion is owned", () => {
+    expect(illusionEnabled(new Set<VoucherId>(["illusion"]))).toBe(true);
+  });
+});
+
+describe("offerKindWeights — playing-card weight (#282)", () => {
+  test("playing-card weight is 0 when Magic Trick is not owned", () => {
+    expect(offerKindWeights(new Set<VoucherId>())["playing-card"]).toBe(0);
+  });
+
+  test("playing-card weight is positive when Magic Trick is owned", () => {
+    expect(
+      offerKindWeights(new Set<VoucherId>(["magic-trick"]))["playing-card"],
+    ).toBeGreaterThan(0);
+  });
+});
+
+describe("voucher catalog count (#282)", () => {
+  test("catalog contains exactly the expected number of vouchers", () => {
+    expect(createVoucherCatalog()).toHaveLength(32);
   });
 });

@@ -1,7 +1,14 @@
 import { useRef, type MutableRefObject } from "react";
 import { useGame } from "../store/game";
 import type { Card } from "../cards/types";
-import { applyBossFaceDown, bossHandSize } from "../items/bosses";
+import {
+  applyBossFaceDown,
+  bossHandSize,
+  bossPostPlayDiscardCount,
+  bossRefillCountOverride,
+  hookRngConfig,
+  pickHookDiscardIds,
+} from "../items/bosses";
 import { drawCountForRefill, HAND_SIZE } from "../cards/deck";
 import {
   extraConsumableSlots,
@@ -23,6 +30,7 @@ export interface UseDiscardPipelineResult {
   readonly pendingHandPlayResetRef: MutableRefObject<boolean>;
   readonly skipDrawAfterDiscardRef: MutableRefObject<boolean>;
   readonly handleCardDiscardEnd: (card: Card) => void;
+  readonly runDiscard: (ids: ReadonlySet<number>) => void;
   readonly discardSelected: () => void;
   readonly resetForNewRound: () => void;
 }
@@ -66,16 +74,34 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
   function finalizeDiscard(idsToDiscard: ReadonlySet<number>): void {
+    const wasHandPlayReset = pendingHandPlayResetRef.current;
+    const skippedDraw = skipDrawAfterDiscardRef.current;
     const kept = dealt.hand.filter((c) => !idsToDiscard.has(c.id));
-    if (skipDrawAfterDiscardRef.current) {
+    const hookCount =
+      wasHandPlayReset && !skippedDraw && blind === 3
+        ? bossPostPlayDiscardCount(currentBoss)
+        : 0;
+    const hookIds =
+      hookCount > 0
+        ? pickHookDiscardIds(kept, new Set(), hookCount, hookRngConfig.rng)
+        : [];
+    const deferRefillForHook = hookIds.length > 0;
+    if (skippedDraw) {
       skipDrawAfterDiscardRef.current = false;
+      setDealt({ hand: kept, remaining: dealt.remaining });
+    } else if (deferRefillForHook) {
       setDealt({ hand: kept, remaining: dealt.remaining });
     } else {
       const effectiveHandSize =
         blind === 3 ? bossHandSize(currentBoss, currentHandSize) : currentHandSize;
-      const drawCount = drawCountForRefill(
-        effectiveHandSize,
-        kept.length,
+      const drawCount = bossRefillCountOverride(
+        currentBoss,
+        blind === 3,
+        drawCountForRefill(
+          effectiveHandSize,
+          kept.length,
+          dealt.remaining.length,
+        ),
         dealt.remaining.length,
       );
       const drawn = dealt.remaining.slice(0, drawCount);
@@ -93,9 +119,12 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     setSelectedHand(null);
     setChips(0);
     setMultiplier(0);
-    if (pendingHandPlayResetRef.current) {
+    if (wasHandPlayReset) {
       pendingHandPlayResetRef.current = false;
       setHandPlaySignal((prev) => prev + 1);
+    }
+    if (deferRefillForHook) {
+      runDiscard(new Set(hookIds));
     }
   }
 
@@ -108,12 +137,11 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     }
   }
 
-  function discardSelected(): void {
-    if (discardingIds.size > 0) return;
-    if (selectedIds.size === 0) return;
-    if (remainingDiscards <= 0) return;
+  function runDiscard(ids: ReadonlySet<number>): void {
+    if (ids.size === 0) return;
 
-    const purpleDiscards = purpleSealDiscarded(dealt.hand, selectedIds);
+    const currentHand = useGame.getState().dealt.hand;
+    const purpleDiscards = purpleSealDiscarded(currentHand, ids);
     if (purpleDiscards.length > 0) {
       setConsumables((prev) => {
         let next = prev;
@@ -130,12 +158,10 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
       });
     }
 
-    pendingDiscardCountRef.current = selectedIds.size;
-    setDiscardingIds(selectedIds);
-    setRemainingDiscards((prev) => prev - 1);
-    setDiscardsUsedThisRound((prev) => prev + 1);
+    pendingDiscardCountRef.current = ids.size;
+    setDiscardingIds(ids);
 
-    const discardedCards = dealt.hand.filter((c) => selectedIds.has(c.id));
+    const discardedCards = currentHand.filter((c) => ids.has(c.id));
     const onDiscardResult = applyOnDiscardJokers(jokers, discardedCards, {
       discardsUsedThisRound: discardsUsedThisRound + 1,
     });
@@ -172,6 +198,16 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     }
   }
 
+  function discardSelected(): void {
+    if (discardingIds.size > 0) return;
+    if (selectedIds.size === 0) return;
+    if (remainingDiscards <= 0) return;
+
+    runDiscard(selectedIds);
+    setRemainingDiscards((prev) => prev - 1);
+    setDiscardsUsedThisRound((prev) => prev + 1);
+  }
+
   function resetForNewRound(): void {
     pendingDiscardCountRef.current = 0;
     pendingHandPlayResetRef.current = false;
@@ -183,6 +219,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
     handleCardDiscardEnd,
+    runDiscard,
     discardSelected,
     resetForNewRound,
   };

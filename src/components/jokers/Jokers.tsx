@@ -5,6 +5,7 @@ import {
   MAX_JOKERS,
   canSellJoker,
   effectiveJokerCount,
+  isJokerActive,
   jokerSellValue,
   type Joker,
 } from "../../items/jokers";
@@ -18,6 +19,7 @@ export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
 interface JokersProps {
   jokers: ReadonlyArray<Joker>;
+  capacity?: number;
   pulseCounters?: Readonly<Record<string, number>>;
   onReorder?: (orderedIds: ReadonlyArray<string>) => void;
   onSell?: (index: number) => void;
@@ -29,6 +31,7 @@ interface JokersProps {
 
 export default function Jokers({
   jokers,
+  capacity = MAX_JOKERS,
   pulseCounters,
   onReorder,
   onSell,
@@ -48,7 +51,7 @@ export default function Jokers({
     onDrop: onConsumableDrop,
   });
   const listRef = useRef<HTMLUListElement | null>(null);
-  const emptyCount = Math.max(0, MAX_JOKERS - effectiveJokerCount(jokers));
+  const emptyCount = Math.max(0, capacity - effectiveJokerCount(jokers));
   const reorderable = Boolean(onReorder);
   const sellable = Boolean(onSell);
   const tileDraggable = reorderable || sellable;
@@ -152,6 +155,7 @@ export default function Jokers({
       className={`jokers${showDropZone ? " jokers-consumable-target" : ""}${
         dropZone.hover ? " jokers-consumable-hover" : ""
       }`}
+      style={{ "--joker-capacity": capacity } as React.CSSProperties}
       aria-label="Equipped jokers"
       data-consumable-drop-active={showDropZone || undefined}
       onDragOver={dropZone.onDragOver}
@@ -179,17 +183,20 @@ export default function Jokers({
           const isDragging = draggingId === joker.id;
           const sellValue = jokerSellValue(joker);
           const jokerSellable = sellable && canSellJoker(joker);
+          const debuffed = !isJokerActive(joker);
           const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
           const editionClass = joker.edition
             ? ` joker-tile-edition joker-tile-edition-${joker.edition}`
             : "";
+          const debuffedClass = debuffed ? " joker-tile-debuffed" : "";
           const editionLabel = editionInfo
             ? ` ${editionInfo.name} edition: ${editionInfo.description}.`
             : "";
+          const debuffedLabel = debuffed ? " Debuffed — does not score." : "";
           const ariaLabel = jokerSellable
-            ? `${joker.name}. ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
-            : editionInfo || sellable
-              ? `${joker.name}. ${joker.description}.${editionLabel}`
+            ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
+            : editionInfo || sellable || debuffed
+              ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel}`
               : undefined;
           const tooltipId = `${tooltipIdBase}-${joker.id}`;
           const tooltipOpen = tooltipOpenId === joker.id;
@@ -199,13 +206,14 @@ export default function Jokers({
               <li
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
-                }${editionClass}`}
+                }${editionClass}${debuffedClass}`}
                 title={joker.description}
                 aria-label={ariaLabel}
                 aria-describedby={tooltipOpen ? tooltipId : undefined}
                 tabIndex={0}
                 data-testid={`joker-tile-filled-${joker.id}`}
                 data-edition={joker.edition ?? undefined}
+                data-debuffed={debuffed || undefined}
                 draggable={tileDraggable || undefined}
                 aria-grabbed={isDragging || undefined}
                 onMouseEnter={(e) => openTooltip(joker.id, e.currentTarget)}

@@ -1,7 +1,7 @@
 .jokers {
   position: relative;
   display: flex;
-  flex: 1 1 41rem;
+  flex: 1 1 calc(var(--joker-capacity, 5) * 8.5rem + 5.3rem);
   min-width: 0;
   flex-direction: column;
   align-items: stretch;
@@ -50,6 +50,16 @@
   color: #5c3c00;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.joker-tile-debuffed {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.joker-tile-debuffed .joker-tile-name,
+.joker-tile-debuffed .joker-tile-description {
+  text-decoration: line-through;
 }
 
 .joker-tile-inner {

@@ -1,12 +1,63 @@
 import type { PlanetCard } from "./planets";
 import type { TarotCard } from "./tarots";
 import type { SpectralCard } from "./spectrals";
+import { hiddenSpectralForRoll } from "./spectrals";
 import type { Joker, RandomSource } from "./jokers";
 import type { Card, Enhancement } from "../cards/types";
 import { ENHANCEMENT_KINDS } from "../cards/enhancements";
 import { SEAL_KINDS } from "../cards/seals";
 import { RANKS, SUITS, nextCardId } from "../cards/deck";
 import { rollChance } from "../dev/chanceOverride";
+
+const FORCE_PACK_TAROT_IDS_KEY = "browslatro:forcePackTarotIds";
+const FORCE_PACK_SPECTRAL_IDS_KEY = "browslatro:forcePackSpectralIds";
+const FORCE_PACK_VARIANT_KEY = "browslatro:forcePackVariant";
+
+function readForcedPackVariant(): PackVariant | null {
+  try {
+    const raw = window.localStorage.getItem(FORCE_PACK_VARIANT_KEY);
+    if (raw === "normal" || raw === "jumbo" || raw === "mega") return raw;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function readForcedIdsFromStorage(key: string): ReadonlyArray<string> {
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return [];
+    return raw.split(",").map((s) => s.trim()).filter((s) => s.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+function readForcedPackTarotIds(
+  catalog: ReadonlyArray<TarotCard>,
+): ReadonlyArray<TarotCard> {
+  const ids = readForcedIdsFromStorage(FORCE_PACK_TAROT_IDS_KEY);
+  if (ids.length === 0) return [];
+  const out: TarotCard[] = [];
+  for (const id of ids) {
+    const tarot = catalog.find((t) => t.id === id);
+    if (tarot) out.push(tarot);
+  }
+  return out;
+}
+
+function readForcedPackSpectralIds(
+  catalog: ReadonlyArray<SpectralCard>,
+): ReadonlyArray<SpectralCard> {
+  const ids = readForcedIdsFromStorage(FORCE_PACK_SPECTRAL_IDS_KEY);
+  if (ids.length === 0) return [];
+  const out: SpectralCard[] = [];
+  for (const id of ids) {
+    const spectral = catalog.find((s) => s.id === id);
+    if (spectral) out.push(spectral);
+  }
+  return out;
+}
 
 export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral" | "standard";
 
@@ -124,22 +175,48 @@ export interface RollPackOptionsArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly excludedJokerIds?: ReadonlyArray<string>;
+  readonly guaranteedPlanetId?: string;
   readonly rng: RandomSource;
 }
 
 export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOption> {
   const want = packOptionsCount(args.pool, args.variant);
+  if (args.pool === "arcana") {
+    const forced = readForcedPackTarotIds(args.tarotCatalog);
+    if (forced.length > 0) {
+      const sliced = forced.slice(0, want);
+      return sliced.map((tarot) => ({ kind: "tarot" as const, tarot }));
+    }
+  }
+  if (args.pool === "spectral") {
+    const forced = readForcedPackSpectralIds(args.spectralCatalog);
+    if (forced.length > 0) {
+      const sliced = forced.slice(0, want);
+      return sliced.map((spectral) => ({ kind: "spectral" as const, spectral }));
+    }
+  }
   if (args.pool === "celestial") {
+    const guaranteed = args.guaranteedPlanetId
+      ? args.planetCatalog.find((p) => p.id === args.guaranteedPlanetId) ?? null
+      : null;
+    if (guaranteed && want >= 1) {
+      const rest = drawWithoutReplacement(
+        args.planetCatalog.filter((p) => p.id !== guaranteed.id),
+        want - 1,
+        args.rng,
+      );
+      return [guaranteed, ...rest].map((planet) => ({
+        kind: "planet" as const,
+        planet,
+      }));
+    }
     return drawWithoutReplacement(args.planetCatalog, want, args.rng).map((planet) => ({
       kind: "planet" as const,
       planet,
     }));
   }
   if (args.pool === "arcana") {
-    return drawWithoutReplacement(args.tarotCatalog, want, args.rng).map((tarot) => ({
-      kind: "tarot" as const,
-      tarot,
-    }));
+    return drawArcanaWithHiddenSpectrals(args, want);
   }
   if (args.pool === "buffoon") {
     const excluded = new Set(args.excludedJokerIds ?? []);
@@ -150,10 +227,7 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
     }));
   }
   if (args.pool === "spectral") {
-    return drawWithoutReplacement(args.spectralCatalog, want, args.rng).map((spectral) => ({
-      kind: "spectral" as const,
-      spectral,
-    }));
+    return drawSpectralPoolWithHiddenSpectrals(args, want);
   }
   if (args.pool === "standard") {
     const out: PackOption[] = [];
@@ -185,6 +259,48 @@ export function rollStandardCard(rng: RandomSource): Card {
   };
 }
 
+function drawArcanaWithHiddenSpectrals(
+  args: RollPackOptionsArgs,
+  want: number,
+): ReadonlyArray<PackOption> {
+  const tarotPool = [...args.tarotCatalog];
+  const out: PackOption[] = [];
+  for (let i = 0; i < want; i += 1) {
+    const roll = args.rng();
+    const hidden = hiddenSpectralForRoll(roll, args.spectralCatalog);
+    if (hidden) {
+      out.push({ kind: "spectral", spectral: hidden });
+      continue;
+    }
+    if (tarotPool.length === 0) break;
+    const idx = Math.floor(roll * tarotPool.length);
+    out.push({ kind: "tarot", tarot: tarotPool[idx] });
+    tarotPool.splice(idx, 1);
+  }
+  return out;
+}
+
+function drawSpectralPoolWithHiddenSpectrals(
+  args: RollPackOptionsArgs,
+  want: number,
+): ReadonlyArray<PackOption> {
+  const pool = args.spectralCatalog.filter((s) => !s.hidden);
+  const out: PackOption[] = [];
+  for (let i = 0; i < want; i += 1) {
+    const roll = args.rng();
+    const hidden = hiddenSpectralForRoll(roll, args.spectralCatalog);
+    if (hidden) {
+      out.push({ kind: "spectral", spectral: hidden });
+      continue;
+    }
+    if (pool.length === 0) break;
+    const idx = Math.floor(roll * pool.length);
+    out.push({ kind: "spectral", spectral: pool[idx] });
+    pool.splice(idx, 1);
+  }
+  return out;
+}
+
 function drawWithoutReplacement<T>(
   catalog: ReadonlyArray<T>,
   count: number,
@@ -206,12 +322,13 @@ export interface RollPackArgs {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly spectralCatalog: ReadonlyArray<SpectralCard>;
   readonly excludedJokerIds?: ReadonlyArray<string>;
+  readonly guaranteedPlanetId?: string;
   readonly rng: RandomSource;
 }
 
 export function rollPack(args: RollPackArgs): PackOffer {
   const pool = rollPackPool(args.rng);
-  const variant = rollPackVariant(args.rng);
+  const variant = readForcedPackVariant() ?? rollPackVariant(args.rng);
   const options = rollPackOptions({
     pool,
     variant,
@@ -220,6 +337,7 @@ export function rollPack(args: RollPackArgs): PackOffer {
     jokerCatalog: args.jokerCatalog,
     spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
+    guaranteedPlanetId: args.guaranteedPlanetId,
     rng: args.rng,
   });
   return { pool, variant, options };
@@ -228,7 +346,7 @@ export function rollPack(args: RollPackArgs): PackOffer {
 export function rollPackForPool(
   pool: PackPool,
   args: RollPackArgs,
-  variant: PackVariant = "normal",
+  variant: PackVariant = readForcedPackVariant() ?? "normal",
 ): PackOffer {
   const options = rollPackOptions({
     pool,
@@ -238,6 +356,7 @@ export function rollPackForPool(
     jokerCatalog: args.jokerCatalog,
     spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
+    guaranteedPlanetId: args.guaranteedPlanetId,
     rng: args.rng,
   });
   return { pool, variant, options };

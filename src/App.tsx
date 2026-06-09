@@ -18,11 +18,14 @@ import {
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
+import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
 import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
+const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
+const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
-import { deckStartingMoneyDelta } from "./items/decks";
+import { deckJokerSlotsDelta, deckStartingMoneyDelta } from "./items/decks";
 import {
   pruneTagsByCategory,
   rollAnteSkipOffers,
@@ -52,13 +55,16 @@ import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import {
   MAX_JOKERS,
   effectiveJokerCount,
+  hasChaosTheClownInJokers,
   initialJokersConfig,
+  probabilityMultiplierFromJokers,
 } from "./items/jokers";
 import {
   applyShopDiscount,
   BOSS_REROLL_COST,
   bossRerollsRemaining,
   extraConsumableSlots,
+  extraJokerSlots,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
 } from "./items/vouchers";
@@ -134,6 +140,13 @@ function App() {
     if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
+  useEffect(() => {
+    chanceOverrideConfig.probabilityMultiplier =
+      probabilityMultiplierFromJokers(jokers);
+    return () => {
+      chanceOverrideConfig.probabilityMultiplier = 1;
+    };
+  }, [jokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
   const handStats = useGame((state) => state.handStats);
   const {
@@ -150,7 +163,9 @@ function App() {
   const { applyGainedTag } = useTagDispatcher();
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
-  const loseGameRef = useRef<() => void>(() => {});
+  const loseGameRef = useRef<
+    (info: { roundScore: number; requiredScore: number }) => void
+  >(() => {});
   const {
     submitHand,
     isScoring,
@@ -160,7 +175,7 @@ function App() {
     resetScoring,
   } = usePlayHand({
     stepMs: scoringStepMs,
-    loseGame: () => loseGameRef.current(),
+    loseGame: (info) => loseGameRef.current(info),
     pendingDiscardCountRef,
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
@@ -176,6 +191,10 @@ function App() {
   // the modal is showing. Dismissal triggers handleWin().
   const pendingWin = useGame((state) => state.pendingWin);
   const setPendingWin = useGame((state) => state.setPendingWin);
+  const pendingLose = useGame((state) => state.pendingLose);
+  const pendingGameWon = useGame((state) => state.pendingGameWon);
+  const setPendingGameWon = useGame((state) => state.setPendingGameWon);
+  const setPendingLose = useGame((state) => state.setPendingLose);
 
   const shopOffers = useGame((state) => state.shopOffers);
   const setShopOffers = useGame((state) => state.setShopOffers);
@@ -202,6 +221,9 @@ function App() {
   const setPendingShopMods = useGame((state) => state.setPendingShopMods);
   const setPackPreviewSelectedIds = useGame(
     (state) => state.setPackPreviewSelectedIds,
+  );
+  const setPackPreviewDisplayOrder = useGame(
+    (state) => state.setPackPreviewDisplayOrder,
   );
   const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
@@ -256,6 +278,12 @@ function App() {
 
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+  const jokerCapacity = Math.max(
+    0,
+    MAX_JOKERS +
+      extraJokerSlots(ownedVoucherIds) +
+      deckJokerSlotsDelta(selectedDeck),
+  );
 
 
   function togglePackPreviewCard(cardId: number) {
@@ -319,6 +347,16 @@ function App() {
     handleWin(precomputed);
   }
 
+  function dismissRoundLostModal() {
+    setPendingLose(null);
+    startNewGame();
+  }
+
+  function dismissGameWonScreen() {
+    setPendingGameWon(null);
+    startNewGame();
+  }
+
   const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
     ? ({
         "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
@@ -371,6 +409,7 @@ function App() {
             ? {
                 money,
                 equippedJokerCount: effectiveJokerCount(jokers),
+                jokerCapacity,
                 consumableCount: consumables.length,
                 consumableCapacity,
                 offers: shopOffers,
@@ -383,6 +422,7 @@ function App() {
                 onNext: closeShopAndStartNextRound,
                 extraRerollReduction:
                   applyNextShopModifiers(pendingShopMods).rerollReduction,
+                freeFirstReroll: hasChaosTheClownInJokers(jokers),
                 voucherOptions: VOUCHER_CATALOG,
                 onSetVoucher: (id) => {
                   const next = VOUCHER_CATALOG.find((v) => v.id === id);
@@ -400,11 +440,12 @@ function App() {
                   consumables,
                   consumableCapacity,
                 ),
-                jokerSlotsFull: effectiveJokerCount(jokers) >= MAX_JOKERS,
+                jokerSlotsFull: effectiveJokerCount(jokers) >= jokerCapacity,
                 previewHand: packPreviewHand,
                 previewSelectedIds: packPreviewSelectedIds,
                 pickedIndices: pickedPackOptionIndices,
                 onSelectPreviewCard: togglePackPreviewCard,
+                onReorderPreview: setPackPreviewDisplayOrder,
                 onPick: pickFromOpenedPack,
                 onClose: closeOpenedPack,
               }
@@ -414,8 +455,22 @@ function App() {
       />
       {pendingWin && (
         <LazyChunkErrorBoundary>
-          <Suspense fallback={null}>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
+      )}
+      {pendingLose && (
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
+            <RoundLostModal info={pendingLose} onContinue={dismissRoundLostModal} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
+      )}
+      {pendingGameWon && (
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
+            <GameWonScreen info={pendingGameWon} onNewRun={dismissGameWonScreen} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
@@ -433,7 +488,7 @@ function App() {
       )}
       {pendingJokerGrantIds.length > 0 && (
         <LazyChunkErrorBoundary>
-          <Suspense fallback={null}>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <JokerGrantAcknowledge
               jokers={pendingJokerGrantIds.flatMap((id) => {
                 const j = jokers.find((joker) => joker.id === id);
@@ -449,7 +504,7 @@ function App() {
         openedPack === null &&
         pendingJokerGrantIds.length === 0 && (
           <LazyChunkErrorBoundary>
-            <Suspense fallback={null}>
+            <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
               <BlindSelectScreenLazy
                 ante={ante}
                 currentBlind={blind}

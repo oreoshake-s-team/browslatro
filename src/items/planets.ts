@@ -1,3 +1,4 @@
+import { HANDS } from "../constants";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandStats, HandStatsEntry } from "../scoring/handStats";
 
@@ -71,6 +72,29 @@ export function availablePlanets(
     if (planet.hiddenUntilPlayed === undefined) return true;
     return (handPlayCounts[planet.hiddenUntilPlayed] ?? 0) >= 1;
   });
+}
+
+export function mostPlayedHand(
+  handPlayCounts: Readonly<Record<HandLabel, number>>,
+): HandLabel {
+  let best: HandLabel = "High Card";
+  let bestCount = 0;
+  for (const hand of HANDS) {
+    const label = hand.label as HandLabel;
+    const count = handPlayCounts[label] ?? 0;
+    if (count > bestCount) {
+      best = label;
+      bestCount = count;
+    }
+  }
+  return best;
+}
+
+export function planetForHand(
+  catalog: ReadonlyArray<PlanetCard>,
+  label: HandLabel,
+): PlanetCard | null {
+  return catalog.find((p) => p.hands.includes(label)) ?? null;
 }
 
 export function applyPlanetUpgrade(

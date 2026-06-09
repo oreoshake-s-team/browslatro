@@ -63,6 +63,13 @@ import {
   SHOOT_THE_MOON_RANKS,
   SLY_JOKER_CHIPS,
   SMILEY_FACE_MULT,
+  LOYALTY_CARD_HANDS_PER_TRIGGER,
+  LOYALTY_CARD_X_MULT,
+  RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
+  RUNNER_CHIPS_PER_STRAIGHT,
+  SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+  SQUARE_JOKER_CARD_COUNT,
+  SQUARE_JOKER_CHIPS_PER_FOUR_CARD,
   STEEL_JOKER_X_MULT_PER_STEEL,
   STONE_JOKER_CHIPS_PER_STONE,
   STUNTMAN_CHIPS,
@@ -82,6 +89,7 @@ import {
   WALKIE_TALKIE_CHIPS,
   WALKIE_TALKIE_MULT,
   WALKIE_TALKIE_RANKS,
+  WEE_JOKER_CHIPS_PER_TWO,
   WILY_JOKER_CHIPS,
   ZANY_JOKER_MULT,
 } from "./constants";
@@ -949,6 +957,106 @@ export function createBurglarJoker(): Joker {
   };
 }
 
+export function createSupernovaJoker(): Joker {
+  return {
+    id: "supernova",
+    rarity: "common",
+    name: "Supernova",
+    description:
+      "Adds the number of times your played hand has been played this run to Mult",
+    effect: { kind: "per-hand-play-count-mult" },
+  };
+}
+
+export function createSpareTrousersJoker(): Joker {
+  return {
+    id: "spare-trousers",
+    rarity: "uncommon",
+    name: "Spare Trousers",
+    description: `This Joker gains +${SPARE_TROUSERS_MULT_PER_TWO_PAIR} Mult if played hand contains a Two Pair`,
+    effect: {
+      kind: "on-hand-type-stack-mult",
+      requires: "Two Pair",
+      amount: SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createRunnerJoker(): Joker {
+  return {
+    id: "runner",
+    rarity: "common",
+    name: "Runner",
+    description: `This Joker gains +${RUNNER_CHIPS_PER_STRAIGHT} Chips if played hand contains a Straight`,
+    effect: {
+      kind: "on-hand-type-stack-chips",
+      requires: "Straight",
+      amount: RUNNER_CHIPS_PER_STRAIGHT,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createSquareJokerJoker(): Joker {
+  return {
+    id: "square-joker",
+    rarity: "common",
+    name: "Square Joker",
+    description: `This Joker gains +${SQUARE_JOKER_CHIPS_PER_FOUR_CARD} Chips if played hand has exactly ${SQUARE_JOKER_CARD_COUNT} cards`,
+    effect: {
+      kind: "on-played-card-count-stack-chips",
+      count: SQUARE_JOKER_CARD_COUNT,
+      amount: SQUARE_JOKER_CHIPS_PER_FOUR_CARD,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createWeeJokerJoker(): Joker {
+  return {
+    id: "wee-joker",
+    rarity: "rare",
+    name: "Wee Joker",
+    description: `This Joker gains +${WEE_JOKER_CHIPS_PER_TWO} Chips per played 2`,
+    effect: {
+      kind: "on-played-rank-stack-chips",
+      ranks: ["2"],
+      amount: WEE_JOKER_CHIPS_PER_TWO,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createRideTheBusJoker(): Joker {
+  return {
+    id: "ride-the-bus",
+    rarity: "common",
+    name: "Ride the Bus",
+    description: `This Joker gains +${RIDE_THE_BUS_MULT_PER_FACELESS_HAND} Mult per consecutive hand played without a scored face card`,
+    effect: {
+      kind: "on-no-face-stack-mult",
+      amount: RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createLoyaltyCardJoker(): Joker {
+  return {
+    id: "loyalty-card",
+    rarity: "uncommon",
+    name: "Loyalty Card",
+    description: `X${LOYALTY_CARD_X_MULT} Mult every ${LOYALTY_CARD_HANDS_PER_TRIGGER} hands played`,
+    effect: {
+      kind: "every-n-hands-xmult",
+      n: LOYALTY_CARD_HANDS_PER_TRIGGER,
+      xmult: LOYALTY_CARD_X_MULT,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
 export function createPareidoliaJoker(): Joker {
   return {
     id: "pareidolia",
@@ -966,6 +1074,72 @@ export function createSplashJoker(): Joker {
     name: "Splash",
     description: "Every played card counts in scoring",
     effect: { kind: "passive-run-stats", allCardsScore: true },
+  };
+}
+
+export function createAstronomerJoker(): Joker {
+  return {
+    id: "astronomer",
+    rarity: "uncommon",
+    name: "Astronomer",
+    description: "All Celestial Packs and Planet cards in the shop are free",
+    effect: { kind: "passive-run-stats", astronomer: true },
+  };
+}
+
+export function createChaosTheClownJoker(): Joker {
+  return {
+    id: "chaos-the-clown",
+    rarity: "common",
+    name: "Chaos the Clown",
+    description: "1 free Reroll per shop",
+    effect: { kind: "passive-run-stats", chaosTheClown: true },
+  };
+}
+
+export function createFourFingersJoker(): Joker {
+  return {
+    id: "four-fingers",
+    rarity: "common",
+    name: "Four Fingers",
+    description: "All Flushes and Straights can be made with 4 cards",
+    effect: { kind: "passive-run-stats", fourFingers: true },
+  };
+}
+
+export function createShortcutJoker(): Joker {
+  return {
+    id: "shortcut",
+    rarity: "uncommon",
+    name: "Shortcut",
+    description: "Allows Straights to be made of cards that are 1 rank apart",
+    effect: { kind: "passive-run-stats", shortcut: true },
+  };
+}
+
+export function createSmearedJoker(): Joker {
+  return {
+    id: "smeared",
+    rarity: "uncommon",
+    name: "Smeared Joker",
+    description:
+      "Hearts and Diamonds count as the same suit. Spades and Clubs count as the same suit.",
+    effect: { kind: "passive-run-stats", smearedSuits: true },
+  };
+}
+
+export const OOPS_ALL_SIXES_PROBABILITY_MULTIPLIER = 2;
+
+export function createOopsAllSixesJoker(): Joker {
+  return {
+    id: "oops-all-6s",
+    rarity: "uncommon",
+    name: "Oops! All 6s",
+    description: "Doubles all listed probabilities (e.g. 1 in 3 becomes 2 in 3)",
+    effect: {
+      kind: "passive-run-stats",
+      probabilityMultiplier: OOPS_ALL_SIXES_PROBABILITY_MULTIPLIER,
+    },
   };
 }
 

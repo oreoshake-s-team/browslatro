@@ -9,7 +9,7 @@ test.beforeEach(async ({ context }) => {
 });
 
 const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^Submit Hand$/;
+const SUBMIT_BUTTON = /^Submit Hand/;
 
 async function dismissBlindSelect(page: Page): Promise<void> {
   const newRun = page.getByTestId("new-run-confirm");
@@ -23,29 +23,35 @@ async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
 }
 
-test("shows reload prompt when the RoundWonModal chunk responds with text/html", async ({
+test("auto-reloads when the RoundWonModal chunk responds with text/html", async ({
   page,
 }) => {
+  let chunkRequestCount = 0;
   await page.route(/RoundWonModal.*\.js(\?.*)?$/, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "text/html",
-      body: "<!doctype html><html></html>",
-    });
+    chunkRequestCount += 1;
+    if (chunkRequestCount === 1) {
+      await route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><html></html>",
+      });
+    } else {
+      await route.continue();
+    }
   });
   page.on("pageerror", () => {});
+
+  const loadEvents: number[] = [];
+  page.on("load", () => loadEvents.push(Date.now()));
 
   await page.goto("/");
   await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
+  const initialLoadCount = loadEvents.length;
   await selectAndSubmitStraightFlush(page);
 
-  await expect(page.getByTestId("lazy-chunk-error")).toBeVisible();
-  await expect(page.getByRole("alertdialog")).toHaveAccessibleName(
-    "A new version is available",
-  );
-  await expect(page.getByTestId("lazy-chunk-error-reload")).toBeVisible();
+  await expect.poll(() => loadEvents.length).toBeGreaterThan(initialLoadCount);
 });
 
 test("RoundWonModal still loads normally when the chunk is not intercepted", async ({
@@ -58,5 +64,4 @@ test("RoundWonModal still loads normally when the chunk is not intercepted", asy
   await selectAndSubmitStraightFlush(page);
 
   await expect(page.getByRole("heading", { name: /Round Won!/ })).toBeVisible();
-  await expect(page.getByTestId("lazy-chunk-error")).toHaveCount(0);
 });

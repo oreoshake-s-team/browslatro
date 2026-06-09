@@ -1,10 +1,15 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PackOpenModal from "./PackOpenModal";
 import type { PackOffer } from "../../items/packs";
 import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
-import { createJokerCatalog } from "../../items/jokers";
+import {
+  PERISHABLE_LIFE,
+  createJokerCatalog,
+  type Joker,
+  type JokerSticker,
+} from "../../items/jokers";
 import { createSpectralCatalog } from "../../items/spectrals";
 
 const PLANETS = createPlanetCatalog();
@@ -940,5 +945,242 @@ describe("PackOpenModal — preview-hand sort toolbar", () => {
     await user.click(screen.getByTestId("pack-open-preview-sort-suit"));
     await user.click(screen.getByRole("button", { name: /^A of / }));
     expect(onSelect).toHaveBeenCalledWith(2004);
+  });
+});
+
+describe("PackOpenModal — preview-hand reorder (#763)", () => {
+  const reorderPreview = [
+    { id: 3001, rank: "5" as const, suit: "hearts" as const },
+    { id: 3002, rank: "K" as const, suit: "spades" as const },
+    { id: 3003, rank: "2" as const, suit: "clubs" as const },
+  ];
+
+  function previewCardTestIds(): string[] {
+    return Array.from(
+      screen.getByTestId("pack-open-preview-hand").querySelectorAll(
+        "[data-testid^='pack-open-preview-card-']",
+      ),
+    ).map((el) => el.getAttribute("data-testid") ?? "");
+  }
+
+  function dispatchDragSequence(sourceId: number, targetId: number): void {
+    const source = screen.getByTestId(`pack-open-preview-card-${sourceId}`);
+    const target = screen.getByTestId(`pack-open-preview-card-${targetId}`);
+    const data: Record<string, string> = {};
+    const dataTransfer = {
+      effectAllowed: "",
+      dropEffect: "",
+      setData: (k: string, v: string) => {
+        data[k] = v;
+      },
+      getData: (k: string) => data[k] ?? "",
+    };
+    fireEvent.dragStart(source, { dataTransfer });
+    fireEvent.dragOver(target, { dataTransfer });
+    fireEvent.drop(target, { dataTransfer });
+    fireEvent.dragEnd(source, { dataTransfer });
+  }
+
+  test("preview cards each render a draggable wrapper with a stable testid", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={reorderPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(previewCardTestIds()).toHaveLength(3);
+  });
+
+  test("dragging a card onto another card reorders the preview hand", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={reorderPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const before = previewCardTestIds();
+    dispatchDragSequence(3003, 3001);
+    const after = previewCardTestIds();
+    expect(after).not.toEqual(before);
+  });
+
+  test("manual reorder places the dragged card before the drop target", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={reorderPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    dispatchDragSequence(3002, 3003);
+    const ids = previewCardTestIds().map((tid) =>
+      Number(tid.replace("pack-open-preview-card-", "")),
+    );
+    expect(ids.indexOf(3002)).toBeLessThan(ids.indexOf(3003));
+  });
+
+  test("manual reorder calls onReorderPreview with the new id order", () => {
+    const onReorder = vi.fn();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={reorderPreview}
+        onReorderPreview={onReorder}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    dispatchDragSequence(3002, 3003);
+    expect(onReorder).toHaveBeenLastCalledWith(
+      expect.arrayContaining([3001, 3002, 3003]),
+    );
+  });
+
+  test("clicking a Sort button after a manual reorder restores the sort order (sort wins)", async () => {
+    const user = userEvent.setup();
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={reorderPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    dispatchDragSequence(3003, 3001);
+    const manualOrder = previewCardTestIds();
+    await user.click(screen.getByTestId("pack-open-preview-sort-rank"));
+    const sortedOrder = previewCardTestIds();
+    expect(sortedOrder).not.toEqual(manualOrder);
+  });
+
+  test("dragging a card onto itself does not change the order (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={arcanaPack("normal", 3)}
+        picksRemaining={1}
+        previewHand={reorderPreview}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const before = previewCardTestIds();
+    dispatchDragSequence(3001, 3001);
+    expect(previewCardTestIds()).toEqual(before);
+  });
+});
+
+describe("PackOpenModal — Buffoon pack sticker badges (closes #801)", () => {
+  function stickeredJokerPack(stickers: ReadonlyArray<JokerSticker>): PackOffer {
+    const base = JOKERS[0];
+    const stamped: Joker = { ...base, stickers };
+    return {
+      pool: "buffoon",
+      variant: "normal",
+      options: [{ kind: "joker" as const, joker: stamped }],
+    };
+  }
+
+  test("an Eternal joker option renders the Eternal badge inside the pack tile", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "eternal" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-eternal")).toBeInTheDocument();
+  });
+
+  test("a Perishable joker option renders the countdown badge (P N/5)", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "perishable", roundsHeld: 0 }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-perishable")).toHaveTextContent(
+      `P ${PERISHABLE_LIFE}/${PERISHABLE_LIFE}`,
+    );
+  });
+
+  test("a Rental joker option renders the Rental badge", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "rental" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-rental")).toBeInTheDocument();
+  });
+
+  test("a joker option with both Eternal and Rental renders both badges (composition)", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "eternal" }, { kind: "rental" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("joker-sticker-eternal")).toBeInTheDocument();
+    expect(screen.getByTestId("joker-sticker-rental")).toBeInTheDocument();
+  });
+
+  test("a sticker-less joker option renders no badge list (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId(/^joker-sticker-/)).not.toBeInTheDocument();
+  });
+
+  test("Pick button's accessible name mentions attached stickers", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "eternal" }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /Pick .*Eternal/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("hovering the option tile shows the sticker description via title attribute", () => {
+    render(
+      <PackOpenModal
+        pack={stickeredJokerPack([{ kind: "perishable", roundsHeld: 2 }])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const optionTile = screen
+      .getByTestId("joker-sticker-perishable")
+      .closest(".pack-open-option");
+    expect(optionTile?.getAttribute("title")).toMatch(
+      new RegExp(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`),
+    );
   });
 });

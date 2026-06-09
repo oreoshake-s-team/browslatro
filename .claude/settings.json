@@ -1,4 +1,20 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p ~/.cache/browslatro-worktrees*)",
+      "Bash(git worktree add ~/.cache/browslatro-worktrees/*)",
+      "Bash(git worktree add -b * ~/.cache/browslatro-worktrees/*)",
+      "Bash(git worktree remove ~/.cache/browslatro-worktrees/*)",
+      "Bash(git worktree list*)",
+      "Bash(git -C ~/.cache/browslatro-worktrees/* *)"
+    ]
+  },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Git worktrees may be created, listed, and removed under ~/.cache/browslatro-worktrees/ — post-#744 layout for this repo (moved off the project tree to avoid the Yarn PnP ancestor-walk collision). Supersedes the older 'worktrees under .claude/worktrees inside the repo' memory rule."
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

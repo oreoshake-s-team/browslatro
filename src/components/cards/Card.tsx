@@ -6,6 +6,8 @@ import { getSealInfo } from "../../cards/seals";
 import { CARD_EDITION_INFO } from "../../cards/editions";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
+import { useGame } from "../../store/game";
+import { probabilityMultiplierFromJokers } from "../../items/jokers";
 
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
@@ -85,6 +87,9 @@ export default function Card({
   const tooltipId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const probabilityMultiplier = useGame((s) =>
+    probabilityMultiplierFromJokers(s.jokers),
+  );
   const showTooltip = () => {
     const el = buttonRef.current;
     if (el) setTooltipRect(el.getBoundingClientRect());
@@ -116,11 +121,14 @@ export default function Card({
   const luckyMoneyScoringClass = luckyMoneyScoring
     ? "card-lucky-money-scoring"
     : "";
-  const enhancementClass = card.enhancement
+  const showBack = card.faceDown === true && !scoring;
+  const enhancementClass = !showBack && card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
-  const sealClass = card.seal ? `card-seal-${card.seal}` : "";
-  const editionClass = card.edition ? `card-edition-${card.edition}` : "";
+  const sealClass = !showBack && card.seal ? `card-seal-${card.seal}` : "";
+  const editionClass = !showBack && card.edition
+    ? `card-edition-${card.edition}`
+    : "";
   const debuffedClass = debuffed ? "card-debuffed" : "";
   const baseName = isStone
     ? "Stone card"
@@ -131,7 +139,6 @@ export default function Card({
   const withEdition = card.edition
     ? `${withSeal}, ${CARD_EDITION_INFO[card.edition].name}`
     : withSeal;
-  const showBack = card.faceDown === true && !scoring;
   const ariaLabel = showBack
     ? "Face-down card"
     : debuffed
@@ -149,7 +156,7 @@ export default function Card({
       className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
         .replace(/\s+/g, " ")
         .trim()}
-      data-edition={card.edition ?? undefined}
+      data-edition={showBack ? undefined : (card.edition ?? undefined)}
       aria-pressed={selected}
       aria-label={ariaLabel}
       aria-describedby={tooltipRect ? tooltipId : undefined}
@@ -192,7 +199,7 @@ export default function Card({
           )}
         </>
       )}
-      {card.seal && (
+      {card.seal && !showBack && (
         <span
           className={`card-seal card-seal-badge-${card.seal}`}
           aria-hidden="true"
@@ -218,7 +225,11 @@ export default function Card({
         </span>
       )}
       {tooltipRect && !showBack && (
-        <CardTooltip id={tooltipId} info={getCardInfo(card)} anchorRect={tooltipRect} />
+        <CardTooltip
+          id={tooltipId}
+          info={getCardInfo(card, { probabilityMultiplier })}
+          anchorRect={tooltipRect}
+        />
       )}
     </button>
   );

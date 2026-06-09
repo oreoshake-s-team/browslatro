@@ -1,5 +1,6 @@
 import type { Card } from "../../../cards/types";
 import { rollChance } from "../../../dev/chanceOverride";
+import { mergedSuit } from "../../../scoring/handEvaluator";
 import { RANK_PARITY } from "../constants";
 import type { Joker, RandomSource } from "../types";
 import type {
@@ -24,6 +25,9 @@ export function applyPerCardJokers(
   const fired: string[] = [];
   const steps: JokerCardStep[] = [];
 
+  const smeared = context.smearedSuits === true;
+  const cardSuit = mergedSuit(card.suit, smeared);
+
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
     const effect = joker.effect;
@@ -41,7 +45,7 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-mult": {
-        if (card.suit === effect.suit) {
+        if (cardSuit === mergedSuit(effect.suit, smeared)) {
           additiveMult += effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -53,7 +57,10 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-chance-x-mult": {
-        if (card.suit === effect.suit && rollChance(effect.chance, rng)) {
+        if (
+          cardSuit === mergedSuit(effect.suit, smeared) &&
+          rollChance(effect.chance, rng)
+        ) {
           xMult *= effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -65,7 +72,7 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-chips": {
-        if (card.suit === effect.suit) {
+        if (cardSuit === mergedSuit(effect.suit, smeared)) {
           additiveChips += effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -77,7 +84,7 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-money": {
-        if (card.suit === effect.suit) {
+        if (cardSuit === mergedSuit(effect.suit, smeared)) {
           moneyEarned += effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -200,6 +207,13 @@ export function applyPerCardJokers(
       case "passive-run-stats":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "per-hand-play-count-mult":
+      case "on-hand-type-stack-mult":
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips":
+      case "on-no-face-stack-mult":
+      case "every-n-hands-xmult":
         break;
       default:
         assertNeverEffect(effect);

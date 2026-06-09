@@ -3,7 +3,7 @@ import { cardKey } from "../cards/deck";
 import { createRngConfig } from "../dev/rngConfig";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandStatsEntry } from "../scoring/handStats";
-import { createPlanetCatalog } from "./planets";
+import { createPlanetCatalog, mostPlayedHand } from "./planets";
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set(["J", "Q", "K"]);
 
@@ -28,7 +28,10 @@ export type BossEffect =
   | { readonly kind: "face-down-initial" }
   | { readonly kind: "face-down-on-refill" }
   | { readonly kind: "face-down-chance"; readonly oneIn: number }
-  | { readonly kind: "face-down-faces" };
+  | { readonly kind: "face-down-faces" }
+  | { readonly kind: "post-play-random-held-discard"; readonly count: number }
+  | { readonly kind: "fixed-refill-count"; readonly value: number }
+  | { readonly kind: "zero-wallet-on-most-played-hand" };
 
 export interface BossBlind {
   readonly id: string;
@@ -199,6 +202,30 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     scoreMultiplier: 2,
     anteMin: 2,
     effect: { kind: "face-down-faces" },
+  },
+  {
+    id: "the-hook",
+    name: "The Hook",
+    description: "Discards 2 random cards per hand played.",
+    scoreMultiplier: 2,
+    anteMin: 1,
+    effect: { kind: "post-play-random-held-discard", count: 2 },
+  },
+  {
+    id: "the-serpent",
+    name: "The Serpent",
+    description: "After Play or Discard, always draw 3 cards.",
+    scoreMultiplier: 2,
+    anteMin: 5,
+    effect: { kind: "fixed-refill-count", value: 3 },
+  },
+  {
+    id: "the-ox",
+    name: "The Ox",
+    description: "Playing your most played hand sets money to $0.",
+    scoreMultiplier: 2,
+    anteMin: 6,
+    effect: { kind: "zero-wallet-on-most-played-hand" },
   },
 ];
 
@@ -380,6 +407,65 @@ export function applyBossFaceDown(
     }
     return faceDown ? { ...c, faceDown: true } : c;
   });
+}
+
+export function bossPostPlayDiscardCount(boss: BossBlind | null): number {
+  if (!boss || boss.effect.kind !== "post-play-random-held-discard") return 0;
+  return boss.effect.count;
+}
+
+export function pickHookDiscardIds(
+  hand: ReadonlyArray<Card>,
+  submittedSelection: ReadonlySet<number>,
+  count: number,
+  rng: () => number = Math.random,
+): number[] {
+  const candidates = hand
+    .filter((c) => !submittedSelection.has(c.id))
+    .map((c) => c.id);
+  const picked: number[] = [];
+  const pool = candidates.slice();
+  const target = Math.min(count, pool.length);
+  for (let i = 0; i < target; i += 1) {
+    const idx = Math.floor(rng() * pool.length);
+    picked.push(pool[idx]);
+    pool.splice(idx, 1);
+  }
+  return picked;
+}
+
+export const hookRngConfig = createRngConfig(Math.random);
+
+export function bossRefillCountOverride(
+  currentBoss: BossBlind | null,
+  isBossRound: boolean,
+  defaultCount: number,
+  remainingDeckCount: number,
+): number {
+  if (
+    !isBossRound ||
+    !currentBoss ||
+    currentBoss.effect.kind !== "fixed-refill-count"
+  ) {
+    return defaultCount;
+  }
+  return Math.min(currentBoss.effect.value, remainingDeckCount);
+}
+
+export function bossShouldZeroWallet(
+  currentBoss: BossBlind | null,
+  isBossRound: boolean,
+  playedHand: HandLabel,
+  handPlayCountsIncludingThisHand: Readonly<Record<HandLabel, number>>,
+): boolean {
+  if (
+    !isBossRound ||
+    !currentBoss ||
+    currentBoss.effect.kind !== "zero-wallet-on-most-played-hand"
+  ) {
+    return false;
+  }
+  return mostPlayedHand(handPlayCountsIncludingThisHand) === playedHand;
 }
 
 export function bossAdjustHandEntry(

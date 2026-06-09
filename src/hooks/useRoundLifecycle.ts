@@ -15,7 +15,12 @@ import {
   extraHandSize,
   pickVouchersForAnte,
 } from "../items/vouchers";
-import { HAND_SIZE, createDeck, resetCardIds } from "../cards/deck";
+import {
+  HAND_SIZE,
+  applyDeckCompositionTransforms,
+  createDeck,
+  resetCardIds,
+} from "../cards/deck";
 import { initialDeal } from "../cards/deckBuild";
 import {
   extraStartingHandSizeFromJokers,
@@ -30,11 +35,15 @@ import {
   type AnteSkipOffer,
   type TagId,
 } from "../items/tags";
-import { deckStartingMoneyDelta } from "../items/decks";
+import {
+  deckCompositionTransforms,
+  deckStartingMoneyDelta,
+} from "../items/decks";
 import {
   computeStartingDiscards,
   computeStartingHands,
 } from "../run/roundSetup";
+import type { RoundLostInfo } from "../components/game/RoundLostModal";
 
 export interface UseRoundLifecycleParams {
   readonly applyGainedTag: (
@@ -52,7 +61,7 @@ export interface UseRoundLifecycleResult {
     handSizeOverride?: number;
   }) => void;
   readonly startNewGame: () => void;
-  readonly loseGame: () => void;
+  readonly loseGame: (info: RoundLostInfo) => void;
   readonly skipBlind: () => void;
 }
 
@@ -73,6 +82,7 @@ export function useRoundLifecycle({
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const equippedJokers = useGame((s) => s.jokers);
   const selectedDeck = useGame((s) => s.selectedDeck);
+  const selectedStake = useGame((s) => s.selectedStake);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
   const setBaseDeckCards = useGame((s) => s.setBaseDeckCards);
@@ -124,6 +134,7 @@ export function useRoundLifecycle({
   const setLuckyMoneyProcIds = useGame((s) => s.setLuckyMoneyProcIds);
   const setScoringEvents = useGame((s) => s.setScoringEvents);
   const setPendingWin = useGame((s) => s.setPendingWin);
+  const setPendingLose = useGame((s) => s.setPendingLose);
 
   const currentHandSize = Math.max(
     1,
@@ -154,6 +165,7 @@ export function useRoundLifecycle({
       ownedVoucherIds,
       deck: selectedDeck,
       jokers: equippedJokers,
+      stake: selectedStake,
     };
     const startingHands = computeStartingHands(resourceCtx);
     const startingDiscards = computeStartingDiscards(resourceCtx);
@@ -211,7 +223,12 @@ export function useRoundLifecycle({
     setJokers(initialJokersConfig.factory());
     useGame.getState().resetStats();
     resetCardIds();
-    setBaseDeckCards(createDeck());
+    setBaseDeckCards(
+      applyDeckCompositionTransforms(
+        createDeck(),
+        deckCompositionTransforms(selectedDeck),
+      ),
+    );
     setDestroyedCardIds(new Set());
     setAddedCards([]);
     setCardEnhancementsById(new Map());
@@ -237,10 +254,9 @@ export function useRoundLifecycle({
     setPendingRunSelect(true);
   }
 
-  function loseGame(): void {
+  function loseGame(info: RoundLostInfo): void {
     play("lose");
-    alert("Game Over! Try again.");
-    startNewGame();
+    setPendingLose(info);
   }
 
   function skipBlind(): void {

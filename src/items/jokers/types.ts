@@ -156,7 +156,46 @@ export type JokerEffect =
       readonly debtFloor?: number;
       readonly allCardsFace?: boolean;
       readonly allCardsScore?: boolean;
+      readonly astronomer?: boolean;
+      readonly chaosTheClown?: boolean;
+      readonly fourFingers?: boolean;
+      readonly shortcut?: boolean;
+      readonly smearedSuits?: boolean;
+      readonly probabilityMultiplier?: number;
+    }
+  | { readonly kind: "per-hand-play-count-mult" }
+  | {
+      readonly kind: "on-hand-type-stack-mult";
+      readonly requires: HandLabel;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-hand-type-stack-chips";
+      readonly requires: HandLabel;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-played-card-count-stack-chips";
+      readonly count: number;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-played-rank-stack-chips";
+      readonly ranks: ReadonlyArray<Rank>;
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "on-no-face-stack-mult";
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "every-n-hands-xmult";
+      readonly n: number;
+      readonly xmult: number;
     };
+
+export type JokerStateValue =
+  | { readonly kind: "counter"; readonly value: number };
 
 export type JokerEdition = "foil" | "holographic" | "polychrome" | "negative";
 
@@ -182,4 +221,5 @@ export interface Joker {
   readonly rarity: JokerRarity;
   readonly edition?: JokerEdition;
   readonly stickers?: ReadonlyArray<JokerSticker>;
+  readonly state?: JokerStateValue;
 }

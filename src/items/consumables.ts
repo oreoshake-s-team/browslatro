@@ -48,12 +48,10 @@ export function consumableUseBlock(
       return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
     }
     if (effect.kind === "destroy-selected") {
-      if (previewMode) return "Cannot destroy cards while opening a pack";
-      return checkSelection(selectedCount, effect.maxTargets);
+      return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
     }
     if (effect.kind === "rank-up-selected") {
-      if (previewMode) return "Cannot modify card ranks while opening a pack";
-      return checkSelection(selectedCount, effect.maxTargets);
+      return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
     }
     if (effect.kind === "convert-suit") {
       return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
@@ -65,8 +63,10 @@ export function consumableUseBlock(
     return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
   }
   if (effect.kind === "duplicate-selected") {
-    if (previewMode) return "Cannot duplicate cards while opening a pack";
-    return checkSelection(selectedCount, effect.maxTargets);
+    return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
+  }
+  if (effect.kind === "aura") {
+    return checkSelection(selectedCount, effect.maxTargets, previewMode ? "preview" : "hand");
   }
   return null;
 }

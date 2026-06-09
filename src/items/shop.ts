@@ -15,8 +15,18 @@ import {
 } from "./jokers";
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
+import { hiddenSpectralForRoll } from "./spectrals";
 import type { TarotCard } from "./tarots";
+import type { OfferKindWeights } from "./vouchers";
 import { JOKER_BASE_PRICE } from "../constants";
+import type { Card } from "../cards/types";
+import { RANKS, SUITS, nextCardId } from "../cards/deck";
+import { ENHANCEMENT_KINDS } from "../cards/enhancements";
+import { CARD_EDITION_KINDS } from "../cards/editions";
+import { SEAL_KINDS } from "../cards/seals";
+
+export const PLAYING_CARD_BASE_PRICE = 4;
+export const ILLUSION_MODIFIER_CHANCE = 0.4;
 
 export function jokerOfferPrice(joker: Joker): number {
   if (hasSticker(joker, "rental")) return RENTAL_BASE_PRICE;
@@ -140,11 +150,45 @@ export type ShopItem =
       readonly sold: boolean;
     }
   | {
+      readonly kind: "playing-card";
+      readonly card: Card;
+      readonly price: number;
+      readonly sold: boolean;
+    }
+  | {
       readonly kind: "pack";
       readonly pack: PackOffer;
       readonly price: number;
       readonly sold: boolean;
     };
+
+export function rollPlayingCardOffer(
+  rng: RandomSource,
+  options: { readonly illusionEnabled?: boolean } = {},
+): ShopItem {
+  const rank = RANKS[Math.floor(rng() * RANKS.length)];
+  const suit = SUITS[Math.floor(rng() * SUITS.length)];
+  const base: Card = { id: nextCardId(), rank, suit };
+  if (!options.illusionEnabled) {
+    return { kind: "playing-card", card: base, price: PLAYING_CARD_BASE_PRICE, sold: false };
+  }
+  const enhancement = rollChance(ILLUSION_MODIFIER_CHANCE, rng)
+    ? ENHANCEMENT_KINDS[Math.floor(rng() * ENHANCEMENT_KINDS.length)]
+    : null;
+  const edition = rollChance(ILLUSION_MODIFIER_CHANCE, rng)
+    ? CARD_EDITION_KINDS[Math.floor(rng() * CARD_EDITION_KINDS.length)]
+    : null;
+  const seal = rollChance(ILLUSION_MODIFIER_CHANCE, rng)
+    ? SEAL_KINDS[Math.floor(rng() * SEAL_KINDS.length)]
+    : null;
+  const card: Card = {
+    ...base,
+    ...(enhancement ? { enhancement } : {}),
+    ...(edition ? { edition } : {}),
+    ...(seal ? { seal } : {}),
+  };
+  return { kind: "playing-card", card, price: PLAYING_CARD_BASE_PRICE, sold: false };
+}
 
 export function buildFreeJokerOffers(
   rarities: ReadonlyArray<JokerRarity>,
@@ -218,6 +262,20 @@ export function ensureBaseJokerForEdition(
   };
   if (replaceIdx === -1) return [fresh, ...offers];
   return offers.map((offer, idx) => (idx === replaceIdx ? fresh : offer));
+}
+
+export function applyAstronomerPricing(
+  offers: ReadonlyArray<ShopItem>,
+  astronomerActive: boolean,
+): ShopItem[] {
+  if (!astronomerActive) return [...offers];
+  return offers.map((offer) => {
+    if (offer.kind === "planet") return { ...offer, price: 0 };
+    if (offer.kind === "pack" && offer.pack.pool === "celestial") {
+      return { ...offer, price: 0 };
+    }
+    return offer;
+  });
 }
 
 export function applyStakeStickersToShopOffers(
@@ -318,11 +376,20 @@ export interface PickShopOffersArgs {
   readonly extraPackSlots?: number;
   readonly forcedPackPools?: ReadonlyArray<PackPool>;
   readonly editionRateMultiplier?: number;
+  readonly tarotToSpectralSwapChance?: number;
+  readonly guaranteedPlanetId?: string;
+  readonly kindWeights?: OfferKindWeights;
+  readonly illusionEnabled?: boolean;
   readonly rng?: RandomSource;
 }
 
 type ShopOfferKind = Exclude<ShopItem["kind"], "pack">;
-const COMMON_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = ["joker", "planet", "tarot"];
+const COMMON_OFFER_KINDS: ReadonlyArray<ShopOfferKind> = [
+  "joker",
+  "planet",
+  "tarot",
+  "playing-card",
+];
 
 interface PickedOfferIds {
   readonly joker: ReadonlySet<string>;
@@ -361,12 +428,31 @@ function pickOfferByKind(
       return next ? planetOffer(next) : null;
     }
     case "tarot": {
+      const swapChance = args.tarotToSpectralSwapChance ?? 0;
+      if (swapChance > 0 && rollChance(swapChance, rng)) {
+        const spectral = pickOfferByKind("spectral", args, rng, picked);
+        if (spectral) return spectral;
+      }
       const next = pickRandom(args.tarotCatalog, [...picked.tarot], rng);
       return next ? tarotOffer(next) : null;
     }
     case "spectral": {
-      const next = pickRandom(args.spectralCatalog, [...picked.spectral], rng);
-      return next ? spectralOffer(next) : null;
+      const roll = rng();
+      const hidden = hiddenSpectralForRoll(roll, args.spectralCatalog);
+      if (hidden && !picked.spectral.has(hidden.id)) {
+        return spectralOffer(hidden);
+      }
+      const pool = args.spectralCatalog.filter((s) => !s.hidden);
+      const excludedIds = new Set(picked.spectral);
+      const eligible = pool.filter((s) => !excludedIds.has(s.id));
+      if (eligible.length === 0) return null;
+      const idx = Math.floor(roll * eligible.length);
+      return spectralOffer(eligible[idx]);
+    }
+    case "playing-card": {
+      return rollPlayingCardOffer(rng, {
+        illusionEnabled: args.illusionEnabled === true,
+      });
     }
   }
 }
@@ -385,9 +471,58 @@ function recordPicked(picked: PickedOfferIds, offer: ShopItem): void {
     case "spectral":
       (picked.spectral as Set<string>).add(offer.spectral.id);
       return;
+    case "playing-card":
+      return;
     case "pack":
       return;
   }
+}
+
+function weightFor(
+  weights: OfferKindWeights | undefined,
+  kind: ShopOfferKind,
+): number {
+  if (kind === "spectral") return 0;
+  if (kind === "playing-card") {
+    const w = weights ? weights["playing-card"] : 0;
+    return w > 0 ? w : 0;
+  }
+  const w = weights ? weights[kind] : 1;
+  return w > 0 ? w : 0;
+}
+
+function pickWeightedKindOrder(
+  args: PickShopOffersArgs,
+  rng: RandomSource,
+): ReadonlyArray<ShopOfferKind> {
+  const weights = COMMON_OFFER_KINDS.map((k) => weightFor(args.kindWeights, k));
+  const total = weights.reduce((sum, w) => sum + w, 0);
+  if (total <= 0) {
+    const fallbackKinds = COMMON_OFFER_KINDS.filter(
+      (k) => k !== "playing-card",
+    );
+    const start = Math.floor(rng() * fallbackKinds.length);
+    return fallbackKinds.map(
+      (_, i) => fallbackKinds[(start + i) % fallbackKinds.length],
+    );
+  }
+  const roll = rng() * total;
+  let acc = 0;
+  let firstIdx = 0;
+  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
+    acc += weights[i];
+    if (roll < acc) {
+      firstIdx = i;
+      break;
+    }
+  }
+  const order: ShopOfferKind[] = [COMMON_OFFER_KINDS[firstIdx]];
+  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
+    if (i === firstIdx) continue;
+    if (weights[i] === 0) continue;
+    order.push(COMMON_OFFER_KINDS[i]);
+  }
+  return order;
 }
 
 function pickRandomKindOffer(
@@ -399,9 +534,8 @@ function pickRandomKindOffer(
     const spectral = pickOfferByKind("spectral", args, rng, picked);
     if (spectral) return spectral;
   }
-  const start = Math.floor(rng() * COMMON_OFFER_KINDS.length);
-  for (let i = 0; i < COMMON_OFFER_KINDS.length; i += 1) {
-    const kind = COMMON_OFFER_KINDS[(start + i) % COMMON_OFFER_KINDS.length];
+  const order = pickWeightedKindOrder(args, rng);
+  for (const kind of order) {
     const offer = pickOfferByKind(kind, args, rng, picked);
     if (offer) return offer;
   }
@@ -451,6 +585,7 @@ export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem
     jokerCatalog: args.jokerCatalog,
     spectralCatalog: args.spectralCatalog,
     excludedJokerIds: args.excludedJokerIds,
+    guaranteedPlanetId: args.guaranteedPlanetId,
     rng,
   };
   for (const pool of forced) {

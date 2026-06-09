@@ -20,6 +20,7 @@ import { createTarotCatalog } from "./tarots";
 import { createJokerCatalog } from "./jokers";
 import { createSpectralCatalog } from "./spectrals";
 import { chanceOverrideConfig } from "../dev/chanceOverride";
+import { sequenceRng } from "../test/rng";
 
 function seededRng(seed: number): () => number {
   let s = seed;
@@ -115,6 +116,51 @@ describe("rollPackOptions for Celestial", () => {
       rng: seededRng(5),
     });
     expect(opts).toHaveLength(small.length);
+  });
+
+  test("guaranteedPlanetId always appears in a Celestial pack roll (#281)", () => {
+    const opts = rollPackOptions({
+      pool: "celestial",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      guaranteedPlanetId: "jupiter",
+      rng: seededRng(6),
+    });
+    const ids = opts.flatMap((o) => (o.kind === "planet" ? [o.planet.id] : []));
+    expect(ids).toContain("jupiter");
+  });
+
+  test("guaranteedPlanetId does not duplicate the guaranteed planet (#281)", () => {
+    const opts = rollPackOptions({
+      pool: "celestial",
+      variant: "jumbo",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      guaranteedPlanetId: "jupiter",
+      rng: seededRng(7),
+    });
+    const ids = opts.flatMap((o) => (o.kind === "planet" ? [o.planet.id] : []));
+    const jupiterCount = ids.filter((id) => id === "jupiter").length;
+    expect(jupiterCount).toBe(1);
+  });
+
+  test("an unknown guaranteedPlanetId falls back to a normal Celestial roll (negative)", () => {
+    const opts = rollPackOptions({
+      pool: "celestial",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      guaranteedPlanetId: "nonexistent-planet",
+      rng: seededRng(8),
+    });
+    expect(opts).toHaveLength(3);
   });
 });
 
@@ -626,5 +672,182 @@ describe("rollPackForPool", () => {
   test("a mega pack yields the mega option count", () => {
     const offer = rollPackForPool("arcana", rollArgs(85), "mega");
     expect(offer.options.length).toBe(packOptionsCount("arcana", "mega"));
+  });
+
+  test("honors the forced-variant dev flag when no explicit variant is passed", () => {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackVariant" ? "mega" : null,
+      },
+    });
+    try {
+      expect(rollPackForPool("arcana", rollArgs(86)).variant).toBe("mega");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("Spectral pool excludes hidden spectrals (closes #826)", () => {
+  function countSpectralIdsAcrossRolls(seed: number, rolls: number): Map<string, number> {
+    const counts = new Map<string, number>();
+    const rng = seededRng(seed);
+    const spectralCatalog = createSpectralCatalog();
+    for (let i = 0; i < rolls; i += 1) {
+      const opts = rollPackOptions({
+        pool: "spectral",
+        variant: "mega",
+        planetCatalog: createPlanetCatalog(),
+        tarotCatalog: createTarotCatalog(),
+        jokerCatalog: createJokerCatalog(),
+        spectralCatalog,
+        rng,
+      });
+      for (const o of opts) {
+        if (o.kind !== "spectral") continue;
+        counts.set(o.spectral.id, (counts.get(o.spectral.id) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }
+
+  test("Black Hole frequency is below 1% over 2,000 spectral slots (seeded)", () => {
+    const counts = countSpectralIdsAcrossRolls(101, 400);
+    const blackHole = counts.get("black-hole") ?? 0;
+    const total = Array.from(counts.values()).reduce((s, n) => s + n, 0);
+    expect(blackHole / total).toBeLessThan(0.01);
+  });
+
+  test("The Soul frequency is below 1% over 2,000 spectral slots (seeded)", () => {
+    const counts = countSpectralIdsAcrossRolls(102, 400);
+    const soul = counts.get("soul") ?? 0;
+    const total = Array.from(counts.values()).reduce((s, n) => s + n, 0);
+    expect(soul / total).toBeLessThan(0.01);
+  });
+
+  test("pool spectrals each appear roughly 1/16 of the time (seeded)", () => {
+    const counts = countSpectralIdsAcrossRolls(103, 800);
+    const poolIds = createSpectralCatalog()
+      .filter((s) => !s.hidden)
+      .map((s) => s.id);
+    const total = Array.from(counts.values()).reduce((s, n) => s + n, 0);
+    const poolMin = Math.min(...poolIds.map((id) => counts.get(id) ?? 0));
+    expect(poolMin / total).toBeGreaterThan(0.03);
+  });
+
+  test("spectral pool draw never returns Black Hole when replacement rolls miss (negative)", () => {
+    const rng = sequenceRng([0.5]);
+    const opts = rollPackOptions({
+      pool: "spectral",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    const ids = opts.flatMap((o) => (o.kind === "spectral" ? [o.spectral.id] : []));
+    expect(ids).not.toContain("black-hole");
+  });
+
+  test("spectral pool draw never returns The Soul when replacement rolls miss (negative)", () => {
+    const rng = sequenceRng([0.5]);
+    const opts = rollPackOptions({
+      pool: "spectral",
+      variant: "mega",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    const ids = opts.flatMap((o) => (o.kind === "spectral" ? [o.spectral.id] : []));
+    expect(ids).not.toContain("soul");
+  });
+});
+
+describe("Hidden-spectral replacement in packs (closes #826)", () => {
+  test("Arcana slot is replaced by Black Hole when the slot roll lands under 0.3%", () => {
+    const rng = sequenceRng([0.001, 0.5, 0.5]);
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    expect(opts[0]).toEqual({
+      kind: "spectral",
+      spectral: expect.objectContaining({ id: "black-hole" }),
+    });
+  });
+
+  test("Arcana slot is replaced by The Soul when the roll lands in the 0.3-0.6% slice", () => {
+    const rng = sequenceRng([0.004, 0.5, 0.5]);
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    expect(opts[0]).toEqual({
+      kind: "spectral",
+      spectral: expect.objectContaining({ id: "soul" }),
+    });
+  });
+
+  test("Spectral slot is replaced by Black Hole even though the pool pick was different", () => {
+    const rng = sequenceRng([0.001, 0.5]);
+    const opts = rollPackOptions({
+      pool: "spectral",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    expect(opts[0]).toEqual({
+      kind: "spectral",
+      spectral: expect.objectContaining({ id: "black-hole" }),
+    });
+  });
+
+  test("Arcana slot remains a Tarot when the replacement roll misses (negative)", () => {
+    const rng = sequenceRng([0.5]);
+    const opts = rollPackOptions({
+      pool: "arcana",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    expect(opts.every((o) => o.kind === "tarot")).toBe(true);
+  });
+
+  test("rng consumption for an arcana pack matches the slot count (single rng per slot)", () => {
+    let calls = 0;
+    const rng = (): number => {
+      calls += 1;
+      return 0.5;
+    };
+    rollPackOptions({
+      pool: "arcana",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    });
+    expect(calls).toBe(3);
   });
 });
