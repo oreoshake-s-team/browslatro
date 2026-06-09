@@ -52,8 +52,37 @@ export function applyHandPlayedToJokerStates(
       case "every-n-hands-xmult": {
         return { ...joker, state: counterState(prevCount(joker) + 1) };
       }
+      case "on-hand-stack-on-discard-shrink-mult": {
+        return {
+          ...joker,
+          state: counterState(prevCount(joker) + effect.growAmount),
+        };
+      }
       default:
         return joker;
     }
+  });
+}
+
+export function applyDiscardToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "on-hand-stack-on-discard-shrink-mult") return joker;
+    return {
+      ...joker,
+      state: counterState(Math.max(0, prevCount(joker) - effect.shrinkAmount)),
+    };
+  });
+}
+
+export function applyShopRerollToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "stack-mult-on-shop-reroll") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
   });
 }

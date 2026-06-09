@@ -85,5 +85,9 @@ export type {
 } from "./jokers/scoring/onDiscard";
 export { applyOnDiscardJokers } from "./jokers/scoring/onDiscard";
 export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
-export { applyHandPlayedToJokerStates } from "./jokers/state";
+export {
+  applyDiscardToJokerStates,
+  applyHandPlayedToJokerStates,
+  applyShopRerollToJokerStates,
+} from "./jokers/state";
 export type { JokerStateValue } from "./jokers/types";

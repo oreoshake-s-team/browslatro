@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test } from "vitest";
 import { useDiscardPipeline } from "./useDiscardPipeline";
 import { useGame } from "../store/game";
+import { createGreenJokerJoker } from "../items/jokers";
 import {
   createBossCatalog,
   hookRngConfig,
@@ -399,5 +400,39 @@ describe("The Serpent — fixed refill count (#811)", () => {
     });
 
     expect(useGame.getState().dealt.hand.length).toBe(8);
+  });
+});
+
+describe("useDiscardPipeline — Green Joker counter shrinks on discard (#868)", () => {
+  beforeEach(() => {
+    useGame.getState().setRemainingDiscards(3);
+  });
+
+  test("a discard shrinks an equipped Green Joker's counter", () => {
+    const greenJoker = {
+      ...createGreenJokerJoker(),
+      state: { kind: "counter", value: 2 } as const,
+    };
+    useGame.getState().setJokers([greenJoker]);
+    seed(buildDeal([1, 2]).hand, []);
+    useGame.getState().setSelectedIds(new Set([1]));
+    const { result } = renderHook(() => useDiscardPipeline());
+    act(() => result.current.discardSelected());
+    expect(useGame.getState().jokers[0].state).toEqual({
+      kind: "counter",
+      value: 1,
+    });
+  });
+
+  test("a discard with the counter at 0 leaves it at 0 (negative)", () => {
+    useGame.getState().setJokers([createGreenJokerJoker()]);
+    seed(buildDeal([1, 2]).hand, []);
+    useGame.getState().setSelectedIds(new Set([1]));
+    const { result } = renderHook(() => useDiscardPipeline());
+    act(() => result.current.discardSelected());
+    expect(useGame.getState().jokers[0].state).toEqual({
+      kind: "counter",
+      value: 0,
+    });
   });
 });

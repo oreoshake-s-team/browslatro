@@ -128,6 +128,7 @@ export function usePlayHand({
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
 
   const setHandPlayCounts = useGame((s) => s.setHandPlayCounts);
+  const runStats = useGame((s) => s.runStats);
   const setRunStats = useGame((s) => s.setRunStats);
   const setHandHistoryThisRound = useGame((s) => s.setHandHistoryThisRound);
   const setPlayedCardKeysThisAnte = useGame((s) => s.setPlayedCardKeysThisAnte);
@@ -421,6 +422,9 @@ export function usePlayHand({
             ...handPlayCounts,
             [label]: handPlayCounts[label] + 1,
           },
+          handLabelsThisRound: handHistoryThisRound,
+          blindsSkipped: runStats.blindsSkipped,
+          addedCardsCount: addedCards.length,
         },
       );
       const noCardsMatchingObservatoryPlanets = consumables.filter(
@@ -467,6 +471,9 @@ export function usePlayHand({
       remainingDeck: dealt.remaining,
       baseDeckSize: baseDeckCards.length,
       handPlayCounts: handPlayCountsWithThisHand,
+      handLabelsThisRound: handHistoryThisRound,
+      blindsSkipped: runStats.blindsSkipped,
+      addedCardsCount: addedCards.length,
     });
 
     let perCardAdditiveMult = 0;

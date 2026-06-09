@@ -99,6 +99,12 @@ export const WEE_JOKER_CHIPS_PER_TWO = 8;
 export const RIDE_THE_BUS_MULT_PER_FACELESS_HAND = 1;
 export const LOYALTY_CARD_HANDS_PER_TRIGGER = 6;
 export const LOYALTY_CARD_X_MULT = 4;
+export const GREEN_JOKER_MULT_PER_HAND = 1;
+export const GREEN_JOKER_MULT_PER_DISCARD = 1;
+export const CARD_SHARP_X_MULT = 3;
+export const THROWBACK_X_MULT_PER_SKIP = 0.25;
+export const HOLOGRAM_X_MULT_PER_ADDED_CARD = 0.25;
+export const FLASH_CARD_MULT_PER_REROLL = 2;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
