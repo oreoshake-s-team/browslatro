@@ -40,6 +40,21 @@ describe("NopeAnimation", () => {
     expect(screen.queryByTestId("nope-animation")).not.toBeInTheDocument();
   });
 
+  test("does not play on initial mount with a restored non-zero key", () => {
+    render(<NopeAnimation triggerKey={3} />);
+    expect(screen.queryByTestId("nope-animation")).not.toBeInTheDocument();
+  });
+
+  test("does not play when the key resets to 0", () => {
+    const { rerender } = render(<NopeAnimation triggerKey={0} />);
+    rerender(<NopeAnimation triggerKey={1} />);
+    act(() => {
+      vi.advanceTimersByTime(NOPE_ANIMATION_MS);
+    });
+    rerender(<NopeAnimation triggerKey={0} />);
+    expect(screen.queryByTestId("nope-animation")).not.toBeInTheDocument();
+  });
+
   test("re-shows the popup on a subsequent trigger", () => {
     const { rerender } = render(<NopeAnimation triggerKey={1} />);
     act(() => {
