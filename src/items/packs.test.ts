@@ -673,6 +673,20 @@ describe("rollPackForPool", () => {
     const offer = rollPackForPool("arcana", rollArgs(85), "mega");
     expect(offer.options.length).toBe(packOptionsCount("arcana", "mega"));
   });
+
+  test("honors the forced-variant dev flag when no explicit variant is passed", () => {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackVariant" ? "mega" : null,
+      },
+    });
+    try {
+      expect(rollPackForPool("arcana", rollArgs(86)).variant).toBe("mega");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("Spectral pool excludes hidden spectrals (closes #826)", () => {
