@@ -51,6 +51,49 @@ describe("baseChipsForAnte", () => {
   });
 });
 
+describe("baseChipsForAnte — endless mode (#855)", () => {
+  test("ante 9 matches Balatro's published 110000", () => {
+    expect(baseChipsForAnte(9)).toBe(110_000);
+  });
+
+  test("ante 10 matches Balatro's published 560000", () => {
+    expect(baseChipsForAnte(10)).toBe(560_000);
+  });
+
+  test("requirements grow strictly per ante from 8 through 16", () => {
+    for (let ante = 8; ante < 16; ante++) {
+      expect(baseChipsForAnte(ante + 1)).toBeGreaterThan(
+        baseChipsForAnte(ante),
+      );
+    }
+  });
+
+  test("endless scaling from the Green stake table starts above the base table", () => {
+    expect(baseChipsForAnte(9, "green")).toBeGreaterThan(baseChipsForAnte(9));
+  });
+
+  test("endless scaling from the Purple stake table starts above Green", () => {
+    expect(baseChipsForAnte(9, "purple")).toBeGreaterThan(
+      baseChipsForAnte(9, "green"),
+    );
+  });
+
+  test("blind multipliers still apply past the table", () => {
+    expect(
+      requiredChipsForBlind({
+        ante: 9,
+        blind: 2,
+        boss: TEST_BOSS,
+        stake: "white",
+      }),
+    ).toBe(baseChipsForAnte(9) * 1.5);
+  });
+
+  test("antes below 1 return the 100-chip floor", () => {
+    expect(baseChipsForAnte(0)).toBe(100);
+  });
+});
+
 describe("requiredChipsForBlind — White (base)", () => {
   test("Small Blind ante 1 returns BASE_CHIPS[0]", () => {
     expect(

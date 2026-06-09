@@ -638,6 +638,64 @@ describe("game actions slice", () => {
     });
   });
 
+  test("continueEndless clears pendingGameWon and enables endless mode (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    useGame.getState().continueEndless();
+    expect(useGame.getState().pendingGameWon).toBeNull();
+    expect(useGame.getState().endlessMode).toBe(true);
+  });
+
+  test("continueEndless advances to the ante past the final ante (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    useGame.getState().continueEndless();
+    expect(useGame.getState().ante).toBe(FINAL_ANTE + 1);
+    expect(useGame.getState().blind).toBe(1);
+  });
+
+  test("continueEndless opens the post-boss shop (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setShopOffers(null);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    useGame.getState().continueEndless();
+    expect(useGame.getState().shopOffers).not.toBeNull();
+  });
+
+  test("continueEndless is a no-op without a pending win (negative — #855)", () => {
+    const game = useGame.getState();
+    game.setAnte(3);
+    game.continueEndless();
+    expect(useGame.getState().ante).toBe(3);
+    expect(useGame.getState().endlessMode).toBe(false);
+  });
+
+  test("handleWin in endless mode advances past the final ante instead of re-winning (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setEndlessMode(true);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().pendingGameWon).toBeNull();
+    expect(useGame.getState().ante).toBe(FINAL_ANTE + 1);
+  });
+
+  test("endless boss win past the final ante keeps advancing antes (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE + 2);
+    game.setBlind(3);
+    game.setEndlessMode(true);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(FINAL_ANTE + 3);
+    expect(useGame.getState().pendingGameWon).toBeNull();
+  });
+
   test("handleWin awards $0 for Small Blind on Red Stake (#553)", () => {
     const game = useGame.getState();
     game.setMoney(0);

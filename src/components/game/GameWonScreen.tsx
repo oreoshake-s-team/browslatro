@@ -6,9 +6,14 @@ import type { GameWonInfo } from "../../store/progression";
 interface GameWonScreenProps {
   info: GameWonInfo;
   onNewRun: () => void;
+  onEndless: () => void;
 }
 
-export default function GameWonScreen({ info, onNewRun }: GameWonScreenProps) {
+export default function GameWonScreen({
+  info,
+  onNewRun,
+  onEndless,
+}: GameWonScreenProps) {
   const { finalAnte, finalMoney, handsPlayed, blindsSkipped } = info;
   useEscapeToClose(onNewRun, true);
 
@@ -49,10 +54,18 @@ export default function GameWonScreen({ info, onNewRun }: GameWonScreenProps) {
         </dl>
         <button
           type="button"
+          className="game-won-endless"
+          data-testid="game-won-endless"
+          onClick={onEndless}
+          autoFocus
+        >
+          Endless mode →
+        </button>
+        <button
+          type="button"
           className="game-won-new-run"
           data-testid="game-won-new-run"
           onClick={onNewRun}
-          autoFocus
         >
           Start a new run →
         </button>
