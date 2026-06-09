@@ -22,7 +22,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd /Users/oreoshake/workspace/browslatro && yarn typecheck --noEmit 2>&1 | tail -20",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && yarn typecheck --noEmit 2>&1 | tail -20",
             "timeout": 30,
             "statusMessage": "Type-checking..."
           }
