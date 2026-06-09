@@ -14,10 +14,13 @@ async function setDeterministic(page: Page): Promise<void> {
 
 async function openDetails(page: Page, text: RegExp): Promise<void> {
   const summary = page.getByText(text).first();
-  const detailsOpen = await summary
-    .locator("xpath=ancestor::details[1]")
-    .evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) await summary.click();
+  await expect(summary).toBeVisible();
+  const details = summary.locator("xpath=ancestor::details[1]");
+  const detailsOpen = await details.evaluate((el) => el.hasAttribute("open"));
+  if (!detailsOpen) {
+    await summary.click();
+    await expect(details).toHaveAttribute("open", "");
+  }
 }
 
 async function forcePackPool(
@@ -26,7 +29,9 @@ async function forcePackPool(
 ): Promise<void> {
   await openDetails(page, /Apply modifiers/);
   await openDetails(page, /Force a Pack pool in next shop/);
-  await page.getByTestId(`force-pack-${pool}`).click();
+  const button = page.getByTestId(`force-pack-${pool}`);
+  await expect(button).toBeVisible();
+  await button.click();
 }
 
 async function forcePackTarots(
