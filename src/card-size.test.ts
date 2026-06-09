@@ -61,7 +61,7 @@ describe("Card-size design tokens (issue #214)", () => {
     { source: discardPileCss, selector: ".discard-pile", dimension: "height" },
     { source: jokersCss, selector: ".joker-tile", dimension: "width" },
     { source: jokersCss, selector: ".joker-tile", dimension: "height" },
-    { source: consumablesCss, selector: ".consumable-tile", dimension: "width" },
+    { source: consumablesCss, selector: ".consumables-list > li", dimension: "width" },
     { source: consumablesCss, selector: ".consumable-tile", dimension: "height" },
   ];
 
@@ -69,7 +69,9 @@ describe("Card-size design tokens (issue #214)", () => {
     "$selector consumes var(--card-$dimension)",
     ({ source, selector, dimension }) => {
       expect(blockBody(source, selector)).toMatch(
-        new RegExp(`${dimension}:\\s*var\\(--card-${dimension}\\)`),
+        new RegExp(
+          `(?:${dimension}:\\s*|flex:\\s*0 1 )var\\(--card-${dimension}\\)`,
+        ),
       );
     },
   );

@@ -14,7 +14,7 @@
 
 .game-top-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 2rem;
   width: 100%;
   max-width: var(--game-row-width);
@@ -24,6 +24,7 @@
 
 .game-overlay-deck {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   margin-left: auto;
 }
