@@ -8,13 +8,15 @@ import type {
   PerCardContext,
 } from "./types";
 import { assertNeverEffect, isFaceCardWith } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export function applyPerCardJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   card: Card,
   rng: RandomSource = Math.random,
   context: PerCardContext = {},
 ): JokerCardResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   let additiveMult = 0;
   let additiveChips = 0;

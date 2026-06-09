@@ -15,7 +15,6 @@ import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
 import {
   applyOnDiscardJokers,
   extraStartingHandSizeFromJokers,
-  isJokerActive,
 } from "../items/jokers";
 import { cardLabel } from "../scoring/scoringTrace";
 
@@ -137,7 +136,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     setDiscardsUsedThisRound((prev) => prev + 1);
 
     const discardedCards = dealt.hand.filter((c) => selectedIds.has(c.id));
-    const onDiscardResult = applyOnDiscardJokers(jokers.filter(isJokerActive), discardedCards, {
+    const onDiscardResult = applyOnDiscardJokers(jokers, discardedCards, {
       discardsUsedThisRound: discardsUsedThisRound + 1,
     });
     for (const step of onDiscardResult.steps) {

@@ -28,7 +28,6 @@ import {
   applyHandLevelJokers,
   applyPerCardJokers,
   isFaceCard,
-  isJokerActive,
 } from "../items/jokers";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import { fullDeckPile } from "../cards/deckBuild";
@@ -196,7 +195,7 @@ export function usePlayHand({
         cardEnhancementsById,
         cardSealsById,
       ).remaining;
-      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers.filter(isJokerActive), {
+      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
         discardsUsedThisRound,
         fullDeck,
@@ -341,7 +340,7 @@ export function usePlayHand({
       cardEnhancementsById,
       cardSealsById,
     ).remaining;
-    const handJokerResult = applyHandLevelJokers(jokers.filter(isJokerActive), {
+    const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
       scoredCards: scoring,
@@ -359,7 +358,7 @@ export function usePlayHand({
     let perCardXMult = 1;
     let firstFaceAlreadyScoredUpfront = false;
     for (let i = 0; i < scoring.length; i += 1) {
-      const perCard = applyPerCardJokers(jokers.filter(isJokerActive), scoring[i], Math.random, {
+      const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
       });
       perCardAdditiveMult += perCard.additiveMult;
