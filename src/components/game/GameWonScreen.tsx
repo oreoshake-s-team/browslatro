@@ -52,23 +52,25 @@ export default function GameWonScreen({
             <dd data-testid="game-won-blinds-skipped">{blindsSkipped}</dd>
           </div>
         </dl>
-        <button
-          type="button"
-          className="game-won-endless"
-          data-testid="game-won-endless"
-          onClick={onEndless}
-          autoFocus
-        >
-          Endless mode →
-        </button>
-        <button
-          type="button"
-          className="game-won-new-run"
-          data-testid="game-won-new-run"
-          onClick={onNewRun}
-        >
-          Start a new run →
-        </button>
+        <div className="game-won-actions">
+          <button
+            type="button"
+            className="game-won-endless"
+            data-testid="game-won-endless"
+            onClick={onEndless}
+            autoFocus
+          >
+            Endless mode →
+          </button>
+          <button
+            type="button"
+            className="game-won-new-run"
+            data-testid="game-won-new-run"
+            onClick={onNewRun}
+          >
+            Start a new run →
+          </button>
+        </div>
       </div>
     </div>,
     document.body,

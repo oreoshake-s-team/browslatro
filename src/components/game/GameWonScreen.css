@@ -67,7 +67,15 @@
   color: #212529;
 }
 
-.game-won-new-run {
+.game-won-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+}
+
+.game-won-endless {
   padding: 0.7rem 1.2rem;
   border: 1px solid #f08c00;
   background-color: #fab005;
@@ -78,32 +86,32 @@
   cursor: pointer;
 }
 
-.game-won-new-run:hover {
+.game-won-endless:hover {
   background-color: #f08c00;
-  color: white;
 }
 
-.game-won-new-run:focus-visible {
+.game-won-endless:focus-visible {
   outline: 2px solid #f08c00;
   outline-offset: 2px;
 }
 
-.game-won-endless {
+.game-won-new-run {
   padding: 0.7rem 1.2rem;
-  border: 1px solid #2f9e44;
-  background-color: #40c057;
-  color: white;
+  border: 1px solid #f08c00;
+  background-color: transparent;
+  color: #5c3c00;
   font-size: 1rem;
   font-weight: 600;
   border-radius: 6px;
   cursor: pointer;
 }
 
-.game-won-endless:hover {
-  background-color: #2f9e44;
+.game-won-new-run:hover {
+  background-color: rgba(250, 176, 5, 0.15);
+  color: #212529;
 }
 
-.game-won-endless:focus-visible {
-  outline: 2px solid #2f9e44;
+.game-won-new-run:focus-visible {
+  outline: 2px solid #f08c00;
   outline-offset: 2px;
 }
