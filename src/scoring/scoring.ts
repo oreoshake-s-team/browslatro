@@ -1,8 +1,17 @@
 import type { Card, Rank } from "../cards/types";
-import { detectHandLabel, evaluateHand, type HandLabel } from "./handEvaluator";
+import {
+  detectHandLabel,
+  evaluateHand,
+  flushAnchorSuit,
+  mergedSuit,
+  straightRunValues,
+  type HandEvalOptions,
+  type HandLabel,
+} from "./handEvaluator";
 import {
   applyCardEnhancement,
   cardRankForEvaluation,
+  cardSuitForEvaluation,
   isStoneCard,
 } from "../cards/enhancements";
 
@@ -92,6 +101,7 @@ const RANK_ORDER: Record<Rank, number> = {
  */
 export interface GetScoringCardsOptions {
   readonly allCardsScore?: boolean;
+  readonly evalOptions?: HandEvalOptions;
 }
 
 export function getScoringCards(
@@ -108,18 +118,30 @@ export function getScoringCards(
     return cards.slice();
   }
 
+  const evalOpts = options.evalOptions ?? {};
   let matched: Card[];
   switch (label) {
-    case "Straight":
-    case "Flush":
     case "Full House":
-    case "Straight Flush":
-    case "Royal Flush":
     case "Five of a Kind":
     case "Flush House":
     case "Flush Five":
       matched = nonStones.slice();
       break;
+    case "Flush":
+      matched = pickFlushCards(nonStones, evalOpts);
+      break;
+    case "Straight":
+      matched = pickStraightCards(nonStones, evalOpts);
+      break;
+    case "Straight Flush":
+    case "Royal Flush": {
+      const flushIds = new Set(pickFlushCards(nonStones, evalOpts).map((c) => c.id));
+      matched = pickStraightCards(nonStones, evalOpts).filter((c) =>
+        flushIds.has(c.id),
+      );
+      if (matched.length === 0) matched = nonStones.slice();
+      break;
+    }
     case "Four of a Kind":
       matched = pickByGroupSize(nonStones, 4);
       break;
@@ -142,6 +164,41 @@ export function getScoringCards(
     ...stones.map((c) => c.id),
   ]);
   return cards.filter((c) => includedIds.has(c.id));
+}
+
+function pickFlushCards(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions,
+): Card[] {
+  const anchor = flushAnchorSuit(cards, options);
+  if (anchor === null) return cards.slice();
+  const smear = options.smearedSuits === true;
+  return cards.filter((c) => {
+    const s = cardSuitForEvaluation(c);
+    return s === null || mergedSuit(s, smear) === anchor;
+  });
+}
+
+function pickStraightCards(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions,
+): Card[] {
+  const run = straightRunValues(cards, options);
+  if (run === null) return cards.slice();
+  const valueSet = new Set<number>(run);
+  const aceLow = valueSet.has(1);
+  const seenRanks = new Set<number>();
+  const result: Card[] = [];
+  for (const c of cards) {
+    const v = RANK_ORDER[c.rank];
+    const matched = valueSet.has(v) || (aceLow && v === 14);
+    if (!matched) continue;
+    const key = aceLow && v === 14 ? 1 : v;
+    if (seenRanks.has(key)) continue;
+    seenRanks.add(key);
+    result.push(c);
+  }
+  return result;
 }
 
 function pickByGroupSize(cards: ReadonlyArray<Card>, size: number): Card[] {

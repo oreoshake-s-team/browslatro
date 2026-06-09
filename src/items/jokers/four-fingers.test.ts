@@ -111,6 +111,61 @@ describe("detectHandLabel with Four Fingers", () => {
     ]);
     expect(detectHandLabel(hand)).toBe("High Card");
   });
+
+  test("5 cards with 4 same-suit + 1 off-suit is labeled Flush (#832)", () => {
+    const hand = cards([
+      ["A", "hearts"],
+      ["7", "diamonds"],
+      ["5", "diamonds"],
+      ["2", "diamonds"],
+      ["9", "diamonds"],
+    ]);
+    expect(detectHandLabel(hand, OPT)).toBe("Flush");
+  });
+
+  test("5 cards with 4 in a run + 1 outlier is labeled Straight (#832)", () => {
+    const hand = cards([
+      ["3", "hearts"],
+      ["4", "spades"],
+      ["5", "diamonds"],
+      ["6", "clubs"],
+      ["K", "hearts"],
+    ]);
+    expect(detectHandLabel(hand, OPT)).toBe("Straight");
+  });
+
+  test("5 cards with 4 same-suit J-Q-K-A + 1 outlier is labeled Royal Flush (#832)", () => {
+    const hand = cards([
+      ["J", "spades"],
+      ["Q", "spades"],
+      ["K", "spades"],
+      ["A", "spades"],
+      ["5", "hearts"],
+    ]);
+    expect(detectHandLabel(hand, OPT)).toBe("Royal Flush");
+  });
+
+  test("5 cards with 3 same-suit + 2 off-suit stays High Card (negative, #832)", () => {
+    const hand = cards([
+      ["A", "hearts"],
+      ["K", "hearts"],
+      ["7", "diamonds"],
+      ["5", "diamonds"],
+      ["2", "diamonds"],
+    ]);
+    expect(detectHandLabel(hand, OPT)).toBe("High Card");
+  });
+
+  test("Flush House still requires all 5 cards same suit (regression)", () => {
+    const hand = cards([
+      ["3", "diamonds"],
+      ["3", "diamonds"],
+      ["3", "diamonds"],
+      ["7", "diamonds"],
+      ["7", "hearts"],
+    ]);
+    expect(detectHandLabel(hand, OPT)).toBe("Full House");
+  });
 });
 
 describe("handEvalOptionsFromJokers", () => {

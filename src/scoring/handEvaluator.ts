@@ -91,59 +91,115 @@ export function mergedSuit(suit: Suit, smearedSuits = false): Suit {
   return suit;
 }
 
+function evalSuit(card: Card, smearedSuits: boolean): Suit | null {
+  const raw = cardSuitForEvaluation(card);
+  return raw === null ? null : mergedSuit(raw, smearedSuits);
+}
+
+function suitTally(
+  cards: ReadonlyArray<Card>,
+  smearedSuits: boolean,
+): { readonly wild: number; readonly counts: ReadonlyMap<Suit, number> } {
+  let wild = 0;
+  const counts = new Map<Suit, number>();
+  for (const c of cards) {
+    const s = evalSuit(c, smearedSuits);
+    if (s === null) wild += 1;
+    else counts.set(s, (counts.get(s) ?? 0) + 1);
+  }
+  return { wild, counts };
+}
+
 function isFlush(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
   const minLen = options.fourFingers ? 4 : 5;
   if (cards.length < minLen || cards.length > 5) return false;
-  const rawSuits = cards.map(cardSuitForEvaluation);
-  const suits = rawSuits.map((s) =>
-    s === null ? null : mergedSuit(s, options.smearedSuits === true),
-  );
-  const anchor = suits.find((s) => s !== null);
-  if (anchor === undefined) return true;
-  return suits.every((s) => s === null || s === anchor);
+  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
+  if (counts.size === 0) return wild >= minLen;
+  for (const c of counts.values()) {
+    if (c + wild >= minLen) return true;
+  }
+  return false;
+}
+
+function isStrictFlush(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): boolean {
+  if (cards.length < 5 || cards.length > 5) return false;
+  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
+  if (counts.size === 0) return wild === cards.length;
+  for (const c of counts.values()) {
+    if (c + wild === cards.length) return true;
+  }
+  return false;
+}
+
+export function flushAnchorSuit(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): Suit | null {
+  const minLen = options.fourFingers ? 4 : 5;
+  if (cards.length < minLen || cards.length > 5) return null;
+  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
+  let best: Suit | null = null;
+  let bestCount = 0;
+  for (const [suit, c] of counts.entries()) {
+    if (c + wild >= minLen && c > bestCount) {
+      best = suit;
+      bestCount = c;
+    }
+  }
+  return best;
+}
+
+function longestRun(
+  sortedUnique: ReadonlyArray<number>,
+  maxGap: number,
+): ReadonlyArray<number> {
+  if (sortedUnique.length === 0) return [];
+  let best: number[] = [sortedUnique[0]];
+  let current: number[] = [sortedUnique[0]];
+  for (let i = 1; i < sortedUnique.length; i += 1) {
+    const gap = sortedUnique[i] - sortedUnique[i - 1];
+    if (gap >= 1 && gap <= maxGap) {
+      current.push(sortedUnique[i]);
+    } else {
+      current = [sortedUnique[i]];
+    }
+    if (current.length > best.length) best = current.slice();
+  }
+  return best;
+}
+
+export function straightRunValues(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): ReadonlyArray<number> | null {
+  const minLen = options.fourFingers ? 4 : 5;
+  if (cards.length < minLen || cards.length > 5) return null;
+  const unique = Array.from(
+    new Set(cards.map((c) => RANK_VALUES[c.rank])),
+  ).sort((a, b) => a - b);
+  if (unique.length < minLen) return null;
+  const maxGap = options.shortcut ? 2 : 1;
+  const high = longestRun(unique, maxGap);
+  if (high.length >= minLen) return high;
+  if (unique[unique.length - 1] === 14) {
+    const aceLow = [1, ...unique.slice(0, -1)];
+    const aceLowRun = longestRun(aceLow, maxGap);
+    if (aceLowRun.length >= minLen) return aceLowRun;
+  }
+  return null;
 }
 
 function isStraight(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
-  const minLen = options.fourFingers ? 4 : 5;
-  if (cards.length < minLen || cards.length > 5) return false;
-  const values = cards.map((c) => RANK_VALUES[c.rank]).sort((a, b) => a - b);
-  if (new Set(values).size !== values.length) return false;
-  if (isConsecutiveRun(values, options)) return true;
-  return isAceLowStraight(values, options);
-}
-
-function isConsecutiveRun(
-  values: ReadonlyArray<number>,
-  options: HandEvalOptions,
-): boolean {
-  const maxGap = options.shortcut ? 2 : 1;
-  for (let i = 1; i < values.length; i += 1) {
-    const gap = values[i] - values[i - 1];
-    if (gap < 1 || gap > maxGap) return false;
-  }
-  return true;
-}
-
-function isAceLowStraight(
-  values: ReadonlyArray<number>,
-  options: HandEvalOptions,
-): boolean {
-  if (values[values.length - 1] !== 14) return false;
-  const lowEnd = values.slice(0, values.length - 1);
-  if (options.fourFingers && lowEnd.length === 3) {
-    return lowEnd[0] === 2 && lowEnd[1] === 3 && lowEnd[2] === 4;
-  }
-  if (lowEnd.length !== 4) return false;
-  return lowEnd[0] === 2 && lowEnd[1] === 3 && lowEnd[2] === 4 && lowEnd[3] === 5;
+  return straightRunValues(cards, options) !== null;
 }
 
 function isRoyal(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
-  const minLen = options.fourFingers ? 4 : 5;
-  if (cards.length < minLen || cards.length > 5) return false;
-  const values = cards.map((c) => RANK_VALUES[c.rank]).sort((a, b) => a - b);
-  if (values[values.length - 1] !== 14) return false;
-  const expectedLow = 14 - values.length + 1;
-  return values[0] === expectedLow;
+  const run = straightRunValues(cards, options);
+  if (run === null) return false;
+  return run[run.length - 1] === 14 && run[0] === 14 - run.length + 1;
 }
 
 export function detectHandLabel(
@@ -152,19 +208,17 @@ export function detectHandLabel(
 ): HandLabel {
   if (cards.length === 0) return "High Card";
 
-  // Stone cards have no rank or suit for the purposes of hand detection.
-  // They still always score (handled in getScoringCards) but are invisible
-  // to flush/straight/grouping checks.
   const meaningful = cards.filter((c) => !isStoneCard(c));
 
   const counts = countByRank(meaningful);
   const flush = isFlush(meaningful, options);
+  const strictFlush = isStrictFlush(meaningful, options);
   const straight = isStraight(meaningful, options);
   const fiveOfKind = counts[0] === 5;
   const fullHouse = counts[0] === 3 && counts[1] === 2;
 
-  if (flush && fiveOfKind) return "Flush Five";
-  if (flush && fullHouse) return "Flush House";
+  if (strictFlush && fiveOfKind) return "Flush Five";
+  if (strictFlush && fullHouse) return "Flush House";
   if (fiveOfKind) return "Five of a Kind";
   if (flush && straight && isRoyal(meaningful, options)) return "Royal Flush";
   if (flush && straight) return "Straight Flush";
