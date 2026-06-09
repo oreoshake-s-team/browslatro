@@ -9,6 +9,7 @@ import {
   POLYCHROME_X_MULT,
 } from "../constants";
 import type { Joker } from "../types";
+import { resolveJokerEffect } from "./copy";
 import type {
   HandLevelContext,
   JokerHandLevelStep,
@@ -29,7 +30,7 @@ export function applyHandLevelJokers(
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
-    const effect = joker.effect;
+    const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
       case "additive-mult": {
         additiveMult += effect.amount;
@@ -433,6 +434,7 @@ export function applyHandLevelJokers(
       case "per-rank-in-deck-end-of-round-money":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "noop":
         break;
       default:
         assertNeverEffect(effect);

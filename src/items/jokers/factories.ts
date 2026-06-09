@@ -1178,3 +1178,23 @@ export function createAcrobatJoker(): Joker {
     effect: { kind: "x-mult-on-final-hand", amount: ACROBAT_X_MULT },
   };
 }
+
+export function createBlueprintJoker(): Joker {
+  return {
+    id: "blueprint",
+    rarity: "rare",
+    name: "Blueprint",
+    description: "Copies the ability of the Joker to the right",
+    effect: { kind: "copy-right-joker" },
+  };
+}
+
+export function createBrainstormJoker(): Joker {
+  return {
+    id: "brainstorm",
+    rarity: "rare",
+    name: "Brainstorm",
+    description: "Copies the ability of the leftmost Joker",
+    effect: { kind: "copy-leftmost-joker" },
+  };
+}
