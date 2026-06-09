@@ -30,14 +30,13 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .joker-tile {
   display: flex;
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-  min-width: var(--card-width);
+  flex: 0 1 var(--card-width);
+  min-width: 0;
   height: var(--card-height);
   flex-direction: column;
   align-items: center;
@@ -149,7 +148,8 @@
 }
 
 .joker-gap {
-  flex: 0 0 2.5rem;
+  flex: 0 1 2.5rem;
+  min-width: 0;
   align-self: stretch;
   min-height: var(--card-height);
   border-radius: 4px;
