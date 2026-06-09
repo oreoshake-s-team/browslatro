@@ -1452,3 +1452,142 @@ describe("applyDeathCopyToSelectedPreviewCards (#763)", () => {
     expect(untouched).toEqual(preview[2]);
   });
 });
+
+describe("destroySelectedPreviewCards (#843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("removes the selected preview card from packPreviewHand", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.destroySelectedPreviewCards();
+    expect(
+      useGame.getState().packPreviewHand.some((c) => c.id === preview[0].id),
+    ).toBe(false);
+  });
+
+  test("adds the destroyed id to destroyedCardIds (persists to deck)", () => {
+    const preview = createDeck().slice(0, 2);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.destroySelectedPreviewCards();
+    expect(useGame.getState().destroyedCardIds.has(preview[0].id)).toBe(true);
+  });
+
+  test("clears packPreviewSelectedIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.destroySelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("is a no-op when no preview card is selected (negative)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.destroySelectedPreviewCards();
+    expect(useGame.getState().packPreviewHand).toHaveLength(1);
+  });
+});
+
+describe("rankUpSelectedPreviewCards (#843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("replaces the selected preview card with a rank-up version", () => {
+    const preview = createDeck().slice(0, 1);
+    const original = preview[0];
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([original.id]));
+    game.rankUpSelectedPreviewCards();
+    const newCard = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id !== original.id);
+    expect(newCard?.suit).toBe(original.suit);
+  });
+
+  test("adds the original id to destroyedCardIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().destroyedCardIds.has(preview[0].id)).toBe(true);
+  });
+
+  test("appends the new card to addedCards (persists in deck)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    const before = useGame.getState().addedCards.length;
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().addedCards.length).toBe(before + 1);
+  });
+
+  test("clears packPreviewSelectedIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("is a no-op when no preview card is selected (negative)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().packPreviewHand).toEqual(preview);
+  });
+});
+
+describe("applyAuraSelectedPreviewCards (#843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("applies an edition to the selected preview card", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyAuraSelectedPreviewCards();
+    const card = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(card?.edition).toBeDefined();
+  });
+
+  test("clears packPreviewSelectedIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyAuraSelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("is a no-op when no preview card is selected (negative)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.applyAuraSelectedPreviewCards();
+    const card = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(card?.edition).toBeUndefined();
+  });
+});
