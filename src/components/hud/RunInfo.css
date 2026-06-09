@@ -164,8 +164,8 @@
 .run-info-close {
   align-self: center;
   padding: 0.7rem 1.6rem;
-  border: 1px solid #1c7ed6;
-  background-color: #339af0;
+  border: 1px solid #1864ab;
+  background-color: #1971c2;
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -174,10 +174,10 @@
 }
 
 .run-info-close:hover {
-  background-color: #1c7ed6;
+  background-color: #1864ab;
 }
 
 .run-info-close:focus-visible {
-  outline: 2px solid #1c7ed6;
+  outline: 2px solid #1864ab;
   outline-offset: 2px;
 }
