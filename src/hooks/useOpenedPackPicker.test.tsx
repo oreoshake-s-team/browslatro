@@ -130,16 +130,30 @@ describe("pickFromOpenedPack — unhandled tarot effect kinds (fix #822)", () =>
     });
   });
 
-  describe("The High Priestess (create-consumables)", () => {
-    test("non-preview pack with free slot adds The High Priestess to the tray", () => {
+  describe("The High Priestess (create-consumables) fires on pick (#850)", () => {
+    test("picking The High Priestess adds 2 planet consumables to the tray", () => {
       openPack([tarotOption("the-high-priestess")]);
       const { result } = renderHook(() => useOpenedPackPicker());
       act(() => result.current.pickFromOpenedPack(0));
-      const ids = useGame.getState().consumables.map((c) => c.card.id);
-      expect(ids).toEqual(["the-high-priestess"]);
+      expect(useGame.getState().consumables).toHaveLength(2);
     });
 
-    test("full tray does NOT decrement packPicksRemaining (early return)", () => {
+    test("picking The High Priestess adds planets (not the tarot itself)", () => {
+      openPack([tarotOption("the-high-priestess")]);
+      const { result } = renderHook(() => useOpenedPackPicker());
+      act(() => result.current.pickFromOpenedPack(0));
+      const kinds = useGame.getState().consumables.map((c) => c.kind);
+      expect(kinds.every((k) => k === "planet")).toBe(true);
+    });
+
+    test("picking The High Priestess decrements packPicksRemaining", () => {
+      openPack([tarotOption("the-high-priestess")], [], 2);
+      const { result } = renderHook(() => useOpenedPackPicker());
+      act(() => result.current.pickFromOpenedPack(0));
+      expect(useGame.getState().packPicksRemaining).toBe(1);
+    });
+
+    test("full tray does NOT decrement packPicksRemaining (negative)", () => {
       fillConsumableTrayWithHangedMen(2);
       openPack([tarotOption("the-high-priestess")], [], 2);
       const { result } = renderHook(() => useOpenedPackPicker());
@@ -269,5 +283,149 @@ describe("pickFromOpenedPack — Judgement (create-joker) fires immediately (fix
     const { result } = renderHook(() => useOpenedPackPicker());
     act(() => result.current.pickFromOpenedPack(0));
     expect(useGame.getState().jokers).toHaveLength(5);
+  });
+});
+
+describe("pickFromOpenedPack — The Emperor (create-consumables) fires on pick (#850)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("picking The Emperor adds 2 tarot consumables to the tray", () => {
+    openPack([tarotOption("the-emperor")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("The Emperor never creates another Emperor (negative)", () => {
+    openPack([tarotOption("the-emperor")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-emperor")).toBe(false);
+  });
+
+  test("picking The Emperor adds tarot consumables (not planet)", () => {
+    openPack([tarotOption("the-emperor")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    const kinds = useGame.getState().consumables.map((c) => c.kind);
+    expect(kinds.every((k) => k === "tarot")).toBe(true);
+  });
+
+  test("picking The Emperor decrements packPicksRemaining", () => {
+    openPack([tarotOption("the-emperor")], [], 2);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(1);
+  });
+});
+
+describe("pickFromOpenedPack — Death (death-copy) fires on preview pack (#850)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("with 2 preview cards selected, Death copies the left onto the right", () => {
+    const left: Card = { id: 100, rank: "K", suit: "spades" };
+    const right: Card = { id: 101, rank: "5", suit: "hearts" };
+    openPack([tarotOption("death")], [left, right], 2);
+    useGame.getState().setPackPreviewSelectedIds(new Set([left.id, right.id]));
+    useGame.getState().setPackPreviewDisplayOrder([left.id, right.id]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    const updated = useGame.getState().packPreviewHand.find((c) => c.id === left.id);
+    expect(updated?.rank).toBe(right.rank);
+  });
+
+  test("decrements packPicksRemaining when fired against a preview", () => {
+    const left: Card = { id: 200, rank: "K", suit: "spades" };
+    const right: Card = { id: 201, rank: "5", suit: "hearts" };
+    openPack([tarotOption("death")], [left, right], 2);
+    useGame.getState().setPackPreviewSelectedIds(new Set([left.id, right.id]));
+    useGame.getState().setPackPreviewDisplayOrder([left.id, right.id]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(1);
+  });
+
+  test("with only 1 preview card selected, Death is a no-op (negative)", () => {
+    const left: Card = { id: 300, rank: "K", suit: "spades" };
+    const right: Card = { id: 301, rank: "5", suit: "hearts" };
+    openPack([tarotOption("death")], [left, right], 2);
+    useGame.getState().setPackPreviewSelectedIds(new Set([left.id]));
+    useGame.getState().setPackPreviewDisplayOrder([left.id, right.id]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(2);
+  });
+});
+
+describe("pickFromOpenedPack — convert-suit fires on preview pack (#850)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("The Sun converts a selected preview card to hearts", () => {
+    const c: Card = { id: 400, rank: "K", suit: "spades" };
+    openPack([tarotOption("the-sun")], [c], 2);
+    useGame.getState().setPackPreviewSelectedIds(new Set([c.id]));
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPreviewHand[0]?.suit).toBe("hearts");
+  });
+
+  test("The Star converts a selected preview card to diamonds", () => {
+    const c: Card = { id: 410, rank: "K", suit: "spades" };
+    openPack([tarotOption("the-star")], [c], 2);
+    useGame.getState().setPackPreviewSelectedIds(new Set([c.id]));
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPreviewHand[0]?.suit).toBe("diamonds");
+  });
+
+  test("with 0 preview cards selected, convert-suit is a no-op (negative)", () => {
+    const c: Card = { id: 420, rank: "K", suit: "spades" };
+    openPack([tarotOption("the-sun")], [c], 2);
+    useGame.getState().setPackPreviewSelectedIds(new Set());
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(2);
+  });
+});
+
+describe("pickFromOpenedPack — The Fool (copy-last-consumable) fires on pick (#850)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("with a previously-used tarot, picking The Fool adds a copy to the tray", () => {
+    const hangedMan = createTarotCatalog().find((t) => t.id === "the-hanged-man");
+    if (!hangedMan) throw new Error("missing");
+    useGame.getState().setLastUsedConsumable({ kind: "tarot", card: hangedMan });
+    openPack([tarotOption("the-fool")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids).toEqual(["the-hanged-man"]);
+  });
+
+  test("with no lastUsedConsumable, The Fool is a no-op (negative)", () => {
+    useGame.getState().setLastUsedConsumable(null);
+    openPack([tarotOption("the-fool")], [], 2);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(2);
+  });
+
+  test("The Fool never copies itself (negative)", () => {
+    const fool = createTarotCatalog().find((t) => t.id === "the-fool");
+    if (!fool) throw new Error("missing");
+    useGame.getState().setLastUsedConsumable({ kind: "tarot", card: fool });
+    openPack([tarotOption("the-fool")], [], 2);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().packPicksRemaining).toBe(2);
   });
 });
