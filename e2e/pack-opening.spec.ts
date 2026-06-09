@@ -12,30 +12,37 @@ async function setDeterministic(page: Page): Promise<void> {
   });
 }
 
-async function openDetails(page: Page, text: RegExp): Promise<void> {
-  const summary = page.getByText(text).first();
-  const detailsOpen = await summary
-    .locator("xpath=ancestor::details[1]")
-    .evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) await summary.click();
-}
-
 async function forcePackPool(
   page: Page,
   pool: "standard" | "arcana" | "buffoon" | "spectral" | "celestial",
 ): Promise<void> {
-  await openDetails(page, /Apply modifiers/);
-  await openDetails(page, /Force a Pack pool in next shop/);
-  await page.getByTestId(`force-pack-${pool}`).click();
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:forcePackPool", value);
+  }, pool);
 }
 
 async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
-  await openDetails(page, /Apply modifiers/);
-  await openDetails(page, /Add a specific Tarot/);
-  await page.locator(`button[data-tarot-id="${tarotId}"]`).click();
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:seedTarotIds", value);
+  }, tarotId);
+}
+
+async function addSpectralToTray(
+  page: Page,
+  spectralId: string,
+): Promise<void> {
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:seedSpectralIds", value);
+  }, spectralId);
+}
+
+async function startRun(page: Page): Promise<void> {
+  await page.goto("/");
+  await page.getByTestId("new-run-confirm").click();
 }
 
 async function winRound1AndOpenShop(page: Page): Promise<void> {
+  await startRun(page);
   await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   for (let i = 0; i < 5; i += 1) {
@@ -58,8 +65,6 @@ async function buyFirstPackOffer(page: Page): Promise<void> {
 test.describe("Pack opening flow (#694)", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
-    await page.goto("/");
-    await page.getByTestId("new-run-confirm").click();
   });
 
   test("Standard pack pool: forced → modal opens on buy → picking the first option closes the modal", async ({
@@ -196,5 +201,41 @@ test.describe("Pack opening flow (#694)", () => {
         ),
       )
       .toBe(before + 1);
+  });
+});
+
+test.describe("Consumables usable while a Standard pack is open (#821)", () => {
+  test.beforeEach(async ({ page }) => {
+    await setDeterministic(page);
+  });
+
+  test("Strength tarot applied to a hand card mid-Standard-pack consumes the tarot and keeps the modal open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addTarotToTray(page, "strength");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.locator(HAND_CARDS).first()).toBeVisible();
+    await page.locator(HAND_CARDS).first().click();
+    await page.locator('[data-consumable-kind="tarot"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="tarot"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+  });
+
+  test("Black Hole spectral used mid-Standard-pack consumes the spectral and keeps the modal open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addSpectralToTray(page, "black-hole");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await page.locator('[data-consumable-kind="spectral"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="spectral"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
   });
 });

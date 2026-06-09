@@ -79,6 +79,73 @@ describe("NewRunScreen", () => {
     );
   });
 
+  test("White selected shows only the White effect entry (closes #833)", () => {
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(
+      screen.getByTestId("new-run-stake-description").querySelectorAll("li"),
+    ).toHaveLength(1);
+  });
+
+  test("Red selected shows Red on top then White below (selected-first order, closes #833)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-red"));
+    const entries = screen
+      .getByTestId("new-run-stake-description")
+      .querySelectorAll("li");
+    expect(Array.from(entries).map((el) => el.getAttribute("data-testid"))).toEqual([
+      "new-run-stake-effect-red",
+      "new-run-stake-effect-white",
+    ]);
+  });
+
+  test("Gold selected shows all 8 cumulative effects, gold-first then descending (closes #833)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-gold"));
+    const entries = screen
+      .getByTestId("new-run-stake-description")
+      .querySelectorAll("li");
+    expect(Array.from(entries).map((el) => el.getAttribute("data-testid"))).toEqual([
+      "new-run-stake-effect-gold",
+      "new-run-stake-effect-orange",
+      "new-run-stake-effect-purple",
+      "new-run-stake-effect-blue",
+      "new-run-stake-effect-black",
+      "new-run-stake-effect-green",
+      "new-run-stake-effect-red",
+      "new-run-stake-effect-white",
+    ]);
+  });
+
+  test("the currently-selected stake entry is marked data-selected (closes #833)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-orange"));
+    expect(screen.getByTestId("new-run-stake-effect-orange")).toHaveAttribute(
+      "data-selected",
+      "true",
+    );
+  });
+
+  test("non-selected cumulative entries are not marked data-selected (closes #833)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-orange"));
+    expect(screen.getByTestId("new-run-stake-effect-red")).not.toHaveAttribute(
+      "data-selected",
+    );
+  });
+
+  test("Black Stake effect text is shown when Gold is selected (closes #833)", async () => {
+    const user = userEvent.setup();
+    render(<NewRunScreen onConfirm={vi.fn()} />);
+    await user.click(screen.getByTestId("new-run-stake-gold"));
+    expect(screen.getByTestId("new-run-stake-effect-black")).toHaveTextContent(
+      /Eternal/i,
+    );
+  });
+
   test("Start Run fires onConfirm with the selected stake", async () => {
     const user = userEvent.setup();
     const onConfirm = vi.fn();
@@ -206,5 +273,74 @@ describe("NewRunScreen", () => {
     await user.click(screen.getByTestId("new-run-stake-blue"));
     await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
     expect(screen.getByTestId("new-run-preview-hands")).toHaveTextContent("4");
+  });
+
+  describe("deck tooltip on hover/focus (#835)", () => {
+    test("no static deck description paragraph is rendered (replaced by hover tooltip)", () => {
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      expect(
+        screen.queryByTestId("new-run-deck-description"),
+      ).not.toBeInTheDocument();
+    });
+
+    test("hovering a deck tile opens a tooltip with that deck's description", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/Yellow Deck/);
+    });
+
+    test("the hovered tooltip carries the deck's effect description", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/extra/i);
+    });
+
+    test("hovering a different deck swaps the tooltip text", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      await user.unhover(screen.getByTestId("new-run-deck-yellow-deck"));
+      await user.hover(screen.getByTestId("new-run-deck-blue-deck"));
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/Blue Deck/);
+    });
+
+    test("focusing a deck tile via keyboard opens the tooltip", () => {
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      const tile = screen.getByTestId("new-run-deck-red-deck");
+      fireEvent.focus(tile);
+      expect(screen.getByRole("tooltip")).toHaveTextContent(/Red Deck/);
+    });
+
+    test("Escape closes an open tooltip (negative)", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      await user.hover(screen.getByTestId("new-run-deck-yellow-deck"));
+      expect(screen.getByRole("tooltip")).toBeInTheDocument();
+      fireEvent.keyDown(window, { key: "Escape" });
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    test("unhover closes the tooltip (negative)", async () => {
+      const user = userEvent.setup();
+      render(<NewRunScreen onConfirm={vi.fn()} />);
+      const tile = screen.getByTestId("new-run-deck-yellow-deck");
+      await user.hover(tile);
+      await user.unhover(tile);
+      expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+    });
+
+    test("clicking a tile still selects it (selection unaffected by tooltip wiring)", async () => {
+      const user = userEvent.setup();
+      const onConfirm = vi.fn();
+      render(<NewRunScreen onConfirm={onConfirm} />);
+      await user.click(screen.getByTestId("new-run-deck-yellow-deck"));
+      await user.click(screen.getByTestId("new-run-confirm"));
+      expect(onConfirm).toHaveBeenCalledWith({
+        stake: "white",
+        deck: "yellow-deck",
+      });
+    });
   });
 });

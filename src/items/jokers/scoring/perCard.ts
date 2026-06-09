@@ -3,19 +3,22 @@ import { rollChance } from "../../../dev/chanceOverride";
 import { mergedSuit } from "../../../scoring/handEvaluator";
 import { RANK_PARITY } from "../constants";
 import type { Joker, RandomSource } from "../types";
+import { resolveJokerEffect } from "./copy";
 import type {
   JokerCardResult,
   JokerCardStep,
   PerCardContext,
 } from "./types";
 import { assertNeverEffect, isFaceCardWith } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export function applyPerCardJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   card: Card,
   rng: RandomSource = Math.random,
   context: PerCardContext = {},
 ): JokerCardResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   let additiveMult = 0;
   let additiveChips = 0;
@@ -28,7 +31,7 @@ export function applyPerCardJokers(
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
-    const effect = joker.effect;
+    const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
       case "business-card": {
         if (isFaceCardWith(card, jokers) && rollChance(effect.chance, rng)) {
@@ -210,6 +213,9 @@ export function applyPerCardJokers(
       case "on-hand-type-stack-chips":
       case "on-played-card-count-stack-chips":
       case "on-played-rank-stack-chips":
+      case "on-no-face-stack-mult":
+      case "every-n-hands-xmult":
+      case "noop":
         break;
       default:
         assertNeverEffect(effect);

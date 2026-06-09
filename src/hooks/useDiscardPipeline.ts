@@ -5,6 +5,7 @@ import {
   applyBossFaceDown,
   bossHandSize,
   bossPostPlayDiscardCount,
+  bossRefillCountOverride,
   hookRngConfig,
   pickHookDiscardIds,
 } from "../items/bosses";
@@ -21,7 +22,6 @@ import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
 import {
   applyOnDiscardJokers,
   extraStartingHandSizeFromJokers,
-  isJokerActive,
 } from "../items/jokers";
 import { cardLabel } from "../scoring/scoringTrace";
 
@@ -94,9 +94,14 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     } else {
       const effectiveHandSize =
         blind === 3 ? bossHandSize(currentBoss, currentHandSize) : currentHandSize;
-      const drawCount = drawCountForRefill(
-        effectiveHandSize,
-        kept.length,
+      const drawCount = bossRefillCountOverride(
+        currentBoss,
+        blind === 3,
+        drawCountForRefill(
+          effectiveHandSize,
+          kept.length,
+          dealt.remaining.length,
+        ),
         dealt.remaining.length,
       );
       const drawn = dealt.remaining.slice(0, drawCount);
@@ -157,7 +162,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     setDiscardingIds(ids);
 
     const discardedCards = currentHand.filter((c) => ids.has(c.id));
-    const onDiscardResult = applyOnDiscardJokers(jokers.filter(isJokerActive), discardedCards, {
+    const onDiscardResult = applyOnDiscardJokers(jokers, discardedCards, {
       discardsUsedThisRound: discardsUsedThisRound + 1,
     });
     for (const step of onDiscardResult.steps) {

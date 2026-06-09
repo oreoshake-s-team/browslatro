@@ -60,6 +60,18 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applyDeathCopyToSelectedPreviewCards = useGame(
     (s) => s.applyDeathCopyToSelectedPreviewCards,
   );
+  const destroySelectedPreviewCards = useGame(
+    (s) => s.destroySelectedPreviewCards,
+  );
+  const rankUpSelectedPreviewCards = useGame(
+    (s) => s.rankUpSelectedPreviewCards,
+  );
+  const applyAuraSelectedPreviewCards = useGame(
+    (s) => s.applyAuraSelectedPreviewCards,
+  );
+  const duplicateSelectedPreviewCards = useGame(
+    (s) => s.duplicateSelectedPreviewCards,
+  );
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
@@ -133,7 +145,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
         return;
       }
       if (spectralEffect.kind === "duplicate-selected") {
-        if (previewActive) return;
+        if (previewActive) {
+          if (packPreviewSelectedIds.size !== spectralEffect.maxTargets) return;
+          play("pop");
+          duplicateSelectedPreviewCards(spectralEffect.copies);
+          consume();
+          return;
+        }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
         setDealt((prev) => ({
@@ -148,7 +166,13 @@ export function useConsumableActions(): UseConsumableActionsResult {
         return;
       }
       if (spectralEffect.kind === "aura") {
-        if (previewActive) return;
+        if (previewActive) {
+          if (packPreviewSelectedIds.size !== spectralEffect.maxTargets) return;
+          play("pop");
+          applyAuraSelectedPreviewCards();
+          consume();
+          return;
+        }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
         setDealt((prev) => ({
@@ -253,7 +277,18 @@ export function useConsumableActions(): UseConsumableActionsResult {
       return;
     }
     if (effect.kind === "destroy-selected") {
-      if (previewActive) return;
+      if (previewActive) {
+        if (
+          packPreviewSelectedIds.size === 0 ||
+          packPreviewSelectedIds.size > effect.maxTargets
+        ) {
+          return;
+        }
+        play("pop");
+        destroySelectedPreviewCards();
+        consume();
+        return;
+      }
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
       const destroyedIds = new Set<number>();
@@ -359,7 +394,18 @@ export function useConsumableActions(): UseConsumableActionsResult {
       return;
     }
     if (effect.kind === "rank-up-selected") {
-      if (previewActive) return;
+      if (previewActive) {
+        if (
+          packPreviewSelectedIds.size === 0 ||
+          packPreviewSelectedIds.size > effect.maxTargets
+        ) {
+          return;
+        }
+        play("pop");
+        rankUpSelectedPreviewCards();
+        consume();
+        return;
+      }
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
       const oldIds = new Set<number>();

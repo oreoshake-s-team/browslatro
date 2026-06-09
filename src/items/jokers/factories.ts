@@ -63,6 +63,9 @@ import {
   SHOOT_THE_MOON_RANKS,
   SLY_JOKER_CHIPS,
   SMILEY_FACE_MULT,
+  LOYALTY_CARD_HANDS_PER_TRIGGER,
+  LOYALTY_CARD_X_MULT,
+  RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
   SQUARE_JOKER_CARD_COUNT,
@@ -1025,6 +1028,35 @@ export function createWeeJokerJoker(): Joker {
   };
 }
 
+export function createRideTheBusJoker(): Joker {
+  return {
+    id: "ride-the-bus",
+    rarity: "common",
+    name: "Ride the Bus",
+    description: `This Joker gains +${RIDE_THE_BUS_MULT_PER_FACELESS_HAND} Mult per consecutive hand played without a scored face card`,
+    effect: {
+      kind: "on-no-face-stack-mult",
+      amount: RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createLoyaltyCardJoker(): Joker {
+  return {
+    id: "loyalty-card",
+    rarity: "uncommon",
+    name: "Loyalty Card",
+    description: `X${LOYALTY_CARD_X_MULT} Mult every ${LOYALTY_CARD_HANDS_PER_TRIGGER} hands played`,
+    effect: {
+      kind: "every-n-hands-xmult",
+      n: LOYALTY_CARD_HANDS_PER_TRIGGER,
+      xmult: LOYALTY_CARD_X_MULT,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
 export function createPareidoliaJoker(): Joker {
   return {
     id: "pareidolia",
@@ -1144,5 +1176,25 @@ export function createAcrobatJoker(): Joker {
     name: "Acrobat",
     description: `X${ACROBAT_X_MULT} Mult on the final hand of the round`,
     effect: { kind: "x-mult-on-final-hand", amount: ACROBAT_X_MULT },
+  };
+}
+
+export function createBlueprintJoker(): Joker {
+  return {
+    id: "blueprint",
+    rarity: "rare",
+    name: "Blueprint",
+    description: "Copies the ability of the Joker to the right",
+    effect: { kind: "copy-right-joker" },
+  };
+}
+
+export function createBrainstormJoker(): Joker {
+  return {
+    id: "brainstorm",
+    rarity: "rare",
+    name: "Brainstorm",
+    description: "Copies the ability of the leftmost Joker",
+    effect: { kind: "copy-leftmost-joker" },
   };
 }

@@ -183,7 +183,18 @@ export type JokerEffect =
       readonly kind: "on-played-rank-stack-chips";
       readonly ranks: ReadonlyArray<Rank>;
       readonly amount: number;
-    };
+    }
+  | {
+      readonly kind: "on-no-face-stack-mult";
+      readonly amount: number;
+    }
+  | {
+      readonly kind: "every-n-hands-xmult";
+      readonly n: number;
+      readonly xmult: number;
+    }
+  | { readonly kind: "copy-right-joker" }
+  | { readonly kind: "copy-leftmost-joker" };
 
 export type JokerStateValue =
   | { readonly kind: "counter"; readonly value: number };

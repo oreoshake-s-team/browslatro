@@ -41,6 +41,7 @@ import {
   type PackOffer,
   type PackPool,
   packPrice,
+  readForcedPackPools,
   rollPack,
   rollPackForPool,
 } from "./packs";
@@ -578,7 +579,7 @@ export function pickShopItemOffers(
 export function pickShopOffers(args: PickShopOffersArgs): ReadonlyArray<ShopItem> {
   const rng = args.rng ?? Math.random;
   const slots: ShopItem[] = [...pickShopItemOffers(args)];
-  const forced = args.forcedPackPools ?? [];
+  const forced = [...readForcedPackPools(), ...(args.forcedPackPools ?? [])];
   const rollArgs = {
     planetCatalog: args.planetCatalog,
     tarotCatalog: args.tarotCatalog,

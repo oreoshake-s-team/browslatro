@@ -8,6 +8,7 @@ import {
   packOptionsCount,
   packPickLimit,
   packPrice,
+  readForcedPackPools,
   rollPack,
   rollPackForPool,
   rollPackOptions,
@@ -672,6 +673,50 @@ describe("rollPackForPool", () => {
   test("a mega pack yields the mega option count", () => {
     const offer = rollPackForPool("arcana", rollArgs(85), "mega");
     expect(offer.options.length).toBe(packOptionsCount("arcana", "mega"));
+  });
+
+  test("honors the forced-variant dev flag when no explicit variant is passed", () => {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackVariant" ? "mega" : null,
+      },
+    });
+    try {
+      expect(rollPackForPool("arcana", rollArgs(86)).variant).toBe("mega");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("readForcedPackPools (dev flag, #856)", () => {
+  function stubForcedPools(value: string | null) {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackPool" ? value : null,
+      },
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("returns the pools listed in the flag", () => {
+    stubForcedPools("arcana,spectral");
+    expect(readForcedPackPools()).toEqual(["arcana", "spectral"]);
+  });
+
+  test("drops tokens that are not valid pack pools", () => {
+    stubForcedPools("arcana,bogus");
+    expect(readForcedPackPools()).toEqual(["arcana"]);
+  });
+
+  test("returns an empty list when the flag is unset", () => {
+    stubForcedPools(null);
+    expect(readForcedPackPools()).toEqual([]);
   });
 });
 

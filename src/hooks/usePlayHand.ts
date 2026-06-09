@@ -20,6 +20,7 @@ import {
   bossBlocksHandLabel,
   bossMoneyPenaltyPerCard,
   bossRequiredCardCount,
+  bossShouldZeroWallet,
   debuffedHandIds,
 } from "../items/bosses";
 import {
@@ -30,7 +31,6 @@ import {
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
-  isJokerActive,
 } from "../items/jokers";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import {
@@ -228,7 +228,7 @@ export function usePlayHand({
         cardEnhancementsById,
         cardSealsById,
       ).remaining;
-      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers.filter(isJokerActive), {
+      const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
         discardsUsedThisRound,
         fullDeck,
@@ -323,10 +323,8 @@ export function usePlayHand({
       useGame.getState().setMoney(money - moneyPenalty);
     }
 
-    const label = detectHandLabel(
-      playedCards,
-      handEvalOptionsFromJokers(jokers.filter(isJokerActive)),
-    );
+    const evalOptions = handEvalOptionsFromJokers(jokers);
+    const label = detectHandLabel(playedCards, evalOptions);
     const isBossRound = blind === 3;
     if (
       isBossRound &&
@@ -338,6 +336,29 @@ export function usePlayHand({
     pendingHandPlayResetRef.current = true;
 
     setHandPlayCounts((prev) => ({ ...prev, [label]: prev[label] + 1 }));
+    const handPlayCountsAfterThisHand = {
+      ...handPlayCounts,
+      [label]: handPlayCounts[label] + 1,
+    };
+    if (
+      bossShouldZeroWallet(
+        currentBoss,
+        isBossRound,
+        label,
+        handPlayCountsAfterThisHand,
+      )
+    ) {
+      const moneyBeforeWipe = useGame.getState().money;
+      useGame.getState().setMoney(0);
+      setScoringEvents((prev) => [
+        ...prev,
+        {
+          kind: "money-delta",
+          amount: -moneyBeforeWipe,
+          source: currentBoss?.name ?? "The Ox",
+        },
+      ]);
+    }
     setRunStats(recordHandPlayed);
     setHandHistoryThisRound((prev) => [...prev, label]);
     setPlayedCardKeysThisAnte((prev) => {
@@ -366,6 +387,7 @@ export function usePlayHand({
     const scoring = expandRedSealRetriggers(
       getScoringCards(playedCards, label, {
         allCardsScore: allCardsScoreFromJokers(jokers),
+        evalOptions,
       }),
     ).filter((c) => !playedDebuffedIds.has(c.id));
     setJokers((prev) =>
@@ -377,7 +399,7 @@ export function usePlayHand({
     );
     if (scoring.length === 0) {
       const noCardsHandJokerResult = applyHandLevelJokers(
-        jokers.filter(isJokerActive),
+        jokers,
         {
           playedHandLabel: label,
           playedCardCount: playedCards.length,
@@ -433,7 +455,7 @@ export function usePlayHand({
       ...handPlayCounts,
       [label]: handPlayCounts[label] + 1,
     };
-    const handJokerResult = applyHandLevelJokers(jokers.filter(isJokerActive), {
+    const handJokerResult = applyHandLevelJokers(jokers, {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
       scoredCards: scoring,
@@ -453,10 +475,10 @@ export function usePlayHand({
     let firstFaceAlreadyScoredUpfront = false;
     const luckyRollsByScoringIndex: LuckyRollResult[] = [];
     const smearedSuitsActive =
-      handEvalOptionsFromJokers(jokers.filter(isJokerActive)).smearedSuits ===
+      handEvalOptionsFromJokers(jokers).smearedSuits ===
       true;
     for (let i = 0; i < scoring.length; i += 1) {
-      const perCard = applyPerCardJokers(jokers.filter(isJokerActive), scoring[i], Math.random, {
+      const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
         smearedSuits: smearedSuitsActive,
       });

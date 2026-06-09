@@ -1,10 +1,10 @@
 .consumables {
   display: flex;
-  flex: 0 0 auto;
+  flex: 0 1 23rem;
+  min-width: 0;
   flex-direction: column;
   align-items: stretch;
   gap: 0.6rem;
-  width: 23rem;
   max-width: 23rem;
   padding: 1rem 1.4rem;
   border: 2px solid #845ef7;
@@ -23,19 +23,25 @@
 
 .consumables-list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: space-around;
   gap: 0.6rem;
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow-x: clip;
+}
+
+.consumables-list > li {
+  display: flex;
+  flex: 0 1 var(--card-width);
+  min-width: 0;
 }
 
 .consumable-tile {
   display: flex;
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-  min-width: var(--card-width);
+  width: 100%;
+  min-width: 0;
   height: var(--card-height);
   flex-direction: column;
   align-items: center;

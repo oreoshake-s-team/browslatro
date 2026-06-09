@@ -9,17 +9,20 @@ import {
   POLYCHROME_X_MULT,
 } from "../constants";
 import type { Joker } from "../types";
+import { resolveJokerEffect } from "./copy";
 import type {
   HandLevelContext,
   JokerHandLevelStep,
   JokerHandResult,
 } from "./types";
 import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export function applyHandLevelJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   context: HandLevelContext = {},
 ): JokerHandResult {
+  const jokers = allJokers.filter(isJokerActive);
   let additiveMult = 0;
   let additiveChips = 0;
   let xMult = 1;
@@ -29,7 +32,7 @@ export function applyHandLevelJokers(
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
-    const effect = joker.effect;
+    const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
       case "additive-mult": {
         additiveMult += effect.amount;
@@ -392,6 +395,32 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "on-no-face-stack-mult": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: bonus,
+          });
+        }
+        break;
+      }
+      case "every-n-hands-xmult": {
+        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (counter > 0 && counter % effect.n === 0) {
+          xMult *= effect.xmult;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.xmult,
+          });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
@@ -407,6 +436,7 @@ export function applyHandLevelJokers(
       case "per-rank-in-deck-end-of-round-money":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "noop":
         break;
       default:
         assertNeverEffect(effect);

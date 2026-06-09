@@ -1,0 +1,89 @@
+.game-won-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.game-won-modal {
+  background-color: #fff9db;
+  border: 2px solid #fab005;
+  border-radius: 12px;
+  padding: 2rem 2.4rem;
+  min-width: 24rem;
+  max-width: 36rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.game-won-title {
+  margin: 0;
+  font-size: 2rem;
+  color: #f08c00;
+  text-align: center;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.game-won-subtitle {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #5c3c00;
+  text-align: center;
+}
+
+.game-won-stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.game-won-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.4rem 0.6rem;
+  background-color: white;
+  border: 1px solid #ffe066;
+  border-radius: 6px;
+}
+
+.game-won-stat dt {
+  font-size: 0.9rem;
+  color: #5c3c00;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.game-won-stat dd {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.game-won-new-run {
+  padding: 0.7rem 1.2rem;
+  border: 1px solid #f08c00;
+  background-color: #fab005;
+  color: #212529;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.game-won-new-run:hover {
+  background-color: #f08c00;
+  color: white;
+}
+
+.game-won-new-run:focus-visible {
+  outline: 2px solid #f08c00;
+  outline-offset: 2px;
+}

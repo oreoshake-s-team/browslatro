@@ -145,6 +145,7 @@ export default function Game({
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
+  const handVisible = (!shop && !packOpen) || (!!packOpen && !previewActive);
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
@@ -175,7 +176,7 @@ export default function Game({
           onDragStart={dragController.onConsumableDragStart}
           onDragEnd={dragController.onConsumableDragEnd}
         />
-        {(shop || packOpen) && (
+        {(shop || packOpen) && !handVisible && (
           <div className="game-overlay-deck">
             <DeckPile
               remaining={overlayDeckRemaining}
@@ -197,7 +198,7 @@ export default function Game({
           <Shop {...shop} disabled={!!packOpen} />
         </Suspense>
       )}
-      {!shop && !packOpen && (
+      {handVisible && (
         <HandComponent
           hand={hand}
           remaining={inHandRemaining}

@@ -16,12 +16,14 @@ import {
   pickBossForAnte,
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
+import { readSeededConsumables } from "./dev/seedConsumables";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
 import { didRestoreFromSnapshot } from "./save/restore";
 const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
+const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { STARTING_MONEY } from "./store/economy";
 import { deckJokerSlotsDelta, deckStartingMoneyDelta } from "./items/decks";
@@ -191,6 +193,8 @@ function App() {
   const pendingWin = useGame((state) => state.pendingWin);
   const setPendingWin = useGame((state) => state.setPendingWin);
   const pendingLose = useGame((state) => state.pendingLose);
+  const pendingGameWon = useGame((state) => state.pendingGameWon);
+  const setPendingGameWon = useGame((state) => state.setPendingGameWon);
   const setPendingLose = useGame((state) => state.setPendingLose);
 
   const shopOffers = useGame((state) => state.shopOffers);
@@ -199,6 +203,12 @@ function App() {
     (state) => state.setSoldJokerIdsThisShopVisit,
   );
   const consumables = useGame((state) => state.consumables);
+  const setConsumables = useGame((state) => state.setConsumables);
+  useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
+    const seeded = readSeededConsumables();
+    if (seeded.length > 0) setConsumables(seeded);
+  }, [setConsumables]);
   const openedPack = useGame((state) => state.openedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);
@@ -349,6 +359,11 @@ function App() {
     startNewGame();
   }
 
+  function dismissGameWonScreen() {
+    setPendingGameWon(null);
+    startNewGame();
+  }
+
   const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
     ? ({
         "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
@@ -456,6 +471,13 @@ function App() {
         <LazyChunkErrorBoundary>
           <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <RoundLostModal info={pendingLose} onContinue={dismissRoundLostModal} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
+      )}
+      {pendingGameWon && (
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
+            <GameWonScreen info={pendingGameWon} onNewRun={dismissGameWonScreen} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
