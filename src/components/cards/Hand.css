@@ -55,6 +55,11 @@
   background-color: var(--surface-hover);
 }
 
+.hand-sort-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
 .hand-sort-button-active {
   background-color: var(--accent-chips-strong);
   color: white;
