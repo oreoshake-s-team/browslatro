@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -88,6 +89,7 @@ export function getScoringStepMs(
 }
 
 function App() {
+  const { t } = useTranslation();
   const blind = useGame((state) => state.blind);
   const round = useGame((state) => state.round);
   const ante = useGame((state) => state.ante);
@@ -384,6 +386,9 @@ function App() {
       data-unused-discards={runStats.unusedDiscards}
       data-blinds-skipped={runStats.blindsSkipped}
     >
+      <h1 className="sr-only">
+        {pendingRunSelect ? t("app.titleMenu") : t("app.titleRun")}
+      </h1>
       <Sidebar
         blind={blind}
         ante={ante}

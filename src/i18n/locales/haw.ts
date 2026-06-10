@@ -7,6 +7,10 @@ type LocaleMessages = {
 };
 
 export const haw: LocaleMessages = {
+  app: {
+    titleMenu: "Browlatro — Papa koho nui",
+    titleRun: "Browlatro — Ke holo nei ka pāʻani",
+  },
   sidebar: {
     runInfo: "Run info",
     options: "Nā koho",
