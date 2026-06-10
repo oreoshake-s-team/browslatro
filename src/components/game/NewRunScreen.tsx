@@ -1,7 +1,8 @@
 import "./NewRunScreen.css";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import DeckTooltip from "./DeckTooltip";
+import { useFocusTrap } from "../system/useFocusTrap";
 import {
   DEFAULT_STAKE,
   createStakeCatalog,
@@ -38,6 +39,8 @@ export default function NewRunScreen({
   const [stake, setStake] = useState<Stake>(initialStake);
   const [deck, setDeck] = useState<Deck>(initialDeck);
   const deckTooltipIdBase = useId();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef);
   const [deckTooltip, setDeckTooltip] = useState<{
     readonly id: Deck;
     readonly rect: DOMRect;
@@ -73,6 +76,7 @@ export default function NewRunScreen({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="new-run-overlay"
       role="dialog"
       aria-modal="true"

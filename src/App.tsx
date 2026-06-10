@@ -378,6 +378,7 @@ function App() {
   return (
     <div
       className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}
+      data-app-shell=""
       style={appStyle}
       data-hands-played={runStats.handsPlayed}
       data-unused-discards={runStats.unusedDiscards}

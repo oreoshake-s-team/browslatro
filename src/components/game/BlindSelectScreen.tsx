@@ -1,5 +1,5 @@
 import "./BlindSelectScreen.css";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
@@ -13,6 +13,7 @@ import {
 } from "../../items/tags";
 import { hasStakeModifier, type Stake } from "../../items/stakes";
 import TagTooltip, { type TagTooltipSpec } from "./TagTooltip";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -78,6 +79,8 @@ export default function BlindSelectScreen({
     bossRerollsRemaining > 0;
 
   const tooltipIdBase = useId();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef);
   const [tooltip, setTooltip] = useState<{
     readonly key: string;
     readonly spec: TagTooltipSpec;
@@ -103,6 +106,7 @@ export default function BlindSelectScreen({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="blind-select-overlay"
       role="dialog"
       aria-modal="true"

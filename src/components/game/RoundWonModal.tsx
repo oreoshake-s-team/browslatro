@@ -1,4 +1,5 @@
 import "./RoundWonModal.css";
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 import {
   GOLD_HELD_BONUS_PER_CARD,
@@ -7,6 +8,7 @@ import {
   REMAINING_HAND_BONUS,
 } from "../../scoring/payout";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 export interface RoundWonJokerPayoutStep {
   readonly jokerId: string;
@@ -69,9 +71,12 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     ? `Remaining hands + discards (${bonusUnits} × $${remainingHandsBonusPerUnit})`
     : `Remaining hands (${bonusUnits} × $${remainingHandsBonusPerUnit})`;
   useEscapeToClose(onContinue, true);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef);
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="round-won-overlay"
       role="dialog"
       aria-modal="true"

@@ -344,3 +344,19 @@ describe("NewRunScreen", () => {
     });
   });
 });
+
+describe("NewRunScreen focus trap (#907)", () => {
+  test("wraps Tab from the confirm button back into the dialog and restores focus on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = render(<NewRunScreen onConfirm={vi.fn()} />);
+    expect(screen.getByTestId("new-run-confirm")).toHaveFocus();
+    await user.tab();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    expect(screen.getByTestId("opener")).not.toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+});
