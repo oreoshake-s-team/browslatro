@@ -2,6 +2,7 @@
 import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
+import { VitePWA } from "vite-plugin-pwa";
 
 const analyzePlugin: PluginOption | false =
   process.env.ANALYZE === "true" &&
@@ -24,11 +25,27 @@ const siteUrlPlugin: PluginOption = {
   },
 };
 
+const pwaPlugin: PluginOption[] = process.env.VITEST
+  ? []
+  : VitePWA({
+      registerType: "autoUpdate",
+      injectRegister: false,
+      manifest: false,
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,mp3,json}"],
+      },
+    });
+
 export default defineConfig({
   define: {
     "import.meta.env.VITE_ON_VERCEL": JSON.stringify(process.env.VERCEL ?? "0"),
   },
-  plugins: [react(), siteUrlPlugin, ...(analyzePlugin ? [analyzePlugin] : [])],
+  plugins: [
+    react(),
+    siteUrlPlugin,
+    ...pwaPlugin,
+    ...(analyzePlugin ? [analyzePlugin] : []),
+  ],
   build: {
     outDir: "build",
   },
