@@ -29,6 +29,8 @@ import {
   applySellToJokerStates,
   interestMultiplierFromJokers,
   isJokerActive,
+  allowsDuplicateJokers,
+  applyGiftCardToJokerSellValues,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -186,7 +188,7 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
   const baseOffers = pickShopOffers({
     jokerCatalog: createJokerCatalog(),
     excludedJokerIds: [
-      ...s.jokers.map((j) => j.id),
+      ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
       ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
     ],
     planetCatalog: planetsForShop,
@@ -308,7 +310,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const freshItems = pickShopItemOffers({
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds: [
-        ...s.jokers.map((j) => j.id),
+        ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
         ...s.soldJokerIdsThisShopVisit,
       ],
       planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
@@ -379,7 +381,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           {
             jokerCatalog: createJokerCatalog(),
             excludedJokerIds: [
-              ...s.jokers.map((j) => j.id),
+              ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
               ...s.soldJokerIdsThisShopVisit,
               ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
             ],
@@ -553,6 +555,23 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   handleWin: (precomputed) => {
     const s = get();
+    if (
+      s.jokers.some(
+        (j) => j.effect.kind === "round-end-grows-all-sell-values",
+      )
+    ) {
+      s.setJokers((prev) => applyGiftCardToJokerSellValues(prev));
+      const giftAmount = s.jokers.reduce(
+        (sum, j) =>
+          j.effect.kind === "round-end-grows-all-sell-values"
+            ? sum + j.effect.amount
+            : sum,
+        0,
+      );
+      s.setConsumables((prev) =>
+        prev.map((c) => ({ ...c, sellBonus: (c.sellBonus ?? 0) + giftAmount })),
+      );
+    }
     const jokersBeforeRoundEnd = get().jokers;
     const jokersAfterRoundEnd = applyRoundEndToJokerStates(
       tickPerishableRounds(jokersBeforeRoundEnd),

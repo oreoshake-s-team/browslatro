@@ -495,6 +495,18 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "money-on-boss-trigger": {
+        if (context.bossTriggered === true) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
       case "money-on-todo-hand": {
         if (
           context.todoHand != null &&
@@ -592,6 +604,8 @@ export function applyHandLevelJokers(
       case "money-per-discarded-rebate-rank":
       case "first-discard-upgrades-hand":
       case "end-of-round-money-per-unique-planet":
+      case "allows-duplicate-jokers":
+      case "round-end-grows-all-sell-values":
       case "noop":
         break;
       default:

@@ -116,6 +116,8 @@ import {
   GLASS_JOKER_X_MULT_PER_SHATTER,
   TO_DO_LIST_PAYOUT,
   MADNESS_X_MULT_PER_BLIND,
+  MATADOR_PAYOUT,
+  GIFT_CARD_SELL_VALUE_PER_ROUND,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1896,6 +1898,39 @@ export function createMadnessJoker(): Joker {
       amount: MADNESS_X_MULT_PER_BLIND,
     },
     state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createMatadorJoker(): Joker {
+  return {
+    id: "matador",
+    rarity: "uncommon",
+    name: "Matador",
+    description: `Earn $${MATADOR_PAYOUT} if played hand triggers the Boss Blind ability`,
+    effect: { kind: "money-on-boss-trigger", payout: MATADOR_PAYOUT },
+  };
+}
+
+export function createShowmanJoker(): Joker {
+  return {
+    id: "showman",
+    rarity: "uncommon",
+    name: "Showman",
+    description: "Joker cards may appear multiple times",
+    effect: { kind: "allows-duplicate-jokers" },
+  };
+}
+
+export function createGiftCardJoker(): Joker {
+  return {
+    id: "gift-card",
+    rarity: "uncommon",
+    name: "Gift Card",
+    description: `Add $${GIFT_CARD_SELL_VALUE_PER_ROUND} of sell value to every Joker and Consumable at end of round`,
+    effect: {
+      kind: "round-end-grows-all-sell-values",
+      amount: GIFT_CARD_SELL_VALUE_PER_ROUND,
+    },
   };
 }
 

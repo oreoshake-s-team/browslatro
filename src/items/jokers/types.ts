@@ -326,6 +326,15 @@ export type JokerEffect =
       readonly kind: "blind-select-x-mult-destroys-joker";
       readonly amount: number;
     }
+  | {
+      readonly kind: "money-on-boss-trigger";
+      readonly payout: number;
+    }
+  | { readonly kind: "allows-duplicate-jokers" }
+  | {
+      readonly kind: "round-end-grows-all-sell-values";
+      readonly amount: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 
@@ -357,4 +366,5 @@ export interface Joker {
   readonly edition?: JokerEdition;
   readonly stickers?: ReadonlyArray<JokerSticker>;
   readonly state?: JokerStateValue;
+  readonly sellBonus?: number;
 }

@@ -5,9 +5,21 @@ import { TAROT_BASE_PRICE, type TarotCard } from "./tarots";
 export const MAX_CONSUMABLE_SLOTS = 2;
 
 export type Consumable =
-  | { readonly kind: "planet"; readonly card: PlanetCard }
-  | { readonly kind: "tarot"; readonly card: TarotCard }
-  | { readonly kind: "spectral"; readonly card: SpectralCard };
+  | {
+      readonly kind: "planet";
+      readonly card: PlanetCard;
+      readonly sellBonus?: number;
+    }
+  | {
+      readonly kind: "tarot";
+      readonly card: TarotCard;
+      readonly sellBonus?: number;
+    }
+  | {
+      readonly kind: "spectral";
+      readonly card: SpectralCard;
+      readonly sellBonus?: number;
+    };
 
 export function consumableSellValue(c: Consumable): number {
   const base =
@@ -16,7 +28,7 @@ export function consumableSellValue(c: Consumable): number {
       : c.kind === "tarot"
         ? TAROT_BASE_PRICE
         : SPECTRAL_BASE_PRICE;
-  return Math.floor(base / 2);
+  return Math.floor(base / 2) + (c.sellBonus ?? 0);
 }
 
 function checkSelection(

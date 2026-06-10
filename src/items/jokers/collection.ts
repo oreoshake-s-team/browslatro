@@ -102,6 +102,14 @@ export function disablesBossBlindsFromJokers(
     .some((j) => j.effect.kind === "disables-boss-blinds");
 }
 
+export function allowsDuplicateJokers(
+  allJokers: ReadonlyArray<Joker>,
+): boolean {
+  return allJokers
+    .filter(isJokerActive)
+    .some((j) => j.effect.kind === "allows-duplicate-jokers");
+}
+
 export function interestMultiplierFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number {
