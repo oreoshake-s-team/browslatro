@@ -25,10 +25,12 @@ import {
   resetCardIds,
 } from "../cards/deck";
 import { fullDeckPile, initialDeal } from "../cards/deckBuild";
+import { SEAL_KINDS } from "../cards/seals";
 import type { Card } from "../cards/types";
 import {
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
+  sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
 } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
@@ -197,9 +199,18 @@ export function useRoundLifecycle({
       suit: SUITS[Math.floor(Math.random() * SUITS.length)],
       enhancement: "stone",
     }));
+    const sealedCount = sealedCardsOnRoundBeginFromJokers(equippedJokers);
+    const newSealed: Card[] = Array.from({ length: sealedCount }, () => ({
+      id: nextCardId(),
+      rank: RANKS[Math.floor(Math.random() * RANKS.length)],
+      suit: SUITS[Math.floor(Math.random() * SUITS.length)],
+      seal: SEAL_KINDS[Math.floor(Math.random() * SEAL_KINDS.length)],
+    }));
     const addedWithStones =
       newStones.length > 0 ? [...addedCards, ...newStones] : addedCards;
-    if (newStones.length > 0) setAddedCards(addedWithStones);
+    if (newStones.length > 0 || newSealed.length > 0) {
+      setAddedCards([...addedWithStones, ...newSealed]);
+    }
     const fresh = initialDeal(
       baseDeckCards,
       destroyedCardIds,
@@ -209,7 +220,10 @@ export function useRoundLifecycle({
       cardSealsById,
     );
     setDealt({
-      hand: applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
+      hand: [
+        ...applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
+        ...newSealed,
+      ],
       remaining: fresh.remaining,
     });
     setSelectedIds(new Set());

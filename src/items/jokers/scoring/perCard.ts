@@ -246,6 +246,8 @@ export function applyPerCardJokers(
       case "x-mult-per-enhancement-eaten":
       case "scored-cards-gain-chips":
       case "blind-select-adds-stone-card":
+      case "x-mult-chance-bust":
+      case "round-begin-adds-sealed-card":
       case "noop":
         break;
       default:

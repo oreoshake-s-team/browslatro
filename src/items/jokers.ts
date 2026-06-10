@@ -43,6 +43,7 @@ export {
   extraStartingHandSizeFromJokers,
   chipsPerScoredCardFromJokers,
   heldRetriggerCountFromJokers,
+  sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
   interestMultiplierFromJokers,
   extraStartingHandsFromJokers,

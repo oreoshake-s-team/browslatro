@@ -56,6 +56,16 @@ export function stoneCardsOnBlindSelectFromJokers(
   return count;
 }
 
+export function sealedCardsOnRoundBeginFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let count = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "round-begin-adds-sealed-card") count += 1;
+  }
+  return count;
+}
+
 export function interestMultiplierFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number {

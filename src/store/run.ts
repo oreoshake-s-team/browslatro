@@ -28,6 +28,7 @@ export interface RunState {
   pendingShopMods: ReadonlyArray<NextShopModifier>;
   pendingNextRoundHandSize: number;
   pendingDouble: boolean;
+  grosMichelDestroyed: boolean;
   selectedStake: Stake;
   selectedDeck: Deck;
   setRunStats: (update: Updater<RunStats>) => void;
@@ -35,6 +36,7 @@ export interface RunState {
   setPendingShopMods: (update: Updater<ReadonlyArray<NextShopModifier>>) => void;
   setPendingNextRoundHandSize: (update: Updater<number>) => void;
   setPendingDouble: (update: Updater<boolean>) => void;
+  setGrosMichelDestroyed: (update: Updater<boolean>) => void;
   setSelectedStake: (update: Updater<Stake>) => void;
   setSelectedDeck: (update: Updater<Deck>) => void;
   resetRun: () => void;
@@ -46,6 +48,7 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
   pendingShopMods: [],
   pendingNextRoundHandSize: 0,
   pendingDouble: false,
+  grosMichelDestroyed: false,
   selectedStake: DEFAULT_STAKE,
   selectedDeck: DEFAULT_DECK,
   setRunStats: (update) =>
@@ -60,6 +63,10 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
     })),
   setPendingDouble: (update) =>
     set((state) => ({ pendingDouble: resolve(update, state.pendingDouble) })),
+  setGrosMichelDestroyed: (update) =>
+    set((state) => ({
+      grosMichelDestroyed: resolve(update, state.grosMichelDestroyed),
+    })),
   setSelectedStake: (update) =>
     set((state) => ({ selectedStake: resolve(update, state.selectedStake) })),
   setSelectedDeck: (update) =>
@@ -71,6 +78,7 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
       pendingShopMods: [],
       pendingNextRoundHandSize: 0,
       pendingDouble: false,
+      grosMichelDestroyed: false,
       selectedStake: DEFAULT_STAKE,
       selectedDeck: DEFAULT_DECK,
     }),
