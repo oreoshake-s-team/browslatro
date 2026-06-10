@@ -136,12 +136,9 @@ export default function BlindSelectScreen({
                   className="blind-select-tag"
                   data-testid={`blind-select-tag-${idx}`}
                   data-tag-id={id}
-                  tabIndex={0}
                   aria-describedby={open ? tooltipId : undefined}
                   onMouseEnter={(e) => openTooltip(key, spec, e.currentTarget)}
                   onMouseLeave={() => closeTooltip(key)}
-                  onFocus={(e) => openTooltip(key, spec, e.currentTarget)}
-                  onBlur={() => closeTooltip(key)}
                 >
                   <span className="blind-select-tag-name">{spec.name}</span>
                   <span className="blind-select-tag-description">
@@ -242,7 +239,6 @@ export default function BlindSelectScreen({
                   <div
                     className="blind-select-row-skip-reward"
                     data-testid={`blind-select-row-skip-reward-${b}`}
-                    tabIndex={0}
                     aria-describedby={
                       skipTooltipOpen ? skipTooltipId : undefined
                     }
@@ -250,10 +246,6 @@ export default function BlindSelectScreen({
                       openTooltip(skipKey, rowSkipSpec, e.currentTarget)
                     }
                     onMouseLeave={() => closeTooltip(skipKey)}
-                    onFocus={(e) =>
-                      openTooltip(skipKey, rowSkipSpec, e.currentTarget)
-                    }
-                    onBlur={() => closeTooltip(skipKey)}
                   >
                     <span className="blind-select-row-skip-reward-label">
                       {t("blinds.skipReward")}

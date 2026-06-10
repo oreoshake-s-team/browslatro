@@ -41,9 +41,18 @@ async function openShop(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 }
 
+// The boss-blind override only renders in production builds when the
+// browslatro:devTools seam is set (issue #915).
+async function enableDevTools(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:devTools", "1");
+  });
+}
+
 test("boss-blind override keeps a visible focus ring on keyboard focus (issue #913)", async ({
   page,
 }) => {
+  await enableDevTools(page);
   await openBlindSelect(page);
   const override = page.getByTestId("blind-select-boss-override");
   await focusViaKeyboard(page, override);
@@ -140,6 +149,7 @@ test("negative: clicking the scoring trace scroll region does not draw the focus
 test("negative: hovering the boss-blind override does not draw the focus outline (issue #913)", async ({
   page,
 }) => {
+  await enableDevTools(page);
   await openBlindSelect(page);
   const override = page.getByTestId("blind-select-boss-override");
   await override.hover();

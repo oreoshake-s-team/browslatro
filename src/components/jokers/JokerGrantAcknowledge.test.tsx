@@ -32,6 +32,27 @@ describe("JokerGrantAcknowledge", () => {
     await user.click(screen.getByTestId("joker-grant-ok"));
     expect(onAcknowledge).toHaveBeenCalledTimes(1);
   });
+
+  test("pressing Escape invokes onAcknowledge (#915)", async () => {
+    const user = userEvent.setup();
+    const onAcknowledge = vi.fn();
+    render(
+      <JokerGrantAcknowledge
+        jokers={[createPlusFourMultJoker()]}
+        onAcknowledge={onAcknowledge}
+      />,
+    );
+    await user.keyboard("{Escape}");
+    expect(onAcknowledge).toHaveBeenCalledTimes(1);
+  });
+
+  test("Escape does nothing while no jokers are pending (negative, #915)", async () => {
+    const user = userEvent.setup();
+    const onAcknowledge = vi.fn();
+    render(<JokerGrantAcknowledge jokers={[]} onAcknowledge={onAcknowledge} />);
+    await user.keyboard("{Escape}");
+    expect(onAcknowledge).not.toHaveBeenCalled();
+  });
 });
 
 describe("JokerGrantAcknowledge focus trap (#907)", () => {
