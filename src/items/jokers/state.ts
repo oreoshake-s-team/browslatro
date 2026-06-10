@@ -90,16 +90,25 @@ export function applyHandPlayedToJokerStates(
           state: counterState(Math.max(0, prevCount(joker) - effect.lossPerHand)),
         };
       }
+      case "retrigger-all-depleting": {
+        return {
+          ...joker,
+          state: counterState(Math.max(0, prevCount(joker) - 1)),
+        };
+      }
       default:
         return joker;
     }
   });
-  return updated.filter(
-    (joker) =>
-      joker.effect.kind !== "chips-melt-per-hand" ||
-      prevCount(joker) > 0 ||
-      !isDestructible(joker),
-  );
+  return updated.filter((joker) => {
+    if (
+      joker.effect.kind !== "chips-melt-per-hand" &&
+      joker.effect.kind !== "retrigger-all-depleting"
+    ) {
+      return true;
+    }
+    return prevCount(joker) > 0 || !isDestructible(joker);
+  });
 }
 
 export function applyDiscardToJokerStates(

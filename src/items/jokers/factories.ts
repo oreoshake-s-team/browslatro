@@ -96,6 +96,9 @@ import {
   ROCKET_PAYOUT_GROWTH_PER_BOSS,
   TURTLE_BEAN_HAND_SIZE,
   TURTLE_BEAN_LOSS_PER_ROUND,
+  SELTZER_HANDS,
+  SELTZER_RETRIGGERS,
+  MIME_HELD_RETRIGGERS,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1543,6 +1546,34 @@ export function createTurtleBeanJoker(): Joker {
       lossPerRound: TURTLE_BEAN_LOSS_PER_ROUND,
     },
     state: { kind: "counter", value: TURTLE_BEAN_HAND_SIZE },
+  };
+}
+
+export function createSeltzerJoker(): Joker {
+  return {
+    id: "seltzer",
+    rarity: "uncommon",
+    name: "Seltzer",
+    description: `Retrigger all cards played for the next ${SELTZER_HANDS} hands`,
+    effect: {
+      kind: "retrigger-all-depleting",
+      times: SELTZER_RETRIGGERS,
+      hands: SELTZER_HANDS,
+    },
+    state: { kind: "counter", value: SELTZER_HANDS },
+  };
+}
+
+export function createMimeJoker(): Joker {
+  return {
+    id: "mime",
+    rarity: "uncommon",
+    name: "Mime",
+    description: "Retrigger all card held in hand abilities",
+    effect: {
+      kind: "retrigger-held-abilities",
+      times: MIME_HELD_RETRIGGERS,
+    },
   };
 }
 

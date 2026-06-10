@@ -31,6 +31,7 @@ import {
   expandScoringRetriggers,
   applyLuckyTriggersToJokerStates,
   interestMultiplierFromJokers,
+  heldRetriggerCountFromJokers,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -211,6 +212,7 @@ export function usePlayHand({
         dealt.hand,
         submittedSelection,
         "gold",
+        heldRetriggerCountFromJokers(jokers),
       );
       const remainingHandsCount = Math.max(0, remainingHands - 1);
       const greenDeckBonusPerUnit =
@@ -520,7 +522,11 @@ export function usePlayHand({
       submittedSelection,
       "steel",
     );
-    const steelMult = steelHeldMultiplier(dealt.hand, submittedSelection);
+    const steelMult = steelHeldMultiplier(
+      dealt.hand,
+      submittedSelection,
+      heldRetriggerCountFromJokers(jokers),
+    );
     const enhancementXMult = scoring.reduce(
       (m, card) => m * applyCardEnhancement(card).multTimes,
       1,

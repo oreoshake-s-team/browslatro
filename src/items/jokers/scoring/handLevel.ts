@@ -1,7 +1,10 @@
 import { rollChance } from "../../../dev/chanceOverride";
 import { handContains } from "../../../scoring/handEvaluator";
 import { getRankChips } from "../../../scoring/scoring";
-import { effectiveJokerCount } from "../collection";
+import {
+  effectiveJokerCount,
+  heldRetriggerCountFromJokers,
+} from "../collection";
 import {
   FOIL_CHIPS,
   HOLOGRAPHIC_MULT,
@@ -25,6 +28,14 @@ export function applyHandLevelJokers(
   context: HandLevelContext = {},
 ): JokerHandResult {
   const jokers = allJokers.filter(isJokerActive);
+  const heldRetriggers = heldRetriggerCountFromJokers(jokers);
+  const heldInHand = context.heldInHandCards ?? [];
+  const heldWithRetriggers =
+    heldRetriggers > 0
+      ? heldInHand.flatMap((card) =>
+          Array.from({ length: 1 + heldRetriggers }, () => card),
+        )
+      : heldInHand;
   let additiveMult = 0;
   let additiveChips = 0;
   let xMult = 1;
@@ -134,7 +145,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "per-held-rank": {
-        const held = context.heldInHandCards ?? [];
+        const held = heldWithRetriggers;
         let matched = 0;
         for (const card of held) {
           if (effect.ranks.includes(card.rank)) matched += 1;
@@ -162,7 +173,7 @@ export function applyHandLevelJokers(
             const value = getRankChips(held[h].rank);
             if (value < lowest) lowest = value;
           }
-          const bonus = effect.multiplier * lowest;
+          const bonus = effect.multiplier * lowest * (1 + heldRetriggers);
           additiveMult += bonus;
           fired.push(joker.id);
           steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
@@ -212,7 +223,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "per-held-face-chance-money": {
-        const held = context.heldInHandCards ?? [];
+        const held = heldWithRetriggers;
         const rng = context.rng ?? Math.random;
         let earned = 0;
         for (const c of held) {
@@ -530,6 +541,8 @@ export function applyHandLevelJokers(
       case "extra-interest-per-five":
       case "sell-creates-double-tag":
       case "hand-size-decay-per-round":
+      case "retrigger-all-depleting":
+      case "retrigger-held-abilities":
       case "noop":
         break;
       default:

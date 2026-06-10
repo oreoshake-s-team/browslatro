@@ -1,5 +1,6 @@
 import { cloneJoker, withEdition } from "./editions";
 import { canDestroyJoker, isJokerActive } from "./stickers";
+import { resolveJokerEffect } from "./scoring/copy";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -19,6 +20,18 @@ export function extraStartingHandSizeFromJokers(
     if (j.effect.kind === "hand-size-decay-per-round") {
       total += j.state?.kind === "counter" ? j.state.value : j.effect.amount;
     }
+  }
+  return total;
+}
+
+export function heldRetriggerCountFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  const jokers = allJokers.filter(isJokerActive);
+  let total = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "retrigger-held-abilities") total += effect.times;
   }
   return total;
 }

@@ -15,6 +15,7 @@ export type JokerCurrentValue =
   | { readonly kind: "sell-value"; readonly value: number }
   | { readonly kind: "money"; readonly value: number }
   | { readonly kind: "hand-size"; readonly value: number }
+  | { readonly kind: "hands-remaining"; readonly value: number }
   | {
       readonly kind: "hands-until-x-mult";
       readonly hands: number;
@@ -85,6 +86,11 @@ export function jokerCurrentValue(
         value:
           joker.state?.kind === "counter" ? joker.state.value : effect.baseAmount,
       };
+    case "retrigger-all-depleting":
+      return {
+        kind: "hands-remaining",
+        value: joker.state?.kind === "counter" ? joker.state.value : effect.hands,
+      };
     case "hand-size-decay-per-round":
       return {
         kind: "hand-size",
@@ -110,6 +116,10 @@ export function jokerCurrentValueLabel(value: JokerCurrentValue): string {
       return `Currently: $${value.value} at end of round`;
     case "hand-size":
       return `Currently: +${value.value} hand size`;
+    case "hands-remaining":
+      return `Currently: ${value.value} ${
+        value.value === 1 ? "hand" : "hands"
+      } left`;
     case "hands-until-x-mult":
       return `X${value.xmult} Mult in ${value.hands} ${
         value.hands === 1 ? "hand" : "hands"
