@@ -183,8 +183,8 @@
 .high-visibility {
   --card-suit-spades-color: #212529;
   --card-suit-hearts-color: #c92a2a;
-  --card-suit-diamonds-color: #1c7ed6;
-  --card-suit-clubs-color: #2f9e44;
+  --card-suit-diamonds-color: var(--suit-blue-on-light);
+  --card-suit-clubs-color: var(--suit-green-on-light);
 }
 
 .high-visibility .card-suit-spades {
@@ -761,7 +761,7 @@
   top: 0.2rem;
   right: 0.2rem;
   font-size: 1.1rem;
-  color: #2b8a3e;
+  color: var(--positive-money-on-light);
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85);
   pointer-events: none;
 }
