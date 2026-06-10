@@ -1,5 +1,5 @@
 import { cloneJoker, withEdition } from "./editions";
-import { canDestroyJoker, isJokerActive } from "./stickers";
+import { canDestroyJoker, hasSticker, isJokerActive } from "./stickers";
 import { resolveJokerEffect } from "./scoring/copy";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
@@ -64,6 +64,42 @@ export function sealedCardsOnRoundBeginFromJokers(
     if (j.effect.kind === "round-begin-adds-sealed-card") count += 1;
   }
   return count;
+}
+
+export function canPreventDeath(
+  allJokers: ReadonlyArray<Joker>,
+  roundScore: number,
+  requiredScore: number,
+): boolean {
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (
+      j.effect.kind === "prevent-death-at-quarter" &&
+      roundScore >= Math.ceil(requiredScore * j.effect.threshold)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function consumeDeathPreventer(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const idx = jokers.findIndex(
+    (j) =>
+      j.effect.kind === "prevent-death-at-quarter" &&
+      !hasSticker(j, "eternal"),
+  );
+  if (idx === -1) return [...jokers];
+  return jokers.filter((_, i) => i !== idx);
+}
+
+export function disablesBossBlindsFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): boolean {
+  return allJokers
+    .filter(isJokerActive)
+    .some((j) => j.effect.kind === "disables-boss-blinds");
 }
 
 export function interestMultiplierFromJokers(

@@ -248,6 +248,9 @@ export function applyPerCardJokers(
       case "blind-select-adds-stone-card":
       case "x-mult-chance-bust":
       case "round-begin-adds-sealed-card":
+      case "prevent-death-at-quarter":
+      case "sell-disables-boss-blind":
+      case "disables-boss-blinds":
       case "noop":
         break;
       default:

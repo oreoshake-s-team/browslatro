@@ -88,6 +88,9 @@ import {
   createMarbleJoker,
   createCertificateJoker,
   createCavendishJoker,
+  createMrBonesJoker,
+  createLuchadorJoker,
+  createChicotJoker,
   createRunnerJoker,
   createScaryFaceJoker,
   createScholarJoker,
@@ -127,7 +130,7 @@ export const initialJokersConfig: { factory: () => Joker[] } = {
 };
 
 export function createLegendaryJokerCatalog(): Joker[] {
-  return [createYorickJoker(), createTribouletJoker()];
+  return [createYorickJoker(), createTribouletJoker(), createChicotJoker()];
 }
 
 export function createJokerCatalog(): Joker[] {
@@ -247,6 +250,8 @@ export function createJokerCatalog(): Joker[] {
     createMarbleJoker(),
     createCertificateJoker(),
     createCavendishJoker(),
+    createMrBonesJoker(),
+    createLuchadorJoker(),
     createLoyaltyCardJoker(),
     createBlueprintJoker(),
     createBrainstormJoker(),

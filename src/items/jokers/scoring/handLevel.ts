@@ -558,6 +558,9 @@ export function applyHandLevelJokers(
       case "scored-cards-gain-chips":
       case "blind-select-adds-stone-card":
       case "round-begin-adds-sealed-card":
+      case "prevent-death-at-quarter":
+      case "sell-disables-boss-blind":
+      case "disables-boss-blinds":
       case "noop":
         break;
       default:

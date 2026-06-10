@@ -103,6 +103,7 @@ import {
   HIKER_CHIPS_PER_SCORED,
   CAVENDISH_X_MULT,
   CAVENDISH_BUST_CHANCE,
+  MR_BONES_SAVE_THRESHOLD,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1649,6 +1650,39 @@ export function createCavendishJoker(): Joker {
       amount: CAVENDISH_X_MULT,
       bustChance: CAVENDISH_BUST_CHANCE,
     },
+  };
+}
+
+export function createMrBonesJoker(): Joker {
+  return {
+    id: "mr-bones",
+    rarity: "uncommon",
+    name: "Mr. Bones",
+    description: "Prevents Death if chips scored are at least 25% of required chips; self destructs",
+    effect: {
+      kind: "prevent-death-at-quarter",
+      threshold: MR_BONES_SAVE_THRESHOLD,
+    },
+  };
+}
+
+export function createLuchadorJoker(): Joker {
+  return {
+    id: "luchador",
+    rarity: "uncommon",
+    name: "Luchador",
+    description: "Sell this card to disable the current Boss Blind",
+    effect: { kind: "sell-disables-boss-blind" },
+  };
+}
+
+export function createChicotJoker(): Joker {
+  return {
+    id: "chicot",
+    rarity: "legendary",
+    name: "Chicot",
+    description: "Disables effect of every Boss Blind",
+    effect: { kind: "disables-boss-blinds" },
   };
 }
 

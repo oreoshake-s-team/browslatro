@@ -275,6 +275,12 @@ export type JokerEffect =
       readonly bustChance: number;
     }
   | { readonly kind: "round-begin-adds-sealed-card" }
+  | {
+      readonly kind: "prevent-death-at-quarter";
+      readonly threshold: number;
+    }
+  | { readonly kind: "sell-disables-boss-blind" }
+  | { readonly kind: "disables-boss-blinds" }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 
