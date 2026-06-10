@@ -5,16 +5,21 @@ import {
   LOYALTY_CARD_X_MULT,
   POPCORN_MULT,
   EROSION_MULT_PER_MISSING_CARD,
-  applyDiscardToJokerStates,
+  HIT_THE_ROAD_X_MULT_PER_JACK,
+  LUCKY_CAT_X_MULT_PER_TRIGGER,
+  createEggJoker,
   createErosionJoker,
   createFlashCardJoker,
+  createHitTheRoadJoker,
   createHologramJoker,
   createIceCreamJoker,
   createJokerCatalog,
   createLoyaltyCardJoker,
+  createLuckyCatJoker,
   createPareidoliaJoker,
   createPopcornJoker,
   createRamenJoker,
+  createRedCardJoker,
   createRunnerJoker,
   createThrowbackJoker,
   jokerCurrentValue,
@@ -135,10 +140,42 @@ describe("jokerCurrentValue (#884)", () => {
   });
 
   test("Ramen reports its shrunken X Mult after discards", () => {
-    const [ramen] = applyDiscardToJokerStates([createRamenJoker()], 3);
+    const ramen = withCounter(createRamenJoker(), 3);
     expect(jokerCurrentValue(ramen, CTX)).toEqual({
       kind: "x-mult",
       value: 1.97,
+    });
+  });
+
+  test("Red Card reports its accumulated Mult from skipped packs", () => {
+    expect(
+      jokerCurrentValue(withCounter(createRedCardJoker(), 6), CTX),
+    ).toEqual({ kind: "mult", value: 6 });
+  });
+
+  test("Hit the Road derives X Mult from Jacks discarded this round", () => {
+    expect(
+      jokerCurrentValue(withCounter(createHitTheRoadJoker(), 2), CTX),
+    ).toEqual({ kind: "x-mult", value: 1 + HIT_THE_ROAD_X_MULT_PER_JACK * 2 });
+  });
+
+  test("Lucky Cat derives X Mult from Lucky card triggers", () => {
+    expect(
+      jokerCurrentValue(withCounter(createLuckyCatJoker(), 4), CTX),
+    ).toEqual({ kind: "x-mult", value: 1 + LUCKY_CAT_X_MULT_PER_TRIGGER * 4 });
+  });
+
+  test("Egg reports its grown sell value", () => {
+    expect(jokerCurrentValue(withCounter(createEggJoker(), 9), CTX)).toEqual({
+      kind: "sell-value",
+      value: 9,
+    });
+  });
+
+  test("a fresh Egg reports zero grown sell value", () => {
+    expect(jokerCurrentValue(createEggJoker(), CTX)).toEqual({
+      kind: "sell-value",
+      value: 0,
     });
   });
 });
@@ -153,6 +190,12 @@ describe("jokerCurrentValueLabel (#884)", () => {
   test("formats accumulated Chips", () => {
     expect(jokerCurrentValueLabel({ kind: "chips", value: 30 })).toBe(
       "Currently: +30 Chips",
+    );
+  });
+
+  test("formats grown sell value", () => {
+    expect(jokerCurrentValueLabel({ kind: "sell-value", value: 9 })).toBe(
+      "Currently: +$9 sell value",
     );
   });
 
