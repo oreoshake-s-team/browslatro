@@ -202,6 +202,26 @@ export type JokerEffect =
   | { readonly kind: "x-mult-on-repeat-hand-this-round"; readonly amount: number }
   | { readonly kind: "x-mult-per-blind-skipped"; readonly amount: number }
   | { readonly kind: "x-mult-per-added-card"; readonly amount: number }
+  | {
+      readonly kind: "chips-melt-per-hand";
+      readonly amount: number;
+      readonly lossPerHand: number;
+    }
+  | {
+      readonly kind: "mult-decay-per-round";
+      readonly amount: number;
+      readonly lossPerRound: number;
+    }
+  | {
+      readonly kind: "x-mult-shrink-per-discarded-card";
+      readonly base: number;
+      readonly lossPerCard: number;
+    }
+  | {
+      readonly kind: "additive-mult-chance-bust";
+      readonly amount: number;
+      readonly bustChance: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

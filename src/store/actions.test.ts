@@ -3,7 +3,10 @@ import { useGame } from "./game";
 import {
   MAX_JOKERS,
   PERISHABLE_LIFE,
+  POPCORN_MULT,
+  POPCORN_MULT_LOSS_PER_ROUND,
   createJokerCatalog,
+  createPopcornJoker,
   hasSticker,
   isJokerActive,
   jokerSellValue,
@@ -578,6 +581,17 @@ describe("game actions slice", () => {
       useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
     }
     expect(isJokerActive(useGame.getState().jokers[0])).toBe(true);
+  });
+
+  test("handleWin applies the round-end joker pass (Popcorn decays — #871)", () => {
+    const game = useGame.getState();
+    game.setJokers([createPopcornJoker()]);
+    game.setBlind(1);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().jokers[0].state).toEqual({
+      kind: "counter",
+      value: POPCORN_MULT - POPCORN_MULT_LOSS_PER_ROUND,
+    });
   });
 
   test("handleWin does not add a Perishable sticker to a non-stickered joker (negative — closes #579)", () => {

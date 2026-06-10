@@ -88,6 +88,8 @@ export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
 export {
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
+  applyRoundEndToJokerStates,
   applyShopRerollToJokerStates,
+  ramenXMultFactor,
 } from "./jokers/state";
 export type { JokerStateValue } from "./jokers/types";

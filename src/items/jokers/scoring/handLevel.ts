@@ -17,6 +17,7 @@ import type {
 } from "./types";
 import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
 import { isJokerActive } from "../stickers";
+import { ramenXMultFactor } from "../state";
 
 export function applyHandLevelJokers(
   allJokers: ReadonlyArray<Joker>,
@@ -34,7 +35,8 @@ export function applyHandLevelJokers(
     const joker = jokers[i];
     const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
-      case "additive-mult": {
+      case "additive-mult":
+      case "additive-mult-chance-bust": {
         additiveMult += effect.amount;
         fired.push(joker.id);
         steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: effect.amount });
@@ -369,7 +371,8 @@ export function applyHandLevelJokers(
       }
       case "on-hand-type-stack-mult":
       case "on-hand-stack-on-discard-shrink-mult":
-      case "stack-mult-on-shop-reroll": {
+      case "stack-mult-on-shop-reroll":
+      case "mult-decay-per-round": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
           additiveMult += bonus;
@@ -384,7 +387,8 @@ export function applyHandLevelJokers(
       }
       case "on-hand-type-stack-chips":
       case "on-played-card-count-stack-chips":
-      case "on-played-rank-stack-chips": {
+      case "on-played-rank-stack-chips":
+      case "chips-melt-per-hand": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
           additiveChips += bonus;
@@ -445,6 +449,19 @@ export function applyHandLevelJokers(
         const added = context.addedCardsCount ?? 0;
         if (added > 0) {
           const factor = 1 + effect.amount * added;
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "x-mult-shrink-per-discarded-card": {
+        const factor = ramenXMultFactor(joker);
+        if (factor > 1) {
           xMult *= factor;
           fired.push(joker.id);
           steps.push({
