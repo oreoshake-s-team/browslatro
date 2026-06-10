@@ -96,6 +96,18 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "per-scored-enhancement-money": {
+        if (card.enhancement === effect.enhancement) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
       case "per-scored-rank-parity": {
         if (RANK_PARITY[card.rank] === effect.parity) {
           if (effect.contribution.kind === "mult") {
@@ -302,6 +314,9 @@ export function applyPerCardJokers(
       case "x-mult-per-face-destroyed":
       case "shop-exit-copies-consumable":
       case "sell-after-rounds-duplicates-joker":
+      case "blind-select-eats-right-joker-mult":
+      case "hand-play-chance-upgrades-hand":
+      case "first-hand-single-card-copies-card":
       case "noop":
         break;
       default:

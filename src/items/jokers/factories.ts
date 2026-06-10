@@ -120,6 +120,9 @@ import {
   GIFT_CARD_SELL_VALUE_PER_ROUND,
   CANIO_X_MULT_PER_FACE,
   INVISIBLE_JOKER_ROUNDS,
+  CEREMONIAL_DAGGER_SELL_VALUE_MULTIPLIER,
+  SPACE_JOKER_UPGRADE_CHANCE,
+  GOLDEN_TICKET_PAYOUT,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1953,6 +1956,59 @@ export function createBrainstormJoker(): Joker {
     name: "Brainstorm",
     description: "Copies the ability of the leftmost Joker",
     effect: { kind: "copy-leftmost-joker" },
+  };
+}
+
+export function createCeremonialDaggerJoker(): Joker {
+  return {
+    id: "ceremonial-dagger",
+    rarity: "uncommon",
+    name: "Ceremonial Dagger",
+    description:
+      "When Blind is selected, destroy Joker to the right and permanently add double its sell value to this Mult",
+    effect: {
+      kind: "blind-select-eats-right-joker-mult",
+      sellValueMultiplier: CEREMONIAL_DAGGER_SELL_VALUE_MULTIPLIER,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createSpaceJoker(): Joker {
+  return {
+    id: "space-joker",
+    rarity: "uncommon",
+    name: "Space Joker",
+    description: "1 in 4 chance to upgrade level of played poker hand",
+    effect: {
+      kind: "hand-play-chance-upgrades-hand",
+      chance: SPACE_JOKER_UPGRADE_CHANCE,
+    },
+  };
+}
+
+export function createDnaJoker(): Joker {
+  return {
+    id: "dna",
+    rarity: "rare",
+    name: "DNA",
+    description:
+      "If first hand of round has only 1 card, add a permanent copy to deck and draw it to hand",
+    effect: { kind: "first-hand-single-card-copies-card" },
+  };
+}
+
+export function createGoldenTicketJoker(): Joker {
+  return {
+    id: "golden-ticket",
+    rarity: "uncommon",
+    name: "Golden Ticket",
+    description: `Played Gold cards earn $${GOLDEN_TICKET_PAYOUT} when scored`,
+    effect: {
+      kind: "per-scored-enhancement-money",
+      enhancement: "gold",
+      payout: GOLDEN_TICKET_PAYOUT,
+    },
   };
 }
 

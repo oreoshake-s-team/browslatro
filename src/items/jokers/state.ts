@@ -2,7 +2,7 @@ import type { Card, Suit } from "../../cards/types";
 import type { HandPlayCounts } from "../../components/hud/handPlayCounts";
 import { handContains, type HandLabel } from "../../scoring/handEvaluator";
 import { rollChance } from "../../dev/chanceOverride";
-import { isFaceCardWith } from "./scoring/utils";
+import { isFaceCardWith, jokerSellValue } from "./scoring/utils";
 import { hasSticker } from "./stickers";
 import type { Joker, JokerStateValue, RandomSource } from "./types";
 
@@ -275,6 +275,32 @@ export function applyMadnessOnBlindSelect(
     next = next.filter((_, i) => i !== victim);
   }
   return next;
+}
+
+export function applyCeremonialDaggerOnBlindSelect(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const out: Joker[] = [];
+  let i = 0;
+  while (i < jokers.length) {
+    const joker = jokers[i];
+    const effect = joker.effect;
+    if (effect.kind !== "blind-select-eats-right-joker-mult") {
+      out.push(joker);
+      i += 1;
+      continue;
+    }
+    const victim = jokers[i + 1];
+    if (victim === undefined || !isDestructible(victim)) {
+      out.push(joker);
+      i += 1;
+      continue;
+    }
+    const gained = effect.sellValueMultiplier * jokerSellValue(victim);
+    out.push({ ...joker, state: counterState(prevCount(joker) + gained) });
+    i += 2;
+  }
+  return out;
 }
 
 export function applyGiftCardToJokerSellValues(

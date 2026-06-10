@@ -43,7 +43,10 @@ import {
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
+  handPlayUpgradeRolls,
+  firstHandCardCopyCount,
 } from "../items/jokers";
+import { applyPlanetUpgrade } from "../items/planets";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import {
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
@@ -72,7 +75,7 @@ import {
   heldEnhancementIdsWithRedSeal,
   steelHeldMultiplier,
 } from "../cards/heldInHand";
-import { cardKey } from "../cards/deck";
+import { cardKey, nextCardId } from "../cards/deck";
 import { recordHandPlayed } from "../run/runStats";
 
 export interface UsePlayHandParams {
@@ -389,7 +392,17 @@ export function usePlayHand({
       for (const card of playedCards) next.add(cardKey(card));
       return next;
     });
-    const baseHandEntry = handStats[label];
+    const upgradeRolls = handPlayUpgradeRolls(jokers);
+    const planetForUpgrade =
+      upgradeRolls > 0 ? planetForHand(label) : undefined;
+    let statsForThisHand = handStats;
+    if (planetForUpgrade !== undefined) {
+      for (let u = 0; u < upgradeRolls; u += 1) {
+        statsForThisHand = applyPlanetUpgrade(statsForThisHand, planetForUpgrade);
+      }
+      useGame.getState().setHandStats(statsForThisHand);
+    }
+    const baseHandEntry = statsForThisHand[label];
     const adjustedHandEntry = isBossRound
       ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
       : baseHandEntry;
@@ -485,6 +498,22 @@ export function usePlayHand({
         next.add(destroyedId);
         return next;
       });
+    }
+    const dnaCopies = firstHandCardCopyCount(
+      jokers,
+      playedCards.length,
+      handHistoryThisRound.length === 0,
+    );
+    if (dnaCopies > 0) {
+      const copies = Array.from({ length: dnaCopies }, () => ({
+        ...playedCards[0],
+        id: nextCardId(),
+      }));
+      useGame.getState().setAddedCards((prev) => [...prev, ...copies]);
+      useGame.getState().setDealt((prev) => ({
+        hand: [...prev.hand, ...copies],
+        remaining: prev.remaining,
+      }));
     }
     const chipsPerScored = chipsPerScoredCardFromJokers(jokers);
     if (chipsPerScored > 0) {

@@ -342,6 +342,20 @@ export type JokerEffect =
   | {
       readonly kind: "sell-after-rounds-duplicates-joker";
       readonly rounds: number;
+    }
+  | {
+      readonly kind: "blind-select-eats-right-joker-mult";
+      readonly sellValueMultiplier: number;
+    }
+  | {
+      readonly kind: "hand-play-chance-upgrades-hand";
+      readonly chance: number;
+    }
+  | { readonly kind: "first-hand-single-card-copies-card" }
+  | {
+      readonly kind: "per-scored-enhancement-money";
+      readonly enhancement: Enhancement;
+      readonly payout: number;
     };
 
 export type JokerStateValue =
