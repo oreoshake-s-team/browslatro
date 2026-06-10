@@ -135,6 +135,12 @@ function App() {
     );
   }, [setDealt, setBaseDeckCards]);
   const highVisibility = usePreferences((state) => state.highVisibility);
+  useEffect(() => {
+    document.body.classList.toggle("high-visibility", highVisibility);
+    return () => {
+      document.body.classList.remove("high-visibility");
+    };
+  }, [highVisibility]);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
@@ -380,7 +386,7 @@ function App() {
 
   return (
     <div
-      className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}
+      className="App"
       data-app-shell=""
       style={appStyle}
       data-hands-played={runStats.handsPlayed}
