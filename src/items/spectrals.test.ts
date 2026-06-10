@@ -179,7 +179,7 @@ describe("transmuteHand", () => {
       FAMILIAR_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next).toHaveLength(10);
+    expect(next.hand).toHaveLength(10);
   });
 
   test("Grim shape (ace, 2): hand grows from 8 to 9 (destroy 1 + add 2)", () => {
@@ -189,7 +189,7 @@ describe("transmuteHand", () => {
       GRIM_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next).toHaveLength(9);
+    expect(next.hand).toHaveLength(9);
   });
 
   test("Incantation shape (numbered, 4): hand grows from 8 to 11", () => {
@@ -199,7 +199,7 @@ describe("transmuteHand", () => {
       INCANTATION_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next).toHaveLength(11);
+    expect(next.hand).toHaveLength(11);
   });
 
   test("the random card chosen to destroy is removed (rng=0 destroys index 0)", () => {
@@ -211,14 +211,36 @@ describe("transmuteHand", () => {
       FAMILIAR_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next.some((c) => c.id === firstId)).toBe(false);
+    expect(next.hand.some((c) => c.id === firstId)).toBe(false);
+  });
+
+  test("the destroyed card id is reported in destroyedIds", () => {
+    const source = fakeHand(8);
+    const firstId = source[0].id;
+    const next = transmuteHand(
+      source,
+      "face",
+      FAMILIAR_ADD_COUNT,
+      sequenceRng([0]),
+    );
+    expect(next.destroyedIds).toEqual([firstId]);
+  });
+
+  test("the created cards are reported in additions", () => {
+    const next = transmuteHand(
+      fakeHand(8),
+      "face",
+      FAMILIAR_ADD_COUNT,
+      sequenceRng([0]),
+    );
+    expect(next.additions).toHaveLength(FAMILIAR_ADD_COUNT);
   });
 
   test("added cards have unique ids that aren't in the source hand (negative)", () => {
     const source = fakeHand(8);
     const sourceIds = new Set(source.map((c) => c.id));
     const next = transmuteHand(source, "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
-    const additionIds = next.slice(-FAMILIAR_ADD_COUNT).map((c) => c.id);
+    const additionIds = next.additions.map((c) => c.id);
     for (const id of additionIds) {
       expect(sourceIds.has(id)).toBe(false);
     }
@@ -226,7 +248,12 @@ describe("transmuteHand", () => {
 
   test("on an empty hand, just adds the requested number of cards", () => {
     const next = transmuteHand([], "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
-    expect(next).toHaveLength(FAMILIAR_ADD_COUNT);
+    expect(next.hand).toHaveLength(FAMILIAR_ADD_COUNT);
+  });
+
+  test("on an empty hand, destroyedIds is empty (negative)", () => {
+    const next = transmuteHand([], "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
+    expect(next.destroyedIds).toHaveLength(0);
   });
 });
 
@@ -284,7 +311,17 @@ describe("duplicateSelectedInHand", () => {
       new Set([hand[0].id]),
       CRYPTID_COPY_COUNT,
     );
-    expect(next).toHaveLength(3 + CRYPTID_COPY_COUNT);
+    expect(next.hand).toHaveLength(3 + CRYPTID_COPY_COUNT);
+  });
+
+  test("the created copies are reported in additions", () => {
+    const hand = fakeHand(3);
+    const next = duplicateSelectedInHand(
+      hand,
+      new Set([hand[0].id]),
+      CRYPTID_COPY_COUNT,
+    );
+    expect(next.additions).toHaveLength(CRYPTID_COPY_COUNT);
   });
 
   test("copies preserve rank, suit, enhancement, and seal", () => {
@@ -297,7 +334,7 @@ describe("duplicateSelectedInHand", () => {
       seal: "gold",
     };
     const next = duplicateSelectedInHand([original], new Set([original.id]), 2);
-    const copies = next.slice(1);
+    const copies = next.additions;
     expect(copies).toEqual([
       { id: copies[0].id, rank: "K", suit: "hearts", enhancement: "glass", seal: "gold" },
       { id: copies[1].id, rank: "K", suit: "hearts", enhancement: "glass", seal: "gold" },
@@ -308,7 +345,7 @@ describe("duplicateSelectedInHand", () => {
     const hand = fakeHand(2);
     const sourceIds = new Set(hand.map((c) => c.id));
     const next = duplicateSelectedInHand(hand, new Set([hand[1].id]), 2);
-    const copyIds = next.slice(2).map((c) => c.id);
+    const copyIds = next.additions.map((c) => c.id);
     for (const id of copyIds) {
       expect(sourceIds.has(id)).toBe(false);
     }
@@ -316,7 +353,7 @@ describe("duplicateSelectedInHand", () => {
 
   test("is a no-op when no card is selected", () => {
     const hand = fakeHand(3);
-    expect(duplicateSelectedInHand(hand, new Set(), 2)).toBe(hand);
+    expect(duplicateSelectedInHand(hand, new Set(), 2).hand).toBe(hand);
   });
 
   test("is a no-op when more than 1 card is selected", () => {
@@ -326,7 +363,7 @@ describe("duplicateSelectedInHand", () => {
       new Set([hand[0].id, hand[1].id]),
       2,
     );
-    expect(next).toBe(hand);
+    expect(next.hand).toBe(hand);
   });
 });
 

@@ -834,6 +834,27 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(4);
   });
 
+  test("applySpectralEffect immolate persists destroyed ids in destroyedCardIds (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "immolate", destroyCount: 2, moneyGain: 0 });
+    expect(useGame.getState().destroyedCardIds.size).toBe(2);
+  });
+
+  test("applySpectralEffect transmute persists the destroyed id in destroyedCardIds (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
+    expect(useGame.getState().destroyedCardIds.size).toBe(1);
+  });
+
+  test("applySpectralEffect transmute pushes the created cards to addedCards (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
+    expect(useGame.getState().addedCards).toHaveLength(3);
+  });
+
   test("applySpectralEffect sigil converts the hand to one suit", () => {
     const game = useGame.getState();
     game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });

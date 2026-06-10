@@ -636,6 +636,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
         }));
+        s.setDestroyedCardIds((prev) => {
+          const next = new Set(prev);
+          for (const id of destroyed) next.add(id);
+          return next;
+        });
         s.earn(effect.moneyGain);
         return;
       }
@@ -657,15 +662,22 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "transmute": {
+        const transmuted = transmuteHand(
+          s.dealt.hand,
+          effect.rankFilter,
+          effect.addCount,
+          Math.random,
+        );
         s.setDealt((prev) => ({
-          hand: transmuteHand(
-            prev.hand,
-            effect.rankFilter,
-            effect.addCount,
-            Math.random,
-          ),
+          hand: transmuted.hand,
           remaining: prev.remaining,
         }));
+        s.setDestroyedCardIds((prev) => {
+          const next = new Set(prev);
+          for (const id of transmuted.destroyedIds) next.add(id);
+          return next;
+        });
+        s.setAddedCards((prev) => [...prev, ...transmuted.additions]);
         return;
       }
       case "create-joker-by-rarity": {
