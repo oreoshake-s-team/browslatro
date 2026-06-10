@@ -1,3 +1,6 @@
+// Drag wiring (drag-to-deck sell, drag-to-jokers use) is covered by
+// src/App.consumableDrag.test.tsx — the e2e drags were synthetic events,
+// not real browser drags, so they live in jsdom now.
 import { test, expect, type Page } from "@playwright/test";
 
 const NEXT_ROUND_BUTTON = /Next Round/;
@@ -56,63 +59,6 @@ test.describe("Consumables in-game flow (issue #240)", () => {
     ).toHaveCount(0);
   });
 
-  async function dragConsumableToTarget(
-    page: Page,
-    sourceSelector: string,
-    targetSelector: string,
-  ): Promise<void> {
-    await page.evaluate(
-      async ({ sourceSelector, targetSelector }) => {
-        const source = document.querySelector(sourceSelector);
-        const target = document.querySelector(targetSelector);
-        if (!source || !target) throw new Error("missing drag source or target");
-        const store: Record<string, string> = {};
-        const types: string[] = [];
-        const dt = {
-          types,
-          effectAllowed: "",
-          dropEffect: "",
-          setData(format: string, data: string) {
-            if (!(format in store)) types.push(format);
-            store[format] = data;
-          },
-          getData(format: string) {
-            return store[format] ?? "";
-          },
-        };
-        function dispatch(target: Element, type: string) {
-          const event = new Event(type, { bubbles: true, cancelable: true });
-          Object.defineProperty(event, "dataTransfer", { value: dt });
-          target.dispatchEvent(event);
-        }
-        function nextFrame(): Promise<void> {
-          return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-        }
-        dispatch(source, "dragstart");
-        await nextFrame();
-        await nextFrame();
-        dispatch(target, "dragover");
-        dispatch(target, "drop");
-        dispatch(source, "dragend");
-      },
-      { sourceSelector, targetSelector },
-    );
-  }
-
-  test("dragging a planet consumable onto the deck pile sells it for $1", async ({
-    page,
-  }) => {
-    await setForcedShopKinds(page, ["planet", "joker"]);
-    await buyForcedKindThenLeaveShop(page, "planet");
-    const before = await moneyOf(page);
-    await dragConsumableToTarget(
-      page,
-      '[data-consumable-kind="planet"]',
-      ".deck-pile",
-    );
-    expect(await moneyOf(page)).toBe(before + 1);
-  });
-
   test("shift-clicking a consumable sells it for $1", async ({ page }) => {
     await setForcedShopKinds(page, ["planet", "joker"]);
     await buyForcedKindThenLeaveShop(page, "planet");
@@ -121,34 +67,5 @@ test.describe("Consumables in-game flow (issue #240)", () => {
       .locator('[data-consumable-kind="planet"]')
       .click({ modifiers: ["Shift"] });
     expect(await moneyOf(page)).toBe(before + 1);
-  });
-
-  test("dragging a planet consumable onto the jokers area uses it", async ({
-    page,
-  }) => {
-    await setForcedShopKinds(page, ["planet", "joker"]);
-    await buyForcedKindThenLeaveShop(page, "planet");
-    await dragConsumableToTarget(
-      page,
-      '[data-consumable-kind="planet"]',
-      '[aria-label="Equipped jokers"]',
-    );
-    await expect(
-      page.locator('[data-consumable-kind="planet"]'),
-    ).toHaveCount(0);
-  });
-
-  test("drag-to-jokers use does not credit the sell value to money", async ({
-    page,
-  }) => {
-    await setForcedShopKinds(page, ["planet", "joker"]);
-    await buyForcedKindThenLeaveShop(page, "planet");
-    const before = await moneyOf(page);
-    await dragConsumableToTarget(
-      page,
-      '[data-consumable-kind="planet"]',
-      '[aria-label="Equipped jokers"]',
-    );
-    expect(await moneyOf(page)).toBe(before);
   });
 });
