@@ -14,6 +14,8 @@ import {
 import {
   extraHandSize,
   pickVouchersForAnte,
+  extraConsumableSlots,
+  extraJokerSlots,
 } from "../items/vouchers";
 import {
   HAND_SIZE,
@@ -25,14 +27,23 @@ import {
   resetCardIds,
 } from "../cards/deck";
 import { fullDeckPile, initialDeal } from "../cards/deckBuild";
-import { SEAL_KINDS } from "../cards/seals";
+import { SEAL_KINDS, pickRandomTarot } from "../cards/seals";
 import type { Card } from "../cards/types";
 import {
+  MAX_CONSUMABLE_SLOTS,
+  addConsumable,
+} from "../items/consumables";
+import {
+  MAX_JOKERS,
+  createJokerByRarity,
+  createJokerCatalog,
   disablesBossBlindsFromJokers,
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
+  isJokerActive,
   sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
+  type Joker,
 } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
@@ -47,6 +58,7 @@ import {
   deckCompositionTransforms,
   deckStartingMoneyDelta,
   type Deck,
+  deckJokerSlotsDelta,
 } from "../items/decks";
 import type { Stake } from "../items/stakes";
 import {
@@ -126,6 +138,7 @@ export function useRoundLifecycle({
   const setDevMultFactor = useGame((s) => s.setDevMultFactor);
   const setForceProbabilities = useGame((s) => s.setForceProbabilities);
   const setJokers = useGame((s) => s.setJokers);
+  const setConsumables = useGame((s) => s.setConsumables);
   const setPendingTags = useGame((s) => s.setPendingTags);
   const runStats = useGame((s) => s.runStats);
   const setRunStats = useGame((s) => s.setRunStats);
@@ -230,6 +243,56 @@ export function useRoundLifecycle({
         ? SUITS[Math.floor(Math.random() * SUITS.length)]
         : null,
     );
+    const activeForBlind = equippedJokers.filter(isJokerActive);
+    const blindTarots = activeForBlind.filter(
+      (j) => j.effect.kind === "blind-select-creates-tarot",
+    ).length;
+    if (blindTarots > 0) {
+      const tarotCapacity =
+        MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      setConsumables((prev) => {
+        let next = prev;
+        for (let i = 0; i < blindTarots; i += 1) {
+          const after = addConsumable(
+            next,
+            { kind: "tarot", card: pickRandomTarot() },
+            tarotCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        return next;
+      });
+    }
+    const commonJokerCreations = activeForBlind.reduce(
+      (sum, j) =>
+        j.effect.kind === "blind-select-creates-common-jokers"
+          ? sum + j.effect.count
+          : sum,
+      0,
+    );
+    if (commonJokerCreations > 0) {
+      const jokerCapacity = Math.max(
+        0,
+        MAX_JOKERS +
+          extraJokerSlots(ownedVoucherIds) +
+          deckJokerSlotsDelta(selectedDeck),
+      );
+      setJokers((prev) => {
+        let next = prev as ReadonlyArray<Joker>;
+        for (let i = 0; i < commonJokerCreations; i += 1) {
+          const created = createJokerByRarity(
+            next,
+            createJokerCatalog(),
+            "common",
+            jokerCapacity,
+          );
+          if (!created) break;
+          next = [...next, created];
+        }
+        return [...next];
+      });
+    }
     const stoneCount = stoneCardsOnBlindSelectFromJokers(equippedJokers);
     const newStones: Card[] = Array.from({ length: stoneCount }, () => ({
       id: nextCardId(),

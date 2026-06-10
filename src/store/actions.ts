@@ -28,6 +28,7 @@ import {
   applyPackSkipToJokerStates,
   applySellToJokerStates,
   interestMultiplierFromJokers,
+  isJokerActive,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -91,6 +92,8 @@ import {
   computeStartingHands,
 } from "../run/roundSetup";
 import { calculateInterest } from "../scoring/payout";
+import { rollChance } from "../dev/chanceOverride";
+import { pickRandomTarot } from "../cards/seals";
 import { BlindValues, FINAL_ANTE } from "../constants";
 import { hasStakeModifier, stakeStickerOdds } from "../items/stakes";
 import type { Blind, Card, Enhancement, Hand, Seal, Suit } from "../cards/types";
@@ -466,6 +469,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.spend(price);
     s.openPackOffer(offer.pack);
     s.markOfferSold(idx);
+    const tarotCapacity =
+      MAX_CONSUMABLE_SLOTS + extraConsumableSlots(s.ownedVoucherIds);
+    for (const joker of s.jokers.filter(isJokerActive)) {
+      if (joker.effect.kind !== "pack-open-chance-creates-tarot") continue;
+      if (!rollChance(joker.effect.chance, Math.random)) continue;
+      s.setConsumables((prev) =>
+        addConsumable(prev, { kind: "tarot", card: pickRandomTarot() }, tarotCapacity),
+      );
+    }
     return true;
   },
   decrementPackPicks: () => {

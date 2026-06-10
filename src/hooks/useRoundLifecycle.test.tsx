@@ -4,9 +4,11 @@ import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useGame } from "../store/game";
 import { createBossCatalog } from "../items/bosses";
 import {
+  createCartomancerJoker,
   createCertificateJoker,
   createChicotJoker,
   createMarbleJoker,
+  createRiffRaffJoker,
 } from "../items/jokers";
 import { STARTING_MONEY } from "../store/economy";
 import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
@@ -362,5 +364,45 @@ describe("startNewRound — Chicot disables the boss (#1000)", () => {
     );
     act(() => result.current.startNewRound());
     expect(useGame.getState().currentBoss.effect.kind).toBe(boss.effect.kind);
+  });
+});
+
+describe("startNewRound — blind-select creations (#1025)", () => {
+  function startRound(): void {
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+  }
+
+  test("Cartomancer creates a tarot when the blind starts", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createCartomancerJoker()]);
+    useGame.getState().setConsumables([]);
+    startRound();
+    expect(
+      useGame.getState().consumables.filter((c) => c.kind === "tarot"),
+    ).toHaveLength(1);
+  });
+
+  test("Riff-Raff creates two common jokers when the blind starts", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createRiffRaffJoker()]);
+    startRound();
+    const jokers = useGame.getState().jokers;
+    expect(jokers.filter((j) => j.rarity === "common")).toHaveLength(3);
+  });
+
+  test("without these jokers nothing is created (negative)", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([]);
+    useGame.getState().setConsumables([]);
+    startRound();
+    expect(useGame.getState().consumables).toHaveLength(0);
+    expect(useGame.getState().jokers).toHaveLength(0);
   });
 });
