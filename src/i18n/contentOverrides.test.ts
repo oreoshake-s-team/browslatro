@@ -1,5 +1,7 @@
 import {
-  HAW_CONSUMABLE_OVERRIDES,
+  HAW_PLANET_OVERRIDES,
+  HAW_SPECTRAL_OVERRIDES,
+  HAW_TAROT_OVERRIDES,
   localizedConsumableDescription,
   localizedConsumableName,
 } from "./contentOverrides";
@@ -26,17 +28,36 @@ describe("contentOverrides", () => {
     ).toBe("Level up Pair");
   });
 
-  test("every haw override id exists in a consumable catalog", () => {
-    const known = new Set(
-      [
-        ...createPlanetCatalog(),
-        ...createTarotCatalog(),
-        ...createSpectralCatalog(),
-      ].map((item) => item.id),
-    );
-    const unknown = Object.keys(HAW_CONSUMABLE_OVERRIDES).filter(
+  test("every haw planet override id exists in the planet catalog", () => {
+    const known = new Set(createPlanetCatalog().map((item) => item.id));
+    const unknown = Object.keys(HAW_PLANET_OVERRIDES).filter(
       (id) => !known.has(id),
     );
     expect(unknown).toEqual([]);
+  });
+
+  test("every haw tarot override id exists in the tarot catalog", () => {
+    const known = new Set(createTarotCatalog().map((item) => item.id));
+    const unknown = Object.keys(HAW_TAROT_OVERRIDES).filter(
+      (id) => !known.has(id),
+    );
+    expect(unknown).toEqual([]);
+  });
+
+  test("every haw spectral override id exists in the spectral catalog", () => {
+    const known = new Set(createSpectralCatalog().map((item) => item.id));
+    const unknown = Object.keys(HAW_SPECTRAL_OVERRIDES).filter(
+      (id) => !known.has(id),
+    );
+    expect(unknown).toEqual([]);
+  });
+
+  test("per-type override ids never collide across types", () => {
+    const ids = [
+      ...Object.keys(HAW_PLANET_OVERRIDES),
+      ...Object.keys(HAW_TAROT_OVERRIDES),
+      ...Object.keys(HAW_SPECTRAL_OVERRIDES),
+    ];
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });
