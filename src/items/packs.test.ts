@@ -720,6 +720,44 @@ describe("readForcedPackPools (dev flag, #856)", () => {
   });
 });
 
+describe("forced pack pool maps to its pack definition (#939)", () => {
+  function stubForcedPool(value: string) {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackPool" ? value : null,
+      },
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.each<{ pool: string; name: string }>([
+    { pool: "standard", name: "Standard Pack" },
+    { pool: "arcana", name: "Arcana Pack" },
+    { pool: "buffoon", name: "Buffoon Pack" },
+    { pool: "spectral", name: "Spectral Pack" },
+    { pool: "celestial", name: "Celestial Pack" },
+  ])("forcing the $pool pool yields a $name offer", ({ pool, name }) => {
+    stubForcedPool(pool);
+    expect(
+      readForcedPackPools().map((forced) =>
+        packDisplayName(
+          rollPackForPool(forced, {
+            planetCatalog: createPlanetCatalog(),
+            tarotCatalog: createTarotCatalog(),
+            jokerCatalog: createJokerCatalog(),
+            spectralCatalog: createSpectralCatalog(),
+            rng: seededRng(90),
+          }),
+        ),
+      ),
+    ).toEqual([name]);
+  });
+});
+
 describe("Spectral pool excludes hidden spectrals (closes #826)", () => {
   function countSpectralIdsAcrossRolls(seed: number, rolls: number): Map<string, number> {
     const counts = new Map<string, number>();
