@@ -386,6 +386,7 @@ export function applyHandLevelJokers(
       case "stack-mult-on-shop-reroll":
       case "stack-mult-on-pack-skip":
       case "stack-mult-per-tarot-used":
+      case "blind-select-eats-right-joker-mult":
       case "mult-decay-per-round": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
@@ -609,6 +610,9 @@ export function applyHandLevelJokers(
       case "round-end-grows-all-sell-values":
       case "shop-exit-copies-consumable":
       case "sell-after-rounds-duplicates-joker":
+      case "hand-play-chance-upgrades-hand":
+      case "first-hand-single-card-copies-card":
+      case "per-scored-enhancement-money":
       case "noop":
         break;
       default:

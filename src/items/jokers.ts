@@ -60,6 +60,8 @@ export {
   probabilityMultiplierFromJokers,
   replaceJokersExceptCopyOf,
   shopExitConsumableCopies,
+  handPlayUpgradeRolls,
+  firstHandCardCopyCount,
 } from "./jokers/collection";
 export * from "./jokers/factories";
 export {
@@ -103,6 +105,7 @@ export {
 export { consumableCreationsOnHandPlayed } from "./jokers/scoring/consumableCreators";
 export {
   applyCardsDestroyedToJokerStates,
+  applyCeremonialDaggerOnBlindSelect,
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
   applyConsumableUsedToJokerStates,

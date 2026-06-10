@@ -46,6 +46,7 @@ import {
   sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
   type Joker,
+  applyCeremonialDaggerOnBlindSelect,
   applyMadnessOnBlindSelect,
 } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
@@ -249,6 +250,7 @@ export function useRoundLifecycle({
     } else {
       setTodoHand(null);
     }
+    setJokers((prev) => applyCeremonialDaggerOnBlindSelect(prev));
     if (effectiveBlind !== 3) {
       setJokers((prev) => applyMadnessOnBlindSelect(prev));
     }

@@ -154,6 +154,9 @@ export const MATADOR_PAYOUT = 8;
 export const GIFT_CARD_SELL_VALUE_PER_ROUND = 1;
 export const CANIO_X_MULT_PER_FACE = 1;
 export const INVISIBLE_JOKER_ROUNDS = 2;
+export const CEREMONIAL_DAGGER_SELL_VALUE_MULTIPLIER = 2;
+export const SPACE_JOKER_UPGRADE_CHANCE = 0.25;
+export const GOLDEN_TICKET_PAYOUT = 4;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

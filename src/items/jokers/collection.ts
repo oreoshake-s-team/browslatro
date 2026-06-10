@@ -1,6 +1,7 @@
 import { cloneJoker, withEdition } from "./editions";
 import { canDestroyJoker, hasSticker, isJokerActive } from "./stickers";
 import { resolveJokerEffect } from "./scoring/copy";
+import { rollChance } from "../../dev/chanceOverride";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -50,6 +51,35 @@ export function shopExitConsumableCopies<T>(
     copies.push(consumables[Math.floor(rng() * consumables.length)]);
   }
   return copies;
+}
+
+export function handPlayUpgradeRolls(
+  allJokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): number {
+  const jokers = allJokers.filter(isJokerActive);
+  let count = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind !== "hand-play-chance-upgrades-hand") continue;
+    if (rollChance(effect.chance, rng)) count += 1;
+  }
+  return count;
+}
+
+export function firstHandCardCopyCount(
+  allJokers: ReadonlyArray<Joker>,
+  playedCardCount: number,
+  isFirstHandOfRound: boolean,
+): number {
+  if (!isFirstHandOfRound || playedCardCount !== 1) return 0;
+  const jokers = allJokers.filter(isJokerActive);
+  let count = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "first-hand-single-card-copies-card") count += 1;
+  }
+  return count;
 }
 
 export function chipsPerScoredCardFromJokers(

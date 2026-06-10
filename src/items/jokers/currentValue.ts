@@ -59,6 +59,7 @@ export function jokerCurrentValue(
     case "stack-mult-on-shop-reroll":
     case "stack-mult-on-pack-skip":
     case "stack-mult-per-tarot-used":
+    case "blind-select-eats-right-joker-mult":
     case "mult-decay-per-round":
       return { kind: "mult", value: counterValue(joker) };
     case "per-missing-card-mult":
