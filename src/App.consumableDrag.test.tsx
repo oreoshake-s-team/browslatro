@@ -71,7 +71,7 @@ describe("Consumable drag wiring (issue #936)", () => {
   test("dragging a consumable onto the equipped-jokers area uses it without crediting the sell value", async () => {
     await mountWithPlanetConsumable();
     const before = moneyOf();
-    dragConsumableTo(screen.getByLabelText("Equipped jokers"));
+    dragConsumableTo(screen.getByTestId("jokers-tray"));
     expect(screen.queryByTestId("consumable-tile-filled-0")).toBeNull();
     expect(moneyOf()).toBe(before);
   });

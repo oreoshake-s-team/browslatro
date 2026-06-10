@@ -155,7 +155,7 @@ export default function Game({
     : selectedIds.size;
 
   return (
-    <main className="game" aria-label="Game">
+    <main className="game" aria-label={t("a11y.game")}>
       <div className="game-top-row">
         <Jokers
           jokers={jokers}
@@ -235,8 +235,12 @@ export default function Game({
               disabled={isScoring || !canSubmit}
               aria-label={
                 selectedHand
-                  ? `Submit Hand: ${selectedHand.label}, ${chips + devChipsBonus} chips times ${(multiplier + devMultBonus) * devMultFactor} multiplier`
-                  : "Submit Hand"
+                  ? t("a11y.submitHandWith", {
+                      hand: tHandLabel(t, selectedHand.label),
+                      chips: chips + devChipsBonus,
+                      mult: (multiplier + devMultBonus) * devMultFactor,
+                    })
+                  : t("a11y.submitHand")
               }
             >
               <span aria-hidden="true">🃏 </span>Submit Hand

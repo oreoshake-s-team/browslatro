@@ -28,7 +28,7 @@ test("Discard renders as the danger (red) variant (issue #874)", async ({
   page,
 }) => {
   await startRound(page);
-  const card = page.locator('[aria-label="Your hand"] .card').first();
+  const card = page.locator('[data-testid="hand-cards"] .card').first();
   await card.click();
   await page.mouse.move(0, 0);
   const discard = page.getByRole("button", { name: /Discard/ });

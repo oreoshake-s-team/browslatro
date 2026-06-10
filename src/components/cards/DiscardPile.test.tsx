@@ -65,7 +65,7 @@ describe("DiscardPile", () => {
   test("clicking the pile opens the modal", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     expect(
       screen.getByRole("heading", { name: "Discarded Cards" })
     ).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("DiscardPile", () => {
     const user = userEvent.setup();
     const fullDeckDiscarded = createDeck();
     render(<DiscardPile discarded={fullDeckDiscarded} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     expect(
       screen.getByRole("heading", { name: "Hearts (13)" })
     ).toBeInTheDocument();
@@ -84,7 +84,7 @@ describe("DiscardPile", () => {
   test("Close button dismisses the modal", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     await user.click(screen.getByText("Close"));
     expect(
       screen.queryByRole("heading", { name: "Discarded Cards" })
@@ -94,7 +94,7 @@ describe("DiscardPile", () => {
   test("Escape closes the modal when open", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     await user.keyboard("{Escape}");
     expect(
       screen.queryByRole("heading", { name: "Discarded Cards" })
@@ -113,7 +113,7 @@ describe("DiscardPile", () => {
   test("Enter while modal is open does not close it", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     await user.keyboard("{Enter}");
     expect(
       screen.getByRole("heading", { name: "Discarded Cards" })
@@ -125,7 +125,7 @@ describe("DiscardPile dialog semantics (#912)", () => {
   test("open modal exposes dialog semantics labelled by its title", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     const dialog = screen.getByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(dialog).toHaveAccessibleName("Discarded Cards");

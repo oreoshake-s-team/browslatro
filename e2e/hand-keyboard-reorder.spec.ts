@@ -13,13 +13,13 @@ async function startRound(page: Page): Promise<void> {
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
   await expect(
-    page.locator('[aria-label="Your hand"] .card').first(),
+    page.locator('[data-testid="hand-cards"] .card').first(),
   ).toBeVisible();
 }
 
 async function handLabels(page: Page): Promise<string[]> {
   return page
-    .locator('[aria-label="Your hand"] .card')
+    .locator('[data-testid="hand-cards"] .card')
     .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
 }
 
@@ -28,7 +28,7 @@ test("keyboard-only reorder of two adjacent cards announces the move (issue #908
 }) => {
   await startRound(page);
   const before = await handLabels(page);
-  await page.locator('[aria-label="Your hand"] .card').nth(1).focus();
+  await page.locator('[data-testid="hand-cards"] .card').nth(1).focus();
   await page.keyboard.press("Tab");
   const moveLeft = page.getByRole("button", { name: `Move ${before[1]} left` });
   await expect(moveLeft).toBeFocused();
@@ -47,7 +47,7 @@ test("mouse drag reordering still works after the keyboard controls (issue #908)
 }) => {
   await startRound(page);
   const before = await handLabels(page);
-  const firstCard = page.locator('[aria-label="Your hand"] .card').first();
+  const firstCard = page.locator('[data-testid="hand-cards"] .card').first();
   const lastGap = page.getByTestId(`hand-gap-${before.length}`);
   await firstCard.dragTo(lastGap);
   await expect

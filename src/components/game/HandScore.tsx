@@ -125,7 +125,10 @@ function HandScore({
         <h3
           aria-label={
             hasLevel
-              ? `${selectedHand.label}, level ${selectedHandLevel}`
+              ? t("a11y.handLevel", {
+                  hand: tHandLabel(t, selectedHand.label),
+                  level: selectedHandLevel,
+                })
               : undefined
           }
         >

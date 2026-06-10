@@ -158,7 +158,8 @@ export default function Jokers({
         showDropZone ? " jokers-consumable-target" : ""
       }${dropZone.hover ? " jokers-consumable-hover" : ""}`}
       style={{ "--joker-capacity": capacity } as React.CSSProperties}
-      aria-label="Equipped jokers"
+      aria-label={t("a11y.equippedJokers")}
+      data-testid="jokers-tray"
       data-consumable-drop-active={showDropZone || undefined}
       onDragOver={dropZone.onDragOver}
       onDragLeave={dropZone.onDragLeave}
@@ -192,11 +193,14 @@ export default function Jokers({
             : "";
           const debuffedClass = debuffed ? " joker-tile-debuffed" : "";
           const editionLabel = editionInfo
-            ? ` ${editionInfo.name} edition: ${editionInfo.description}.`
+            ? ` ${t("a11y.jokerEdition", {
+                name: editionInfo.name,
+                description: editionInfo.description,
+              })}`
             : "";
-          const debuffedLabel = debuffed ? " Debuffed — does not score." : "";
+          const debuffedLabel = debuffed ? ` ${t("a11y.jokerDebuffed")}` : "";
           const ariaLabel = jokerSellable
-            ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel} Shift-click or drag to deck to sell for $${sellValue}.`
+            ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel} ${t("a11y.sellHint", { value: sellValue })}`
             : editionInfo || sellable || debuffed
               ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel}`
               : undefined;
@@ -282,7 +286,7 @@ export default function Jokers({
             )}
             <li
               className="joker-tile joker-tile-empty"
-              aria-label="Empty joker slot"
+              aria-label={t("a11y.emptyJokerSlot")}
               data-testid="joker-tile-empty"
             >
               Empty

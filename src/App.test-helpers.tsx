@@ -54,14 +54,14 @@ export async function dismissBlindSelect(
 
 export function getHandCardButtons(): HTMLElement[] {
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
   );
 }
 
 export function getHandGaps(): HTMLElement[] {
   return Array.from(
     screen
-      .getByLabelText("Your hand")
+      .getByTestId("hand-cards")
       .querySelectorAll('[data-testid^="hand-gap-"]'),
   );
 }

@@ -8,7 +8,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const SUBMIT_BUTTON = /^Submit Hand/;
 
 async function dismissBlindSelect(page: Page): Promise<void> {

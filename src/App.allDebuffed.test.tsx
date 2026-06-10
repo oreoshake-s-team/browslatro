@@ -68,7 +68,7 @@ afterEach(() => {
 
 function getHandCardButtons(): HTMLElement[] {
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
   );
 }
 
@@ -162,7 +162,7 @@ describe("Submitting an all-debuffed selection on a Boss Blind (#264)", () => {
     flushDiscardAnimation();
     const stillInHand = Array.from(
       document.querySelectorAll(
-        '[aria-label="Your hand"] button[aria-label*="of Clubs"]',
+        '[data-testid="hand-cards"] button[aria-label*="of Clubs"]',
       ),
     );
     expect(stillInHand).toHaveLength(0);

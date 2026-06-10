@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 
 async function setDeterministic(page: Page): Promise<void> {
   await page.addInitScript(() => {

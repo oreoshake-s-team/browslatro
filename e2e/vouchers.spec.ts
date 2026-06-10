@@ -132,7 +132,7 @@ test.describe("Telescope + Observatory vouchers (#281)", () => {
     await page.getByText(/Add a specific Planet/).click();
     await page.locator('button[data-planet-id="pluto"]').first().click();
 
-    const cards = page.locator('[aria-label="Your hand"] .card');
+    const cards = page.locator('[data-testid="hand-cards"] .card');
     await cards.first().click();
     await page.getByRole("button", { name: /^Submit Hand/ }).click();
 

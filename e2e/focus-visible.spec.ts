@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 
 const FOCUS_RING = "rgb(116, 192, 252)";
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const SHOP_HEADING = /Shop/;
 
 test.beforeEach(async ({ context }) => {

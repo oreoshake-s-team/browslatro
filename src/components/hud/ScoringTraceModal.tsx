@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
 import { useEscapeToClose } from "../system/useEscapeToClose";
@@ -10,6 +11,7 @@ interface ScoringTraceModalProps {
 }
 
 export default function ScoringTraceModal({ events, onClose }: ScoringTraceModalProps) {
+  const { t } = useTranslation();
   useEscapeToClose(onClose, true);
   return createPortal(
     <div
@@ -28,7 +30,7 @@ export default function ScoringTraceModal({ events, onClose }: ScoringTraceModal
             type="button"
             className="scoring-trace-modal__close"
             onClick={onClose}
-            aria-label="Close scoring trace"
+            aria-label={t("a11y.closeScoringTrace")}
             autoFocus
           >
             ✕ Close
@@ -38,7 +40,7 @@ export default function ScoringTraceModal({ events, onClose }: ScoringTraceModal
           className="scoring-trace-modal__body"
           role="log"
           aria-live="polite"
-          aria-label="Scoring trace"
+          aria-label={t("a11y.scoringTraceLog")}
           tabIndex={0}
         >
           <ScoringTraceContent events={events} idPrefix="scoring-trace-modal" />

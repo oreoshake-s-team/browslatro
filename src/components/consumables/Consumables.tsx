@@ -24,10 +24,6 @@ interface ConsumablesProps {
   onDragEnd?: () => void;
 }
 
-function tileLabel(c: Consumable, sellValue: number): string {
-  return `Use ${c.card.name} (${c.kind}). Shift-click or drag to deck to sell for $${sellValue}.`;
-}
-
 export default function Consumables({
   consumables,
   selectedCount,
@@ -44,7 +40,8 @@ export default function Consumables({
   return (
     <section
       className={`consumables${consumables.length === 0 ? " consumables-tray-empty" : ""}`}
-      aria-label="Consumable slots"
+      aria-label={t("a11y.consumableSlots")}
+      data-testid="consumables-tray"
     >
       <span className="consumables-label">{t("trays.consumables")}</span>
       <ul className="consumables-list">
@@ -70,7 +67,15 @@ export default function Consumables({
                     entry.card.description,
                   )
                 }
-                aria-label={tileLabel(entry, sellValue)}
+                aria-label={t("a11y.consumableTile", {
+                  name: localizedConsumableName(
+                    i18n.language,
+                    entry.card.id,
+                    entry.card.name,
+                  ),
+                  kind: entry.kind,
+                  value: sellValue,
+                })}
                 disabled={interactionDisabled}
                 draggable
                 onDragStart={(e) => {
@@ -117,7 +122,7 @@ export default function Consumables({
               type="button"
               className="consumable-tile consumable-tile-empty"
               data-testid="consumable-tile-empty"
-              aria-label="Empty consumable slot"
+              aria-label={t("a11y.emptyConsumableSlot")}
               disabled
             >
               Empty
