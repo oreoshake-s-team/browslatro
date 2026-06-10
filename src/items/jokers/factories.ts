@@ -109,6 +109,8 @@ import {
   CASTLE_CHIPS_PER_DISCARD,
   EIGHT_BALL_TAROT_CHANCE,
   VAGABOND_MONEY_THRESHOLD,
+  HALLUCINATION_TAROT_CHANCE,
+  RIFF_RAFF_JOKER_COUNT,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1779,6 +1781,42 @@ export function createVagabondJoker(): Joker {
       kind: "poor-hand-creates-tarot",
       threshold: VAGABOND_MONEY_THRESHOLD,
     },
+  };
+}
+
+export function createHallucinationJoker(): Joker {
+  return {
+    id: "hallucination",
+    rarity: "common",
+    name: "Hallucination",
+    description: "1 in 2 chance to create a Tarot card when any Booster Pack is opened",
+    effect: {
+      kind: "pack-open-chance-creates-tarot",
+      chance: HALLUCINATION_TAROT_CHANCE,
+    },
+  };
+}
+
+export function createRiffRaffJoker(): Joker {
+  return {
+    id: "riff-raff",
+    rarity: "common",
+    name: "Riff-Raff",
+    description: `When Blind is selected, create ${RIFF_RAFF_JOKER_COUNT} Common Jokers`,
+    effect: {
+      kind: "blind-select-creates-common-jokers",
+      count: RIFF_RAFF_JOKER_COUNT,
+    },
+  };
+}
+
+export function createCartomancerJoker(): Joker {
+  return {
+    id: "cartomancer",
+    rarity: "uncommon",
+    name: "Cartomancer",
+    description: "Create a Tarot card when Blind is selected",
+    effect: { kind: "blind-select-creates-tarot" },
   };
 }
 

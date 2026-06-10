@@ -287,6 +287,9 @@ export function applyPerCardJokers(
       case "first-hand-single-six-creates-spectral":
       case "ace-straight-creates-tarot":
       case "poor-hand-creates-tarot":
+      case "pack-open-chance-creates-tarot":
+      case "blind-select-creates-common-jokers":
+      case "blind-select-creates-tarot":
       case "noop":
         break;
       default:

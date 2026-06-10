@@ -299,6 +299,15 @@ export type JokerEffect =
   | { readonly kind: "first-hand-single-six-creates-spectral" }
   | { readonly kind: "ace-straight-creates-tarot" }
   | { readonly kind: "poor-hand-creates-tarot"; readonly threshold: number }
+  | {
+      readonly kind: "pack-open-chance-creates-tarot";
+      readonly chance: number;
+    }
+  | {
+      readonly kind: "blind-select-creates-common-jokers";
+      readonly count: number;
+    }
+  | { readonly kind: "blind-select-creates-tarot" }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 
