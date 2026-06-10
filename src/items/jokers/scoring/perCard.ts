@@ -224,6 +224,10 @@ export function applyPerCardJokers(
       case "mult-decay-per-round":
       case "x-mult-shrink-per-discarded-card":
       case "additive-mult-chance-bust":
+      case "retrigger-ranks":
+      case "retrigger-face-cards":
+      case "retrigger-first-card":
+      case "retrigger-on-final-hand":
       case "noop":
         break;
       default:

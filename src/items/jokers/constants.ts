@@ -113,6 +113,11 @@ export const RAMEN_X_MULT = 2;
 export const RAMEN_X_MULT_LOSS_PER_CARD = 0.01;
 export const GROS_MICHEL_MULT = 15;
 export const GROS_MICHEL_BUST_CHANCE = 1 / 6;
+export const HACK_RANKS: ReadonlyArray<Rank> = ["2", "3", "4", "5"];
+export const HACK_RETRIGGERS = 1;
+export const DUSK_RETRIGGERS = 1;
+export const SOCK_AND_BUSKIN_RETRIGGERS = 1;
+export const HANGING_CHAD_RETRIGGERS = 2;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

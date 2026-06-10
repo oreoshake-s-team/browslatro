@@ -28,6 +28,7 @@ import {
   applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyHandPlayedToJokerStates,
+  expandScoringRetriggers,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -52,7 +53,6 @@ import {
 } from "../cards/enhancements";
 import {
   blueSealHeldCards,
-  expandRedSealRetriggers,
   planetForHand,
 } from "../cards/seals";
 import {
@@ -385,11 +385,13 @@ export function usePlayHand({
       isBossRound,
       playedCardKeysThisAnte,
     );
-    const scoring = expandRedSealRetriggers(
+    const scoring = expandScoringRetriggers(
       getScoringCards(playedCards, label, {
         allCardsScore: allCardsScoreFromJokers(jokers),
         evalOptions,
       }),
+      jokers,
+      { remainingHands },
     ).filter((c) => !playedDebuffedIds.has(c.id));
     setJokers((prev) =>
       applyHandPlayedToJokerStates(prev, {
