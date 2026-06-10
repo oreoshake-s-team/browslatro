@@ -287,6 +287,18 @@ export type JokerEffect =
       readonly kind: "stack-chips-per-rotating-suit-discard";
       readonly amount: number;
     }
+  | {
+      readonly kind: "scored-rank-chance-creates-tarot";
+      readonly rank: Rank;
+      readonly chance: number;
+    }
+  | {
+      readonly kind: "hand-type-creates-spectral";
+      readonly requires: HandLabel;
+    }
+  | { readonly kind: "first-hand-single-six-creates-spectral" }
+  | { readonly kind: "ace-straight-creates-tarot" }
+  | { readonly kind: "poor-hand-creates-tarot"; readonly threshold: number }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

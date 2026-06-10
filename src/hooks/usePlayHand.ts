@@ -1,5 +1,6 @@
 import type { MutableRefObject } from "react";
 import { useGame } from "../store/game";
+import { createSpectralCatalog } from "../items/spectrals";
 import { useScoringPipeline } from "./useScoringPipeline";
 import { play } from "../components/system/sounds";
 import type { Card } from "../cards/types";
@@ -36,6 +37,7 @@ import {
   applyScoredMutationsToCards,
   applyEnhancementsEatenToJokerStates,
   chipsPerScoredCardFromJokers,
+  consumableCreationsOnHandPlayed,
   canPreventDeath,
   consumeDeathPreventer,
   applyPerCardJokers,
@@ -63,6 +65,7 @@ import {
 import {
   blueSealHeldCards,
   planetForHand,
+  pickRandomTarot,
 } from "../cards/seals";
 import {
   getHeldInHand,
@@ -432,6 +435,50 @@ export function usePlayHand({
       setJokers((prev) =>
         applyEnhancementsEatenToJokerStates(prev, mutations.enhancementsEaten),
       );
+    }
+    const creations = consumableCreationsOnHandPlayed(jokers, {
+      playedHandLabel: label,
+      playedCards,
+      scoredCards: scoring,
+      isFirstHandOfRound: handHistoryThisRound.length === 0,
+      money,
+    });
+    if (creations.tarots > 0 || creations.spectrals > 0) {
+      setConsumables((prev) => {
+        let next = prev;
+        for (let i = 0; i < creations.tarots; i += 1) {
+          const after = addConsumable(
+            next,
+            { kind: "tarot", card: pickRandomTarot() },
+            consumableCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        for (let i = 0; i < creations.spectrals; i += 1) {
+          const pool = createSpectralCatalog().filter((s) => !s.hidden);
+          const after = addConsumable(
+            next,
+            {
+              kind: "spectral",
+              card: pool[Math.floor(Math.random() * pool.length)],
+            },
+            consumableCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        return next;
+      });
+    }
+    if (creations.destroyedCardId !== null) {
+      const destroyedId = creations.destroyedCardId;
+      useGame.getState().setDestroyedCardIds((prev) => {
+        if (prev.has(destroyedId)) return prev;
+        const next = new Set(prev);
+        next.add(destroyedId);
+        return next;
+      });
     }
     const chipsPerScored = chipsPerScoredCardFromJokers(jokers);
     if (chipsPerScored > 0) {

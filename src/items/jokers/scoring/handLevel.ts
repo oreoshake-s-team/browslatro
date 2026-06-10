@@ -564,6 +564,11 @@ export function applyHandLevelJokers(
       case "disables-boss-blinds":
       case "x-mult-on-idol-card":
       case "x-mult-per-suit-rotating":
+      case "scored-rank-chance-creates-tarot":
+      case "hand-type-creates-spectral":
+      case "first-hand-single-six-creates-spectral":
+      case "ace-straight-creates-tarot":
+      case "poor-hand-creates-tarot":
       case "noop":
         break;
       default:

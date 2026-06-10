@@ -107,6 +107,8 @@ import {
   THE_IDOL_X_MULT,
   ANCIENT_JOKER_X_MULT,
   CASTLE_CHIPS_PER_DISCARD,
+  EIGHT_BALL_TAROT_CHANCE,
+  VAGABOND_MONEY_THRESHOLD,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1720,6 +1722,63 @@ export function createCastleJoker(): Joker {
       amount: CASTLE_CHIPS_PER_DISCARD,
     },
     state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createEightBallJoker(): Joker {
+  return {
+    id: "8-ball",
+    rarity: "common",
+    name: "8 Ball",
+    description: "Each played 8 has a 1 in 4 chance to create a Tarot card when scored",
+    effect: {
+      kind: "scored-rank-chance-creates-tarot",
+      rank: "8",
+      chance: EIGHT_BALL_TAROT_CHANCE,
+    },
+  };
+}
+
+export function createSeanceJoker(): Joker {
+  return {
+    id: "seance",
+    rarity: "uncommon",
+    name: "Séance",
+    description: "If poker hand is a Straight Flush, create a random Spectral card",
+    effect: { kind: "hand-type-creates-spectral", requires: "Straight Flush" },
+  };
+}
+
+export function createSixthSenseJoker(): Joker {
+  return {
+    id: "sixth-sense",
+    rarity: "uncommon",
+    name: "Sixth Sense",
+    description: "If first hand of round is a single 6, destroy it and create a Spectral card",
+    effect: { kind: "first-hand-single-six-creates-spectral" },
+  };
+}
+
+export function createSuperpositionJoker(): Joker {
+  return {
+    id: "superposition",
+    rarity: "common",
+    name: "Superposition",
+    description: "Create a Tarot card if poker hand contains an Ace and a Straight",
+    effect: { kind: "ace-straight-creates-tarot" },
+  };
+}
+
+export function createVagabondJoker(): Joker {
+  return {
+    id: "vagabond",
+    rarity: "rare",
+    name: "Vagabond",
+    description: `Create a Tarot card if hand is played with $${VAGABOND_MONEY_THRESHOLD} or less`,
+    effect: {
+      kind: "poor-hand-creates-tarot",
+      threshold: VAGABOND_MONEY_THRESHOLD,
+    },
   };
 }
 

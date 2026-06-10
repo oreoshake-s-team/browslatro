@@ -282,6 +282,11 @@ export function applyPerCardJokers(
       case "sell-disables-boss-blind":
       case "disables-boss-blinds":
       case "stack-chips-per-rotating-suit-discard":
+      case "scored-rank-chance-creates-tarot":
+      case "hand-type-creates-spectral":
+      case "first-hand-single-six-creates-spectral":
+      case "ace-straight-creates-tarot":
+      case "poor-hand-creates-tarot":
       case "noop":
         break;
       default:
