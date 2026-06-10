@@ -150,10 +150,18 @@ centralized and translatable, and there's a high-visibility theme toggle
 
 ## Dev tooling
 
-- **Dev modifiers slice** (`src/store/devModifiers.ts`) — manual chips/mult bumps
-  (`devChipsBonus`, `devMultBonus`, `devMultFactor`) and `forceProbabilities`. These are
-  *sticky* and only reset on New Game, so they survive scoring/finalize; the Sidebar folds
-  them into the displayed numbers. They emit their own `ScoringEvent`s labelled "(dev)".
+- **The "Apply modifiers" panel** (`src/components/game/ModifierPanel.tsx`) — a `<details>`
+  disclosure under the game board, always available. Buttons: Add Chips / Add Multiplier /
+  Multiply Multiplier, **Win** (calls `handleWin()` directly — the fastest way to reach
+  the shop), money ±$10, hand size ±1, Force Probabilities On, plus pickers to grant any
+  specific Tarot / Planet / Spectral and to force a pack pool into the next shop. The
+  Blind Select screen's boss dropdown and the shop's voucher dropdown are the same idea
+  for bosses/vouchers.
+- **Dev modifiers slice** (`src/store/devModifiers.ts`) — backs the panel's chips/mult
+  bumps (`devChipsBonus`, `devMultBonus`, `devMultFactor`) and `forceProbabilities`. These
+  are *sticky* and only reset on New Game, so they survive scoring/finalize; the Sidebar
+  folds them into the displayed numbers. They emit their own `ScoringEvent`s labelled
+  "(dev)".
 - **RNG configs + `force100`** (above) for deterministic manual testing.
 
 ## Quick "where do I…?" index

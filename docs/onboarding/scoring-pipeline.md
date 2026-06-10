@@ -33,6 +33,19 @@ multiplied by the product of every `×mult`.** A single `×3` Joker applied to a
 is worth far more than `+3`. Getting the add-vs-multiply boundary right is the essence of
 "is the score correct?"
 
+### A worked example (verified in the running app)
+
+Play `K♦ 10♠ 10♥ 4♠ 4♥` with no Jokers or enhancements:
+
+- Label: **Two Pair** → base `20 chips × 2 mult` (Lv 1).
+- Scoring cards: `10♠ 10♥ 4♠ 4♥` — the King is a kicker and does **not** score.
+- Chips: `20 + 10 + 10 + 4 + 4 = 48`; mult stays `2`.
+- `finalScore = floor(48 × 2) = 96`.
+
+The sidebar's Scoring Trace shows exactly this:
+`Hand 1: Two Pair (Lv 1)` / `+20 Chips, +2 Mult` / `+10 Chips (10♠ rank)` / … — one line
+per contribution, in animation order.
+
 ## Stage 0 — what even counts as a hand
 
 `src/scoring/handEvaluator.ts`
@@ -204,7 +217,9 @@ Consequences you must respect when editing scoring:
 Every contribution emits a `ScoringEvent` — a tagged union (`hand-base`, `chips-delta`,
 `mult-delta`, `mult-times`, `money-delta`, `card-destroyed`, `boss-adjustment`). These
 accumulate in the store's `scoringEvents` and render as the human-readable breakdown in
-the UI ("+11 Chips (A♠ rank)", "×1.5 Mult (Photograph on K♥)", …).
+the sidebar's always-visible **Scoring Trace** panel (with an EXPAND button that opens
+`ScoringTraceModal`): "+11 Chips (A♠ rank)", "×1.5 Mult (Photograph on K♥)", and money
+events grouped under a "Money won" section ("+$3 (Small Blind reward)", …).
 
 - `formatScoringEvent` turns an event into its display string.
 - `groupEventsByHand` / `partitionByCategory` organize them for the Round-Won modal.

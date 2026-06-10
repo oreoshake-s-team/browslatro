@@ -144,6 +144,23 @@ Before opening a PR, the baseline is: `yarn typecheck && yarn test` green, plus 
 whatever you changed. See `claude.md` for the full ruleset (squash-merge, ≤150 lines of
 app code per change, strict TS / no `any`, no code comments, work in worktrees, etc.).
 
+### Visually verifying your work
+
+`claude.md` asks you to visually verify changes in a browser whenever possible, and the
+app ships the tooling to make that fast. Run `yarn start` and use:
+
+- **The "Apply modifiers" panel** — a `<details>` disclosure at the bottom of the game
+  area (`src/components/game/ModifierPanel.tsx`). It has Add Chips / Add Multiplier /
+  Multiply Multiplier (so you can hit any score), **Win** (calls `handleWin()` directly,
+  jumping straight to the shop), money ±$10, hand size ±1, a **Force Probabilities On**
+  toggle (every "X% chance" effect always procs), and pickers to grant any specific
+  Tarot / Planet / Spectral or force a pack pool into the next shop.
+- **The boss dropdown** on the Blind Select screen — swap in any boss to test its effect.
+- **The voucher dropdown** in the shop — set any voucher offer.
+- **The Scoring Trace panel** in the sidebar (with its EXPAND modal) — the exact
+  contribution-by-contribution breakdown of the last hand, which is usually the fastest
+  way to confirm a scoring change did what you intended.
+
 ---
 
 ## Gotchas a new dev hits in week one

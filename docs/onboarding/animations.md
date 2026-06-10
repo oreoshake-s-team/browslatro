@@ -150,6 +150,16 @@ offsets) so the player sees them climb. Only when `finalizeHandSubmission` runs 
 score get *committed* into `roundScore` and the live chips/mult reset to 0 for the next
 hand. So: `chips`/`multiplier` = "this hand, so far"; `roundScore` = "banked this round".
 
+The same `chips`/`multiplier` fields also serve as the **selection preview**: before any
+play, `toggleCard` (in the actions slice) sets them to the boss-adjusted base entry for
+the currently selected hand — select two 10s and two 4s and the Sidebar immediately shows
+"Two Pair, 20 × 2". `submitHand` then re-seeds them when the animation starts.
+
+While a sequence is in flight, the game **locks input**: the Submit Hand and Discard
+buttons are disabled via `isScoring`, and `toggleCard` ignores clicks while
+`scoringIndex < scoringCards.length` (and while a discard fly-out is pending). If you add
+a new interaction, gate it the same way or the player can mutate state mid-animation.
+
 ## Visual cues layered on top
 
 - **Card highlight.** `useScoringPipeline` exposes `currentScoringId` /
