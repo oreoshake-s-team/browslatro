@@ -34,7 +34,9 @@ export async function awaitShopOpen(): Promise<void> {
 
 export function resetHighVisibility(): void {
   if (isHighVisibility()) {
-    toggleHighVisibility();
+    act(() => {
+      toggleHighVisibility();
+    });
   }
   window.localStorage.removeItem("browslatro:highVisibility");
 }
