@@ -8,7 +8,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 2 : undefined,
   // In CI we also emit an HTML report into ./playwright-report so the
   // workflow can upload it as a build artifact (see .github/workflows/test.yml).
   // `open: "never"` keeps `playwright test` from launching a browser locally
