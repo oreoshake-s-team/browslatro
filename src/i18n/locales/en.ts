@@ -52,6 +52,9 @@ export const en = {
   scoringTrace: {
     handHeading: "Hand {{number}}: {{hand}} (Lv {{level}})",
   },
+  handScore: {
+    preview: "{{chips}} chips × {{mult}} mult",
+  },
   trays: {
     jokers: "Jokers",
     consumables: "Consumables",
