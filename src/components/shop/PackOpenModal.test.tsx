@@ -1184,3 +1184,38 @@ describe("PackOpenModal — Buffoon pack sticker badges (closes #801)", () => {
     );
   });
 });
+
+describe("PackOpenModal i18n (#921)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("pick buttons render Koho under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(
+      <PackOpenModal
+        pack={celestialPack("normal", 3)}
+        picksRemaining={1}
+        onPick={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getAllByText("Koho")).toHaveLength(3);
+  });
+
+  test("the close button renders Pau under the haw locale after a pick was made", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(
+      <PackOpenModal
+        pack={celestialPack("mega", 5)}
+        picksRemaining={1}
+        onPick={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-close")).toHaveTextContent("Pau");
+  });
+});

@@ -1,5 +1,7 @@
 import "./PackOpenModal.css";
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   type PackOffer,
   type PackOption,
@@ -84,7 +86,7 @@ function stickerTooltip(joker: Joker): string {
     .join("\n");
 }
 
-function describeOption(option: PackOption): OptionView | null {
+function describeOption(t: TFunction, option: PackOption): OptionView | null {
   if (option.kind === "planet") {
     return {
       id: option.planet.id,
@@ -152,7 +154,7 @@ function describeOption(option: PackOption): OptionView | null {
       id: String(c.id),
       icon: suitGlyph[c.suit] ?? "🂠",
       name: `${c.rank}${suitGlyph[c.suit] ?? ""}`,
-      description: tags.length > 0 ? tags.join(", ") : "Add to your deck",
+      description: tags.length > 0 ? tags.join(", ") : t("pack.addToDeck"),
       needsConsumableSlot: false,
       needsJokerSlot: false,
     };
@@ -173,6 +175,7 @@ export default function PackOpenModal({
   onPick,
   onClose,
 }: PackOpenModalProps) {
+  const { t } = useTranslation();
   useEscapeToClose(onClose, true);
   const [previewSortMode, setPreviewSortMode] = useState<SortMode>("rank");
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
@@ -213,11 +216,17 @@ export default function PackOpenModal({
   const selectedCount = previewSelectedIds?.size ?? 0;
   const subtitle =
     previewHand.length > 0 && selectedCount > 0
-      ? `${selectedCount} preview card${selectedCount === 1 ? "" : "s"} selected — pick a tarot to apply`
+      ? selectedCount === 1
+        ? t("pack.previewSelectedOne")
+        : t("pack.previewSelectedMany", { count: selectedCount })
       : totalPicks === 1
-        ? "Pick 1 card to keep"
-        : `Pick ${totalPicks} cards to keep (${picksRemaining} left)`;
-  const closeLabel = picksRemaining < totalPicks ? "Done" : "Skip";
+        ? t("pack.pickOneToKeep")
+        : t("pack.pickManyToKeep", {
+            total: totalPicks,
+            remaining: picksRemaining,
+          });
+  const closeLabel =
+    picksRemaining < totalPicks ? t("pack.done") : t("pack.skip");
 
   return (
     <section
@@ -235,7 +244,7 @@ export default function PackOpenModal({
         <ul className="pack-open-options" aria-label="Pack options">
           {pack.options.map((option, idx) => {
             if (pickedIndices?.has(idx)) return null;
-            const view = describeOption(option);
+            const view = describeOption(t, option);
             if (!view) return null;
             const noPicksLeft = picksRemaining <= 0;
             const consumableBlocked = view.needsConsumableSlot && consumableSlotsFull;
@@ -249,19 +258,19 @@ export default function PackOpenModal({
             const disabled =
               noPicksLeft || consumableBlocked || jokerBlocked || selectionInvalid;
             const tooltip = noPicksLeft
-              ? "No picks remaining"
+              ? t("pack.noPicksRemaining")
               : consumableBlocked
-                ? "Consumable slots are full"
+                ? t("pack.consumableSlotsFull")
                 : jokerBlocked
-                  ? "Joker slots are full"
+                  ? t("pack.jokerSlotsFull")
                   : selectionInvalid
                     ? sel.maxTargets === 1
                       ? selectedCount === 0
-                        ? "Select 1 card in the preview hand first"
-                        : "Too many cards selected (max 1)"
+                        ? t("pack.selectOneFirst")
+                        : t("pack.tooManySelectedMaxOne")
                       : selectedCount === 0
-                        ? `Select 1–${sel.maxTargets} cards in the preview hand first`
-                        : `Too many cards selected (max ${sel.maxTargets})`
+                        ? t("pack.selectRangeFirst", { max: sel.maxTargets })
+                        : t("pack.tooManySelectedMax", { max: sel.maxTargets })
                     : undefined;
             const stickerNames =
               view.joker && jokerStickers(view.joker).length > 0
@@ -295,7 +304,7 @@ export default function PackOpenModal({
                   aria-label={pickAriaLabel}
                   onClick={() => onPick(idx)}
                 >
-                  Pick
+                  {t("pack.pick")}
                 </button>
               </li>
             );
@@ -308,7 +317,9 @@ export default function PackOpenModal({
               role="group"
               aria-label="Sort preview hand"
             >
-              <span className="pack-open-preview-sort-label">Sort:</span>
+              <span className="pack-open-preview-sort-label">
+                {t("pack.sortLabel")}
+              </span>
               <button
                 type="button"
                 className={`pack-open-preview-sort-button${
@@ -320,7 +331,7 @@ export default function PackOpenModal({
                 aria-pressed={previewSortMode === "rank"}
                 onClick={() => selectPreviewSort("rank")}
               >
-                Rank
+                {t("pack.sortRank")}
               </button>
               <button
                 type="button"
@@ -333,7 +344,7 @@ export default function PackOpenModal({
                 aria-pressed={previewSortMode === "suit"}
                 onClick={() => selectPreviewSort("suit")}
               >
-                Suit
+                {t("pack.sortSuit")}
               </button>
             </div>
             <div

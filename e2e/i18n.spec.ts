@@ -55,3 +55,21 @@ test("switching back to English restores the English sidebar (issue #896)", asyn
   await expect(page.getByText("Money", { exact: true })).toBeVisible();
   await expect(page.getByText("Kālā", { exact: true })).toHaveCount(0);
 });
+
+test("the shop renders Hawaiian strings under the haw locale (issue #921)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:locale", "haw");
+    window.localStorage.setItem("browslatro:bootShop", "1");
+    window.localStorage.setItem("browslatro:deterministicShuffle", "1");
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: /Hale kūʻai/ }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".shop-offer-buy").first(),
+  ).toHaveText(/Kūʻai mai|Wehe|Ua kūʻai ʻia|Slots full/);
+  await expect(page.getByRole("heading", { name: /^Shop$/ })).toHaveCount(0);
+});
