@@ -204,11 +204,13 @@ function App() {
   );
   const consumables = useGame((state) => state.consumables);
   const setConsumables = useGame((state) => state.setConsumables);
+  const pendingRunSelect = useGame((state) => state.pendingRunSelect);
   useEffect(() => {
     if (didRestoreFromSnapshot()) return;
+    if (pendingRunSelect) return;
     const seeded = readSeededConsumables();
     if (seeded.length > 0) setConsumables(seeded);
-  }, [setConsumables]);
+  }, [pendingRunSelect, setConsumables]);
   const openedPack = useGame((state) => state.openedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);
@@ -242,7 +244,6 @@ function App() {
   const setPendingJokerGrantIds = useGame(
     (state) => state.setPendingJokerGrantIds,
   );
-  const pendingRunSelect = useGame((state) => state.pendingRunSelect);
   const selectedStake = useGame((state) => state.selectedStake);
   const selectedDeck = useGame((state) => state.selectedDeck);
   const pendingTags = useGame((state) => state.pendingTags);
