@@ -6,7 +6,8 @@ import {
   type TagId,
 } from "../items/tags";
 import type { RunStats } from "../run/runStats";
-import { MAX_JOKERS, createJokerByRarity, createJokerCatalog } from "../items/jokers";
+import { MAX_JOKERS, createJokerByRarity } from "../items/jokers";
+import { availableJokerCatalog } from "../store/jokerCatalog";
 import { deckJokerSlotsDelta } from "../items/decks";
 import { extraJokerSlots } from "../items/vouchers";
 import { rollPackForPool, type PackPool, type PackVariant } from "../items/packs";
@@ -58,7 +59,7 @@ export function useTagDispatcher(): UseTagDispatcherResult {
         {
           planetCatalog: availablePlanets(createPlanetCatalog(), handPlayCounts),
           tarotCatalog: createTarotCatalog(),
-          jokerCatalog: createJokerCatalog(),
+          jokerCatalog: availableJokerCatalog(useGame.getState()),
           spectralCatalog: createSpectralCatalog(),
           excludedJokerIds: jokers.map((j) => j.id),
           rng: shopPickerRngConfig.rng,
@@ -88,12 +89,13 @@ export function useTagDispatcher(): UseTagDispatcherResult {
             deckJokerSlotsDelta(selectedDeck),
         );
         const grantedIds: string[] = [];
+        const catalog = availableJokerCatalog(useGame.getState());
         setJokers((prev) => {
           let next = prev;
           for (let i = 0; i < action.count; i += 1) {
             const joker = createJokerByRarity(
               next,
-              createJokerCatalog(),
+              catalog,
               action.rarity,
               capacity,
               shopPickerRngConfig.rng,

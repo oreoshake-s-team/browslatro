@@ -5,6 +5,7 @@ import {
   buildShuffledDeck,
   countEnhancedInFullDeck,
   countEnhancementInFullDeck,
+  enhancementsInFullDeck,
   fullDeckPile,
   fullDeckSize,
   initialDeal,
@@ -345,6 +346,53 @@ describe("countEnhancementInFullDeck", () => {
         "stone",
       ),
     ).toBe(0);
+  });
+});
+
+describe("enhancementsInFullDeck", () => {
+  test("returns an empty set for an unenhanced deck", () => {
+    expect(enhancementsInFullDeck(createDeck()).size).toBe(0);
+  });
+
+  test("collects each distinct enhancement from base-deck overrides once", () => {
+    const base = createDeck();
+    const overrides = new Map([
+      [base[0].id, "stone" as const],
+      [base[1].id, "stone" as const],
+      [base[2].id, "steel" as const],
+    ]);
+    const present = enhancementsInFullDeck(base, new Set(), [], overrides);
+    expect([...present].sort()).toEqual(["steel", "stone"]);
+  });
+
+  test("includes enhancements carried by added cards", () => {
+    const added = [card({ id: 999, enhancement: "steel" })];
+    expect(enhancementsInFullDeck([], new Set(), added).has("steel")).toBe(
+      true,
+    );
+  });
+
+  test("a destroyed card no longer contributes its enhancement", () => {
+    const base = createDeck();
+    const overrides = new Map([[base[0].id, "stone" as const]]);
+    const present = enhancementsInFullDeck(
+      base,
+      new Set([base[0].id]),
+      [],
+      overrides,
+    );
+    expect(present.has("stone")).toBe(false);
+  });
+
+  test("a null override strips an intrinsic enhancement from the set", () => {
+    const added = [card({ id: 999, enhancement: "glass" })];
+    const present = enhancementsInFullDeck(
+      [],
+      new Set(),
+      added,
+      new Map([[999, null]]),
+    );
+    expect(present.has("glass")).toBe(false);
   });
 });
 

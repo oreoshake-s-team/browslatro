@@ -33,6 +33,7 @@ export {
 } from "./jokers/editions";
 export {
   allCardsScoreFromJokers,
+  availableJokers,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
   createRandomJoker,

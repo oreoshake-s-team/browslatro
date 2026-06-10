@@ -13,7 +13,7 @@ Sync the project's `docs/` folder with the most recently merged pull request on 
 - Never invent documentation for behavior the PR didn't change. If nothing in `docs/` is affected, say so and stop.
 - One `docs/` edit per logical doc change; prefer editing existing files over creating new ones.
 - Match the existing style of `docs/conversation_summary.md` (section headings, fenced code blocks, no emojis, no trailing summaries).
-- Adhere to project rules in `.claude/CLAUDE.md`: no comments in code samples beyond what the existing doc uses; strict TypeScript in examples; semantic.
+- Adhere to project rules in `CLAUDE.md` (repo root): no comments in code samples beyond what the existing doc uses; strict TypeScript in examples; semantic.
 
 ## Procedure
 
@@ -35,7 +35,9 @@ Confirm the PR number and title with the user in one short sentence before proce
 
 ### 2. Inspect what actually changed
 
-Prefer `mcp__github__pull_request_read` to fetch the PR body, title, and labels. For the file diff, use the `gh` CLI (the MCP has no diff tool):
+Use `mcp__github__pull_request_read` to fetch the PR body, title, labels, and the changed-files list (it returns per-file paths and patches). This is the primary path — `gh` is not installed in web sessions.
+
+Fall back to the `gh` CLI only if the MCP is unavailable:
 
 ```bash
 gh pr diff <PR_NUMBER> --name-only

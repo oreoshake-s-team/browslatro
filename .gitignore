@@ -28,6 +28,10 @@ vite.config.*.timestamp-*
 # worktrees
 .claude/worktrees/
 
+# claude code runtime debris
+.claude/scheduled_tasks.lock
+.claude/*.lock
+
 # playwright MCP server cache
 .playwright-mcp/
 

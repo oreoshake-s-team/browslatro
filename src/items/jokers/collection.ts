@@ -1,3 +1,4 @@
+import type { Enhancement } from "../../cards/types";
 import { cloneJoker, withEdition } from "./editions";
 import { canDestroyJoker, hasSticker, isJokerActive } from "./stickers";
 import { resolveJokerEffect } from "./scoring/copy";
@@ -312,6 +313,17 @@ export function pickRandomFromCatalog(
   const pool = catalog.filter(filter);
   if (pool.length === 0) return null;
   return pool[Math.floor(rng() * pool.length)];
+}
+
+export function availableJokers(
+  catalog: ReadonlyArray<Joker>,
+  deckEnhancements: ReadonlySet<Enhancement>,
+): Joker[] {
+  return catalog.filter(
+    (j) =>
+      j.requiresEnhancementInDeck === undefined ||
+      deckEnhancements.has(j.requiresEnhancementInDeck),
+  );
 }
 
 export function createJokerByRarity(
