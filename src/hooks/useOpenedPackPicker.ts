@@ -22,7 +22,6 @@ import {
 } from "../items/tarots";
 import {
   MAX_JOKERS,
-  createJokerCatalog,
   createRandomJoker,
   effectiveJokerCount,
   withEdition,
@@ -30,6 +29,7 @@ import {
 } from "../items/jokers";
 import { spectralNeedsTarget } from "../items/spectrals";
 import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
+import { availableJokerCatalog } from "../store/jokerCatalog";
 
 export interface UseOpenedPackPickerResult {
   readonly pickFromOpenedPack: (optionIdx: number) => void;
@@ -133,7 +133,11 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         }
       } else if (effect.kind === "create-joker") {
         const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
-        const created = createRandomJoker(jokers, createJokerCatalog(), capacity);
+        const created = createRandomJoker(
+          jokers,
+          availableJokerCatalog(useGame.getState()),
+          capacity,
+        );
         if (!created) return;
         play("pop");
         markUsed("tarot");

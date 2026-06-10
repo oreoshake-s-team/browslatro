@@ -1470,6 +1470,86 @@ describe("pending shop modifiers", () => {
   });
 });
 
+describe("enhancement-gated jokers (#985)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "joker"]);
+  });
+
+  function ownAllJokersExcept(ids: ReadonlyArray<string>): void {
+    const owned = createJokerCatalog()
+      .filter((j) => !ids.includes(j.id))
+      // Showman lets owned jokers reappear as duplicate offers, which would
+      // defeat the "own everything to exclude everything" isolation these gate
+      // tests rely on. Keep it owned (so it stays out of the offer pool) but
+      // inactive (expired perishable) so it grants no duplicate allowance.
+      .map((j) =>
+        j.effect.kind === "allows-duplicate-jokers"
+          ? { ...j, stickers: [{ kind: "perishable", roundsHeld: PERISHABLE_LIFE } as const] }
+          : j,
+      );
+    useGame.getState().setJokers(owned);
+  }
+
+  function offeredJokerIds(): string[] {
+    return (useGame.getState().shopOffers ?? []).flatMap((o) =>
+      o.kind === "joker" ? [o.joker.id] : [],
+    );
+  }
+
+  test("the shop offers no joker when only gated jokers remain and no matching cards are owned", () => {
+    ownAllJokersExcept(["stone-joker", "steel-joker"]);
+    useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    expect(offeredJokerIds()).toHaveLength(0);
+  });
+
+  test("Stone Joker can appear once a base card is enhanced to Stone", () => {
+    ownAllJokersExcept(["stone-joker"]);
+    const game = useGame.getState();
+    game.setCardEnhancementsById(
+      new Map([[game.baseDeckCards[0].id, "stone" as const]]),
+    );
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(offeredJokerIds()).toContain("stone-joker");
+  });
+
+  test("Steel Joker can appear once a Steel card is added to the deck", () => {
+    ownAllJokersExcept(["steel-joker"]);
+    const game = useGame.getState();
+    game.setAddedCards([
+      { id: 999, rank: "A", suit: "spades", enhancement: "steel" },
+    ]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(offeredJokerIds()).toContain("steel-joker");
+  });
+
+  test("a Steel card alone does not unlock Stone Joker (negative)", () => {
+    ownAllJokersExcept(["stone-joker", "steel-joker"]);
+    const game = useGame.getState();
+    game.setAddedCards([
+      { id: 999, rank: "A", suit: "spades", enhancement: "steel" },
+    ]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(offeredJokerIds()).toEqual(["steel-joker"]);
+  });
+
+  test("a reroll re-evaluates the gate after a Stone card joins mid-shop", () => {
+    ownAllJokersExcept(["stone-joker"]);
+    const game = useGame.getState();
+    game.setMoney(100);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(offeredJokerIds()).toHaveLength(0);
+    useGame
+      .getState()
+      .setCardEnhancementsById(
+        new Map([[game.baseDeckCards[0].id, "stone" as const]]),
+      );
+    shopPickerRngConfig.rng = forceShopLayout(["joker", "joker"]);
+    useGame.getState().rerollShopOffers(5);
+    expect(offeredJokerIds()).toContain("stone-joker");
+  });
+});
+
 describe("applyDeathCopyToSelectedPreviewCards (#763)", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
