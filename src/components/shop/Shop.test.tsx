@@ -353,6 +353,13 @@ describe("Shop", () => {
       ).toBeInTheDocument();
     });
 
+    test("uses the secondary button variant (issue #876)", () => {
+      renderShop({ money: 10 });
+      expect(screen.getByRole("button", { name: /Reroll/ })).toHaveClass(
+        "btn--secondary",
+      );
+    });
+
     test("Reroll button label shows the current cost", () => {
       renderShop({ money: 10 });
       expect(screen.getByRole("button", { name: /Reroll/ })).toHaveTextContent(

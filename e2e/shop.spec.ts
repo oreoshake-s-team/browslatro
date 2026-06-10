@@ -143,3 +143,30 @@ test.describe("Reroll refreshes sold offers (issue #267)", () => {
     }
   });
 });
+
+test.describe("Shop offers render as card tiles (issue #876)", () => {
+  test("offers sit side by side as vertical tiles with a gold price badge and a normal-height reroll button", async ({
+    page,
+  }) => {
+    await setForcedShopKinds(page, ["joker", "planet"]);
+    await openShopAfterRound1Win(page);
+    const first = page.locator(".shop-offer").nth(0);
+    const second = page.locator(".shop-offer").nth(1);
+    const firstBox = (await first.boundingBox())!;
+    const secondBox = (await second.boundingBox())!;
+    expect(Math.abs(firstBox.y - secondBox.y)).toBeLessThanOrEqual(2);
+    expect(secondBox.x).toBeGreaterThan(firstBox.x + firstBox.width - 2);
+    const nameBox = (await first.locator(".shop-offer-name").boundingBox())!;
+    const priceBox = (await first.locator(".shop-offer-price").boundingBox())!;
+    const buyBox = (await first.locator(".shop-offer-buy").boundingBox())!;
+    expect(priceBox.y).toBeGreaterThan(nameBox.y + nameBox.height - 1);
+    expect(buyBox.y).toBeGreaterThan(priceBox.y + priceBox.height - 1);
+    const priceBg = await first
+      .locator(".shop-offer-price")
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
+    expect(priceBg).toBe("rgb(255, 212, 59)");
+    const rerollBox = (await page.locator("button.shop-reroll").boundingBox())!;
+    expect(rerollBox.height).toBeLessThan(60);
+    expect(rerollBox.height).toBeLessThan(firstBox.height / 2);
+  });
+});

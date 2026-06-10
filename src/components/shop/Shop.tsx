@@ -415,9 +415,15 @@ export default function Shop({
           Money: ${money}
         </p>
         <div className="shop-cards-row">
+          <ul className="shop-offers shop-offers-cards" aria-label="Items for sale">
+            {offers.map((offer, idx) => {
+              if (offer.kind === "pack") return null;
+              return renderOffer(offer, idx);
+            })}
+          </ul>
           <button
             type="button"
-            className="btn shop-reroll"
+            className="btn btn--secondary shop-reroll"
             onClick={handleReroll}
             disabled={disabled || !canAffordReroll}
             title={rerollTooltip}
@@ -425,12 +431,6 @@ export default function Shop({
           >
             Reroll (${currentRerollCost})
           </button>
-          <ul className="shop-offers shop-offers-cards" aria-label="Items for sale">
-            {offers.map((offer, idx) => {
-              if (offer.kind === "pack") return null;
-              return renderOffer(offer, idx);
-            })}
-          </ul>
         </div>
         <div className="shop-extras-row">
           <section

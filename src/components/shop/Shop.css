@@ -34,17 +34,16 @@
 
 .shop-cards-row {
   display: flex;
+  flex-direction: column;
   align-items: stretch;
   gap: 0.8rem;
 }
 
 .shop-cards-row .shop-reroll {
-  flex: 0 0 auto;
-  align-self: stretch;
+  align-self: flex-start;
 }
 
 .shop-cards-row .shop-offers {
-  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -186,52 +185,59 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr));
+  align-items: stretch;
   gap: 0.8rem;
 }
 
 .shop-offer {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.4rem 0.8rem;
-  padding: 0.8rem 1rem;
+  text-align: center;
+  gap: 0.45rem;
+  padding: 0.8rem 0.7rem;
   border: 2px solid #dee2e6;
-  border-left-width: 6px;
   border-radius: 8px;
   background-color: white;
   transition: opacity 120ms linear;
 }
 
 .shop-offer-joker {
-  border-color: #ffa8a8;
-  border-left-color: #e03131;
-  background-color: #fff5f5;
+  border-color: #f59f00;
+  background-color: #ffe066;
+  color: #5c3c00;
 }
 
 .shop-offer-planet {
-  border-color: #91a7ff;
-  border-left-color: #364fc7;
-  background-color: #edf2ff;
+  border-color: #5c7cfa;
+  background-color: #bac8ff;
+  color: #1c3faa;
 }
 
 .shop-offer-tarot {
-  border-color: #b197fc;
-  border-left-color: #5f3dc4;
-  background-color: #f3f0ff;
+  border-color: #845ef7;
+  background-color: #d0bfff;
+  color: #3b1f7a;
 }
 
 .shop-offer-spectral {
-  border-color: #63e6be;
-  border-left-color: #099268;
-  background-color: #e6fcf5;
+  border-color: #099268;
+  background-color: #c3fae8;
+  color: #0b5d3b;
 }
 
 .shop-offer-playing-card {
-  border-color: #ffd43b;
-  border-left-color: #f08c00;
+  border-color: #f08c00;
   background-color: #fff9db;
+  color: #5c3c00;
+}
+
+.shop-offer-pack {
+  border-color: #fd7e14;
+  background-color: #ffe8cc;
+  color: #7f3500;
 }
 
 .shop-offer-sold {
@@ -240,18 +246,16 @@
 }
 
 .shop-offer-kind {
-  grid-column: 1 / 4;
-  grid-row: 1;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  justify-self: start;
   padding: 0.2rem 0.6rem;
   border-radius: 999px;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  background-color: rgba(255, 255, 255, 0.55);
 }
 
 .shop-offer-kind-icon {
@@ -279,43 +283,55 @@
   color: #0b5d3b;
 }
 
+.shop-offer-kind-playing-card {
+  background-color: #fff3bf;
+  color: #5c3c00;
+}
+
+.shop-offer-kind-pack {
+  background-color: #ffd8a8;
+  color: #7f3500;
+}
+
 .shop-offer-name {
-  grid-column: 1 / 2;
-  grid-row: 2;
-  font-weight: 600;
-  color: #343a40;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1.2;
+  word-break: break-word;
 }
 
 .shop-offer-description {
-  grid-column: 1 / 4;
-  grid-row: 3;
-  font-size: 0.9rem;
-  color: #495057;
+  font-size: 0.8rem;
+  line-height: 1.25;
+  word-break: break-word;
 }
 
 .shop-offer-price {
-  grid-column: 2 / 3;
-  grid-row: 2;
-  font-weight: 700;
-  color: #099268;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  margin-top: auto;
+  padding: 0.15rem 0.7rem;
+  border-radius: 999px;
+  background-color: var(--accent-money);
+  color: #5c3a00;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 .shop-offer-price-original {
   text-decoration: line-through;
-  color: #adb5bd;
-  font-size: 0.9rem;
+  color: #8a6d1a;
+  font-size: 0.8rem;
 }
 
 .shop-offer-price-discounted {
-  color: #c92a2a;
-  font-weight: 700;
+  color: #862e2e;
+  font-weight: 800;
 }
 
 .shop-offer-price-free {
-  color: #2b8a3e;
+  color: #155724;
   font-weight: 800;
   letter-spacing: 0.05em;
 }
@@ -336,7 +352,6 @@
 
 .shop-offer[data-edition="foil"] {
   border-color: #4dabf7;
-  border-left-color: #1864ab;
   box-shadow: 0 0 10px rgba(77, 171, 247, 0.55);
   background: linear-gradient(135deg, #e7f5ff 0%, #fff9db 100%);
 }
@@ -348,7 +363,6 @@
 
 .shop-offer[data-edition="holographic"] {
   border-color: #cc5de8;
-  border-left-color: #862e9c;
   box-shadow: 0 0 10px rgba(204, 93, 232, 0.55);
   background: linear-gradient(135deg, #f8f0fc 0%, #fff9db 50%, #e3fafc 100%);
 }
@@ -360,7 +374,6 @@
 
 .shop-offer[data-edition="polychrome"] {
   border-color: #ff8787;
-  border-left-color: #c92a2a;
   box-shadow: 0 0 12px rgba(255, 135, 135, 0.6);
   background: linear-gradient(
     135deg,
@@ -379,7 +392,6 @@
 
 .shop-offer[data-edition="negative"] {
   border-color: #495057;
-  border-left-color: #212529;
   box-shadow: 0 0 12px rgba(73, 80, 87, 0.6), inset 0 0 14px rgba(0, 0, 0, 0.5);
   background-color: #212529;
   color: #ffe066;
@@ -397,28 +409,24 @@
 
 .shop-offer-playing-card-enhanced {
   border-color: #b197fc;
-  border-left-color: #5f3dc4;
   background: linear-gradient(135deg, #fff9db 0%, #f3f0ff 65%, #fff3bf 100%);
   box-shadow: 0 0 10px rgba(177, 151, 252, 0.5);
 }
 
 .shop-offer-playing-card[data-card-edition="foil"] {
   border-color: #4dabf7;
-  border-left-color: #1864ab;
   box-shadow: 0 0 10px rgba(77, 171, 247, 0.55);
   background: linear-gradient(135deg, #e7f5ff 0%, #fff9db 100%);
 }
 
 .shop-offer-playing-card[data-card-edition="holographic"] {
   border-color: #cc5de8;
-  border-left-color: #862e9c;
   box-shadow: 0 0 10px rgba(204, 93, 232, 0.55);
   background: linear-gradient(135deg, #f8f0fc 0%, #fff9db 50%, #e3fafc 100%);
 }
 
 .shop-offer-playing-card[data-card-edition="polychrome"] {
   border-color: #ff8787;
-  border-left-color: #c92a2a;
   box-shadow: 0 0 12px rgba(255, 135, 135, 0.6);
   background: linear-gradient(
     135deg,
@@ -528,10 +536,9 @@
 }
 
 .shop-offer-buy {
-  grid-column: 3 / 4;
-  grid-row: 2;
-  padding: 0.4rem 0.9rem;
-  background-color: #1971c2;
+  width: 100%;
+  padding: 0.4rem 0.6rem;
+  background-color: var(--accent-chips-strong);
   color: white;
   border: none;
   border-radius: 4px;
@@ -557,16 +564,8 @@
 }
 
 .shop-reroll {
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  background-color: var(--surface-raised);
-  color: #ffa94d;
-  border-color: #e8590c;
-}
-
-.shop-reroll:hover:not(:disabled) {
-  background-color: var(--surface-hover);
-  color: #ffc078;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.95rem;
 }
 
 .shop-next {
