@@ -8,20 +8,20 @@ type LocaleMessages = {
 
 export const haw: LocaleMessages = {
   sidebar: {
-    runInfo: "ʻIke holo",
+    runInfo: "Run info",
     options: "Nā koho",
     hands: "Nā lima",
     discards: "Nā kiola",
     money: "Kālā",
-    ante: "Pili",
-    round: "Pōʻai",
-    roundScore: "Helu pōʻai",
+    ante: "Ante",
+    round: "Round",
+    roundScore: "Round score",
     scoreAtLeast: "E loaʻa ka helu: {{score}}",
     toEarn: "e loaʻa ai {{award}}",
   },
   trays: {
     jokers: "Nā Joker",
-    consumables: "Nā mea hoʻohana",
+    consumables: "Consumables",
   },
   options: {
     language: "ʻŌlelo",
