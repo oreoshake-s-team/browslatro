@@ -239,8 +239,8 @@ describe("Empty tray treatment (issue #875)", () => {
 
 describe("Consumables content overrides (#978)", () => {
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("a Mercury planet tile renders ʻUkali under the haw locale", async () => {

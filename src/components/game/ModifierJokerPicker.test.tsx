@@ -168,8 +168,8 @@ describe("ModifierJokerPicker", () => {
 
 describe("ModifierJokerPicker aria i18n (#987)", () => {
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("the pagination nav resolves its accessible name from the catalog", () => {

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
 import LiveAnnouncer from "../system/LiveAnnouncer";
@@ -637,7 +637,9 @@ describe("Hand keyboard reordering (#908)", () => {
   test("Tab from a focused card reaches its Move left control", async () => {
     const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
-    getCardButtons()[1].focus();
+    act(() => {
+      getCardButtons()[1].focus();
+    });
     await user.tab();
     expect(screen.getByTestId("hand-move-left-1")).toHaveFocus();
   });

@@ -955,8 +955,8 @@ describe("Shop playing-card offer visual modifiers (#282)", () => {
 
 describe("Shop i18n (#921)", () => {
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("the shop heading renders in Hawaiian under the haw locale", async () => {
@@ -1004,8 +1004,8 @@ describe("Shop card-label i18n (#923)", () => {
   }
 
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("a stone-enhanced playing-card offer renders Pōhaku under the haw locale", async () => {
