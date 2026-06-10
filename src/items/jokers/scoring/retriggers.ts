@@ -36,6 +36,12 @@ export function expandScoringRetriggers(
           if (context.remainingHands === 1) extra += effect.times;
           break;
         }
+        case "retrigger-all-depleting": {
+          const state = jokers[i].state;
+          const remaining = state?.kind === "counter" ? state.value : 0;
+          if (remaining > 0) extra += effect.times;
+          break;
+        }
         default:
           break;
       }

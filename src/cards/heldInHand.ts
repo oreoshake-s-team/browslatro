@@ -21,12 +21,13 @@ export function heldEnhancementIdsWithRedSeal(
   hand: ReadonlyArray<Card>,
   submittedIds: ReadonlySet<number>,
   enhancement: Enhancement,
+  extraTriggersPerCard = 0,
 ): number[] {
   const ids: number[] = [];
   for (const card of getHeldInHand(hand, submittedIds)) {
     if (card.enhancement !== enhancement) continue;
-    ids.push(card.id);
-    if (card.seal === "red") ids.push(card.id);
+    const copies = 1 + (card.seal === "red" ? 1 : 0) + extraTriggersPerCard;
+    for (let i = 0; i < copies; i += 1) ids.push(card.id);
   }
   return ids;
 }
@@ -36,11 +37,13 @@ export const STEEL_MULT_FACTOR = 1.5;
 export function steelHeldMultiplier(
   hand: ReadonlyArray<Card>,
   submittedIds: ReadonlySet<number>,
+  extraTriggersPerCard = 0,
 ): number {
   const count = heldEnhancementIdsWithRedSeal(
     hand,
     submittedIds,
     "steel",
+    extraTriggersPerCard,
   ).length;
   return STEEL_MULT_FACTOR ** count;
 }

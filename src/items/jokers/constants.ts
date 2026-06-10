@@ -130,6 +130,9 @@ export const ROCKET_BASE_PAYOUT = 1;
 export const ROCKET_PAYOUT_GROWTH_PER_BOSS = 2;
 export const TURTLE_BEAN_HAND_SIZE = 5;
 export const TURTLE_BEAN_LOSS_PER_ROUND = 1;
+export const SELTZER_HANDS = 10;
+export const SELTZER_RETRIGGERS = 1;
+export const MIME_HELD_RETRIGGERS = 1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

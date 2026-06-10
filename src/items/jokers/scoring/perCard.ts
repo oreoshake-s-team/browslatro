@@ -240,6 +240,8 @@ export function applyPerCardJokers(
       case "extra-interest-per-five":
       case "sell-creates-double-tag":
       case "hand-size-decay-per-round":
+      case "retrigger-all-depleting":
+      case "retrigger-held-abilities":
       case "noop":
         break;
       default:

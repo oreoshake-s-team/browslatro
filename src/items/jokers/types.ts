@@ -256,6 +256,12 @@ export type JokerEffect =
       readonly amount: number;
       readonly lossPerRound: number;
     }
+  | {
+      readonly kind: "retrigger-all-depleting";
+      readonly times: number;
+      readonly hands: number;
+    }
+  | { readonly kind: "retrigger-held-abilities"; readonly times: number }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 
