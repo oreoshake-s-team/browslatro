@@ -1,6 +1,9 @@
 {
   "short_name": "Browslatro",
   "name": "Browslatro",
+  "description": "A slimmed down react implementation of the popular poker game, Balatro.",
+  "id": "/",
+  "scope": "/",
   "icons": [
     {
       "src": "favicon.ico",
