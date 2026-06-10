@@ -1,71 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { simulatePlay, type SimulatePlayInput } from "./simulatePlay";
-import type { Card, Rank, Suit } from "../cards/types";
-import type { BossBlind } from "../items/bosses";
-import type { Joker } from "../items/jokers/types";
-import { createDefaultHandStats } from "../scoring/handStats";
-import { emptyHandCounts } from "../components/hud/handPlayCounts";
-
-let nextId = 0;
-
-function card(rank: Rank, suit: Suit, extra?: Partial<Card>): Card {
-  return { id: ++nextId, rank, suit, ...extra };
-}
-
-function joker(extra?: Partial<Joker>): Joker {
-  return {
-    id: "test-joker",
-    name: "Test Joker",
-    description: "+4 Mult",
-    effect: { kind: "additive-mult", amount: 4 },
-    rarity: "common",
-    ...extra,
-  };
-}
-
-function boss(extra?: Partial<BossBlind>): BossBlind {
-  return {
-    id: "the-wall",
-    name: "The Wall",
-    description: "Extra large blind requirement.",
-    scoreMultiplier: 4,
-    anteMin: 2,
-    effect: { kind: "none" },
-    ...extra,
-  };
-}
-
-function input(
-  hand: ReadonlyArray<Card>,
-  extra?: Partial<SimulatePlayInput>,
-): SimulatePlayInput {
-  return {
-    dealt: { hand, remaining: [] },
-    baseDeckCards: [],
-    destroyedCardIds: new Set(),
-    addedCards: [],
-    cardEnhancementsById: new Map(),
-    cardSealsById: new Map(),
-    jokers: [],
-    handStats: createDefaultHandStats(),
-    handPlayCounts: emptyHandCounts(),
-    handHistoryThisRound: [],
-    playedCardKeysThisAnte: new Set(),
-    consumables: [],
-    ownedVoucherIds: new Set(),
-    blind: 1,
-    currentBoss: boss(),
-    money: 4,
-    remainingHands: 4,
-    remainingDiscards: 3,
-    runStats: { blindsSkipped: 0 },
-    todoHand: null,
-    idolTarget: null,
-    ancientSuit: null,
-    ...extra,
-  };
-}
+import { simulatePlay } from "./simulatePlay";
+import { boss, card, joker, simulateInput as input } from "./test-helpers";
 
 describe("simulatePlay — legality", () => {
   test("rejects an empty selection", () => {
