@@ -412,3 +412,21 @@ describe("BlindSelectScreen", () => {
     });
   });
 });
+
+describe("BlindSelectScreen focus trap (#907)", () => {
+  test("cycles Tab between Play and Skip and restores focus to the opener on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = renderScreen({ onSkip: vi.fn() });
+    expect(screen.getByTestId("blind-select-play")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByTestId("blind-select-skip")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByTestId("blind-select-play")).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByTestId("blind-select-skip")).toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+});

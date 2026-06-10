@@ -1,6 +1,8 @@
 import "./JokerGrantAcknowledge.css";
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 import type { Joker } from "../../items/jokers";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 interface JokerGrantAcknowledgeProps {
   readonly jokers: ReadonlyArray<Joker>;
@@ -11,6 +13,8 @@ export default function JokerGrantAcknowledge({
   jokers,
   onAcknowledge,
 }: JokerGrantAcknowledgeProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef, jokers.length > 0);
   if (jokers.length === 0) return null;
   const title =
     jokers.length === 1
@@ -18,6 +22,7 @@ export default function JokerGrantAcknowledge({
       : `Gained ${jokers.length} Jokers`;
   return createPortal(
     <div
+      ref={overlayRef}
       className="joker-grant-overlay"
       role="dialog"
       aria-modal="true"

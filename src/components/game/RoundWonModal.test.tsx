@@ -383,3 +383,22 @@ describe("RoundWonModal — Green Deck payout (closes #818)", () => {
     expect(screen.queryByTestId("round-won-hands")).not.toBeInTheDocument();
   });
 });
+
+describe("RoundWonModal focus trap (#907)", () => {
+  test("traps Tab on the Continue button and restores focus to the opener on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = render(
+      <RoundWonModal info={buildInfo()} onContinue={() => {}} />,
+    );
+    const continueButton = screen.getByRole("button", { name: /Continue/ });
+    expect(continueButton).toHaveFocus();
+    await user.tab();
+    expect(continueButton).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(continueButton).toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+});

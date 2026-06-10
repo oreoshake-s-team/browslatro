@@ -6,6 +6,7 @@ import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 import type { HandPlayCounts } from "./handPlayCounts";
 
 type TabId = "hands" | "vouchers";
@@ -35,6 +36,8 @@ export default function RunInfoDialog({
 
   const handleClose = useCallback(() => onClose(), [onClose]);
   useEscapeToClose(handleClose, true);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef);
 
   function selectTab(tab: TabId) {
     setActiveTab(tab);
@@ -89,6 +92,7 @@ export default function RunInfoDialog({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="run-info-overlay"
       role="dialog"
       aria-modal="true"

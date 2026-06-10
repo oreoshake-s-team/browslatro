@@ -31,3 +31,13 @@ describe("Game action buttons — emojis are decorative (#640)", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Modal dialogs inert the app shell (#907)", () => {
+  test("the app shell is inert while the boot dialog is open", () => {
+    const { container } = render(<App />);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(container.querySelector("[data-app-shell]")).toHaveAttribute(
+      "inert",
+    );
+  });
+});
