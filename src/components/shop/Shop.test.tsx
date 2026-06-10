@@ -952,3 +952,41 @@ describe("Shop playing-card offer visual modifiers (#282)", () => {
     );
   });
 });
+
+describe("Shop i18n (#921)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the shop heading renders in Hawaiian under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    renderShop();
+    expect(
+      screen.getByRole("heading", { name: /Hale kūʻai/ }),
+    ).toBeInTheDocument();
+  });
+
+  test("an affordable offer's buy button renders Kūʻai mai under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    renderShop({ offers: [planetOffer("pluto")] });
+    expect(screen.getByText("Kūʻai mai ($3)")).toBeInTheDocument();
+  });
+
+  test("a sold offer's buy button renders Ua kūʻai ʻia under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    renderShop({ offers: [planetOffer("pluto", true)] });
+    expect(screen.getByText("Ua kūʻai ʻia")).toBeInTheDocument();
+  });
+
+  test("switching back to English restores the English shop heading (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    await i18n.changeLanguage("en");
+    renderShop();
+    expect(screen.getByRole("heading", { name: /Shop/ })).toBeInTheDocument();
+  });
+});
