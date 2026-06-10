@@ -75,3 +75,50 @@ describe("focus-visible outlines (issue #913)", () => {
     }
   });
 });
+
+const scoringTraceCss = componentCss("hud", "ScoringTrace.css");
+const scoringTraceModalCss = componentCss("hud", "ScoringTraceModal.css");
+
+describe("scoring trace focus-visible outlines (issue #974)", () => {
+  test("inline trace scroll focus-visible uses the focus-ring token", () => {
+    expect(
+      ruleBody(scoringTraceCss, ".scoring-trace__scroll:focus-visible"),
+    ).toMatch(/outline\s*:\s*2px solid var\(--focus-ring\)/);
+  });
+
+  test("inline trace scroll focus outline is inset so flush panels cannot hide it", () => {
+    expect(
+      ruleBody(scoringTraceCss, ".scoring-trace__scroll:focus-visible"),
+    ).toMatch(/outline-offset\s*:\s*-2px/);
+  });
+
+  test("modal body focus-visible uses the focus-ring token", () => {
+    expect(
+      ruleBody(scoringTraceModalCss, ".scoring-trace-modal__body:focus-visible"),
+    ).toMatch(/outline\s*:\s*2px solid var\(--focus-ring\)/);
+  });
+
+  test("modal body focus outline is inset so flush panels cannot hide it", () => {
+    expect(
+      ruleBody(scoringTraceModalCss, ".scoring-trace-modal__body:focus-visible"),
+    ).toMatch(/outline-offset\s*:\s*-2px/);
+  });
+
+  test("negative: the inline trace scroll base rule no longer suppresses the outline", () => {
+    expect(ruleBody(scoringTraceCss, ".scoring-trace__scroll")).not.toMatch(
+      /outline\s*:\s*none/,
+    );
+  });
+
+  test("negative: the modal body base rule no longer suppresses the outline", () => {
+    expect(
+      ruleBody(scoringTraceModalCss, ".scoring-trace-modal__body"),
+    ).not.toMatch(/outline\s*:\s*none/);
+  });
+
+  test("negative: no focus-visible rule in the trace files suppresses the outline", () => {
+    for (const css of [scoringTraceCss, scoringTraceModalCss]) {
+      expect(css).not.toMatch(/:focus-visible[^{]*{[^}]*outline\s*:\s*none/);
+    }
+  });
+});
