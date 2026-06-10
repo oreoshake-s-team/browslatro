@@ -24,6 +24,7 @@ import {
   polychromeRandomJokerDestroyOthers,
   tickPerishableRounds,
   applyShopRerollToJokerStates,
+  applyRoundEndToJokerStates,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -523,7 +524,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   handleWin: (precomputed) => {
     const s = get();
-    s.setJokers((prev) => tickPerishableRounds(prev));
+    s.setJokers((prev) =>
+      applyRoundEndToJokerStates(tickPerishableRounds(prev)),
+    );
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
     const baseBlindReward = s.blind + 2;

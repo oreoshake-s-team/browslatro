@@ -163,7 +163,9 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     setDiscardingIds(ids);
 
     const discardedCards = currentHand.filter((c) => ids.has(c.id));
-    useGame.getState().setJokers((prev) => applyDiscardToJokerStates(prev));
+    useGame.getState().setJokers((prev) =>
+      applyDiscardToJokerStates(prev, ids.size),
+    );
     const onDiscardResult = applyOnDiscardJokers(jokers, discardedCards, {
       discardsUsedThisRound: discardsUsedThisRound + 1,
     });

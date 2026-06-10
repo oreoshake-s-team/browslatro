@@ -71,6 +71,14 @@ import {
   THROWBACK_X_MULT_PER_SKIP,
   HOLOGRAM_X_MULT_PER_ADDED_CARD,
   FLASH_CARD_MULT_PER_REROLL,
+  ICE_CREAM_CHIPS,
+  ICE_CREAM_CHIPS_LOSS_PER_HAND,
+  POPCORN_MULT,
+  POPCORN_MULT_LOSS_PER_ROUND,
+  RAMEN_X_MULT,
+  RAMEN_X_MULT_LOSS_PER_CARD,
+  GROS_MICHEL_MULT,
+  GROS_MICHEL_BUST_CHANCE,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1250,6 +1258,65 @@ export function createFlashCardJoker(): Joker {
       amount: FLASH_CARD_MULT_PER_REROLL,
     },
     state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createIceCreamJoker(): Joker {
+  return {
+    id: "ice-cream",
+    rarity: "common",
+    name: "Ice Cream",
+    description: `+${ICE_CREAM_CHIPS} Chips, -${ICE_CREAM_CHIPS_LOSS_PER_HAND} Chips for every hand played; melts at 0`,
+    effect: {
+      kind: "chips-melt-per-hand",
+      amount: ICE_CREAM_CHIPS,
+      lossPerHand: ICE_CREAM_CHIPS_LOSS_PER_HAND,
+    },
+    state: { kind: "counter", value: ICE_CREAM_CHIPS },
+  };
+}
+
+export function createPopcornJoker(): Joker {
+  return {
+    id: "popcorn",
+    rarity: "common",
+    name: "Popcorn",
+    description: `+${POPCORN_MULT} Mult, -${POPCORN_MULT_LOSS_PER_ROUND} Mult per round played; destroyed at 0`,
+    effect: {
+      kind: "mult-decay-per-round",
+      amount: POPCORN_MULT,
+      lossPerRound: POPCORN_MULT_LOSS_PER_ROUND,
+    },
+    state: { kind: "counter", value: POPCORN_MULT },
+  };
+}
+
+export function createRamenJoker(): Joker {
+  return {
+    id: "ramen",
+    rarity: "uncommon",
+    name: "Ramen",
+    description: `X${RAMEN_X_MULT} Mult, loses X${RAMEN_X_MULT_LOSS_PER_CARD} Mult per card discarded; destroyed at X1`,
+    effect: {
+      kind: "x-mult-shrink-per-discarded-card",
+      base: RAMEN_X_MULT,
+      lossPerCard: RAMEN_X_MULT_LOSS_PER_CARD,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createGrosMichelJoker(): Joker {
+  return {
+    id: "gros-michel",
+    rarity: "common",
+    name: "Gros Michel",
+    description: `+${GROS_MICHEL_MULT} Mult; 1 in 6 chance this card is destroyed at the end of round`,
+    effect: {
+      kind: "additive-mult-chance-bust",
+      amount: GROS_MICHEL_MULT,
+      bustChance: GROS_MICHEL_BUST_CHANCE,
+    },
   };
 }
 

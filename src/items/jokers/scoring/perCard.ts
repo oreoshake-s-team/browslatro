@@ -220,6 +220,10 @@ export function applyPerCardJokers(
       case "x-mult-on-repeat-hand-this-round":
       case "x-mult-per-blind-skipped":
       case "x-mult-per-added-card":
+      case "chips-melt-per-hand":
+      case "mult-decay-per-round":
+      case "x-mult-shrink-per-discarded-card":
+      case "additive-mult-chance-bust":
       case "noop":
         break;
       default:

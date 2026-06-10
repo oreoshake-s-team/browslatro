@@ -105,6 +105,14 @@ export const CARD_SHARP_X_MULT = 3;
 export const THROWBACK_X_MULT_PER_SKIP = 0.25;
 export const HOLOGRAM_X_MULT_PER_ADDED_CARD = 0.25;
 export const FLASH_CARD_MULT_PER_REROLL = 2;
+export const ICE_CREAM_CHIPS = 100;
+export const ICE_CREAM_CHIPS_LOSS_PER_HAND = 5;
+export const POPCORN_MULT = 20;
+export const POPCORN_MULT_LOSS_PER_ROUND = 4;
+export const RAMEN_X_MULT = 2;
+export const RAMEN_X_MULT_LOSS_PER_CARD = 0.01;
+export const GROS_MICHEL_MULT = 15;
+export const GROS_MICHEL_BUST_CHANCE = 1 / 6;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
