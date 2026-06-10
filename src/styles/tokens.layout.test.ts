@@ -51,3 +51,26 @@ describe("design tokens (issue #873)", () => {
     expect(new Set(names).size).toBe(names.length);
   });
 });
+
+const CONTRAST_TOKENS = [
+  "--positive-money-on-light",
+  "--shop-price",
+  "--shop-muted-on-light",
+  "--suit-green-on-light",
+  "--suit-blue-on-light",
+] as const;
+
+describe("contrast tokens (issue #911)", () => {
+  test.each(CONTRAST_TOKENS)("tokens.css defines %s", (token) => {
+    expect(tokensCss).toMatch(new RegExp(`${token}\\s*:\\s*[^;]+;`));
+  });
+
+  test("negative: audited shop styles no longer hardcode the failing greens", () => {
+    const shopCss = readFileSync(
+      join(__dirname, "..", "components", "shop", "Shop.css"),
+      "utf8",
+    );
+    expect(shopCss).not.toMatch(/\n\s*color:\s*#099268/);
+    expect(shopCss).not.toMatch(/\n\s*color:\s*#2b8a3e/);
+  });
+});

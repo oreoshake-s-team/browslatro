@@ -143,21 +143,21 @@
 .shop-voucher-description {
   grid-column: 1 / 4;
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--shop-muted-on-light);
 }
 
 .shop-voucher-price {
   grid-column: 2 / 3;
   grid-row: 1;
   font-weight: 700;
-  color: #099268;
+  color: var(--shop-price);
 }
 
 .shop-voucher-buy {
   grid-column: 3 / 4;
   grid-row: 1;
   padding: 0.4rem 0.9rem;
-  background-color: #845ef7;
+  background-color: #7048e8;
   color: white;
   border: none;
   border-radius: 4px;
@@ -167,7 +167,7 @@
 }
 
 .shop-voucher-buy:hover:not(:disabled) {
-  background-color: #7048e8;
+  background-color: #5f3dc4;
 }
 
 .shop-voucher-buy:disabled {
@@ -178,7 +178,7 @@
 .shop-voucher-empty {
   margin: 0;
   font-size: 0.9rem;
-  color: #6c757d;
+  color: var(--shop-muted-on-light);
   font-style: italic;
 }
 
@@ -252,6 +252,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+  color: var(--shop-muted-on-light);
 }
 
 .shop-offer-kind-icon {
@@ -297,7 +298,7 @@
   grid-column: 2 / 3;
   grid-row: 2;
   font-weight: 700;
-  color: #099268;
+  color: var(--shop-price);
   display: flex;
   align-items: center;
   gap: 0.4rem;
@@ -315,7 +316,7 @@
 }
 
 .shop-offer-price-free {
-  color: #2b8a3e;
+  color: var(--positive-money-on-light);
   font-weight: 800;
   letter-spacing: 0.05em;
 }

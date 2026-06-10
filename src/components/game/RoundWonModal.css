@@ -60,7 +60,7 @@
 }
 
 .round-won-stat-beat dd {
-  color: #2b8a3e;
+  color: var(--positive-money-on-light);
 }
 
 .round-won-payout {
