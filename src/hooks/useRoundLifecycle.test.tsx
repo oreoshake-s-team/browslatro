@@ -2,7 +2,12 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useGame } from "../store/game";
-import { createCertificateJoker, createMarbleJoker } from "../items/jokers";
+import { createBossCatalog } from "../items/bosses";
+import {
+  createCertificateJoker,
+  createChicotJoker,
+  createMarbleJoker,
+} from "../items/jokers";
 import { STARTING_MONEY } from "../store/economy";
 import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
 import { createGreedyJoker } from "../items/jokers";
@@ -319,5 +324,43 @@ describe("startNewRound — Certificate sealed card (#988)", () => {
     expect(
       useGame.getState().addedCards.filter((c) => c.seal !== undefined),
     ).toHaveLength(1);
+  });
+});
+
+describe("startNewRound — Chicot disables the boss (#1000)", () => {
+  test("a boss round starts with the boss effect neutralized", () => {
+    useGame.getState().resetGame();
+    const boss = createBossCatalog().find((b) => b.effect.kind !== "none");
+    if (!boss) throw new Error("no boss with an effect in the catalog");
+    useGame.getState().setJokers([createChicotJoker()]);
+    useGame.getState().setCurrentBoss(boss);
+    useGame.getState().setBlind(3);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(useGame.getState().currentBoss.effect.kind).toBe("none");
+  });
+
+  test("without Chicot the boss effect stays (negative)", () => {
+    useGame.getState().resetGame();
+    const boss = createBossCatalog().find((b) => b.effect.kind !== "none");
+    if (!boss) throw new Error("no boss with an effect in the catalog");
+    useGame.getState().setJokers([]);
+    useGame.getState().setCurrentBoss(boss);
+    useGame.getState().setBlind(3);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(useGame.getState().currentBoss.effect.kind).toBe(boss.effect.kind);
   });
 });

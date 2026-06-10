@@ -36,6 +36,8 @@ import {
   applyScoredMutationsToCards,
   applyEnhancementsEatenToJokerStates,
   chipsPerScoredCardFromJokers,
+  canPreventDeath,
+  consumeDeathPreventer,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -184,7 +186,14 @@ export function usePlayHand({
     setScoringCards([]);
     setScoringIndex(0);
 
-    const roundWon = newRoundScore >= requiredScore;
+    const mrBonesSave =
+      newRoundScore < requiredScore &&
+      remainingHands <= 1 &&
+      canPreventDeath(jokers, newRoundScore, requiredScore);
+    if (mrBonesSave) {
+      setJokers((prev) => consumeDeathPreventer(prev));
+    }
+    const roundWon = newRoundScore >= requiredScore || mrBonesSave;
     if (submittedSelection.size > 0) {
       pendingDiscardCountRef.current = submittedSelection.size;
       skipDrawAfterDiscardRef.current = roundWon;

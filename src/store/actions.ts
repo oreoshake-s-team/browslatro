@@ -281,6 +281,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (entry.effect.kind === "sell-creates-double-tag") {
       s.setPendingTags((prev) => [...prev, "double"]);
     }
+    if (entry.effect.kind === "sell-disables-boss-blind" && s.blind === 3) {
+      s.setCurrentBoss({ ...s.currentBoss, effect: { kind: "none" } });
+    }
     s.setJokers((prev) =>
       applySellToJokerStates(prev.filter((_, i) => i !== jokerIdx)),
     );

@@ -28,6 +28,7 @@ import { fullDeckPile, initialDeal } from "../cards/deckBuild";
 import { SEAL_KINDS } from "../cards/seals";
 import type { Card } from "../cards/types";
 import {
+  disablesBossBlindsFromJokers,
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
   sealedCardsOnRoundBeginFromJokers,
@@ -165,9 +166,18 @@ export function useRoundLifecycle({
     handSizeOverride?: number;
   } = {}): void {
     const effectiveBlind = opts.blind ?? blind;
-    const effectiveBoss =
-      opts.boss !== undefined ? opts.boss : currentBoss;
+    const pickedBoss = opts.boss !== undefined ? opts.boss : currentBoss;
     const isBossRound = effectiveBlind === 3;
+    const effectiveBoss =
+      isBossRound &&
+      pickedBoss !== null &&
+      pickedBoss.effect.kind !== "none" &&
+      disablesBossBlindsFromJokers(equippedJokers)
+        ? { ...pickedBoss, effect: { kind: "none" as const } }
+        : pickedBoss;
+    if (effectiveBoss !== pickedBoss && effectiveBoss !== null) {
+      setCurrentBoss(effectiveBoss);
+    }
     const baseHandSize =
       (opts.handSizeOverride ?? currentHandSize) + pendingNextRoundHandSize;
     if (pendingNextRoundHandSize !== 0) {
