@@ -56,7 +56,7 @@ See docs/conversation_summary.md for more background.
 
 ## Project Environment
 
-- This project uses **Yarn Berry with PnP** (not npm/node_modules). Use `yarn` commands, not `npm`. Never assume a `node_modules` directory exists.
+- This project uses **Yarn Berry with `nodeLinker: pnpm`** (not npm). Use `yarn` commands, not `npm`. `node_modules` is generated per checkout (hardlinked from the global Yarn store) — run `yarn install` in every fresh clone or worktree before anything else.
 - TypeScript is the primary language - all new code should be `.ts`/`.tsx`.
 - Run `yarn typecheck` and `yarn test` before opening PRs.
 - Use `import`, not `require()` — this is an ESM project.
