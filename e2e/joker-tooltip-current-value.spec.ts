@@ -58,6 +58,34 @@ async function hoveredCurrentValue(page: Page, jokerId: string) {
 }
 
 test.describe("Joker tooltip current scaling value (#884)", () => {
+  test("Egg tooltip shows $2 sell value on pickup and $5 after winning a round (#926)", async ({
+    page,
+  }) => {
+    await setDeterministic(page);
+    await page.goto("/");
+    await page.getByTestId("new-run-confirm").click();
+    await addJokerById(page, "egg");
+    await page.getByTestId("blind-select-play").click();
+    await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+
+    await expect(await hoveredCurrentValue(page, "egg")).toHaveText(
+      "Currently: $2 sell value",
+    );
+    await page.mouse.move(0, 0);
+
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator(HAND_CARDS).nth(i).click();
+    }
+    await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+    await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+    await expect(
+      page.getByRole("heading", { name: SHOP_HEADING }),
+    ).toBeVisible();
+    await expect(await hoveredCurrentValue(page, "egg")).toHaveText(
+      "Currently: $5 sell value",
+    );
+  });
+
   test("Flash Card tooltip shows +0 Mult before and +2 Mult after a shop reroll", async ({
     page,
   }) => {
