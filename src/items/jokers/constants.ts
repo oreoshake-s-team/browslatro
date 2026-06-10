@@ -118,6 +118,10 @@ export const HACK_RETRIGGERS = 1;
 export const DUSK_RETRIGGERS = 1;
 export const SOCK_AND_BUSKIN_RETRIGGERS = 1;
 export const HANGING_CHAD_RETRIGGERS = 2;
+export const RED_CARD_MULT_PER_SKIPPED_PACK = 3;
+export const HIT_THE_ROAD_X_MULT_PER_JACK = 0.5;
+export const LUCKY_CAT_X_MULT_PER_TRIGGER = 0.25;
+export const EGG_SELL_VALUE_PER_ROUND = 3;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

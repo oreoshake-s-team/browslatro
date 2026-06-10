@@ -228,6 +228,10 @@ export function applyPerCardJokers(
       case "retrigger-face-cards":
       case "retrigger-first-card":
       case "retrigger-on-final-hand":
+      case "stack-mult-on-pack-skip":
+      case "x-mult-per-jack-discarded-this-round":
+      case "x-mult-per-lucky-trigger":
+      case "sell-value-grows-per-round":
       case "noop":
         break;
       default:

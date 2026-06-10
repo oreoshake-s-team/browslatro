@@ -93,7 +93,7 @@ export function applyHandPlayedToJokerStates(
 
 export function applyDiscardToJokerStates(
   jokers: ReadonlyArray<Joker>,
-  discardedCardCount = 0,
+  discardedCards: ReadonlyArray<Card> = [],
 ): Joker[] {
   const updated = jokers.map((joker) => {
     const effect = joker.effect;
@@ -106,8 +106,13 @@ export function applyDiscardToJokerStates(
     if (effect.kind === "x-mult-shrink-per-discarded-card") {
       return {
         ...joker,
-        state: counterState(prevCount(joker) + discardedCardCount),
+        state: counterState(prevCount(joker) + discardedCards.length),
       };
+    }
+    if (effect.kind === "x-mult-per-jack-discarded-this-round") {
+      const jacks = discardedCards.filter((c) => c.rank === "J").length;
+      if (jacks === 0) return joker;
+      return { ...joker, state: counterState(prevCount(joker) + jacks) };
     }
     return joker;
   });
@@ -129,6 +134,28 @@ export function applyShopRerollToJokerStates(
   });
 }
 
+export function applyPackSkipToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "stack-mult-on-pack-skip") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
+  });
+}
+
+export function applyLuckyTriggersToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  triggerCount: number,
+): Joker[] {
+  if (triggerCount <= 0) return [...jokers];
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-lucky-trigger") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + triggerCount) };
+  });
+}
+
 export function applyRoundEndToJokerStates(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
@@ -145,6 +172,14 @@ export function applyRoundEndToJokerStates(
     if (effect.kind === "additive-mult-chance-bust") {
       if (rollChance(effect.bustChance, rng) && isDestructible(joker)) continue;
       out.push(joker);
+      continue;
+    }
+    if (effect.kind === "x-mult-per-jack-discarded-this-round") {
+      out.push({ ...joker, state: counterState(0) });
+      continue;
+    }
+    if (effect.kind === "sell-value-grows-per-round") {
+      out.push({ ...joker, state: counterState(prevCount(joker) + effect.amount) });
       continue;
     }
     out.push(joker);

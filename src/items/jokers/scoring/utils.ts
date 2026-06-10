@@ -30,7 +30,12 @@ export function isFaceCardWith(
 
 export function jokerSellValue(joker: Joker): number {
   if (hasSticker(joker, "rental")) return RENTAL_BASE_PRICE;
-  return JOKER_SELL_VALUE;
+  const grown =
+    joker.effect.kind === "sell-value-grows-per-round" &&
+    joker.state?.kind === "counter"
+      ? joker.state.value
+      : 0;
+  return JOKER_SELL_VALUE + grown;
 }
 
 export function assertNeverEffect(effect: never): never {

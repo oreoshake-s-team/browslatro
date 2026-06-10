@@ -231,7 +231,12 @@ describe("createRandomJoker", () => {
     const catalog = createJokerCatalog();
     const owned = catalog.slice(0, catalog.length - 1);
     const remaining = catalog[catalog.length - 1];
-    const result = createRandomJoker(owned, catalog, 99, fixedRng([0]));
+    const result = createRandomJoker(
+      owned,
+      catalog,
+      catalog.length + 1,
+      fixedRng([0]),
+    );
     expect(result?.id).toBe(remaining.id);
   });
 
