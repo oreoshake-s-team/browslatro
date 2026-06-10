@@ -1,5 +1,6 @@
 import "./NewRunScreen.css";
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import DeckTooltip from "./DeckTooltip";
 import { useFocusTrap } from "../system/useFocusTrap";
@@ -36,6 +37,7 @@ export default function NewRunScreen({
   initialDeck = DEFAULT_DECK,
   onConfirm,
 }: NewRunScreenProps) {
+  const { t } = useTranslation();
   const [stake, setStake] = useState<Stake>(initialStake);
   const [deck, setDeck] = useState<Deck>(initialDeck);
   const deckTooltipIdBase = useId();
@@ -89,7 +91,7 @@ export default function NewRunScreen({
           </h2>
           <p
             className="new-run-header-preview"
-            aria-label="Starting resources for this run"
+            aria-label={t("a11y.startingResources")}
           >
             <span
               className="new-run-header-preview-pair"
@@ -130,7 +132,7 @@ export default function NewRunScreen({
           <div
             className="new-run-deck-grid"
             role="radiogroup"
-            aria-label="Deck variant"
+            aria-label={t("a11y.deckVariant")}
           >
             {DECKS.map((spec) => {
               const isSelected = spec.id === deck;
@@ -178,7 +180,7 @@ export default function NewRunScreen({
           <div
             className="new-run-stake-grid"
             role="radiogroup"
-            aria-label="Stake difficulty"
+            aria-label={t("a11y.stakeDifficulty")}
           >
             {STAKES.map((spec) => {
               const isSelected = spec.id === stake;
@@ -205,7 +207,7 @@ export default function NewRunScreen({
             className="new-run-stake-description"
             data-testid="new-run-stake-description"
             aria-live="polite"
-            aria-label="Active stake effects"
+            aria-label={t("a11y.activeStakeEffects")}
           >
             {getActiveStakes(stake).slice().reverse().map((id) => {
               const spec = getStakeSpec(id);

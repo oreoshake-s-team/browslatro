@@ -1,6 +1,7 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./RunInfo.css";
 import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
@@ -108,7 +109,7 @@ export default function RunInfoDialog({
         <div
           className="run-info-tablist"
           role="tablist"
-          aria-label="Run Information sections"
+          aria-label={t("a11y.runInfoSections")}
         >
           <button {...tabButtonProps("hands")}>{t("runInfo.handsTab")}</button>
           <button {...tabButtonProps("vouchers")}>
@@ -121,7 +122,7 @@ export default function RunInfoDialog({
               <thead>
                 <tr>
                   <th scope="col">{t("runInfo.handHeader")}</th>
-                  <th scope="col" aria-label="Level">
+                  <th scope="col" aria-label={t("a11y.level")}>
                     {t("runInfo.levelHeader")}
                   </th>
                   <th scope="col">{t("runInfo.chipsTimesMult")}</th>
@@ -134,7 +135,7 @@ export default function RunInfoDialog({
                   const stats = handStats[label];
                   return (
                     <tr key={label} data-testid={`run-info-row-${label}`}>
-                      <th scope="row">{label}</th>
+                      <th scope="row">{tHandLabel(t, label)}</th>
                       <td
                         className="run-info-level"
                         data-testid={`run-info-level-${label}`}

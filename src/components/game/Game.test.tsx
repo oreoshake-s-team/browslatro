@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { beforeEach } from "vitest";
@@ -66,7 +66,7 @@ describe("Game", () => {
 
   test("renders the player's hand of cards", () => {
     renderGame();
-    expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
+    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
   });
 
   test("Discard button calls onDiscard when enabled", async () => {
@@ -148,7 +148,9 @@ describe("Game", () => {
         />,
       );
       expect(deckPileCount()).toBe(40);
-      useGame.setState({ destroyedCardIds: new Set([1, 2, 3]) });
+      act(() => {
+        useGame.setState({ destroyedCardIds: new Set([1, 2, 3]) });
+      });
       rerender(
         <Game
           onSubmitHand={vi.fn()}
@@ -177,7 +179,9 @@ describe("Game", () => {
         />,
       );
       expect(deckPileCount()).toBe(40);
-      useGame.setState({ addedCards: makeCards(500, 2) });
+      act(() => {
+        useGame.setState({ addedCards: makeCards(500, 2) });
+      });
       rerender(
         <Game
           onSubmitHand={vi.fn()}
@@ -242,7 +246,9 @@ describe("Game", () => {
         />,
       );
       expect(deckPileCount()).toBe(10);
-      useGame.setState({ destroyedCardIds: new Set([1, 2]) });
+      act(() => {
+        useGame.setState({ destroyedCardIds: new Set([1, 2]) });
+      });
       rerender(
         <Game
           onSubmitHand={vi.fn()}
@@ -292,7 +298,9 @@ describe("Game", () => {
         />,
       );
       const before = deckPileCount();
-      useGame.setState({ destroyedCardIds: new Set([3, 4, 5]) });
+      act(() => {
+        useGame.setState({ destroyedCardIds: new Set([3, 4, 5]) });
+      });
       rerender(
         <Game
           onSubmitHand={vi.fn()}

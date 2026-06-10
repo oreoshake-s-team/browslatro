@@ -21,6 +21,7 @@ import {
   createRandomJoker,
   MAX_JOKERS,
   withEdition,
+  applyCardsDestroyedToJokerStates,
   applyConsumableUsedToJokerStates,
 } from "../items/jokers";
 import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
@@ -76,6 +77,8 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
+  const setCardSealsById = useGame((s) => s.setCardSealsById);
+  const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
   const handDisplayOrder = useGame((s) => s.handDisplayOrder);
 
@@ -89,6 +92,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
       useGame
         .getState()
         .setJokers((prev) => applyConsumableUsedToJokerStates(prev, entry.kind));
+      if (entry.kind === "planet") {
+        useGame
+          .getState()
+          .setPlanetsUsed((prev) => new Set(prev).add(entry.card.id));
+      }
       if (entry.kind === "planet") {
         setLastUsedConsumable(entry);
         return;
@@ -141,6 +149,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
           ),
           remaining: prev.remaining,
         }));
+        setCardSealsById((prev) => {
+          const next = new Map(prev);
+          for (const id of selectedIds) next.set(id, spectralEffect.seal);
+          return next;
+        });
         setSelectedIds(new Set());
         setSelectedHand(null);
         setChips(0);
@@ -158,10 +171,16 @@ export function useConsumableActions(): UseConsumableActionsResult {
         }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
+        const duplicated = duplicateSelectedInHand(
+          useGame.getState().dealt.hand,
+          selectedIds,
+          spectralEffect.copies,
+        );
         setDealt((prev) => ({
-          hand: duplicateSelectedInHand(prev.hand, selectedIds, spectralEffect.copies),
+          hand: duplicated.hand,
           remaining: prev.remaining,
         }));
+        setAddedCards((prev) => [...prev, ...duplicated.additions]);
         setSelectedIds(new Set());
         setSelectedHand(null);
         setChips(0);
@@ -300,14 +319,19 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
       const destroyedIds = new Set<number>();
+      const destroyedCards: Card[] = [];
       for (const c of useGame.getState().dealt.hand) {
-        if (selectedIds.has(c.id)) destroyedIds.add(c.id);
+        if (selectedIds.has(c.id)) {
+          destroyedIds.add(c.id);
+          destroyedCards.push(c);
+        }
       }
       setDestroyedCardIds((prev) => {
         const next = new Set(prev);
         for (const id of destroyedIds) next.add(id);
         return next;
       });
+      setJokers((prev) => applyCardsDestroyedToJokerStates(prev, destroyedCards));
       setDealt((prev) => ({
         hand: prev.hand.filter((c) => !selectedIds.has(c.id)),
         remaining: prev.remaining,
@@ -464,6 +488,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
       ),
       remaining: prev.remaining,
     }));
+    setCardEnhancementsById((prev) => {
+      const next = new Map(prev);
+      for (const id of selectedIds) next.set(id, effect.enhancement);
+      return next;
+    });
     setSelectedIds(new Set());
     setSelectedHand(null);
     setChips(0);

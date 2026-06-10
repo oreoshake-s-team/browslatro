@@ -1,8 +1,8 @@
-import type { Card } from "../../cards/types";
+import type { Card, Suit } from "../../cards/types";
 import type { HandPlayCounts } from "../../components/hud/handPlayCounts";
 import { handContains, type HandLabel } from "../../scoring/handEvaluator";
 import { rollChance } from "../../dev/chanceOverride";
-import { isFaceCardWith } from "./scoring/utils";
+import { isFaceCardWith, jokerSellValue } from "./scoring/utils";
 import { hasSticker } from "./stickers";
 import type { Joker, JokerStateValue, RandomSource } from "./types";
 
@@ -114,6 +114,7 @@ export function applyHandPlayedToJokerStates(
 export function applyDiscardToJokerStates(
   jokers: ReadonlyArray<Joker>,
   discardedCards: ReadonlyArray<Card> = [],
+  castleSuit: Suit | null = null,
 ): Joker[] {
   const updated = jokers.map((joker) => {
     const effect = joker.effect;
@@ -127,6 +128,15 @@ export function applyDiscardToJokerStates(
       return {
         ...joker,
         state: counterState(prevCount(joker) + discardedCards.length),
+      };
+    }
+    if (effect.kind === "stack-chips-per-rotating-suit-discard") {
+      if (castleSuit === null) return joker;
+      const matches = discardedCards.filter((c) => c.suit === castleSuit).length;
+      if (matches === 0) return joker;
+      return {
+        ...joker,
+        state: counterState(prevCount(joker) + effect.amount * matches),
       };
     }
     if (effect.kind === "x-mult-per-jack-discarded-this-round") {
@@ -212,6 +222,106 @@ export function applySellToJokerStates(jokers: ReadonlyArray<Joker>): Joker[] {
   });
 }
 
+export function applyCardsDestroyedToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  destroyedCards: ReadonlyArray<Card>,
+): Joker[] {
+  const faces = destroyedCards.filter((c) => isFaceCardWith(c, jokers)).length;
+  if (faces <= 0) return [...jokers];
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-face-destroyed") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + faces) };
+  });
+}
+
+export function applyGlassShatterToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  shatteredCount: number,
+): Joker[] {
+  if (shatteredCount <= 0) return [...jokers];
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-glass-shattered") return joker;
+    return {
+      ...joker,
+      state: counterState(prevCount(joker) + shatteredCount),
+    };
+  });
+}
+
+export function applyMadnessOnBlindSelect(
+  jokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  const madnessIndices = jokers.flatMap((j, i) =>
+    j.effect.kind === "blind-select-x-mult-destroys-joker" ? [i] : [],
+  );
+  if (madnessIndices.length === 0) return [...jokers];
+  let next = jokers.map((joker) =>
+    joker.effect.kind === "blind-select-x-mult-destroys-joker"
+      ? { ...joker, state: counterState(prevCount(joker) + 1) }
+      : joker,
+  );
+  for (const _ of madnessIndices) {
+    const victims = next.flatMap((j, i) =>
+      j.effect.kind !== "blind-select-x-mult-destroys-joker" &&
+      isDestructible(j)
+        ? [i]
+        : [],
+    );
+    if (victims.length === 0) break;
+    const victim = victims[Math.floor(rng() * victims.length)];
+    next = next.filter((_, i) => i !== victim);
+  }
+  return next;
+}
+
+export function applyCeremonialDaggerOnBlindSelect(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const out: Joker[] = [];
+  let i = 0;
+  while (i < jokers.length) {
+    const joker = jokers[i];
+    const effect = joker.effect;
+    if (effect.kind !== "blind-select-eats-right-joker-mult") {
+      out.push(joker);
+      i += 1;
+      continue;
+    }
+    const victim = jokers[i + 1];
+    if (victim === undefined || !isDestructible(victim)) {
+      out.push(joker);
+      i += 1;
+      continue;
+    }
+    const gained = effect.sellValueMultiplier * jokerSellValue(victim);
+    out.push({ ...joker, state: counterState(prevCount(joker) + gained) });
+    i += 2;
+  }
+  return out;
+}
+
+export function applyGiftCardToJokerSellValues(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const giftAmount = jokers
+    .filter(isDestructible)
+    .reduce(
+      (sum, j) =>
+        j.effect.kind === "round-end-grows-all-sell-values"
+          ? sum + j.effect.amount
+          : sum,
+      0,
+    );
+  if (giftAmount === 0) return [...jokers];
+  return jokers.map((j) => ({
+    ...j,
+    sellBonus: (j.sellBonus ?? 0) + giftAmount,
+  }));
+}
+
 export function applyRoundEndToJokerStates(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
@@ -226,7 +336,10 @@ export function applyRoundEndToJokerStates(
       out.push({ ...joker, state: counterState(next) });
       continue;
     }
-    if (effect.kind === "additive-mult-chance-bust") {
+    if (
+      effect.kind === "additive-mult-chance-bust" ||
+      effect.kind === "x-mult-chance-bust"
+    ) {
       if (rollChance(effect.bustChance, rng) && isDestructible(joker)) continue;
       out.push(joker);
       continue;
@@ -255,6 +368,10 @@ export function applyRoundEndToJokerStates(
     }
     if (effect.kind === "sell-value-grows-per-round") {
       out.push({ ...joker, state: counterState(prevCount(joker) + effect.amount) });
+      continue;
+    }
+    if (effect.kind === "sell-after-rounds-duplicates-joker") {
+      out.push({ ...joker, state: counterState(prevCount(joker) + 1) });
       continue;
     }
     out.push(joker);

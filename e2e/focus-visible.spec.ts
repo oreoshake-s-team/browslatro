@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 
 const FOCUS_RING = "rgb(116, 192, 252)";
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const SHOP_HEADING = /Shop/;
 
 test.beforeEach(async ({ context }) => {
@@ -41,9 +41,18 @@ async function openShop(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 }
 
+// The boss-blind override only renders in production builds when the
+// browslatro:devTools seam is set (issue #915).
+async function enableDevTools(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:devTools", "1");
+  });
+}
+
 test("boss-blind override keeps a visible focus ring on keyboard focus (issue #913)", async ({
   page,
 }) => {
+  await enableDevTools(page);
   await openBlindSelect(page);
   const override = page.getByTestId("blind-select-boss-override");
   await focusViaKeyboard(page, override);
@@ -97,9 +106,50 @@ test("pack preview sort buttons show the focus ring on keyboard focus (issue #91
   expect(outline.color).toBe(FOCUS_RING);
 });
 
+async function startRound(page: Page): Promise<void> {
+  await openBlindSelect(page);
+  await page.getByTestId("blind-select-play").click();
+  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+}
+
+test("scoring trace scroll region shows the focus ring on keyboard focus (issue #974)", async ({
+  page,
+}) => {
+  await startRound(page);
+  const trace = page.locator(".scoring-trace__scroll");
+  await focusViaKeyboard(page, trace);
+  const outline = await outlineOf(trace);
+  expect(outline.style).toBe("solid");
+  expect(outline.color).toBe(FOCUS_RING);
+});
+
+test("scoring trace modal body shows the focus ring on keyboard focus (issue #974)", async ({
+  page,
+}) => {
+  await startRound(page);
+  await page.locator(".scoring-trace__expand").click();
+  const body = page.locator(".scoring-trace-modal__body");
+  await expect(body).toBeVisible();
+  await focusViaKeyboard(page, body);
+  const outline = await outlineOf(body);
+  expect(outline.style).toBe("solid");
+  expect(outline.color).toBe(FOCUS_RING);
+});
+
+test("negative: clicking the scoring trace scroll region does not draw the focus outline (issue #974)", async ({
+  page,
+}) => {
+  await startRound(page);
+  const trace = page.locator(".scoring-trace__scroll");
+  await trace.click();
+  const outline = await outlineOf(trace);
+  expect(outline.style).toBe("none");
+});
+
 test("negative: hovering the boss-blind override does not draw the focus outline (issue #913)", async ({
   page,
 }) => {
+  await enableDevTools(page);
   await openBlindSelect(page);
   const override = page.getByTestId("blind-select-boss-override");
   await override.hover();

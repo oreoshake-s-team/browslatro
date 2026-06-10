@@ -38,14 +38,6 @@
       "last 1 safari version"
     ]
   },
-  "dependenciesMeta": {
-    "@playwright/test": {
-      "unplugged": true
-    },
-    "playwright": {
-      "unplugged": true
-    }
-  },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@playwright/test": "^1.55.0",

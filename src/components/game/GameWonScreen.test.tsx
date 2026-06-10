@@ -90,8 +90,8 @@ describe("GameWonScreen", () => {
 
 describe("GameWonScreen i18n (#922)", () => {
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("the title renders Lanakila! under the haw locale", async () => {

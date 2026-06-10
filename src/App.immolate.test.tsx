@@ -88,7 +88,7 @@ afterEach(() => {
 
 function getHandCardButtons(): HTMLElement[] {
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
   );
 }
 

@@ -405,8 +405,8 @@ describe("RoundWonModal focus trap (#907)", () => {
 
 describe("RoundWonModal i18n (#922)", () => {
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("the continue button renders Hoʻomau under the haw locale", async () => {

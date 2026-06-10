@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
@@ -11,6 +12,7 @@ interface ScoringTraceProps {
 }
 
 export default function ScoringTrace({ events }: ScoringTraceProps) {
+  const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const open = useCallback(() => setIsExpanded(true), []);
   const close = useCallback(() => setIsExpanded(false), []);
@@ -23,7 +25,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
           className="scoring-trace__expand"
           onClick={open}
           aria-haspopup="dialog"
-          title="Expand scoring trace to full screen"
+          title={t("a11y.expandScoringTrace")}
         >
           <span aria-hidden="true">⤢ </span>Expand
         </button>
@@ -32,7 +34,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
         className="scoring-trace__scroll"
         role="log"
         aria-live="polite"
-        aria-label="Scoring trace"
+        aria-label={t("a11y.scoringTraceLog")}
         tabIndex={0}
       >
         <ScoringTraceContent events={events} />

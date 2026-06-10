@@ -42,7 +42,14 @@ export {
   extraDebtFloorFromJokers,
   extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
+  allowsDuplicateJokers,
+  canPreventDeath,
+  chipsPerScoredCardFromJokers,
+  consumeDeathPreventer,
+  disablesBossBlindsFromJokers,
   heldRetriggerCountFromJokers,
+  sealedCardsOnRoundBeginFromJokers,
+  stoneCardsOnBlindSelectFromJokers,
   interestMultiplierFromJokers,
   extraStartingHandsFromJokers,
   handEvalOptionsFromJokers,
@@ -53,6 +60,9 @@ export {
   polychromeRandomJokerDestroyOthers,
   probabilityMultiplierFromJokers,
   replaceJokersExceptCopyOf,
+  shopExitConsumableCopies,
+  handPlayUpgradeRolls,
+  firstHandCardCopyCount,
 } from "./jokers/collection";
 export * from "./jokers/factories";
 export {
@@ -93,11 +103,17 @@ export {
   applyScoredCardMutations,
   applyScoredMutationsToCards,
 } from "./jokers/scoring/scoredCardMutations";
+export { consumableCreationsOnHandPlayed } from "./jokers/scoring/consumableCreators";
 export {
+  applyCardsDestroyedToJokerStates,
+  applyCeremonialDaggerOnBlindSelect,
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
   applyConsumableUsedToJokerStates,
   applyEnhancementsEatenToJokerStates,
+  applyGiftCardToJokerSellValues,
+  applyGlassShatterToJokerStates,
+  applyMadnessOnBlindSelect,
   applyLuckyTriggersToJokerStates,
   applyPackSkipToJokerStates,
   applySellToJokerStates,

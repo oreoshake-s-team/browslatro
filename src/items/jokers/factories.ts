@@ -100,6 +100,29 @@ import {
   SELTZER_RETRIGGERS,
   MIME_HELD_RETRIGGERS,
   VAMPIRE_X_MULT_PER_ENHANCED,
+  HIKER_CHIPS_PER_SCORED,
+  CAVENDISH_X_MULT,
+  CAVENDISH_BUST_CHANCE,
+  MR_BONES_SAVE_THRESHOLD,
+  THE_IDOL_X_MULT,
+  ANCIENT_JOKER_X_MULT,
+  CASTLE_CHIPS_PER_DISCARD,
+  EIGHT_BALL_TAROT_CHANCE,
+  VAGABOND_MONEY_THRESHOLD,
+  HALLUCINATION_TAROT_CHANCE,
+  RIFF_RAFF_JOKER_COUNT,
+  MAIL_IN_REBATE_PAYOUT,
+  SATELLITE_MONEY_PER_PLANET,
+  GLASS_JOKER_X_MULT_PER_SHATTER,
+  TO_DO_LIST_PAYOUT,
+  MADNESS_X_MULT_PER_BLIND,
+  MATADOR_PAYOUT,
+  GIFT_CARD_SELL_VALUE_PER_ROUND,
+  CANIO_X_MULT_PER_FACE,
+  INVISIBLE_JOKER_ROUNDS,
+  CEREMONIAL_DAGGER_SELL_VALUE_MULTIPLIER,
+  SPACE_JOKER_UPGRADE_CHANCE,
+  GOLDEN_TICKET_PAYOUT,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1604,6 +1627,320 @@ export function createVampireJoker(): Joker {
   };
 }
 
+export function createHikerJoker(): Joker {
+  return {
+    id: "hiker",
+    rarity: "uncommon",
+    name: "Hiker",
+    description: `Every played card permanently gains +${HIKER_CHIPS_PER_SCORED} Chips when scored`,
+    effect: {
+      kind: "scored-cards-gain-chips",
+      amount: HIKER_CHIPS_PER_SCORED,
+    },
+  };
+}
+
+export function createMarbleJoker(): Joker {
+  return {
+    id: "marble-joker",
+    rarity: "uncommon",
+    name: "Marble Joker",
+    description: "Adds one Stone card to the deck when Blind is selected",
+    effect: { kind: "blind-select-adds-stone-card" },
+  };
+}
+
+export function createCertificateJoker(): Joker {
+  return {
+    id: "certificate",
+    rarity: "uncommon",
+    name: "Certificate",
+    description: "When round begins, add a random playing card with a random seal attached to your hand",
+    effect: { kind: "round-begin-adds-sealed-card" },
+  };
+}
+
+export function createCavendishJoker(): Joker {
+  return {
+    id: "cavendish",
+    rarity: "common",
+    name: "Cavendish",
+    description: `X${CAVENDISH_X_MULT} Mult; 1 in 1000 chance this card is destroyed at the end of round`,
+    effect: {
+      kind: "x-mult-chance-bust",
+      amount: CAVENDISH_X_MULT,
+      bustChance: CAVENDISH_BUST_CHANCE,
+    },
+  };
+}
+
+export function createMrBonesJoker(): Joker {
+  return {
+    id: "mr-bones",
+    rarity: "uncommon",
+    name: "Mr. Bones",
+    description: "Prevents Death if chips scored are at least 25% of required chips; self destructs",
+    effect: {
+      kind: "prevent-death-at-quarter",
+      threshold: MR_BONES_SAVE_THRESHOLD,
+    },
+  };
+}
+
+export function createLuchadorJoker(): Joker {
+  return {
+    id: "luchador",
+    rarity: "uncommon",
+    name: "Luchador",
+    description: "Sell this card to disable the current Boss Blind",
+    effect: { kind: "sell-disables-boss-blind" },
+  };
+}
+
+export function createChicotJoker(): Joker {
+  return {
+    id: "chicot",
+    rarity: "legendary",
+    name: "Chicot",
+    description: "Disables effect of every Boss Blind",
+    effect: { kind: "disables-boss-blinds" },
+  };
+}
+
+export function createTheIdolJoker(): Joker {
+  return {
+    id: "the-idol",
+    rarity: "uncommon",
+    name: "The Idol",
+    description: `Each played card of the chosen rank and suit gives X${THE_IDOL_X_MULT} Mult when scored; card changes every round`,
+    effect: { kind: "x-mult-on-idol-card", amount: THE_IDOL_X_MULT },
+  };
+}
+
+export function createAncientJoker(): Joker {
+  return {
+    id: "ancient-joker",
+    rarity: "rare",
+    name: "Ancient Joker",
+    description: `Each played card of the chosen suit gives X${ANCIENT_JOKER_X_MULT} Mult when scored; suit changes every round`,
+    effect: { kind: "x-mult-per-suit-rotating", amount: ANCIENT_JOKER_X_MULT },
+  };
+}
+
+export function createCastleJoker(): Joker {
+  return {
+    id: "castle",
+    rarity: "uncommon",
+    name: "Castle",
+    description: `This Joker gains +${CASTLE_CHIPS_PER_DISCARD} Chips per discarded card of the chosen suit; suit changes every round`,
+    effect: {
+      kind: "stack-chips-per-rotating-suit-discard",
+      amount: CASTLE_CHIPS_PER_DISCARD,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createEightBallJoker(): Joker {
+  return {
+    id: "8-ball",
+    rarity: "common",
+    name: "8 Ball",
+    description: "Each played 8 has a 1 in 4 chance to create a Tarot card when scored",
+    effect: {
+      kind: "scored-rank-chance-creates-tarot",
+      rank: "8",
+      chance: EIGHT_BALL_TAROT_CHANCE,
+    },
+  };
+}
+
+export function createSeanceJoker(): Joker {
+  return {
+    id: "seance",
+    rarity: "uncommon",
+    name: "Séance",
+    description: "If poker hand is a Straight Flush, create a random Spectral card",
+    effect: { kind: "hand-type-creates-spectral", requires: "Straight Flush" },
+  };
+}
+
+export function createSixthSenseJoker(): Joker {
+  return {
+    id: "sixth-sense",
+    rarity: "uncommon",
+    name: "Sixth Sense",
+    description: "If first hand of round is a single 6, destroy it and create a Spectral card",
+    effect: { kind: "first-hand-single-six-creates-spectral" },
+  };
+}
+
+export function createSuperpositionJoker(): Joker {
+  return {
+    id: "superposition",
+    rarity: "common",
+    name: "Superposition",
+    description: "Create a Tarot card if poker hand contains an Ace and a Straight",
+    effect: { kind: "ace-straight-creates-tarot" },
+  };
+}
+
+export function createVagabondJoker(): Joker {
+  return {
+    id: "vagabond",
+    rarity: "rare",
+    name: "Vagabond",
+    description: `Create a Tarot card if hand is played with $${VAGABOND_MONEY_THRESHOLD} or less`,
+    effect: {
+      kind: "poor-hand-creates-tarot",
+      threshold: VAGABOND_MONEY_THRESHOLD,
+    },
+  };
+}
+
+export function createHallucinationJoker(): Joker {
+  return {
+    id: "hallucination",
+    rarity: "common",
+    name: "Hallucination",
+    description: "1 in 2 chance to create a Tarot card when any Booster Pack is opened",
+    effect: {
+      kind: "pack-open-chance-creates-tarot",
+      chance: HALLUCINATION_TAROT_CHANCE,
+    },
+  };
+}
+
+export function createRiffRaffJoker(): Joker {
+  return {
+    id: "riff-raff",
+    rarity: "common",
+    name: "Riff-Raff",
+    description: `When Blind is selected, create ${RIFF_RAFF_JOKER_COUNT} Common Jokers`,
+    effect: {
+      kind: "blind-select-creates-common-jokers",
+      count: RIFF_RAFF_JOKER_COUNT,
+    },
+  };
+}
+
+export function createCartomancerJoker(): Joker {
+  return {
+    id: "cartomancer",
+    rarity: "uncommon",
+    name: "Cartomancer",
+    description: "Create a Tarot card when Blind is selected",
+    effect: { kind: "blind-select-creates-tarot" },
+  };
+}
+
+export function createMailInRebateJoker(): Joker {
+  return {
+    id: "mail-in-rebate",
+    rarity: "common",
+    name: "Mail-In Rebate",
+    description: `Earn $${MAIL_IN_REBATE_PAYOUT} per discarded card of the chosen rank; rank changes every round`,
+    effect: {
+      kind: "money-per-discarded-rebate-rank",
+      payout: MAIL_IN_REBATE_PAYOUT,
+    },
+  };
+}
+
+export function createBurntJoker(): Joker {
+  return {
+    id: "burnt-joker",
+    rarity: "rare",
+    name: "Burnt Joker",
+    description: "Upgrade the level of the first discarded poker hand each round",
+    effect: { kind: "first-discard-upgrades-hand" },
+  };
+}
+
+export function createSatelliteJoker(): Joker {
+  return {
+    id: "satellite",
+    rarity: "uncommon",
+    name: "Satellite",
+    description: `Earn $${SATELLITE_MONEY_PER_PLANET} at end of round per unique Planet card used this run`,
+    effect: {
+      kind: "end-of-round-money-per-unique-planet",
+      amount: SATELLITE_MONEY_PER_PLANET,
+    },
+  };
+}
+
+export function createGlassJoker(): Joker {
+  return {
+    id: "glass-joker",
+    rarity: "uncommon",
+    name: "Glass Joker",
+    description: `This Joker gains X${GLASS_JOKER_X_MULT_PER_SHATTER} Mult for every Glass card that is destroyed`,
+    effect: {
+      kind: "x-mult-per-glass-shattered",
+      amount: GLASS_JOKER_X_MULT_PER_SHATTER,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createToDoListJoker(): Joker {
+  return {
+    id: "to-do-list",
+    rarity: "common",
+    name: "To Do List",
+    description: `Earn $${TO_DO_LIST_PAYOUT} if poker hand is the listed hand; hand changes every round`,
+    effect: { kind: "money-on-todo-hand", payout: TO_DO_LIST_PAYOUT },
+  };
+}
+
+export function createMadnessJoker(): Joker {
+  return {
+    id: "madness",
+    rarity: "uncommon",
+    name: "Madness",
+    description: `When Small or Big Blind is selected, gain X${MADNESS_X_MULT_PER_BLIND} Mult and destroy a random Joker`,
+    effect: {
+      kind: "blind-select-x-mult-destroys-joker",
+      amount: MADNESS_X_MULT_PER_BLIND,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createMatadorJoker(): Joker {
+  return {
+    id: "matador",
+    rarity: "uncommon",
+    name: "Matador",
+    description: `Earn $${MATADOR_PAYOUT} if played hand triggers the Boss Blind ability`,
+    effect: { kind: "money-on-boss-trigger", payout: MATADOR_PAYOUT },
+  };
+}
+
+export function createShowmanJoker(): Joker {
+  return {
+    id: "showman",
+    rarity: "uncommon",
+    name: "Showman",
+    description: "Joker cards may appear multiple times",
+    effect: { kind: "allows-duplicate-jokers" },
+  };
+}
+
+export function createGiftCardJoker(): Joker {
+  return {
+    id: "gift-card",
+    rarity: "uncommon",
+    name: "Gift Card",
+    description: `Add $${GIFT_CARD_SELL_VALUE_PER_ROUND} of sell value to every Joker and Consumable at end of round`,
+    effect: {
+      kind: "round-end-grows-all-sell-values",
+      amount: GIFT_CARD_SELL_VALUE_PER_ROUND,
+    },
+  };
+}
+
 export function createBlueprintJoker(): Joker {
   return {
     id: "blueprint",
@@ -1621,5 +1958,97 @@ export function createBrainstormJoker(): Joker {
     name: "Brainstorm",
     description: "Copies the ability of the leftmost Joker",
     effect: { kind: "copy-leftmost-joker" },
+  };
+}
+
+export function createCeremonialDaggerJoker(): Joker {
+  return {
+    id: "ceremonial-dagger",
+    rarity: "uncommon",
+    name: "Ceremonial Dagger",
+    description:
+      "When Blind is selected, destroy Joker to the right and permanently add double its sell value to this Mult",
+    effect: {
+      kind: "blind-select-eats-right-joker-mult",
+      sellValueMultiplier: CEREMONIAL_DAGGER_SELL_VALUE_MULTIPLIER,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createSpaceJoker(): Joker {
+  return {
+    id: "space-joker",
+    rarity: "uncommon",
+    name: "Space Joker",
+    description: "1 in 4 chance to upgrade level of played poker hand",
+    effect: {
+      kind: "hand-play-chance-upgrades-hand",
+      chance: SPACE_JOKER_UPGRADE_CHANCE,
+    },
+  };
+}
+
+export function createDnaJoker(): Joker {
+  return {
+    id: "dna",
+    rarity: "rare",
+    name: "DNA",
+    description:
+      "If first hand of round has only 1 card, add a permanent copy to deck and draw it to hand",
+    effect: { kind: "first-hand-single-card-copies-card" },
+  };
+}
+
+export function createGoldenTicketJoker(): Joker {
+  return {
+    id: "golden-ticket",
+    rarity: "uncommon",
+    name: "Golden Ticket",
+    description: `Played Gold cards earn $${GOLDEN_TICKET_PAYOUT} when scored`,
+    effect: {
+      kind: "per-scored-enhancement-money",
+      enhancement: "gold",
+      payout: GOLDEN_TICKET_PAYOUT,
+    },
+  };
+}
+
+export function createCanioJoker(): Joker {
+  return {
+    id: "canio",
+    rarity: "legendary",
+    name: "Canio",
+    description: `This Joker gains X${CANIO_X_MULT_PER_FACE} Mult when a face card is destroyed`,
+    effect: {
+      kind: "x-mult-per-face-destroyed",
+      amount: CANIO_X_MULT_PER_FACE,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createPerkeoJoker(): Joker {
+  return {
+    id: "perkeo",
+    rarity: "legendary",
+    name: "Perkeo",
+    description:
+      "Creates a copy of a random consumable in your possession when you leave the shop",
+    effect: { kind: "shop-exit-copies-consumable" },
+  };
+}
+
+export function createInvisibleJoker(): Joker {
+  return {
+    id: "invisible-joker",
+    rarity: "legendary",
+    name: "Invisible Joker",
+    description: `After ${INVISIBLE_JOKER_ROUNDS} rounds, sell this card to duplicate a random Joker`,
+    effect: {
+      kind: "sell-after-rounds-duplicates-joker",
+      rounds: INVISIBLE_JOKER_ROUNDS,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }

@@ -18,6 +18,7 @@ import {
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import { bootIntoShop, shouldBootIntoShop } from "./dev/bootShop";
+import { devToolsEnabled } from "./dev/devTools";
 import { readSeededConsumables } from "./dev/seedConsumables";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
@@ -61,6 +62,7 @@ import {
   hasChaosTheClownInJokers,
   initialJokersConfig,
   probabilityMultiplierFromJokers,
+  shopExitConsumableCopies,
 } from "./items/jokers";
 import {
   applyShopDiscount,
@@ -135,6 +137,12 @@ function App() {
     );
   }, [setDealt, setBaseDeckCards]);
   const highVisibility = usePreferences((state) => state.highVisibility);
+  useEffect(() => {
+    document.body.classList.toggle("high-visibility", highVisibility);
+    return () => {
+      document.body.classList.remove("high-visibility");
+    };
+  }, [highVisibility]);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
@@ -328,6 +336,13 @@ function App() {
   };
 
   function closeShopAndStartNextRound() {
+    const copies = shopExitConsumableCopies(
+      jokers,
+      useGame.getState().consumables,
+    );
+    if (copies.length > 0) {
+      setConsumables((prev) => [...prev, ...copies]);
+    }
     setShopOffers(null);
     setSoldJokerIdsThisShopVisit([]);
     setPendingShopMods([]);
@@ -380,7 +395,7 @@ function App() {
 
   return (
     <div
-      className={`App ${highVisibility ? "high-visibility" : ""}`.trim()}
+      className="App"
       data-app-shell=""
       style={appStyle}
       data-hands-played={runStats.handsPlayed}
@@ -534,11 +549,21 @@ function App() {
                 onSkip={skipBlind}
                 tags={pendingTags}
                 skipRewards={skipTagOffers}
-                bossOptions={availableBosses(createBossCatalog(), ante)}
-                onSetBoss={(id) => {
-                  const next = createBossCatalog().find((b) => b.id === id);
-                  if (next) setCurrentBoss(next);
-                }}
+                bossOptions={
+                  devToolsEnabled()
+                    ? availableBosses(createBossCatalog(), ante)
+                    : undefined
+                }
+                onSetBoss={
+                  devToolsEnabled()
+                    ? (id) => {
+                        const next = createBossCatalog().find(
+                          (b) => b.id === id,
+                        );
+                        if (next) setCurrentBoss(next);
+                      }
+                    : undefined
+                }
                 onRerollBoss={() => {
                   useGame.getState().rerollBoss();
                 }}

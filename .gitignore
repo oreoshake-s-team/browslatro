@@ -1,17 +1,12 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# dependencies (yarn berry, nodeLinker: pnpm — node_modules is generated per
+# checkout/worktree by `yarn install`, hardlinked from the global store)
 /node_modules
-
-# yarn berry (PnP linker). The .pnp.* files are machine-specific generated
-# artifacts (they embed paths to the out-of-project global cache), so they are
-# not committed — run `yarn install` to regenerate them after cloning.
-.pnp.*
 .yarn/*
 !.yarn/patches
 !.yarn/plugins
 !.yarn/releases
-!.yarn/sdks
 !.yarn/versions
 
 # testing
@@ -24,6 +19,7 @@
 # production
 /build
 bundle-stats.html
+vite.config.*.timestamp-*
 
 # storybook
 /storybook-static

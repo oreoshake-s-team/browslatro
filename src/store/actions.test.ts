@@ -834,6 +834,27 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(4);
   });
 
+  test("applySpectralEffect immolate persists destroyed ids in destroyedCardIds (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "immolate", destroyCount: 2, moneyGain: 0 });
+    expect(useGame.getState().destroyedCardIds.size).toBe(2);
+  });
+
+  test("applySpectralEffect transmute persists the destroyed id in destroyedCardIds (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
+    expect(useGame.getState().destroyedCardIds.size).toBe(1);
+  });
+
+  test("applySpectralEffect transmute pushes the created cards to addedCards (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
+    expect(useGame.getState().addedCards).toHaveLength(3);
+  });
+
   test("applySpectralEffect sigil converts the hand to one suit", () => {
     const game = useGame.getState();
     game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
@@ -1456,7 +1477,17 @@ describe("enhancement-gated jokers (#985)", () => {
   });
 
   function ownAllJokersExcept(ids: ReadonlyArray<string>): void {
-    const owned = createJokerCatalog().filter((j) => !ids.includes(j.id));
+    const owned = createJokerCatalog()
+      .filter((j) => !ids.includes(j.id))
+      // Showman lets owned jokers reappear as duplicate offers, which would
+      // defeat the "own everything to exclude everything" isolation these gate
+      // tests rely on. Keep it owned (so it stays out of the offer pool) but
+      // inactive (expired perishable) so it grants no duplicate allowance.
+      .map((j) =>
+        j.effect.kind === "allows-duplicate-jokers"
+          ? { ...j, stickers: [{ kind: "perishable", roundsHeld: PERISHABLE_LIFE } as const] }
+          : j,
+      );
     useGame.getState().setJokers(owned);
   }
 

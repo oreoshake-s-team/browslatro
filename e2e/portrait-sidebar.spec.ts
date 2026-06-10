@@ -14,7 +14,7 @@ async function startRound(page: Page): Promise<void> {
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
-  await expect(page.locator('[aria-label="Your hand"] .card').first()).toBeVisible();
+  await expect(page.locator('[data-testid="hand-cards"] .card').first()).toBeVisible();
 }
 
 test("portrait: blind, round score, and chips×mult stack in one column (issue #880)", async ({

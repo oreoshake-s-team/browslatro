@@ -386,6 +386,7 @@ export function applyHandLevelJokers(
       case "stack-mult-on-shop-reroll":
       case "stack-mult-on-pack-skip":
       case "stack-mult-per-tarot-used":
+      case "blind-select-eats-right-joker-mult":
       case "mult-decay-per-round": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
@@ -402,6 +403,7 @@ export function applyHandLevelJokers(
       case "on-hand-type-stack-chips":
       case "on-played-card-count-stack-chips":
       case "on-played-rank-stack-chips":
+      case "stack-chips-per-rotating-suit-discard":
       case "chips-melt-per-hand": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
@@ -478,6 +480,9 @@ export function applyHandLevelJokers(
       case "x-mult-per-planet-used":
       case "x-mult-per-sold-card":
       case "x-mult-per-enhancement-eaten":
+      case "x-mult-per-glass-shattered":
+      case "blind-select-x-mult-destroys-joker":
+      case "x-mult-per-face-destroyed":
       case "x-mult-per-hand-without-most-played": {
         const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (counter > 0) {
@@ -490,6 +495,43 @@ export function applyHandLevelJokers(
             xMultFactor: factor,
           });
         }
+        break;
+      }
+      case "money-on-boss-trigger": {
+        if (context.bossTriggered === true) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
+      case "money-on-todo-hand": {
+        if (
+          context.todoHand != null &&
+          context.playedHandLabel === context.todoHand
+        ) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
+      case "x-mult-chance-bust": {
+        xMult *= effect.amount;
+        fired.push(joker.id);
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          xMultFactor: effect.amount,
+        });
         break;
       }
       case "x-mult-shrink-per-discarded-card": {
@@ -545,6 +587,32 @@ export function applyHandLevelJokers(
       case "retrigger-all-depleting":
       case "retrigger-held-abilities":
       case "played-faces-become-gold":
+      case "scored-cards-gain-chips":
+      case "blind-select-adds-stone-card":
+      case "round-begin-adds-sealed-card":
+      case "prevent-death-at-quarter":
+      case "sell-disables-boss-blind":
+      case "disables-boss-blinds":
+      case "x-mult-on-idol-card":
+      case "x-mult-per-suit-rotating":
+      case "scored-rank-chance-creates-tarot":
+      case "hand-type-creates-spectral":
+      case "first-hand-single-six-creates-spectral":
+      case "ace-straight-creates-tarot":
+      case "poor-hand-creates-tarot":
+      case "pack-open-chance-creates-tarot":
+      case "blind-select-creates-common-jokers":
+      case "blind-select-creates-tarot":
+      case "money-per-discarded-rebate-rank":
+      case "first-discard-upgrades-hand":
+      case "end-of-round-money-per-unique-planet":
+      case "allows-duplicate-jokers":
+      case "round-end-grows-all-sell-values":
+      case "shop-exit-copies-consumable":
+      case "sell-after-rounds-duplicates-joker":
+      case "hand-play-chance-upgrades-hand":
+      case "first-hand-single-card-copies-card":
+      case "per-scored-enhancement-money":
       case "noop":
         break;
       default:

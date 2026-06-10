@@ -2,6 +2,14 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useGame } from "../store/game";
+import { createBossCatalog } from "../items/bosses";
+import {
+  createCartomancerJoker,
+  createCertificateJoker,
+  createChicotJoker,
+  createMarbleJoker,
+  createRiffRaffJoker,
+} from "../items/jokers";
 import { STARTING_MONEY } from "../store/economy";
 import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
 import { createGreedyJoker } from "../items/jokers";
@@ -252,5 +260,149 @@ describe("useRoundLifecycle.startNewGame preserves the run selection (#851)", ()
     useGame.getState().setSelectedStake("red");
     runStartNewGame();
     expect(useGame.getState().selectedStake).toBe("red");
+  });
+});
+
+describe("startNewRound — Marble Joker stone card (#980)", () => {
+  test("a new round adds a stone card to addedCards", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createMarbleJoker()]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(
+      useGame.getState().addedCards.filter((c) => c.enhancement === "stone"),
+    ).toHaveLength(1);
+  });
+
+  test("a new round without Marble Joker adds nothing (negative)", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(useGame.getState().addedCards).toHaveLength(0);
+  });
+});
+
+describe("startNewRound — Certificate sealed card (#988)", () => {
+  test("a new round puts a sealed card in the opening hand", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createCertificateJoker()]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(
+      useGame.getState().dealt.hand.filter((c) => c.seal !== undefined),
+    ).toHaveLength(1);
+  });
+
+  test("the sealed card persists in addedCards", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createCertificateJoker()]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(
+      useGame.getState().addedCards.filter((c) => c.seal !== undefined),
+    ).toHaveLength(1);
+  });
+});
+
+describe("startNewRound — Chicot disables the boss (#1000)", () => {
+  test("a boss round starts with the boss effect neutralized", () => {
+    useGame.getState().resetGame();
+    const boss = createBossCatalog().find((b) => b.effect.kind !== "none");
+    if (!boss) throw new Error("no boss with an effect in the catalog");
+    useGame.getState().setJokers([createChicotJoker()]);
+    useGame.getState().setCurrentBoss(boss);
+    useGame.getState().setBlind(3);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(useGame.getState().currentBoss.effect.kind).toBe("none");
+  });
+
+  test("without Chicot the boss effect stays (negative)", () => {
+    useGame.getState().resetGame();
+    const boss = createBossCatalog().find((b) => b.effect.kind !== "none");
+    if (!boss) throw new Error("no boss with an effect in the catalog");
+    useGame.getState().setJokers([]);
+    useGame.getState().setCurrentBoss(boss);
+    useGame.getState().setBlind(3);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(useGame.getState().currentBoss.effect.kind).toBe(boss.effect.kind);
+  });
+});
+
+describe("startNewRound — blind-select creations (#1025)", () => {
+  function startRound(): void {
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+  }
+
+  test("Cartomancer creates a tarot when the blind starts", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createCartomancerJoker()]);
+    useGame.getState().setConsumables([]);
+    startRound();
+    expect(
+      useGame.getState().consumables.filter((c) => c.kind === "tarot"),
+    ).toHaveLength(1);
+  });
+
+  test("Riff-Raff creates two common jokers when the blind starts", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createRiffRaffJoker()]);
+    startRound();
+    const jokers = useGame.getState().jokers;
+    expect(jokers.filter((j) => j.rarity === "common")).toHaveLength(3);
+  });
+
+  test("without these jokers nothing is created (negative)", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([]);
+    useGame.getState().setConsumables([]);
+    startRound();
+    expect(useGame.getState().consumables).toHaveLength(0);
+    expect(useGame.getState().jokers).toHaveLength(0);
   });
 });

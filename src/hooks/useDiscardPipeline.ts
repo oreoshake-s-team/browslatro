@@ -20,11 +20,19 @@ import {
 } from "../items/consumables";
 import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
 import {
+  applyCardsDestroyedToJokerStates,
   applyDiscardToJokerStates,
   applyOnDiscardJokers,
   extraStartingHandSizeFromJokers,
+  isJokerActive,
 } from "../items/jokers";
 import { cardLabel } from "../scoring/scoringTrace";
+import { detectHandLabel } from "../scoring/handEvaluator";
+import {
+  applyPlanetUpgrade,
+  createPlanetCatalog,
+  planetForHand,
+} from "../items/planets";
 
 export interface UseDiscardPipelineResult {
   readonly pendingDiscardCountRef: MutableRefObject<number>;
@@ -167,11 +175,34 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
 
     const discardedCards = currentHand.filter((c) => ids.has(c.id));
     useGame.getState().setJokers((prev) =>
-      applyDiscardToJokerStates(prev, discardedCards),
+      applyDiscardToJokerStates(
+        prev,
+        discardedCards,
+        useGame.getState().castleSuit,
+      ),
     );
     const onDiscardResult = applyOnDiscardJokers(jokers, discardedCards, {
       discardsUsedThisRound: discardsUsedThisRound + 1,
+      rebateRank: useGame.getState().rebateRank,
     });
+    if (
+      discardsUsedThisRound === 0 &&
+      jokers.some(
+        (j) =>
+          j.effect.kind === "first-discard-upgrades-hand" && isJokerActive(j),
+      )
+    ) {
+      const discardedLabel = detectHandLabel(discardedCards);
+      const planet =
+        discardedLabel !== null
+          ? planetForHand(createPlanetCatalog(), discardedLabel)
+          : null;
+      if (planet) {
+        useGame
+          .getState()
+          .setHandStats((prev) => applyPlanetUpgrade(prev, planet));
+      }
+    }
     for (const step of onDiscardResult.steps) {
       useGame.getState().earn(step.moneyEarned);
       setScoringEvents((prev) => [
@@ -192,6 +223,11 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
         });
         const destroyed = discardedCards.find((c) => c.id === id);
         if (destroyed) {
+          useGame
+            .getState()
+            .setJokers((prev) =>
+              applyCardsDestroyedToJokerStates(prev, [destroyed]),
+            );
           setScoringEvents((prev) => [
             ...prev,
             {

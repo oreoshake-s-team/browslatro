@@ -122,7 +122,7 @@ export default function BlindSelectScreen({
         {tags.length > 0 && (
           <ul
             className="blind-select-tags"
-            aria-label="Tags held"
+            aria-label={t("a11y.tagsHeld")}
             data-testid="blind-select-tags"
           >
             {tags.map((id, idx) => {
@@ -136,12 +136,9 @@ export default function BlindSelectScreen({
                   className="blind-select-tag"
                   data-testid={`blind-select-tag-${idx}`}
                   data-tag-id={id}
-                  tabIndex={0}
                   aria-describedby={open ? tooltipId : undefined}
                   onMouseEnter={(e) => openTooltip(key, spec, e.currentTarget)}
                   onMouseLeave={() => closeTooltip(key)}
-                  onFocus={(e) => openTooltip(key, spec, e.currentTarget)}
-                  onBlur={() => closeTooltip(key)}
                 >
                   <span className="blind-select-tag-name">{spec.name}</span>
                   <span className="blind-select-tag-description">
@@ -159,7 +156,7 @@ export default function BlindSelectScreen({
             })}
           </ul>
         )}
-        <ul className="blind-select-rows" aria-label="Blinds for this ante">
+        <ul className="blind-select-rows" aria-label={t("a11y.blindsForAnte")}>
           {blinds.map((b) => {
             const isCurrent = b === currentBlind;
             const isCompleted = b < currentBlind;
@@ -187,7 +184,7 @@ export default function BlindSelectScreen({
                   <select
                     className="blind-select-row-name blind-select-boss-override"
                     data-testid="blind-select-boss-override"
-                    aria-label="Override boss for this ante (dev)"
+                    aria-label={t("a11y.overrideBossDev")}
                     value={boss.id}
                     onChange={(e) => onSetBoss?.(e.target.value)}
                   >
@@ -217,8 +214,8 @@ export default function BlindSelectScreen({
                     disabled={canAffordBossReroll === false}
                     aria-label={
                       canAffordBossReroll === false
-                        ? `Reroll Boss ($${bossRerollCost ?? 10}) — not enough money`
-                        : `Reroll Boss ($${bossRerollCost ?? 10})`
+                        ? t("a11y.rerollBossNotEnough", { cost: bossRerollCost ?? 10 })
+                        : t("blinds.rerollBoss", { cost: bossRerollCost ?? 10 })
                     }
                   >
                     {t("blinds.rerollBoss", { cost: bossRerollCost ?? 10 })}
@@ -242,7 +239,6 @@ export default function BlindSelectScreen({
                   <div
                     className="blind-select-row-skip-reward"
                     data-testid={`blind-select-row-skip-reward-${b}`}
-                    tabIndex={0}
                     aria-describedby={
                       skipTooltipOpen ? skipTooltipId : undefined
                     }
@@ -250,10 +246,6 @@ export default function BlindSelectScreen({
                       openTooltip(skipKey, rowSkipSpec, e.currentTarget)
                     }
                     onMouseLeave={() => closeTooltip(skipKey)}
-                    onFocus={(e) =>
-                      openTooltip(skipKey, rowSkipSpec, e.currentTarget)
-                    }
-                    onBlur={() => closeTooltip(skipKey)}
                   >
                     <span className="blind-select-row-skip-reward-label">
                       {t("blinds.skipReward")}
@@ -290,7 +282,7 @@ export default function BlindSelectScreen({
               className="btn btn--ghost blind-select-skip"
               data-testid="blind-select-skip"
               onClick={onSkip}
-              aria-label={`Skip ${currentName} (no reward, no penalty)`}
+              aria-label={t("a11y.skipBlind", { blind: currentName })}
             >
               {t("blinds.skip")}
             </button>

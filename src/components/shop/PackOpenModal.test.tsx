@@ -1187,8 +1187,8 @@ describe("PackOpenModal — Buffoon pack sticker badges (closes #801)", () => {
 
 describe("PackOpenModal i18n (#921)", () => {
   afterEach(async () => {
-    const { default: i18n } = await import("../../i18n");
-    await i18n.changeLanguage("en");
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("pick buttons render Koho under the haw locale", async () => {

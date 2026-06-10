@@ -1,4 +1,6 @@
 import "./JokerStickerBadges.css";
+import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import {
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
@@ -18,12 +20,13 @@ const STICKER_LETTER: Readonly<Record<JokerSticker["kind"], string>> = {
 };
 
 export default function JokerStickerBadges({ joker }: JokerStickerBadgesProps) {
+  const { t } = useTranslation();
   const stickers = jokerStickers(joker);
   if (stickers.length === 0) return null;
   return (
     <ul
       className="joker-sticker-badges"
-      aria-label="Joker stickers"
+      aria-label={t("a11y.jokerStickers")}
       data-testid={`joker-stickers-${joker.id}`}
     >
       {stickers.map((sticker, idx) => (
@@ -34,7 +37,7 @@ export default function JokerStickerBadges({ joker }: JokerStickerBadgesProps) {
               ? " joker-sticker-badge-debuffed"
               : ""
           }`}
-          aria-label={badgeAriaLabel(sticker)}
+          aria-label={badgeAriaLabel(t, sticker)}
           data-testid={`joker-sticker-${sticker.kind}`}
         >
           {badgeText(sticker)}
@@ -52,14 +55,18 @@ function badgeText(sticker: JokerSticker): string {
   return STICKER_LETTER[sticker.kind];
 }
 
-function badgeAriaLabel(sticker: JokerSticker): string {
+function badgeAriaLabel(t: TFunction, sticker: JokerSticker): string {
   const info = JOKER_STICKER_INFO[sticker.kind];
   if (sticker.kind === "perishable") {
     if (sticker.roundsHeld >= PERISHABLE_LIFE) {
-      return `${info.name} — debuffed`;
+      return t("a11y.stickerDebuffed", { name: info.name });
     }
     const remaining = PERISHABLE_LIFE - sticker.roundsHeld;
-    return `${info.name} — ${remaining} of ${PERISHABLE_LIFE} rounds left`;
+    return t("a11y.stickerRoundsLeft", {
+      name: info.name,
+      remaining,
+      total: PERISHABLE_LIFE,
+    });
   }
-  return `${info.name} — ${info.description}`;
+  return t("a11y.stickerInfo", { name: info.name, detail: info.description });
 }

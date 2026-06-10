@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Hand } from "../../cards/types";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./HandScore.css";
 
 interface HandScoreProps {
@@ -15,6 +17,19 @@ interface CountUp {
 }
 
 const COUNT_UP_MS = 700;
+const ANNOUNCE_DEBOUNCE_MS = 120;
+
+function useDebouncedText(text: string): string {
+  const [debounced, setDebounced] = useState(text);
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebounced(text),
+      ANNOUNCE_DEBOUNCE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [text]);
+  return debounced;
+}
 
 function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
@@ -94,6 +109,10 @@ function HandScore({
   selectedHand,
   selectedHandLevel = null,
 }: HandScoreProps) {
+  const { t } = useTranslation();
+  const announcement = useDebouncedText(
+    t("handScore.preview", { chips, mult: multiplier }),
+  );
   const hasLevel =
     selectedHand !== null && typeof selectedHandLevel === "number";
   const labelKey = selectedHand?.label ?? null;
@@ -106,11 +125,14 @@ function HandScore({
         <h3
           aria-label={
             hasLevel
-              ? `${selectedHand.label}, level ${selectedHandLevel}`
+              ? t("a11y.handLevel", {
+                  hand: tHandLabel(t, selectedHand.label),
+                  level: selectedHandLevel,
+                })
               : undefined
           }
         >
-          <span>{selectedHand.label}</span>
+          <span>{tHandLabel(t, selectedHand.label)}</span>
           {hasLevel && (
             <span className="hand-score-level" aria-hidden="true">
               Lv {selectedHandLevel}
@@ -118,7 +140,7 @@ function HandScore({
           )}
         </h3>
       )}
-      <p>
+      <p aria-hidden="true">
         <span
           key={`chips-${labelKey ?? "none"}`}
           className={`chips${chipsAnim.leveling ? " hand-score-leveling" : ""}`}
@@ -134,6 +156,14 @@ function HandScore({
         >
           {multAnim.value}
         </span>
+      </p>
+      <p
+        className="hand-score-announcement"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        {announcement}
       </p>
     </div>
   );

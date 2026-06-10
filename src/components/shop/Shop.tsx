@@ -2,6 +2,14 @@ import "./Shop.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import {
+  localizedConsumableDescription,
+  localizedConsumableName,
+} from "../../i18n/contentOverrides";
+import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
 import type {
   CardEdition,
   Enhancement,
@@ -158,29 +166,29 @@ const SUIT_GLYPH: Record<string, string> = {
   clubs: "♣",
 };
 
-const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
-  bonus: "Bonus",
-  mult: "Mult",
-  wild: "Wild",
-  glass: "Glass",
-  steel: "Steel",
-  stone: "Stone",
-  gold: "Gold",
-  lucky: "Lucky",
-};
+const ENHANCEMENT_LABEL_KEY = {
+  bonus: "cardLabels.enhancementBonus",
+  mult: "cardLabels.enhancementMult",
+  wild: "cardLabels.enhancementWild",
+  glass: "cardLabels.enhancementGlass",
+  steel: "cardLabels.enhancementSteel",
+  stone: "cardLabels.enhancementStone",
+  gold: "cardLabels.enhancementGold",
+  lucky: "cardLabels.enhancementLucky",
+} as const satisfies Record<Enhancement, string>;
 
-const CARD_EDITION_LABEL: Record<CardEdition, string> = {
-  foil: "Foil",
-  holographic: "Holographic",
-  polychrome: "Polychrome",
-};
+const CARD_EDITION_LABEL_KEY = {
+  foil: "cardLabels.editionFoil",
+  holographic: "cardLabels.editionHolographic",
+  polychrome: "cardLabels.editionPolychrome",
+} as const satisfies Record<CardEdition, string>;
 
-const SEAL_LABEL: Record<Seal, string> = {
-  gold: "Gold Seal",
-  red: "Red Seal",
-  blue: "Blue Seal",
-  purple: "Purple Seal",
-};
+const SEAL_LABEL_KEY = {
+  gold: "cardLabels.sealGold",
+  red: "cardLabels.sealRed",
+  blue: "cardLabels.sealBlue",
+  purple: "cardLabels.sealPurple",
+} as const satisfies Record<Seal, string>;
 
 function playingCardSummary(
   t: TFunction,
@@ -201,8 +209,20 @@ function playingCardSummary(
   return { name, description };
 }
 
+function localizedSubject(
+  locale: string,
+  item: { readonly id: string; readonly name: string; readonly description: string },
+): { readonly id: string; readonly name: string; readonly description: string } {
+  return {
+    id: item.id,
+    name: localizedConsumableName(locale, item.id, item.name),
+    description: localizedConsumableDescription(locale, item.id, item.description),
+  };
+}
+
 function offerSubject(
   t: TFunction,
+  locale: string,
   offer: ShopItem,
 ): {
   readonly id: string;
@@ -211,13 +231,21 @@ function offerSubject(
 } {
   switch (offer.kind) {
     case "joker":
-      return offer.joker;
+      return {
+        id: offer.joker.id,
+        name: localizedJokerName(locale, offer.joker.id, offer.joker.name),
+        description: localizedJokerDescription(
+          locale,
+          offer.joker.id,
+          offer.joker.description,
+        ),
+      };
     case "planet":
-      return offer.planet;
+      return localizedSubject(locale, offer.planet);
     case "tarot":
-      return offer.tarot;
+      return localizedSubject(locale, offer.tarot);
     case "spectral":
-      return offer.spectral;
+      return localizedSubject(locale, offer.spectral);
     case "playing-card": {
       const summary = playingCardSummary(t, offer.card);
       return {
@@ -262,12 +290,12 @@ const OFFER_KIND_LABEL_KEY = {
   pack: "shop.kindPack",
 } as const satisfies Record<ShopItem["kind"], string>;
 
-const EDITION_LABEL: Readonly<Record<JokerEdition, string>> = {
-  foil: "Foil",
-  holographic: "Holographic",
-  polychrome: "Polychrome",
-  negative: "Negative",
-};
+const JOKER_EDITION_LABEL_KEY = {
+  foil: "cardLabels.editionFoil",
+  holographic: "cardLabels.editionHolographic",
+  polychrome: "cardLabels.editionPolychrome",
+  negative: "cardLabels.editionNegative",
+} as const satisfies Record<JokerEdition, string>;
 
 export default function Shop({
   money,
@@ -289,7 +317,7 @@ export default function Shop({
   extraRerollReduction = 0,
   freeFirstReroll = false,
 }: ShopProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lockTooltip = t("shop.finishPickingFirst");
   useEscapeToClose(onNext, !disabled);
   const canOverrideVoucher =
@@ -329,7 +357,7 @@ export default function Shop({
       consumableCapacity,
     );
     const label = buyButtonLabel(t, state, effectivePrice, offer.kind);
-    const subject = offerSubject(t, offer);
+    const subject = offerSubject(t, i18n.language, offer);
     const edition = offer.kind === "joker" ? offer.joker.edition : undefined;
     const card = offer.kind === "playing-card" ? offer.card : undefined;
     const cardEnhancement = card?.enhancement ?? undefined;
@@ -379,7 +407,7 @@ export default function Shop({
               className="shop-offer-edition-badge"
               data-testid={`shop-edition-${idx}`}
             >
-              {EDITION_LABEL[edition]}
+              {t(JOKER_EDITION_LABEL_KEY[edition])}
             </span>
           )}
           {cardEnhancement && (
@@ -387,7 +415,7 @@ export default function Shop({
               className={`shop-offer-card-badge shop-offer-card-enhancement-badge shop-offer-card-enhancement-${cardEnhancement}`}
               data-testid={`shop-card-enhancement-${idx}`}
             >
-              {ENHANCEMENT_LABEL[cardEnhancement]}
+              {t(ENHANCEMENT_LABEL_KEY[cardEnhancement])}
             </span>
           )}
           {cardEdition && (
@@ -395,7 +423,7 @@ export default function Shop({
               className={`shop-offer-card-badge shop-offer-card-edition-badge shop-offer-card-edition-${cardEdition}`}
               data-testid={`shop-card-edition-${idx}`}
             >
-              {CARD_EDITION_LABEL[cardEdition]}
+              {t(CARD_EDITION_LABEL_KEY[cardEdition])}
             </span>
           )}
           {cardSeal && (
@@ -403,7 +431,7 @@ export default function Shop({
               className={`shop-offer-card-badge shop-offer-card-seal-badge shop-offer-card-seal-${cardSeal}`}
               data-testid={`shop-card-seal-${idx}`}
             >
-              {SEAL_LABEL[cardSeal]}
+              {t(SEAL_LABEL_KEY[cardSeal])}
             </span>
           )}
         </span>
@@ -432,7 +460,7 @@ export default function Shop({
               ? lockTooltip
               : buyButtonTooltip(t, state, consumableCapacity, jokerCapacity)
           }
-          aria-label={`${label}: ${subject.name}`}
+          aria-label={t("a11y.buyOffer", { label, name: subject.name })}
           onClick={() => onBuy(idx)}
         >
           {label}
@@ -461,11 +489,11 @@ export default function Shop({
             onClick={handleReroll}
             disabled={disabled || !canAffordReroll}
             title={rerollTooltip}
-            aria-label={`Reroll shop offers for $${currentRerollCost}`}
+            aria-label={t("a11y.rerollShopOffers", { cost: currentRerollCost })}
           >
             {t("shop.reroll", { cost: currentRerollCost })}
           </button>
-          <ul className="shop-offers shop-offers-cards" aria-label="Items for sale">
+          <ul className="shop-offers shop-offers-cards" aria-label={t("a11y.itemsForSale")}>
             {offers.map((offer, idx) => {
               if (offer.kind === "pack") return null;
               return renderOffer(offer, idx);
@@ -476,7 +504,7 @@ export default function Shop({
           <section
             className="shop-voucher"
             data-testid="shop-voucher"
-            aria-label="Vouchers for this ante"
+            aria-label={t("a11y.vouchersForAnte")}
           >
             <h3 className="shop-voucher-heading">
               {vouchers.length === 1
@@ -487,7 +515,7 @@ export default function Shop({
               <select
                 className="shop-voucher-override"
                 data-testid="shop-voucher-override"
-                aria-label="Override offered voucher (dev)"
+                aria-label={t("a11y.overrideVoucherDev")}
                 value={vouchers[0]?.id ?? voucherOptions[0].id}
                 onChange={(e) => onSetVoucher?.(e.target.value)}
               >
@@ -536,7 +564,7 @@ export default function Shop({
                         data-testid={`shop-voucher-buy-${idx}`}
                         disabled={disabled || btn.disabled}
                         title={disabled ? lockTooltip : btn.title}
-                        aria-label={`${btn.label}: ${voucher.name}`}
+                        aria-label={t("a11y.buyOffer", { label: btn.label, name: voucher.name })}
                         onClick={() => onBuyVoucher(idx)}
                       >
                         {btn.label}
@@ -550,10 +578,10 @@ export default function Shop({
           <section
             className="shop-packs"
             data-testid="shop-packs"
-            aria-label="Booster packs for sale"
+            aria-label={t("a11y.boosterPacksForSale")}
           >
             <h3 className="shop-packs-heading">{t("shop.boosterPacks")}</h3>
-            <ul className="shop-offers shop-offers-packs" aria-label="Packs for sale">
+            <ul className="shop-offers shop-offers-packs" aria-label={t("a11y.packsForSale")}>
               {offers.map((offer, idx) => {
                 if (offer.kind !== "pack") return null;
                 return renderOffer(offer, idx);

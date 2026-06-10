@@ -1,9 +1,9 @@
 import "./Card.css";
 import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
-import type { Card as CardType, Enhancement, Rank, Suit } from "../../cards/types";
-import { getSealInfo } from "../../cards/seals";
-import { CARD_EDITION_INFO } from "../../cards/editions";
+import { useTranslation } from "react-i18next";
+import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";
+import { tSuitName } from "../../i18n/strings";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 import { useGame } from "../../store/game";
@@ -14,13 +14,6 @@ const SUIT_GLYPHS: Record<Suit, string> = {
   hearts: "♥",
   diamonds: "♦",
   clubs: "♣",
-};
-
-const SUIT_LABELS: Record<Suit, string> = {
-  spades: "Spades",
-  hearts: "Hearts",
-  diamonds: "Diamonds",
-  clubs: "Clubs",
 };
 
 type FaceRank = "J" | "Q" | "K";
@@ -40,16 +33,29 @@ const FACE_RANK_GLYPH: Record<FaceRank, string> = {
   K: "♚",
 };
 
-const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
-  bonus: "Bonus",
-  mult: "Mult",
-  wild: "Wild",
-  glass: "Glass",
-  steel: "Steel",
-  stone: "Stone",
-  gold: "Gold",
-  lucky: "Lucky",
-};
+const ENHANCEMENT_LABEL_KEY = {
+  bonus: "cardLabels.enhancementBonus",
+  mult: "cardLabels.enhancementMult",
+  wild: "cardLabels.enhancementWild",
+  glass: "cardLabels.enhancementGlass",
+  steel: "cardLabels.enhancementSteel",
+  stone: "cardLabels.enhancementStone",
+  gold: "cardLabels.enhancementGold",
+  lucky: "cardLabels.enhancementLucky",
+} as const satisfies Record<Enhancement, string>;
+
+const SEAL_LABEL_KEY = {
+  gold: "cardLabels.sealGold",
+  red: "cardLabels.sealRed",
+  blue: "cardLabels.sealBlue",
+  purple: "cardLabels.sealPurple",
+} as const satisfies Record<Seal, string>;
+
+const CARD_EDITION_LABEL_KEY = {
+  foil: "cardLabels.editionFoil",
+  holographic: "cardLabels.editionHolographic",
+  polychrome: "cardLabels.editionPolychrome",
+} as const satisfies Record<CardEdition, string>;
 
 function isFaceRank(rank: Rank): rank is FaceRank {
   return rank === "J" || rank === "Q" || rank === "K";
@@ -88,6 +94,7 @@ export default function Card({
   onDiscardEnd,
   decorative = false,
 }: CardProps) {
+  const { t } = useTranslation();
   const tooltipId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
@@ -136,19 +143,33 @@ export default function Card({
     : "";
   const debuffedClass = debuffed ? "card-debuffed" : "";
   const baseName = isStone
-    ? "Stone card"
+    ? t("a11y.stoneCard")
     : card.enhancement
-      ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
-      : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
-  const withSeal = card.seal ? `${baseName}, ${getSealInfo(card.seal).name}` : baseName;
+      ? t("a11y.cardNameEnhanced", {
+          rank: card.rank,
+          suit: tSuitName(t, card.suit),
+          enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
+        })
+      : t("a11y.cardName", { rank: card.rank, suit: tSuitName(t, card.suit) });
+  const withSeal = card.seal
+    ? t("a11y.cardWithDetail", {
+        name: baseName,
+        detail: t(SEAL_LABEL_KEY[card.seal]),
+      })
+    : baseName;
   const withEdition = card.edition
-    ? `${withSeal}, ${CARD_EDITION_INFO[card.edition].name}`
+    ? t("a11y.cardWithDetail", {
+        name: withSeal,
+        detail: t(CARD_EDITION_LABEL_KEY[card.edition]),
+      })
     : withSeal;
-  const withDebuff = debuffed ? `${withEdition}, debuffed` : withEdition;
+  const withDebuff = debuffed
+    ? t("a11y.cardDebuffed", { name: withEdition })
+    : withEdition;
   const ariaLabel = showBack
-    ? "Face-down card"
+    ? t("a11y.faceDownCard")
     : newlyDrawn
-      ? `${withDebuff}, newly drawn`
+      ? t("a11y.cardNewlyDrawn", { name: withDebuff })
       : withDebuff;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`

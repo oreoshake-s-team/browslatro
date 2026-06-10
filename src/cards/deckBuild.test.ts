@@ -124,6 +124,13 @@ describe("buildShuffledDeck", () => {
     const deck = buildShuffledDeck(base, new Set([999]), [addedAce]);
     expect(deck.some((c) => c.id === baseAce.id)).toBe(true);
   });
+
+  test("omits a destroyed added card from the deck (#999)", () => {
+    const base = createDeck();
+    const addedAce = card({ id: 999, rank: "A", suit: "spades" });
+    const deck = buildShuffledDeck(base, new Set([999]), [addedAce]);
+    expect(deck.some((c) => c.id === 999)).toBe(false);
+  });
 });
 
 describe("initialDeal", () => {
@@ -290,6 +297,12 @@ describe("fullDeckSize", () => {
     expect(fullDeckSize(createDeck(), new Set(), [card({ id: 999 })])).toBe(
       DECK_SIZE + 1,
     );
+  });
+
+  test("a destroyed added card shrinks the full deck (#999)", () => {
+    expect(
+      fullDeckSize(createDeck(), new Set([999]), [card({ id: 999 })]),
+    ).toBe(DECK_SIZE);
   });
 });
 

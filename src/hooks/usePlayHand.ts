@@ -1,5 +1,6 @@
 import type { MutableRefObject } from "react";
 import { useGame } from "../store/game";
+import { createSpectralCatalog } from "../items/spectrals";
 import { useScoringPipeline } from "./useScoringPipeline";
 import { play } from "../components/system/sounds";
 import type { Card } from "../cards/types";
@@ -35,10 +36,17 @@ import {
   applyScoredCardMutations,
   applyScoredMutationsToCards,
   applyEnhancementsEatenToJokerStates,
+  chipsPerScoredCardFromJokers,
+  consumableCreationsOnHandPlayed,
+  canPreventDeath,
+  consumeDeathPreventer,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
+  handPlayUpgradeRolls,
+  firstHandCardCopyCount,
 } from "../items/jokers";
+import { applyPlanetUpgrade } from "../items/planets";
 import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
 import {
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
@@ -60,13 +68,14 @@ import {
 import {
   blueSealHeldCards,
   planetForHand,
+  pickRandomTarot,
 } from "../cards/seals";
 import {
   getHeldInHand,
   heldEnhancementIdsWithRedSeal,
   steelHeldMultiplier,
 } from "../cards/heldInHand";
-import { cardKey } from "../cards/deck";
+import { cardKey, nextCardId } from "../cards/deck";
 import { recordHandPlayed } from "../run/runStats";
 
 export interface UsePlayHandParams {
@@ -183,7 +192,14 @@ export function usePlayHand({
     setScoringCards([]);
     setScoringIndex(0);
 
-    const roundWon = newRoundScore >= requiredScore;
+    const mrBonesSave =
+      newRoundScore < requiredScore &&
+      remainingHands <= 1 &&
+      canPreventDeath(jokers, newRoundScore, requiredScore);
+    if (mrBonesSave) {
+      setJokers((prev) => consumeDeathPreventer(prev));
+    }
+    const roundWon = newRoundScore >= requiredScore || mrBonesSave;
     if (submittedSelection.size > 0) {
       pendingDiscardCountRef.current = submittedSelection.size;
       skipDrawAfterDiscardRef.current = roundWon;
@@ -241,6 +257,7 @@ export function usePlayHand({
         remainingDiscards,
         discardsUsedThisRound,
         fullDeck,
+        uniquePlanetsUsed: useGame.getState().planetsUsed.size,
       });
       const postJokerWallet = postBonusesWallet + endOfRoundJokerResult.moneyEarned;
       const openModal = () => {
@@ -375,7 +392,17 @@ export function usePlayHand({
       for (const card of playedCards) next.add(cardKey(card));
       return next;
     });
-    const baseHandEntry = handStats[label];
+    const upgradeRolls = handPlayUpgradeRolls(jokers);
+    const planetForUpgrade =
+      upgradeRolls > 0 ? planetForHand(label) : undefined;
+    let statsForThisHand = handStats;
+    if (planetForUpgrade !== undefined) {
+      for (let u = 0; u < upgradeRolls; u += 1) {
+        statsForThisHand = applyPlanetUpgrade(statsForThisHand, planetForUpgrade);
+      }
+      useGame.getState().setHandStats(statsForThisHand);
+    }
+    const baseHandEntry = statsForThisHand[label];
     const adjustedHandEntry = isBossRound
       ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
       : baseHandEntry;
@@ -393,6 +420,11 @@ export function usePlayHand({
       isBossRound,
       playedCardKeysThisAnte,
     );
+    const bossTriggered =
+      isBossRound &&
+      (playedDebuffedIds.size > 0 ||
+        psychicZeroed ||
+        adjustedHandEntry !== baseHandEntry);
     const preMutationScoring = expandScoringRetriggers(
       getScoringCards(playedCards, label, {
         allCardsScore: allCardsScoreFromJokers(jokers),
@@ -422,6 +454,78 @@ export function usePlayHand({
       setJokers((prev) =>
         applyEnhancementsEatenToJokerStates(prev, mutations.enhancementsEaten),
       );
+    }
+    const creations = consumableCreationsOnHandPlayed(jokers, {
+      playedHandLabel: label,
+      playedCards,
+      scoredCards: scoring,
+      isFirstHandOfRound: handHistoryThisRound.length === 0,
+      money,
+    });
+    if (creations.tarots > 0 || creations.spectrals > 0) {
+      setConsumables((prev) => {
+        let next = prev;
+        for (let i = 0; i < creations.tarots; i += 1) {
+          const after = addConsumable(
+            next,
+            { kind: "tarot", card: pickRandomTarot() },
+            consumableCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        for (let i = 0; i < creations.spectrals; i += 1) {
+          const pool = createSpectralCatalog().filter((s) => !s.hidden);
+          const after = addConsumable(
+            next,
+            {
+              kind: "spectral",
+              card: pool[Math.floor(Math.random() * pool.length)],
+            },
+            consumableCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        return next;
+      });
+    }
+    if (creations.destroyedCardId !== null) {
+      const destroyedId = creations.destroyedCardId;
+      useGame.getState().setDestroyedCardIds((prev) => {
+        if (prev.has(destroyedId)) return prev;
+        const next = new Set(prev);
+        next.add(destroyedId);
+        return next;
+      });
+    }
+    const dnaCopies = firstHandCardCopyCount(
+      jokers,
+      playedCards.length,
+      handHistoryThisRound.length === 0,
+    );
+    if (dnaCopies > 0) {
+      const copies = Array.from({ length: dnaCopies }, () => ({
+        ...playedCards[0],
+        id: nextCardId(),
+      }));
+      useGame.getState().setAddedCards((prev) => [...prev, ...copies]);
+      useGame.getState().setDealt((prev) => ({
+        hand: [...prev.hand, ...copies],
+        remaining: prev.remaining,
+      }));
+    }
+    const chipsPerScored = chipsPerScoredCardFromJokers(jokers);
+    if (chipsPerScored > 0) {
+      const scoredIds = new Set(scoring.map((c) => c.id));
+      const addBonus = (cards: ReadonlyArray<Card>): Card[] =>
+        cards.map((c) =>
+          scoredIds.has(c.id)
+            ? { ...c, bonusChips: (c.bonusChips ?? 0) + chipsPerScored }
+            : c,
+        );
+      useGame.getState().setBaseDeckCards(addBonus);
+      useGame.getState().setAddedCards(addBonus);
     }
     setJokers((prev) =>
       applyHandPlayedToJokerStates(prev, {
@@ -458,6 +562,8 @@ export function usePlayHand({
           handLabelsThisRound: handHistoryThisRound,
           blindsSkipped: runStats.blindsSkipped,
           addedCardsCount: addedCards.length,
+          todoHand: useGame.getState().todoHand,
+          bossTriggered,
         },
       );
       const noCardsMatchingObservatoryPlanets = consumables.filter(
@@ -507,6 +613,8 @@ export function usePlayHand({
       handLabelsThisRound: handHistoryThisRound,
       blindsSkipped: runStats.blindsSkipped,
       addedCardsCount: addedCards.length,
+      todoHand: useGame.getState().todoHand,
+      bossTriggered,
     });
 
     let perCardAdditiveMult = 0;
@@ -521,6 +629,8 @@ export function usePlayHand({
       const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
         smearedSuits: smearedSuitsActive,
+        idolTarget: useGame.getState().idolTarget,
+        ancientSuit: useGame.getState().ancientSuit,
       });
       perCardAdditiveMult += perCard.additiveMult;
       perCardAdditiveChips += perCard.additiveChips;

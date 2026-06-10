@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Blind, BlindValuesMap } from "../../cards/types";
+import { tHandLabel } from "../../i18n/handLabels";
 import type { BossBlind } from "../../items/bosses";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import "./Round.css";
@@ -40,9 +41,14 @@ function Round({
           <p
             className="boss-locked-hand"
             data-testid="boss-locked-hand"
-            aria-label={`Locked to ${firstPlayedHandLabel}`}
+            aria-label={t("a11y.lockedTo", {
+              hand: firstPlayedHandLabel
+                ? tHandLabel(t, firstPlayedHandLabel)
+                : "",
+            })}
           >
-            Locked to: <strong>{firstPlayedHandLabel}</strong>
+            {t("sidebar.lockedTo")}{" "}
+            <strong>{firstPlayedHandLabel ? tHandLabel(t, firstPlayedHandLabel) : null}</strong>
           </p>
         )}
         <h3>{t("sidebar.scoreAtLeast", { score: requiredScore })}</h3>

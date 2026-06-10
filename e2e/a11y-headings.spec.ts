@@ -9,7 +9,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 
 async function expectHeadingRulesPass(page: Page): Promise<void> {
   const results = await new AxeBuilder({ page })

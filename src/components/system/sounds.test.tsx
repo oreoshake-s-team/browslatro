@@ -51,6 +51,7 @@ function buildFakeContext() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   isMutedMock.mockReset();
   isMutedMock.mockReturnValue(false);
   audioContextCtor.mockReset();
@@ -60,6 +61,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.clearAllTimers();
   vi.useRealTimers();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -117,7 +119,6 @@ describe("sample preloading", () => {
     vi.resetModules();
     await import("./sounds");
     expect(audioCtor).not.toHaveBeenCalled();
-    vi.useFakeTimers();
     emitPrefsChange(
       { muted: false, highVisibility: false },
       { muted: true, highVisibility: false },

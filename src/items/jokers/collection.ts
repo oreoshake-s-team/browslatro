@@ -1,7 +1,8 @@
 import type { Enhancement } from "../../cards/types";
 import { cloneJoker, withEdition } from "./editions";
-import { canDestroyJoker, isJokerActive } from "./stickers";
+import { canDestroyJoker, hasSticker, isJokerActive } from "./stickers";
 import { resolveJokerEffect } from "./scoring/copy";
+import { rollChance } from "../../dev/chanceOverride";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -35,6 +36,125 @@ export function heldRetriggerCountFromJokers(
     if (effect.kind === "retrigger-held-abilities") total += effect.times;
   }
   return total;
+}
+
+export function shopExitConsumableCopies<T>(
+  allJokers: ReadonlyArray<Joker>,
+  consumables: ReadonlyArray<T>,
+  rng: RandomSource = Math.random,
+): T[] {
+  if (consumables.length === 0) return [];
+  const jokers = allJokers.filter(isJokerActive);
+  const copies: T[] = [];
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind !== "shop-exit-copies-consumable") continue;
+    copies.push(consumables[Math.floor(rng() * consumables.length)]);
+  }
+  return copies;
+}
+
+export function handPlayUpgradeRolls(
+  allJokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): number {
+  const jokers = allJokers.filter(isJokerActive);
+  let count = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind !== "hand-play-chance-upgrades-hand") continue;
+    if (rollChance(effect.chance, rng)) count += 1;
+  }
+  return count;
+}
+
+export function firstHandCardCopyCount(
+  allJokers: ReadonlyArray<Joker>,
+  playedCardCount: number,
+  isFirstHandOfRound: boolean,
+): number {
+  if (!isFirstHandOfRound || playedCardCount !== 1) return 0;
+  const jokers = allJokers.filter(isJokerActive);
+  let count = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "first-hand-single-card-copies-card") count += 1;
+  }
+  return count;
+}
+
+export function chipsPerScoredCardFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "scored-cards-gain-chips") total += j.effect.amount;
+  }
+  return total;
+}
+
+export function stoneCardsOnBlindSelectFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let count = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "blind-select-adds-stone-card") count += 1;
+  }
+  return count;
+}
+
+export function sealedCardsOnRoundBeginFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let count = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "round-begin-adds-sealed-card") count += 1;
+  }
+  return count;
+}
+
+export function canPreventDeath(
+  allJokers: ReadonlyArray<Joker>,
+  roundScore: number,
+  requiredScore: number,
+): boolean {
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (
+      j.effect.kind === "prevent-death-at-quarter" &&
+      roundScore >= Math.ceil(requiredScore * j.effect.threshold)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function consumeDeathPreventer(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const idx = jokers.findIndex(
+    (j) =>
+      j.effect.kind === "prevent-death-at-quarter" &&
+      !hasSticker(j, "eternal"),
+  );
+  if (idx === -1) return [...jokers];
+  return jokers.filter((_, i) => i !== idx);
+}
+
+export function disablesBossBlindsFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): boolean {
+  return allJokers
+    .filter(isJokerActive)
+    .some((j) => j.effect.kind === "disables-boss-blinds");
+}
+
+export function allowsDuplicateJokers(
+  allJokers: ReadonlyArray<Joker>,
+): boolean {
+  return allJokers
+    .filter(isJokerActive)
+    .some((j) => j.effect.kind === "allows-duplicate-jokers");
 }
 
 export function interestMultiplierFromJokers(

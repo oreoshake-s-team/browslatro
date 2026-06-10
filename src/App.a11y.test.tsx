@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, test } from "vitest";
 import App from "./App";
 import { useGame } from "./store/game";
@@ -19,7 +19,9 @@ describe("App landmarks (#640)", () => {
 
 describe("App heading hierarchy (#917)", () => {
   afterEach(() => {
-    useGame.getState().setPendingRunSelect(true);
+    act(() => {
+      useGame.getState().setPendingRunSelect(true);
+    });
   });
 
   test("fresh boot exposes exactly one visually-hidden h1 naming the main menu", () => {

@@ -165,3 +165,26 @@ describe("ModifierJokerPicker", () => {
     ).toHaveTextContent("Page 1 /");
   });
 });
+
+describe("ModifierJokerPicker aria i18n (#987)", () => {
+  afterEach(async () => {
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
+  });
+
+  test("the pagination nav resolves its accessible name from the catalog", () => {
+    render(<ModifierJokerPicker />);
+    expect(
+      screen.getByRole("navigation", { name: "Joker picker pagination" }),
+    ).toBeInTheDocument();
+  });
+
+  test("the pagination nav keeps the English fallback under the haw locale (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<ModifierJokerPicker />);
+    expect(
+      screen.getByRole("navigation", { name: "Joker picker pagination" }),
+    ).toBeInTheDocument();
+  });
+});

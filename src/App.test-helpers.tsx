@@ -34,7 +34,9 @@ export async function awaitShopOpen(): Promise<void> {
 
 export function resetHighVisibility(): void {
   if (isHighVisibility()) {
-    toggleHighVisibility();
+    act(() => {
+      toggleHighVisibility();
+    });
   }
   window.localStorage.removeItem("browslatro:highVisibility");
 }
@@ -54,14 +56,14 @@ export async function dismissBlindSelect(
 
 export function getHandCardButtons(): HTMLElement[] {
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
   );
 }
 
 export function getHandGaps(): HTMLElement[] {
   return Array.from(
     screen
-      .getByLabelText("Your hand")
+      .getByTestId("hand-cards")
       .querySelectorAll('[data-testid^="hand-gap-"]'),
   );
 }
@@ -125,6 +127,8 @@ export function withDeck(deck: Deck): void {
     useGame.getState().setSelectedDeck(deck);
   });
   afterEach(() => {
-    useGame.getState().setSelectedDeck("red-deck");
+    act(() => {
+      useGame.getState().setSelectedDeck("red-deck");
+    });
   });
 }

@@ -13,7 +13,7 @@ async function startRound(page: Page): Promise<void> {
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
   await expect(
-    page.locator('[aria-label="Your hand"] .card').first(),
+    page.locator('[data-testid="hand-cards"] .card').first(),
   ).toBeVisible();
 }
 
@@ -21,7 +21,7 @@ test("selecting a hand card lifts it out of the row (issue #875)", async ({
   page,
 }) => {
   await startRound(page);
-  const card = page.locator('[aria-label="Your hand"] .card').first();
+  const card = page.locator('[data-testid="hand-cards"] .card').first();
   const before = await card.boundingBox();
   await card.click();
   await expect(card).toHaveClass(/card-selected/);
@@ -38,7 +38,7 @@ test("deselecting a card returns it to the row (issue #875)", async ({
   page,
 }) => {
   await startRound(page);
-  const card = page.locator('[aria-label="Your hand"] .card').first();
+  const card = page.locator('[data-testid="hand-cards"] .card').first();
   const before = await card.boundingBox();
   await card.click();
   await expect(card).toHaveClass(/card-selected/);

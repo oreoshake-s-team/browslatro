@@ -22,11 +22,16 @@ import {
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
   tickPerishableRounds,
+  applyCardsDestroyedToJokerStates,
   applyShopRerollToJokerStates,
   applyRoundEndToJokerStates,
   applyPackSkipToJokerStates,
   applySellToJokerStates,
   interestMultiplierFromJokers,
+  isJokerActive,
+  allowsDuplicateJokers,
+  applyGiftCardToJokerSellValues,
+  cloneJoker,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -90,6 +95,8 @@ import {
   computeStartingHands,
 } from "../run/roundSetup";
 import { calculateInterest } from "../scoring/payout";
+import { rollChance } from "../dev/chanceOverride";
+import { pickRandomTarot } from "../cards/seals";
 import { BlindValues, FINAL_ANTE } from "../constants";
 import { hasStakeModifier, stakeStickerOdds } from "../items/stakes";
 import type { Blind, Card, Enhancement, Hand, Seal, Suit } from "../cards/types";
@@ -182,7 +189,10 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
     : undefined;
   const baseOffers = pickShopOffers({
     jokerCatalog: availableJokerCatalog(s),
-    excludedJokerIds: s.jokers.map((j) => j.id),
+    excludedJokerIds: [
+      ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
+      ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
+    ],
     planetCatalog: planetsForShop,
     tarotCatalog: createTarotCatalog(),
     spectralCatalog: createSpectralCatalog(),
@@ -278,9 +288,21 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (entry.effect.kind === "sell-creates-double-tag") {
       s.setPendingTags((prev) => [...prev, "double"]);
     }
-    s.setJokers((prev) =>
-      applySellToJokerStates(prev.filter((_, i) => i !== jokerIdx)),
-    );
+    if (entry.effect.kind === "sell-disables-boss-blind" && s.blind === 3) {
+      s.setCurrentBoss({ ...s.currentBoss, effect: { kind: "none" } });
+    }
+    const duplicatesOnSell =
+      entry.effect.kind === "sell-after-rounds-duplicates-joker" &&
+      entry.state?.kind === "counter" &&
+      entry.state.value >= entry.effect.rounds;
+    s.setJokers((prev) => {
+      const remaining = applySellToJokerStates(
+        prev.filter((_, i) => i !== jokerIdx),
+      );
+      if (!duplicatesOnSell || remaining.length === 0) return remaining;
+      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+      return [...remaining, cloneJoker(pick)];
+    });
   },
   reorderJokers: (orderedIds) => {
     get().setJokers((prev) => {
@@ -299,7 +321,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const freshItems = pickShopItemOffers({
       jokerCatalog: availableJokerCatalog(s),
       excludedJokerIds: [
-        ...s.jokers.map((j) => j.id),
+        ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
         ...s.soldJokerIdsThisShopVisit,
       ],
       planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
@@ -370,8 +392,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           {
             jokerCatalog: availableJokerCatalog(s),
             excludedJokerIds: [
-              ...s.jokers.map((j) => j.id),
+              ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
               ...s.soldJokerIdsThisShopVisit,
+              ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
             ],
             planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
             tarotCatalog: createTarotCatalog(),
@@ -459,6 +482,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.spend(price);
     s.openPackOffer(offer.pack);
     s.markOfferSold(idx);
+    const tarotCapacity =
+      MAX_CONSUMABLE_SLOTS + extraConsumableSlots(s.ownedVoucherIds);
+    for (const joker of s.jokers.filter(isJokerActive)) {
+      if (joker.effect.kind !== "pack-open-chance-creates-tarot") continue;
+      if (!rollChance(joker.effect.chance, Math.random)) continue;
+      s.setConsumables((prev) =>
+        addConsumable(prev, { kind: "tarot", card: pickRandomTarot() }, tarotCapacity),
+      );
+    }
     return true;
   },
   decrementPackPicks: () => {
@@ -534,13 +566,36 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   handleWin: (precomputed) => {
     const s = get();
-    s.setJokers((prev) =>
-      applyRoundEndToJokerStates(
-        tickPerishableRounds(prev),
-        Math.random,
-        s.blind === 3,
-      ),
+    if (
+      s.jokers.some(
+        (j) => j.effect.kind === "round-end-grows-all-sell-values",
+      )
+    ) {
+      s.setJokers((prev) => applyGiftCardToJokerSellValues(prev));
+      const giftAmount = s.jokers.reduce(
+        (sum, j) =>
+          j.effect.kind === "round-end-grows-all-sell-values"
+            ? sum + j.effect.amount
+            : sum,
+        0,
+      );
+      s.setConsumables((prev) =>
+        prev.map((c) => ({ ...c, sellBonus: (c.sellBonus ?? 0) + giftAmount })),
+      );
+    }
+    const jokersBeforeRoundEnd = get().jokers;
+    const jokersAfterRoundEnd = applyRoundEndToJokerStates(
+      tickPerishableRounds(jokersBeforeRoundEnd),
+      Math.random,
+      s.blind === 3,
     );
+    if (
+      jokersBeforeRoundEnd.some((j) => j.id === "gros-michel") &&
+      !jokersAfterRoundEnd.some((j) => j.id === "gros-michel")
+    ) {
+      s.setGrosMichelDestroyed(true);
+    }
+    s.setJokers(jokersAfterRoundEnd);
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
     const baseBlindReward = s.blind + 2;
@@ -622,10 +677,19 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         const handIds = s.dealt.hand.map((c) => c.id);
         const shuffled = [...handIds].sort(() => Math.random() - 0.5);
         const destroyed = new Set(shuffled.slice(0, effect.destroyCount));
+        const destroyedCards = s.dealt.hand.filter((c) => destroyed.has(c.id));
         s.setDealt((prev) => ({
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
         }));
+        s.setDestroyedCardIds((prev) => {
+          const next = new Set(prev);
+          for (const id of destroyed) next.add(id);
+          return next;
+        });
+        s.setJokers((prev) =>
+          applyCardsDestroyedToJokerStates(prev, destroyedCards),
+        );
         s.earn(effect.moneyGain);
         return;
       }
@@ -647,15 +711,22 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "transmute": {
+        const transmuted = transmuteHand(
+          s.dealt.hand,
+          effect.rankFilter,
+          effect.addCount,
+          Math.random,
+        );
         s.setDealt((prev) => ({
-          hand: transmuteHand(
-            prev.hand,
-            effect.rankFilter,
-            effect.addCount,
-            Math.random,
-          ),
+          hand: transmuted.hand,
           remaining: prev.remaining,
         }));
+        s.setDestroyedCardIds((prev) => {
+          const next = new Set(prev);
+          for (const id of transmuted.destroyedIds) next.add(id);
+          return next;
+        });
+        s.setAddedCards((prev) => [...prev, ...transmuted.additions]);
         return;
       }
       case "create-joker-by-rarity": {
@@ -816,11 +887,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       if (s.packPreviewSelectedIds.has(c.id)) ids.add(c.id);
     }
     if (ids.size === 0) return;
+    const destroyedCards = s.packPreviewHand.filter((c) => ids.has(c.id));
     s.setDestroyedCardIds((prev) => {
       const next = new Set(prev);
       for (const id of ids) next.add(id);
       return next;
     });
+    s.setJokers((prev) =>
+      applyCardsDestroyedToJokerStates(prev, destroyedCards),
+    );
     s.setPackPreviewHand((prev) => prev.filter((c) => !ids.has(c.id)));
     s.setPackPreviewSelectedIds(new Set());
   },

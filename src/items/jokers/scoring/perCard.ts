@@ -96,6 +96,18 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "per-scored-enhancement-money": {
+        if (card.enhancement === effect.enhancement) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
       case "per-scored-rank-parity": {
         if (RANK_PARITY[card.rank] === effect.parity) {
           if (effect.contribution.kind === "mult") {
@@ -160,6 +172,36 @@ export function applyPerCardJokers(
             jokerName: joker.name,
             ...(effect.mult !== undefined ? { additiveMult: effect.mult } : {}),
             ...(effect.chips !== undefined ? { additiveChips: effect.chips } : {}),
+          });
+        }
+        break;
+      }
+      case "x-mult-on-idol-card": {
+        const target = context.idolTarget;
+        if (
+          target != null &&
+          card.rank === target.rank &&
+          cardSuit === mergedSuit(target.suit, smeared)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-suit-rotating": {
+        const suit = context.ancientSuit;
+        if (suit != null && cardSuit === mergedSuit(suit, smeared)) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
           });
         }
         break;
@@ -244,6 +286,37 @@ export function applyPerCardJokers(
       case "retrigger-held-abilities":
       case "played-faces-become-gold":
       case "x-mult-per-enhancement-eaten":
+      case "scored-cards-gain-chips":
+      case "blind-select-adds-stone-card":
+      case "x-mult-chance-bust":
+      case "round-begin-adds-sealed-card":
+      case "prevent-death-at-quarter":
+      case "sell-disables-boss-blind":
+      case "disables-boss-blinds":
+      case "stack-chips-per-rotating-suit-discard":
+      case "scored-rank-chance-creates-tarot":
+      case "hand-type-creates-spectral":
+      case "first-hand-single-six-creates-spectral":
+      case "ace-straight-creates-tarot":
+      case "poor-hand-creates-tarot":
+      case "pack-open-chance-creates-tarot":
+      case "blind-select-creates-common-jokers":
+      case "blind-select-creates-tarot":
+      case "money-per-discarded-rebate-rank":
+      case "first-discard-upgrades-hand":
+      case "end-of-round-money-per-unique-planet":
+      case "x-mult-per-glass-shattered":
+      case "money-on-todo-hand":
+      case "blind-select-x-mult-destroys-joker":
+      case "money-on-boss-trigger":
+      case "allows-duplicate-jokers":
+      case "round-end-grows-all-sell-values":
+      case "x-mult-per-face-destroyed":
+      case "shop-exit-copies-consumable":
+      case "sell-after-rounds-duplicates-joker":
+      case "blind-select-eats-right-joker-mult":
+      case "hand-play-chance-upgrades-hand":
+      case "first-hand-single-card-copies-card":
       case "noop":
         break;
       default:

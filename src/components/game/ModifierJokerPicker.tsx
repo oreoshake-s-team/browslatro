@@ -1,5 +1,6 @@
 import "./ModifierJokerPicker.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import {
@@ -16,6 +17,7 @@ import JokerTooltip from "../jokers/JokerTooltip";
 const PAGE_SIZE = 12;
 
 export default function ModifierJokerPicker() {
+  const { t } = useTranslation();
   const jokers = useGame((s) => s.jokers);
   const setJokers = useGame((s) => s.setJokers);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
@@ -115,13 +117,13 @@ export default function ModifierJokerPicker() {
         </div>
         <nav
           className="modifier-joker-picker-nav"
-          aria-label="Joker picker pagination"
+          aria-label={t("a11y.jokerPickerPagination")}
         >
           <button
             type="button"
             className="modifier-joker-picker-prev"
             data-testid="modifier-joker-picker-prev"
-            aria-label="Previous joker page"
+            aria-label={t("a11y.prevJokerPage")}
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
@@ -138,7 +140,7 @@ export default function ModifierJokerPicker() {
             type="button"
             className="modifier-joker-picker-next"
             data-testid="modifier-joker-picker-next"
-            aria-label="Next joker page"
+            aria-label={t("a11y.nextJokerPage")}
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           >

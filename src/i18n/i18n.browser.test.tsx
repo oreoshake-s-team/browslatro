@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import i18n, { detectLocale, persistLocale } from "./index";
+import { restoreEnglishLocale } from "./i18n.test-helpers";
 import RunProgress from "../components/hud/RunProgress";
+import Consumables from "../components/consumables/Consumables";
+import DiscardPile from "../components/cards/DiscardPile";
 
 const STORAGE_KEY = "browslatro:locale";
 
@@ -77,5 +80,34 @@ describe("Hawaiian rendering", () => {
     await i18n.changeLanguage("en");
     render(<RunProgress ante={1} round={1} money={4} />);
     expect(screen.getByText("Money")).toBeInTheDocument();
+  });
+});
+
+describe("Hawaiian aria-labels (issue #924)", () => {
+  afterEach(restoreEnglishLocale);
+
+  test("Consumables tray exposes the Hawaiian aria-label", async () => {
+    await i18n.changeLanguage("haw");
+    render(<Consumables consumables={[]} selectedCount={0} onUse={() => {}} />);
+    expect(screen.getByLabelText("Nā wahi consumable")).toBeInTheDocument();
+  });
+
+  test("Consumables tray does not expose the English aria-label in Hawaiian", async () => {
+    await i18n.changeLanguage("haw");
+    render(<Consumables consumables={[]} selectedCount={0} onUse={() => {}} />);
+    expect(screen.queryByLabelText("Consumable slots")).not.toBeInTheDocument();
+  });
+
+  test("Consumables tray exposes the English aria-label after switching back", async () => {
+    await i18n.changeLanguage("haw");
+    await i18n.changeLanguage("en");
+    render(<Consumables consumables={[]} selectedCount={0} onUse={() => {}} />);
+    expect(screen.getByLabelText("Consumable slots")).toBeInTheDocument();
+  });
+
+  test("DiscardPile announces the Hawaiian label with the card count", async () => {
+    await i18n.changeLanguage("haw");
+    render(<DiscardPile discarded={[]} />);
+    expect(screen.getByLabelText("Pūʻulu kiola (0 kāleka)")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "./DiscardPile.css";
 import Card from "./Card";
 import type { Card as CardType, Suit } from "../../cards/types";
@@ -19,6 +20,7 @@ interface DiscardPileProps {
 }
 
 export default function DiscardPile({ discarded }: DiscardPileProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const topCard = discarded.length > 0 ? discarded[discarded.length - 1] : null;
   const grouped = groupBySuit(discarded);
@@ -33,7 +35,8 @@ export default function DiscardPile({ discarded }: DiscardPileProps) {
       <button
         type="button"
         className="discard-pile"
-        aria-label={`Discard pile (${discarded.length} cards)`}
+        aria-label={t("a11y.discardPile", { total: discarded.length })}
+        data-testid="discard-pile"
         onClick={() => setOpen(true)}
       >
         {topCard ? (

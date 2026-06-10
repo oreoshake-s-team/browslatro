@@ -1,4 +1,6 @@
 import { Suspense, lazy, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./Game.css";
 import type { Card } from "../../cards/types";
 import HandComponent from "../cards/Hand";
@@ -48,6 +50,7 @@ export default function Game({
   packOpen,
   onCardDiscardEnd,
 }: GameProps) {
+  const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
@@ -152,7 +155,7 @@ export default function Game({
     : selectedIds.size;
 
   return (
-    <main className="game" aria-label="Game">
+    <main className="game" aria-label={t("a11y.game")}>
       <div className="game-top-row">
         <Jokers
           jokers={jokers}
@@ -232,18 +235,23 @@ export default function Game({
               disabled={isScoring || !canSubmit}
               aria-label={
                 selectedHand
-                  ? `Submit Hand: ${selectedHand.label}, ${chips + devChipsBonus} chips times ${(multiplier + devMultBonus) * devMultFactor} multiplier`
-                  : "Submit Hand"
+                  ? t("a11y.submitHandWith", {
+                      hand: tHandLabel(t, selectedHand.label),
+                      chips: chips + devChipsBonus,
+                      mult: (multiplier + devMultBonus) * devMultFactor,
+                    })
+                  : t("a11y.submitHand")
               }
             >
-              <span aria-hidden="true">🃏 </span>Submit Hand
+              <span aria-hidden="true">🃏 </span>
+              {t("game.submitHand")}
               {selectedHand && (
                 <span
                   className="submit-hand-button-detected"
                   data-testid="submit-hand-detected"
                 >
                   <span className="submit-hand-button-detected-label">
-                    {selectedHand.label}
+                    {tHandLabel(t, selectedHand.label)}
                   </span>
                   <span className="submit-hand-button-detected-score">
                     <span className="submit-hand-button-chips">

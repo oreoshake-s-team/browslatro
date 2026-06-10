@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
 import LiveAnnouncer from "../system/LiveAnnouncer";
@@ -10,7 +10,7 @@ function createDeck(): CardType[] {
 }
 
 function getHandRegion(): HTMLElement {
-  return screen.getByLabelText("Your hand");
+  return screen.getByTestId("hand-cards");
 }
 
 function getCardButtons(): HTMLElement[] {
@@ -342,7 +342,7 @@ describe("Hand drag-and-drop reordering", () => {
 
   test("the hand row widens its drop hitboxes while a drag is in flight", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    const handRow = screen.getByLabelText("Your hand");
+    const handRow = screen.getByTestId("hand-cards");
     expect(handRow).not.toHaveClass("hand-cards-dragging");
     fireEvent.dragStart(getSlot(4));
     expect(handRow).toHaveClass("hand-cards-dragging");
@@ -351,7 +351,7 @@ describe("Hand drag-and-drop reordering", () => {
   test("the hand row stops widening its drop hitboxes once the drag ends", () => {
     renderHand({ hand: fourCards, remaining: [] });
     const source = getSlot(4);
-    const handRow = screen.getByLabelText("Your hand");
+    const handRow = screen.getByTestId("hand-cards");
     fireEvent.dragStart(source);
     fireEvent.dragEnd(source);
     expect(handRow).not.toHaveClass("hand-cards-dragging");
@@ -405,7 +405,7 @@ describe("Hand drag-and-drop reordering", () => {
     // drop on the container.
     renderHand({ hand: fourCards, remaining: [] });
     const source = getSlot(4);
-    const handRow = screen.getByLabelText("Your hand");
+    const handRow = screen.getByTestId("hand-cards");
     fireEvent.dragStart(source);
     fireEvent.dragOver(getGap(3));
     fireEvent.drop(handRow);
@@ -637,7 +637,9 @@ describe("Hand keyboard reordering (#908)", () => {
   test("Tab from a focused card reaches its Move left control", async () => {
     const user = userEvent.setup();
     renderHand({ hand: fourCards, remaining: [] });
-    getCardButtons()[1].focus();
+    act(() => {
+      getCardButtons()[1].focus();
+    });
     await user.tab();
     expect(screen.getByTestId("hand-move-left-1")).toHaveFocus();
   });

@@ -310,7 +310,7 @@ The `src/` root was reorganized into the original subfolders in #219; subsequent
 ## Notes for Claude Code
 
 - The project is React 19 + **strict TypeScript** (no `any`).
-- Tooling: **Yarn Berry with PnP** (not npm). Run `yarn typecheck` and `yarn test` before opening PRs.
+- Tooling: **Yarn Berry with `nodeLinker: pnpm`** (not npm). Run `yarn typecheck` and `yarn test` before opening PRs.
 - Animations: CSS `key` trick preferred for score/money pops; no Framer Motion dependency in the tree.
 - All scoring code should remain **pure functions** — no side effects, easy to unit test.
 - Card IDs use a module-level counter (`let cardIdCounter = 0`) — save/load reseeds it from the snapshot (#651, #718); multiplayer will still need revisiting.

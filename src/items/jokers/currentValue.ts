@@ -59,6 +59,7 @@ export function jokerCurrentValue(
     case "stack-mult-on-shop-reroll":
     case "stack-mult-on-pack-skip":
     case "stack-mult-per-tarot-used":
+    case "blind-select-eats-right-joker-mult":
     case "mult-decay-per-round":
       return { kind: "mult", value: counterValue(joker) };
     case "per-missing-card-mult":
@@ -68,6 +69,7 @@ export function jokerCurrentValue(
     case "on-hand-type-stack-chips":
     case "on-played-card-count-stack-chips":
     case "on-played-rank-stack-chips":
+    case "stack-chips-per-rotating-suit-discard":
     case "chips-melt-per-hand":
       return { kind: "chips", value: counterValue(joker) };
     case "per-remaining-discard-chips":
@@ -118,6 +120,9 @@ export function jokerCurrentValue(
     case "x-mult-per-planet-used":
     case "x-mult-per-sold-card":
     case "x-mult-per-enhancement-eaten":
+    case "x-mult-per-glass-shattered":
+    case "blind-select-x-mult-destroys-joker":
+    case "x-mult-per-face-destroyed":
     case "x-mult-per-hand-without-most-played":
       return {
         kind: "x-mult",
