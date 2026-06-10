@@ -4,6 +4,8 @@ import Card from "./Card";
 import DeckPile from "./DeckPile";
 import type { Card as CardType } from "../../cards/types";
 import { sortCards, type SortMode } from "../../cards/deck";
+import { announce } from "../system/LiveAnnouncer";
+import { cardName, reorderStrings } from "../../i18n/strings";
 
 export const MAX_SELECTED = 5;
 
@@ -179,6 +181,24 @@ export default function Hand({
 
   function endDrag() {
     dispatch({ type: "endDrag" });
+  }
+
+  function moveCard(card: CardType, direction: -1 | 1) {
+    const idx = displayedHand.findIndex((c) => c.id === card.id);
+    if (idx < 0) return;
+    const name = cardName(card);
+    if (direction === -1 && idx === 0) {
+      announce(reorderStrings.atStart(name));
+      return;
+    }
+    if (direction === 1 && idx === displayedHand.length - 1) {
+      announce(reorderStrings.atEnd(name));
+      return;
+    }
+    insertAtGap(card.id, direction === -1 ? idx - 1 : idx + 2);
+    announce(
+      reorderStrings.moved(name, idx + direction + 1, displayedHand.length),
+    );
   }
 
   function handleDragStart(cardId: number, e: React.DragEvent<HTMLDivElement>) {
@@ -385,6 +405,26 @@ export default function Hand({
                     onToggle={onToggleCard}
                     onDiscardEnd={onCardDiscardEnd}
                   />
+                  <div className="hand-move-controls">
+                    <button
+                      type="button"
+                      className="hand-move-button"
+                      aria-label={reorderStrings.moveLeft(cardName(card))}
+                      data-testid={`hand-move-left-${card.id}`}
+                      onClick={() => moveCard(card, -1)}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="hand-move-button"
+                      aria-label={reorderStrings.moveRight(cardName(card))}
+                      data-testid={`hand-move-right-${card.id}`}
+                      onClick={() => moveCard(card, 1)}
+                    >
+                      ▶
+                    </button>
+                  </div>
                 </div>
               </Fragment>
             );

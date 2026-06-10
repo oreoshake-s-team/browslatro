@@ -39,6 +39,7 @@ import {
 } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
+import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import {
   getAnimationSpeed,
   getAnimationSpeedMultiplier,
@@ -546,6 +547,7 @@ function App() {
             </Suspense>
           </LazyChunkErrorBoundary>
         )}
+      <LiveAnnouncer />
     </div>
   );
 }

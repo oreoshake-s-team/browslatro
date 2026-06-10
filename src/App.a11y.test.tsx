@@ -41,3 +41,13 @@ describe("Modal dialogs inert the app shell (#907)", () => {
     );
   });
 });
+
+describe("Live announcer (#908)", () => {
+  test("the app mounts a polite live region for announcements", () => {
+    render(<App />);
+    expect(screen.getByTestId("live-announcer")).toHaveAttribute(
+      "aria-live",
+      "polite",
+    );
+  });
+});
