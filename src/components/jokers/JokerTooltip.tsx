@@ -1,5 +1,10 @@
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "./JokerTooltip.css";
+import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
 import {
   JOKER_EDITION_INFO,
   JOKER_STICKER_INFO,
@@ -33,6 +38,7 @@ interface JokerTooltipProps {
 const TOOLTIP_OFFSET_PX = 8;
 
 export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProps) {
+  const { i18n } = useTranslation();
   const style: React.CSSProperties = {
     top: anchorRect.bottom + TOOLTIP_OFFSET_PX,
     left: anchorRect.left + anchorRect.width / 2,
@@ -47,14 +53,18 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
   const currentValue = useCurrentValue(joker);
   return createPortal(
     <div id={id} role="tooltip" className="joker-tooltip" style={style}>
-      <p className="joker-tooltip-heading">{joker.name}</p>
+      <p className="joker-tooltip-heading">
+        {localizedJokerName(i18n.language, joker.id, joker.name)}
+      </p>
       <p
         className={`joker-tooltip-rarity joker-tooltip-rarity-${joker.rarity}`}
         data-testid="joker-tooltip-rarity"
       >
         {rarityLabel(joker.rarity)}
       </p>
-      <p className="joker-tooltip-description">{joker.description}</p>
+      <p className="joker-tooltip-description">
+        {localizedJokerDescription(i18n.language, joker.id, joker.description)}
+      </p>
       {currentValue && (
         <p
           className="joker-tooltip-current-value"

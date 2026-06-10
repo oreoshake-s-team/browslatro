@@ -1,5 +1,9 @@
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
 import "./Jokers.css";
 import {
   JOKER_EDITION_INFO,
@@ -41,7 +45,7 @@ export default function Jokers({
   consumableDropEnabled = false,
   onConsumableDrop,
 }: JokersProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
@@ -213,7 +217,11 @@ export default function Jokers({
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
                 }${editionClass}${debuffedClass}`}
-                title={joker.description}
+                title={localizedJokerDescription(
+                  i18n.language,
+                  joker.id,
+                  joker.description,
+                )}
                 aria-label={ariaLabel}
                 aria-describedby={tooltipOpen ? tooltipId : undefined}
                 tabIndex={0}
@@ -258,8 +266,16 @@ export default function Jokers({
                   data-testid={`joker-tile-inner-${joker.id}`}
                   data-pulse={pulse}
                 >
-                  <span className="joker-tile-name">{joker.name}</span>
-                  <span className="joker-tile-description">{joker.description}</span>
+                  <span className="joker-tile-name">
+                    {localizedJokerName(i18n.language, joker.id, joker.name)}
+                  </span>
+                  <span className="joker-tile-description">
+                    {localizedJokerDescription(
+                      i18n.language,
+                      joker.id,
+                      joker.description,
+                    )}
+                  </span>
                   <JokerStickerBadges joker={joker} />
                   {jokerSellable && isDragging && (
                     <span className="joker-tile-sell" aria-hidden="true">
