@@ -7,9 +7,6 @@
   margin: 0;
 }
 
-.App.high-visibility {
-}
-
 @media (orientation: portrait) and (max-width: 768px) {
   .App {
     flex-direction: column;
