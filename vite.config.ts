@@ -48,6 +48,18 @@ export default defineConfig({
   ],
   build: {
     outDir: "build",
+    rolldownOptions: {
+      output: {
+        advancedChunks: {
+          groups: [
+            {
+              name: "vendor",
+              test: /node_modules[\\/].*(react|scheduler|i18next|zustand|drag-drop-touch)/,
+            },
+          ],
+        },
+      },
+    },
   },
   server: {
     port: 3000,
