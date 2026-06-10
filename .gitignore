@@ -25,6 +25,10 @@
 /build
 bundle-stats.html
 
+# storybook
+/storybook-static
+*storybook.log
+
 # worktrees
 .claude/worktrees/
 

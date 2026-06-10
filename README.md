@@ -53,6 +53,14 @@ Builds the app, boots `vite preview`, and runs the Playwright end-to-end suite a
 
 Runs `tsc --noEmit` without building.
 
+### `yarn storybook`
+
+Starts [Storybook](https://storybook.js.org/) at [http://localhost:6006](http://localhost:6006). Every component under `src/components/` has co-located `*.stories.tsx` covering its visual states; shared story utilities (the `withGame` store-seeding decorator and card fixtures) live in `src/stories/`.
+
+### `yarn build-storybook`
+
+Builds the static Storybook site into `storybook-static/`.
+
 ## CI reports
 
 Every push to `main` publishes the Vitest coverage report and the Playwright
