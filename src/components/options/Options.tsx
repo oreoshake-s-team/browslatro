@@ -1,6 +1,13 @@
 import { useCallback, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./Options.css";
 import { createPortal } from "react-dom";
+import {
+  LOCALE_NAMES,
+  SUPPORTED_LOCALES,
+  isLocale,
+  persistLocale,
+} from "../../i18n";
 import {
   ANIMATION_SPEED_VALUES,
   getAnimationSpeed,
@@ -31,6 +38,7 @@ function Options({
   onHighVisibilityChange,
   onAnimationSpeedChange,
 }: OptionsProps) {
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [muted, setMuted] = useState(isMuted);
   const [highVisibility, setHighVisibility] = useState(isHighVisibility);
@@ -38,6 +46,7 @@ function Options({
     getAnimationSpeed,
   );
   const animationSpeedSelectId = useId();
+  const languageSelectId = useId();
   const handleClose = useCallback(() => setOpen(false), []);
   useEscapeToClose(handleClose, open);
 
@@ -62,16 +71,23 @@ function Options({
     onAnimationSpeedChange?.(next);
   }
 
+  function handleLanguageChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const next = event.target.value;
+    if (!isLocale(next)) return;
+    void i18n.changeLanguage(next);
+    persistLocale(next);
+  }
+
   return (
     <>
       <button className="btn btn--ghost" onClick={() => setOpen(true)}>
-        Options
+        {t("sidebar.options")}
       </button>
       {open &&
         createPortal(
           <div className="modal-overlay" onClick={handleClose}>
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h3>Options</h3>
+              <h3>{t("sidebar.options")}</h3>
               <button
                 className="options-button options-button--toggle"
                 aria-pressed={muted}
@@ -102,6 +118,24 @@ function Options({
                   {ANIMATION_SPEED_VALUES.map((value) => (
                     <option key={value} value={value}>
                       {ANIMATION_SPEED_LABELS[value]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="options-field" htmlFor={languageSelectId}>
+                <span className="options-field-label">
+                  {t("options.language")}
+                </span>
+                <select
+                  id={languageSelectId}
+                  className="options-select"
+                  data-testid="options-language"
+                  value={isLocale(i18n.language) ? i18n.language : "en"}
+                  onChange={handleLanguageChange}
+                >
+                  {SUPPORTED_LOCALES.map((locale) => (
+                    <option key={locale} value={locale} lang={locale}>
+                      {LOCALE_NAMES[locale]}
                     </option>
                   ))}
                 </select>

@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./Consumables.css";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -33,6 +34,7 @@ export default function Consumables({
   onDragStart,
   onDragEnd,
 }: ConsumablesProps) {
+  const { t } = useTranslation();
   const emptyCount = Math.max(0, capacity - consumables.length);
 
   return (
@@ -40,7 +42,7 @@ export default function Consumables({
       className={`consumables${consumables.length === 0 ? " consumables-tray-empty" : ""}`}
       aria-label="Consumable slots"
     >
-      <span className="consumables-label">Consumables</span>
+      <span className="consumables-label">{t("trays.consumables")}</span>
       <ul className="consumables-list">
         {consumables.map((entry, idx) => {
           const block = consumableUseBlock(entry, selectedCount, previewMode);

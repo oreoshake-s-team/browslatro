@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import i18n from "./i18n";
 
 vi.mock("./components/system/sounds", () => ({ play: vi.fn() }));
 
@@ -11,6 +12,9 @@ if (typeof HTMLMediaElement !== "undefined") {
 beforeEach(async () => {
   const { useGame } = await import("./store/game");
   useGame.getState().resetGame();
+  if (i18n.language !== "en") {
+    await i18n.changeLanguage("en");
+  }
   if (typeof window !== "undefined") {
     vi.spyOn(window, "confirm").mockReturnValue(true);
   }
