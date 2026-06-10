@@ -236,3 +236,27 @@ describe("Empty tray treatment (issue #875)", () => {
     expect(screen.getByLabelText("Consumable slots")).not.toHaveClass("consumables-tray-empty");
   });
 });
+
+describe("Consumables content overrides (#978)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("a Mercury planet tile renders ʻUkali under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    const mercury = createPlanetCatalog().find((p) => p.id === "mercury")!;
+    const entry: Consumable = { kind: "planet", card: mercury };
+    renderConsumables({ consumables: [entry] });
+    expect(screen.getByText("ʻUkali")).toBeInTheDocument();
+  });
+
+  test("a tarot tile keeps its English name under the haw locale (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    const entry: Consumable = { kind: "tarot", card: tarot };
+    renderConsumables({ consumables: [entry] });
+    expect(screen.getByText(tarot.name)).toBeInTheDocument();
+  });
+});

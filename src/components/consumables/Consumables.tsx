@@ -1,6 +1,10 @@
 import { useTranslation } from "react-i18next";
 import "./Consumables.css";
 import {
+  localizedConsumableDescription,
+  localizedConsumableName,
+} from "../../i18n/contentOverrides";
+import {
   MAX_CONSUMABLE_SLOTS,
   consumableSellValue,
   consumableUseBlock,
@@ -34,7 +38,7 @@ export default function Consumables({
   onDragStart,
   onDragEnd,
 }: ConsumablesProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const emptyCount = Math.max(0, capacity - consumables.length);
 
   return (
@@ -58,7 +62,14 @@ export default function Consumables({
                 data-testid={`consumable-tile-filled-${idx}`}
                 data-consumable-kind={entry.kind}
                 data-use-disabled={useDisabled || undefined}
-                title={block ?? entry.card.description}
+                title={
+                  block ??
+                  localizedConsumableDescription(
+                    i18n.language,
+                    entry.card.id,
+                    entry.card.description,
+                  )
+                }
                 aria-label={tileLabel(entry, sellValue)}
                 disabled={interactionDisabled}
                 draggable
@@ -77,9 +88,19 @@ export default function Consumables({
                   onUse(idx);
                 }}
               >
-                <span className="consumable-tile-name">{entry.card.name}</span>
+                <span className="consumable-tile-name">
+                  {localizedConsumableName(
+                    i18n.language,
+                    entry.card.id,
+                    entry.card.name,
+                  )}
+                </span>
                 <span className="consumable-tile-description">
-                  {entry.card.description}
+                  {localizedConsumableDescription(
+                    i18n.language,
+                    entry.card.id,
+                    entry.card.description,
+                  )}
                 </span>
                 {canSell && (
                   <span className="consumable-tile-sell" aria-hidden="true">

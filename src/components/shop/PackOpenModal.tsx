@@ -3,6 +3,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
+  localizedConsumableDescription,
+  localizedConsumableName,
+} from "../../i18n/contentOverrides";
+import {
   type PackOffer,
   type PackOption,
   packDisplayName,
@@ -86,13 +90,21 @@ function stickerTooltip(joker: Joker): string {
     .join("\n");
 }
 
-function describeOption(t: TFunction, option: PackOption): OptionView | null {
+function describeOption(
+  t: TFunction,
+  locale: string,
+  option: PackOption,
+): OptionView | null {
   if (option.kind === "planet") {
     return {
       id: option.planet.id,
       icon: "🪐",
-      name: option.planet.name,
-      description: option.planet.description,
+      name: localizedConsumableName(locale, option.planet.id, option.planet.name),
+      description: localizedConsumableDescription(
+        locale,
+        option.planet.id,
+        option.planet.description,
+      ),
       needsConsumableSlot: false,
       needsJokerSlot: false,
     };
@@ -102,8 +114,12 @@ function describeOption(t: TFunction, option: PackOption): OptionView | null {
     return {
       id: option.tarot.id,
       icon: "🃏",
-      name: option.tarot.name,
-      description: option.tarot.description,
+      name: localizedConsumableName(locale, option.tarot.id, option.tarot.name),
+      description: localizedConsumableDescription(
+        locale,
+        option.tarot.id,
+        option.tarot.description,
+      ),
       needsConsumableSlot: false,
       needsJokerSlot: false,
       requiresPreviewSelection:
@@ -129,8 +145,12 @@ function describeOption(t: TFunction, option: PackOption): OptionView | null {
     return {
       id: option.spectral.id,
       icon: "👻",
-      name: option.spectral.name,
-      description: option.spectral.description,
+      name: localizedConsumableName(locale, option.spectral.id, option.spectral.name),
+      description: localizedConsumableDescription(
+        locale,
+        option.spectral.id,
+        option.spectral.description,
+      ),
       needsConsumableSlot:
         spectralNeedsTarget(effect) && !appliesDirectlyToPreview,
       needsJokerSlot: false,
@@ -175,7 +195,7 @@ export default function PackOpenModal({
   onPick,
   onClose,
 }: PackOpenModalProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   useEscapeToClose(onClose, true);
   const [previewSortMode, setPreviewSortMode] = useState<SortMode>("rank");
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
@@ -244,7 +264,7 @@ export default function PackOpenModal({
         <ul className="pack-open-options" aria-label="Pack options">
           {pack.options.map((option, idx) => {
             if (pickedIndices?.has(idx)) return null;
-            const view = describeOption(t, option);
+            const view = describeOption(t, i18n.language, option);
             if (!view) return null;
             const noPicksLeft = picksRemaining <= 0;
             const consumableBlocked = view.needsConsumableSlot && consumableSlotsFull;
