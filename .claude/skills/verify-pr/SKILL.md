@@ -21,8 +21,7 @@ Codify the project's "run all checks before a PR" bar into one repeatable gate. 
 yarn typecheck
 ```
 
-No `any`, no type errors. This is also enforced at commit time by the
-`typecheck-before-commit` hook, but run it here for fast feedback.
+No `any`, no type errors.
 
 ### 2. Unit tests
 

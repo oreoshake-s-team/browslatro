@@ -68,7 +68,7 @@ Then prefer `mcp__github__create_pull_request` to open the PR.
 
 After the PR is created, fetch the Vercel preview URL for the branch and add it to the PR body.
 
-If the Vercel MCP tool `mcp__plugin_vercel_vercel__list_deployments` is available, use it to find the deployment for this branch. Poll until the deployment state is `READY` (retry up to ~10 times with a short delay). Then edit the PR body to append:
+If the Vercel MCP tool `mcp__vercel__list_deployments` is available, use it to find the deployment for this branch. Poll until the deployment state is `READY` (retry up to ~10 times with a short delay). Then edit the PR body to append:
 
 ```
 ## Preview
