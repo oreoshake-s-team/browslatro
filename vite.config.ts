@@ -31,6 +31,8 @@ export default defineConfig({
   test: {
     globals: true,
     css: true,
+    testTimeout: process.env.CI ? 5_000 : 20_000,
+    hookTimeout: process.env.CI ? 10_000 : 20_000,
     coverage: {
       provider: "istanbul",
       reporter: ["text", "html", "lcov"],
