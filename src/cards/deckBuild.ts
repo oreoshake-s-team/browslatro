@@ -79,7 +79,7 @@ export function countEnhancedInFullDeck(
   return count;
 }
 
-export function countMissingFromFullDeck(
+export function fullDeckSize(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),
   addedCards: ReadonlyArray<Card> = [],
@@ -87,8 +87,38 @@ export function countMissingFromFullDeck(
   const survivingBase = baseDeckCards.filter(
     (c) => !destroyedCardIds.has(c.id),
   );
-  const fullDeckSize = survivingBase.length + addedCards.length;
-  return Math.max(0, baseDeckCards.length - fullDeckSize);
+  return survivingBase.length + addedCards.length;
+}
+
+export function countMissingFromFullDeck(
+  baseDeckCards: ReadonlyArray<Card> = [],
+  destroyedCardIds: ReadonlySet<number> = new Set(),
+  addedCards: ReadonlyArray<Card> = [],
+): number {
+  return Math.max(
+    0,
+    baseDeckCards.length -
+      fullDeckSize(baseDeckCards, destroyedCardIds, addedCards),
+  );
+}
+
+export function countEnhancementInFullDeck(
+  baseDeckCards: ReadonlyArray<Card> = [],
+  destroyedCardIds: ReadonlySet<number> = new Set(),
+  addedCards: ReadonlyArray<Card> = [],
+  enhancementOverrides: ReadonlyMap<number, Enhancement> = new Map(),
+  enhancement: Enhancement | null = null,
+): number {
+  if (enhancement === null) return 0;
+  const survivingBase = baseDeckCards.filter(
+    (c) => !destroyedCardIds.has(c.id),
+  );
+  const base = applyEnhancementOverrides(survivingBase, enhancementOverrides);
+  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
+  let count = 0;
+  for (const c of base) if (c.enhancement === enhancement) count += 1;
+  for (const c of extras) if (c.enhancement === enhancement) count += 1;
+  return count;
 }
 
 export function fullDeckPile(

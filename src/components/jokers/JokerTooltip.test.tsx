@@ -8,8 +8,11 @@ import {
   JOKER_EDITION_KINDS,
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
+  createAbstractJoker,
+  createBannerJoker,
   createBaronJoker,
   createBloodstoneJoker,
+  createBullJoker,
   createBusinessCardJoker,
   createDriversLicenseJoker,
   createFlashCardJoker,
@@ -19,6 +22,7 @@ import {
   createOopsAllSixesJoker,
   createPlusFourMultJoker,
   createReservedParkingJoker,
+  createStoneJoker,
   createThrowbackJoker,
   createTribouletJoker,
   jokerSellValue,
@@ -27,7 +31,7 @@ import {
   type JokerEdition,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
-import type { Enhancement } from "../../cards/types";
+import type { Card, Enhancement } from "../../cards/types";
 
 describe("Joker tooltip — open / close affordances", () => {
   test("no tooltip is rendered on initial mount", () => {
@@ -488,5 +492,63 @@ describe("Joker tooltip — current scaling value (#884)", () => {
     expect(
       screen.getByTestId("joker-tooltip-current-value"),
     ).toHaveTextContent("X4 Mult in 6 hands");
+  });
+});
+
+describe("Joker tooltip — live-derived current value (#898)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("Bull renders the Chips derived from current money", async () => {
+    useGame.getState().setMoney(10);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBullJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-bull"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: +20 Chips");
+  });
+
+  test("Banner renders the Chips derived from remaining discards", async () => {
+    useGame.getState().setRemainingDiscards(2);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBannerJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-banner"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: +60 Chips");
+  });
+
+  test("Abstract Joker renders the Mult derived from the equipped joker count", async () => {
+    const equipped = [createAbstractJoker(), createBannerJoker()];
+    useGame.getState().setJokers(equipped);
+    const user = userEvent.setup();
+    render(<Jokers jokers={equipped} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-abstract-joker"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: +6 Mult");
+  });
+
+  test("Stone Joker renders the Chips derived from Stone cards in the full deck", async () => {
+    const base: ReadonlyArray<Card> = [
+      { id: 1, rank: "A", suit: "spades" },
+      { id: 2, rank: "K", suit: "hearts" },
+      { id: 3, rank: "Q", suit: "clubs" },
+    ];
+    useGame.getState().setBaseDeckCards(base);
+    useGame.getState().setCardEnhancementsById(
+      new Map<number, Enhancement>([
+        [1, "stone"],
+        [3, "stone"],
+      ]),
+    );
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createStoneJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-stone-joker"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: +50 Chips");
   });
 });

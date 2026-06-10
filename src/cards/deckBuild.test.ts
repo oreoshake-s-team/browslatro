@@ -4,7 +4,9 @@ import {
   applySealOverrides,
   buildShuffledDeck,
   countEnhancedInFullDeck,
+  countEnhancementInFullDeck,
   fullDeckPile,
+  fullDeckSize,
   initialDeal,
 } from "./deckBuild";
 import { createDeck, resetCardIds, DECK_SIZE, HAND_SIZE } from "./deck";
@@ -267,6 +269,68 @@ describe("countEnhancedInFullDeck", () => {
     const overrides = new Map([[target.id, "gold" as const]]);
     expect(
       countEnhancedInFullDeck(base, new Set([target.id]), [], overrides),
+    ).toBe(0);
+  });
+});
+
+describe("fullDeckSize", () => {
+  test("returns the base deck size with no changes", () => {
+    expect(fullDeckSize(createDeck())).toBe(DECK_SIZE);
+  });
+
+  test("destroyed cards shrink the full deck", () => {
+    const base = createDeck();
+    expect(fullDeckSize(base, new Set([base[0].id, base[1].id]))).toBe(
+      DECK_SIZE - 2,
+    );
+  });
+
+  test("added cards grow the full deck", () => {
+    expect(fullDeckSize(createDeck(), new Set(), [card({ id: 999 })])).toBe(
+      DECK_SIZE + 1,
+    );
+  });
+});
+
+describe("countEnhancementInFullDeck", () => {
+  test("returns 0 when no enhancement filter is given", () => {
+    const base = createDeck();
+    const overrides = new Map([[base[0].id, "stone" as const]]);
+    expect(
+      countEnhancementInFullDeck(base, new Set(), [], overrides, null),
+    ).toBe(0);
+  });
+
+  test("counts only cards matching the requested enhancement", () => {
+    const base = createDeck();
+    const overrides = new Map([
+      [base[0].id, "stone" as const],
+      [base[1].id, "steel" as const],
+      [base[2].id, "stone" as const],
+    ]);
+    expect(
+      countEnhancementInFullDeck(base, new Set(), [], overrides, "stone"),
+    ).toBe(2);
+  });
+
+  test("counts added cards carrying the requested enhancement", () => {
+    const added = [card({ id: 999, enhancement: "steel" })];
+    expect(
+      countEnhancementInFullDeck([], new Set(), added, new Map(), "steel"),
+    ).toBe(1);
+  });
+
+  test("a destroyed card no longer counts toward the enhancement", () => {
+    const base = createDeck();
+    const overrides = new Map([[base[0].id, "stone" as const]]);
+    expect(
+      countEnhancementInFullDeck(
+        base,
+        new Set([base[0].id]),
+        [],
+        overrides,
+        "stone",
+      ),
     ).toBe(0);
   });
 });

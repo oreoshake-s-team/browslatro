@@ -6,6 +6,7 @@ import {
   PERISHABLE_LIFE,
   jokerCurrentValue,
   jokerCurrentValueLabel,
+  jokerEnhancementFilter,
   jokerSellValue,
   jokerStickers,
   probabilityMultiplierFromJokers,
@@ -17,7 +18,9 @@ import {
 import { useGame } from "../../store/game";
 import {
   countEnhancedInFullDeck,
+  countEnhancementInFullDeck,
   countMissingFromFullDeck,
+  fullDeckSize,
 } from "../../cards/deckBuild";
 import { formatChanceRatio } from "../cards/cardInfo";
 
@@ -144,10 +147,33 @@ function useCurrentValue(joker: Joker): JokerCurrentValue | null {
   const missingDeckCards = useGame((s) =>
     countMissingFromFullDeck(s.baseDeckCards, s.destroyedCardIds, s.addedCards),
   );
+  const money = useGame((s) => s.money);
+  const jokerCount = useGame((s) => s.jokers.length);
+  const remainingDiscards = useGame((s) => s.remainingDiscards);
+  const remainingDeckCards = useGame((s) =>
+    s.dealt.hand.length > 0
+      ? s.dealt.remaining.length
+      : fullDeckSize(s.baseDeckCards, s.destroyedCardIds, s.addedCards),
+  );
+  const enhancement = jokerEnhancementFilter(joker);
+  const matchingEnhancedDeckCards = useGame((s) =>
+    countEnhancementInFullDeck(
+      s.baseDeckCards,
+      s.destroyedCardIds,
+      s.addedCards,
+      s.cardEnhancementsById,
+      enhancement,
+    ),
+  );
   return jokerCurrentValue(joker, {
     blindsSkipped,
     addedCardsCount,
     missingDeckCards,
+    money,
+    jokerCount,
+    remainingDiscards,
+    remainingDeckCards,
+    matchingEnhancedDeckCards,
   });
 }
 
