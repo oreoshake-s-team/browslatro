@@ -5,13 +5,23 @@ export interface ContentOverride {
 
 export type ContentOverrideMap = Readonly<Record<string, ContentOverride>>;
 
-export const HAW_CONSUMABLE_OVERRIDES: ContentOverrideMap = {
+export const HAW_PLANET_OVERRIDES: ContentOverrideMap = {
   mercury: { name: "ʻUkali" },
   venus: { name: "Hōkūloa" },
   mars: { name: "Hōkūʻula" },
   jupiter: { name: "Kaʻāwela" },
   saturn: { name: "Makulu" },
   earth: { name: "Honua" },
+};
+
+export const HAW_TAROT_OVERRIDES: ContentOverrideMap = {};
+
+export const HAW_SPECTRAL_OVERRIDES: ContentOverrideMap = {};
+
+const HAW_CONSUMABLE_OVERRIDES: ContentOverrideMap = {
+  ...HAW_PLANET_OVERRIDES,
+  ...HAW_TAROT_OVERRIDES,
+  ...HAW_SPECTRAL_OVERRIDES,
 };
 
 const OVERRIDES_BY_LOCALE: Readonly<Record<string, ContentOverrideMap>> = {
