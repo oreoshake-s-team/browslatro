@@ -1,0 +1,87 @@
+import { ramenXMultFactor } from "./state";
+import type { Joker } from "./types";
+
+export interface JokerCurrentValueContext {
+  readonly blindsSkipped: number;
+  readonly addedCardsCount: number;
+  readonly missingDeckCards: number;
+}
+
+export type JokerCurrentValue =
+  | { readonly kind: "mult"; readonly value: number }
+  | { readonly kind: "chips"; readonly value: number }
+  | { readonly kind: "x-mult"; readonly value: number }
+  | {
+      readonly kind: "hands-until-x-mult";
+      readonly hands: number;
+      readonly xmult: number;
+    };
+
+export function perCountXMultFactor(amount: number, count: number): number {
+  return 1 + amount * count;
+}
+
+function counterValue(joker: Joker): number {
+  return joker.state?.kind === "counter" ? joker.state.value : 0;
+}
+
+export function jokerCurrentValue(
+  joker: Joker,
+  context: JokerCurrentValueContext,
+): JokerCurrentValue | null {
+  const effect = joker.effect;
+  switch (effect.kind) {
+    case "on-hand-type-stack-mult":
+    case "on-no-face-stack-mult":
+    case "on-hand-stack-on-discard-shrink-mult":
+    case "stack-mult-on-shop-reroll":
+    case "mult-decay-per-round":
+      return { kind: "mult", value: counterValue(joker) };
+    case "per-missing-card-mult":
+      return { kind: "mult", value: effect.amount * context.missingDeckCards };
+    case "on-hand-type-stack-chips":
+    case "on-played-card-count-stack-chips":
+    case "on-played-rank-stack-chips":
+    case "chips-melt-per-hand":
+      return { kind: "chips", value: counterValue(joker) };
+    case "every-n-hands-xmult":
+      return {
+        kind: "hands-until-x-mult",
+        hands: effect.n - (counterValue(joker) % effect.n),
+        xmult: effect.xmult,
+      };
+    case "x-mult-per-blind-skipped":
+      return {
+        kind: "x-mult",
+        value: perCountXMultFactor(effect.amount, context.blindsSkipped),
+      };
+    case "x-mult-per-added-card":
+      return {
+        kind: "x-mult",
+        value: perCountXMultFactor(effect.amount, context.addedCardsCount),
+      };
+    case "x-mult-shrink-per-discarded-card":
+      return { kind: "x-mult", value: ramenXMultFactor(joker) };
+    default:
+      return null;
+  }
+}
+
+export function jokerCurrentValueLabel(value: JokerCurrentValue): string {
+  switch (value.kind) {
+    case "mult":
+      return `Currently: +${value.value} Mult`;
+    case "chips":
+      return `Currently: +${value.value} Chips`;
+    case "x-mult":
+      return `Currently: X${formatFactor(value.value)} Mult`;
+    case "hands-until-x-mult":
+      return `X${value.xmult} Mult in ${value.hands} ${
+        value.hands === 1 ? "hand" : "hands"
+      }`;
+  }
+}
+
+function formatFactor(value: number): string {
+  return String(Math.round(value * 100) / 100);
+}

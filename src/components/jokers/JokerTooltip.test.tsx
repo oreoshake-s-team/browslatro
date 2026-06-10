@@ -12,11 +12,14 @@ import {
   createBloodstoneJoker,
   createBusinessCardJoker,
   createDriversLicenseJoker,
+  createFlashCardJoker,
   createGreedyJoker,
   createJokerStencilJoker,
+  createLoyaltyCardJoker,
   createOopsAllSixesJoker,
   createPlusFourMultJoker,
   createReservedParkingJoker,
+  createThrowbackJoker,
   createTribouletJoker,
   jokerSellValue,
   withEdition,
@@ -429,5 +432,61 @@ describe("Joker tooltip — effective odds with a probability multiplier (#774)"
     render(<Jokers jokers={[createBusinessCardJoker()]} />);
     await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
     expect(screen.getByRole("tooltip")).toHaveTextContent(/50% chance/);
+  });
+});
+
+describe("Joker tooltip — current scaling value (#884)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("a joker without scaling state does not render the current-value row", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(
+      screen.queryByTestId("joker-tooltip-current-value"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("a fresh Flash Card renders the zero-state row", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createFlashCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-flash-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: +0 Mult");
+  });
+
+  test("Flash Card renders its accumulated Mult from counter state", async () => {
+    const stacked: Joker = {
+      ...createFlashCardJoker(),
+      state: { kind: "counter", value: 14 },
+    };
+    const user = userEvent.setup();
+    render(<Jokers jokers={[stacked]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-flash-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: +14 Mult");
+  });
+
+  test("Throwback renders the X Mult derived from blinds skipped in the store", async () => {
+    useGame.getState().setRunStats((prev) => ({ ...prev, blindsSkipped: 2 }));
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createThrowbackJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-throwback"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("Currently: X1.5 Mult");
+  });
+
+  test("Loyalty Card renders the hands-until-trigger countdown", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createLoyaltyCardJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-loyalty-card"));
+    expect(
+      screen.getByTestId("joker-tooltip-current-value"),
+    ).toHaveTextContent("X4 Mult in 6 hands");
   });
 });

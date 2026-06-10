@@ -96,3 +96,12 @@ export {
   ramenXMultFactor,
 } from "./jokers/state";
 export type { JokerStateValue } from "./jokers/types";
+export {
+  jokerCurrentValue,
+  jokerCurrentValueLabel,
+  perCountXMultFactor,
+} from "./jokers/currentValue";
+export type {
+  JokerCurrentValue,
+  JokerCurrentValueContext,
+} from "./jokers/currentValue";
