@@ -141,6 +141,8 @@ export const MR_BONES_SAVE_THRESHOLD = 0.25;
 export const THE_IDOL_X_MULT = 2;
 export const ANCIENT_JOKER_X_MULT = 1.5;
 export const CASTLE_CHIPS_PER_DISCARD = 3;
+export const EIGHT_BALL_TAROT_CHANCE = 0.25;
+export const VAGABOND_MONEY_THRESHOLD = 4;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

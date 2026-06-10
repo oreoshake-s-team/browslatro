@@ -98,6 +98,7 @@ export {
   applyScoredCardMutations,
   applyScoredMutationsToCards,
 } from "./jokers/scoring/scoredCardMutations";
+export { consumableCreationsOnHandPlayed } from "./jokers/scoring/consumableCreators";
 export {
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
