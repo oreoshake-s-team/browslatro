@@ -69,6 +69,7 @@ interface CardProps {
   luckyMoneyScoring?: boolean;
   onToggle?: (card: CardType) => void;
   onDiscardEnd?: (card: CardType) => void;
+  decorative?: boolean;
 }
 
 export default function Card({
@@ -85,6 +86,7 @@ export default function Card({
   luckyMoneyScoring = false,
   onToggle,
   onDiscardEnd,
+  decorative = false,
 }: CardProps) {
   const tooltipId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -153,29 +155,12 @@ export default function Card({
     : "";
   const faceDownClass = showBack ? "card-face-down" : "";
 
-  return (
-    <button
-      ref={buttonRef}
-      type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
-        .replace(/\s+/g, " ")
-        .trim()}
-      data-edition={showBack ? undefined : (card.edition ?? undefined)}
-      aria-pressed={selected}
-      aria-label={ariaLabel}
-      aria-describedby={tooltipRect ? tooltipId : undefined}
-      data-testid={steelScoring ? `steel-scoring-${card.id}` : undefined}
-      onClick={() => onToggle?.(card)}
-      onMouseEnter={showTooltip}
-      onMouseLeave={hideTooltip}
-      onFocus={showTooltip}
-      onBlur={hideTooltip}
-      onAnimationEnd={() => {
-        if (discarding) {
-          onDiscardEnd?.(card);
-        }
-      }}
-    >
+  const cardClassName =
+    `card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
+      .replace(/\s+/g, " ")
+      .trim();
+  const content = (
+    <>
       {showBack ? (
         <span
           className="card-back-face"
@@ -228,6 +213,41 @@ export default function Card({
           +$20
         </span>
       )}
+    </>
+  );
+  if (decorative) {
+    return (
+      <span
+        className={cardClassName}
+        data-edition={showBack ? undefined : (card.edition ?? undefined)}
+        aria-hidden="true"
+      >
+        {content}
+      </span>
+    );
+  }
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className={cardClassName}
+      data-edition={showBack ? undefined : (card.edition ?? undefined)}
+      aria-pressed={selected}
+      aria-label={ariaLabel}
+      aria-describedby={tooltipRect ? tooltipId : undefined}
+      data-testid={steelScoring ? `steel-scoring-${card.id}` : undefined}
+      onClick={() => onToggle?.(card)}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
+      onAnimationEnd={() => {
+        if (discarding) {
+          onDiscardEnd?.(card);
+        }
+      }}
+    >
+      {content}
       {tooltipRect && !showBack && (
         <CardTooltip
           id={tooltipId}

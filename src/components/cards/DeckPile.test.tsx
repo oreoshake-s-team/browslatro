@@ -346,3 +346,28 @@ describe("DeckPile joker drop zone", () => {
     expect(onJokerDrop).not.toHaveBeenCalled();
   });
 });
+
+describe("DeckPile dialog semantics (#912)", () => {
+  test("open modal exposes dialog semantics labelled by its title", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    await user.click(screen.getByRole("button", { name: /Deck/ }));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAccessibleName("Remaining Cards");
+  });
+
+  test("moves focus into the dialog on open and restores it to the trigger on close", async () => {
+    const user = userEvent.setup();
+    render(<DeckPile remaining={createDeck()} />);
+    const trigger = screen.getByRole("button", { name: /Deck/ });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+});
