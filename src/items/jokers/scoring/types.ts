@@ -70,4 +70,5 @@ export interface HandLevelContext {
   readonly blindsSkipped?: number;
   readonly addedCardsCount?: number;
   readonly todoHand?: HandLabel | null;
+  readonly bossTriggered?: boolean;
 }

@@ -150,6 +150,8 @@ export const SATELLITE_MONEY_PER_PLANET = 1;
 export const GLASS_JOKER_X_MULT_PER_SHATTER = 0.75;
 export const TO_DO_LIST_PAYOUT = 4;
 export const MADNESS_X_MULT_PER_BLIND = 0.5;
+export const MATADOR_PAYOUT = 8;
+export const GIFT_CARD_SELL_VALUE_PER_ROUND = 1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

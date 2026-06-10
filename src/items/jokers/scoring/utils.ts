@@ -35,7 +35,7 @@ export function jokerSellValue(joker: Joker): number {
     joker.state?.kind === "counter"
       ? joker.state.value
       : 0;
-  return JOKER_SELL_VALUE + grown;
+  return JOKER_SELL_VALUE + grown + (joker.sellBonus ?? 0);
 }
 
 export function assertNeverEffect(effect: never): never {

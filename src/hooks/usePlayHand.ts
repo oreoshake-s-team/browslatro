@@ -407,6 +407,11 @@ export function usePlayHand({
       isBossRound,
       playedCardKeysThisAnte,
     );
+    const bossTriggered =
+      isBossRound &&
+      (playedDebuffedIds.size > 0 ||
+        psychicZeroed ||
+        adjustedHandEntry !== baseHandEntry);
     const preMutationScoring = expandScoringRetriggers(
       getScoringCards(playedCards, label, {
         allCardsScore: allCardsScoreFromJokers(jokers),
@@ -529,6 +534,7 @@ export function usePlayHand({
           blindsSkipped: runStats.blindsSkipped,
           addedCardsCount: addedCards.length,
           todoHand: useGame.getState().todoHand,
+          bossTriggered,
         },
       );
       const noCardsMatchingObservatoryPlanets = consumables.filter(
@@ -579,6 +585,7 @@ export function usePlayHand({
       blindsSkipped: runStats.blindsSkipped,
       addedCardsCount: addedCards.length,
       todoHand: useGame.getState().todoHand,
+      bossTriggered,
     });
 
     let perCardAdditiveMult = 0;

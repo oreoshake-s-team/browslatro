@@ -264,6 +264,25 @@ export function applyMadnessOnBlindSelect(
   return next;
 }
 
+export function applyGiftCardToJokerSellValues(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const giftAmount = jokers
+    .filter(isDestructible)
+    .reduce(
+      (sum, j) =>
+        j.effect.kind === "round-end-grows-all-sell-values"
+          ? sum + j.effect.amount
+          : sum,
+      0,
+    );
+  if (giftAmount === 0) return [...jokers];
+  return jokers.map((j) => ({
+    ...j,
+    sellBonus: (j.sellBonus ?? 0) + giftAmount,
+  }));
+}
+
 export function applyRoundEndToJokerStates(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,

@@ -296,6 +296,9 @@ export function applyPerCardJokers(
       case "x-mult-per-glass-shattered":
       case "money-on-todo-hand":
       case "blind-select-x-mult-destroys-joker":
+      case "money-on-boss-trigger":
+      case "allows-duplicate-jokers":
+      case "round-end-grows-all-sell-values":
       case "noop":
         break;
       default:
