@@ -158,29 +158,29 @@ const SUIT_GLYPH: Record<string, string> = {
   clubs: "♣",
 };
 
-const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
-  bonus: "Bonus",
-  mult: "Mult",
-  wild: "Wild",
-  glass: "Glass",
-  steel: "Steel",
-  stone: "Stone",
-  gold: "Gold",
-  lucky: "Lucky",
-};
+const ENHANCEMENT_LABEL_KEY = {
+  bonus: "cardLabels.enhancementBonus",
+  mult: "cardLabels.enhancementMult",
+  wild: "cardLabels.enhancementWild",
+  glass: "cardLabels.enhancementGlass",
+  steel: "cardLabels.enhancementSteel",
+  stone: "cardLabels.enhancementStone",
+  gold: "cardLabels.enhancementGold",
+  lucky: "cardLabels.enhancementLucky",
+} as const satisfies Record<Enhancement, string>;
 
-const CARD_EDITION_LABEL: Record<CardEdition, string> = {
-  foil: "Foil",
-  holographic: "Holographic",
-  polychrome: "Polychrome",
-};
+const CARD_EDITION_LABEL_KEY = {
+  foil: "cardLabels.editionFoil",
+  holographic: "cardLabels.editionHolographic",
+  polychrome: "cardLabels.editionPolychrome",
+} as const satisfies Record<CardEdition, string>;
 
-const SEAL_LABEL: Record<Seal, string> = {
-  gold: "Gold Seal",
-  red: "Red Seal",
-  blue: "Blue Seal",
-  purple: "Purple Seal",
-};
+const SEAL_LABEL_KEY = {
+  gold: "cardLabels.sealGold",
+  red: "cardLabels.sealRed",
+  blue: "cardLabels.sealBlue",
+  purple: "cardLabels.sealPurple",
+} as const satisfies Record<Seal, string>;
 
 function playingCardSummary(
   t: TFunction,
@@ -262,12 +262,12 @@ const OFFER_KIND_LABEL_KEY = {
   pack: "shop.kindPack",
 } as const satisfies Record<ShopItem["kind"], string>;
 
-const EDITION_LABEL: Readonly<Record<JokerEdition, string>> = {
-  foil: "Foil",
-  holographic: "Holographic",
-  polychrome: "Polychrome",
-  negative: "Negative",
-};
+const JOKER_EDITION_LABEL_KEY = {
+  foil: "cardLabels.editionFoil",
+  holographic: "cardLabels.editionHolographic",
+  polychrome: "cardLabels.editionPolychrome",
+  negative: "cardLabels.editionNegative",
+} as const satisfies Record<JokerEdition, string>;
 
 export default function Shop({
   money,
@@ -379,7 +379,7 @@ export default function Shop({
               className="shop-offer-edition-badge"
               data-testid={`shop-edition-${idx}`}
             >
-              {EDITION_LABEL[edition]}
+              {t(JOKER_EDITION_LABEL_KEY[edition])}
             </span>
           )}
           {cardEnhancement && (
@@ -387,7 +387,7 @@ export default function Shop({
               className={`shop-offer-card-badge shop-offer-card-enhancement-badge shop-offer-card-enhancement-${cardEnhancement}`}
               data-testid={`shop-card-enhancement-${idx}`}
             >
-              {ENHANCEMENT_LABEL[cardEnhancement]}
+              {t(ENHANCEMENT_LABEL_KEY[cardEnhancement])}
             </span>
           )}
           {cardEdition && (
@@ -395,7 +395,7 @@ export default function Shop({
               className={`shop-offer-card-badge shop-offer-card-edition-badge shop-offer-card-edition-${cardEdition}`}
               data-testid={`shop-card-edition-${idx}`}
             >
-              {CARD_EDITION_LABEL[cardEdition]}
+              {t(CARD_EDITION_LABEL_KEY[cardEdition])}
             </span>
           )}
           {cardSeal && (
@@ -403,7 +403,7 @@ export default function Shop({
               className={`shop-offer-card-badge shop-offer-card-seal-badge shop-offer-card-seal-${cardSeal}`}
               data-testid={`shop-card-seal-${idx}`}
             >
-              {SEAL_LABEL[cardSeal]}
+              {t(SEAL_LABEL_KEY[cardSeal])}
             </span>
           )}
         </span>

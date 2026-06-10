@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { Hand } from "../../cards/types";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./HandScore.css";
 
 interface HandScoreProps {
@@ -94,6 +96,7 @@ function HandScore({
   selectedHand,
   selectedHandLevel = null,
 }: HandScoreProps) {
+  const { t } = useTranslation();
   const hasLevel =
     selectedHand !== null && typeof selectedHandLevel === "number";
   const labelKey = selectedHand?.label ?? null;
@@ -110,7 +113,7 @@ function HandScore({
               : undefined
           }
         >
-          <span>{selectedHand.label}</span>
+          <span>{tHandLabel(t, selectedHand.label)}</span>
           {hasLevel && (
             <span className="hand-score-level" aria-hidden="true">
               Lv {selectedHandLevel}
