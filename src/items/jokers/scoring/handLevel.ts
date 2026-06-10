@@ -526,6 +526,10 @@ export function applyHandLevelJokers(
       case "retrigger-first-card":
       case "retrigger-on-final-hand":
       case "sell-value-grows-per-round":
+      case "end-of-round-money-grows-on-boss":
+      case "extra-interest-per-five":
+      case "sell-creates-double-tag":
+      case "hand-size-decay-per-round":
       case "noop":
         break;
       default:

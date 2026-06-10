@@ -236,6 +236,10 @@ export function applyPerCardJokers(
       case "x-mult-per-planet-used":
       case "x-mult-per-sold-card":
       case "x-mult-per-hand-without-most-played":
+      case "end-of-round-money-grows-on-boss":
+      case "extra-interest-per-five":
+      case "sell-creates-double-tag":
+      case "hand-size-decay-per-round":
       case "noop":
         break;
       default:

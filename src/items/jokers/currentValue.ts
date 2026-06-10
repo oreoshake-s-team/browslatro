@@ -13,6 +13,8 @@ export type JokerCurrentValue =
   | { readonly kind: "chips"; readonly value: number }
   | { readonly kind: "x-mult"; readonly value: number }
   | { readonly kind: "sell-value"; readonly value: number }
+  | { readonly kind: "money"; readonly value: number }
+  | { readonly kind: "hand-size"; readonly value: number }
   | {
       readonly kind: "hands-until-x-mult";
       readonly hands: number;
@@ -77,6 +79,18 @@ export function jokerCurrentValue(
       };
     case "sell-value-grows-per-round":
       return { kind: "sell-value", value: jokerSellValue(joker) };
+    case "end-of-round-money-grows-on-boss":
+      return {
+        kind: "money",
+        value:
+          joker.state?.kind === "counter" ? joker.state.value : effect.baseAmount,
+      };
+    case "hand-size-decay-per-round":
+      return {
+        kind: "hand-size",
+        value:
+          joker.state?.kind === "counter" ? joker.state.value : effect.amount,
+      };
     default:
       return null;
   }
@@ -92,6 +106,10 @@ export function jokerCurrentValueLabel(value: JokerCurrentValue): string {
       return `Currently: X${formatFactor(value.value)} Mult`;
     case "sell-value":
       return `Currently: $${value.value} sell value`;
+    case "money":
+      return `Currently: $${value.value} at end of round`;
+    case "hand-size":
+      return `Currently: +${value.value} hand size`;
     case "hands-until-x-mult":
       return `X${value.xmult} Mult in ${value.hands} ${
         value.hands === 1 ? "hand" : "hands"

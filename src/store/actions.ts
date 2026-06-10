@@ -27,6 +27,7 @@ import {
   applyRoundEndToJokerStates,
   applyPackSkipToJokerStates,
   applySellToJokerStates,
+  interestMultiplierFromJokers,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -274,6 +275,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!entry) return;
     if (!canSellJoker(entry)) return;
     s.earn(jokerSellValue(entry));
+    if (entry.effect.kind === "sell-creates-double-tag") {
+      s.setPendingTags((prev) => [...prev, "double"]);
+    }
     s.setJokers((prev) =>
       applySellToJokerStates(prev.filter((_, i) => i !== jokerIdx)),
     );
@@ -549,7 +553,8 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       precomputed?.interest ??
       (deckSuppressesInterest(s.selectedDeck)
         ? 0
-        : calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds)));
+        : calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds)) *
+          interestMultiplierFromJokers(s.jokers));
     s.earn(blindReward + interest);
     if (blindReward > 0) {
       s.setScoringEvents((prev) => [

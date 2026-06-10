@@ -92,6 +92,10 @@ import {
   CONSTELLATION_X_MULT_PER_PLANET,
   CAMPFIRE_X_MULT_PER_SOLD_CARD,
   OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
+  ROCKET_BASE_PAYOUT,
+  ROCKET_PAYOUT_GROWTH_PER_BOSS,
+  TURTLE_BEAN_HAND_SIZE,
+  TURTLE_BEAN_LOSS_PER_ROUND,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1489,6 +1493,56 @@ export function createObeliskJoker(): Joker {
       amount: OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
     },
     state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createRocketJoker(): Joker {
+  return {
+    id: "rocket",
+    rarity: "uncommon",
+    name: "Rocket",
+    description: `Earn $${ROCKET_BASE_PAYOUT} at end of round. Payout increases by $${ROCKET_PAYOUT_GROWTH_PER_BOSS} when Boss Blind is defeated`,
+    effect: {
+      kind: "end-of-round-money-grows-on-boss",
+      baseAmount: ROCKET_BASE_PAYOUT,
+      growth: ROCKET_PAYOUT_GROWTH_PER_BOSS,
+    },
+    state: { kind: "counter", value: ROCKET_BASE_PAYOUT },
+  };
+}
+
+export function createToTheMoonJoker(): Joker {
+  return {
+    id: "to-the-moon",
+    rarity: "uncommon",
+    name: "To the Moon",
+    description: "Earn an extra $1 of interest for every $5 you have at end of round",
+    effect: { kind: "extra-interest-per-five" },
+  };
+}
+
+export function createDietColaJoker(): Joker {
+  return {
+    id: "diet-cola",
+    rarity: "uncommon",
+    name: "Diet Cola",
+    description: "Sell this card to create a free Double Tag",
+    effect: { kind: "sell-creates-double-tag" },
+  };
+}
+
+export function createTurtleBeanJoker(): Joker {
+  return {
+    id: "turtle-bean",
+    rarity: "uncommon",
+    name: "Turtle Bean",
+    description: `+${TURTLE_BEAN_HAND_SIZE} hand size, reduces by ${TURTLE_BEAN_LOSS_PER_ROUND} every round`,
+    effect: {
+      kind: "hand-size-decay-per-round",
+      amount: TURTLE_BEAN_HAND_SIZE,
+      lossPerRound: TURTLE_BEAN_LOSS_PER_ROUND,
+    },
+    state: { kind: "counter", value: TURTLE_BEAN_HAND_SIZE },
   };
 }
 

@@ -41,6 +41,7 @@ export {
   extraDebtFloorFromJokers,
   extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
+  interestMultiplierFromJokers,
   extraStartingHandsFromJokers,
   handEvalOptionsFromJokers,
   hasAstronomerInJokers,

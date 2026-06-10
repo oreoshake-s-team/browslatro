@@ -126,6 +126,10 @@ export const FORTUNE_TELLER_MULT_PER_TAROT = 1;
 export const CONSTELLATION_X_MULT_PER_PLANET = 0.1;
 export const CAMPFIRE_X_MULT_PER_SOLD_CARD = 0.25;
 export const OBELISK_X_MULT_PER_CONSECUTIVE_HAND = 0.2;
+export const ROCKET_BASE_PAYOUT = 1;
+export const ROCKET_PAYOUT_GROWTH_PER_BOSS = 2;
+export const TURTLE_BEAN_HAND_SIZE = 5;
+export const TURTLE_BEAN_LOSS_PER_ROUND = 1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;
