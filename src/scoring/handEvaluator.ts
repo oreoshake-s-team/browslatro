@@ -24,12 +24,12 @@ const CONTAINMENT_ROWS: ReadonlyArray<readonly [HandLabel, ReadonlyArray<HandLab
   ["Three of a Kind", ["High Card", "Pair", "Three of a Kind"]],
   ["Straight", ["High Card", "Straight"]],
   ["Flush", ["High Card", "Flush"]],
-  ["Full House", ["High Card", "Pair", "Three of a Kind", "Full House"]],
+  ["Full House", ["High Card", "Pair", "Two Pair", "Three of a Kind", "Full House"]],
   ["Four of a Kind", ["High Card", "Pair", "Three of a Kind", "Four of a Kind"]],
   ["Straight Flush", ["High Card", "Straight", "Flush", "Straight Flush"]],
   ["Royal Flush", ["High Card", "Straight", "Flush", "Straight Flush", "Royal Flush"]],
   ["Five of a Kind", ["High Card", "Pair", "Three of a Kind", "Four of a Kind", "Five of a Kind"]],
-  ["Flush House", ["High Card", "Pair", "Three of a Kind", "Full House", "Flush", "Flush House"]],
+  ["Flush House", ["High Card", "Pair", "Two Pair", "Three of a Kind", "Full House", "Flush", "Flush House"]],
   ["Flush Five", ["High Card", "Pair", "Three of a Kind", "Four of a Kind", "Five of a Kind", "Flush", "Flush Five"]],
 ];
 

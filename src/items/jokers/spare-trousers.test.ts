@@ -90,10 +90,21 @@ describe("Spare Trousers joker (#804)", () => {
     expect(jokers[0].state).toEqual({ kind: "counter", value: 0 });
   });
 
-  test("Full House does not increment state (negative — matches Balatro's hand-contains rules, Two Pair is not in Full House's contains-set)", () => {
+  test("Full House increments state (contains Two Pair, issue #895)", () => {
     const [updated] = applyHandPlayedToJokerStates(
       [createSpareTrousersJoker()],
       { playedHandLabel: "Full House", playedCardCount: 5, scoredCards: [] },
+    );
+    expect(updated.state).toEqual({
+      kind: "counter",
+      value: SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+    });
+  });
+
+  test("Four of a Kind does not increment state (negative — no two distinct pairs)", () => {
+    const [updated] = applyHandPlayedToJokerStates(
+      [createSpareTrousersJoker()],
+      { playedHandLabel: "Four of a Kind", playedCardCount: 5, scoredCards: [] },
     );
     expect(updated.state).toEqual({ kind: "counter", value: 0 });
   });
