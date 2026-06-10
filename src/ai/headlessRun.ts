@@ -76,12 +76,15 @@ const STARTING_MONEY = 4;
 const BLIND_CLEAR_REWARD_BASE = 2;
 const MAX_DISCARD_SIZE = 5;
 
-interface Pile {
+export interface Pile {
   readonly hand: ReadonlyArray<Card>;
   readonly remaining: ReadonlyArray<Card>;
 }
 
-function removeAndRefill(pile: Pile, cardIds: ReadonlyArray<number>): Pile {
+export function removeAndRefill(
+  pile: Pile,
+  cardIds: ReadonlyArray<number>,
+): Pile {
   const removed = new Set(cardIds);
   const kept = pile.hand.filter((c) => !removed.has(c.id));
   const drawCount = Math.min(
