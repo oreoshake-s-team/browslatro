@@ -334,3 +334,19 @@ describe("countEnhancementInFullDeck", () => {
     ).toBe(0);
   });
 });
+
+describe("applyEnhancementOverrides — null removal marker (#969)", () => {
+  test("a null override strips an intrinsic enhancement", () => {
+    const result = applyEnhancementOverrides(
+      [card({ id: 7, enhancement: "steel" })],
+      new Map([[7, null]]),
+    );
+    expect(result[0].enhancement).toBeUndefined();
+  });
+
+  test("a null override on an unenhanced card is a no-op (negative)", () => {
+    const plain = card({ id: 7 });
+    const result = applyEnhancementOverrides([plain], new Map([[7, null]]));
+    expect(result[0]).toBe(plain);
+  });
+});

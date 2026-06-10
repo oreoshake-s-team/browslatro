@@ -242,6 +242,8 @@ export function applyPerCardJokers(
       case "hand-size-decay-per-round":
       case "retrigger-all-depleting":
       case "retrigger-held-abilities":
+      case "played-faces-become-gold":
+      case "x-mult-per-enhancement-eaten":
       case "noop":
         break;
       default:

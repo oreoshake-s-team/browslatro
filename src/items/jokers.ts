@@ -89,9 +89,14 @@ export { applyOnDiscardJokers } from "./jokers/scoring/onDiscard";
 export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
 export { expandScoringRetriggers } from "./jokers/scoring/retriggers";
 export {
+  applyScoredCardMutations,
+  applyScoredMutationsToCards,
+} from "./jokers/scoring/scoredCardMutations";
+export {
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
   applyConsumableUsedToJokerStates,
+  applyEnhancementsEatenToJokerStates,
   applyLuckyTriggersToJokerStates,
   applyPackSkipToJokerStates,
   applySellToJokerStates,

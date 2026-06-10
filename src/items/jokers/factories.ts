@@ -99,6 +99,7 @@ import {
   SELTZER_HANDS,
   SELTZER_RETRIGGERS,
   MIME_HELD_RETRIGGERS,
+  VAMPIRE_X_MULT_PER_ENHANCED,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1574,6 +1575,30 @@ export function createMimeJoker(): Joker {
       kind: "retrigger-held-abilities",
       times: MIME_HELD_RETRIGGERS,
     },
+  };
+}
+
+export function createMidasMaskJoker(): Joker {
+  return {
+    id: "midas-mask",
+    rarity: "uncommon",
+    name: "Midas Mask",
+    description: "All played face cards become Gold cards when scored",
+    effect: { kind: "played-faces-become-gold" },
+  };
+}
+
+export function createVampireJoker(): Joker {
+  return {
+    id: "vampire",
+    rarity: "rare",
+    name: "Vampire",
+    description: `This Joker gains X${VAMPIRE_X_MULT_PER_ENHANCED} Mult per scored Enhanced card played, removes card Enhancement`,
+    effect: {
+      kind: "x-mult-per-enhancement-eaten",
+      amount: VAMPIRE_X_MULT_PER_ENHANCED,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }
 
