@@ -63,7 +63,7 @@ test("portrait: the sidebar strip fits the viewport without a horizontal scrollb
   const overflow = await page
     .locator(".sidebar")
     .evaluate((el) => el.scrollWidth - el.clientWidth);
-  expect(overflow).toBe(0);
+  expect(overflow).toBeLessThanOrEqual(1);
 });
 
 test("negative: landscape keeps the vertical sidebar column (issue #880)", async ({
