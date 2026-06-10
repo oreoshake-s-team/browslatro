@@ -19,6 +19,7 @@
 # production
 /build
 bundle-stats.html
+vite.config.*.timestamp-*
 
 # storybook
 /storybook-static
