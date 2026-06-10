@@ -118,6 +118,8 @@ import {
   MADNESS_X_MULT_PER_BLIND,
   MATADOR_PAYOUT,
   GIFT_CARD_SELL_VALUE_PER_ROUND,
+  CANIO_X_MULT_PER_FACE,
+  INVISIBLE_JOKER_ROUNDS,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1951,5 +1953,44 @@ export function createBrainstormJoker(): Joker {
     name: "Brainstorm",
     description: "Copies the ability of the leftmost Joker",
     effect: { kind: "copy-leftmost-joker" },
+  };
+}
+
+export function createCanioJoker(): Joker {
+  return {
+    id: "canio",
+    rarity: "legendary",
+    name: "Canio",
+    description: `This Joker gains X${CANIO_X_MULT_PER_FACE} Mult when a face card is destroyed`,
+    effect: {
+      kind: "x-mult-per-face-destroyed",
+      amount: CANIO_X_MULT_PER_FACE,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createPerkeoJoker(): Joker {
+  return {
+    id: "perkeo",
+    rarity: "legendary",
+    name: "Perkeo",
+    description:
+      "Creates a copy of a random consumable in your possession when you leave the shop",
+    effect: { kind: "shop-exit-copies-consumable" },
+  };
+}
+
+export function createInvisibleJoker(): Joker {
+  return {
+    id: "invisible-joker",
+    rarity: "legendary",
+    name: "Invisible Joker",
+    description: `After ${INVISIBLE_JOKER_ROUNDS} rounds, sell this card to duplicate a random Joker`,
+    effect: {
+      kind: "sell-after-rounds-duplicates-joker",
+      rounds: INVISIBLE_JOKER_ROUNDS,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }

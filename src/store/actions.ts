@@ -23,6 +23,7 @@ import {
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
   tickPerishableRounds,
+  applyCardsDestroyedToJokerStates,
   applyShopRerollToJokerStates,
   applyRoundEndToJokerStates,
   applyPackSkipToJokerStates,
@@ -31,6 +32,7 @@ import {
   isJokerActive,
   allowsDuplicateJokers,
   applyGiftCardToJokerSellValues,
+  cloneJoker,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -289,9 +291,18 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (entry.effect.kind === "sell-disables-boss-blind" && s.blind === 3) {
       s.setCurrentBoss({ ...s.currentBoss, effect: { kind: "none" } });
     }
-    s.setJokers((prev) =>
-      applySellToJokerStates(prev.filter((_, i) => i !== jokerIdx)),
-    );
+    const duplicatesOnSell =
+      entry.effect.kind === "sell-after-rounds-duplicates-joker" &&
+      entry.state?.kind === "counter" &&
+      entry.state.value >= entry.effect.rounds;
+    s.setJokers((prev) => {
+      const remaining = applySellToJokerStates(
+        prev.filter((_, i) => i !== jokerIdx),
+      );
+      if (!duplicatesOnSell || remaining.length === 0) return remaining;
+      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+      return [...remaining, cloneJoker(pick)];
+    });
   },
   reorderJokers: (orderedIds) => {
     get().setJokers((prev) => {
@@ -666,6 +677,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         const handIds = s.dealt.hand.map((c) => c.id);
         const shuffled = [...handIds].sort(() => Math.random() - 0.5);
         const destroyed = new Set(shuffled.slice(0, effect.destroyCount));
+        const destroyedCards = s.dealt.hand.filter((c) => destroyed.has(c.id));
         s.setDealt((prev) => ({
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
@@ -675,6 +687,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           for (const id of destroyed) next.add(id);
           return next;
         });
+        s.setJokers((prev) =>
+          applyCardsDestroyedToJokerStates(prev, destroyedCards),
+        );
         s.earn(effect.moneyGain);
         return;
       }
@@ -872,11 +887,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       if (s.packPreviewSelectedIds.has(c.id)) ids.add(c.id);
     }
     if (ids.size === 0) return;
+    const destroyedCards = s.packPreviewHand.filter((c) => ids.has(c.id));
     s.setDestroyedCardIds((prev) => {
       const next = new Set(prev);
       for (const id of ids) next.add(id);
       return next;
     });
+    s.setJokers((prev) =>
+      applyCardsDestroyedToJokerStates(prev, destroyedCards),
+    );
     s.setPackPreviewHand((prev) => prev.filter((c) => !ids.has(c.id)));
     s.setPackPreviewSelectedIds(new Set());
   },

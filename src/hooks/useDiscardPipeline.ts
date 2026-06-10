@@ -20,6 +20,7 @@ import {
 } from "../items/consumables";
 import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
 import {
+  applyCardsDestroyedToJokerStates,
   applyDiscardToJokerStates,
   applyOnDiscardJokers,
   extraStartingHandSizeFromJokers,
@@ -222,6 +223,11 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
         });
         const destroyed = discardedCards.find((c) => c.id === id);
         if (destroyed) {
+          useGame
+            .getState()
+            .setJokers((prev) =>
+              applyCardsDestroyedToJokerStates(prev, [destroyed]),
+            );
           setScoringEvents((prev) => [
             ...prev,
             {

@@ -299,6 +299,9 @@ export function applyPerCardJokers(
       case "money-on-boss-trigger":
       case "allows-duplicate-jokers":
       case "round-end-grows-all-sell-values":
+      case "x-mult-per-face-destroyed":
+      case "shop-exit-copies-consumable":
+      case "sell-after-rounds-duplicates-joker":
       case "noop":
         break;
       default:

@@ -111,6 +111,9 @@ import {
   createShowmanJoker,
   createGiftCardJoker,
   createChicotJoker,
+  createCanioJoker,
+  createPerkeoJoker,
+  createInvisibleJoker,
   createRunnerJoker,
   createScaryFaceJoker,
   createScholarJoker,
@@ -150,7 +153,14 @@ export const initialJokersConfig: { factory: () => Joker[] } = {
 };
 
 export function createLegendaryJokerCatalog(): Joker[] {
-  return [createYorickJoker(), createTribouletJoker(), createChicotJoker()];
+  return [
+    createYorickJoker(),
+    createTribouletJoker(),
+    createChicotJoker(),
+    createCanioJoker(),
+    createPerkeoJoker(),
+    createInvisibleJoker(),
+  ];
 }
 
 export function createJokerCatalog(): Joker[] {

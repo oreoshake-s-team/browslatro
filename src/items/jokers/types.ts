@@ -336,7 +336,13 @@ export type JokerEffect =
       readonly amount: number;
     }
   | { readonly kind: "copy-right-joker" }
-  | { readonly kind: "copy-leftmost-joker" };
+  | { readonly kind: "copy-leftmost-joker" }
+  | { readonly kind: "x-mult-per-face-destroyed"; readonly amount: number }
+  | { readonly kind: "shop-exit-copies-consumable" }
+  | {
+      readonly kind: "sell-after-rounds-duplicates-joker";
+      readonly rounds: number;
+    };
 
 export type JokerStateValue =
   | { readonly kind: "counter"; readonly value: number };

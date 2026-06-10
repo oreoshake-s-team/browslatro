@@ -59,6 +59,7 @@ export {
   polychromeRandomJokerDestroyOthers,
   probabilityMultiplierFromJokers,
   replaceJokersExceptCopyOf,
+  shopExitConsumableCopies,
 } from "./jokers/collection";
 export * from "./jokers/factories";
 export {
@@ -101,6 +102,7 @@ export {
 } from "./jokers/scoring/scoredCardMutations";
 export { consumableCreationsOnHandPlayed } from "./jokers/scoring/consumableCreators";
 export {
+  applyCardsDestroyedToJokerStates,
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
   applyConsumableUsedToJokerStates,

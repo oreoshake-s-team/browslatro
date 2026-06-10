@@ -17,6 +17,7 @@ import {
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
+  applyCardsDestroyedToJokerStates,
   applyGlassShatterToJokerStates,
 } from "../items/jokers";
 import { CARD_EDITION_INFO, applyCardEdition } from "../cards/editions";
@@ -181,7 +182,12 @@ export function useScoringPipeline({
         });
         useGame
           .getState()
-          .setJokers((prev) => applyGlassShatterToJokerStates(prev, 1));
+          .setJokers((prev) =>
+            applyCardsDestroyedToJokerStates(
+              applyGlassShatterToJokerStates(prev, 1),
+              [stepCard],
+            ),
+          );
       }
       const luckyResult = useGame.getState().luckyRollsByScoringIndex[stepIdx] ?? {
         multBonus: 0,

@@ -22,6 +22,7 @@ import {
   createRandomJoker,
   MAX_JOKERS,
   withEdition,
+  applyCardsDestroyedToJokerStates,
   applyConsumableUsedToJokerStates,
 } from "../items/jokers";
 import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
@@ -314,14 +315,19 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (selectedIds.size === 0 || selectedIds.size > effect.maxTargets) return;
       play("pop");
       const destroyedIds = new Set<number>();
+      const destroyedCards: Card[] = [];
       for (const c of useGame.getState().dealt.hand) {
-        if (selectedIds.has(c.id)) destroyedIds.add(c.id);
+        if (selectedIds.has(c.id)) {
+          destroyedIds.add(c.id);
+          destroyedCards.push(c);
+        }
       }
       setDestroyedCardIds((prev) => {
         const next = new Set(prev);
         for (const id of destroyedIds) next.add(id);
         return next;
       });
+      setJokers((prev) => applyCardsDestroyedToJokerStates(prev, destroyedCards));
       setDealt((prev) => ({
         hand: prev.hand.filter((c) => !selectedIds.has(c.id)),
         remaining: prev.remaining,

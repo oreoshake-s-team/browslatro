@@ -152,6 +152,8 @@ export const TO_DO_LIST_PAYOUT = 4;
 export const MADNESS_X_MULT_PER_BLIND = 0.5;
 export const MATADOR_PAYOUT = 8;
 export const GIFT_CARD_SELL_VALUE_PER_ROUND = 1;
+export const CANIO_X_MULT_PER_FACE = 1;
+export const INVISIBLE_JOKER_ROUNDS = 2;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

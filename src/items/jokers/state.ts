@@ -222,6 +222,19 @@ export function applySellToJokerStates(jokers: ReadonlyArray<Joker>): Joker[] {
   });
 }
 
+export function applyCardsDestroyedToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  destroyedCards: ReadonlyArray<Card>,
+): Joker[] {
+  const faces = destroyedCards.filter((c) => isFaceCardWith(c, jokers)).length;
+  if (faces <= 0) return [...jokers];
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-face-destroyed") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + faces) };
+  });
+}
+
 export function applyGlassShatterToJokerStates(
   jokers: ReadonlyArray<Joker>,
   shatteredCount: number,
@@ -329,6 +342,10 @@ export function applyRoundEndToJokerStates(
     }
     if (effect.kind === "sell-value-grows-per-round") {
       out.push({ ...joker, state: counterState(prevCount(joker) + effect.amount) });
+      continue;
+    }
+    if (effect.kind === "sell-after-rounds-duplicates-joker") {
+      out.push({ ...joker, state: counterState(prevCount(joker) + 1) });
       continue;
     }
     out.push(joker);
