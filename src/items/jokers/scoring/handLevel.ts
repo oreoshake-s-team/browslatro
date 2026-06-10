@@ -545,6 +545,8 @@ export function applyHandLevelJokers(
       case "retrigger-all-depleting":
       case "retrigger-held-abilities":
       case "played-faces-become-gold":
+      case "scored-cards-gain-chips":
+      case "blind-select-adds-stone-card":
       case "noop":
         break;
       default:

@@ -41,6 +41,7 @@ export type CardEdition = "foil" | "holographic" | "polychrome";
 export interface Card {
   readonly id: number;
   readonly rank: Rank;
+  readonly bonusChips?: number;
   readonly suit: Suit;
   readonly enhancement?: Enhancement | null;
   readonly seal?: Seal | null;

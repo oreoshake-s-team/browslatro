@@ -244,6 +244,8 @@ export function applyPerCardJokers(
       case "retrigger-held-abilities":
       case "played-faces-become-gold":
       case "x-mult-per-enhancement-eaten":
+      case "scored-cards-gain-chips":
+      case "blind-select-adds-stone-card":
       case "noop":
         break;
       default:

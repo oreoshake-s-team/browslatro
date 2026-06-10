@@ -17,14 +17,19 @@ import {
 } from "../items/vouchers";
 import {
   HAND_SIZE,
+  RANKS,
+  SUITS,
   applyDeckCompositionTransforms,
   createDeck,
+  nextCardId,
   resetCardIds,
 } from "../cards/deck";
 import { fullDeckPile, initialDeal } from "../cards/deckBuild";
+import type { Card } from "../cards/types";
 import {
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
+  stoneCardsOnBlindSelectFromJokers,
 } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
@@ -185,11 +190,21 @@ export function useRoundLifecycle({
     setRemainingDiscards(startingDiscards);
     setDiscardsUsedThisRound(0);
     setHandHistoryThisRound([]);
+    const stoneCount = stoneCardsOnBlindSelectFromJokers(equippedJokers);
+    const newStones: Card[] = Array.from({ length: stoneCount }, () => ({
+      id: nextCardId(),
+      rank: RANKS[Math.floor(Math.random() * RANKS.length)],
+      suit: SUITS[Math.floor(Math.random() * SUITS.length)],
+      enhancement: "stone",
+    }));
+    const addedWithStones =
+      newStones.length > 0 ? [...addedCards, ...newStones] : addedCards;
+    if (newStones.length > 0) setAddedCards(addedWithStones);
     const fresh = initialDeal(
       baseDeckCards,
       destroyedCardIds,
       handSize,
-      addedCards,
+      addedWithStones,
       cardEnhancementsById,
       cardSealsById,
     );
