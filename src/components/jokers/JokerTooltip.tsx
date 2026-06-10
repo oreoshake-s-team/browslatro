@@ -4,15 +4,21 @@ import {
   JOKER_EDITION_INFO,
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
+  jokerCurrentValue,
+  jokerCurrentValueLabel,
   jokerSellValue,
   jokerStickers,
   probabilityMultiplierFromJokers,
   type Joker,
+  type JokerCurrentValue,
   type JokerRarity,
   type JokerSticker,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
-import { countEnhancedInFullDeck } from "../../cards/deckBuild";
+import {
+  countEnhancedInFullDeck,
+  countMissingFromFullDeck,
+} from "../../cards/deckBuild";
 import { formatChanceRatio } from "../cards/cardInfo";
 
 interface JokerTooltipProps {
@@ -35,6 +41,7 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
   const effectiveOdds = useEffectiveOdds(joker);
+  const currentValue = useCurrentValue(joker);
   return createPortal(
     <div id={id} role="tooltip" className="joker-tooltip" style={style}>
       <p className="joker-tooltip-heading">{joker.name}</p>
@@ -45,6 +52,14 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
         {rarityLabel(joker.rarity)}
       </p>
       <p className="joker-tooltip-description">{joker.description}</p>
+      {currentValue && (
+        <p
+          className="joker-tooltip-current-value"
+          data-testid="joker-tooltip-current-value"
+        >
+          {jokerCurrentValueLabel(currentValue)}
+        </p>
+      )}
       {effectiveOdds && (
         <p
           className="joker-tooltip-effective-odds"
@@ -121,6 +136,19 @@ function getJokerBaseChance(joker: Joker): number | null {
     return e.chance;
   }
   return null;
+}
+
+function useCurrentValue(joker: Joker): JokerCurrentValue | null {
+  const blindsSkipped = useGame((s) => s.runStats.blindsSkipped);
+  const addedCardsCount = useGame((s) => s.addedCards.length);
+  const missingDeckCards = useGame((s) =>
+    countMissingFromFullDeck(s.baseDeckCards, s.destroyedCardIds, s.addedCards),
+  );
+  return jokerCurrentValue(joker, {
+    blindsSkipped,
+    addedCardsCount,
+    missingDeckCards,
+  });
 }
 
 function useEffectiveOdds(joker: Joker): string | null {

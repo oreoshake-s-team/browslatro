@@ -79,6 +79,18 @@ export function countEnhancedInFullDeck(
   return count;
 }
 
+export function countMissingFromFullDeck(
+  baseDeckCards: ReadonlyArray<Card> = [],
+  destroyedCardIds: ReadonlySet<number> = new Set(),
+  addedCards: ReadonlyArray<Card> = [],
+): number {
+  const survivingBase = baseDeckCards.filter(
+    (c) => !destroyedCardIds.has(c.id),
+  );
+  const fullDeckSize = survivingBase.length + addedCards.length;
+  return Math.max(0, baseDeckCards.length - fullDeckSize);
+}
+
 export function fullDeckPile(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),

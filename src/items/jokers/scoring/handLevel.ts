@@ -18,6 +18,7 @@ import type {
 import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
 import { isJokerActive } from "../stickers";
 import { ramenXMultFactor } from "../state";
+import { perCountXMultFactor } from "../currentValue";
 
 export function applyHandLevelJokers(
   allJokers: ReadonlyArray<Joker>,
@@ -434,7 +435,7 @@ export function applyHandLevelJokers(
       case "x-mult-per-blind-skipped": {
         const skips = context.blindsSkipped ?? 0;
         if (skips > 0) {
-          const factor = 1 + effect.amount * skips;
+          const factor = perCountXMultFactor(effect.amount, skips);
           xMult *= factor;
           fired.push(joker.id);
           steps.push({
@@ -448,7 +449,7 @@ export function applyHandLevelJokers(
       case "x-mult-per-added-card": {
         const added = context.addedCardsCount ?? 0;
         if (added > 0) {
-          const factor = 1 + effect.amount * added;
+          const factor = perCountXMultFactor(effect.amount, added);
           xMult *= factor;
           fired.push(joker.id);
           steps.push({
