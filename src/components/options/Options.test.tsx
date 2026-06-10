@@ -13,6 +13,7 @@ import {
 const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
 const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
+const LOCALE_KEY = "browslatro:locale";
 
 function resetPreferences(): void {
   if (isHighVisibility()) {
@@ -257,5 +258,63 @@ describe("Options — animation speed", () => {
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     expect(screen.getByLabelText("Animation speed")).toHaveValue("slow");
+  });
+});
+
+describe("Options — language picker", () => {
+  afterEach(() => {
+    window.localStorage.removeItem(LOCALE_KEY);
+  });
+
+  test("renders the language control inside the modal", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Language")).toBeInTheDocument();
+  });
+
+  test("defaults to English", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Language")).toHaveValue("en");
+  });
+
+  test("offers ʻŌlelo Hawaiʻi as an option", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(
+      screen.getByRole("option", { name: "ʻŌlelo Hawaiʻi" }),
+    ).toBeInTheDocument();
+  });
+
+  test("selecting Hawaiian translates the modal heading", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    expect(
+      screen.getByRole("heading", { name: "Nā koho" }),
+    ).toBeInTheDocument();
+  });
+
+  test("selecting Hawaiian persists the locale to localStorage", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    expect(window.localStorage.getItem(LOCALE_KEY)).toBe("haw");
+  });
+
+  test("switching back to English restores the English heading", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    await user.selectOptions(screen.getByLabelText("ʻŌlelo"), "en");
+    expect(
+      screen.getByRole("heading", { name: "Options" }),
+    ).toBeInTheDocument();
   });
 });

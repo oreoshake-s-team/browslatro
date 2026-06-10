@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./Jokers.css";
 import {
   JOKER_EDITION_INFO,
@@ -40,6 +41,7 @@ export default function Jokers({
   consumableDropEnabled = false,
   onConsumableDrop,
 }: JokersProps) {
+  const { t } = useTranslation();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
@@ -171,7 +173,7 @@ export default function Jokers({
           <span className="consumable-drop-overlay-label">Use</span>
         </div>
       )}
-      <span className="jokers-label">Jokers</span>
+      <span className="jokers-label">{t("trays.jokers")}</span>
       <ul
         ref={listRef}
         className={`jokers-list${draggingId !== null ? " jokers-list-dragging" : ""}`}

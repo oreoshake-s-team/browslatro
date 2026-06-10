@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import "./RunProgress.css";
 
 interface RunProgressProps {
@@ -8,6 +9,7 @@ interface RunProgressProps {
 }
 
 function RunProgress({ ante, round, money }: RunProgressProps) {
+  const { t } = useTranslation();
   const hasMountedRef = useRef(false);
   useEffect(() => {
     hasMountedRef.current = true;
@@ -24,16 +26,16 @@ function RunProgress({ ante, round, money }: RunProgressProps) {
         >
           ${money}
         </span>
-        <span className="stat-label">Money</span>
+        <span className="stat-label">{t("sidebar.money")}</span>
       </div>
       <div className="run-progress-row">
         <div className="stat">
           <span className="stat-value">{ante}</span>
-          <span className="stat-label">Ante</span>
+          <span className="stat-label">{t("sidebar.ante")}</span>
         </div>
         <div className="stat">
           <span className="stat-value">{round}</span>
-          <span className="stat-label">Round</span>
+          <span className="stat-label">{t("sidebar.round")}</span>
         </div>
       </div>
     </div>
