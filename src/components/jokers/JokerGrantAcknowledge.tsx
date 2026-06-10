@@ -1,5 +1,6 @@
 import "./JokerGrantAcknowledge.css";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import type { Joker } from "../../items/jokers";
 import { useFocusTrap } from "../system/useFocusTrap";
@@ -13,6 +14,7 @@ export default function JokerGrantAcknowledge({
   jokers,
   onAcknowledge,
 }: JokerGrantAcknowledgeProps) {
+  const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
   useFocusTrap(overlayRef, jokers.length > 0);
   if (jokers.length === 0) return null;
@@ -33,7 +35,7 @@ export default function JokerGrantAcknowledge({
         <h2 id="joker-grant-title" className="joker-grant-title">
           {title}
         </h2>
-        <ul className="joker-grant-list" aria-label="Granted jokers">
+        <ul className="joker-grant-list" aria-label={t("a11y.grantedJokers")}>
           {jokers.map((joker, idx) => (
             <li
               key={`${joker.id}-${idx}`}

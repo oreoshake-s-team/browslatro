@@ -261,7 +261,7 @@ export default function PackOpenModal({
         <p className="pack-open-subtitle" data-testid="pack-open-subtitle">
           {subtitle}
         </p>
-        <ul className="pack-open-options" aria-label="Pack options">
+        <ul className="pack-open-options" aria-label={t("a11y.packOptions")}>
           {pack.options.map((option, idx) => {
             if (pickedIndices?.has(idx)) return null;
             const view = describeOption(t, i18n.language, option);
@@ -301,8 +301,8 @@ export default function PackOpenModal({
                 ? stickerTooltip(view.joker)
                 : undefined;
             const pickAriaLabel = stickerNames
-              ? `Pick ${view.name} (${stickerNames})`
-              : `Pick ${view.name}`;
+              ? t("a11y.pickOptionWith", { name: view.name, stickers: stickerNames })
+              : t("a11y.pickOption", { name: view.name });
             return (
               <li
                 key={`${view.id}-${idx}`}
@@ -335,7 +335,7 @@ export default function PackOpenModal({
             <div
               className="pack-open-preview-sort"
               role="group"
-              aria-label="Sort preview hand"
+              aria-label={t("a11y.sortPreviewHand")}
             >
               <span className="pack-open-preview-sort-label">
                 {t("pack.sortLabel")}
@@ -370,7 +370,7 @@ export default function PackOpenModal({
             <div
               className="pack-open-preview-hand"
               data-testid="pack-open-preview-hand"
-              aria-label="Preview hand"
+              aria-label={t("a11y.previewHand")}
             >
               {displayedPreviewHand.map((card) => (
                 <div
