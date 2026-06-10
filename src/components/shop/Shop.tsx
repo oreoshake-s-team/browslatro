@@ -2,6 +2,10 @@ import "./Shop.css";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import {
+  localizedConsumableDescription,
+  localizedConsumableName,
+} from "../../i18n/contentOverrides";
 import type {
   CardEdition,
   Enhancement,
@@ -201,8 +205,20 @@ function playingCardSummary(
   return { name, description };
 }
 
+function localizedSubject(
+  locale: string,
+  item: { readonly id: string; readonly name: string; readonly description: string },
+): { readonly id: string; readonly name: string; readonly description: string } {
+  return {
+    id: item.id,
+    name: localizedConsumableName(locale, item.id, item.name),
+    description: localizedConsumableDescription(locale, item.id, item.description),
+  };
+}
+
 function offerSubject(
   t: TFunction,
+  locale: string,
   offer: ShopItem,
 ): {
   readonly id: string;
@@ -213,11 +229,11 @@ function offerSubject(
     case "joker":
       return offer.joker;
     case "planet":
-      return offer.planet;
+      return localizedSubject(locale, offer.planet);
     case "tarot":
-      return offer.tarot;
+      return localizedSubject(locale, offer.tarot);
     case "spectral":
-      return offer.spectral;
+      return localizedSubject(locale, offer.spectral);
     case "playing-card": {
       const summary = playingCardSummary(t, offer.card);
       return {
@@ -289,7 +305,7 @@ export default function Shop({
   extraRerollReduction = 0,
   freeFirstReroll = false,
 }: ShopProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lockTooltip = t("shop.finishPickingFirst");
   useEscapeToClose(onNext, !disabled);
   const canOverrideVoucher =
@@ -329,7 +345,7 @@ export default function Shop({
       consumableCapacity,
     );
     const label = buyButtonLabel(t, state, effectivePrice, offer.kind);
-    const subject = offerSubject(t, offer);
+    const subject = offerSubject(t, i18n.language, offer);
     const edition = offer.kind === "joker" ? offer.joker.edition : undefined;
     const card = offer.kind === "playing-card" ? offer.card : undefined;
     const cardEnhancement = card?.enhancement ?? undefined;

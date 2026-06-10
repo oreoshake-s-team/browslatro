@@ -74,6 +74,29 @@ test("the shop renders Hawaiian strings under the haw locale (issue #921)", asyn
   await expect(page.getByRole("heading", { name: /^Shop$/ })).toHaveCount(0);
 });
 
+test("a Celestial pack under the haw locale shows Hawaiian planet names (issue #978)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:locale", "haw");
+    window.localStorage.setItem("browslatro:bootShop", "1");
+    window.localStorage.setItem("browslatro:deterministicShuffle", "1");
+    window.localStorage.setItem("browslatro:forcePackPool", "celestial");
+  });
+  await page.goto("/");
+  const packOffer = page
+    .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
+    .first();
+  await packOffer.locator("button.shop-offer-buy").click();
+  await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+  await expect(
+    page
+      .locator(".pack-open-option-name")
+      .filter({ hasText: /ʻUkali|Hōkūloa|Hōkūʻula|Kaʻāwela|Makulu|Honua/ })
+      .first(),
+  ).toBeVisible();
+});
+
 test("winning round 1 under the haw locale shows Hawaiian Round Won strings (issue #922)", async ({
   page,
 }) => {
