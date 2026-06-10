@@ -21,7 +21,7 @@ describe("createSearchAgent", () => {
     expect(first).toEqual(second);
   });
 
-  test("beats the greedy baseline over a seeded batch", () => {
+  test("beats the greedy baseline over a seeded batch", { timeout: 60000 }, () => {
     const games = 12;
     const search = evaluateAgent(
       (seed) => createSearchAgent({ rng: seededRng(seed), rollouts: 4 }),

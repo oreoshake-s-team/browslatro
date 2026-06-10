@@ -49,6 +49,8 @@ export type AgentAction =
 
 export interface HeadlessRoundView extends SimulatePlayInput {
   readonly ante: number;
+  readonly round: number;
+  readonly selectedStake: Stake;
   readonly roundScore: number;
   readonly scoreTarget: number;
 }
@@ -162,6 +164,8 @@ export function playHeadlessRun(
           idolTarget: null,
           ancientSuit: null,
           ante,
+          round: blindsCleared + 1,
+          selectedStake: stake,
           roundScore,
           scoreTarget,
         };
