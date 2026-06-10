@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { useGame } from "./game";
 import {
   MAX_JOKERS,
@@ -16,6 +16,7 @@ import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { createDeck } from "../cards/deck";
+import { buildShuffledDeck } from "../cards/deckBuild";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
 import { applyBossFaceDown, createBossCatalog } from "../items/bosses";
@@ -874,6 +875,113 @@ describe("game actions slice", () => {
   test("applySpectralEffect ouija applies the hand-size delta", () => {
     useGame.getState().applySpectralEffect({ kind: "ouija", handSizeDelta: -1 });
     expect(useGame.getState().handSizeModifier).toBe(-1);
+  });
+
+  describe("sigil/ouija conversions persist across deals (#1005)", () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    function seedHandFromBaseDeck(count: number) {
+      const game = useGame.getState();
+      const base = createDeck();
+      game.setBaseDeckCards(base);
+      const hand = base.slice(0, count);
+      game.setDealt({ hand, remaining: base.slice(count) });
+      return hand;
+    }
+
+    test("sigil registers replaced originals as destroyed and adds converted copies", () => {
+      // 0.25 picks SUITS[1] (hearts); the seeded hand is all spades.
+      vi.spyOn(Math, "random").mockReturnValue(0.25);
+      const hand = seedHandFromBaseDeck(5);
+      useGame.getState().applySpectralEffect({ kind: "sigil" });
+      const st = useGame.getState();
+      expect([...st.destroyedCardIds].sort()).toEqual(
+        hand.map((c) => c.id).sort(),
+      );
+      expect(st.addedCards).toHaveLength(hand.length);
+      expect(st.addedCards.every((c) => c.suit === "hearts")).toBe(true);
+    });
+
+    test("sigil keeps already-matching cards' ids (negative)", () => {
+      // 0 picks SUITS[0] (spades); the seeded hand is already all spades.
+      vi.spyOn(Math, "random").mockReturnValue(0);
+      const hand = seedHandFromBaseDeck(5);
+      useGame.getState().applySpectralEffect({ kind: "sigil" });
+      const st = useGame.getState();
+      expect(st.destroyedCardIds.size).toBe(0);
+      expect(st.addedCards).toHaveLength(0);
+      expect(st.dealt.hand.map((c) => c.id)).toEqual(hand.map((c) => c.id));
+    });
+
+    test("a sigil-converted card appears in the next built deck and its original does not", () => {
+      vi.spyOn(Math, "random").mockReturnValue(0.25);
+      const hand = seedHandFromBaseDeck(5);
+      const converted = hand[0];
+      useGame.getState().applySpectralEffect({ kind: "sigil" });
+      vi.restoreAllMocks();
+      const st = useGame.getState();
+      const rebuilt = buildShuffledDeck(
+        st.baseDeckCards,
+        st.destroyedCardIds,
+        st.addedCards,
+        st.cardEnhancementsById,
+        st.cardSealsById,
+        st.cardEditionsById,
+      );
+      expect(rebuilt.some((c) => c.id === converted.id)).toBe(false);
+      const replacement = st.addedCards.find((c) => c.rank === converted.rank);
+      expect(replacement).toBeDefined();
+      expect(rebuilt.some((c) => c.id === replacement?.id)).toBe(true);
+    });
+
+    test("sigil remaps the current selection onto the replacement ids", () => {
+      vi.spyOn(Math, "random").mockReturnValue(0.25);
+      const hand = seedHandFromBaseDeck(5);
+      const converted = hand[0];
+      useGame.getState().setSelectedIds(new Set([converted.id]));
+      useGame.getState().applySpectralEffect({ kind: "sigil" });
+      const st = useGame.getState();
+      expect(st.selectedIds.size).toBe(1);
+      const [selectedId] = [...st.selectedIds];
+      expect(selectedId).not.toBe(converted.id);
+      expect(st.dealt.hand.some((c) => c.id === selectedId)).toBe(true);
+    });
+
+    test("ouija registers replaced originals as destroyed and adds converted copies", () => {
+      vi.spyOn(Math, "random").mockReturnValue(0);
+      const hand = seedHandFromBaseDeck(5);
+      const nonTwos = hand.filter((c) => c.rank !== "2");
+      useGame.getState().applySpectralEffect({ kind: "ouija", handSizeDelta: -1 });
+      const st = useGame.getState();
+      expect([...st.destroyedCardIds].sort()).toEqual(
+        nonTwos.map((c) => c.id).sort(),
+      );
+      expect(st.addedCards.every((c) => c.rank === "2")).toBe(true);
+    });
+
+    test("ouija preserves each replaced card's suit on the re-added copy", () => {
+      vi.spyOn(Math, "random").mockReturnValue(0);
+      const hand = seedHandFromBaseDeck(5);
+      useGame.getState().applySpectralEffect({ kind: "ouija", handSizeDelta: -1 });
+      const st = useGame.getState();
+      const suitsBefore = hand.map((c) => c.suit);
+      const suitsAfter = st.dealt.hand.map((c) => c.suit);
+      expect(suitsAfter).toEqual(suitsBefore);
+    });
+
+    test("cards not in hand when sigil was used are unchanged (negative)", () => {
+      vi.spyOn(Math, "random").mockReturnValue(0.25);
+      seedHandFromBaseDeck(5);
+      const st0 = useGame.getState();
+      const outsideIds = st0.dealt.remaining.map((c) => c.id);
+      useGame.getState().applySpectralEffect({ kind: "sigil" });
+      const st = useGame.getState();
+      for (const id of outsideIds) {
+        expect(st.destroyedCardIds.has(id)).toBe(false);
+      }
+    });
   });
 
   test("applySpectralEffect create-joker-by-rarity adds a joker", () => {

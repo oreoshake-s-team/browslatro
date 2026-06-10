@@ -55,8 +55,11 @@ import {
 import { createTarotCatalog, nextRankUp } from "../items/tarots";
 import { pickRandomCardEdition } from "../cards/editions";
 import {
+  convertHandToRank,
+  convertHandToSuit,
   createSpectralCatalog,
   transmuteHand,
+  type ConvertHandResult,
   type SpectralEffect,
 } from "../items/spectrals";
 import {
@@ -82,6 +85,7 @@ import { nextCardId, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
 import { detectHandLabel } from "../scoring/handEvaluator";
 import { MAX_SELECTED } from "../components/cards/Hand";
 import {
+  applyEditionOverrides,
   applyEnhancementOverrides,
   applySealOverrides,
   fullDeckPile,
@@ -261,10 +265,37 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
       s.addedCards,
       s.cardEnhancementsById,
       s.cardSealsById,
+      s.cardEditionsById,
     ),
   );
   s.setSelectedIds(new Set());
   s.setSelectedHand(null);
+}
+
+// Sigil/Ouija replace converted cards with new-id copies so the conversion
+// persists into future deals (issue #1005): originals are registered as
+// destroyed, copies as added, and any current selection is remapped onto the
+// new ids (destroyedIds pairs index-for-index with additions).
+function applyHandConversion(s: GameState, converted: ConvertHandResult): void {
+  s.setDealt((prev) => ({ hand: converted.hand, remaining: prev.remaining }));
+  if (converted.destroyedIds.length === 0) return;
+  s.setDestroyedCardIds((prev) => {
+    const next = new Set(prev);
+    for (const id of converted.destroyedIds) next.add(id);
+    return next;
+  });
+  s.setAddedCards((prev) => [...prev, ...converted.additions]);
+  if (s.selectedIds.size > 0) {
+    const idMap = new Map(
+      converted.destroyedIds.map((oldId, i) => [
+        oldId,
+        converted.additions[i].id,
+      ]),
+    );
+    s.setSelectedIds(
+      (prev) => new Set([...prev].map((id) => idMap.get(id) ?? id)),
+    );
+  }
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -445,13 +476,19 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       const survivingBase = s.baseDeckCards.filter(
         (c) => !s.destroyedCardIds.has(c.id),
       );
-      const baseDeck = applySealOverrides(
-        applyEnhancementOverrides(survivingBase, s.cardEnhancementsById),
-        s.cardSealsById,
+      const baseDeck = applyEditionOverrides(
+        applySealOverrides(
+          applyEnhancementOverrides(survivingBase, s.cardEnhancementsById),
+          s.cardSealsById,
+        ),
+        s.cardEditionsById,
       );
-      const extras = applySealOverrides(
-        applyEnhancementOverrides(s.addedCards, s.cardEnhancementsById),
-        s.cardSealsById,
+      const extras = applyEditionOverrides(
+        applySealOverrides(
+          applyEnhancementOverrides(s.addedCards, s.cardEnhancementsById),
+          s.cardSealsById,
+        ),
+        s.cardEditionsById,
       );
       s.setPackPreviewHand(
         shuffle([...baseDeck, ...extras]).slice(0, currentHandSize),
@@ -466,6 +503,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           s.addedCards,
           s.cardEnhancementsById,
           s.cardSealsById,
+          s.cardEditionsById,
         );
         s.setDealt(fresh);
       }
@@ -695,18 +733,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       }
       case "sigil": {
         const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
-        s.setDealt((prev) => ({
-          hand: prev.hand.map((c) => ({ ...c, suit })),
-          remaining: prev.remaining,
-        }));
+        applyHandConversion(s, convertHandToSuit(s.dealt.hand, suit));
         return;
       }
       case "ouija": {
         const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
-        s.setDealt((prev) => ({
-          hand: prev.hand.map((c) => ({ ...c, rank })),
-          remaining: prev.remaining,
-        }));
+        applyHandConversion(s, convertHandToRank(s.dealt.hand, rank));
         s.setHandSizeModifier((prev) => prev + effect.handSizeDelta);
         return;
       }
@@ -927,13 +959,23 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const s = get();
     const ids = s.packPreviewSelectedIds;
     if (ids.size === 0) return;
-    s.setPackPreviewHand((prev) =>
-      prev.map((c) =>
-        ids.has(c.id)
-          ? { ...c, edition: pickRandomCardEdition(Math.random) }
-          : c,
-      ),
+    // Roll outside the updater and record the edition in the run-level
+    // overlay so it survives future deals (issue #1005).
+    const rolled = s.packPreviewHand.map((c) =>
+      ids.has(c.id)
+        ? { ...c, edition: pickRandomCardEdition(Math.random) }
+        : c,
     );
+    s.setPackPreviewHand(rolled);
+    s.setCardEditionsById((prev) => {
+      const next = new Map(prev);
+      for (const c of rolled) {
+        if (ids.has(c.id) && c.edition !== undefined && c.edition !== null) {
+          next.set(c.id, c.edition);
+        }
+      }
+      return next;
+    });
     s.setPackPreviewSelectedIds(new Set());
   },
   toggleCard: (card) => {

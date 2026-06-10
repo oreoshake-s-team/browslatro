@@ -133,6 +133,7 @@ function App() {
         s.addedCards,
         s.cardEnhancementsById,
         s.cardSealsById,
+        s.cardEditionsById,
       ),
     );
   }, [setDealt, setBaseDeckCards]);

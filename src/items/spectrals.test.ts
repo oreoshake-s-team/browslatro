@@ -8,6 +8,8 @@ import {
   IMMOLATE_MONEY_GAIN,
   SPECTRAL_BASE_PRICE,
   applyAuraToSelectedInHand,
+  convertHandToRank,
+  convertHandToSuit,
   createPoolSpectralCatalog,
   createSpectralCatalog,
   duplicateSelectedInHand,
@@ -516,26 +518,34 @@ describe("applyAuraToSelectedInHand", () => {
     const a = mkCard();
     const b = mkCard("7", "hearts");
     const result = applyAuraToSelectedInHand([a, b], new Set([a.id]), sequenceRng([0]));
-    expect(result.find((c) => c.id === a.id)?.edition).toBe("foil");
+    expect(result.hand.find((c) => c.id === a.id)?.edition).toBe("foil");
+  });
+
+  test("reports the target id and rolled edition for the run-level overlay (#1005)", () => {
+    const a = mkCard();
+    const b = mkCard("7", "hearts");
+    const result = applyAuraToSelectedInHand([a, b], new Set([a.id]), sequenceRng([0]));
+    expect(result.targetId).toBe(a.id);
+    expect(result.edition).toBe("foil");
   });
 
   test("leaves unselected cards unchanged (negative)", () => {
     const a = mkCard();
     const b = mkCard("7", "hearts");
     const result = applyAuraToSelectedInHand([a, b], new Set([a.id]), sequenceRng([0]));
-    expect(result.find((c) => c.id === b.id)?.edition).toBeUndefined();
+    expect(result.hand.find((c) => c.id === b.id)?.edition).toBeUndefined();
   });
 
   test("picks Foil when rng selects index 0", () => {
     const a = mkCard();
     const result = applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0]));
-    expect(result[0].edition).toBe("foil");
+    expect(result.hand[0].edition).toBe("foil");
   });
 
   test("picks Holographic when rng selects index 1", () => {
     const a = mkCard();
     const result = applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0.5]));
-    expect(result[0].edition).toBe("holographic");
+    expect(result.hand[0].edition).toBe("holographic");
   });
 
   test("picks Polychrome when rng selects index 2", () => {
@@ -545,28 +555,128 @@ describe("applyAuraToSelectedInHand", () => {
       new Set([a.id]),
       sequenceRng([0.99]),
     );
-    expect(result[0].edition).toBe("polychrome");
+    expect(result.hand[0].edition).toBe("polychrome");
   });
 
   test("returns the same hand reference when zero cards are selected (negative)", () => {
     const a = mkCard();
     const hand = [a];
-    expect(applyAuraToSelectedInHand(hand, new Set(), sequenceRng([0]))).toBe(hand);
+    const result = applyAuraToSelectedInHand(hand, new Set(), sequenceRng([0]));
+    expect(result.hand).toBe(hand);
+    expect(result.targetId).toBeNull();
+    expect(result.edition).toBeNull();
   });
 
   test("returns the same hand reference when more than one card is selected (negative)", () => {
     const a = mkCard();
     const b = mkCard("7", "hearts");
     const hand = [a, b];
-    expect(
-      applyAuraToSelectedInHand(hand, new Set([a.id, b.id]), sequenceRng([0])),
-    ).toBe(hand);
+    const result = applyAuraToSelectedInHand(
+      hand,
+      new Set([a.id, b.id]),
+      sequenceRng([0]),
+    );
+    expect(result.hand).toBe(hand);
+    expect(result.targetId).toBeNull();
+  });
+
+  test("returns the same hand reference when the selected card is not in hand (negative)", () => {
+    const a = mkCard();
+    const hand = [a];
+    const result = applyAuraToSelectedInHand(hand, new Set([a.id + 99]), sequenceRng([0]));
+    expect(result.hand).toBe(hand);
+    expect(result.edition).toBeNull();
   });
 
   test("does not mutate the original card object (negative)", () => {
     const a = mkCard();
     applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0]));
     expect(a.edition).toBeUndefined();
+  });
+});
+
+describe("convertHandToSuit / convertHandToRank (#1005)", () => {
+  beforeEach(() => resetCardIds());
+
+  function mkCard(
+    rank: Card["rank"],
+    suit: Card["suit"],
+    extra: Partial<Card> = {},
+  ): Card {
+    return { id: nextCardId(), rank, suit, ...extra };
+  }
+
+  test("replaces non-matching cards with new-id copies carrying the suit", () => {
+    const a = mkCard("5", "hearts");
+    const b = mkCard("7", "clubs");
+    const result = convertHandToSuit([a, b], "spades");
+    expect(result.hand.map((c) => c.suit)).toEqual(["spades", "spades"]);
+    expect(result.hand[0].id).not.toBe(a.id);
+    expect(result.hand[1].id).not.toBe(b.id);
+  });
+
+  test("registers replaced originals as destroyed, paired with additions", () => {
+    const a = mkCard("5", "hearts");
+    const b = mkCard("7", "clubs");
+    const result = convertHandToSuit([a, b], "spades");
+    expect(result.destroyedIds).toEqual([a.id, b.id]);
+    expect(result.additions.map((c) => c.id)).toEqual(
+      result.hand.map((c) => c.id),
+    );
+  });
+
+  test("cards already matching the suit keep their id and are not re-registered (negative)", () => {
+    const match = mkCard("5", "spades");
+    const other = mkCard("7", "hearts");
+    const result = convertHandToSuit([match, other], "spades");
+    expect(result.hand[0]).toBe(match);
+    expect(result.destroyedIds).toEqual([other.id]);
+    expect(result.additions).toHaveLength(1);
+  });
+
+  test("preserves inline seal, enhancement, and edition on the replacement", () => {
+    const fancy = mkCard("5", "hearts", {
+      seal: "red",
+      enhancement: "glass",
+      edition: "foil",
+    });
+    const result = convertHandToSuit([fancy], "spades");
+    expect(result.additions[0]).toMatchObject({
+      suit: "spades",
+      rank: "5",
+      seal: "red",
+      enhancement: "glass",
+      edition: "foil",
+    });
+  });
+
+  test("keeps faceDown on the in-hand copy but not on the registered addition", () => {
+    const hidden = mkCard("5", "hearts", { faceDown: true });
+    const result = convertHandToSuit([hidden], "spades");
+    expect(result.hand[0].faceDown).toBe(true);
+    expect(result.additions[0].faceDown).toBeUndefined();
+  });
+
+  test("an empty hand converts to nothing", () => {
+    const result = convertHandToSuit([], "spades");
+    expect(result.hand).toEqual([]);
+    expect(result.destroyedIds).toEqual([]);
+    expect(result.additions).toEqual([]);
+  });
+
+  test("convertHandToRank replaces non-matching cards with the rank", () => {
+    const a = mkCard("5", "hearts");
+    const b = mkCard("K", "clubs");
+    const result = convertHandToRank([a, b], "K");
+    expect(result.hand.map((c) => c.rank)).toEqual(["K", "K"]);
+    expect(result.hand[1]).toBe(b);
+    expect(result.destroyedIds).toEqual([a.id]);
+  });
+
+  test("convertHandToRank keeps each card's suit", () => {
+    const a = mkCard("5", "hearts");
+    const result = convertHandToRank([a], "K");
+    expect(result.hand[0].suit).toBe("hearts");
   });
 });
 

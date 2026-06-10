@@ -133,6 +133,8 @@ export function useRoundLifecycle({
   const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
   const setCardSealsById = useGame((s) => s.setCardSealsById);
+  const cardEditionsById = useGame((s) => s.cardEditionsById);
+  const setCardEditionsById = useGame((s) => s.setCardEditionsById);
   const pendingNextRoundHandSize = useGame((s) => s.pendingNextRoundHandSize);
   const setPendingNextRoundHandSize = useGame(
     (s) => s.setPendingNextRoundHandSize,
@@ -344,6 +346,7 @@ export function useRoundLifecycle({
       addedWithStones,
       cardEnhancementsById,
       cardSealsById,
+      cardEditionsById,
     );
     setDealt({
       hand: [
@@ -396,6 +399,7 @@ export function useRoundLifecycle({
     setAddedCards([]);
     setCardEnhancementsById(new Map());
     setCardSealsById(new Map());
+    setCardEditionsById(new Map());
     setDealt(fullDeckPile(freshBaseDeck));
     useGame.getState().resetVouchers();
     setCurrentAnteVouchers(

@@ -79,6 +79,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const setAddedCards = useGame((s) => s.setAddedCards);
   const setCardSealsById = useGame((s) => s.setCardSealsById);
   const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
+  const setCardEditionsById = useGame((s) => s.setCardEditionsById);
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
   const handDisplayOrder = useGame((s) => s.handDisplayOrder);
 
@@ -198,10 +199,21 @@ export function useConsumableActions(): UseConsumableActionsResult {
         }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
+        const aura = applyAuraToSelectedInHand(
+          useGame.getState().dealt.hand,
+          selectedIds,
+          Math.random,
+        );
         setDealt((prev) => ({
-          hand: applyAuraToSelectedInHand(prev.hand, selectedIds, Math.random),
+          hand: aura.hand,
           remaining: prev.remaining,
         }));
+        // Record the edition in the run-level overlay so it survives
+        // future deals (issue #1005).
+        if (aura.targetId !== null && aura.edition !== null) {
+          const { targetId, edition } = aura;
+          setCardEditionsById((prev) => new Map(prev).set(targetId, edition));
+        }
         setSelectedIds(new Set());
         setSelectedHand(null);
         setChips(0);

@@ -1,7 +1,9 @@
 import "./GameWonScreen.css";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 import type { GameWonInfo } from "../../store/progression";
 
 interface GameWonScreenProps {
@@ -17,10 +19,13 @@ export default function GameWonScreen({
 }: GameWonScreenProps) {
   const { t } = useTranslation();
   const { finalAnte, finalMoney, handsPlayed, blindsSkipped } = info;
+  const overlayRef = useRef<HTMLDivElement>(null);
   useEscapeToClose(onNewRun, true);
+  useFocusTrap(overlayRef);
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="game-won-overlay"
       role="dialog"
       aria-modal="true"

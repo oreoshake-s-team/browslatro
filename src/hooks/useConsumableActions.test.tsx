@@ -1158,6 +1158,52 @@ describe("useConsumableActions — Aura on pack preview (closes #843)", () => {
   });
 });
 
+describe("useConsumableActions — Aura edition persists for the run (#1005)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([auraConsumable()]);
+  });
+
+  test("applying Aura in-round records the edition in cardEditionsById", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const st = useGame.getState();
+    expect(st.cardEditionsById.get(card.id)).toBe(st.dealt.hand[0]?.edition);
+    expect(st.cardEditionsById.get(card.id)).toBeDefined();
+  });
+
+  test("the in-hand card shows the edition immediately", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.edition).toBeDefined();
+  });
+
+  test("with no card selected, cardEditionsById stays empty (negative)", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set());
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardEditionsById.size).toBe(0);
+  });
+
+  test("applying Aura to a pack-preview card records the edition in cardEditionsById", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 9, rank: "A", suit: "diamonds" }];
+    setPackPreview(cards, [9]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const st = useGame.getState();
+    expect(st.cardEditionsById.get(9)).toBe(st.packPreviewHand[0]?.edition);
+    expect(st.cardEditionsById.get(9)).toBeDefined();
+  });
+});
+
 function catalogSpectralConsumable(id: string): Consumable {
   const card = createSpectralCatalog().find((s) => s.id === id);
   if (!card) throw new Error(`${id} missing from catalog`);

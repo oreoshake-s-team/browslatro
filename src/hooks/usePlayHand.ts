@@ -131,6 +131,7 @@ export function usePlayHand({
   const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
   const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
+  const cardEditionsById = useGame((s) => s.cardEditionsById);
   const consumables = useGame((s) => s.consumables);
   const selectedDeck = useGame((s) => s.selectedDeck);
 
@@ -252,6 +253,7 @@ export function usePlayHand({
         addedCards,
         cardEnhancementsById,
         cardSealsById,
+        cardEditionsById,
       ).remaining;
       const endOfRoundJokerResult = applyEndOfRoundJokers(jokers, {
         remainingDiscards,
@@ -552,6 +554,7 @@ export function usePlayHand({
             addedCards,
             cardEnhancementsById,
             cardSealsById,
+            cardEditionsById,
           ).remaining,
           remainingDeck: dealt.remaining,
           baseDeckSize: baseDeckCards.length,
@@ -593,6 +596,7 @@ export function usePlayHand({
       addedCards,
       cardEnhancementsById,
       cardSealsById,
+      cardEditionsById,
     ).remaining;
     const handPlayCountsWithThisHand = {
       ...handPlayCounts,

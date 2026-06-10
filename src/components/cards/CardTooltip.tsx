@@ -2,6 +2,7 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "./CardTooltip.css";
 import { tSuitName } from "../../i18n/strings";
+import { useTooltipPosition } from "../system/useTooltipPosition";
 import type { CardInfo } from "./cardInfo";
 
 interface CardTooltipProps {
@@ -10,14 +11,9 @@ interface CardTooltipProps {
   anchorRect: DOMRect;
 }
 
-const TOOLTIP_OFFSET_PX = 8;
-
 export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) {
   const { t } = useTranslation();
-  const style: React.CSSProperties = {
-    top: anchorRect.bottom + TOOLTIP_OFFSET_PX,
-    left: anchorRect.left + anchorRect.width / 2,
-  };
+  const { ref, style } = useTooltipPosition(anchorRect);
   const heading = info.isStone
     ? t("a11y.stoneCard")
     : t("a11y.cardName", {
@@ -26,7 +22,7 @@ export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) 
       });
   const suitColorClass = `card-tooltip-suit-${info.suitClass}`;
   return createPortal(
-    <div id={id} role="tooltip" className="card-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="card-tooltip" style={style}>
       <p className="card-tooltip-heading">
         <span className="card-tooltip-rank">{info.rank}</span>
         <span className={`card-tooltip-suit ${suitColorClass}`} aria-hidden="true">

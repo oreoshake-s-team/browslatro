@@ -1,5 +1,6 @@
 // @vitest-environment node
 import {
+  applyEditionOverrides,
   applyEnhancementOverrides,
   applySealOverrides,
   buildShuffledDeck,
@@ -80,6 +81,65 @@ describe("applySealOverrides", () => {
       new Map([[1, "red"]]),
     );
     expect(result[1].seal).toBeUndefined();
+  });
+});
+
+describe("applyEditionOverrides (#1005)", () => {
+  test("applies an override to a card without an edition", () => {
+    const result = applyEditionOverrides(
+      [card({ id: 7 })],
+      new Map([[7, "foil"]]),
+    );
+    expect(result[0].edition).toBe("foil");
+  });
+
+  test("does not override a card that already has an edition", () => {
+    const result = applyEditionOverrides(
+      [card({ id: 7, edition: "polychrome" })],
+      new Map([[7, "foil"]]),
+    );
+    expect(result[0].edition).toBe("polychrome");
+  });
+
+  test("leaves a card untouched when its id is absent from the map", () => {
+    const result = applyEditionOverrides([card({ id: 7 })], new Map());
+    expect(result[0].edition).toBeUndefined();
+  });
+
+  test("does not bleed an edition onto a sibling card with the same rank+suit", () => {
+    const result = applyEditionOverrides(
+      [card({ id: 1 }), card({ id: 2 })],
+      new Map([[1, "foil"]]),
+    );
+    expect(result[1].edition).toBeUndefined();
+  });
+
+  test("buildShuffledDeck applies edition overrides to base cards", () => {
+    const base = createDeck();
+    const targetId = base[0].id;
+    const deck = buildShuffledDeck(
+      base,
+      new Set(),
+      [],
+      new Map(),
+      new Map(),
+      new Map([[targetId, "holographic"]]),
+    );
+    expect(deck.find((c) => c.id === targetId)?.edition).toBe("holographic");
+  });
+
+  test("buildShuffledDeck applies edition overrides to added cards", () => {
+    const base = createDeck();
+    const added: Card = { id: 9001, rank: "A", suit: "hearts" };
+    const deck = buildShuffledDeck(
+      base,
+      new Set(),
+      [added],
+      new Map(),
+      new Map(),
+      new Map([[9001, "foil"]]),
+    );
+    expect(deck.find((c) => c.id === 9001)?.edition).toBe("foil");
   });
 });
 

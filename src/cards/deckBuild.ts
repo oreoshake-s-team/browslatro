@@ -1,5 +1,5 @@
 import { deal, shuffle, HAND_SIZE, type DealResult } from "./deck";
-import type { Card, Enhancement, Seal } from "./types";
+import type { Card, CardEdition, Enhancement, Seal } from "./types";
 
 export function applyEnhancementOverrides(
   cards: ReadonlyArray<Card>,
@@ -28,22 +28,53 @@ export function applySealOverrides(
   });
 }
 
+export function applyEditionOverrides(
+  cards: ReadonlyArray<Card>,
+  overrides: ReadonlyMap<number, CardEdition>,
+): Card[] {
+  return cards.map((c) => {
+    if (c.edition !== undefined) return c;
+    const override = overrides.get(c.id);
+    return override === undefined ? c : { ...c, edition: override };
+  });
+}
+
+function applyCardOverrides(
+  cards: ReadonlyArray<Card>,
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null>,
+  sealOverrides: ReadonlyMap<number, Seal>,
+  editionOverrides: ReadonlyMap<number, CardEdition>,
+): Card[] {
+  return applyEditionOverrides(
+    applySealOverrides(
+      applyEnhancementOverrides(cards, enhancementOverrides),
+      sealOverrides,
+    ),
+    editionOverrides,
+  );
+}
+
 export function buildShuffledDeck(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),
   addedCards: ReadonlyArray<Card> = [],
   enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
+  editionOverrides: ReadonlyMap<number, CardEdition> = new Map(),
 ): Card[] {
   const survivingBase = baseDeckCards.filter((c) => !destroyedCardIds.has(c.id));
   const survivingAdded = addedCards.filter((c) => !destroyedCardIds.has(c.id));
-  const base = applySealOverrides(
-    applyEnhancementOverrides(survivingBase, enhancementOverrides),
+  const base = applyCardOverrides(
+    survivingBase,
+    enhancementOverrides,
     sealOverrides,
+    editionOverrides,
   );
-  const extras = applySealOverrides(
-    applyEnhancementOverrides(survivingAdded, enhancementOverrides),
+  const extras = applyCardOverrides(
+    survivingAdded,
+    enhancementOverrides,
     sealOverrides,
+    editionOverrides,
   );
   return shuffle([...base, ...extras]);
 }
@@ -55,6 +86,7 @@ export function initialDeal(
   addedCards: ReadonlyArray<Card> = [],
   enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
+  editionOverrides: ReadonlyMap<number, CardEdition> = new Map(),
 ): DealResult {
   return deal(
     buildShuffledDeck(
@@ -63,6 +95,7 @@ export function initialDeal(
       addedCards,
       enhancementOverrides,
       sealOverrides,
+      editionOverrides,
     ),
     Math.max(1, handSize),
   );
@@ -161,6 +194,7 @@ export function fullDeckPile(
   addedCards: ReadonlyArray<Card> = [],
   enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
+  editionOverrides: ReadonlyMap<number, CardEdition> = new Map(),
 ): DealResult {
   return {
     hand: [],
@@ -170,6 +204,7 @@ export function fullDeckPile(
       addedCards,
       enhancementOverrides,
       sealOverrides,
+      editionOverrides,
     ),
   };
 }

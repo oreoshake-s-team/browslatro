@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import "./DeckTooltip.css";
+import { useTooltipPosition } from "../system/useTooltipPosition";
 import type { DeckSpec } from "../../items/decks";
 
 interface DeckTooltipProps {
@@ -8,15 +9,10 @@ interface DeckTooltipProps {
   anchorRect: DOMRect;
 }
 
-const TOOLTIP_OFFSET_PX = 8;
-
 export default function DeckTooltip({ id, spec, anchorRect }: DeckTooltipProps) {
-  const style: React.CSSProperties = {
-    top: anchorRect.bottom + TOOLTIP_OFFSET_PX,
-    left: anchorRect.left + anchorRect.width / 2,
-  };
+  const { ref, style } = useTooltipPosition(anchorRect);
   return createPortal(
-    <div id={id} role="tooltip" className="deck-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="deck-tooltip" style={style}>
       <p className="deck-tooltip-heading">{spec.name}</p>
       <p className="deck-tooltip-description">{spec.description}</p>
     </div>,
