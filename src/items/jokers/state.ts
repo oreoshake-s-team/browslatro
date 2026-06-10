@@ -23,7 +23,7 @@ export function ramenXMultFactor(joker: Joker): number {
   const hundredths =
     Math.round(effect.base * 100) -
     Math.round(effect.lossPerCard * 100) * prevCount(joker);
-  return Math.max(100, hundredths) / 100;
+  return hundredths / 100;
 }
 
 export interface HandPlayedContext {
