@@ -1,7 +1,9 @@
 import { Suspense, lazy, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
 import type { HandPlayCounts } from "./handPlayCounts";
+import LazyChunkSpinner from "../system/LazyChunkSpinner";
 
 export { emptyHandCounts, type HandPlayCounts } from "./handPlayCounts";
 
@@ -18,13 +20,16 @@ function RunInfo({
   handStats,
   ownedVouchers = [],
 }: RunInfoProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <button onClick={() => setOpen(true)}>Run info</button>
+      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+        {t("sidebar.runInfo")}
+      </button>
       {open && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <RunInfoDialog
             handPlayCounts={handPlayCounts}
             handStats={handStats}

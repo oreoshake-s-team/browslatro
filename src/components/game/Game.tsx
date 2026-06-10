@@ -1,4 +1,6 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./Game.css";
 import type { Card } from "../../cards/types";
 import HandComponent from "../cards/Hand";
@@ -8,6 +10,7 @@ import Consumables from "../consumables/Consumables";
 import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
+import LazyChunkSpinner from "../system/LazyChunkSpinner";
 const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
 const NopeAnimation = lazy(() => import("./NopeAnimation"));
@@ -17,7 +20,10 @@ import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { play } from "../system/sounds";
 import { canSubmitHand, debuffedHandIds } from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
-import { extraConsumableSlots } from "../../items/vouchers";
+import { MAX_JOKERS } from "../../items/jokers";
+import { deckJokerSlotsDelta } from "../../items/decks";
+import { extraConsumableSlots, extraJokerSlots } from "../../items/vouchers";
+import { fullDeckPile } from "../../cards/deckBuild";
 
 interface GameProps {
   onSubmitHand: () => void;
@@ -44,10 +50,17 @@ export default function Game({
   packOpen,
   onCardDiscardEnd,
 }: GameProps) {
+  const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
+  const baseDeckCards = useGame((s) => s.baseDeckCards);
+  const destroyedCardIds = useGame((s) => s.destroyedCardIds);
+  const addedCards = useGame((s) => s.addedCards);
+  const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
+  const cardSealsById = useGame((s) => s.cardSealsById);
   const selectedIds = useGame((s) => s.selectedIds);
   const discardingIds = useGame((s) => s.discardingIds);
+  const newlyDrawnIds = useGame((s) => s.newlyDrawnIds);
   const jokers = useGame((s) => s.jokers);
   const jokerPulseCounters = useGame((s) => s.jokerPulseCounters);
   const consumables = useGame((s) => s.consumables);
@@ -61,9 +74,15 @@ export default function Game({
   const blind = useGame((s) => s.blind);
   const currentBoss = useGame((s) => s.currentBoss);
   const selectedHand = useGame((s) => s.selectedHand);
+  const chips = useGame((s) => s.chips);
+  const multiplier = useGame((s) => s.multiplier);
+  const devChipsBonus = useGame((s) => s.devChipsBonus);
+  const devMultBonus = useGame((s) => s.devMultBonus);
+  const devMultFactor = useGame((s) => s.devMultFactor);
   const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const nopeTriggerKey = useGame((s) => s.nopeTriggerKey);
   const sellConsumableAction = useGame((s) => s.sellConsumable);
   const sellJokerAction = useGame((s) => s.sellJoker);
@@ -99,19 +118,48 @@ export default function Game({
   );
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+  const jokerCapacity = Math.max(
+    0,
+    MAX_JOKERS +
+      extraJokerSlots(ownedVoucherIds) +
+      deckJokerSlotsDelta(selectedDeck),
+  );
+  const overlayDeckRemaining = useMemo(
+    () =>
+      fullDeckPile(
+        baseDeckCards,
+        destroyedCardIds,
+        addedCards,
+        cardEnhancementsById,
+        cardSealsById,
+      ).remaining,
+    [
+      baseDeckCards,
+      destroyedCardIds,
+      addedCards,
+      cardEnhancementsById,
+      cardSealsById,
+    ],
+  );
+  const inHandRemaining = useMemo(
+    () => remaining.filter((c) => !destroyedCardIds.has(c.id)),
+    [remaining, destroyedCardIds],
+  );
 
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
+  const handVisible = (!shop && !packOpen) || (!!packOpen && !previewActive);
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
 
   return (
-    <main className="game" aria-label="Game">
+    <main className="game" aria-label={t("a11y.game")}>
       <div className="game-top-row">
         <Jokers
           jokers={jokers}
+          capacity={jokerCapacity}
           pulseCounters={jokerPulseCounters}
           onReorder={reorderJokers}
           onSell={sellJoker}
@@ -132,10 +180,10 @@ export default function Game({
           onDragStart={dragController.onConsumableDragStart}
           onDragEnd={dragController.onConsumableDragEnd}
         />
-        {(shop || packOpen) && (
+        {(shop || packOpen) && !handVisible && (
           <div className="game-overlay-deck">
             <DeckPile
-              remaining={remaining}
+              remaining={overlayDeckRemaining}
               consumableDropEnabled={dragging}
               onConsumableDrop={dragController.onConsumableDropOnDeck}
               jokerDropEnabled={draggingJoker}
@@ -145,21 +193,22 @@ export default function Game({
         )}
       </div>
       {packOpen && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <PackOpenModal {...packOpen} />
         </Suspense>
       )}
       {shop && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LazyChunkSpinner />}>
           <Shop {...shop} disabled={!!packOpen} />
         </Suspense>
       )}
-      {!shop && !packOpen && (
+      {handVisible && (
         <HandComponent
           hand={hand}
-          remaining={remaining}
+          remaining={inHandRemaining}
           selectedIds={selectedIds}
           discardingIds={discardingIds}
+          newlyDrawnIds={newlyDrawnIds}
           debuffedIds={debuffedIds}
           scoringId={scoringId}
           scoringPulseTick={scoringPulseTick}
@@ -181,14 +230,43 @@ export default function Game({
         <div className="submit-hand">
           <div className="play-actions">
             <button
-              className="submit-hand-button"
+              className="btn btn--primary submit-hand-button"
               onClick={onSubmitHand}
               disabled={isScoring || !canSubmit}
+              aria-label={
+                selectedHand
+                  ? t("a11y.submitHandWith", {
+                      hand: tHandLabel(t, selectedHand.label),
+                      chips: chips + devChipsBonus,
+                      mult: (multiplier + devMultBonus) * devMultFactor,
+                    })
+                  : t("a11y.submitHand")
+              }
             >
-              <span aria-hidden="true">🃏 </span>Submit Hand
+              <span aria-hidden="true">🃏 </span>
+              {t("game.submitHand")}
+              {selectedHand && (
+                <span
+                  className="submit-hand-button-detected"
+                  data-testid="submit-hand-detected"
+                >
+                  <span className="submit-hand-button-detected-label">
+                    {tHandLabel(t, selectedHand.label)}
+                  </span>
+                  <span className="submit-hand-button-detected-score">
+                    <span className="submit-hand-button-chips">
+                      {chips + devChipsBonus}
+                    </span>
+                    <span aria-hidden="true"> × </span>
+                    <span className="submit-hand-button-mult">
+                      {(multiplier + devMultBonus) * devMultFactor}
+                    </span>
+                  </span>
+                </span>
+              )}
             </button>
             <button
-              className="discard-button"
+              className="btn btn--danger discard-button"
               onClick={onDiscard}
               disabled={!canDiscard}
             >
@@ -198,7 +276,7 @@ export default function Game({
         </div>
       )}
       <ModifierPanel />
-      <Suspense fallback={null}>
+      <Suspense fallback={<LazyChunkSpinner />}>
         <NopeAnimation triggerKey={nopeTriggerKey} />
       </Suspense>
     </main>

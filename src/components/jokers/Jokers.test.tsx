@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import Jokers from "./Jokers";
 import {
   MAX_JOKERS,
+  PERISHABLE_LIFE,
   createBusinessCardJoker,
   createGluttonousJoker,
   createGreedyJoker,
@@ -344,7 +345,7 @@ describe("Jokers consumable drop zone", () => {
         onConsumableDrop={onConsumableDrop}
       />,
     );
-    const section = screen.getByLabelText("Equipped jokers");
+    const section = screen.getByTestId("jokers-tray");
     dispatchDrag(section, "dragover", ["application/x-browslatro-consumable"]);
     dispatchDrag(section, "drop", ["application/x-browslatro-consumable"]);
     expect(onConsumableDrop).toHaveBeenCalledTimes(1);
@@ -359,7 +360,7 @@ describe("Jokers consumable drop zone", () => {
         onConsumableDrop={onConsumableDrop}
       />,
     );
-    const section = screen.getByLabelText("Equipped jokers");
+    const section = screen.getByTestId("jokers-tray");
     dispatchDrag(section, "drop", ["text/plain"]);
     expect(onConsumableDrop).not.toHaveBeenCalled();
   });
@@ -373,7 +374,7 @@ describe("Jokers consumable drop zone", () => {
         onConsumableDrop={onConsumableDrop}
       />,
     );
-    const section = screen.getByLabelText("Equipped jokers");
+    const section = screen.getByTestId("jokers-tray");
     dispatchDrag(section, "drop", ["application/x-browslatro-consumable"]);
     expect(onConsumableDrop).not.toHaveBeenCalled();
   });
@@ -605,5 +606,83 @@ describe("Jokers edition rendering", () => {
     expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(
       MAX_JOKERS - 1,
     );
+  });
+});
+
+describe("Jokers UI — capacity prop (closes #566)", () => {
+  test("a capacity larger than MAX_JOKERS renders the extra empty slot", () => {
+    render(<Jokers jokers={[]} capacity={MAX_JOKERS + 1} />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(
+      MAX_JOKERS + 1,
+    );
+  });
+
+  test("a capacity equal to MAX_JOKERS matches default behaviour (negative)", () => {
+    render(<Jokers jokers={[]} capacity={MAX_JOKERS} />);
+    expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(MAX_JOKERS);
+  });
+});
+
+describe("Jokers UI — Perishable debuffed visual (closes #579)", () => {
+  function withPerishable(roundsHeld: number): Joker {
+    return {
+      ...createPlusFourMultJoker(),
+      stickers: [{ kind: "perishable", roundsHeld }],
+    };
+  }
+
+  test("a perishable joker past its life is rendered with the joker-tile-debuffed class", () => {
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
+      "joker-tile-debuffed",
+    );
+  });
+
+  test("a perishable joker past its life exposes data-debuffed", () => {
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveAttribute(
+      "data-debuffed",
+      "true",
+    );
+  });
+
+  test("a still-active perishable joker has no debuffed class (negative)", () => {
+    const j = withPerishable(PERISHABLE_LIFE - 1);
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).not.toHaveClass(
+      "joker-tile-debuffed",
+    );
+  });
+
+  test("a debuffed perishable joker mentions 'Debuffed' in its accessible name when sellable", () => {
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} onSell={() => {}} />);
+    expect(
+      screen.getByTestId(`joker-tile-filled-${j.id}`),
+    ).toHaveAccessibleName(/Debuffed/);
+  });
+
+  test("a debuffed perishable joker is still sellable via shift-click (no Eternal guard)", () => {
+    const onSell = vi.fn();
+    const j = withPerishable(PERISHABLE_LIFE);
+    render(<Jokers jokers={[j]} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId(`joker-tile-filled-${j.id}`), {
+      shiftKey: true,
+    });
+    expect(onSell).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("Empty tray treatment (issue #875)", () => {
+  test("the tray carries the jokers-tray-empty class when no jokers are equipped", () => {
+    render(<Jokers jokers={[]} />);
+    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers-tray-empty");
+  });
+
+  test("negative: the tray drops the empty class once a joker is equipped", () => {
+    render(<Jokers jokers={[createGreedyJoker()]} />);
+    expect(screen.getByTestId("jokers-tray")).not.toHaveClass("jokers-tray-empty");
   });
 });

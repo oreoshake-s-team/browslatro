@@ -7,9 +7,9 @@
    * flex-wrap mid-drag. */
   max-width: 90rem;
   padding: 1.6rem;
-  border: 2px solid #dee2e6;
+  border: 2px solid var(--border);
   border-radius: 8px;
-  background-color: #f8f9fa;
+  background-color: var(--surface);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -24,7 +24,7 @@
 
 .hand-sort-label {
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: 600;
@@ -32,19 +32,19 @@
 
 .hand-sort-group {
   display: flex;
-  border: 1px solid #adb5bd;
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .hand-sort-button {
   padding: 0.4rem 1rem;
-  background-color: white;
+  background-color: var(--surface-raised);
   border: none;
-  border-right: 1px solid #adb5bd;
+  border-right: 1px solid var(--border-strong);
   cursor: pointer;
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .hand-sort-button:last-child {
@@ -52,11 +52,16 @@
 }
 
 .hand-sort-button:hover {
-  background-color: #e9ecef;
+  background-color: var(--surface-hover);
+}
+
+.hand-sort-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
 }
 
 .hand-sort-button-active {
-  background-color: #1971c2;
+  background-color: var(--accent-chips-strong);
   color: white;
 }
 
@@ -134,6 +139,7 @@
 }
 
 .hand-card-slot {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -166,4 +172,41 @@
 
 .hand-sort-button:disabled {
   cursor: default;
+}
+
+.hand-move-controls {
+  position: absolute;
+  top: -1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.2rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hand-card-slot:focus-within .hand-move-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.hand-move-button {
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+}
+
+.hand-move-button:hover {
+  background-color: var(--surface-hover);
+}
+
+.hand-move-button:focus-visible {
+  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline-offset: 1px;
 }

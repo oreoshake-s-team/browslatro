@@ -56,6 +56,7 @@ export interface SpectralCard {
   readonly name: string;
   readonly description: string;
   readonly effect: SpectralEffect;
+  readonly hidden?: boolean;
 }
 
 type SpectralSpec = Omit<SpectralCard, "description">;
@@ -112,22 +113,29 @@ export function makeEnhancedCard(
   return { id: nextCardId(), rank, suit, enhancement };
 }
 
+export interface TransmuteResult {
+  readonly hand: ReadonlyArray<Card>;
+  readonly destroyedIds: ReadonlyArray<number>;
+  readonly additions: ReadonlyArray<Card>;
+}
+
 export function transmuteHand(
   hand: ReadonlyArray<Card>,
   filter: TransmuteRankFilter,
   addCount: number,
   rng: SpectralRandomSource,
-): ReadonlyArray<Card> {
+): TransmuteResult {
   if (hand.length === 0) {
     const additions: Card[] = [];
     for (let i = 0; i < addCount; i += 1) additions.push(makeEnhancedCard(filter, rng));
-    return additions;
+    return { hand: additions, destroyedIds: [], additions };
   }
   const destroyIdx = Math.floor(rng() * hand.length);
+  const destroyedIds = [hand[destroyIdx].id];
   const kept = hand.filter((_, i) => i !== destroyIdx);
   const additions: Card[] = [];
   for (let i = 0; i < addCount; i += 1) additions.push(makeEnhancedCard(filter, rng));
-  return [...kept, ...additions];
+  return { hand: [...kept, ...additions], destroyedIds, additions };
 }
 
 export function applyAuraToSelectedInHand(
@@ -140,19 +148,24 @@ export function applyAuraToSelectedInHand(
   return hand.map((c) => (selectedIds.has(c.id) ? { ...c, edition } : c));
 }
 
+export interface DuplicateSelectedResult {
+  readonly hand: ReadonlyArray<Card>;
+  readonly additions: ReadonlyArray<Card>;
+}
+
 export function duplicateSelectedInHand(
   hand: ReadonlyArray<Card>,
   selectedIds: ReadonlySet<number>,
   copies: number,
-): ReadonlyArray<Card> {
+): DuplicateSelectedResult {
   const selected = hand.filter((c) => selectedIds.has(c.id));
-  if (selected.length !== 1) return hand;
+  if (selected.length !== 1) return { hand, additions: [] };
   const original = selected[0];
   const additions: Card[] = [];
   for (let i = 0; i < copies; i += 1) {
     additions.push({ ...original, id: nextCardId() });
   }
-  return [...hand, ...additions];
+  return { hand: [...hand, ...additions], additions };
 }
 
 function describe(spec: SpectralSpec): string {
@@ -191,7 +204,7 @@ function describe(spec: SpectralSpec): string {
 }
 
 const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
-  { id: "black-hole", name: "Black Hole", effect: { kind: "black-hole" } },
+  { id: "black-hole", name: "Black Hole", effect: { kind: "black-hole" }, hidden: true },
   {
     id: "immolate",
     name: "Immolate",
@@ -280,9 +293,36 @@ const SPECTRAL_SPECS: ReadonlyArray<SpectralSpec> = [
     id: "soul",
     name: "The Soul",
     effect: { kind: "create-legendary" },
+    hidden: true,
   },
 ];
 
 export function createSpectralCatalog(): SpectralCard[] {
   return SPECTRAL_SPECS.map((spec) => ({ ...spec, description: describe(spec) }));
+}
+
+export function createPoolSpectralCatalog(): SpectralCard[] {
+  return createSpectralCatalog().filter((s) => !s.hidden);
+}
+
+export const HIDDEN_SPECTRAL_REPLACE_CHANCE = 0.003;
+
+export function hiddenSpectralForRoll(
+  roll: number,
+  catalog: ReadonlyArray<SpectralCard>,
+): SpectralCard | null {
+  if (roll < HIDDEN_SPECTRAL_REPLACE_CHANCE) {
+    return catalog.find((s) => s.id === "black-hole") ?? null;
+  }
+  if (roll < HIDDEN_SPECTRAL_REPLACE_CHANCE * 2) {
+    return catalog.find((s) => s.id === "soul") ?? null;
+  }
+  return null;
+}
+
+export function rollHiddenSpectralReplacement(
+  rng: SpectralRandomSource,
+  catalog: ReadonlyArray<SpectralCard>,
+): SpectralCard | null {
+  return hiddenSpectralForRoll(rng(), catalog);
 }

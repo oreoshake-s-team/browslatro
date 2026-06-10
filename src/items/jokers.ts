@@ -35,16 +35,33 @@ export {
   allCardsScoreFromJokers,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
+  createRandomJoker,
   discardsOverrideFromJokers,
   effectiveJokerCount,
   extraDebtFloorFromJokers,
   extraStartingDiscardsFromJokers,
   extraStartingHandSizeFromJokers,
+  allowsDuplicateJokers,
+  canPreventDeath,
+  chipsPerScoredCardFromJokers,
+  consumeDeathPreventer,
+  disablesBossBlindsFromJokers,
+  heldRetriggerCountFromJokers,
+  sealedCardsOnRoundBeginFromJokers,
+  stoneCardsOnBlindSelectFromJokers,
+  interestMultiplierFromJokers,
   extraStartingHandsFromJokers,
+  handEvalOptionsFromJokers,
+  hasAstronomerInJokers,
+  hasChaosTheClownInJokers,
   pickRandomEquipped,
   pickRandomFromCatalog,
   polychromeRandomJokerDestroyOthers,
+  probabilityMultiplierFromJokers,
   replaceJokersExceptCopyOf,
+  shopExitConsumableCopies,
+  handPlayUpgradeRolls,
+  firstHandCardCopyCount,
 } from "./jokers/collection";
 export * from "./jokers/factories";
 export {
@@ -80,3 +97,37 @@ export type {
 } from "./jokers/scoring/onDiscard";
 export { applyOnDiscardJokers } from "./jokers/scoring/onDiscard";
 export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
+export { expandScoringRetriggers } from "./jokers/scoring/retriggers";
+export {
+  applyScoredCardMutations,
+  applyScoredMutationsToCards,
+} from "./jokers/scoring/scoredCardMutations";
+export { consumableCreationsOnHandPlayed } from "./jokers/scoring/consumableCreators";
+export {
+  applyCardsDestroyedToJokerStates,
+  applyCeremonialDaggerOnBlindSelect,
+  applyDiscardToJokerStates,
+  applyHandPlayedToJokerStates,
+  applyConsumableUsedToJokerStates,
+  applyEnhancementsEatenToJokerStates,
+  applyGiftCardToJokerSellValues,
+  applyGlassShatterToJokerStates,
+  applyMadnessOnBlindSelect,
+  applyLuckyTriggersToJokerStates,
+  applyPackSkipToJokerStates,
+  applySellToJokerStates,
+  applyRoundEndToJokerStates,
+  applyShopRerollToJokerStates,
+  ramenXMultFactor,
+} from "./jokers/state";
+export type { JokerStateValue } from "./jokers/types";
+export {
+  jokerCurrentValue,
+  jokerCurrentValueLabel,
+  jokerEnhancementFilter,
+  perCountXMultFactor,
+} from "./jokers/currentValue";
+export type {
+  JokerCurrentValue,
+  JokerCurrentValueContext,
+} from "./jokers/currentValue";

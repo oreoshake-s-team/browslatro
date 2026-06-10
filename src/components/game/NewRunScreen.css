@@ -31,11 +31,51 @@
   gap: 1.25rem;
 }
 
+.new-run-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.75rem 1.25rem;
+}
+
 .new-run-title {
   margin: 0;
   font-size: 1.4rem;
   text-align: center;
   color: #f8f9fa;
+}
+
+.new-run-header-preview {
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background-color: #161a1f;
+  border: 1px solid #2f3640;
+  font-size: 0.95rem;
+  color: #ced4da;
+  white-space: nowrap;
+}
+
+.new-run-header-preview-pair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.new-run-header-preview-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffd43b;
+  line-height: 1;
+}
+
+.new-run-header-preview-sep {
+  color: #495057;
+  font-weight: 700;
 }
 
 .new-run-section {
@@ -79,7 +119,7 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 120ms ease;
+  transition: border-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .new-run-deck-tile:hover {
@@ -98,21 +138,37 @@
 
 .new-run-deck-tile-red-deck { box-shadow: inset 0 -3px 0 #fa5252; }
 .new-run-deck-tile-yellow-deck { box-shadow: inset 0 -3px 0 #ffd43b; }
+.new-run-deck-tile-blue-deck { box-shadow: inset 0 -3px 0 #339af0; }
+.new-run-deck-tile-green-deck { box-shadow: inset 0 -3px 0 #51cf66; }
+.new-run-deck-tile-black-deck {
+  box-shadow:
+    inset 0 -3px 0 #0b0c0d,
+    inset 0 -4px 0 #adb5bd;
+}
+.new-run-deck-tile-checkered-deck {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #f8f9fa 0 6px,
+    #212529 6px 12px
+  );
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 3px;
+}
+.new-run-deck-tile-abandoned-deck {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #868e96 0 6px,
+    transparent 6px 10px
+  );
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 3px;
+}
 
 .new-run-deck-name {
   font-size: 0.95rem;
   text-align: center;
-}
-
-.new-run-deck-description {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #ced4da;
-  min-height: 2.6em;
-}
-
-.new-run-deck-description strong {
-  color: #ffd43b;
 }
 
 .new-run-stake-grid {
@@ -142,7 +198,8 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 60ms ease, border-color 120ms ease;
+  transition: transform calc(60ms * var(--animation-speed, 1)) ease,
+    border-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .new-run-stake-tile:hover {
@@ -175,14 +232,48 @@
 }
 
 .new-run-stake-description {
+  list-style: none;
   margin: 0;
-  font-size: 0.95rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.9rem;
   color: #ced4da;
   min-height: 2.6em;
 }
 
-.new-run-stake-description strong {
-  color: #ffd43b;
+.new-run-stake-effect {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.new-run-stake-effect-selected {
+  background-color: rgba(255, 212, 59, 0.1);
+  outline: 1px solid rgba(255, 212, 59, 0.4);
+}
+
+.new-run-stake-effect-name {
+  font-weight: 600;
+  text-align: right;
+}
+
+.new-run-stake-effect-name-white { color: #f8f9fa; }
+.new-run-stake-effect-name-red { color: #fa5252; }
+.new-run-stake-effect-name-green { color: #51cf66; }
+.new-run-stake-effect-name-black { color: #adb5bd; }
+.new-run-stake-effect-name-blue { color: #339af0; }
+.new-run-stake-effect-name-purple { color: #cc5de8; }
+.new-run-stake-effect-name-orange { color: #ff922b; }
+.new-run-stake-effect-name-gold { color: #ffd43b; }
+
+.new-run-stake-effect-text {
+  color: #ced4da;
 }
 
 .new-run-actions {
@@ -193,20 +284,5 @@
 .new-run-confirm {
   padding: 0.8rem 2rem;
   font-size: 1.1rem;
-  font-weight: 600;
-  background-color: #1f7a33;
-  color: #f8f9fa;
-  border: 2px solid #186626;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.new-run-confirm:hover {
-  background-color: #287d3a;
-}
-
-.new-run-confirm:focus-visible {
-  outline: 2px solid #74c0fc;
-  outline-offset: 2px;
 }
 

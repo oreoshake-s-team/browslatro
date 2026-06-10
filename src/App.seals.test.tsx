@@ -71,7 +71,7 @@ afterEach(() => {
 
 function getHandCardButtons(): HTMLElement[] {
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
   );
 }
 
@@ -238,6 +238,7 @@ describe("Blue Seal — held at end of round creates a Planet (#208)", () => {
     expect(consumableCount()).toBe(beforeCount);
   });
 });
+
 
 describe("Purple Seal — discard creates a Tarot (#208)", () => {
   test("discarding a Purple-seal card adds a tarot consumable", async () => {

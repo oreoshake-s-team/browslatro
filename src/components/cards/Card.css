@@ -20,13 +20,68 @@
 }
 
 .card-selected {
-  transform: translateY(-1.2rem);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1.4rem);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
   border-color: #339af0;
 }
 
 .card-selected:hover {
-  transform: translateY(-1.4rem);
+  transform: translateY(-1.6rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}
+
+.card-newly-drawn {
+  animation:
+    card-newly-drawn-enter calc(500ms * var(--animation-speed, 1)) ease-out
+      backwards,
+    card-newly-drawn-fade calc(2400ms * var(--animation-speed, 1)) ease-out
+      forwards;
+}
+
+@keyframes card-newly-drawn-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(1.2rem) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes card-newly-drawn-fade {
+  0% {
+    box-shadow:
+      0 0 0 3px var(--focus-ring),
+      0 0 18px var(--focus-ring),
+      0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  75% {
+    box-shadow:
+      0 0 0 3px var(--focus-ring),
+      0 0 14px var(--focus-ring),
+      0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 transparent,
+      0 0 0 transparent,
+      0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-newly-drawn {
+    animation: none;
+    box-shadow:
+      0 0 0 2px var(--focus-ring),
+      0 2px 4px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .card-discarding {
@@ -128,8 +183,8 @@
 .high-visibility {
   --card-suit-spades-color: #212529;
   --card-suit-hearts-color: #c92a2a;
-  --card-suit-diamonds-color: #1c7ed6;
-  --card-suit-clubs-color: #2f9e44;
+  --card-suit-diamonds-color: var(--suit-blue-on-light);
+  --card-suit-clubs-color: var(--suit-green-on-light);
 }
 
 .high-visibility .card-suit-spades {
@@ -706,7 +761,7 @@
   top: 0.2rem;
   right: 0.2rem;
   font-size: 1.1rem;
-  color: #2b8a3e;
+  color: var(--positive-money-on-light);
   text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85);
   pointer-events: none;
 }
@@ -794,4 +849,21 @@
   border-radius: 4px;
   margin: 0.3rem;
   pointer-events: none;
+}
+
+@media (forced-colors: active) {
+  .card {
+    forced-color-adjust: none;
+  }
+
+  .card:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+
+  .card-selected {
+    border-color: CanvasText;
+    outline: 2px solid CanvasText;
+    outline-offset: 2px;
+  }
 }

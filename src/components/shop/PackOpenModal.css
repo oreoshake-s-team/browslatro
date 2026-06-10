@@ -33,12 +33,14 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
   gap: 0.8rem;
 }
 
 .pack-open-option {
+  flex: 0 1 13rem;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: 0.4rem;
@@ -66,36 +68,11 @@
 
 .pack-open-option-pick {
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  background-color: #5c7cfa;
-  color: #fff;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.pack-open-option-pick:hover:not(:disabled) {
-  background-color: #748ffc;
-}
-
-.pack-open-option-pick:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .pack-open-close {
   align-self: flex-end;
   padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  background-color: #495057;
-  color: #fff;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pack-open-close:hover {
-  background-color: #6c757d;
 }
 
 .pack-open-preview-sort {
@@ -126,6 +103,11 @@
   background-color: rgba(92, 124, 250, 0.25);
 }
 
+.pack-open-preview-sort-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .pack-open-preview-sort-button-active {
   background-color: #5c7cfa;
   color: #fff;
@@ -148,5 +130,20 @@
 .pack-open-preview-hand > .card {
   flex: 0 1 var(--card-width);
   min-width: 0;
+}
+
+.pack-open-preview-card {
+  display: flex;
+  flex: 0 1 var(--card-width);
+  min-width: 0;
+  cursor: grab;
+}
+
+.pack-open-preview-card:active {
+  cursor: grabbing;
+}
+
+.pack-open-preview-card-dragging {
+  opacity: 0.5;
 }
 

@@ -11,12 +11,16 @@ import type { HandLabel } from "../scoring/handEvaluator";
 import { HANDS, JOKER_BASE_PRICE } from "../constants";
 import { RENTAL_BASE_PRICE } from "./jokers";
 import { createSpectralCatalog } from "./spectrals";
+import { stakeStickerOdds } from "./stakes";
 import { createTarotCatalog } from "./tarots";
 import {
+  ILLUSION_MODIFIER_CHANCE,
+  PLAYING_CARD_BASE_PRICE,
   SHOP_OFFER_SLOTS,
   SHOP_PACK_SLOTS,
   SPECTRAL_OFFER_CHANCE,
   applyEditionToFirstJoker,
+  applyAstronomerPricing,
   applyStakeStickersToShopOffers,
   buildFreeJokerOffers,
   ensureBaseJokerForEdition,
@@ -30,32 +34,15 @@ import {
   pickSingleShopOffer,
   rerollCostFor,
   rerollShopOffer,
+  rollPlayingCardOffer,
   type ShopItem,
 } from "./shop";
+import { offerKindWeights } from "./vouchers";
 import { chanceOverrideConfig } from "../dev/chanceOverride";
+import { mulberry32, sequenceRng } from "../test/rng";
 
 function itemOffers(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
   return offers.filter((o) => o.kind !== "pack");
-}
-
-function sequenceRng(values: ReadonlyArray<number>): RandomSource {
-  let i = 0;
-  return (): number => {
-    const v = values[i % values.length];
-    i += 1;
-    return v;
-  };
-}
-
-function mulberry32(seed: number): RandomSource {
-  let a = seed >>> 0;
-  return (): number => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 function baseArgs(rng: RandomSource): Parameters<typeof pickShopOffers>[0] {
@@ -286,6 +273,8 @@ function offerSubjectId(offer: ShopItem): string {
       return offer.tarot.id;
     case "spectral":
       return offer.spectral.id;
+    case "playing-card":
+      return `playing-card-${offer.card.id}`;
     case "pack":
       return `pack-${offer.pack.pool}-${offer.pack.variant}`;
   }
@@ -450,6 +439,56 @@ describe("pickShopOffers — spectral offer rate", () => {
     } finally {
       chanceOverrideConfig.force100 = false;
     }
+  });
+});
+
+describe("pickSingleShopOffer — Omen Globe tarot→spectral swap (#278)", () => {
+  function tarotOnlyArgs(rng: RandomSource): Parameters<typeof pickSingleShopOffer>[0] {
+    return {
+      jokerCatalog: [],
+      excludedJokerIds: [],
+      planetCatalog: [],
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng,
+    };
+  }
+
+  test("a tarot kind is swapped for a spectral when the swap chance fires", () => {
+    const rng = sequenceRng([0.99, 0.99, 0.0, 0]);
+    const offer = pickSingleShopOffer(
+      { ...tarotOnlyArgs(rng), tarotToSpectralSwapChance: 0.2 },
+      [],
+    );
+    expect(offer?.kind).toBe("spectral");
+  });
+
+  test("a tarot kind stays a tarot when the swap chance does NOT fire", () => {
+    const rng = sequenceRng([0.99, 0.99, 0.99, 0]);
+    const offer = pickSingleShopOffer(
+      { ...tarotOnlyArgs(rng), tarotToSpectralSwapChance: 0.2 },
+      [],
+    );
+    expect(offer?.kind).toBe("tarot");
+  });
+
+  test("without Omen Globe (swap chance 0), a tarot roll always stays a tarot", () => {
+    const rng = sequenceRng([0.99, 0.99, 0]);
+    const offer = pickSingleShopOffer(tarotOnlyArgs(rng), []);
+    expect(offer?.kind).toBe("tarot");
+  });
+
+  test("falls back to a tarot when the swap fires but the spectral catalog is empty", () => {
+    const rng = sequenceRng([0.99, 0.99, 0.0, 0]);
+    const offer = pickSingleShopOffer(
+      {
+        ...tarotOnlyArgs(rng),
+        spectralCatalog: [],
+        tarotToSpectralSwapChance: 0.2,
+      },
+      [],
+    );
+    expect(offer?.kind).toBe("tarot");
   });
 });
 
@@ -665,6 +704,49 @@ describe("pickShopOffers — forcedPackPools (dev queue)", () => {
       forcedPackPools: [],
     });
     expect(packs(withEmpty).length).toBe(packs(baseline).length);
+  });
+});
+
+describe("pickShopOffers — browslatro:forcePackPool localStorage flag (#856)", () => {
+  function packs(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
+    return offers.filter((o) => o.kind === "pack");
+  }
+
+  function stubForcedPool(value: string | null) {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackPool" ? value : null,
+      },
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("a pool set via the flag is forced into the shop", () => {
+    stubForcedPool("spectral");
+    const offers = pickShopOffers(baseArgs(mulberry32(8)));
+    const first = packs(offers)[0];
+    expect(first?.kind === "pack" && first.pack.pool).toBe("spectral");
+  });
+
+  test("flag pools come before pools forced via args", () => {
+    stubForcedPool("celestial");
+    const offers = pickShopOffers({
+      ...baseArgs(mulberry32(9)),
+      forcedPackPools: ["arcana"],
+    });
+    const pools = packs(offers).map((o) => o.kind === "pack" && o.pack.pool);
+    expect(pools.slice(0, 2)).toEqual(["celestial", "arcana"]);
+  });
+
+  test("an invalid flag value leaves the shop unchanged (negative)", () => {
+    const baseline = pickShopOffers(baseArgs(mulberry32(10)));
+    stubForcedPool("not-a-pool");
+    const offers = pickShopOffers(baseArgs(mulberry32(10)));
+    expect(packs(offers).length).toBe(packs(baseline).length);
   });
 });
 
@@ -1053,5 +1135,365 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     };
     const stamped = applyStakeStickersToShopOffers([offer], { eternal: 1 }, () => 0);
     expect(stamped[0]).toEqual(offer);
+  });
+
+  test("stamps Perishable onto a shop joker offer when the roll succeeds (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { perishable: 1 },
+      () => 0,
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers).toEqual([{ kind: "perishable", roundsHeld: 0 }]);
+  });
+
+  test("stamps Perishable on a Buffoon pack's joker option when the roll succeeds (#558)", () => {
+    const offers = [packOfferWithJokerOption("p1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { perishable: 1 },
+      () => 0,
+    );
+    const opt = stamped[0].kind === "pack" ? stamped[0].pack.options[0] : null;
+    expect(opt && opt.kind === "joker" ? opt.joker.stickers : null).toEqual([
+      { kind: "perishable", roundsHeld: 0 },
+    ]);
+  });
+
+  test("does not stamp Perishable when the roll fails (negative) (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      { perishable: 0.3 },
+      () => 0.9,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
+      .toBeUndefined();
+  });
+
+  test("at Orange Stake, shop joker rolls receive Perishable when the perishable roll hits (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("orange"),
+      sequenceRng([0.99, 0]),
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers?.some((s) => s.kind === "perishable")).toBe(true);
+  });
+
+  test("at White Stake, shop joker rolls never receive Perishable (negative) (#558)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("white"),
+      () => 0,
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
+      .toBeUndefined();
+  });
+
+  test("at Gold Stake, shop joker rolls receive Rental when only the rental roll hits (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers?.some((s) => s.kind === "rental")).toBe(true);
+  });
+
+  test("at Gold Stake, a rental shop joker is priced at RENTAL_BASE_PRICE (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].price).toBe(RENTAL_BASE_PRICE);
+  });
+
+  test("at Orange Stake, shop joker rolls never receive Rental (negative) (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("orange"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    const stickers =
+      stamped[0].kind === "joker" ? stamped[0].joker.stickers : null;
+    expect(stickers?.some((s) => s.kind === "rental") ?? false).toBe(false);
+  });
+
+  test("at Gold Stake, shop joker rolls do not receive Rental when every roll misses (negative) (#559)", () => {
+    const offers = [jokerOffer("j1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0.99]),
+    );
+    expect(stamped[0].kind === "joker" && stamped[0].joker.stickers)
+      .toBeUndefined();
+  });
+
+  test("at Gold Stake, Buffoon pack joker options can receive Rental (#559)", () => {
+    const offers = [packOfferWithJokerOption("p1")];
+    const stamped = applyStakeStickersToShopOffers(
+      offers,
+      stakeStickerOdds("gold"),
+      sequenceRng([0.99, 0.99, 0]),
+    );
+    const opt = stamped[0].kind === "pack" ? stamped[0].pack.options[0] : null;
+    expect(opt && opt.kind === "joker" ? opt.joker.stickers : null).toEqual([
+      { kind: "rental" },
+    ]);
+  });
+});
+
+describe("applyAstronomerPricing (#741)", () => {
+  function planetOffer(id: string, price = 3): ShopItem {
+    const planet = createPlanetCatalog().find((p) => p.id === id);
+    if (!planet) throw new Error(`no planet ${id}`);
+    return { kind: "planet", planet, price, sold: false };
+  }
+
+  function tarotOffer(price = 3): ShopItem {
+    return {
+      kind: "tarot",
+      tarot: createTarotCatalog()[0],
+      price,
+      sold: false,
+    };
+  }
+
+  function celestialPackOffer(price = 4): ShopItem {
+    return {
+      kind: "pack",
+      pack: { pool: "celestial", variant: "normal", options: [] },
+      price,
+      sold: false,
+    };
+  }
+
+  function buffoonPackOffer(price = 4): ShopItem {
+    return {
+      kind: "pack",
+      pack: { pool: "buffoon", variant: "normal", options: [] },
+      price,
+      sold: false,
+    };
+  }
+
+  test("is a no-op when Astronomer is not active", () => {
+    const offers = [planetOffer("jupiter"), celestialPackOffer()];
+    expect(applyAstronomerPricing(offers, false)).toEqual(offers);
+  });
+
+  test("zeroes the price of every Planet offer when Astronomer is active", () => {
+    const offers = [planetOffer("jupiter", 3)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "planet" && out[0].price).toBe(0);
+  });
+
+  test("zeroes the price of every Celestial pack offer when Astronomer is active", () => {
+    const offers = [celestialPackOffer(4)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "pack" && out[0].price).toBe(0);
+  });
+
+  test("does not change Tarot offer prices (negative — other kinds untouched)", () => {
+    const offers = [tarotOffer(3)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "tarot" && out[0].price).toBe(3);
+  });
+
+  test("does not change Buffoon pack prices (negative — only Celestial is free)", () => {
+    const offers = [buffoonPackOffer(4)];
+    const out = applyAstronomerPricing(offers, true);
+    expect(out[0].kind === "pack" && out[0].price).toBe(4);
+  });
+});
+
+describe("Telescope: guaranteedPlanetId on forced Celestial pack (#281)", () => {
+  test("a forced Celestial pack with a guaranteedPlanetId always includes that planet", () => {
+    const offers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: [],
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      forcedPackPools: ["celestial"],
+      guaranteedPlanetId: "jupiter",
+      rng: () => 0.5,
+    });
+    const pack = offers.find((o) => o.kind === "pack");
+    const ids =
+      pack && pack.kind === "pack"
+        ? pack.pack.options.flatMap((o) =>
+            o.kind === "planet" ? [o.planet.id] : [],
+          )
+        : [];
+    expect(ids).toContain("jupiter");
+  });
+
+  test("a forced Celestial pack without a guaranteedPlanetId does not always include Jupiter (negative)", () => {
+    const offers = pickShopOffers({
+      jokerCatalog: createJokerCatalog(),
+      excludedJokerIds: [],
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      forcedPackPools: ["celestial"],
+      rng: () => 0.001,
+    });
+    const pack = offers.find((o) => o.kind === "pack");
+    const ids =
+      pack && pack.kind === "pack"
+        ? pack.pack.options.flatMap((o) =>
+            o.kind === "planet" ? [o.planet.id] : [],
+          )
+        : [];
+    expect(ids).not.toContain("jupiter");
+  });
+});
+
+describe("rollPlayingCardOffer (#282)", () => {
+  test("returns a playing-card offer with the base price by default", () => {
+    const offer = rollPlayingCardOffer(mulberry32(1));
+    expect(offer.kind).toBe("playing-card");
+    expect(offer.price).toBe(PLAYING_CARD_BASE_PRICE);
+  });
+
+  test("the rolled card has a valid rank and suit", () => {
+    const offer = rollPlayingCardOffer(mulberry32(1));
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(offer.card.rank).toMatch(/^(2|3|4|5|6|7|8|9|10|J|Q|K|A)$/);
+  });
+
+  test("the rolled card has no enhancement, edition, or seal by default", () => {
+    const offer = rollPlayingCardOffer(mulberry32(1));
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(
+      offer.card.enhancement === undefined &&
+        offer.card.edition === undefined &&
+        offer.card.seal === undefined,
+    ).toBe(true);
+  });
+
+  test("with illusion enabled and forced rolls failing, no modifiers are added", () => {
+    const offer = rollPlayingCardOffer(
+      sequenceRng([0.5, 0.5, 0.99, 0.99, 0.99]),
+      { illusionEnabled: true },
+    );
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(
+      offer.card.enhancement === undefined &&
+        offer.card.edition === undefined &&
+        offer.card.seal === undefined,
+    ).toBe(true);
+  });
+
+  test("with illusion enabled and forced rolls passing, all three modifiers are added", () => {
+    const lowChance = ILLUSION_MODIFIER_CHANCE / 2;
+    const offer = rollPlayingCardOffer(
+      sequenceRng([0.5, 0.5, lowChance, 0, lowChance, 0, lowChance, 0]),
+      { illusionEnabled: true },
+    );
+    if (offer.kind !== "playing-card") throw new Error("kind mismatch");
+    expect(
+      offer.card.enhancement !== undefined &&
+        offer.card.edition !== undefined &&
+        offer.card.seal !== undefined,
+    ).toBe(true);
+  });
+
+  test("ILLUSION_MODIFIER_CHANCE is a tunable rate between 0 and 1", () => {
+    expect(ILLUSION_MODIFIER_CHANCE).toBeGreaterThan(0);
+    expect(ILLUSION_MODIFIER_CHANCE).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("pickShopItemOffers — Magic Trick playing-card offers (#282)", () => {
+  test("with Magic Trick NOT owned, never produces a playing-card offer (negative)", () => {
+    let sawPlayingCard = false;
+    for (let seed = 1; seed <= 50; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        kindWeights: offerKindWeights(new Set()),
+      });
+      if (offers.some((o) => o.kind === "playing-card")) {
+        sawPlayingCard = true;
+        break;
+      }
+    }
+    expect(sawPlayingCard).toBe(false);
+  });
+
+  test("with Magic Trick owned, can produce a playing-card offer across seeds", () => {
+    let sawPlayingCard = false;
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        extraSlots: 4,
+        kindWeights: offerKindWeights(new Set(["magic-trick"])),
+      });
+      if (offers.some((o) => o.kind === "playing-card")) {
+        sawPlayingCard = true;
+        break;
+      }
+    }
+    expect(sawPlayingCard).toBe(true);
+  });
+
+  test("with Magic Trick owned but Illusion NOT owned, playing-card offers carry no modifiers (negative)", () => {
+    let sawModified = false;
+    for (let seed = 1; seed <= 100; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        extraSlots: 4,
+        kindWeights: offerKindWeights(new Set(["magic-trick"])),
+        illusionEnabled: false,
+      });
+      for (const o of offers) {
+        if (o.kind !== "playing-card") continue;
+        if (
+          o.card.enhancement !== undefined ||
+          o.card.edition !== undefined ||
+          o.card.seal !== undefined
+        ) {
+          sawModified = true;
+        }
+      }
+    }
+    expect(sawModified).toBe(false);
+  });
+
+  test("with Illusion enabled, playing-card offers can roll an enhancement/edition/seal across seeds", () => {
+    let sawModified = false;
+    for (let seed = 1; seed <= 200; seed += 1) {
+      const offers = pickShopItemOffers({
+        ...baseArgs(mulberry32(seed)),
+        extraSlots: 4,
+        kindWeights: offerKindWeights(new Set(["magic-trick", "illusion"])),
+        illusionEnabled: true,
+      });
+      for (const o of offers) {
+        if (o.kind !== "playing-card") continue;
+        if (
+          o.card.enhancement !== undefined ||
+          o.card.edition !== undefined ||
+          o.card.seal !== undefined
+        ) {
+          sawModified = true;
+        }
+      }
+      if (sawModified) break;
+    }
+    expect(sawModified).toBe(true);
   });
 });

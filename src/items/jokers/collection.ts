@@ -1,5 +1,7 @@
 import { cloneJoker, withEdition } from "./editions";
-import { canDestroyJoker } from "./stickers";
+import { canDestroyJoker, hasSticker, isJokerActive } from "./stickers";
+import { resolveJokerEffect } from "./scoring/copy";
+import { rollChance } from "../../dev/chanceOverride";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -16,8 +18,152 @@ export function extraStartingHandSizeFromJokers(
     if (j.effect.kind === "passive-run-stats" && j.effect.handSize !== undefined) {
       total += j.effect.handSize;
     }
+    if (j.effect.kind === "hand-size-decay-per-round") {
+      total += j.state?.kind === "counter" ? j.state.value : j.effect.amount;
+    }
   }
   return total;
+}
+
+export function heldRetriggerCountFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  const jokers = allJokers.filter(isJokerActive);
+  let total = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "retrigger-held-abilities") total += effect.times;
+  }
+  return total;
+}
+
+export function shopExitConsumableCopies<T>(
+  allJokers: ReadonlyArray<Joker>,
+  consumables: ReadonlyArray<T>,
+  rng: RandomSource = Math.random,
+): T[] {
+  if (consumables.length === 0) return [];
+  const jokers = allJokers.filter(isJokerActive);
+  const copies: T[] = [];
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind !== "shop-exit-copies-consumable") continue;
+    copies.push(consumables[Math.floor(rng() * consumables.length)]);
+  }
+  return copies;
+}
+
+export function handPlayUpgradeRolls(
+  allJokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): number {
+  const jokers = allJokers.filter(isJokerActive);
+  let count = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind !== "hand-play-chance-upgrades-hand") continue;
+    if (rollChance(effect.chance, rng)) count += 1;
+  }
+  return count;
+}
+
+export function firstHandCardCopyCount(
+  allJokers: ReadonlyArray<Joker>,
+  playedCardCount: number,
+  isFirstHandOfRound: boolean,
+): number {
+  if (!isFirstHandOfRound || playedCardCount !== 1) return 0;
+  const jokers = allJokers.filter(isJokerActive);
+  let count = 0;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "first-hand-single-card-copies-card") count += 1;
+  }
+  return count;
+}
+
+export function chipsPerScoredCardFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "scored-cards-gain-chips") total += j.effect.amount;
+  }
+  return total;
+}
+
+export function stoneCardsOnBlindSelectFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let count = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "blind-select-adds-stone-card") count += 1;
+  }
+  return count;
+}
+
+export function sealedCardsOnRoundBeginFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let count = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "round-begin-adds-sealed-card") count += 1;
+  }
+  return count;
+}
+
+export function canPreventDeath(
+  allJokers: ReadonlyArray<Joker>,
+  roundScore: number,
+  requiredScore: number,
+): boolean {
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (
+      j.effect.kind === "prevent-death-at-quarter" &&
+      roundScore >= Math.ceil(requiredScore * j.effect.threshold)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function consumeDeathPreventer(
+  jokers: ReadonlyArray<Joker>,
+): Joker[] {
+  const idx = jokers.findIndex(
+    (j) =>
+      j.effect.kind === "prevent-death-at-quarter" &&
+      !hasSticker(j, "eternal"),
+  );
+  if (idx === -1) return [...jokers];
+  return jokers.filter((_, i) => i !== idx);
+}
+
+export function disablesBossBlindsFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): boolean {
+  return allJokers
+    .filter(isJokerActive)
+    .some((j) => j.effect.kind === "disables-boss-blinds");
+}
+
+export function allowsDuplicateJokers(
+  allJokers: ReadonlyArray<Joker>,
+): boolean {
+  return allJokers
+    .filter(isJokerActive)
+    .some((j) => j.effect.kind === "allows-duplicate-jokers");
+}
+
+export function interestMultiplierFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let extraStreams = 0;
+  for (const j of jokers) {
+    if (j.effect.kind === "extra-interest-per-five") extraStreams += 1;
+  }
+  return 1 + extraStreams;
 }
 
 export function extraStartingDiscardsFromJokers(
@@ -55,6 +201,59 @@ export function allCardsScoreFromJokers(
   return false;
 }
 
+export function hasAstronomerInJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (j.effect.kind === "passive-run-stats" && j.effect.astronomer === true) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function hasChaosTheClownInJokers(
+  jokers: ReadonlyArray<Joker>,
+): boolean {
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.chaosTheClown === true
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function handEvalOptionsFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): {
+  readonly fourFingers?: boolean;
+  readonly shortcut?: boolean;
+  readonly smearedSuits?: boolean;
+} {
+  const jokers = allJokers.filter(isJokerActive);
+  let fourFingers = false;
+  let shortcut = false;
+  let smearedSuits = false;
+  for (const j of jokers) {
+    if (j.effect.kind !== "passive-run-stats") continue;
+    if (j.effect.fourFingers === true) fourFingers = true;
+    if (j.effect.shortcut === true) shortcut = true;
+    if (j.effect.smearedSuits === true) smearedSuits = true;
+  }
+  const out: {
+    fourFingers?: boolean;
+    shortcut?: boolean;
+    smearedSuits?: boolean;
+  } = {};
+  if (fourFingers) out.fourFingers = true;
+  if (shortcut) out.shortcut = true;
+  if (smearedSuits) out.smearedSuits = true;
+  return out;
+}
+
 export function discardsOverrideFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number | null {
@@ -79,6 +278,22 @@ export function extraStartingHandsFromJokers(
     }
   }
   return total;
+}
+
+export function probabilityMultiplierFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let multiplier = 1;
+  for (const j of jokers) {
+    if (
+      j.effect.kind === "passive-run-stats" &&
+      j.effect.probabilityMultiplier !== undefined &&
+      j.effect.probabilityMultiplier > 0
+    ) {
+      multiplier *= j.effect.probabilityMultiplier;
+    }
+  }
+  return multiplier;
 }
 
 export function pickRandomEquipped(
@@ -111,6 +326,21 @@ export function createJokerByRarity(
   return pickRandomFromCatalog(
     catalog,
     (j) => j.rarity === rarity && !ownedIds.has(j.id),
+    rng,
+  );
+}
+
+export function createRandomJoker(
+  jokers: ReadonlyArray<Joker>,
+  catalog: ReadonlyArray<Joker>,
+  capacity: number,
+  rng: RandomSource = Math.random,
+): Joker | null {
+  if (effectiveJokerCount(jokers) >= capacity) return null;
+  const ownedIds = new Set(jokers.map((j) => j.id));
+  return pickRandomFromCatalog(
+    catalog,
+    (j) => j.rarity !== "legendary" && !ownedIds.has(j.id),
     rng,
   );
 }

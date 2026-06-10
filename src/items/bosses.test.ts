@@ -7,7 +7,10 @@ import {
   bossBlocksHandLabel,
   bossHandSize,
   bossMoneyPenaltyPerCard,
+  bossPostPlayDiscardCount,
+  bossRefillCountOverride,
   bossRequiredCardCount,
+  bossShouldZeroWallet,
   bossStartingDiscards,
   bossStartingHands,
   canSubmitHand,
@@ -15,9 +18,11 @@ import {
   debuffedHandIds,
   isCardDebuffedByBoss,
   pickBossForAnte,
+  pickHookDiscardIds,
   type BossBlind,
 } from "./bosses";
 import type { Card, Hand } from "../cards/types";
+import type { HandLabel } from "../scoring/handEvaluator";
 
 describe("createBossCatalog", () => {
   test("does not include the abilityless generic boss-default entry (#672)", () => {
@@ -539,5 +544,269 @@ describe("applyBossFaceDown", () => {
     expect(
       applyBossFaceDown(sample, wall, true, "initial").some((c) => c.faceDown),
     ).toBe(false);
+  });
+});
+
+describe("Phase 5 boss catalog — The Hook (#810)", () => {
+  test("the-hook has the post-play-random-held-discard effect with count 2", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook");
+    expect(hook?.effect).toEqual({
+      kind: "post-play-random-held-discard",
+      count: 2,
+    });
+  });
+
+  test("the-hook is available from ante 1", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook");
+    expect(hook?.anteMin).toBe(1);
+  });
+
+  test("the-hook applies the standard 2x score multiplier", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook");
+    expect(hook?.scoreMultiplier).toBe(2);
+  });
+});
+
+describe("bossPostPlayDiscardCount", () => {
+  test("returns 2 for The Hook", () => {
+    const hook = createBossCatalog().find((b) => b.id === "the-hook")!;
+    expect(bossPostPlayDiscardCount(hook)).toBe(2);
+  });
+
+  test("returns 0 for a non-hook boss", () => {
+    const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+    expect(bossPostPlayDiscardCount(wall)).toBe(0);
+  });
+
+  test("returns 0 when boss is null", () => {
+    expect(bossPostPlayDiscardCount(null)).toBe(0);
+  });
+});
+
+function makeHandPlayCounts(
+  overrides: Partial<Record<HandLabel, number>> = {},
+): Record<HandLabel, number> {
+  return {
+    "High Card": 0,
+    Pair: 0,
+    "Two Pair": 0,
+    "Three of a Kind": 0,
+    Straight: 0,
+    Flush: 0,
+    "Full House": 0,
+    "Four of a Kind": 0,
+    "Straight Flush": 0,
+    "Royal Flush": 0,
+    "Five of a Kind": 0,
+    "Flush House": 0,
+    "Flush Five": 0,
+    ...overrides,
+  };
+}
+
+describe("Phase 5 boss catalog — The Serpent (#811)", () => {
+  test("the-serpent has the fixed-refill-count effect with value 3", () => {
+    const serpent = createBossCatalog().find((b) => b.id === "the-serpent");
+    expect(serpent?.effect).toEqual({ kind: "fixed-refill-count", value: 3 });
+  });
+
+  test("the-serpent requires ante 5+", () => {
+    const serpent = createBossCatalog().find((b) => b.id === "the-serpent");
+    expect(serpent?.anteMin).toBe(5);
+  });
+
+  test("the-serpent applies the standard 2x score multiplier", () => {
+    const serpent = createBossCatalog().find((b) => b.id === "the-serpent");
+    expect(serpent?.scoreMultiplier).toBe(2);
+  });
+
+  test("ante 4 excludes The Serpent", () => {
+    const ids = availableBosses(createBossCatalog(), 4).map((b) => b.id);
+    expect(ids).not.toContain("the-serpent");
+  });
+
+  test("ante 5 includes The Serpent", () => {
+    const ids = availableBosses(createBossCatalog(), 5).map((b) => b.id);
+    expect(ids).toContain("the-serpent");
+  });
+});
+
+describe("bossRefillCountOverride (The Serpent)", () => {
+  const serpent = createBossCatalog().find((b) => b.id === "the-serpent")!;
+  const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+
+  test("returns 3 under The Serpent on a boss round, regardless of defaultCount", () => {
+    expect(bossRefillCountOverride(serpent, true, 7, 30)).toBe(3);
+  });
+
+  test("returns the default when boss is null", () => {
+    expect(bossRefillCountOverride(null, true, 5, 30)).toBe(5);
+  });
+
+  test("returns the default for a non-Serpent boss", () => {
+    expect(bossRefillCountOverride(wall, true, 5, 30)).toBe(5);
+  });
+
+  test("returns the default when isBossRound is false", () => {
+    expect(bossRefillCountOverride(serpent, false, 5, 30)).toBe(5);
+  });
+
+  test("clamps the override to the remaining deck size when deck is short", () => {
+    expect(bossRefillCountOverride(serpent, true, 7, 1)).toBe(1);
+  });
+
+  test("returns 0 when the deck is empty even though the boss override is 3", () => {
+    expect(bossRefillCountOverride(serpent, true, 7, 0)).toBe(0);
+  });
+});
+
+describe("Phase 5 boss catalog — The Ox (#812)", () => {
+  test("the-ox has the zero-wallet-on-most-played-hand effect", () => {
+    const ox = createBossCatalog().find((b) => b.id === "the-ox");
+    expect(ox?.effect).toEqual({ kind: "zero-wallet-on-most-played-hand" });
+  });
+
+  test("the-ox requires ante 6+", () => {
+    const ox = createBossCatalog().find((b) => b.id === "the-ox");
+    expect(ox?.anteMin).toBe(6);
+  });
+
+  test("the-ox applies the standard 2x score multiplier", () => {
+    const ox = createBossCatalog().find((b) => b.id === "the-ox");
+    expect(ox?.scoreMultiplier).toBe(2);
+  });
+
+  test("ante 5 excludes The Ox", () => {
+    const ids = availableBosses(createBossCatalog(), 5).map((b) => b.id);
+    expect(ids).not.toContain("the-ox");
+  });
+
+  test("ante 6 includes The Ox", () => {
+    const ids = availableBosses(createBossCatalog(), 6).map((b) => b.id);
+    expect(ids).toContain("the-ox");
+  });
+});
+
+describe("bossShouldZeroWallet (The Ox)", () => {
+  const ox = createBossCatalog().find((b) => b.id === "the-ox")!;
+  const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
+
+  test("returns true for the most-played hand on a boss round", () => {
+    const counts = makeHandPlayCounts({ "High Card": 5, Pair: 3 });
+    expect(bossShouldZeroWallet(ox, true, "High Card", counts)).toBe(true);
+  });
+
+  test("returns false for a non-most-played hand on a boss round", () => {
+    const counts = makeHandPlayCounts({ "High Card": 5, Pair: 3 });
+    expect(bossShouldZeroWallet(ox, true, "Pair", counts)).toBe(false);
+  });
+
+  test("returns false for a non-Ox boss", () => {
+    const counts = makeHandPlayCounts({ "High Card": 5 });
+    expect(bossShouldZeroWallet(wall, true, "High Card", counts)).toBe(false);
+  });
+
+  test("returns false when boss is null", () => {
+    const counts = makeHandPlayCounts({ "High Card": 5 });
+    expect(bossShouldZeroWallet(null, true, "High Card", counts)).toBe(false);
+  });
+
+  test("returns false when isBossRound is false even with Ox active", () => {
+    const counts = makeHandPlayCounts({ "High Card": 5 });
+    expect(bossShouldZeroWallet(ox, false, "High Card", counts)).toBe(false);
+  });
+
+  test("tie-break favors the lower-ranked hand (matches mostPlayedHand)", () => {
+    const counts = makeHandPlayCounts({ "High Card": 3, Pair: 3 });
+    expect(bossShouldZeroWallet(ox, true, "High Card", counts)).toBe(true);
+  });
+
+  test("tie-break does NOT trigger the wipe for the higher-ranked tied hand", () => {
+    const counts = makeHandPlayCounts({ "High Card": 3, Pair: 3 });
+    expect(bossShouldZeroWallet(ox, true, "Pair", counts)).toBe(false);
+  });
+});
+
+describe("pickBossForAnte — Phase 5 ante gating (#811, #812)", () => {
+  test("returns The Serpent for ante 5 when picker selects it", () => {
+    const catalog = createBossCatalog();
+    const serpent = catalog.find((b) => b.id === "the-serpent")!;
+    expect(
+      pickBossForAnte({
+        ante: 5,
+        catalog: [serpent],
+        rng: () => 0,
+      }).id,
+    ).toBe("the-serpent");
+  });
+
+  test("never returns The Serpent at ante 4", () => {
+    const catalog = createBossCatalog();
+    const eligible = availableBosses(catalog, 4);
+    expect(eligible.some((b) => b.id === "the-serpent")).toBe(false);
+  });
+
+  test("returns The Ox for ante 6 when picker selects it", () => {
+    const catalog = createBossCatalog();
+    const ox = catalog.find((b) => b.id === "the-ox")!;
+    expect(
+      pickBossForAnte({
+        ante: 6,
+        catalog: [ox],
+        rng: () => 0,
+      }).id,
+    ).toBe("the-ox");
+  });
+
+  test("never returns The Ox at ante 5", () => {
+    const catalog = createBossCatalog();
+    const eligible = availableBosses(catalog, 5);
+    expect(eligible.some((b) => b.id === "the-ox")).toBe(false);
+  });
+});
+
+describe("pickHookDiscardIds", () => {
+  const buildHand = (count: number): ReadonlyArray<Card> =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i + 1,
+      rank: "5" as const,
+      suit: "clubs" as const,
+    }));
+
+  test("returns the first N ids when rng is always 0 (deterministic head pick)", () => {
+    const hand = buildHand(5);
+    expect(pickHookDiscardIds(hand, new Set(), 2, () => 0)).toEqual([1, 2]);
+  });
+
+  test("excludes the submitted selection from the candidate pool", () => {
+    const hand = buildHand(5);
+    expect(
+      pickHookDiscardIds(hand, new Set([1, 2]), 2, () => 0),
+    ).toEqual([3, 4]);
+  });
+
+  test("caps the picked count at the candidate pool size", () => {
+    const hand = buildHand(3);
+    expect(
+      pickHookDiscardIds(hand, new Set([1, 2]), 2, () => 0),
+    ).toEqual([3]);
+  });
+
+  test("returns an empty array when no non-played cards remain", () => {
+    const hand = buildHand(2);
+    expect(pickHookDiscardIds(hand, new Set([1, 2]), 2, () => 0)).toEqual([]);
+  });
+
+  test("never picks the same id twice (no replacement)", () => {
+    const hand = buildHand(4);
+    const picked = pickHookDiscardIds(hand, new Set(), 2, () => 0.5);
+    expect(new Set(picked).size).toBe(picked.length);
+  });
+
+  test("uses the provided rng deterministically", () => {
+    const hand = buildHand(4);
+    const rng = vi.fn().mockReturnValueOnce(0.75).mockReturnValueOnce(0);
+    const picked = pickHookDiscardIds(hand, new Set(), 2, rng);
+    expect(picked).toEqual([4, 1]);
   });
 });

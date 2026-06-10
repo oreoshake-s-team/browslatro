@@ -14,7 +14,7 @@
 
 .game-top-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 2rem;
   width: 100%;
   max-width: var(--game-row-width);
@@ -24,6 +24,7 @@
 
 .game-overlay-deck {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
   margin-left: auto;
 }
@@ -41,6 +42,43 @@
   padding: 1.6rem 4rem;
   font-size: 2rem;
   flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem 1rem;
+  line-height: 1.1;
+}
+
+.submit-hand-button-detected {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  background-color: rgba(16, 43, 28, 0.9);
+  color: var(--text-primary);
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.submit-hand-button-detected-label {
+  text-transform: uppercase;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.submit-hand-button-detected-score {
+  font-variant-numeric: tabular-nums;
+}
+
+.submit-hand-button-chips {
+  color: var(--accent-chips-text);
+}
+
+.submit-hand-button-mult {
+  color: var(--accent-mult-text);
 }
 
 .play-actions {
@@ -52,18 +90,6 @@
 .discard-button {
   padding: 1.6rem 2rem;
   font-size: 1.4rem;
-  background-color: #c92a2a;
-  color: white;
-  border: 2px solid #a51111;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.discard-button:disabled {
-  background-color: #adb5bd;
-  border-color: #868e96;
-  cursor: not-allowed;
-  opacity: 0.7;
 }
 
 @media (max-width: 1024px) {

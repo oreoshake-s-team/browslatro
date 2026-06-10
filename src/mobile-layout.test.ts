@@ -85,7 +85,7 @@ describe("Sidebar layout — portrait mobile (issue #105)", () => {
 
   test("portrait narrow viewports lay the sidebar out as a horizontal strip", () => {
     const inner = blockBody(portraitBlock, /\.sidebar\s*{/);
-    expect(inner).toMatch(/flex-direction\s*:\s*row/);
+    expect(inner).toMatch(/grid-auto-flow\s*:\s*column/);
   });
 
   test("portrait narrow viewports widen the sidebar to span the full width", () => {

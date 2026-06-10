@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+import { tHandLabel } from "../../i18n/handLabels";
 import {
   formatScoringEvent,
   groupEventsByHand,
@@ -14,6 +16,7 @@ export default function ScoringTraceContent({
   events,
   idPrefix = "scoring-trace",
 }: ScoringTraceContentProps) {
+  const { t } = useTranslation();
   const groups = groupEventsByHand(events);
   if (groups.length === 0) {
     return <p className="scoring-trace__empty">No scoring yet.</p>;
@@ -34,7 +37,11 @@ export default function ScoringTraceContent({
           >
             {group.base ? (
               <h3 id={headingId} className="scoring-trace__group-heading">
-                Hand {group.base.handNumber}: {group.base.handLabel} (Lv {group.base.level})
+                {t("scoringTrace.handHeading", {
+                  number: group.base.handNumber,
+                  hand: tHandLabel(t, group.base.handLabel),
+                  level: group.base.level,
+                })}
                 {" "}
                 <span className="scoring-trace__group-base">
                   +{group.base.chips} Chips, +{group.base.mult} Mult

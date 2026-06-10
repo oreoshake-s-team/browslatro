@@ -1,10 +1,12 @@
 import "./ModifierPanel.css";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
+import { FINAL_ANTE } from "../../constants";
 import ModifierSpectralPicker from "./ModifierSpectralPicker";
 import ModifierTarotPicker from "./ModifierTarotPicker";
 import ModifierPlanetPicker from "./ModifierPlanetPicker";
 import ModifierPackPicker from "./ModifierPackPicker";
+import ModifierJokerPicker from "./ModifierJokerPicker";
 
 export default function ModifierPanel() {
   const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
@@ -16,6 +18,8 @@ export default function ModifierPanel() {
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
   const forceProbabilities = useGame((s) => s.forceProbabilities);
   const setForceProbabilities = useGame((s) => s.setForceProbabilities);
+  const ante = useGame((s) => s.ante);
+  const setAnte = useGame((s) => s.setAnte);
 
   function addChips(amount: number) {
     play("pop");
@@ -79,6 +83,22 @@ export default function ModifierPanel() {
         </button>
         <button
           type="button"
+          className="shrink-ante-button"
+          onClick={() => setAnte((prev) => Math.max(1, prev - 1))}
+          disabled={ante <= 1}
+        >
+          <span aria-hidden="true">⏪ </span>Ante −1
+        </button>
+        <button
+          type="button"
+          className="grow-ante-button"
+          onClick={() => setAnte((prev) => Math.min(FINAL_ANTE, prev + 1))}
+          disabled={ante >= FINAL_ANTE}
+        >
+          <span aria-hidden="true">⏩ </span>Ante +1
+        </button>
+        <button
+          type="button"
           className="force-probabilities-button"
           onClick={() => setForceProbabilities((p) => !p)}
           aria-pressed={forceProbabilities}
@@ -89,6 +109,7 @@ export default function ModifierPanel() {
         <ModifierPlanetPicker />
         <ModifierSpectralPicker />
         <ModifierPackPicker />
+        <ModifierJokerPicker />
       </div>
     </details>
   );

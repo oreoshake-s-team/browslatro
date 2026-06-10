@@ -1,11 +1,13 @@
-import { useCallback, useState, type DragEvent } from "react";
+import { useCallback, useId, useRef, useState, type DragEvent } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "./DeckPile.css";
 import Card from "./Card";
 import DeckSummary from "./DeckSummary";
 import type { Card as CardType, Suit } from "../../cards/types";
 import { SUITS, groupBySuit } from "../../cards/deck";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
 import { JOKER_DRAG_MIME } from "../jokers/Jokers";
@@ -32,10 +34,14 @@ export default function DeckPile({
   jokerDropEnabled = false,
   onJokerDrop,
 }: DeckPileProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const grouped = groupBySuit(remaining);
+  const titleId = useId();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const handleClose = useCallback(() => setOpen(false), []);
   useEscapeToClose(handleClose, open);
+  useFocusTrap(overlayRef, open);
   const consumableZone = useMimeDropZone({
     enabled: consumableDropEnabled,
     mime: CONSUMABLE_DRAG_MIME,
@@ -68,7 +74,8 @@ export default function DeckPile({
         className={`deck-pile${showDropZone ? " deck-pile-drop-target" : ""}${
           hover ? " deck-pile-drop-hover" : ""
         }`}
-        aria-label={`Deck (${remaining.length} cards remaining)`}
+        aria-label={t("a11y.deckPile", { total: remaining.length })}
+        data-testid="deck-pile"
         data-consumable-drop-active={showDropZone || undefined}
         onClick={() => setOpen(true)}
         onDragOver={showDropZone ? handleDragOver : undefined}
@@ -88,12 +95,19 @@ export default function DeckPile({
       </button>
       {open &&
         createPortal(
-          <div className="modal-overlay" onClick={handleClose}>
+          <div
+            ref={overlayRef}
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onClick={handleClose}
+          >
             <div
               className="modal deck-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3>Remaining Cards</h3>
+              <h3 id={titleId}>Remaining Cards</h3>
               <div className="deck-modal-body">
                 <DeckSummary remaining={remaining} />
                 <div className="deck-modal-groups">
@@ -111,7 +125,7 @@ export default function DeckPile({
                   ))}
                 </div>
               </div>
-              <button className="modal-close" onClick={handleClose}>
+              <button className="btn btn--secondary modal-close" onClick={handleClose}>
                 Close
               </button>
             </div>

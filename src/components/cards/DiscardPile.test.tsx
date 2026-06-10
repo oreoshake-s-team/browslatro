@@ -33,10 +33,26 @@ describe("DiscardPile", () => {
   test("renders the top discarded card face-up on the pile", () => {
     render(<DiscardPile discarded={sampleCards} />);
     expect(
-      within(screen.getByLabelText(/Discard pile/)).getByRole("button", {
-        name: "Q of Diamonds",
-      })
-    ).toBeInTheDocument();
+      screen
+        .getByRole("button", { name: /Discard pile/ })
+        .querySelector(".card-suit-diamonds")
+    ).not.toBeNull();
+  });
+
+  test("the pile trigger is a native button element", () => {
+    render(<DiscardPile discarded={sampleCards} />);
+    expect(screen.getByRole("button", { name: /Discard pile/ }).tagName).toBe(
+      "BUTTON"
+    );
+  });
+
+  test("the top card is decorative, not a nested interactive element", () => {
+    render(<DiscardPile discarded={sampleCards} />);
+    expect(
+      within(screen.getByRole("button", { name: /Discard pile/ })).queryByRole(
+        "button"
+      )
+    ).not.toBeInTheDocument();
   });
 
   test("modal is hidden by default", () => {
@@ -49,7 +65,7 @@ describe("DiscardPile", () => {
   test("clicking the pile opens the modal", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     expect(
       screen.getByRole("heading", { name: "Discarded Cards" })
     ).toBeInTheDocument();
@@ -59,7 +75,7 @@ describe("DiscardPile", () => {
     const user = userEvent.setup();
     const fullDeckDiscarded = createDeck();
     render(<DiscardPile discarded={fullDeckDiscarded} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     expect(
       screen.getByRole("heading", { name: "Hearts (13)" })
     ).toBeInTheDocument();
@@ -68,7 +84,7 @@ describe("DiscardPile", () => {
   test("Close button dismisses the modal", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     await user.click(screen.getByText("Close"));
     expect(
       screen.queryByRole("heading", { name: "Discarded Cards" })
@@ -78,7 +94,7 @@ describe("DiscardPile", () => {
   test("Escape closes the modal when open", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     await user.keyboard("{Escape}");
     expect(
       screen.queryByRole("heading", { name: "Discarded Cards" })
@@ -97,10 +113,35 @@ describe("DiscardPile", () => {
   test("Enter while modal is open does not close it", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);
-    await user.click(screen.getByLabelText(/Discard pile/));
+    await user.click(screen.getByTestId("discard-pile"));
     await user.keyboard("{Enter}");
     expect(
       screen.getByRole("heading", { name: "Discarded Cards" })
     ).toBeInTheDocument();
+  });
+});
+
+describe("DiscardPile dialog semantics (#912)", () => {
+  test("open modal exposes dialog semantics labelled by its title", async () => {
+    const user = userEvent.setup();
+    render(<DiscardPile discarded={sampleCards} />);
+    await user.click(screen.getByTestId("discard-pile"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAccessibleName("Discarded Cards");
+  });
+
+  test("moves focus into the dialog on open and restores it to the trigger on close", async () => {
+    const user = userEvent.setup();
+    render(<DiscardPile discarded={sampleCards} />);
+    const trigger = screen.getByRole("button", { name: /Discard pile/ });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 });

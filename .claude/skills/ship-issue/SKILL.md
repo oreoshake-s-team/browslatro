@@ -19,25 +19,16 @@ Implement a GitHub issue from start to a merge-ready green PR. Drive the entire 
 
 ### 1. Start
 
-Prefer the GitHub MCP for all GitHub API calls. Use `mcp__github__issue_read` to fetch the issue. Fall back to `gh` CLI only if the MCP is unavailable:
-
-```bash
-gh issue view <N> --json number,title,body,labels
-```
-
-Leave a comment using `mcp__github__add_issue_comment`, or fall back to:
-
-```bash
-gh issue comment <N> --body "Starting work on this."
-```
+Prefer the GitHub MCP for all GitHub API calls. Use `mcp__github__issue_read` to fetch the issue. Fall back to `gh` CLI only if the MCP is unavailable
 
 ### 2. Create a worktree and branch
 
 Branch name: `<N>-<kebab-title>` (e.g. `432-add-steel-card`).
-Worktree path: `.claude/worktrees/<branch-name>`.
+Worktree path: `~/.cache/browslatro-worktrees/<branch-name>` (outside the project tree so vitest workers don't hit a parent `.pnp.cjs`).
 
 ```bash
-git worktree add .claude/worktrees/<branch> -b <branch> main
+mkdir -p ~/.cache/browslatro-worktrees
+git worktree add ~/.cache/browslatro-worktrees/<branch> -b <branch> main
 ```
 
 ### 3. Implement
@@ -55,6 +46,7 @@ yarn test --run
 ```
 
 Fix all type errors and test failures before proceeding. Add new tests covering:
+
 - The happy path
 - At least one negative / edge case
 
@@ -70,24 +62,7 @@ Semantic commit message (e.g. `feat(cards): add Steel enhancement`). Squash into
 git push -u origin <branch>
 ```
 
-Then prefer `mcp__github__create_pull_request` to open the PR. Fall back to `gh` CLI only if the MCP is unavailable:
-
-```bash
-gh pr create --title "<semantic title>" --body "$(cat <<'EOF'
-## Summary
-- <bullet 1>
-- <bullet 2>
-
-Closes #<N>
-
-## Test plan
-- [ ] <manual check 1>
-- [ ] <manual check 2>
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-EOF
-)"
-```
+Then prefer `mcp__github__create_pull_request` to open the PR.
 
 ### 7. Add Vercel preview URL
 

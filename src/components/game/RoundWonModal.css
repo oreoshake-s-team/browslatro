@@ -60,7 +60,7 @@
 }
 
 .round-won-stat-beat dd {
-  color: #2b8a3e;
+  color: var(--positive-money-on-light);
 }
 
 .round-won-payout {
@@ -113,20 +113,5 @@
 
 .round-won-continue {
   padding: 0.7rem 1.2rem;
-  border: 1px solid #1c7ed6;
-  background-color: #339af0;
-  color: white;
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.round-won-continue:hover {
-  background-color: #1c7ed6;
-}
-
-.round-won-continue:focus-visible {
-  outline: 2px solid #1c7ed6;
-  outline-offset: 2px;
 }

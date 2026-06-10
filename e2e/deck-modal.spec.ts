@@ -28,6 +28,27 @@ async function heightOf(page: Page, selector: string): Promise<number> {
   return box.height;
 }
 
+test("Remaining Cards summary rows are readable on the dark theme (#887)", async ({
+  page,
+}) => {
+  await openDeckModal(page);
+  const oddRowBg = await page
+    .locator(".deck-summary-row:nth-child(odd)")
+    .first()
+    .evaluate((el) => getComputedStyle(el).backgroundColor);
+  const countColor = await page
+    .locator(".deck-summary-count")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  const headingColor = await page
+    .locator(".deck-summary-heading")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  expect(oddRowBg).toBe("rgb(35, 43, 63)");
+  expect(countColor).toBe("rgb(248, 249, 250)");
+  expect(headingColor).toBe("rgb(173, 181, 189)");
+});
+
 test("Remaining Cards summary column matches the card grid height (#437)", async ({
   page,
 }) => {
@@ -45,4 +66,47 @@ test("Remaining Cards summary sections fill the column height (#437)", async ({
   const suits = await heightOf(page, ".deck-summary-section-suits");
   const ranks = await heightOf(page, ".deck-summary-section-ranks");
   expect(suits + ranks).toBeGreaterThan(summary * 0.9);
+});
+
+test("deck modal cards use the high-visibility palette when enabled in Options (#950)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:highVisibility", "false");
+  });
+  await page.goto("/");
+  await page.waitForSelector(".deck-pile");
+  await dismissBlindSelect(page);
+  await page.getByRole("button", { name: "Options" }).click();
+  const optionsDialog = page.getByRole("dialog", { name: "Options" });
+  await optionsDialog
+    .getByRole("button", { name: "Enable high visibility suits" })
+    .click();
+  await optionsDialog.getByRole("button", { name: "Close" }).click();
+  await page.locator(".deck-pile").click();
+  await page.waitForSelector(".deck-modal");
+  const diamondColor = await page
+    .locator(".deck-modal .card-suit-diamonds")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  const clubColor = await page
+    .locator(".deck-modal .card-suit-clubs")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  expect(diamondColor).toBe("rgb(25, 113, 194)");
+  expect(clubColor).toBe("rgb(26, 116, 49)");
+});
+
+test("deck modal cards keep the classic palette when high visibility is off (#950)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:highVisibility", "false");
+  });
+  await openDeckModal(page);
+  const diamondColor = await page
+    .locator(".deck-modal .card-suit-diamonds")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  expect(diamondColor).toBe("rgb(201, 42, 42)");
 });

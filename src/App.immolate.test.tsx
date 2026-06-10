@@ -15,6 +15,7 @@ const KIND_TO_RNG: Record<ShopOfferKind, number> = {
   planet: 0.4,
   tarot: 0.75,
   spectral: 0,
+  "playing-card": 0,
 };
 
 function forceShopLayout(kinds: ReadonlyArray<ShopOfferKind>): () => number {
@@ -87,7 +88,7 @@ afterEach(() => {
 
 function getHandCardButtons(): HTMLElement[] {
   return Array.from(
-    screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+    screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
   );
 }
 

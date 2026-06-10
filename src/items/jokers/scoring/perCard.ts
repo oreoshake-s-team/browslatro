@@ -1,20 +1,24 @@
 import type { Card } from "../../../cards/types";
 import { rollChance } from "../../../dev/chanceOverride";
+import { mergedSuit } from "../../../scoring/handEvaluator";
 import { RANK_PARITY } from "../constants";
 import type { Joker, RandomSource } from "../types";
+import { resolveJokerEffect } from "./copy";
 import type {
   JokerCardResult,
   JokerCardStep,
   PerCardContext,
 } from "./types";
 import { assertNeverEffect, isFaceCardWith } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export function applyPerCardJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   card: Card,
   rng: RandomSource = Math.random,
   context: PerCardContext = {},
 ): JokerCardResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   let additiveMult = 0;
   let additiveChips = 0;
@@ -22,9 +26,12 @@ export function applyPerCardJokers(
   const fired: string[] = [];
   const steps: JokerCardStep[] = [];
 
+  const smeared = context.smearedSuits === true;
+  const cardSuit = mergedSuit(card.suit, smeared);
+
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
-    const effect = joker.effect;
+    const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
       case "business-card": {
         if (isFaceCardWith(card, jokers) && rollChance(effect.chance, rng)) {
@@ -39,7 +46,7 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-mult": {
-        if (card.suit === effect.suit) {
+        if (cardSuit === mergedSuit(effect.suit, smeared)) {
           additiveMult += effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -51,7 +58,10 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-chance-x-mult": {
-        if (card.suit === effect.suit && rollChance(effect.chance, rng)) {
+        if (
+          cardSuit === mergedSuit(effect.suit, smeared) &&
+          rollChance(effect.chance, rng)
+        ) {
           xMult *= effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -63,7 +73,7 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-chips": {
-        if (card.suit === effect.suit) {
+        if (cardSuit === mergedSuit(effect.suit, smeared)) {
           additiveChips += effect.amount;
           fired.push(joker.id);
           steps.push({
@@ -75,13 +85,25 @@ export function applyPerCardJokers(
         break;
       }
       case "per-suit-money": {
-        if (card.suit === effect.suit) {
+        if (cardSuit === mergedSuit(effect.suit, smeared)) {
           moneyEarned += effect.amount;
           fired.push(joker.id);
           steps.push({
             jokerId: joker.id,
             jokerName: joker.name,
             moneyEarned: effect.amount,
+          });
+        }
+        break;
+      }
+      case "per-scored-enhancement-money": {
+        if (card.enhancement === effect.enhancement) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
           });
         }
         break;
@@ -154,6 +176,36 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "x-mult-on-idol-card": {
+        const target = context.idolTarget;
+        if (
+          target != null &&
+          card.rank === target.rank &&
+          cardSuit === mergedSuit(target.suit, smeared)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-suit-rotating": {
+        const suit = context.ancientSuit;
+        if (suit != null && cardSuit === mergedSuit(suit, smeared)) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
       case "per-scored-rank-x-mult": {
         if (effect.ranks.includes(card.rank)) {
           xMult *= effect.amount;
@@ -198,6 +250,74 @@ export function applyPerCardJokers(
       case "passive-run-stats":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "per-hand-play-count-mult":
+      case "on-hand-type-stack-mult":
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips":
+      case "on-no-face-stack-mult":
+      case "every-n-hands-xmult":
+      case "on-hand-stack-on-discard-shrink-mult":
+      case "stack-mult-on-shop-reroll":
+      case "x-mult-on-repeat-hand-this-round":
+      case "x-mult-per-blind-skipped":
+      case "x-mult-per-added-card":
+      case "chips-melt-per-hand":
+      case "mult-decay-per-round":
+      case "x-mult-shrink-per-discarded-card":
+      case "additive-mult-chance-bust":
+      case "retrigger-ranks":
+      case "retrigger-face-cards":
+      case "retrigger-first-card":
+      case "retrigger-on-final-hand":
+      case "stack-mult-on-pack-skip":
+      case "x-mult-per-jack-discarded-this-round":
+      case "x-mult-per-lucky-trigger":
+      case "sell-value-grows-per-round":
+      case "stack-mult-per-tarot-used":
+      case "x-mult-per-planet-used":
+      case "x-mult-per-sold-card":
+      case "x-mult-per-hand-without-most-played":
+      case "end-of-round-money-grows-on-boss":
+      case "extra-interest-per-five":
+      case "sell-creates-double-tag":
+      case "hand-size-decay-per-round":
+      case "retrigger-all-depleting":
+      case "retrigger-held-abilities":
+      case "played-faces-become-gold":
+      case "x-mult-per-enhancement-eaten":
+      case "scored-cards-gain-chips":
+      case "blind-select-adds-stone-card":
+      case "x-mult-chance-bust":
+      case "round-begin-adds-sealed-card":
+      case "prevent-death-at-quarter":
+      case "sell-disables-boss-blind":
+      case "disables-boss-blinds":
+      case "stack-chips-per-rotating-suit-discard":
+      case "scored-rank-chance-creates-tarot":
+      case "hand-type-creates-spectral":
+      case "first-hand-single-six-creates-spectral":
+      case "ace-straight-creates-tarot":
+      case "poor-hand-creates-tarot":
+      case "pack-open-chance-creates-tarot":
+      case "blind-select-creates-common-jokers":
+      case "blind-select-creates-tarot":
+      case "money-per-discarded-rebate-rank":
+      case "first-discard-upgrades-hand":
+      case "end-of-round-money-per-unique-planet":
+      case "x-mult-per-glass-shattered":
+      case "money-on-todo-hand":
+      case "blind-select-x-mult-destroys-joker":
+      case "money-on-boss-trigger":
+      case "allows-duplicate-jokers":
+      case "round-end-grows-all-sell-values":
+      case "x-mult-per-face-destroyed":
+      case "shop-exit-copies-consumable":
+      case "sell-after-rounds-duplicates-joker":
+      case "blind-select-eats-right-joker-mult":
+      case "hand-play-chance-upgrades-hand":
+      case "first-hand-single-card-copies-card":
+      case "noop":
         break;
       default:
         assertNeverEffect(effect);

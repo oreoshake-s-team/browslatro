@@ -1,7 +1,10 @@
 import { rollChance } from "../../../dev/chanceOverride";
 import { handContains } from "../../../scoring/handEvaluator";
 import { getRankChips } from "../../../scoring/scoring";
-import { effectiveJokerCount } from "../collection";
+import {
+  effectiveJokerCount,
+  heldRetriggerCountFromJokers,
+} from "../collection";
 import {
   FOIL_CHIPS,
   HOLOGRAPHIC_MULT,
@@ -9,17 +12,30 @@ import {
   POLYCHROME_X_MULT,
 } from "../constants";
 import type { Joker } from "../types";
+import { resolveJokerEffect } from "./copy";
 import type {
   HandLevelContext,
   JokerHandLevelStep,
   JokerHandResult,
 } from "./types";
 import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
+import { isJokerActive } from "../stickers";
+import { ramenXMultFactor } from "../state";
+import { perCountXMultFactor } from "../currentValue";
 
 export function applyHandLevelJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   context: HandLevelContext = {},
 ): JokerHandResult {
+  const jokers = allJokers.filter(isJokerActive);
+  const heldRetriggers = heldRetriggerCountFromJokers(jokers);
+  const heldInHand = context.heldInHandCards ?? [];
+  const heldWithRetriggers =
+    heldRetriggers > 0
+      ? heldInHand.flatMap((card) =>
+          Array.from({ length: 1 + heldRetriggers }, () => card),
+        )
+      : heldInHand;
   let additiveMult = 0;
   let additiveChips = 0;
   let xMult = 1;
@@ -29,9 +45,10 @@ export function applyHandLevelJokers(
 
   for (let i = 0; i < jokers.length; i += 1) {
     const joker = jokers[i];
-    const effect = joker.effect;
+    const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
-      case "additive-mult": {
+      case "additive-mult":
+      case "additive-mult-chance-bust": {
         additiveMult += effect.amount;
         fired.push(joker.id);
         steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: effect.amount });
@@ -128,7 +145,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "per-held-rank": {
-        const held = context.heldInHandCards ?? [];
+        const held = heldWithRetriggers;
         let matched = 0;
         for (const card of held) {
           if (effect.ranks.includes(card.rank)) matched += 1;
@@ -156,7 +173,7 @@ export function applyHandLevelJokers(
             const value = getRankChips(held[h].rank);
             if (value < lowest) lowest = value;
           }
-          const bonus = effect.multiplier * lowest;
+          const bonus = effect.multiplier * lowest * (1 + heldRetriggers);
           additiveMult += bonus;
           fired.push(joker.id);
           steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
@@ -206,7 +223,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "per-held-face-chance-money": {
-        const held = context.heldInHandCards ?? [];
+        const held = heldWithRetriggers;
         const rng = context.rng ?? Math.random;
         let earned = 0;
         for (const c of held) {
@@ -347,6 +364,202 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "per-hand-play-count-mult": {
+        const counts = context.handPlayCounts;
+        const label = context.playedHandLabel;
+        if (counts !== undefined && label !== undefined) {
+          const bonus = counts[label];
+          if (bonus > 0) {
+            additiveMult += bonus;
+            fired.push(joker.id);
+            steps.push({
+              jokerId: joker.id,
+              jokerName: joker.name,
+              additiveMult: bonus,
+            });
+          }
+        }
+        break;
+      }
+      case "on-hand-type-stack-mult":
+      case "on-hand-stack-on-discard-shrink-mult":
+      case "stack-mult-on-shop-reroll":
+      case "stack-mult-on-pack-skip":
+      case "stack-mult-per-tarot-used":
+      case "blind-select-eats-right-joker-mult":
+      case "mult-decay-per-round": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: bonus,
+          });
+        }
+        break;
+      }
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips":
+      case "stack-chips-per-rotating-suit-discard":
+      case "chips-melt-per-hand": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveChips += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveChips: bonus,
+          });
+        }
+        break;
+      }
+      case "on-no-face-stack-mult": {
+        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (bonus > 0) {
+          additiveMult += bonus;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            additiveMult: bonus,
+          });
+        }
+        break;
+      }
+      case "x-mult-on-repeat-hand-this-round": {
+        const label = context.playedHandLabel;
+        if (
+          label !== undefined &&
+          context.handLabelsThisRound !== undefined &&
+          context.handLabelsThisRound.includes(label)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-blind-skipped": {
+        const skips = context.blindsSkipped ?? 0;
+        if (skips > 0) {
+          const factor = perCountXMultFactor(effect.amount, skips);
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-added-card": {
+        const added = context.addedCardsCount ?? 0;
+        if (added > 0) {
+          const factor = perCountXMultFactor(effect.amount, added);
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-jack-discarded-this-round":
+      case "x-mult-per-lucky-trigger":
+      case "x-mult-per-planet-used":
+      case "x-mult-per-sold-card":
+      case "x-mult-per-enhancement-eaten":
+      case "x-mult-per-glass-shattered":
+      case "blind-select-x-mult-destroys-joker":
+      case "x-mult-per-face-destroyed":
+      case "x-mult-per-hand-without-most-played": {
+        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (counter > 0) {
+          const factor = 1 + effect.amount * counter;
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "money-on-boss-trigger": {
+        if (context.bossTriggered === true) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
+      case "money-on-todo-hand": {
+        if (
+          context.todoHand != null &&
+          context.playedHandLabel === context.todoHand
+        ) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
+          });
+        }
+        break;
+      }
+      case "x-mult-chance-bust": {
+        xMult *= effect.amount;
+        fired.push(joker.id);
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          xMultFactor: effect.amount,
+        });
+        break;
+      }
+      case "x-mult-shrink-per-discarded-card": {
+        const factor = ramenXMultFactor(joker);
+        if (factor > 1) {
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "every-n-hands-xmult": {
+        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (counter > 0 && counter % effect.n === 0) {
+          xMult *= effect.xmult;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.xmult,
+          });
+        }
+        break;
+      }
       case "business-card":
       case "per-suit-mult":
       case "per-scored-rank-parity":
@@ -362,6 +575,45 @@ export function applyHandLevelJokers(
       case "per-rank-in-deck-end-of-round-money":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "retrigger-ranks":
+      case "retrigger-face-cards":
+      case "retrigger-first-card":
+      case "retrigger-on-final-hand":
+      case "sell-value-grows-per-round":
+      case "end-of-round-money-grows-on-boss":
+      case "extra-interest-per-five":
+      case "sell-creates-double-tag":
+      case "hand-size-decay-per-round":
+      case "retrigger-all-depleting":
+      case "retrigger-held-abilities":
+      case "played-faces-become-gold":
+      case "scored-cards-gain-chips":
+      case "blind-select-adds-stone-card":
+      case "round-begin-adds-sealed-card":
+      case "prevent-death-at-quarter":
+      case "sell-disables-boss-blind":
+      case "disables-boss-blinds":
+      case "x-mult-on-idol-card":
+      case "x-mult-per-suit-rotating":
+      case "scored-rank-chance-creates-tarot":
+      case "hand-type-creates-spectral":
+      case "first-hand-single-six-creates-spectral":
+      case "ace-straight-creates-tarot":
+      case "poor-hand-creates-tarot":
+      case "pack-open-chance-creates-tarot":
+      case "blind-select-creates-common-jokers":
+      case "blind-select-creates-tarot":
+      case "money-per-discarded-rebate-rank":
+      case "first-discard-upgrades-hand":
+      case "end-of-round-money-per-unique-planet":
+      case "allows-duplicate-jokers":
+      case "round-end-grows-all-sell-values":
+      case "shop-exit-copies-consumable":
+      case "sell-after-rounds-duplicates-joker":
+      case "hand-play-chance-upgrades-hand":
+      case "first-hand-single-card-copies-card":
+      case "per-scored-enhancement-money":
+      case "noop":
         break;
       default:
         assertNeverEffect(effect);

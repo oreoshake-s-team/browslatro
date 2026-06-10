@@ -17,9 +17,9 @@ function emptyDeck() {
     dealt: { hand: [], remaining: [] } as DealResult,
     destroyedCardIds: new Set<number>() as ReadonlySet<number>,
     addedCards: [] as ReadonlyArray<Card>,
-    cardEnhancementsById: new Map<number, Enhancement>() as ReadonlyMap<
+    cardEnhancementsById: new Map<number, Enhancement | null>() as ReadonlyMap<
       number,
-      Enhancement
+      Enhancement | null
     >,
     cardSealsById: new Map<number, Seal>() as ReadonlyMap<number, Seal>,
   };
@@ -30,14 +30,14 @@ export interface DeckState {
   dealt: DealResult;
   destroyedCardIds: ReadonlySet<number>;
   addedCards: ReadonlyArray<Card>;
-  cardEnhancementsById: ReadonlyMap<number, Enhancement>;
+  cardEnhancementsById: ReadonlyMap<number, Enhancement | null>;
   cardSealsById: ReadonlyMap<number, Seal>;
   setBaseDeckCards: (update: Updater<ReadonlyArray<Card>>) => void;
   setDealt: (update: Updater<DealResult>) => void;
   setDestroyedCardIds: (update: Updater<ReadonlySet<number>>) => void;
   setAddedCards: (update: Updater<ReadonlyArray<Card>>) => void;
   setCardEnhancementsById: (
-    update: Updater<ReadonlyMap<number, Enhancement>>,
+    update: Updater<ReadonlyMap<number, Enhancement | null>>,
   ) => void;
   setCardSealsById: (update: Updater<ReadonlyMap<number, Seal>>) => void;
   resetDeck: () => void;

@@ -20,17 +20,11 @@ async function clickWin(page: Page): Promise<void> {
   await page.locator("button.win-button").click();
 }
 
-async function startRound(page: Page): Promise<void> {
-  await page.goto("/");
-  await page.getByTestId("new-run-confirm").click();
-}
-
 async function reachShop(page: Page): Promise<void> {
-  await startRound(page);
-  await page.getByTestId("blind-select-play").click();
-  await clickWin(page);
-  await clickWin(page);
-  await clickWin(page);
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:bootShop", "1");
+  });
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
 }
 
@@ -91,5 +85,59 @@ test.describe("Shop vouchers (#699)", () => {
       (await statValue(page, "Hands").textContent()) ?? "0",
     );
     expect(handsAfter).toBe(handsBefore + 1);
+  });
+});
+
+test.describe("Telescope + Observatory vouchers (#281)", () => {
+  test.beforeEach(async ({ page }) => {
+    await setDeterministic(page);
+  });
+
+  async function buyVoucherInShop(page: Page, voucherId: string): Promise<void> {
+    await page
+      .getByTestId("shop-voucher-override")
+      .selectOption({ value: voucherId });
+    await page.getByTestId("shop-voucher-buy-0").click();
+  }
+
+  async function nextRound(page: Page): Promise<void> {
+    await page.getByRole("button", { name: /Next Round/ }).click();
+    await page.getByTestId("blind-select-play").click();
+  }
+
+  test("Observatory is locked behind Telescope (negative — requires-prereq disables buy)", async ({
+    page,
+  }) => {
+    await reachShop(page);
+    await page
+      .getByTestId("shop-voucher-override")
+      .selectOption({ value: "observatory" });
+    await expect(page.getByTestId("shop-voucher-buy-0")).toBeDisabled();
+  });
+
+  test("after buying Telescope + Observatory and holding Pluto, playing High Card emits an Observatory ×1.5 Mult trace entry", async ({
+    page,
+  }) => {
+    await reachShop(page);
+    await buyVoucherInShop(page, "telescope");
+    await nextRound(page);
+    await clickWin(page);
+    await clickWin(page);
+    await clickWin(page);
+    await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
+    await buyVoucherInShop(page, "observatory");
+    await nextRound(page);
+
+    await ensureModifierPanelOpen(page);
+    await page.getByText(/Add a specific Planet/).click();
+    await page.locator('button[data-planet-id="pluto"]').first().click();
+
+    const cards = page.locator('[data-testid="hand-cards"] .card');
+    await cards.first().click();
+    await page.getByRole("button", { name: /^Submit Hand/ }).click();
+
+    await expect(page.locator(".scoring-trace")).toContainText(
+      /×1\.5 Mult \(Observatory: 1 matching Planet\)/,
+    );
   });
 });

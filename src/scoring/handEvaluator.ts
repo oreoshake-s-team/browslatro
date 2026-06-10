@@ -1,4 +1,4 @@
-import type { Card, Hand, Rank } from "../cards/types";
+import type { Card, Hand, Rank, Suit } from "../cards/types";
 import { HANDS } from "../constants";
 import { cardSuitForEvaluation, isStoneCard } from "../cards/enhancements";
 
@@ -24,12 +24,12 @@ const CONTAINMENT_ROWS: ReadonlyArray<readonly [HandLabel, ReadonlyArray<HandLab
   ["Three of a Kind", ["High Card", "Pair", "Three of a Kind"]],
   ["Straight", ["High Card", "Straight"]],
   ["Flush", ["High Card", "Flush"]],
-  ["Full House", ["High Card", "Pair", "Three of a Kind", "Full House"]],
+  ["Full House", ["High Card", "Pair", "Two Pair", "Three of a Kind", "Full House"]],
   ["Four of a Kind", ["High Card", "Pair", "Three of a Kind", "Four of a Kind"]],
   ["Straight Flush", ["High Card", "Straight", "Flush", "Straight Flush"]],
   ["Royal Flush", ["High Card", "Straight", "Flush", "Straight Flush", "Royal Flush"]],
   ["Five of a Kind", ["High Card", "Pair", "Three of a Kind", "Four of a Kind", "Five of a Kind"]],
-  ["Flush House", ["High Card", "Pair", "Three of a Kind", "Full House", "Flush", "Flush House"]],
+  ["Flush House", ["High Card", "Pair", "Two Pair", "Three of a Kind", "Full House", "Flush", "Flush House"]],
   ["Flush Five", ["High Card", "Pair", "Three of a Kind", "Four of a Kind", "Five of a Kind", "Flush", "Flush Five"]],
 ];
 
@@ -78,53 +78,149 @@ function countByRank(cards: ReadonlyArray<Card>): number[] {
   return Array.from(counts.values()).sort((a, b) => b - a);
 }
 
-function isFlush(cards: ReadonlyArray<Card>): boolean {
-  if (cards.length !== 5) return false;
-  const suits = cards.map(cardSuitForEvaluation);
-  const anchor = suits.find((s) => s !== null);
-  if (anchor === undefined) return true;
-  return suits.every((s) => s === null || s === anchor);
+export interface HandEvalOptions {
+  readonly fourFingers?: boolean;
+  readonly shortcut?: boolean;
+  readonly smearedSuits?: boolean;
 }
 
-function isStraight(cards: ReadonlyArray<Card>): boolean {
-  if (cards.length !== 5) return false;
-  const values = cards.map((c) => RANK_VALUES[c.rank]).sort((a, b) => a - b);
-  if (new Set(values).size !== 5) return false;
-  if (values[4] - values[0] === 4) return true;
-  // Ace-low straight: A-2-3-4-5 → [2, 3, 4, 5, 14]
-  return (
-    values[0] === 2 &&
-    values[1] === 3 &&
-    values[2] === 4 &&
-    values[3] === 5 &&
-    values[4] === 14
-  );
+export function mergedSuit(suit: Suit, smearedSuits = false): Suit {
+  if (!smearedSuits) return suit;
+  if (suit === "hearts") return "diamonds";
+  if (suit === "spades") return "clubs";
+  return suit;
 }
 
-function isRoyal(cards: ReadonlyArray<Card>): boolean {
-  if (cards.length !== 5) return false;
-  const values = cards.map((c) => RANK_VALUES[c.rank]).sort((a, b) => a - b);
-  return values[0] === 10 && values[4] === 14;
+function evalSuit(card: Card, smearedSuits: boolean): Suit | null {
+  const raw = cardSuitForEvaluation(card);
+  return raw === null ? null : mergedSuit(raw, smearedSuits);
 }
 
-export function detectHandLabel(cards: ReadonlyArray<Card>): HandLabel {
+function suitTally(
+  cards: ReadonlyArray<Card>,
+  smearedSuits: boolean,
+): { readonly wild: number; readonly counts: ReadonlyMap<Suit, number> } {
+  let wild = 0;
+  const counts = new Map<Suit, number>();
+  for (const c of cards) {
+    const s = evalSuit(c, smearedSuits);
+    if (s === null) wild += 1;
+    else counts.set(s, (counts.get(s) ?? 0) + 1);
+  }
+  return { wild, counts };
+}
+
+function isFlush(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
+  const minLen = options.fourFingers ? 4 : 5;
+  if (cards.length < minLen || cards.length > 5) return false;
+  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
+  if (counts.size === 0) return wild >= minLen;
+  for (const c of counts.values()) {
+    if (c + wild >= minLen) return true;
+  }
+  return false;
+}
+
+function isStrictFlush(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): boolean {
+  if (cards.length < 5 || cards.length > 5) return false;
+  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
+  if (counts.size === 0) return wild === cards.length;
+  for (const c of counts.values()) {
+    if (c + wild === cards.length) return true;
+  }
+  return false;
+}
+
+export function flushAnchorSuit(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): Suit | null {
+  const minLen = options.fourFingers ? 4 : 5;
+  if (cards.length < minLen || cards.length > 5) return null;
+  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
+  let best: Suit | null = null;
+  let bestCount = 0;
+  for (const [suit, c] of counts.entries()) {
+    if (c + wild >= minLen && c > bestCount) {
+      best = suit;
+      bestCount = c;
+    }
+  }
+  return best;
+}
+
+function longestRun(
+  sortedUnique: ReadonlyArray<number>,
+  maxGap: number,
+): ReadonlyArray<number> {
+  if (sortedUnique.length === 0) return [];
+  let best: number[] = [sortedUnique[0]];
+  let current: number[] = [sortedUnique[0]];
+  for (let i = 1; i < sortedUnique.length; i += 1) {
+    const gap = sortedUnique[i] - sortedUnique[i - 1];
+    if (gap >= 1 && gap <= maxGap) {
+      current.push(sortedUnique[i]);
+    } else {
+      current = [sortedUnique[i]];
+    }
+    if (current.length > best.length) best = current.slice();
+  }
+  return best;
+}
+
+export function straightRunValues(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): ReadonlyArray<number> | null {
+  const minLen = options.fourFingers ? 4 : 5;
+  if (cards.length < minLen || cards.length > 5) return null;
+  const unique = Array.from(
+    new Set(cards.map((c) => RANK_VALUES[c.rank])),
+  ).sort((a, b) => a - b);
+  if (unique.length < minLen) return null;
+  const maxGap = options.shortcut ? 2 : 1;
+  const high = longestRun(unique, maxGap);
+  if (high.length >= minLen) return high;
+  if (unique[unique.length - 1] === 14) {
+    const aceLow = [1, ...unique.slice(0, -1)];
+    const aceLowRun = longestRun(aceLow, maxGap);
+    if (aceLowRun.length >= minLen) return aceLowRun;
+  }
+  return null;
+}
+
+function isStraight(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
+  return straightRunValues(cards, options) !== null;
+}
+
+function isRoyal(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
+  const run = straightRunValues(cards, options);
+  if (run === null) return false;
+  return run[run.length - 1] === 14 && run[0] === 14 - run.length + 1;
+}
+
+export function detectHandLabel(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): HandLabel {
   if (cards.length === 0) return "High Card";
 
-  // Stone cards have no rank or suit for the purposes of hand detection.
-  // They still always score (handled in getScoringCards) but are invisible
-  // to flush/straight/grouping checks.
   const meaningful = cards.filter((c) => !isStoneCard(c));
 
   const counts = countByRank(meaningful);
-  const flush = isFlush(meaningful);
-  const straight = isStraight(meaningful);
+  const flush = isFlush(meaningful, options);
+  const strictFlush = isStrictFlush(meaningful, options);
+  const straight = isStraight(meaningful, options);
   const fiveOfKind = counts[0] === 5;
   const fullHouse = counts[0] === 3 && counts[1] === 2;
 
-  if (flush && fiveOfKind) return "Flush Five";
-  if (flush && fullHouse) return "Flush House";
+  if (strictFlush && fiveOfKind) return "Flush Five";
+  if (strictFlush && fullHouse) return "Flush House";
   if (fiveOfKind) return "Five of a Kind";
-  if (flush && straight && isRoyal(meaningful)) return "Royal Flush";
+  if (flush && straight && isRoyal(meaningful, options)) return "Royal Flush";
   if (flush && straight) return "Straight Flush";
   if (counts[0] === 4) return "Four of a Kind";
   if (fullHouse) return "Full House";
@@ -136,6 +232,9 @@ export function detectHandLabel(cards: ReadonlyArray<Card>): HandLabel {
   return "High Card";
 }
 
-export function evaluateHand(cards: ReadonlyArray<Card>): Hand {
-  return getHand(detectHandLabel(cards));
+export function evaluateHand(
+  cards: ReadonlyArray<Card>,
+  options: HandEvalOptions = {},
+): Hand {
+  return getHand(detectHandLabel(cards, options));
 }

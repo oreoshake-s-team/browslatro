@@ -1,6 +1,13 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import "./Options.css";
 import { createPortal } from "react-dom";
+import {
+  LOCALE_NAMES,
+  SUPPORTED_LOCALES,
+  isLocale,
+  persistLocale,
+} from "../../i18n";
 import {
   ANIMATION_SPEED_VALUES,
   getAnimationSpeed,
@@ -12,6 +19,7 @@ import {
   type AnimationSpeed,
 } from "../system/preferences";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 interface OptionsProps {
   onNewGame: () => void;
@@ -19,18 +27,19 @@ interface OptionsProps {
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
 }
 
-const ANIMATION_SPEED_LABELS: Readonly<Record<AnimationSpeed, string>> = {
-  slow: "Slow",
-  normal: "Normal",
-  fast: "Fast",
-  instant: "Instant",
-};
+const ANIMATION_SPEED_LABEL_KEYS = {
+  slow: "options.speedSlow",
+  normal: "options.speedNormal",
+  fast: "options.speedFast",
+  instant: "options.speedInstant",
+} as const satisfies Record<AnimationSpeed, string>;
 
 function Options({
   onNewGame,
   onHighVisibilityChange,
   onAnimationSpeedChange,
 }: OptionsProps) {
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const [muted, setMuted] = useState(isMuted);
   const [highVisibility, setHighVisibility] = useState(isHighVisibility);
@@ -38,8 +47,12 @@ function Options({
     getAnimationSpeed,
   );
   const animationSpeedSelectId = useId();
+  const languageSelectId = useId();
+  const titleId = useId();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const handleClose = useCallback(() => setOpen(false), []);
   useEscapeToClose(handleClose, open);
+  useFocusTrap(overlayRef, open);
 
   function handleToggleMute() {
     toggleMute();
@@ -62,20 +75,38 @@ function Options({
     onAnimationSpeedChange?.(next);
   }
 
+  function handleLanguageChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    const next = event.target.value;
+    if (!isLocale(next)) return;
+    void i18n.changeLanguage(next);
+    persistLocale(next);
+  }
+
   return (
     <>
-      <button onClick={() => setOpen(true)}>Options</button>
+      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+        {t("sidebar.options")}
+      </button>
       {open &&
         createPortal(
-          <div className="modal-overlay" onClick={handleClose}>
+          <div
+            ref={overlayRef}
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onClick={handleClose}
+          >
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h3>Options</h3>
+              <h3 id={titleId}>{t("sidebar.options")}</h3>
               <button
                 className="options-button options-button--toggle"
                 aria-pressed={muted}
                 onClick={handleToggleMute}
               >
-                {muted ? "🔇 Unmute sounds" : "🔊 Mute sounds"}
+                {muted
+                  ? `🔇 ${t("options.unmuteSounds")}`
+                  : `🔊 ${t("options.muteSounds")}`}
               </button>
               <button
                 className="options-button options-button--toggle"
@@ -83,14 +114,16 @@ function Options({
                 onClick={handleToggleHighVisibility}
               >
                 {highVisibility
-                  ? "🎨 Disable high visibility suits"
-                  : "🎨 Enable high visibility suits"}
+                  ? `🎨 ${t("options.disableHighVisibility")}`
+                  : `🎨 ${t("options.enableHighVisibility")}`}
               </button>
               <label
                 className="options-field"
                 htmlFor={animationSpeedSelectId}
               >
-                <span className="options-field-label">Animation speed</span>
+                <span className="options-field-label">
+                  {t("options.animationSpeed")}
+                </span>
                 <select
                   id={animationSpeedSelectId}
                   className="options-select"
@@ -99,7 +132,25 @@ function Options({
                 >
                   {ANIMATION_SPEED_VALUES.map((value) => (
                     <option key={value} value={value}>
-                      {ANIMATION_SPEED_LABELS[value]}
+                      {t(ANIMATION_SPEED_LABEL_KEYS[value])}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="options-field" htmlFor={languageSelectId}>
+                <span className="options-field-label">
+                  {t("options.language")}
+                </span>
+                <select
+                  id={languageSelectId}
+                  className="options-select"
+                  data-testid="options-language"
+                  value={isLocale(i18n.language) ? i18n.language : "en"}
+                  onChange={handleLanguageChange}
+                >
+                  {SUPPORTED_LOCALES.map((locale) => (
+                    <option key={locale} value={locale} lang={locale}>
+                      {LOCALE_NAMES[locale]}
                     </option>
                   ))}
                 </select>
@@ -108,17 +159,17 @@ function Options({
                 className="options-button options-button--destructive"
                 onClick={() => {
                   const confirmed = window.confirm(
-                    "Start a new game? This will end your current run.",
+                    t("options.newGameConfirm"),
                   );
                   if (!confirmed) return;
                   onNewGame();
                   handleClose();
                 }}
               >
-                New game
+                {t("options.newGame")}
               </button>
               <button className="options-button" onClick={handleClose}>
-                Close
+                {t("options.close")}
               </button>
             </div>
           </div>,

@@ -18,10 +18,24 @@ import {
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   extraStartingHandSizeFromJokers,
+  handEvalOptionsFromJokers,
+  hasAstronomerInJokers,
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
+  tickPerishableRounds,
+  applyCardsDestroyedToJokerStates,
+  applyShopRerollToJokerStates,
+  applyRoundEndToJokerStates,
+  applyPackSkipToJokerStates,
+  applySellToJokerStates,
+  interestMultiplierFromJokers,
+  isJokerActive,
+  allowsDuplicateJokers,
+  applyGiftCardToJokerSellValues,
+  cloneJoker,
 } from "../items/jokers";
 import {
+  applyAstronomerPricing,
   applyEditionToFirstJoker,
   applyStakeStickersToShopOffers,
   buildFreeJokerOffers,
@@ -36,8 +50,11 @@ import {
   applyPlanetUpgrade,
   availablePlanets,
   createPlanetCatalog,
+  mostPlayedHand,
+  planetForHand,
 } from "../items/planets";
-import { createTarotCatalog } from "../items/tarots";
+import { createTarotCatalog, nextRankUp } from "../items/tarots";
+import { pickRandomCardEdition } from "../cards/editions";
 import {
   createSpectralCatalog,
   transmuteHand,
@@ -54,8 +71,11 @@ import {
   extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
+  illusionEnabled,
   interestCapFor,
+  offerKindWeights,
   pickVouchersForAnte,
+  tarotToSpectralSwapChance,
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
@@ -66,7 +86,9 @@ import {
   applyEnhancementOverrides,
   applySealOverrides,
   fullDeckPile,
+  initialDeal,
 } from "../cards/deckBuild";
+import { deckJokerSlotsDelta, deckSuppressesInterest } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -74,7 +96,9 @@ import {
   computeStartingHands,
 } from "../run/roundSetup";
 import { calculateInterest } from "../scoring/payout";
-import { BlindValues } from "../constants";
+import { rollChance } from "../dev/chanceOverride";
+import { pickRandomTarot } from "../cards/seals";
+import { BlindValues, FINAL_ANTE } from "../constants";
 import { hasStakeModifier, stakeStickerOdds } from "../items/stakes";
 import type { Blind, Card, Enhancement, Hand, Seal, Suit } from "../cards/types";
 import {
@@ -105,14 +129,142 @@ export interface ActionsState {
     readonly interest: number;
     readonly interestWallet: number;
   }) => void;
+  continueEndless: () => void;
   applySpectralEffect: (effect: SpectralEffect) => void;
   applyEnhancementToSelectedPreviewCards: (enhancement: Enhancement) => void;
   applySealToSelectedPreviewCards: (seal: Seal) => void;
   applySuitToSelectedPreviewCards: (suit: Suit) => void;
+  applyDeathCopyToSelectedPreviewCards: () => void;
   duplicateSelectedPreviewCards: (copies: number) => void;
+  destroySelectedPreviewCards: () => void;
+  rankUpSelectedPreviewCards: () => void;
+  applyAuraSelectedPreviewCards: () => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
   rerollBoss: () => boolean;
+}
+
+function advanceToNextAnte(s: GameState): void {
+  const nextAnte = s.ante + 1;
+  s.setAnte(nextAnte);
+  s.setBlind(1);
+  s.setCurrentAnteVouchers(
+    pickVouchersForAnte(
+      { ante: nextAnte, ownedIds: s.ownedVoucherIds },
+      BASE_VOUCHER_SLOTS + s.extraVoucherSlots,
+    ),
+  );
+  s.setSoldVoucherIds(new Set());
+  s.setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+  const nextRecent = new Set(s.recentBossIds);
+  nextRecent.add(s.currentBoss.id);
+  s.setRecentBossIds(nextRecent);
+  s.setCurrentBoss(
+    pickBossForAnte({
+      ante: nextAnte,
+      recentIds: nextRecent,
+      rng: bossPickerRngConfig.rng,
+    }),
+  );
+  s.setBossRerollsUsedThisAnte(0);
+  s.setPlayedCardKeysThisAnte(new Set());
+}
+
+function openPostRoundShop(s: GameState, get: () => GameState): void {
+  const next = get();
+  const resourceCtx = {
+    blind: next.blind,
+    boss: next.currentBoss,
+    ownedVoucherIds: next.ownedVoucherIds,
+    deck: next.selectedDeck,
+    jokers: next.jokers,
+    stake: next.selectedStake,
+  };
+  s.setRemainingHands(computeStartingHands(resourceCtx));
+  s.setRemainingDiscards(computeStartingDiscards(resourceCtx));
+  s.setSoldJokerIdsThisShopVisit([]);
+  const planetsForShop = availablePlanets(createPlanetCatalog(), s.handPlayCounts);
+  const telescopePlanetId = s.ownedVoucherIds.has("telescope")
+    ? planetForHand(planetsForShop, mostPlayedHand(s.handPlayCounts))?.id
+    : undefined;
+  const baseOffers = pickShopOffers({
+    jokerCatalog: createJokerCatalog(),
+    excludedJokerIds: [
+      ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
+      ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
+    ],
+    planetCatalog: planetsForShop,
+    tarotCatalog: createTarotCatalog(),
+    spectralCatalog: createSpectralCatalog(),
+    extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
+    extraPackSlots: s.extraPackSlots,
+    forcedPackPools: s.pendingForcedPacks,
+    editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
+    tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
+    guaranteedPlanetId: telescopePlanetId,
+    kindWeights: offerKindWeights(s.ownedVoucherIds),
+    illusionEnabled: illusionEnabled(s.ownedVoucherIds),
+    rng: shopPickerRngConfig.rng,
+  });
+  const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);
+  const pricedOffers = shopAdjustments.freeShopItems
+    ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
+    : baseOffers;
+  const freeJokerOffers = buildFreeJokerOffers(
+    shopAdjustments.freeJokerRarities,
+    createJokerCatalog(),
+    new Set(s.jokers.map((j) => j.id)),
+    shopPickerRngConfig.rng,
+  );
+  const ownedJokerIds = new Set(s.jokers.map((j) => j.id));
+  const editionedOffers = shopAdjustments.editionJokers.reduce(
+    (offers, edition) => {
+      const ensured = ensureBaseJokerForEdition(
+        offers,
+        createJokerCatalog(),
+        ownedJokerIds,
+        shopPickerRngConfig.rng,
+      );
+      return applyEditionToFirstJoker(ensured, edition);
+    },
+    mergeFreeJokerOffersIntoShop(pricedOffers, freeJokerOffers),
+  );
+  const stamped = applyStakeStickersToShopOffers(
+    editionedOffers,
+    stakeStickerOdds(s.selectedStake),
+    shopPickerRngConfig.rng,
+  );
+  const astronomerPriced = applyAstronomerPricing(
+    stamped,
+    hasAstronomerInJokers(s.jokers),
+  );
+  s.setShopOffers(astronomerPriced);
+  if (shopAdjustments.extraVouchers > 0) {
+    s.setCurrentAnteVouchers((prev) => {
+      const existing = new Set(prev.map((v) => v.id));
+      const extra = pickVouchersForAnte(
+        {
+          ante: s.ante,
+          ownedIds: s.ownedVoucherIds,
+          excludeIds: new Set<VoucherId>([...s.ownedVoucherIds, ...existing]),
+        },
+        shopAdjustments.extraVouchers,
+      );
+      return [...prev, ...extra];
+    });
+  }
+  s.setPendingForcedPacks([]);
+  s.setDealt(
+    fullDeckPile(
+      s.baseDeckCards,
+      s.destroyedCardIds,
+      s.addedCards,
+      s.cardEnhancementsById,
+      s.cardSealsById,
+    ),
+  );
+  s.setSelectedIds(new Set());
+  s.setSelectedHand(null);
 }
 
 export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> = (
@@ -125,6 +277,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!entry) return;
     s.earn(consumableSellValue(entry));
     s.setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+    s.setJokers((prev) => applySellToJokerStates(prev));
   },
   sellJoker: (jokerIdx) => {
     const s = get();
@@ -132,7 +285,24 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!entry) return;
     if (!canSellJoker(entry)) return;
     s.earn(jokerSellValue(entry));
-    s.setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
+    if (entry.effect.kind === "sell-creates-double-tag") {
+      s.setPendingTags((prev) => [...prev, "double"]);
+    }
+    if (entry.effect.kind === "sell-disables-boss-blind" && s.blind === 3) {
+      s.setCurrentBoss({ ...s.currentBoss, effect: { kind: "none" } });
+    }
+    const duplicatesOnSell =
+      entry.effect.kind === "sell-after-rounds-duplicates-joker" &&
+      entry.state?.kind === "counter" &&
+      entry.state.value >= entry.effect.rounds;
+    s.setJokers((prev) => {
+      const remaining = applySellToJokerStates(
+        prev.filter((_, i) => i !== jokerIdx),
+      );
+      if (!duplicatesOnSell || remaining.length === 0) return remaining;
+      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+      return [...remaining, cloneJoker(pick)];
+    });
   },
   reorderJokers: (orderedIds) => {
     get().setJokers((prev) => {
@@ -147,10 +317,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!s.shopOffers) return;
     if (s.money < cost) return;
     s.spend(cost);
+    s.setJokers((prev) => applyShopRerollToJokerStates(prev));
     const freshItems = pickShopItemOffers({
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds: [
-        ...s.jokers.map((j) => j.id),
+        ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
         ...s.soldJokerIdsThisShopVisit,
       ],
       planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
@@ -158,6 +329,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       spectralCatalog: createSpectralCatalog(),
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
+      tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
+      kindWeights: offerKindWeights(s.ownedVoucherIds),
+      illusionEnabled: illusionEnabled(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
     });
     const rerollAdjustments = applyNextShopModifiers(s.pendingShopMods);
@@ -169,10 +343,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       stakeStickerOdds(s.selectedStake),
       shopPickerRngConfig.rng,
     );
+    const astronomerPricedRerollItems = applyAstronomerPricing(
+      stampedRerollItems,
+      hasAstronomerInJokers(s.jokers),
+    );
     s.setShopOffers((current) => {
       if (!current) return current;
       const existingPacks = current.filter((o) => o.kind === "pack");
-      return [...stampedRerollItems, ...existingPacks];
+      return [...astronomerPricedRerollItems, ...existingPacks];
     });
   },
   buyAnteVoucher: (voucherIdx) => {
@@ -214,13 +392,18 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           {
             jokerCatalog: createJokerCatalog(),
             excludedJokerIds: [
-              ...s.jokers.map((j) => j.id),
+              ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
               ...s.soldJokerIdsThisShopVisit,
+              ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
             ],
             planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
             tarotCatalog: createTarotCatalog(),
             spectralCatalog: createSpectralCatalog(),
             editionRateMultiplier: editionRateMultiplier(nextOwnedVoucherIds),
+            tarotToSpectralSwapChance:
+              tarotToSpectralSwapChance(nextOwnedVoucherIds),
+            kindWeights: offerKindWeights(nextOwnedVoucherIds),
+            illusionEnabled: illusionEnabled(nextOwnedVoucherIds),
             rng: shopPickerRngConfig.rng,
           },
           current,
@@ -231,7 +414,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           stakeStickerOdds(s.selectedStake),
           shopPickerRngConfig.rng,
         );
-        return [...current, stampedExtra];
+        const [astronomerExtra] = applyAstronomerPricing(
+          [stampedExtra],
+          hasAstronomerInJokers(s.jokers),
+        );
+        return [...current, astronomerExtra];
       });
     }
   },
@@ -247,14 +434,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setOpenedPack(pack);
     s.setPackPicksRemaining(packPickLimit(pack.variant));
     s.setPickedPackOptionIndices(new Set());
+    const currentHandSize = Math.max(
+      1,
+      HAND_SIZE +
+        s.handSizeModifier +
+        extraHandSize(s.ownedVoucherIds) +
+        extraStartingHandSizeFromJokers(s.jokers),
+    );
     if (pack.pool === "arcana" || pack.pool === "spectral") {
-      const currentHandSize = Math.max(
-        1,
-        HAND_SIZE +
-          s.handSizeModifier +
-          extraHandSize(s.ownedVoucherIds) +
-          extraStartingHandSizeFromJokers(s.jokers),
-      );
       const survivingBase = s.baseDeckCards.filter(
         (c) => !s.destroyedCardIds.has(c.id),
       );
@@ -271,8 +458,20 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       );
     } else {
       s.setPackPreviewHand([]);
+      if (s.dealt.hand.length === 0) {
+        const fresh = initialDeal(
+          s.baseDeckCards,
+          s.destroyedCardIds,
+          currentHandSize,
+          s.addedCards,
+          s.cardEnhancementsById,
+          s.cardSealsById,
+        );
+        s.setDealt(fresh);
+      }
     }
     s.setPackPreviewSelectedIds(new Set());
+    s.setPackPreviewDisplayOrder([]);
   },
   openPack: (idx) => {
     const s = get();
@@ -283,6 +482,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.spend(price);
     s.openPackOffer(offer.pack);
     s.markOfferSold(idx);
+    const tarotCapacity =
+      MAX_CONSUMABLE_SLOTS + extraConsumableSlots(s.ownedVoucherIds);
+    for (const joker of s.jokers.filter(isJokerActive)) {
+      if (joker.effect.kind !== "pack-open-chance-creates-tarot") continue;
+      if (!rollChance(joker.effect.chance, Math.random)) continue;
+      s.setConsumables((prev) =>
+        addConsumable(prev, { kind: "tarot", card: pickRandomTarot() }, tarotCapacity),
+      );
+    }
     return true;
   },
   decrementPackPicks: () => {
@@ -293,6 +501,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         s.setOpenedPack(null);
         s.setPackPreviewHand([]);
         s.setPackPreviewSelectedIds(new Set());
+        s.setPackPreviewDisplayOrder([]);
         s.setPickedPackOptionIndices(new Set());
       }
       return remaining;
@@ -300,10 +509,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   closeOpenedPack: () => {
     const s = get();
+    s.setJokers((prev) => applyPackSkipToJokerStates(prev));
     s.setOpenedPack(null);
     s.setPackPicksRemaining(0);
     s.setPackPreviewHand([]);
     s.setPackPreviewSelectedIds(new Set());
+    s.setPackPreviewDisplayOrder([]);
     s.setPickedPackOptionIndices(new Set());
   },
   buyShopOffer: (idx) => {
@@ -318,13 +529,24 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (offer.kind === "joker") {
       if (
         effectiveJokerCount(s.jokers) >=
-        MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds)
+        Math.max(
+          0,
+          MAX_JOKERS +
+            extraJokerSlots(s.ownedVoucherIds) +
+            deckJokerSlotsDelta(s.selectedDeck),
+        )
       ) {
         return false;
       }
       s.spend(price);
       s.setJokers((prev) => [...prev, offer.joker]);
       s.setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
+      s.markOfferSold(idx);
+      return true;
+    }
+    if (offer.kind === "playing-card") {
+      s.spend(price);
+      s.setAddedCards((prev) => [...prev, offer.card]);
       s.markOfferSold(idx);
       return true;
     }
@@ -344,6 +566,36 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   handleWin: (precomputed) => {
     const s = get();
+    if (
+      s.jokers.some(
+        (j) => j.effect.kind === "round-end-grows-all-sell-values",
+      )
+    ) {
+      s.setJokers((prev) => applyGiftCardToJokerSellValues(prev));
+      const giftAmount = s.jokers.reduce(
+        (sum, j) =>
+          j.effect.kind === "round-end-grows-all-sell-values"
+            ? sum + j.effect.amount
+            : sum,
+        0,
+      );
+      s.setConsumables((prev) =>
+        prev.map((c) => ({ ...c, sellBonus: (c.sellBonus ?? 0) + giftAmount })),
+      );
+    }
+    const jokersBeforeRoundEnd = get().jokers;
+    const jokersAfterRoundEnd = applyRoundEndToJokerStates(
+      tickPerishableRounds(jokersBeforeRoundEnd),
+      Math.random,
+      s.blind === 3,
+    );
+    if (
+      jokersBeforeRoundEnd.some((j) => j.id === "gros-michel") &&
+      !jokersAfterRoundEnd.some((j) => j.id === "gros-michel")
+    ) {
+      s.setGrosMichelDestroyed(true);
+    }
+    s.setJokers(jokersAfterRoundEnd);
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
     const baseBlindReward = s.blind + 2;
@@ -354,7 +606,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const interestBefore = precomputed?.interestWallet ?? s.money;
     const interest =
       precomputed?.interest ??
-      calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds));
+      (deckSuppressesInterest(s.selectedDeck)
+        ? 0
+        : calculateInterest(interestBefore, interestCapFor(s.ownedVoucherIds)) *
+          interestMultiplierFromJokers(s.jokers));
     s.earn(blindReward + interest);
     if (blindReward > 0) {
       s.setScoringEvents((prev) => [
@@ -384,108 +639,27 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         s.earn(tagPayout);
         s.setPendingTags([]);
       }
-      const nextAnte = s.ante + 1;
-      s.setAnte(nextAnte);
-      s.setBlind(1);
-      s.setCurrentAnteVouchers(
-        pickVouchersForAnte(
-          { ante: nextAnte, ownedIds: s.ownedVoucherIds },
-          BASE_VOUCHER_SLOTS + s.extraVoucherSlots,
-        ),
-      );
-      s.setSoldVoucherIds(new Set());
-      s.setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
-      const nextRecent = new Set(s.recentBossIds);
-      nextRecent.add(s.currentBoss.id);
-      s.setRecentBossIds(nextRecent);
-      s.setCurrentBoss(
-        pickBossForAnte({
-          ante: nextAnte,
-          recentIds: nextRecent,
-          rng: bossPickerRngConfig.rng,
-        }),
-      );
-      s.setBossRerollsUsedThisAnte(0);
-      s.setPlayedCardKeysThisAnte(new Set());
+      if (s.ante === FINAL_ANTE && !s.endlessMode) {
+        const post = get();
+        s.setPendingGameWon({
+          finalAnte: s.ante,
+          finalMoney: post.money,
+          handsPlayed: post.runStats.handsPlayed,
+          blindsSkipped: post.runStats.blindsSkipped,
+        });
+        return;
+      }
+      advanceToNextAnte(s);
     }
-    const next = get();
-    const resourceCtx = {
-      blind: next.blind,
-      boss: next.currentBoss,
-      ownedVoucherIds: next.ownedVoucherIds,
-      deck: next.selectedDeck,
-      jokers: next.jokers,
-    };
-    s.setRemainingHands(computeStartingHands(resourceCtx));
-    s.setRemainingDiscards(computeStartingDiscards(resourceCtx));
-    s.setSoldJokerIdsThisShopVisit([]);
-    const baseOffers = pickShopOffers({
-      jokerCatalog: createJokerCatalog(),
-      excludedJokerIds: s.jokers.map((j) => j.id),
-      planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
-      tarotCatalog: createTarotCatalog(),
-      spectralCatalog: createSpectralCatalog(),
-      extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
-      extraPackSlots: s.extraPackSlots,
-      forcedPackPools: s.pendingForcedPacks,
-      editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
-      rng: shopPickerRngConfig.rng,
-    });
-    const shopAdjustments = applyNextShopModifiers(s.pendingShopMods);
-    const pricedOffers = shopAdjustments.freeShopItems
-      ? baseOffers.map((offer) => ({ ...offer, price: 0 }))
-      : baseOffers;
-    const freeJokerOffers = buildFreeJokerOffers(
-      shopAdjustments.freeJokerRarities,
-      createJokerCatalog(),
-      new Set(s.jokers.map((j) => j.id)),
-      shopPickerRngConfig.rng,
-    );
-    const ownedJokerIds = new Set(s.jokers.map((j) => j.id));
-    const editionedOffers = shopAdjustments.editionJokers.reduce(
-      (offers, edition) => {
-        const ensured = ensureBaseJokerForEdition(
-          offers,
-          createJokerCatalog(),
-          ownedJokerIds,
-          shopPickerRngConfig.rng,
-        );
-        return applyEditionToFirstJoker(ensured, edition);
-      },
-      mergeFreeJokerOffersIntoShop(pricedOffers, freeJokerOffers),
-    );
-    const stamped = applyStakeStickersToShopOffers(
-      editionedOffers,
-      stakeStickerOdds(s.selectedStake),
-      shopPickerRngConfig.rng,
-    );
-    s.setShopOffers(stamped);
-    if (shopAdjustments.extraVouchers > 0) {
-      s.setCurrentAnteVouchers((prev) => {
-        const existing = new Set(prev.map((v) => v.id));
-        const extra = pickVouchersForAnte(
-          {
-            ante: s.ante,
-            ownedIds: s.ownedVoucherIds,
-            excludeIds: new Set<VoucherId>([...s.ownedVoucherIds, ...existing]),
-          },
-          shopAdjustments.extraVouchers,
-        );
-        return [...prev, ...extra];
-      });
-    }
-    s.setPendingForcedPacks([]);
-    s.setDealt(
-      fullDeckPile(
-        s.baseDeckCards,
-        s.destroyedCardIds,
-        s.addedCards,
-        s.cardEnhancementsById,
-        s.cardSealsById,
-      ),
-    );
-    s.setSelectedIds(new Set());
-    s.setSelectedHand(null);
+    openPostRoundShop(s, get);
+  },
+  continueEndless: () => {
+    const s = get();
+    if (!s.pendingGameWon) return;
+    s.setEndlessMode(true);
+    s.setPendingGameWon(null);
+    advanceToNextAnte(s);
+    openPostRoundShop(s, get);
   },
   applySpectralEffect: (effect) => {
     const s = get();
@@ -503,10 +677,19 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         const handIds = s.dealt.hand.map((c) => c.id);
         const shuffled = [...handIds].sort(() => Math.random() - 0.5);
         const destroyed = new Set(shuffled.slice(0, effect.destroyCount));
+        const destroyedCards = s.dealt.hand.filter((c) => destroyed.has(c.id));
         s.setDealt((prev) => ({
           hand: prev.hand.filter((c) => !destroyed.has(c.id)),
           remaining: prev.remaining,
         }));
+        s.setDestroyedCardIds((prev) => {
+          const next = new Set(prev);
+          for (const id of destroyed) next.add(id);
+          return next;
+        });
+        s.setJokers((prev) =>
+          applyCardsDestroyedToJokerStates(prev, destroyedCards),
+        );
         s.earn(effect.moneyGain);
         return;
       }
@@ -528,19 +711,31 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "transmute": {
+        const transmuted = transmuteHand(
+          s.dealt.hand,
+          effect.rankFilter,
+          effect.addCount,
+          Math.random,
+        );
         s.setDealt((prev) => ({
-          hand: transmuteHand(
-            prev.hand,
-            effect.rankFilter,
-            effect.addCount,
-            Math.random,
-          ),
+          hand: transmuted.hand,
           remaining: prev.remaining,
         }));
+        s.setDestroyedCardIds((prev) => {
+          const next = new Set(prev);
+          for (const id of transmuted.destroyedIds) next.add(id);
+          return next;
+        });
+        s.setAddedCards((prev) => [...prev, ...transmuted.additions]);
         return;
       }
       case "create-joker-by-rarity": {
-        const capacity = MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds);
+        const capacity = Math.max(
+          0,
+          MAX_JOKERS +
+            extraJokerSlots(s.ownedVoucherIds) +
+            deckJokerSlotsDelta(s.selectedDeck),
+        );
         const created = createJokerByRarity(
           s.jokers,
           createJokerCatalog(),
@@ -573,7 +768,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "create-legendary": {
-        const capacity = MAX_JOKERS + extraJokerSlots(s.ownedVoucherIds);
+        const capacity = Math.max(
+          0,
+          MAX_JOKERS +
+            extraJokerSlots(s.ownedVoucherIds) +
+            deckJokerSlotsDelta(s.selectedDeck),
+        );
         const created = createJokerByRarity(
           s.jokers,
           createLegendaryJokerCatalog(),
@@ -635,6 +835,35 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     );
     s.setPackPreviewSelectedIds(new Set());
   },
+  applyDeathCopyToSelectedPreviewCards: () => {
+    const s = get();
+    const byId = new Map(s.packPreviewHand.map((c) => [c.id, c]));
+    const seen = new Set<number>();
+    const orderedIds: number[] = [];
+    for (const id of s.packPreviewDisplayOrder) {
+      if (byId.has(id)) {
+        orderedIds.push(id);
+        seen.add(id);
+      }
+    }
+    for (const c of s.packPreviewHand) {
+      if (!seen.has(c.id)) orderedIds.push(c.id);
+    }
+    const selectedInOrder: Card[] = [];
+    for (const id of orderedIds) {
+      if (s.packPreviewSelectedIds.has(id)) {
+        const c = byId.get(id);
+        if (c) selectedInOrder.push(c);
+      }
+    }
+    if (selectedInOrder.length !== 2) return;
+    const [left, right] = selectedInOrder;
+    const copied: Card = { ...right, id: left.id };
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) => (c.id === left.id ? copied : c)),
+    );
+    s.setPackPreviewSelectedIds(new Set());
+  },
   duplicateSelectedPreviewCards: (copies) => {
     const s = get();
     const originals = s.packPreviewHand.filter((c) =>
@@ -649,6 +878,62 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     }
     s.setAddedCards((prev) => [...prev, ...additions]);
     s.setPackPreviewHand((prev) => [...prev, ...additions]);
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  destroySelectedPreviewCards: () => {
+    const s = get();
+    const ids = new Set<number>();
+    for (const c of s.packPreviewHand) {
+      if (s.packPreviewSelectedIds.has(c.id)) ids.add(c.id);
+    }
+    if (ids.size === 0) return;
+    const destroyedCards = s.packPreviewHand.filter((c) => ids.has(c.id));
+    s.setDestroyedCardIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) next.add(id);
+      return next;
+    });
+    s.setJokers((prev) =>
+      applyCardsDestroyedToJokerStates(prev, destroyedCards),
+    );
+    s.setPackPreviewHand((prev) => prev.filter((c) => !ids.has(c.id)));
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  rankUpSelectedPreviewCards: () => {
+    const s = get();
+    const oldIds = new Set<number>();
+    const replacements: Card[] = [];
+    for (const c of s.packPreviewHand) {
+      if (!s.packPreviewSelectedIds.has(c.id)) continue;
+      oldIds.add(c.id);
+      replacements.push({ ...c, id: nextCardId(), rank: nextRankUp(c.rank) });
+    }
+    if (replacements.length === 0) return;
+    s.setDestroyedCardIds((prev) => {
+      const next = new Set(prev);
+      for (const id of oldIds) next.add(id);
+      return next;
+    });
+    s.setAddedCards((prev) => [...prev, ...replacements]);
+    const replacementByOldId = new Map<number, Card>();
+    const originalIds = [...oldIds];
+    originalIds.forEach((id, i) => replacementByOldId.set(id, replacements[i]));
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) => replacementByOldId.get(c.id) ?? c),
+    );
+    s.setPackPreviewSelectedIds(new Set());
+  },
+  applyAuraSelectedPreviewCards: () => {
+    const s = get();
+    const ids = s.packPreviewSelectedIds;
+    if (ids.size === 0) return;
+    s.setPackPreviewHand((prev) =>
+      prev.map((c) =>
+        ids.has(c.id)
+          ? { ...c, edition: pickRandomCardEdition(Math.random) }
+          : c,
+      ),
+    );
     s.setPackPreviewSelectedIds(new Set());
   },
   toggleCard: (card) => {
@@ -674,7 +959,17 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       return;
     }
     const nextSelected = s.dealt.hand.filter((c) => nextIds.has(c.id));
-    const label = detectHandLabel(nextSelected);
+    const visibleSelected = nextSelected.filter((c) => c.faceDown !== true);
+    if (visibleSelected.length === 0) {
+      s.setSelectedHand(null);
+      s.setChips(0);
+      s.setMultiplier(0);
+      return;
+    }
+    const label = detectHandLabel(
+      visibleSelected,
+      handEvalOptionsFromJokers(s.jokers),
+    );
     const entry =
       s.blind === 3
         ? bossAdjustHandEntry(s.currentBoss, label, s.handStats[label])

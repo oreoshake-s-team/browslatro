@@ -1,6 +1,16 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { useGame } from "./game";
-import { MAX_JOKERS, createJokerCatalog, jokerSellValue } from "../items/jokers";
+import {
+  MAX_JOKERS,
+  PERISHABLE_LIFE,
+  POPCORN_MULT,
+  POPCORN_MULT_LOSS_PER_ROUND,
+  createJokerCatalog,
+  createPopcornJoker,
+  hasSticker,
+  isJokerActive,
+  jokerSellValue,
+} from "../items/jokers";
 import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
 import { VOUCHER_CATALOG } from "../items/vouchers";
@@ -8,6 +18,8 @@ import { packPickLimit, type PackOffer } from "../items/packs";
 import { createDeck } from "../cards/deck";
 import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
+import { applyBossFaceDown, createBossCatalog } from "../items/bosses";
+import { FINAL_ANTE } from "../constants";
 
 describe("game actions slice", () => {
   beforeEach(() => {
@@ -392,6 +404,90 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
   });
 
+  test("buyShopOffer allows MAX_JOKERS + 1 jokers when Black Deck is selected (closes #566)", () => {
+    const catalog = createJokerCatalog();
+    const game = useGame.getState();
+    game.setSelectedDeck("black-deck");
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: catalog[MAX_JOKERS], price: 1, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS + 1);
+  });
+
+  test("buyShopOffer with Red Deck still caps at MAX_JOKERS (negative)", () => {
+    const catalog = createJokerCatalog();
+    const game = useGame.getState();
+    game.setSelectedDeck("red-deck");
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: catalog[MAX_JOKERS], price: 1, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
+  });
+
+  test("buyShopOffer appends a plain Magic Trick playing-card to addedCards (#282)", () => {
+    const game = useGame.getState();
+    const card = { id: 999, rank: "K" as const, suit: "spades" as const };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(
+      useGame.getState().addedCards.some((c) => c.id === 999),
+    ).toBe(true);
+  });
+
+  test("buyShopOffer preserves enhancement/edition/seal from an Illusion playing-card offer (#282)", () => {
+    const game = useGame.getState();
+    const card = {
+      id: 1000,
+      rank: "5" as const,
+      suit: "hearts" as const,
+      enhancement: "mult" as const,
+      edition: "foil" as const,
+      seal: "gold" as const,
+    };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    const added = useGame.getState().addedCards.find((c) => c.id === 1000);
+    expect(
+      added?.enhancement === "mult" &&
+        added?.edition === "foil" &&
+        added?.seal === "gold",
+    ).toBe(true);
+  });
+
+  test("buyShopOffer marks a playing-card offer sold after purchase (#282)", () => {
+    const game = useGame.getState();
+    const card = { id: 1001, rank: "3" as const, suit: "diamonds" as const };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    const offers = useGame.getState().shopOffers;
+    expect(offers?.[0]?.sold).toBe(true);
+  });
+
+  test("buyShopOffer for a playing-card returns false when unaffordable (#282, negative)", () => {
+    const game = useGame.getState();
+    const card = { id: 1002, rank: "A" as const, suit: "clubs" as const };
+    game.setShopOffers([
+      { kind: "playing-card", card, price: 4, sold: false },
+    ]);
+    game.setMoney(1);
+    expect(game.buyShopOffer(0)).toBe(false);
+  });
+
   test("handleWin increments the round counter", () => {
     useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().round).toBe(2);
@@ -456,6 +552,162 @@ describe("game actions slice", () => {
     game.setRemainingHands(0);
     game.handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().remainingHands).toBe(3);
+  });
+
+  test("handleWin ticks the Perishable roundsHeld counter (closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 2 }] }]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const next = useGame.getState().jokers[0].stickers?.[0];
+    expect(next).toEqual({ kind: "perishable", roundsHeld: 3 });
+  });
+
+  test("after PERISHABLE_LIFE handleWin calls, the joker is no longer active (closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 0 }] }]);
+    for (let i = 0; i < PERISHABLE_LIFE; i += 1) {
+      useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    }
+    expect(isJokerActive(useGame.getState().jokers[0])).toBe(false);
+  });
+
+  test("at PERISHABLE_LIFE - 1 ticks, the joker is still active (negative — closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 0 }] }]);
+    for (let i = 0; i < PERISHABLE_LIFE - 1; i += 1) {
+      useGame.getState().handleWin({ interest: 0, interestWallet: 0 });
+    }
+    expect(isJokerActive(useGame.getState().jokers[0])).toBe(true);
+  });
+
+  test("handleWin applies the round-end joker pass (Popcorn decays — #871)", () => {
+    const game = useGame.getState();
+    game.setJokers([createPopcornJoker()]);
+    game.setBlind(1);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().jokers[0].state).toEqual({
+      kind: "counter",
+      value: POPCORN_MULT - POPCORN_MULT_LOSS_PER_ROUND,
+    });
+  });
+
+  test("handleWin does not add a Perishable sticker to a non-stickered joker (negative — closes #579)", () => {
+    const base = createJokerCatalog()[0];
+    const game = useGame.getState();
+    game.setJokers([base]);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(hasSticker(useGame.getState().jokers[0], "perishable")).toBe(false);
+  });
+
+  test("handleWin on the final-ante Boss Blind sets pendingGameWon (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().pendingGameWon).not.toBeNull();
+  });
+
+  test("handleWin on the final-ante Boss Blind does NOT advance ante past the final ante (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(FINAL_ANTE);
+  });
+
+  test("handleWin on the final-ante Boss Blind does NOT populate shopOffers (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setShopOffers(null);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().shopOffers).toBeNull();
+  });
+
+  test("handleWin on a pre-final Boss Blind advances ante and leaves pendingGameWon null (negative — closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE - 1);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(FINAL_ANTE);
+    expect(useGame.getState().pendingGameWon).toBeNull();
+  });
+
+  test("pendingGameWon snapshot carries finalAnte, money, hands played, and skips (closes #384)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setMoney(0);
+    game.setRunStats({ handsPlayed: 17, unusedDiscards: 4, blindsSkipped: 2 });
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    const snap = useGame.getState().pendingGameWon;
+    expect(snap).toEqual({
+      finalAnte: FINAL_ANTE,
+      finalMoney: useGame.getState().money,
+      handsPlayed: 17,
+      blindsSkipped: 2,
+    });
+  });
+
+  test("continueEndless clears pendingGameWon and enables endless mode (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    useGame.getState().continueEndless();
+    expect(useGame.getState().pendingGameWon).toBeNull();
+    expect(useGame.getState().endlessMode).toBe(true);
+  });
+
+  test("continueEndless advances to the ante past the final ante (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    useGame.getState().continueEndless();
+    expect(useGame.getState().ante).toBe(FINAL_ANTE + 1);
+    expect(useGame.getState().blind).toBe(1);
+  });
+
+  test("continueEndless opens the post-boss shop (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setShopOffers(null);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    useGame.getState().continueEndless();
+    expect(useGame.getState().shopOffers).not.toBeNull();
+  });
+
+  test("continueEndless is a no-op without a pending win (negative — #855)", () => {
+    const game = useGame.getState();
+    game.setAnte(3);
+    game.continueEndless();
+    expect(useGame.getState().ante).toBe(3);
+    expect(useGame.getState().endlessMode).toBe(false);
+  });
+
+  test("handleWin in endless mode advances past the final ante instead of re-winning (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE);
+    game.setBlind(3);
+    game.setEndlessMode(true);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().pendingGameWon).toBeNull();
+    expect(useGame.getState().ante).toBe(FINAL_ANTE + 1);
+  });
+
+  test("endless boss win past the final ante keeps advancing antes (#855)", () => {
+    const game = useGame.getState();
+    game.setAnte(FINAL_ANTE + 2);
+    game.setBlind(3);
+    game.setEndlessMode(true);
+    game.handleWin({ interest: 0, interestWallet: 0 });
+    expect(useGame.getState().ante).toBe(FINAL_ANTE + 3);
+    expect(useGame.getState().pendingGameWon).toBeNull();
   });
 
   test("handleWin awards $0 for Small Blind on Red Stake (#553)", () => {
@@ -580,6 +832,27 @@ describe("game actions slice", () => {
     game.setMoney(0);
     game.applySpectralEffect({ kind: "immolate", destroyCount: 1, moneyGain: 4 });
     expect(useGame.getState().money).toBe(4);
+  });
+
+  test("applySpectralEffect immolate persists destroyed ids in destroyedCardIds (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "immolate", destroyCount: 2, moneyGain: 0 });
+    expect(useGame.getState().destroyedCardIds.size).toBe(2);
+  });
+
+  test("applySpectralEffect transmute persists the destroyed id in destroyedCardIds (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
+    expect(useGame.getState().destroyedCardIds.size).toBe(1);
+  });
+
+  test("applySpectralEffect transmute pushes the created cards to addedCards (#999)", () => {
+    const game = useGame.getState();
+    game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
+    game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
+    expect(useGame.getState().addedCards).toHaveLength(3);
   });
 
   test("applySpectralEffect sigil converts the hand to one suit", () => {
@@ -955,6 +1228,87 @@ describe("game actions slice", () => {
     expect(useGame.getState().selectedHand?.label).toBe("Pair");
   });
 
+  test("toggleCard does not leak label when only face-down cards are selected (#764)", () => {
+    const base = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const hand = base.map((c) => ({ ...c, faceDown: true }));
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand).toBeNull();
+  });
+
+  test("toggleCard zeroes chips and mult when only face-down cards are selected (#764)", () => {
+    const base = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const hand = base.map((c) => ({ ...c, faceDown: true }));
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    const state = useGame.getState();
+    expect([state.chips, state.multiplier]).toEqual([0, 0]);
+  });
+
+  test("toggleCard does not preview Pair when a face-down card would complete it (#764)", () => {
+    const fives = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 1);
+    const seven = createDeck().find((c) => c.rank === "7");
+    if (!seven) throw new Error("expected a 7 in the base deck");
+    const hand = [{ ...fives[0], faceDown: true }, seven];
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand?.label).toBe("High Card");
+  });
+
+  test("toggleCard still previews Pair when two face-up cards match (#764 regression)", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("toggleCard previews label using only face-up cards when mixed with face-down (#764)", () => {
+    const fives = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const seven = createDeck().find((c) => c.rank === "7");
+    if (!seven) throw new Error("expected a 7 in the base deck");
+    const hand = [fives[0], fives[1], { ...seven, faceDown: true }];
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    game.toggleCard(hand[2]);
+    expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("toggleCard hides preview after The House flips initial hand face-down (#764)", () => {
+    const house = createBossCatalog().find((b) => b.id === "the-house");
+    if (!house) throw new Error("expected The House in the boss catalog");
+    const fives = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const hand = applyBossFaceDown(fives, house, true, "initial");
+    const game = useGame.getState();
+    game.setBlind(3);
+    game.setCurrentBoss(house);
+    game.setDealt({ hand, remaining: [] });
+    game.toggleCard(hand[0]);
+    game.toggleCard(hand[1]);
+    expect(useGame.getState().selectedHand).toBeNull();
+  });
+
   test("toggleCard halves chips on blind 3 against The Flint", () => {
     const hand = createDeck()
       .filter((c) => c.rank === "5")
@@ -1113,5 +1467,220 @@ describe("pending shop modifiers", () => {
       .getState()
       .shopOffers?.filter((o) => o.kind !== "pack") ?? [];
     expect(items.every((o) => o.price > 0)).toBe(true);
+  });
+});
+
+describe("applyDeathCopyToSelectedPreviewCards (#763)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("is a no-op when fewer than 2 cards are selected (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const same = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(same).toEqual(preview[0]);
+  });
+
+  test("uses store packPreviewHand order when no display order is set: left becomes a copy of right", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const left = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(left?.rank).toBe(preview[1].rank);
+  });
+
+  test("preserves the left card's id after the copy (the new card replaces the old left in place)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const stillExists = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(stillExists).toBeDefined();
+  });
+
+  test("respects packPreviewDisplayOrder: left/right follow the displayed arrangement", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.setPackPreviewDisplayOrder([preview[1].id, preview[0].id, preview[2].id]);
+    game.applyDeathCopyToSelectedPreviewCards();
+    const card1 = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[1].id);
+    expect(card1?.rank).toBe(preview[0].rank);
+  });
+
+  test("clears the preview selection after applying", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("leaves the unselected card untouched (negative)", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id, preview[1].id]));
+    game.applyDeathCopyToSelectedPreviewCards();
+    const untouched = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[2].id);
+    expect(untouched).toEqual(preview[2]);
+  });
+});
+
+describe("destroySelectedPreviewCards (#843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("removes the selected preview card from packPreviewHand", () => {
+    const preview = createDeck().slice(0, 3);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.destroySelectedPreviewCards();
+    expect(
+      useGame.getState().packPreviewHand.some((c) => c.id === preview[0].id),
+    ).toBe(false);
+  });
+
+  test("adds the destroyed id to destroyedCardIds (persists to deck)", () => {
+    const preview = createDeck().slice(0, 2);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.destroySelectedPreviewCards();
+    expect(useGame.getState().destroyedCardIds.has(preview[0].id)).toBe(true);
+  });
+
+  test("clears packPreviewSelectedIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.destroySelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("is a no-op when no preview card is selected (negative)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.destroySelectedPreviewCards();
+    expect(useGame.getState().packPreviewHand).toHaveLength(1);
+  });
+});
+
+describe("rankUpSelectedPreviewCards (#843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("replaces the selected preview card with a rank-up version", () => {
+    const preview = createDeck().slice(0, 1);
+    const original = preview[0];
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([original.id]));
+    game.rankUpSelectedPreviewCards();
+    const newCard = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id !== original.id);
+    expect(newCard?.suit).toBe(original.suit);
+  });
+
+  test("adds the original id to destroyedCardIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().destroyedCardIds.has(preview[0].id)).toBe(true);
+  });
+
+  test("appends the new card to addedCards (persists in deck)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    const before = useGame.getState().addedCards.length;
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().addedCards.length).toBe(before + 1);
+  });
+
+  test("clears packPreviewSelectedIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("is a no-op when no preview card is selected (negative)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.rankUpSelectedPreviewCards();
+    expect(useGame.getState().packPreviewHand).toEqual(preview);
+  });
+});
+
+describe("applyAuraSelectedPreviewCards (#843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("applies an edition to the selected preview card", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyAuraSelectedPreviewCards();
+    const card = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(card?.edition).toBeDefined();
+  });
+
+  test("clears packPreviewSelectedIds", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set([preview[0].id]));
+    game.applyAuraSelectedPreviewCards();
+    expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+
+  test("is a no-op when no preview card is selected (negative)", () => {
+    const preview = createDeck().slice(0, 1);
+    const game = useGame.getState();
+    game.setPackPreviewHand(preview);
+    game.setPackPreviewSelectedIds(new Set());
+    game.applyAuraSelectedPreviewCards();
+    const card = useGame
+      .getState()
+      .packPreviewHand.find((c) => c.id === preview[0].id);
+    expect(card?.edition).toBeUndefined();
   });
 });

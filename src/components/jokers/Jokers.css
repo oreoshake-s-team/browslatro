@@ -1,24 +1,33 @@
 .jokers {
   position: relative;
   display: flex;
-  flex: 1 1 41rem;
+  flex: 1 1 calc(var(--joker-capacity, 5) * 8.5rem + 5.3rem);
   min-width: 0;
   flex-direction: column;
   align-items: stretch;
   gap: 0.6rem;
   padding: 1rem 1.4rem;
-  border: 2px solid #f59f00;
+  border: 2px solid rgba(245, 159, 0, 0.55);
   border-radius: 8px;
-  background-color: #fff9db;
+  background-color: #221d12;
   box-sizing: border-box;
 }
 
 .jokers-label {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #5c3c00;
+  color: var(--accent-money);
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.jokers-tray-empty {
+  border-color: rgba(245, 159, 0, 0.25);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.jokers-tray-empty .jokers-label {
+  color: var(--text-muted);
 }
 
 .jokers-list {
@@ -30,14 +39,13 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  overflow-x: auto;
+  overflow-x: clip;
 }
 
 .joker-tile {
   display: flex;
-  flex: 0 0 var(--card-width);
-  width: var(--card-width);
-  min-width: var(--card-width);
+  flex: 0 1 var(--card-width);
+  min-width: 0;
   height: var(--card-height);
   flex-direction: column;
   align-items: center;
@@ -50,6 +58,16 @@
   color: #5c3c00;
   overflow: hidden;
   box-sizing: border-box;
+}
+
+.joker-tile-debuffed {
+  filter: grayscale(1);
+  opacity: 0.55;
+}
+
+.joker-tile-debuffed .joker-tile-name,
+.joker-tile-debuffed .joker-tile-description {
+  text-decoration: line-through;
 }
 
 .joker-tile-inner {
@@ -113,10 +131,10 @@
 }
 
 .joker-tile-empty {
-  background-color: #fff3bf;
+  background-color: rgba(255, 255, 255, 0.04);
   border-style: dashed;
-  border-color: #f1c40f;
-  color: #495057;
+  border-color: rgba(245, 159, 0, 0.35);
+  color: var(--text-muted);
   font-style: italic;
   font-size: 0.85rem;
 }
@@ -139,7 +157,8 @@
 }
 
 .joker-gap {
-  flex: 0 0 2.5rem;
+  flex: 0 1 2.5rem;
+  min-width: 0;
   align-self: stretch;
   min-height: var(--card-height);
   border-radius: 4px;
@@ -157,12 +176,13 @@
 .jokers-consumable-target {
   outline: 2px dashed transparent;
   outline-offset: 4px;
-  transition: outline-color 120ms ease, background-color 120ms ease;
+  transition: outline-color calc(120ms * var(--animation-speed, 1)) ease,
+    background-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .jokers-consumable-target.jokers-consumable-hover {
-  outline-color: #2f9e44;
-  background-color: #ebfbee;
+  outline-color: var(--accent-success);
+  background-color: rgba(47, 158, 68, 0.15);
 }
 
 .consumable-drop-overlay {

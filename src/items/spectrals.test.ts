@@ -2,20 +2,24 @@ import {
   CRYPTID_COPY_COUNT,
   FAMILIAR_ADD_COUNT,
   GRIM_ADD_COUNT,
+  HIDDEN_SPECTRAL_REPLACE_CHANCE,
   INCANTATION_ADD_COUNT,
   IMMOLATE_DESTROY_COUNT,
   IMMOLATE_MONEY_GAIN,
   SPECTRAL_BASE_PRICE,
   applyAuraToSelectedInHand,
+  createPoolSpectralCatalog,
   createSpectralCatalog,
   duplicateSelectedInHand,
   makeEnhancedCard,
+  rollHiddenSpectralReplacement,
   spectralNeedsTarget,
   transmuteHand,
   type SpectralCard,
 } from "./spectrals";
 import { nextCardId, resetCardIds } from "../cards/deck";
 import type { Card } from "../cards/types";
+import { sequenceRng } from "../test/rng";
 
 function find(id: SpectralCard["id"]): SpectralCard {
   const card = createSpectralCatalog().find((c) => c.id === id);
@@ -133,15 +137,6 @@ describe("Spectral descriptions", () => {
   });
 });
 
-function sequenceRng(values: ReadonlyArray<number>): () => number {
-  let i = 0;
-  return (): number => {
-    const v = values[i % values.length];
-    i += 1;
-    return v;
-  };
-}
-
 describe("makeEnhancedCard", () => {
   beforeEach(() => resetCardIds());
 
@@ -184,7 +179,7 @@ describe("transmuteHand", () => {
       FAMILIAR_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next).toHaveLength(10);
+    expect(next.hand).toHaveLength(10);
   });
 
   test("Grim shape (ace, 2): hand grows from 8 to 9 (destroy 1 + add 2)", () => {
@@ -194,7 +189,7 @@ describe("transmuteHand", () => {
       GRIM_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next).toHaveLength(9);
+    expect(next.hand).toHaveLength(9);
   });
 
   test("Incantation shape (numbered, 4): hand grows from 8 to 11", () => {
@@ -204,7 +199,7 @@ describe("transmuteHand", () => {
       INCANTATION_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next).toHaveLength(11);
+    expect(next.hand).toHaveLength(11);
   });
 
   test("the random card chosen to destroy is removed (rng=0 destroys index 0)", () => {
@@ -216,14 +211,36 @@ describe("transmuteHand", () => {
       FAMILIAR_ADD_COUNT,
       sequenceRng([0]),
     );
-    expect(next.some((c) => c.id === firstId)).toBe(false);
+    expect(next.hand.some((c) => c.id === firstId)).toBe(false);
+  });
+
+  test("the destroyed card id is reported in destroyedIds", () => {
+    const source = fakeHand(8);
+    const firstId = source[0].id;
+    const next = transmuteHand(
+      source,
+      "face",
+      FAMILIAR_ADD_COUNT,
+      sequenceRng([0]),
+    );
+    expect(next.destroyedIds).toEqual([firstId]);
+  });
+
+  test("the created cards are reported in additions", () => {
+    const next = transmuteHand(
+      fakeHand(8),
+      "face",
+      FAMILIAR_ADD_COUNT,
+      sequenceRng([0]),
+    );
+    expect(next.additions).toHaveLength(FAMILIAR_ADD_COUNT);
   });
 
   test("added cards have unique ids that aren't in the source hand (negative)", () => {
     const source = fakeHand(8);
     const sourceIds = new Set(source.map((c) => c.id));
     const next = transmuteHand(source, "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
-    const additionIds = next.slice(-FAMILIAR_ADD_COUNT).map((c) => c.id);
+    const additionIds = next.additions.map((c) => c.id);
     for (const id of additionIds) {
       expect(sourceIds.has(id)).toBe(false);
     }
@@ -231,7 +248,12 @@ describe("transmuteHand", () => {
 
   test("on an empty hand, just adds the requested number of cards", () => {
     const next = transmuteHand([], "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
-    expect(next).toHaveLength(FAMILIAR_ADD_COUNT);
+    expect(next.hand).toHaveLength(FAMILIAR_ADD_COUNT);
+  });
+
+  test("on an empty hand, destroyedIds is empty (negative)", () => {
+    const next = transmuteHand([], "face", FAMILIAR_ADD_COUNT, sequenceRng([0]));
+    expect(next.destroyedIds).toHaveLength(0);
   });
 });
 
@@ -289,7 +311,17 @@ describe("duplicateSelectedInHand", () => {
       new Set([hand[0].id]),
       CRYPTID_COPY_COUNT,
     );
-    expect(next).toHaveLength(3 + CRYPTID_COPY_COUNT);
+    expect(next.hand).toHaveLength(3 + CRYPTID_COPY_COUNT);
+  });
+
+  test("the created copies are reported in additions", () => {
+    const hand = fakeHand(3);
+    const next = duplicateSelectedInHand(
+      hand,
+      new Set([hand[0].id]),
+      CRYPTID_COPY_COUNT,
+    );
+    expect(next.additions).toHaveLength(CRYPTID_COPY_COUNT);
   });
 
   test("copies preserve rank, suit, enhancement, and seal", () => {
@@ -302,7 +334,7 @@ describe("duplicateSelectedInHand", () => {
       seal: "gold",
     };
     const next = duplicateSelectedInHand([original], new Set([original.id]), 2);
-    const copies = next.slice(1);
+    const copies = next.additions;
     expect(copies).toEqual([
       { id: copies[0].id, rank: "K", suit: "hearts", enhancement: "glass", seal: "gold" },
       { id: copies[1].id, rank: "K", suit: "hearts", enhancement: "glass", seal: "gold" },
@@ -313,7 +345,7 @@ describe("duplicateSelectedInHand", () => {
     const hand = fakeHand(2);
     const sourceIds = new Set(hand.map((c) => c.id));
     const next = duplicateSelectedInHand(hand, new Set([hand[1].id]), 2);
-    const copyIds = next.slice(2).map((c) => c.id);
+    const copyIds = next.additions.map((c) => c.id);
     for (const id of copyIds) {
       expect(sourceIds.has(id)).toBe(false);
     }
@@ -321,7 +353,7 @@ describe("duplicateSelectedInHand", () => {
 
   test("is a no-op when no card is selected", () => {
     const hand = fakeHand(3);
-    expect(duplicateSelectedInHand(hand, new Set(), 2)).toBe(hand);
+    expect(duplicateSelectedInHand(hand, new Set(), 2).hand).toBe(hand);
   });
 
   test("is a no-op when more than 1 card is selected", () => {
@@ -331,7 +363,7 @@ describe("duplicateSelectedInHand", () => {
       new Set([hand[0].id, hand[1].id]),
       2,
     );
-    expect(next).toBe(hand);
+    expect(next.hand).toBe(hand);
   });
 });
 
@@ -535,5 +567,76 @@ describe("applyAuraToSelectedInHand", () => {
     const a = mkCard();
     applyAuraToSelectedInHand([a], new Set([a.id]), sequenceRng([0]));
     expect(a.edition).toBeUndefined();
+  });
+});
+
+describe("Hidden-rarity spectrals", () => {
+  test("Black Hole is marked hidden", () => {
+    expect(find("black-hole").hidden).toBe(true);
+  });
+
+  test("The Soul is marked hidden", () => {
+    expect(find("soul").hidden).toBe(true);
+  });
+
+  test("createPoolSpectralCatalog excludes Black Hole", () => {
+    expect(
+      createPoolSpectralCatalog().some((s) => s.id === "black-hole"),
+    ).toBe(false);
+  });
+
+  test("createPoolSpectralCatalog excludes The Soul", () => {
+    expect(createPoolSpectralCatalog().some((s) => s.id === "soul")).toBe(false);
+  });
+
+  test("createPoolSpectralCatalog has fewer entries than the full catalog", () => {
+    expect(createPoolSpectralCatalog().length).toBe(
+      createSpectralCatalog().length - 2,
+    );
+  });
+
+  test("createSpectralCatalog still contains both hidden spectrals", () => {
+    const ids = createSpectralCatalog().map((s) => s.id);
+    expect(ids).toEqual(expect.arrayContaining(["black-hole", "soul"]));
+  });
+
+  test("HIDDEN_SPECTRAL_REPLACE_CHANCE is 0.003", () => {
+    expect(HIDDEN_SPECTRAL_REPLACE_CHANCE).toBe(0.003);
+  });
+});
+
+describe("rollHiddenSpectralReplacement", () => {
+  const catalog = createSpectralCatalog();
+
+  test("returns null when the roll misses", () => {
+    expect(rollHiddenSpectralReplacement(sequenceRng([0.5]), catalog)).toBeNull();
+  });
+
+  test("returns Black Hole when the roll lands in the first 0.3% slice", () => {
+    const r = rollHiddenSpectralReplacement(sequenceRng([0.001]), catalog);
+    expect(r?.id).toBe("black-hole");
+  });
+
+  test("returns The Soul when the roll lands in the 0.3-0.6% slice", () => {
+    const r = rollHiddenSpectralReplacement(sequenceRng([0.004]), catalog);
+    expect(r?.id).toBe("soul");
+  });
+
+  test("Black Hole wins on the boundary value 0 (mutual exclusion)", () => {
+    const r = rollHiddenSpectralReplacement(sequenceRng([0]), catalog);
+    expect(r?.id).toBe("black-hole");
+  });
+
+  test("returns null when roll value equals the cumulative threshold (negative)", () => {
+    const r = rollHiddenSpectralReplacement(
+      sequenceRng([HIDDEN_SPECTRAL_REPLACE_CHANCE * 2]),
+      catalog,
+    );
+    expect(r).toBeNull();
+  });
+
+  test("returns null when catalog has no hidden spectrals (negative)", () => {
+    const empty = catalog.filter((s) => !s.hidden);
+    expect(rollHiddenSpectralReplacement(sequenceRng([0.001]), empty)).toBeNull();
   });
 });

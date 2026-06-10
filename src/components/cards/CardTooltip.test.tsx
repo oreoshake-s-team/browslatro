@@ -1,7 +1,12 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach } from "vitest";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Card from "./Card";
 import type { Card as CardType } from "../../cards/types";
+import { useGame } from "../../store/game";
+import {
+  createOopsAllSixesJoker,
+} from "../../items/jokers";
 
 const plain: CardType = { id: 1, rank: "9", suit: "spades" };
 const stoneCard: CardType = { id: 2, rank: "2", suit: "hearts", enhancement: "stone" };
@@ -158,5 +163,51 @@ describe("Card tooltip — content per card state", () => {
     render(<Card card={plain} />);
     await user.hover(screen.getByRole("button"));
     expect(screen.queryByText(/Polychrome|Holographic|Foil/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("Card tooltip — effective odds with a probability multiplier (#774)", () => {
+  afterEach(() => {
+    act(() => {
+      useGame.getState().resetGame();
+    });
+  });
+
+  test("Lucky card tooltip shows 1-in-5 by default (no probability multiplier)", async () => {
+    const user = userEvent.setup();
+    render(<Card card={luckyCard} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/1-in-5/);
+  });
+
+  test("Lucky card tooltip doubles the mult-hit ratio when Oops! All 6s is equipped", async () => {
+    useGame.getState().setJokers([createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Card card={luckyCard} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/2-in-5/);
+  });
+
+  test("Lucky card tooltip doubles the money-hit ratio when Oops! All 6s is equipped", async () => {
+    useGame.getState().setJokers([createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Card card={luckyCard} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/2-in-15/);
+  });
+
+  test("Glass card tooltip doubles the break chance when Oops! All 6s is equipped", async () => {
+    useGame.getState().setJokers([createOopsAllSixesJoker()]);
+    const user = userEvent.setup();
+    render(<Card card={glassCard} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/2-in-4/);
+  });
+
+  test("Glass card tooltip still shows 1-in-4 when no probability joker is equipped (negative)", async () => {
+    const user = userEvent.setup();
+    render(<Card card={glassCard} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/1-in-4/);
   });
 });

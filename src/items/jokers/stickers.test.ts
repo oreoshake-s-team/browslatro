@@ -133,18 +133,54 @@ describe("applyStakeStickersOnRoll", () => {
     expect(hasSticker(result, "eternal")).toBe(false);
   });
 
-  test("applies multiple stickers when all rolls succeed", () => {
+  test("applies at most one stake sticker even when every roll would succeed", () => {
     const joker = createBusinessCardJoker();
     const result = applyStakeStickersOnRoll(
       joker,
       { eternal: 1, perishable: 1, rental: 1 },
       fixedRng([0]),
     );
-    expect(jokerStickers(result).map((s) => s.kind).sort()).toEqual([
-      "eternal",
-      "perishable",
-      "rental",
-    ]);
+    expect(jokerStickers(result)).toHaveLength(1);
+  });
+
+  test("prefers eternal over perishable and rental when all rolls would succeed", () => {
+    const joker = createBusinessCardJoker();
+    const result = applyStakeStickersOnRoll(
+      joker,
+      { eternal: 1, perishable: 1, rental: 1 },
+      fixedRng([0]),
+    );
+    expect(jokerStickers(result)[0]?.kind).toBe("eternal");
+  });
+
+  test("falls through to perishable when the eternal roll misses but perishable would hit", () => {
+    const joker = createBusinessCardJoker();
+    const result = applyStakeStickersOnRoll(
+      joker,
+      { eternal: 0.3, perishable: 1, rental: 1 },
+      fixedRng([0.5, 0]),
+    );
+    expect(jokerStickers(result).map((s) => s.kind)).toEqual(["perishable"]);
+  });
+
+  test("falls through to rental when eternal and perishable both miss", () => {
+    const joker = createBusinessCardJoker();
+    const result = applyStakeStickersOnRoll(
+      joker,
+      { eternal: 0.3, perishable: 0.3, rental: 1 },
+      fixedRng([0.5, 0.5, 0]),
+    );
+    expect(jokerStickers(result).map((s) => s.kind)).toEqual(["rental"]);
+  });
+
+  test("returns the joker unchanged when every roll misses (negative)", () => {
+    const joker = createBusinessCardJoker();
+    const result = applyStakeStickersOnRoll(
+      joker,
+      { eternal: 0.3, perishable: 0.3, rental: 0.3 },
+      fixedRng([0.5, 0.5, 0.5]),
+    );
+    expect(jokerStickers(result)).toHaveLength(0);
   });
 
   test("perishable sticker starts with roundsHeld = 0", () => {

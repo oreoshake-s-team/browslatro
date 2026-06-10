@@ -5,14 +5,22 @@
   height: 100vh;
   height: 100dvh;
   margin: 0;
-  --animation-speed: 1;
-}
-
-.App.high-visibility {
 }
 
 @media (orientation: portrait) and (max-width: 768px) {
   .App {
     flex-direction: column;
   }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

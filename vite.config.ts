@@ -31,6 +31,8 @@ export default defineConfig({
   test: {
     globals: true,
     css: true,
+    testTimeout: process.env.CI ? 5_000 : 20_000,
+    hookTimeout: process.env.CI ? 10_000 : 20_000,
     coverage: {
       provider: "istanbul",
       reporter: ["text", "html", "lcov"],
@@ -38,6 +40,8 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/**/*.{test,spec}.{ts,tsx}",
+        "src/**/*.stories.tsx",
+        "src/stories/**",
         "src/setupTests.ts",
         "src/test/**",
         "src/index.tsx",

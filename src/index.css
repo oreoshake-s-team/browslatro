@@ -24,6 +24,18 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-speed: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  :root {
+    --focus-ring: Highlight;
+  }
+}
+
 html {
   font-size: 62.5%;
   font-family:
@@ -64,7 +76,8 @@ html {
 
 body {
   height: 100vh;
-  color: #495057;
+  background-color: var(--bg);
+  color: var(--text-secondary);
   display: flex;
   margin: 0;
   padding: 0;
@@ -83,6 +96,15 @@ body {
 .win-button {
   padding: 10px 20px;
   font-size: 1.1rem;
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.win-button:hover {
+  background-color: var(--surface-hover);
 }
 
 /* shared stat display used by RoundProgress and RunProgress */
@@ -93,8 +115,8 @@ body {
   justify-content: center;
   gap: 0.25rem;
   padding: 0.6rem 0.5rem;
-  background-color: #ffffff;
-  border: 1px solid #dee2e6;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 6px;
   box-sizing: border-box;
 }
@@ -103,11 +125,12 @@ body {
   font-size: 1.75rem;
   font-weight: 700;
   line-height: 1;
+  color: var(--text-primary);
 }
 
 .stat-label {
   font-size: 0.85rem;
-  color: #495057;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }

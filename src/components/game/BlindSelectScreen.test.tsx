@@ -243,11 +243,27 @@ describe("BlindSelectScreen", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  test("skip-reward preview is keyboard-focusable for the tooltip", () => {
+  test("skip-reward preview is not in the tab order (#915)", () => {
     renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
-    const target = screen.getByTestId("blind-select-row-skip-reward-1");
-    fireEvent.focus(target);
-    expect(screen.getByRole("tooltip")).toHaveTextContent("Investment Tag");
+    expect(
+      screen.getByTestId("blind-select-row-skip-reward-1"),
+    ).not.toHaveAttribute("tabindex");
+  });
+
+  test("held tag chips are not in the tab order (#915)", () => {
+    renderScreen({ tags: ["investment"] });
+    expect(screen.getByTestId("blind-select-tag-0")).not.toHaveAttribute(
+      "tabindex",
+    );
+  });
+
+  test("Play precedes Skip in document order so Tab reaches the default action first (#915)", () => {
+    renderScreen({ currentBlind: 1, onSkip: vi.fn() });
+    const play = screen.getByTestId("blind-select-play");
+    const skip = screen.getByTestId("blind-select-skip");
+    expect(
+      play.compareDocumentPosition(skip) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   test("held tag shows a tooltip with its description on hover", async () => {
@@ -410,5 +426,37 @@ describe("BlindSelectScreen", () => {
       fireEvent.click(screen.getByTestId("blind-select-boss-reroll"));
       expect(onRerollBoss).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("BlindSelectScreen focus trap (#907)", () => {
+  test("cycles Tab between Play and Skip and restores focus to the opener on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = renderScreen({ onSkip: vi.fn() });
+    expect(screen.getByTestId("blind-select-play")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByTestId("blind-select-skip")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByTestId("blind-select-play")).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(screen.getByTestId("blind-select-skip")).toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+
+  test("tag chips and skip-reward previews add no extra tab stops between Play and Skip (#915)", async () => {
+    const user = userEvent.setup();
+    renderScreen({
+      onSkip: vi.fn(),
+      tags: ["investment"],
+      skipRewards: { small: { id: "investment" }, big: { id: "d6" } },
+    });
+    expect(screen.getByTestId("blind-select-play")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByTestId("blind-select-skip")).toHaveFocus();
+    await user.tab();
+    expect(screen.getByTestId("blind-select-play")).toHaveFocus();
   });
 });

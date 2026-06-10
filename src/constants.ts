@@ -8,8 +8,14 @@ export const BlindValues: BlindValuesMap = {
 
 export const BASE_CHIPS = [300, 800, 2000, 5000, 11000, 20000, 35000, 50000] as const;
 
+export const FINAL_ANTE = BASE_CHIPS.length;
+
 export const GREEN_STAKE_CHIPS = [
   300, 900, 2600, 8000, 20000, 36000, 60000, 100000,
+] as const;
+
+export const PURPLE_STAKE_CHIPS = [
+  300, 1000, 3200, 9000, 25000, 60000, 110000, 200000,
 ] as const;
 
 export const BLIND_MULTIPLIERS = [1, 1.5, 2] as const;

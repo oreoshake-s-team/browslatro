@@ -121,6 +121,91 @@ describe("HandScore level chip (#241)", () => {
   });
 });
 
+describe("HandScore live announcement (#914)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  test("renders a polite status region", () => {
+    render(<HandScore chips={0} multiplier={0} selectedHand={null} />);
+    expect(screen.getByRole("status")).toHaveAttribute("aria-live", "polite");
+  });
+
+  test("status region announces atomically", () => {
+    render(<HandScore chips={0} multiplier={0} selectedHand={null} />);
+    expect(screen.getByRole("status")).toHaveAttribute("aria-atomic", "true");
+  });
+
+  test("announces the chips × mult preview once the value settles", () => {
+    const { rerender } = render(
+      <HandScore chips={0} multiplier={0} selectedHand={null} />,
+    );
+    rerender(<HandScore chips={30} multiplier={4} selectedHand={HANDS[2]} />);
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "30 chips × 4 mult",
+    );
+  });
+
+  test("does not announce before the debounce window elapses (negative)", () => {
+    const { rerender } = render(
+      <HandScore chips={0} multiplier={0} selectedHand={null} />,
+    );
+    rerender(<HandScore chips={30} multiplier={4} selectedHand={HANDS[2]} />);
+    act(() => {
+      vi.advanceTimersByTime(60);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "0 chips × 0 mult",
+    );
+  });
+
+  test("skips intermediate values during rapid selection (negative)", () => {
+    const { rerender } = render(
+      <HandScore chips={0} multiplier={0} selectedHand={null} />,
+    );
+    rerender(<HandScore chips={15} multiplier={2} selectedHand={HANDS[1]} />);
+    act(() => {
+      vi.advanceTimersByTime(60);
+    });
+    rerender(<HandScore chips={30} multiplier={4} selectedHand={HANDS[2]} />);
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).not.toHaveTextContent("15 chips");
+  });
+
+  test("select then deselect announces only the settled reset preview", () => {
+    const { rerender } = render(
+      <HandScore chips={0} multiplier={0} selectedHand={null} />,
+    );
+    rerender(<HandScore chips={15} multiplier={2} selectedHand={HANDS[1]} />);
+    act(() => {
+      vi.advanceTimersByTime(60);
+    });
+    rerender(<HandScore chips={0} multiplier={0} selectedHand={null} />);
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(screen.getByRole("status")).toHaveTextContent("0 chips × 0 mult");
+  });
+
+  test("hides the animated visible numbers from assistive tech", () => {
+    const { container } = render(
+      <HandScore chips={10} multiplier={2} selectedHand={HANDS[1]} />,
+    );
+    expect(
+      container.querySelector(".chips")?.closest("p"),
+    ).toHaveAttribute("aria-hidden", "true");
+  });
+});
+
 describe("HandScore level-up animation (#601)", () => {
   beforeEach(() => {
     vi.useFakeTimers();

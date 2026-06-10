@@ -1,5 +1,6 @@
 import "./BlindSelectScreen.css";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
@@ -13,6 +14,7 @@ import {
 } from "../../items/tags";
 import { hasStakeModifier, type Stake } from "../../items/stakes";
 import TagTooltip, { type TagTooltipSpec } from "./TagTooltip";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -31,11 +33,11 @@ interface BlindSelectScreenProps {
   canAffordBossReroll?: boolean;
 }
 
-const BLIND_NAMES: Readonly<Record<Blind, string>> = {
-  1: "Small Blind",
-  2: "Big Blind",
-  3: "Boss Blind",
-};
+const BLIND_NAME_KEYS = {
+  1: "blinds.smallBlind",
+  2: "blinds.bigBlind",
+  3: "blinds.bossBlind",
+} as const satisfies Record<Blind, string>;
 
 
 function payoutFor(blind: Blind, stake?: Stake): number {
@@ -65,8 +67,10 @@ export default function BlindSelectScreen({
   bossRerollCost,
   canAffordBossReroll,
 }: BlindSelectScreenProps) {
+  const { t } = useTranslation();
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
-  const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
+  const currentName =
+    currentBlind === 3 ? boss.name : t(BLIND_NAME_KEYS[currentBlind]);
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
   const skipOfferForBlind = (blind: Blind): AnteSkipOffer | undefined =>
     blind === 1 ? skipRewards?.small : blind === 2 ? skipRewards?.big : undefined;
@@ -78,6 +82,8 @@ export default function BlindSelectScreen({
     bossRerollsRemaining > 0;
 
   const tooltipIdBase = useId();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef);
   const [tooltip, setTooltip] = useState<{
     readonly key: string;
     readonly spec: TagTooltipSpec;
@@ -103,6 +109,7 @@ export default function BlindSelectScreen({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="blind-select-overlay"
       role="dialog"
       aria-modal="true"
@@ -110,12 +117,12 @@ export default function BlindSelectScreen({
     >
       <div className="blind-select-modal" onClick={(e) => e.stopPropagation()}>
         <h2 id="blind-select-title" className="blind-select-title">
-          Ante {ante}
+          {t("blinds.anteHeading", { ante })}
         </h2>
         {tags.length > 0 && (
           <ul
             className="blind-select-tags"
-            aria-label="Tags held"
+            aria-label={t("a11y.tagsHeld")}
             data-testid="blind-select-tags"
           >
             {tags.map((id, idx) => {
@@ -129,12 +136,9 @@ export default function BlindSelectScreen({
                   className="blind-select-tag"
                   data-testid={`blind-select-tag-${idx}`}
                   data-tag-id={id}
-                  tabIndex={0}
                   aria-describedby={open ? tooltipId : undefined}
                   onMouseEnter={(e) => openTooltip(key, spec, e.currentTarget)}
                   onMouseLeave={() => closeTooltip(key)}
-                  onFocus={(e) => openTooltip(key, spec, e.currentTarget)}
-                  onBlur={() => closeTooltip(key)}
                 >
                   <span className="blind-select-tag-name">{spec.name}</span>
                   <span className="blind-select-tag-description">
@@ -152,11 +156,11 @@ export default function BlindSelectScreen({
             })}
           </ul>
         )}
-        <ul className="blind-select-rows" aria-label="Blinds for this ante">
+        <ul className="blind-select-rows" aria-label={t("a11y.blindsForAnte")}>
           {blinds.map((b) => {
             const isCurrent = b === currentBlind;
             const isCompleted = b < currentBlind;
-            const name = b === 3 ? boss.name : BLIND_NAMES[b];
+            const name = b === 3 ? boss.name : t(BLIND_NAME_KEYS[b]);
             const rowSkipOffer = skipOfferForBlind(b);
             const rowSkipSpec = rowSkipOffer ? describeSkipOffer(rowSkipOffer) : null;
             const skipKey = `skip-${b}`;
@@ -180,7 +184,7 @@ export default function BlindSelectScreen({
                   <select
                     className="blind-select-row-name blind-select-boss-override"
                     data-testid="blind-select-boss-override"
-                    aria-label="Override boss for this ante (dev)"
+                    aria-label={t("a11y.overrideBossDev")}
                     value={boss.id}
                     onChange={(e) => onSetBoss?.(e.target.value)}
                   >
@@ -210,22 +214,22 @@ export default function BlindSelectScreen({
                     disabled={canAffordBossReroll === false}
                     aria-label={
                       canAffordBossReroll === false
-                        ? `Reroll Boss ($${bossRerollCost ?? 10}) — not enough money`
-                        : `Reroll Boss ($${bossRerollCost ?? 10})`
+                        ? t("a11y.rerollBossNotEnough", { cost: bossRerollCost ?? 10 })
+                        : t("blinds.rerollBoss", { cost: bossRerollCost ?? 10 })
                     }
                   >
-                    Reroll Boss (${bossRerollCost ?? 10})
+                    {t("blinds.rerollBoss", { cost: bossRerollCost ?? 10 })}
                   </button>
                 )}
                 <dl className="blind-select-row-stats">
                   <div className="blind-select-row-stat">
-                    <dt>Score at least</dt>
+                    <dt>{t("blinds.scoreAtLeast")}</dt>
                     <dd data-testid={`blind-select-required-${b}`}>
                       {requiredChipsForBlind({ ante, blind: b, boss, stake })}
                     </dd>
                   </div>
                   <div className="blind-select-row-stat">
-                    <dt>Payout</dt>
+                    <dt>{t("blinds.payout")}</dt>
                     <dd data-testid={`blind-select-payout-${b}`}>
                       ${payoutFor(b, stake)}
                     </dd>
@@ -235,7 +239,6 @@ export default function BlindSelectScreen({
                   <div
                     className="blind-select-row-skip-reward"
                     data-testid={`blind-select-row-skip-reward-${b}`}
-                    tabIndex={0}
                     aria-describedby={
                       skipTooltipOpen ? skipTooltipId : undefined
                     }
@@ -243,13 +246,9 @@ export default function BlindSelectScreen({
                       openTooltip(skipKey, rowSkipSpec, e.currentTarget)
                     }
                     onMouseLeave={() => closeTooltip(skipKey)}
-                    onFocus={(e) =>
-                      openTooltip(skipKey, rowSkipSpec, e.currentTarget)
-                    }
-                    onBlur={() => closeTooltip(skipKey)}
                   >
                     <span className="blind-select-row-skip-reward-label">
-                      Skip reward
+                      {t("blinds.skipReward")}
                     </span>
                     <span className="blind-select-row-skip-reward-name">
                       + {rowSkipSpec.name}
@@ -270,22 +269,22 @@ export default function BlindSelectScreen({
         <div className="blind-select-actions">
           <button
             type="button"
-            className="blind-select-play"
+            className="btn btn--primary blind-select-play"
             data-testid="blind-select-play"
             onClick={onPlay}
             autoFocus
           >
-            Play {currentName} →
+            {t("blinds.play", { blind: currentName })}
           </button>
           {canSkip && (
             <button
               type="button"
-              className="blind-select-skip"
+              className="btn btn--ghost blind-select-skip"
               data-testid="blind-select-skip"
               onClick={onSkip}
-              aria-label={`Skip ${currentName} (no reward, no penalty)`}
+              aria-label={t("a11y.skipBlind", { blind: currentName })}
             >
-              Skip
+              {t("blinds.skip")}
             </button>
           )}
         </div>

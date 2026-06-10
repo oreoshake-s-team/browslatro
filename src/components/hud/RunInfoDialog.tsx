@@ -1,11 +1,14 @@
 import { useCallback, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./RunInfo.css";
 import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 import type { HandPlayCounts } from "./handPlayCounts";
 
 type TabId = "hands" | "vouchers";
@@ -25,6 +28,7 @@ export default function RunInfoDialog({
   ownedVouchers,
   onClose,
 }: RunInfoDialogProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabId>("hands");
   const titleId = useId();
   const tabIdPrefix = useId();
@@ -35,6 +39,8 @@ export default function RunInfoDialog({
 
   const handleClose = useCallback(() => onClose(), [onClose]);
   useEscapeToClose(handleClose, true);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(overlayRef);
 
   function selectTab(tab: TabId) {
     setActiveTab(tab);
@@ -89,6 +95,7 @@ export default function RunInfoDialog({
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="run-info-overlay"
       role="dialog"
       aria-modal="true"
@@ -97,25 +104,29 @@ export default function RunInfoDialog({
     >
       <div className="run-info-modal" onClick={(e) => e.stopPropagation()}>
         <h2 id={titleId} className="run-info-title">
-          Run Information
+          {t("runInfo.title")}
         </h2>
         <div
           className="run-info-tablist"
           role="tablist"
-          aria-label="Run Information sections"
+          aria-label={t("a11y.runInfoSections")}
         >
-          <button {...tabButtonProps("hands")}>Hands</button>
-          <button {...tabButtonProps("vouchers")}>Vouchers</button>
+          <button {...tabButtonProps("hands")}>{t("runInfo.handsTab")}</button>
+          <button {...tabButtonProps("vouchers")}>
+            {t("runInfo.vouchersTab")}
+          </button>
         </div>
         <div className="run-info-panels">
           <div {...panelProps("hands")}>
             <table className="run-info-table">
               <thead>
                 <tr>
-                  <th scope="col">Hand</th>
-                  <th scope="col" aria-label="Level">Lvl</th>
-                  <th scope="col">Chips × Mult</th>
-                  <th scope="col">Played</th>
+                  <th scope="col">{t("runInfo.handHeader")}</th>
+                  <th scope="col" aria-label={t("a11y.level")}>
+                    {t("runInfo.levelHeader")}
+                  </th>
+                  <th scope="col">{t("runInfo.chipsTimesMult")}</th>
+                  <th scope="col">{t("runInfo.playedHeader")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -124,7 +135,7 @@ export default function RunInfoDialog({
                   const stats = handStats[label];
                   return (
                     <tr key={label} data-testid={`run-info-row-${label}`}>
-                      <th scope="row">{label}</th>
+                      <th scope="row">{tHandLabel(t, label)}</th>
                       <td
                         className="run-info-level"
                         data-testid={`run-info-level-${label}`}
@@ -149,7 +160,7 @@ export default function RunInfoDialog({
                 className="run-info-voucher-empty"
                 data-testid="run-info-voucher-empty"
               >
-                No vouchers purchased yet.
+                {t("runInfo.noVouchers")}
               </p>
             ) : (
               <ul className="run-info-voucher-list">
@@ -173,11 +184,11 @@ export default function RunInfoDialog({
         </div>
         <button
           type="button"
-          className="run-info-close"
+          className="btn btn--primary run-info-close"
           onClick={handleClose}
           autoFocus
         >
-          Close
+          {t("runInfo.close")}
         </button>
       </div>
     </div>,

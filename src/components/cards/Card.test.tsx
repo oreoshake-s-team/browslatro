@@ -110,6 +110,23 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-discarding");
   });
 
+  test("applies the newly-drawn class when the newlyDrawn prop is set", () => {
+    render(<Card card={aceOfSpades} newlyDrawn />);
+    expect(screen.getByRole("button")).toHaveClass("card-newly-drawn");
+  });
+
+  test("marks the aria-label as newly drawn when the newlyDrawn prop is set", () => {
+    render(<Card card={aceOfSpades} newlyDrawn />);
+    expect(
+      screen.getByRole("button", { name: "A of Spades, newly drawn" })
+    ).toBeInTheDocument();
+  });
+
+  test("does not apply the newly-drawn class by default (negative)", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-newly-drawn");
+  });
+
   test("invokes onDiscardEnd with the card when the discard animation ends", () => {
     const onDiscardEnd = vi.fn();
     render(
@@ -341,6 +358,92 @@ describe("Card scoring pulse animation", () => {
     render(<Card card={aceOfSpades} scoring={false} scoringPulseTick={5} />);
     const button = screen.getByRole("button");
     expect(button).not.toHaveClass("card-scoring-tick-0");
+  });
+});
+
+describe("Card face-down hides seal/enhancement/edition (#765)", () => {
+  test("a face-down lucky card does not apply the enhancement class", () => {
+    const lucky: CardType = {
+      id: 40,
+      rank: "3",
+      suit: "hearts",
+      enhancement: "lucky",
+      faceDown: true,
+    };
+    render(<Card card={lucky} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-enhancement-lucky");
+  });
+
+  test("a face-down blue-seal card does not apply the seal class", () => {
+    const sealed: CardType = {
+      id: 41,
+      rank: "7",
+      suit: "clubs",
+      seal: "blue",
+      faceDown: true,
+    };
+    render(<Card card={sealed} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-seal-blue");
+  });
+
+  test("a face-down card with a seal does not render the seal badge", () => {
+    const sealed: CardType = {
+      id: 42,
+      rank: "5",
+      suit: "spades",
+      seal: "gold",
+      faceDown: true,
+    };
+    render(<Card card={sealed} />);
+    expect(screen.queryByTestId("card-seal-42")).not.toBeInTheDocument();
+  });
+
+  test("a face-down foil card does not apply the edition class", () => {
+    const editioned: CardType = {
+      id: 43,
+      rank: "8",
+      suit: "diamonds",
+      edition: "foil",
+      faceDown: true,
+    };
+    render(<Card card={editioned} />);
+    expect(screen.getByRole("button").className).not.toMatch(/card-edition-/);
+  });
+
+  test("a face-down card flipped face-up restores its enhancement class (regression)", () => {
+    const lucky: CardType = {
+      id: 44,
+      rank: "3",
+      suit: "hearts",
+      enhancement: "lucky",
+      faceDown: false,
+    };
+    render(<Card card={lucky} />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
+  });
+
+  test("a face-down card flipped face-up restores its seal badge (regression)", () => {
+    const sealed: CardType = {
+      id: 45,
+      rank: "5",
+      suit: "spades",
+      seal: "gold",
+      faceDown: false,
+    };
+    render(<Card card={sealed} />);
+    expect(screen.getByTestId("card-seal-45")).toBeInTheDocument();
+  });
+
+  test("a face-down card scoring renders its enhancement class (showBack flips off during scoring)", () => {
+    const lucky: CardType = {
+      id: 46,
+      rank: "3",
+      suit: "hearts",
+      enhancement: "lucky",
+      faceDown: true,
+    };
+    render(<Card card={lucky} scoring />);
+    expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
   });
 });
 

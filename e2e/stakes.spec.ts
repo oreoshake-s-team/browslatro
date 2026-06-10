@@ -20,65 +20,23 @@ async function clickWin(page: Page): Promise<void> {
   await page.locator("button.win-button").click();
 }
 
-test.describe("Stake picker (#695)", () => {
-  test.beforeEach(async ({ page }) => {
-    await setDeterministic(page);
-    await page.goto("/");
-  });
-
-  test("renders White / Red / Green / Black stake tiles; does not render Gold (still implemented:false)", async ({
-    page,
-  }) => {
-    await expect(page.getByTestId("new-run-stake-white")).toBeVisible();
-    await expect(page.getByTestId("new-run-stake-red")).toBeVisible();
-    await expect(page.getByTestId("new-run-stake-green")).toBeVisible();
-    await expect(page.getByTestId("new-run-stake-black")).toBeVisible();
-    await expect(page.getByTestId("new-run-stake-gold")).toHaveCount(0);
-  });
-});
-
-test.describe("Stake-derived deltas on BlindSelectScreen (#695)", () => {
-  test.beforeEach(async ({ page }) => {
-    await setDeterministic(page);
-    await page.goto("/");
-  });
-
-  test("Red Stake: Small Blind payout is $0; Big Blind payout is still $4 (only Small is zeroed)", async ({
-    page,
-  }) => {
-    await page.getByTestId("new-run-stake-red").click();
-    await page.getByTestId("new-run-confirm").click();
-    await expect(page.getByTestId("blind-select-payout-1")).toHaveText("$0");
-    await expect(page.getByTestId("blind-select-payout-2")).toHaveText("$4");
-  });
-
-  test("White Stake: Small Blind payout is $3 and Ante 1 Small Blind required is 300 (BASE_CHIPS[0])", async ({
-    page,
-  }) => {
-    await page.getByTestId("new-run-stake-white").click();
-    await page.getByTestId("new-run-confirm").click();
-    await expect(page.getByTestId("blind-select-payout-1")).toHaveText("$3");
-    await expect(page.getByTestId("blind-select-required-1")).toHaveText("300");
-  });
-
-  test("Green Stake: Ante 1 Small Blind required is 300 (Green = White at ante 1)", async ({
-    page,
-  }) => {
-    await page.getByTestId("new-run-stake-green").click();
-    await page.getByTestId("new-run-confirm").click();
-    await expect(page.getByTestId("blind-select-required-1")).toHaveText("300");
-  });
-
-  test("Green Stake: after advancing to Ante 2, Small Blind required is 900 (GREEN_STAKE_CHIPS[1])", async ({
-    page,
-  }) => {
-    await page.getByTestId("new-run-stake-green").click();
-    await page.getByTestId("new-run-confirm").click();
-    await page.getByTestId("blind-select-play").click();
-    await clickWin(page);
-    await clickWin(page);
-    await clickWin(page);
-    await page.getByRole("button", { name: /Next Round/ }).click();
-    await expect(page.getByTestId("blind-select-required-1")).toHaveText("900");
-  });
+// Single-screen stake math (payouts, required chips, the live New Run
+// preview) is covered by NewRunScreen.test.tsx, BlindSelectScreen.test.tsx,
+// items/stakes.test.ts, and scoring/anteScaling.test.ts; this journey keeps
+// the only multi-round behavior — Green Stake scaling kicking in at ante 2
+// (#935).
+test("Green Stake: after advancing to Ante 2, Small Blind required is 900 (GREEN_STAKE_CHIPS[1])", async ({
+  page,
+}) => {
+  await setDeterministic(page);
+  await page.goto("/");
+  await page.getByTestId("new-run-stake-green").click();
+  await page.getByTestId("new-run-confirm").click();
+  await expect(page.getByTestId("blind-select-required-1")).toHaveText("300");
+  await page.getByTestId("blind-select-play").click();
+  await clickWin(page);
+  await clickWin(page);
+  await clickWin(page);
+  await page.getByRole("button", { name: /Next Round/ }).click();
+  await expect(page.getByTestId("blind-select-required-1")).toHaveText("900");
 });

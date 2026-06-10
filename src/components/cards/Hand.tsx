@@ -1,9 +1,12 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useReducer, useRef } from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
 import type { Card as CardType } from "../../cards/types";
 import { sortCards, type SortMode } from "../../cards/deck";
+import { useTranslation } from "react-i18next";
+import { announce } from "../system/LiveAnnouncer";
+import { cardName } from "../../i18n/strings";
 
 export const MAX_SELECTED = 5;
 
@@ -27,11 +30,66 @@ function applyManualOrder(
   return result;
 }
 
+interface HandUiState {
+  readonly sortMode: SortMode;
+  readonly manualOrder: ReadonlyArray<number> | null;
+  readonly draggingId: number | null;
+  readonly dragOverGap: number | null;
+}
+
+type HandUiAction =
+  | { readonly type: "selectSort"; readonly mode: SortMode }
+  | { readonly type: "resetManualOrder" }
+  | { readonly type: "reorder"; readonly order: ReadonlyArray<number> }
+  | { readonly type: "dragStart"; readonly id: number }
+  | { readonly type: "setDragOverGap"; readonly gap: number }
+  | { readonly type: "clearDragOverGap"; readonly gap: number }
+  | { readonly type: "endDrag" };
+
+const initialHandUiState: HandUiState = {
+  sortMode: "rank",
+  manualOrder: null,
+  draggingId: null,
+  dragOverGap: null,
+};
+
+function handUiReducer(state: HandUiState, action: HandUiAction): HandUiState {
+  switch (action.type) {
+    // Choosing a sort always abandons any manual arrangement.
+    case "selectSort":
+      return { ...state, sortMode: action.mode, manualOrder: null };
+    case "resetManualOrder":
+      return state.manualOrder === null
+        ? state
+        : { ...state, manualOrder: null };
+    case "reorder":
+      return { ...state, manualOrder: action.order };
+    case "dragStart":
+      return { ...state, draggingId: action.id };
+    case "setDragOverGap":
+      return state.dragOverGap === action.gap
+        ? state
+        : { ...state, dragOverGap: action.gap };
+    case "clearDragOverGap":
+      return state.dragOverGap === action.gap
+        ? { ...state, dragOverGap: null }
+        : state;
+    // Ending a drag clears both drag-tracking fields atomically.
+    case "endDrag":
+      return state.draggingId === null && state.dragOverGap === null
+        ? state
+        : { ...state, draggingId: null, dragOverGap: null };
+    default:
+      return state;
+  }
+}
+
 interface HandProps {
   hand: ReadonlyArray<CardType>;
   remaining: ReadonlyArray<CardType>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
+  newlyDrawnIds?: ReadonlySet<number>;
   debuffedIds?: ReadonlySet<number>;
   scoringId?: number | null;
   scoringPulseTick?: number;
@@ -54,6 +112,7 @@ export default function Hand({
   remaining,
   selectedIds,
   discardingIds,
+  newlyDrawnIds,
   debuffedIds,
   scoringId = null,
   scoringPulseTick = 0,
@@ -70,19 +129,22 @@ export default function Hand({
   jokerDropEnabled,
   onJokerSellDrop,
 }: HandProps) {
-  const [sortMode, setSortMode] = useState<SortMode>("rank");
-  const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
-    null,
-  );
-  const [draggingId, setDraggingId] = useState<number | null>(null);
-  const [dragOverGap, setDragOverGap] = useState<number | null>(null);
+  const { t } = useTranslation();
+  const [{ sortMode, manualOrder, draggingId, dragOverGap }, dispatch] =
+    useReducer(handUiReducer, initialHandUiState);
   const handCardsRef = useRef<HTMLDivElement | null>(null);
   const lastHandPlaySignalRef = useRef<number>(handPlaySignal);
+  // The newly-drawn set is part of the persisted run state, so a restored run
+  // can mount with a non-empty set; only mark cards when it changes after
+  // mount (same principle as the Nope! replay fix, issue #860).
+  const mountNewlyDrawnRef = useRef(newlyDrawnIds);
+  const showNewlyDrawn =
+    newlyDrawnIds !== undefined && newlyDrawnIds !== mountNewlyDrawnRef.current;
 
   useEffect(() => {
     if (lastHandPlaySignalRef.current === handPlaySignal) return;
     lastHandPlaySignalRef.current = handPlaySignal;
-    setManualOrder(null);
+    dispatch({ type: "resetManualOrder" });
   }, [handPlaySignal]);
 
   const displayedHand = useMemo(
@@ -97,8 +159,7 @@ export default function Hand({
   }, [displayedHand, onDisplayOrderChange]);
 
   function selectSort(mode: SortMode) {
-    setSortMode(mode);
-    setManualOrder(null);
+    dispatch({ type: "selectSort", mode });
   }
 
   // Gap indices run 0..N where N = hand size; gap K is "before card K"
@@ -117,16 +178,37 @@ export default function Hand({
     next.splice(fromIdx, 1);
     const insertIdx = gapIdx > fromIdx ? gapIdx - 1 : gapIdx;
     next.splice(insertIdx, 0, sourceId);
-    setManualOrder(next);
+    dispatch({ type: "reorder", order: next });
   }
 
   function endDrag() {
-    setDraggingId(null);
-    setDragOverGap(null);
+    dispatch({ type: "endDrag" });
+  }
+
+  function moveCard(card: CardType, direction: -1 | 1) {
+    const idx = displayedHand.findIndex((c) => c.id === card.id);
+    if (idx < 0) return;
+    const name = cardName(t, card);
+    if (direction === -1 && idx === 0) {
+      announce(t("a11y.atStart", { item: name }));
+      return;
+    }
+    if (direction === 1 && idx === displayedHand.length - 1) {
+      announce(t("a11y.atEnd", { item: name }));
+      return;
+    }
+    insertAtGap(card.id, direction === -1 ? idx - 1 : idx + 2);
+    announce(
+      t("a11y.movedTo", {
+        item: name,
+        position: idx + direction + 1,
+        total: displayedHand.length,
+      }),
+    );
   }
 
   function handleDragStart(cardId: number, e: React.DragEvent<HTMLDivElement>) {
-    setDraggingId(cardId);
+    dispatch({ type: "dragStart", id: cardId });
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", String(cardId));
@@ -140,11 +222,11 @@ export default function Hand({
     if (draggingId === null) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    if (dragOverGap !== gapIdx) setDragOverGap(gapIdx);
+    dispatch({ type: "setDragOverGap", gap: gapIdx });
   }
 
   function handleGapDragLeave(gapIdx: number) {
-    if (dragOverGap === gapIdx) setDragOverGap(null);
+    dispatch({ type: "clearDragOverGap", gap: gapIdx });
   }
 
   function handleGapDrop(
@@ -200,7 +282,7 @@ export default function Hand({
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     const gap = gapNearestToClientX(e.clientX);
-    if (gap !== null && dragOverGap !== gap) setDragOverGap(gap);
+    if (gap !== null) dispatch({ type: "setDragOverGap", gap });
   }
 
   function handleHandDrop(e: React.DragEvent<HTMLDivElement>) {
@@ -246,7 +328,11 @@ export default function Hand({
     <div className="hand">
       <div className="hand-toolbar">
         <span className="hand-sort-label">Sort:</span>
-        <div className="hand-sort-group" role="group" aria-label="Sort hand">
+        <div
+          className="hand-sort-group"
+          role="group"
+          aria-label={t("a11y.sortHand")}
+        >
           <button
             type="button"
             className={`hand-sort-button ${
@@ -278,10 +364,10 @@ export default function Hand({
             }`.trim()}
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
-            aria-label="Manual order"
-            title="Manual order (drag a card to rearrange)"
+            aria-label={t("a11y.manualOrder")}
+            title={t("hand.manualOrderHint")}
           >
-            Manual
+            {t("hand.sortManual")}
           </button>
         </div>
       </div>
@@ -291,7 +377,8 @@ export default function Hand({
           className={`hand-cards${
             draggingId !== null ? " hand-cards-dragging" : ""
           }`}
-          aria-label="Your hand"
+          aria-label={t("a11y.yourHand")}
+          data-testid="hand-cards"
           onDragOver={handleHandDragOver}
           onDrop={handleHandDrop}
         >
@@ -318,6 +405,7 @@ export default function Hand({
                     card={card}
                     selected={selectedIds.has(card.id)}
                     discarding={discardingIds.has(card.id)}
+                    newlyDrawn={showNewlyDrawn && newlyDrawnIds.has(card.id)}
                     debuffed={debuffedIds?.has(card.id) ?? false}
                     scoring={scoringId === card.id}
                     scoringPulseTick={scoringPulseTick}
@@ -328,6 +416,26 @@ export default function Hand({
                     onToggle={onToggleCard}
                     onDiscardEnd={onCardDiscardEnd}
                   />
+                  <div className="hand-move-controls">
+                    <button
+                      type="button"
+                      className="hand-move-button"
+                      aria-label={t("a11y.moveLeft", { item: cardName(t, card) })}
+                      data-testid={`hand-move-left-${card.id}`}
+                      onClick={() => moveCard(card, -1)}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="hand-move-button"
+                      aria-label={t("a11y.moveRight", { item: cardName(t, card) })}
+                      data-testid={`hand-move-right-${card.id}`}
+                      onClick={() => moveCard(card, 1)}
+                    >
+                      ▶
+                    </button>
+                  </div>
                 </div>
               </Fragment>
             );

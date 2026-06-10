@@ -14,12 +14,40 @@ import {
 import {
   extraHandSize,
   pickVouchersForAnte,
+  extraConsumableSlots,
+  extraJokerSlots,
 } from "../items/vouchers";
-import { HAND_SIZE, createDeck, resetCardIds } from "../cards/deck";
-import { initialDeal } from "../cards/deckBuild";
 import {
+  HAND_SIZE,
+  RANKS,
+  SUITS,
+  applyDeckCompositionTransforms,
+  createDeck,
+  nextCardId,
+  resetCardIds,
+} from "../cards/deck";
+import { fullDeckPile, initialDeal } from "../cards/deckBuild";
+import { SEAL_KINDS, pickRandomTarot } from "../cards/seals";
+import type { Card } from "../cards/types";
+import { emptyHandCounts } from "../components/hud/handPlayCounts";
+import type { HandLabel } from "../scoring/handEvaluator";
+import {
+  MAX_CONSUMABLE_SLOTS,
+  addConsumable,
+} from "../items/consumables";
+import {
+  MAX_JOKERS,
+  createJokerByRarity,
+  createJokerCatalog,
+  disablesBossBlindsFromJokers,
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
+  isJokerActive,
+  sealedCardsOnRoundBeginFromJokers,
+  stoneCardsOnBlindSelectFromJokers,
+  type Joker,
+  applyCeremonialDaggerOnBlindSelect,
+  applyMadnessOnBlindSelect,
 } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
@@ -30,11 +58,18 @@ import {
   type AnteSkipOffer,
   type TagId,
 } from "../items/tags";
-import { deckStartingMoneyDelta } from "../items/decks";
+import {
+  deckCompositionTransforms,
+  deckStartingMoneyDelta,
+  type Deck,
+  deckJokerSlotsDelta,
+} from "../items/decks";
+import type { Stake } from "../items/stakes";
 import {
   computeStartingDiscards,
   computeStartingHands,
 } from "../run/roundSetup";
+import type { RoundLostInfo } from "../components/game/RoundLostModal";
 
 export interface UseRoundLifecycleParams {
   readonly applyGainedTag: (
@@ -52,7 +87,11 @@ export interface UseRoundLifecycleResult {
     handSizeOverride?: number;
   }) => void;
   readonly startNewGame: () => void;
-  readonly loseGame: () => void;
+  readonly confirmRunSelection: (selection: {
+    readonly stake: Stake;
+    readonly deck: Deck;
+  }) => void;
+  readonly loseGame: (info: RoundLostInfo) => void;
   readonly skipBlind: () => void;
 }
 
@@ -67,12 +106,22 @@ export function useRoundLifecycle({
   const setAnte = useGame((s) => s.setAnte);
   const currentBoss = useGame((s) => s.currentBoss);
   const setCurrentBoss = useGame((s) => s.setCurrentBoss);
+  const setIdolTarget = useGame((s) => s.setIdolTarget);
+  const setAncientSuit = useGame((s) => s.setAncientSuit);
+  const setCastleSuit = useGame((s) => s.setCastleSuit);
+  const setRebateRank = useGame((s) => s.setRebateRank);
+  const setTodoHand = useGame((s) => s.setTodoHand);
   const setRecentBossIds = useGame((s) => s.setRecentBossIds);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const equippedJokers = useGame((s) => s.jokers);
   const selectedDeck = useGame((s) => s.selectedDeck);
+  const selectedStake = useGame((s) => s.selectedStake);
+  const setSelectedStake = useGame((s) => s.setSelectedStake);
+  const setSelectedDeck = useGame((s) => s.setSelectedDeck);
+  const setEndlessMode = useGame((s) => s.setEndlessMode);
+  const setPendingGameWon = useGame((s) => s.setPendingGameWon);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
   const setBaseDeckCards = useGame((s) => s.setBaseDeckCards);
@@ -90,8 +139,6 @@ export function useRoundLifecycle({
   );
   const pendingDouble = useGame((s) => s.pendingDouble);
   const setPendingDouble = useGame((s) => s.setPendingDouble);
-  const setExtraPackSlots = useGame((s) => s.setExtraPackSlots);
-  const setPendingForcedPacks = useGame((s) => s.setPendingForcedPacks);
   const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
   const setDevMultBonus = useGame((s) => s.setDevMultBonus);
   const setDevMultFactor = useGame((s) => s.setDevMultFactor);
@@ -117,6 +164,7 @@ export function useRoundLifecycle({
   const setDealt = useGame((s) => s.setDealt);
   const setSelectedIds = useGame((s) => s.setSelectedIds);
   const setDiscardingIds = useGame((s) => s.setDiscardingIds);
+  const setNewlyDrawnIds = useGame((s) => s.setNewlyDrawnIds);
   const setSelectedHand = useGame((s) => s.setSelectedHand);
   const setChips = useGame((s) => s.setChips);
   const setMultiplier = useGame((s) => s.setMultiplier);
@@ -124,6 +172,7 @@ export function useRoundLifecycle({
   const setLuckyMoneyProcIds = useGame((s) => s.setLuckyMoneyProcIds);
   const setScoringEvents = useGame((s) => s.setScoringEvents);
   const setPendingWin = useGame((s) => s.setPendingWin);
+  const setPendingLose = useGame((s) => s.setPendingLose);
 
   const currentHandSize = Math.max(
     1,
@@ -139,9 +188,18 @@ export function useRoundLifecycle({
     handSizeOverride?: number;
   } = {}): void {
     const effectiveBlind = opts.blind ?? blind;
-    const effectiveBoss =
-      opts.boss !== undefined ? opts.boss : currentBoss;
+    const pickedBoss = opts.boss !== undefined ? opts.boss : currentBoss;
     const isBossRound = effectiveBlind === 3;
+    const effectiveBoss =
+      isBossRound &&
+      pickedBoss !== null &&
+      pickedBoss.effect.kind !== "none" &&
+      disablesBossBlindsFromJokers(equippedJokers)
+        ? { ...pickedBoss, effect: { kind: "none" as const } }
+        : pickedBoss;
+    if (effectiveBoss !== pickedBoss && effectiveBoss !== null) {
+      setCurrentBoss(effectiveBoss);
+    }
     const baseHandSize =
       (opts.handSizeOverride ?? currentHandSize) + pendingNextRoundHandSize;
     if (pendingNextRoundHandSize !== 0) {
@@ -154,6 +212,7 @@ export function useRoundLifecycle({
       ownedVoucherIds,
       deck: selectedDeck,
       jokers: equippedJokers,
+      stake: selectedStake,
     };
     const startingHands = computeStartingHands(resourceCtx);
     const startingDiscards = computeStartingDiscards(resourceCtx);
@@ -165,20 +224,137 @@ export function useRoundLifecycle({
     setRemainingDiscards(startingDiscards);
     setDiscardsUsedThisRound(0);
     setHandHistoryThisRound([]);
+    const deckForTargets = [...baseDeckCards, ...addedCards].filter(
+      (c) => !destroyedCardIds.has(c.id),
+    );
+    const needsIdol = equippedJokers.some(
+      (j) => j.effect.kind === "x-mult-on-idol-card",
+    );
+    if (needsIdol && deckForTargets.length > 0) {
+      const pick =
+        deckForTargets[Math.floor(Math.random() * deckForTargets.length)];
+      setIdolTarget({ rank: pick.rank, suit: pick.suit });
+    } else {
+      setIdolTarget(null);
+    }
+    setAncientSuit(
+      equippedJokers.some((j) => j.effect.kind === "x-mult-per-suit-rotating")
+        ? SUITS[Math.floor(Math.random() * SUITS.length)]
+        : null,
+    );
+    if (
+      equippedJokers.some((j) => j.effect.kind === "money-on-todo-hand")
+    ) {
+      const labels = Object.keys(emptyHandCounts()) as HandLabel[];
+      setTodoHand(labels[Math.floor(Math.random() * labels.length)]);
+    } else {
+      setTodoHand(null);
+    }
+    setJokers((prev) => applyCeremonialDaggerOnBlindSelect(prev));
+    if (effectiveBlind !== 3) {
+      setJokers((prev) => applyMadnessOnBlindSelect(prev));
+    }
+    setRebateRank(
+      equippedJokers.some(
+        (j) => j.effect.kind === "money-per-discarded-rebate-rank",
+      )
+        ? RANKS[Math.floor(Math.random() * RANKS.length)]
+        : null,
+    );
+    setCastleSuit(
+      equippedJokers.some(
+        (j) => j.effect.kind === "stack-chips-per-rotating-suit-discard",
+      )
+        ? SUITS[Math.floor(Math.random() * SUITS.length)]
+        : null,
+    );
+    const activeForBlind = equippedJokers.filter(isJokerActive);
+    const blindTarots = activeForBlind.filter(
+      (j) => j.effect.kind === "blind-select-creates-tarot",
+    ).length;
+    if (blindTarots > 0) {
+      const tarotCapacity =
+        MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      setConsumables((prev) => {
+        let next = prev;
+        for (let i = 0; i < blindTarots; i += 1) {
+          const after = addConsumable(
+            next,
+            { kind: "tarot", card: pickRandomTarot() },
+            tarotCapacity,
+          );
+          if (after === next) break;
+          next = after;
+        }
+        return next;
+      });
+    }
+    const commonJokerCreations = activeForBlind.reduce(
+      (sum, j) =>
+        j.effect.kind === "blind-select-creates-common-jokers"
+          ? sum + j.effect.count
+          : sum,
+      0,
+    );
+    if (commonJokerCreations > 0) {
+      const jokerCapacity = Math.max(
+        0,
+        MAX_JOKERS +
+          extraJokerSlots(ownedVoucherIds) +
+          deckJokerSlotsDelta(selectedDeck),
+      );
+      setJokers((prev) => {
+        let next = prev as ReadonlyArray<Joker>;
+        for (let i = 0; i < commonJokerCreations; i += 1) {
+          const created = createJokerByRarity(
+            next,
+            createJokerCatalog(),
+            "common",
+            jokerCapacity,
+          );
+          if (!created) break;
+          next = [...next, created];
+        }
+        return [...next];
+      });
+    }
+    const stoneCount = stoneCardsOnBlindSelectFromJokers(equippedJokers);
+    const newStones: Card[] = Array.from({ length: stoneCount }, () => ({
+      id: nextCardId(),
+      rank: RANKS[Math.floor(Math.random() * RANKS.length)],
+      suit: SUITS[Math.floor(Math.random() * SUITS.length)],
+      enhancement: "stone",
+    }));
+    const sealedCount = sealedCardsOnRoundBeginFromJokers(equippedJokers);
+    const newSealed: Card[] = Array.from({ length: sealedCount }, () => ({
+      id: nextCardId(),
+      rank: RANKS[Math.floor(Math.random() * RANKS.length)],
+      suit: SUITS[Math.floor(Math.random() * SUITS.length)],
+      seal: SEAL_KINDS[Math.floor(Math.random() * SEAL_KINDS.length)],
+    }));
+    const addedWithStones =
+      newStones.length > 0 ? [...addedCards, ...newStones] : addedCards;
+    if (newStones.length > 0 || newSealed.length > 0) {
+      setAddedCards([...addedWithStones, ...newSealed]);
+    }
     const fresh = initialDeal(
       baseDeckCards,
       destroyedCardIds,
       handSize,
-      addedCards,
+      addedWithStones,
       cardEnhancementsById,
       cardSealsById,
     );
     setDealt({
-      hand: applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
+      hand: [
+        ...applyBossFaceDown(fresh.hand, effectiveBoss, isBossRound, "initial"),
+        ...newSealed,
+      ],
       remaining: fresh.remaining,
     });
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
+    setNewlyDrawnIds(new Set());
     setSelectedHand(null);
     setChips(0);
     setMultiplier(0);
@@ -190,20 +366,20 @@ export function useRoundLifecycle({
     setPendingWin(null);
   }
 
-  function startNewGame(): void {
+  function resetForNewRun(deck: Deck): void {
     setBlind(1);
     setRound(1);
     setAnte(1);
+    setEndlessMode(false);
+    setPendingGameWon(null);
     useGame.getState().resetEconomy();
-    const moneyDelta = deckStartingMoneyDelta(selectedDeck);
+    const moneyDelta = deckStartingMoneyDelta(deck);
     if (moneyDelta !== 0) {
       useGame.getState().setMoney(useGame.getState().money + moneyDelta);
     }
     setHandSizeModifier(0);
     setPendingNextRoundHandSize(0);
     setPendingDouble(false);
-    setExtraPackSlots(0);
-    setPendingForcedPacks([]);
     setDevChipsBonus(0);
     setDevMultBonus(0);
     setDevMultFactor(1);
@@ -211,12 +387,16 @@ export function useRoundLifecycle({
     setJokers(initialJokersConfig.factory());
     useGame.getState().resetStats();
     resetCardIds();
-    setBaseDeckCards(createDeck());
+    const freshBaseDeck = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms(deck),
+    );
+    setBaseDeckCards(freshBaseDeck);
     setDestroyedCardIds(new Set());
     setAddedCards([]);
     setCardEnhancementsById(new Map());
     setCardSealsById(new Map());
-    setConsumables([]);
+    setDealt(fullDeckPile(freshBaseDeck));
     useGame.getState().resetVouchers();
     setCurrentAnteVouchers(
       pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
@@ -233,14 +413,38 @@ export function useRoundLifecycle({
     setPendingShopMods([]);
     setPlayedCardKeysThisAnte(new Set());
     setHandHistoryThisRound([]);
+    const store = useGame.getState();
+    store.resetConsumables();
+    store.resetHand();
+    store.resetShop();
+    store.resetPacks();
+    store.resetScoring();
+    store.resetAnimations();
+    store.resetLastUsedConsumable();
+    store.setHandPlaySignal(0);
+    resetDiscardPipeline();
+    resetScoring();
     setPendingBlindSelect(true);
+  }
+
+  function startNewGame(): void {
+    resetForNewRun(selectedDeck);
     setPendingRunSelect(true);
   }
 
-  function loseGame(): void {
+  function confirmRunSelection(selection: {
+    readonly stake: Stake;
+    readonly deck: Deck;
+  }): void {
+    setSelectedStake(selection.stake);
+    setSelectedDeck(selection.deck);
+    resetForNewRun(selection.deck);
+    setPendingRunSelect(false);
+  }
+
+  function loseGame(info: RoundLostInfo): void {
     play("lose");
-    alert("Game Over! Try again.");
-    startNewGame();
+    setPendingLose(info);
   }
 
   function skipBlind(): void {
@@ -264,5 +468,5 @@ export function useRoundLifecycle({
     for (let i = 0; i < times; i += 1) applyGainedTag(offered, nextStats);
   }
 
-  return { startNewRound, startNewGame, loseGame, skipBlind };
+  return { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind };
 }

@@ -9,8 +9,8 @@
 }
 
 .run-info-modal {
-  background-color: #f8f9fa;
-  border: 2px solid #dee2e6;
+  background-color: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 12px;
   padding: 1.8rem 2rem;
   min-width: 22rem;
@@ -26,7 +26,7 @@
 .run-info-title {
   margin: 0;
   font-size: 1.5rem;
-  color: #495057;
+  color: var(--text-primary);
   text-align: center;
 }
 
@@ -41,9 +41,9 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #495057;
+  color: var(--text-muted);
   padding: 0.4rem 0.6rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border);
 }
 
 .run-info-table thead th:last-child,
@@ -54,31 +54,31 @@
 .run-info-table tbody th {
   text-align: left;
   font-weight: 600;
-  color: #212529;
+  color: var(--text-primary);
   padding: 0.4rem 0.6rem;
 }
 
 .run-info-table tbody td {
   padding: 0.4rem 0.6rem;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .run-info-table .run-info-level {
   text-align: center;
   font-variant-numeric: tabular-nums;
-  color: #1c7ed6;
+  color: var(--accent-chips-text);
   font-weight: 600;
 }
 
 .run-info-table tbody tr + tr th,
 .run-info-table tbody tr + tr td {
-  border-top: 1px solid #f1f3f5;
+  border-top: 1px solid var(--border);
 }
 
 .run-info-tablist {
   display: flex;
   gap: 0.4rem;
-  border-bottom: 1px solid #dee2e6;
+  border-bottom: 1px solid var(--border);
 }
 
 .run-info-tab {
@@ -88,25 +88,25 @@
   padding: 0.55rem 1rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #495057;
+  color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
 }
 
 .run-info-tab:hover {
-  color: #1c7ed6;
+  color: var(--accent-chips-text);
 }
 
 .run-info-tab:focus-visible {
-  outline: 2px solid #1c7ed6;
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 4px;
 }
 
 .run-info-tab-active {
-  color: #1c7ed6;
-  border-bottom-color: #1c7ed6;
+  color: var(--accent-chips-text);
+  border-bottom-color: var(--accent-chips-text);
 }
 
 .run-info-panels {
@@ -138,25 +138,25 @@
   flex-direction: column;
   gap: 0.15rem;
   padding: 0.5rem 0.6rem;
-  background-color: #ffffff;
-  border: 1px solid #e9ecef;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .run-info-voucher-name {
   font-weight: 600;
-  color: #212529;
+  color: var(--text-primary);
 }
 
 .run-info-voucher-description {
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--text-secondary);
 }
 
 .run-info-voucher-empty {
   margin: 0;
   padding: 0.6rem;
-  color: #495057;
+  color: var(--text-muted);
   font-style: italic;
   text-align: center;
 }
@@ -164,20 +164,5 @@
 .run-info-close {
   align-self: center;
   padding: 0.7rem 1.6rem;
-  border: 1px solid #1c7ed6;
-  background-color: #339af0;
-  color: white;
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.run-info-close:hover {
-  background-color: #1c7ed6;
-}
-
-.run-info-close:focus-visible {
-  outline: 2px solid #1c7ed6;
-  outline-offset: 2px;
 }

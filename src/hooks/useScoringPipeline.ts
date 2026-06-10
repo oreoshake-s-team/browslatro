@@ -9,12 +9,17 @@ import {
 import { cardLabel, type ScoringEvent } from "../scoring/scoringTrace";
 import {
   applyCardEnhancement,
-  applyLuckyRolls,
   cardRankForEvaluation,
   rollEnhancementChance,
 } from "../cards/enhancements";
 import { goldSealMoney } from "../cards/seals";
-import { applyPerCardJokers, isFaceCard } from "../items/jokers";
+import {
+  applyPerCardJokers,
+  handEvalOptionsFromJokers,
+  isFaceCard,
+  applyCardsDestroyedToJokerStates,
+  applyGlassShatterToJokerStates,
+} from "../items/jokers";
 import { CARD_EDITION_INFO, applyCardEdition } from "../cards/editions";
 import { GOLD_HELD_BONUS_PER_CARD } from "../scoring/payout";
 import { STEEL_MULT_FACTOR } from "../cards/heldInHand";
@@ -75,9 +80,19 @@ export function useScoringPipeline({
   const jokers = useGame((s) => s.jokers);
   const dealt = useGame((s) => s.dealt);
 
-  const isScoring =
+  const perCardScoring =
     scoringCards.length > 0 && scoringIndex < scoringCards.length;
-  const currentScoringId = isScoring ? scoringCards[scoringIndex].id : null;
+  const handLevelScoring =
+    handLevelSteps.length > 0 && handLevelIndex < handLevelSteps.length;
+  const steelScoring =
+    steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length;
+  const goldPhase =
+    goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length;
+  const isScoring =
+    perCardScoring || handLevelScoring || steelScoring || goldPhase;
+  const currentScoringId = perCardScoring
+    ? scoringCards[scoringIndex].id
+    : null;
   const currentGoldScoringId =
     goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length
       ? goldScoringIds[goldScoringIndex]
@@ -165,8 +180,19 @@ export function useScoringPipeline({
           cardLabel: stepCardLabel,
           source: "Glass roll",
         });
+        useGame
+          .getState()
+          .setJokers((prev) =>
+            applyCardsDestroyedToJokerStates(
+              applyGlassShatterToJokerStates(prev, 1),
+              [stepCard],
+            ),
+          );
       }
-      const luckyResult = applyLuckyRolls(stepCard);
+      const luckyResult = useGame.getState().luckyRollsByScoringIndex[stepIdx] ?? {
+        multBonus: 0,
+        moneyBonus: 0,
+      };
       if (luckyResult.multBonus > 0) {
         setMultiplier((prev) => prev + luckyResult.multBonus);
         pushScoringEvent({
@@ -205,11 +231,19 @@ export function useScoringPipeline({
       const firstFaceAlreadyScored = scoringCards
         .slice(0, stepIdx)
         .some(isFaceCard);
+      const smearedSuits =
+        handEvalOptionsFromJokers(jokers).smearedSuits ===
+        true;
       const cardJokerResult = applyPerCardJokers(
         jokers,
         stepCard,
         Math.random,
-        { firstFaceAlreadyScored },
+        {
+          firstFaceAlreadyScored,
+          smearedSuits,
+          idolTarget: useGame.getState().idolTarget,
+          ancientSuit: useGame.getState().ancientSuit,
+        },
       );
       if (cardJokerResult.moneyEarned > 0) {
         useGame.getState().earn(cardJokerResult.moneyEarned);

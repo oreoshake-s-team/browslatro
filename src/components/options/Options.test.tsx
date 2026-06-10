@@ -13,6 +13,7 @@ import {
 const STORAGE_KEY = "browslatro:highVisibility";
 const MUTED_KEY = "browslatro:muted";
 const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
+const LOCALE_KEY = "browslatro:locale";
 
 function resetPreferences(): void {
   if (isHighVisibility()) {
@@ -257,5 +258,141 @@ describe("Options — animation speed", () => {
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     expect(screen.getByLabelText("Animation speed")).toHaveValue("slow");
+  });
+});
+
+describe("Options — language picker", () => {
+  afterEach(() => {
+    window.localStorage.removeItem(LOCALE_KEY);
+  });
+
+  test("renders the language control inside the modal", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Language")).toBeInTheDocument();
+  });
+
+  test("defaults to English", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByLabelText("Language")).toHaveValue("en");
+  });
+
+  test("offers ʻŌlelo Hawaiʻi as an option", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(
+      screen.getByRole("option", { name: "ʻŌlelo Hawaiʻi" }),
+    ).toBeInTheDocument();
+  });
+
+  test("selecting Hawaiian translates the modal heading", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    expect(
+      screen.getByRole("heading", { name: "Nā koho" }),
+    ).toBeInTheDocument();
+  });
+
+  test("selecting Hawaiian persists the locale to localStorage", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    expect(window.localStorage.getItem(LOCALE_KEY)).toBe("haw");
+  });
+
+  test("switching back to English restores the English heading", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    await user.selectOptions(screen.getByLabelText("ʻŌlelo"), "en");
+    expect(
+      screen.getByRole("heading", { name: "Options" }),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("Options i18n (#922)", () => {
+  afterEach(async () => {
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
+  });
+
+  test("the New game button renders Pāʻani hou under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    expect(screen.getByRole("button", { name: "Pāʻani hou" })).toBeInTheDocument();
+  });
+
+  test("the Close button renders Pani under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    expect(screen.getByRole("button", { name: "Pani" })).toBeInTheDocument();
+  });
+
+  test("animation speed options render Lohi and Wikiwiki under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    expect(screen.getByRole("option", { name: "Lohi" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Wikiwiki" })).toBeInTheDocument();
+  });
+
+  test("the New game confirm copy stays English fallback under the haw locale (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pāʻani hou" }));
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Start a new game? This will end your current run.",
+    );
+    confirmSpy.mockRestore();
+  });
+});
+
+describe("Options dialog semantics (#912)", () => {
+  beforeEach(resetPreferences);
+  afterEach(resetPreferences);
+
+  test("open modal exposes dialog semantics labelled by its title", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAccessibleName("Options");
+  });
+
+  test("moves focus into the dialog on open and restores it to the trigger on close", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    const trigger = screen.getByRole("button", { name: "Options" });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  test("dialog is absent before the Options button is pressed", () => {
+    render(<Options onNewGame={() => {}} />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

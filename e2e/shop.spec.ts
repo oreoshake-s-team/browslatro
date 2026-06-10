@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^Submit Hand$/;
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const SHOP_HEADING = /Shop/;
 
@@ -40,6 +40,14 @@ async function openShopAfterRound1Win(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 }
 
+async function openShopViaBootSeam(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:bootShop", "1");
+  });
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
+}
+
 function offerOfKind(page: Page, kind: string) {
   return page.locator(`.shop-offer[data-offer-kind="${kind}"]`).first();
 }
@@ -72,7 +80,7 @@ test.describe("Shop purchases (issue #240)", () => {
     page,
   }) => {
     await setForcedShopKinds(page, ["planet", "joker"]);
-    await openShopAfterRound1Win(page);
+    await openShopViaBootSeam(page);
     await offerOfKind(page, "planet").locator("button.shop-offer-buy").click();
     await expect(
       page.locator('[data-consumable-kind="planet"]'),
@@ -83,7 +91,7 @@ test.describe("Shop purchases (issue #240)", () => {
     page,
   }) => {
     await setForcedShopKinds(page, ["tarot", "joker"]);
-    await openShopAfterRound1Win(page);
+    await openShopViaBootSeam(page);
     await offerOfKind(page, "tarot").locator("button.shop-offer-buy").click();
     await expect(
       page.locator('[data-consumable-kind="tarot"]'),
@@ -94,7 +102,7 @@ test.describe("Shop purchases (issue #240)", () => {
     page,
   }) => {
     await setForcedShopKinds(page, ["spectral", "joker"]);
-    await openShopAfterRound1Win(page);
+    await openShopViaBootSeam(page);
     await offerOfKind(page, "spectral").locator("button.shop-offer-buy").click();
     await expect(
       page.locator('[data-consumable-kind="spectral"]'),
@@ -105,7 +113,7 @@ test.describe("Shop purchases (issue #240)", () => {
     page,
   }) => {
     await setForcedShopKinds(page, ["joker", "joker"]);
-    await openShopAfterRound1Win(page);
+    await openShopViaBootSeam(page);
     await page.locator("button.shop-reroll").click();
     const offers = page.locator('.shop-offer[data-offer-kind="joker"]');
     await offers.first().locator("button.shop-offer-buy").click();
@@ -121,7 +129,7 @@ test.describe("Reroll refreshes sold offers (issue #267)", () => {
     page,
   }) => {
     await setForcedShopKinds(page, ["joker", "joker"]);
-    await openShopAfterRound1Win(page);
+    await openShopViaBootSeam(page);
     const firstOffer = page.locator(".shop-offer").first();
     const buyName =
       (await firstOffer.locator(".shop-offer-name").textContent()) ?? "";

@@ -412,3 +412,31 @@ describe("RunInfo vouchers panel", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("RunInfo dialog focus trap (#907)", () => {
+  test("traps Tab inside the dialog and restores focus to the Run info trigger on close", async () => {
+    const user = userEvent.setup();
+    render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    const dialog = await screen.findByRole("dialog");
+    const closeButton = screen.getByRole("button", { name: "Close" });
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    closeButton.focus();
+    await user.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.click(closeButton);
+    expect(
+      screen.getByRole("button", { name: "Run info" }),
+    ).toHaveFocus();
+  });
+
+  test("Escape still closes the dialog and restores focus to the trigger (no useEscapeToClose regression)", async () => {
+    const user = userEvent.setup();
+    render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Run info" })).toHaveFocus();
+  });
+});

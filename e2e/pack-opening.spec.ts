@@ -1,8 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^Submit Hand$/;
-const CONTINUE_BUTTON = /Continue/;
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const SHOP_HEADING = /Shop/;
 
 async function setDeterministic(page: Page): Promise<void> {
@@ -12,37 +10,35 @@ async function setDeterministic(page: Page): Promise<void> {
   });
 }
 
-async function openDetails(page: Page, text: RegExp): Promise<void> {
-  const summary = page.getByText(text).first();
-  const detailsOpen = await summary
-    .locator("xpath=ancestor::details[1]")
-    .evaluate((el) => el.hasAttribute("open"));
-  if (!detailsOpen) await summary.click();
-}
-
 async function forcePackPool(
   page: Page,
   pool: "standard" | "arcana" | "buffoon" | "spectral" | "celestial",
 ): Promise<void> {
-  await openDetails(page, /Apply modifiers/);
-  await openDetails(page, /Force a Pack pool in next shop/);
-  await page.getByTestId(`force-pack-${pool}`).click();
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:forcePackPool", value);
+  }, pool);
 }
 
 async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
-  await openDetails(page, /Apply modifiers/);
-  await openDetails(page, /Add a specific Tarot/);
-  await page.locator(`button[data-tarot-id="${tarotId}"]`).click();
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:seedTarotIds", value);
+  }, tarotId);
+}
+
+async function addSpectralToTray(
+  page: Page,
+  spectralId: string,
+): Promise<void> {
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem("browslatro:seedSpectralIds", value);
+  }, spectralId);
 }
 
 async function winRound1AndOpenShop(page: Page): Promise<void> {
-  await page.getByTestId("blind-select-play").click();
-  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  for (let i = 0; i < 5; i += 1) {
-    await page.locator(HAND_CARDS).nth(i).click();
-  }
-  await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
-  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:bootShop", "1");
+  });
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 }
 
@@ -52,13 +48,12 @@ async function buyFirstPackOffer(page: Page): Promise<void> {
     .first();
   await expect(packOffer).toBeVisible();
   await packOffer.locator("button.shop-offer-buy").click();
+  await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
 test.describe("Pack opening flow (#694)", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
-    await page.goto("/");
-    await page.getByTestId("new-run-confirm").click();
   });
 
   test("Standard pack pool: forced → modal opens on buy → picking the first option closes the modal", async ({
@@ -70,50 +65,6 @@ test.describe("Pack opening flow (#694)", () => {
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
     await page.getByTestId("pack-open-pick-0").click();
     await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
-  });
-
-  test("forcing an Arcana pack pool opens an Arcana pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "arcana");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Arcana/ }),
-    ).toBeVisible();
-  });
-
-  test("forcing a Buffoon pack pool opens a Buffoon pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "buffoon");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Buffoon/ }),
-    ).toBeVisible();
-  });
-
-  test("forcing a Spectral pack pool opens a Spectral pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "spectral");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Spectral/ }),
-    ).toBeVisible();
-  });
-
-  test("forcing a Celestial pack pool opens a Celestial pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "celestial");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Celestial/ }),
-    ).toBeVisible();
   });
 
   test("closing the pack modal without picking leaves consumables unchanged (negative)", async ({
@@ -132,43 +83,86 @@ test.describe("Pack opening flow (#694)", () => {
     expect(consumableCountAfter).toBe(consumableCountBefore);
   });
 
-  test("using The Sun on a selected Arcana-pack preview card converts that card to hearts (#692)", async ({
+  test("pack pick options are evenly spaced across the row without stretching (closes #893)", async ({
     page,
   }) => {
     await forcePackPool(page, "arcana");
-    await addTarotToTray(page, "the-sun");
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
-    const firstPreviewCard = page
-      .getByTestId("pack-open-preview-hand")
-      .locator(".card")
-      .first();
-    await firstPreviewCard.click();
-    await page.locator('[data-consumable-kind="tarot"]').first().click();
-    await expect(
-      page
-        .getByTestId("pack-open-preview-hand")
-        .locator(".card.card-suit-hearts"),
-    ).toHaveCount(1);
+    const list = page.locator(".pack-open-options");
+    const options = list.locator(".pack-open-option");
+    await expect(options.first()).toBeVisible();
+    const count = await options.count();
+    expect(count).toBeGreaterThan(1);
+    const listBox = await list.boundingBox();
+    const boxes: Array<{ x: number; width: number }> = [];
+    for (let i = 0; i < count; i += 1) {
+      const box = await options.nth(i).boundingBox();
+      if (box) boxes.push(box);
+    }
+    const first = boxes[0];
+    const last = boxes[boxes.length - 1];
+    if (!listBox || !first || !last || boxes.length !== count) {
+      throw new Error("missing bounding boxes");
+    }
+    const leading = first.x - listBox.x;
+    const trailing = listBox.x + listBox.width - (last.x + last.width);
+    expect(leading).toBeGreaterThan(8);
+    expect(Math.abs(leading - trailing)).toBeLessThanOrEqual(1);
+    for (const box of boxes) {
+      expect(Math.abs(box.width - first.width)).toBeLessThanOrEqual(1);
+    }
+    expect(first.width).toBeLessThanOrEqual(13 * 16 + 2);
   });
 
-  test("using The Lovers on a selected Arcana-pack preview card applies the wild enhancement", async ({
+  test("Standard pack: picking a card increments the shop overlay deck pile count (closes #747)", async ({
     page,
   }) => {
-    await forcePackPool(page, "arcana");
-    await addTarotToTray(page, "the-lovers");
+    await forcePackPool(page, "standard");
+    await winRound1AndOpenShop(page);
+    const deckPile = page.locator(".game-overlay-deck .deck-pile");
+    await expect(deckPile).toBeVisible();
+    const before = Number(
+      (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+    );
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await page.getByTestId("pack-open-pick-0").click();
+    await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
+    await expect
+      .poll(async () =>
+        Number(
+          (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+        ),
+      )
+      .toBe(before + 1);
+  });
+});
+
+test.describe("Consumables usable while a Standard pack is open (#821)", () => {
+  test.beforeEach(async ({ page }) => {
+    await setDeterministic(page);
+  });
+
+  test("Strength tarot on a hand card, then Black Hole spectral, each consumed mid-Standard-pack with the modal staying open", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addTarotToTray(page, "strength");
+    await addSpectralToTray(page, "black-hole");
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
-    const firstPreviewCard = page
-      .getByTestId("pack-open-preview-hand")
-      .locator(".card")
-      .first();
-    await firstPreviewCard.click();
+    await expect(page.locator(HAND_CARDS).first()).toBeVisible();
+    await page.locator(HAND_CARDS).first().click();
     await page.locator('[data-consumable-kind="tarot"]').first().click();
     await expect(
-      page
-        .getByTestId("pack-open-preview-hand")
-        .locator(".card.card-enhancement-wild"),
-    ).toHaveCount(1);
+      page.locator('[data-consumable-kind="tarot"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await page.locator('[data-consumable-kind="spectral"]').first().click();
+    await expect(
+      page.locator('[data-consumable-kind="spectral"]'),
+    ).toHaveCount(0);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
   });
 });

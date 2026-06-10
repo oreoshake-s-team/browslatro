@@ -224,3 +224,39 @@ describe("Consumables", () => {
     );
   });
 });
+
+describe("Empty tray treatment (issue #875)", () => {
+  test("the tray carries the consumables-tray-empty class when empty", () => {
+    renderConsumables();
+    expect(screen.getByTestId("consumables-tray")).toHaveClass("consumables-tray-empty");
+  });
+
+  test("negative: the tray drops the empty class once a consumable is held", () => {
+    renderConsumables({ consumables: [{ kind: "tarot", card: tarot }] as Consumable[] });
+    expect(screen.getByTestId("consumables-tray")).not.toHaveClass("consumables-tray-empty");
+  });
+});
+
+describe("Consumables content overrides (#978)", () => {
+  afterEach(async () => {
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
+  });
+
+  test("a Mercury planet tile renders ʻUkali under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    const mercury = createPlanetCatalog().find((p) => p.id === "mercury")!;
+    const entry: Consumable = { kind: "planet", card: mercury };
+    renderConsumables({ consumables: [entry] });
+    expect(screen.getByText("ʻUkali")).toBeInTheDocument();
+  });
+
+  test("a tarot tile keeps its English name under the haw locale (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    const entry: Consumable = { kind: "tarot", card: tarot };
+    renderConsumables({ consumables: [entry] });
+    expect(screen.getByText(tarot.name)).toBeInTheDocument();
+  });
+});

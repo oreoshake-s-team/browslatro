@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { useConsumableActions } from "./useConsumableActions";
 import { useGame } from "../store/game";
 import { createTarotCatalog } from "../items/tarots";
+import { CRYPTID_COPY_COUNT, createSpectralCatalog } from "../items/spectrals";
+import { MAX_JOKERS, createJokerCatalog } from "../items/jokers";
 import type { Consumable } from "../items/consumables";
 import type { Card } from "../cards/types";
 
@@ -262,15 +264,9 @@ function blackHoleConsumable(): Consumable {
 }
 
 function foolConsumable(): Consumable {
-  return {
-    kind: "tarot",
-    card: {
-      id: "the-fool",
-      name: "The Fool",
-      description: "test",
-      effect: { kind: "money-multiply", multiplier: 1, bonusCap: 0 },
-    },
-  };
+  const tarot = createTarotCatalog().find((t) => t.id === "the-fool");
+  if (!tarot) throw new Error("The Fool missing from catalog");
+  return { kind: "tarot", card: tarot };
 }
 
 describe("useConsumableActions — lastUsedConsumable tracking (#615)", () => {
@@ -475,5 +471,814 @@ describe("useConsumableActions — The Star (suit-conversion) on pack-preview", 
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
     expect(useGame.getState().packPreviewSelectedIds.size).toBe(0);
+  });
+});
+
+function deathConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "death");
+  if (!tarot) throw new Error("Death missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — Death", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([deathConsumable()]);
+  });
+
+  test("left card becomes a copy of the right card (rank)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.rank).toBe("K");
+  });
+
+  test("left card becomes a copy of the right card (suit)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.suit).toBe("hearts");
+  });
+
+  test("left card keeps its own id (stable React key)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.id).toBe(1);
+  });
+
+  test("right card is unchanged", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[1]).toEqual(right);
+  });
+
+  test("left/right ordering follows handDisplayOrder, not Set insertion", () => {
+    const a: Card = { id: 1, rank: "2", suit: "spades" };
+    const b: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([a, b]);
+    useGame.getState().setHandDisplayOrder([b.id, a.id]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand.find((c) => c.id === b.id)?.rank).toBe(
+      "2",
+    );
+  });
+
+  test("copies enhancement/seal/edition from the right card", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = {
+      id: 2,
+      rank: "K",
+      suit: "hearts",
+      enhancement: "glass",
+      seal: "gold",
+      edition: "foil",
+    };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]).toEqual({
+      id: 1,
+      rank: "K",
+      suit: "hearts",
+      enhancement: "glass",
+      seal: "gold",
+      edition: "foil",
+    });
+  });
+
+  test("Death is consumed from the consumable list on use", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("selection is cleared after use", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    const right: Card = { id: 2, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([left.id, right.id]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().selectedIds.size).toBe(0);
+  });
+
+  test("with 1 selected card, Death is a no-op (consumable stays)", () => {
+    const left: Card = { id: 1, rank: "2", suit: "spades" };
+    seedHand([left]);
+    useGame.getState().setHandDisplayOrder([left.id]);
+    useGame.getState().setSelectedIds(new Set([left.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("with 3 selected cards, Death is a no-op (consumable stays)", () => {
+    const a: Card = { id: 1, rank: "2", suit: "spades" };
+    const b: Card = { id: 2, rank: "K", suit: "hearts" };
+    const c: Card = { id: 3, rank: "5", suit: "clubs" };
+    seedHand([a, b, c]);
+    useGame.getState().setHandDisplayOrder([a.id, b.id, c.id]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id, c.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("cards not in handDisplayOrder are appended in dealt.hand order (left/right still resolves)", () => {
+    const left: Card = { id: 10, rank: "2", suit: "spades" };
+    const right: Card = { id: 20, rank: "K", suit: "hearts" };
+    seedHand([left, right]);
+    useGame.getState().setHandDisplayOrder([]);
+    useGame.getState().setSelectedIds(new Set([left.id, right.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.rank).toBe("K");
+  });
+});
+
+function judgementConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "judgement");
+  if (!tarot) throw new Error("Judgement missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — Judgement (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([judgementConsumable()]);
+    useGame.getState().setJokers([]);
+  });
+
+  test("using Judgement adds a joker to the equipped row", () => {
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().jokers.length).toBe(1);
+  });
+
+  test("using Judgement consumes the tarot from the consumable list", () => {
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("at joker capacity, Judgement is a no-op and the tarot is NOT consumed (matches Balatro)", () => {
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, MAX_JOKERS));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+
+  test("at joker capacity, no extra joker is added (negative)", () => {
+    const catalog = createJokerCatalog();
+    const equipped = catalog.slice(0, MAX_JOKERS);
+    useGame.getState().setJokers(equipped);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().jokers.length).toBe(MAX_JOKERS);
+  });
+
+  test("the created joker is not a duplicate of any already-equipped joker", () => {
+    const catalog = createJokerCatalog();
+    const ownedIds = new Set(catalog.slice(0, 3).map((j) => j.id));
+    useGame.getState().setJokers(catalog.slice(0, 3));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const newest = useGame.getState().jokers[useGame.getState().jokers.length - 1];
+    expect(ownedIds.has(newest.id)).toBe(false);
+  });
+});
+
+function emperorConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-emperor");
+  if (!tarot) throw new Error("The Emperor missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — The Emperor (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("with both slots free after consuming Emperor, adds exactly 2 tarots", () => {
+    useGame.getState().setConsumables([emperorConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with one tarot slot already taken alongside Emperor, adds exactly 1 tarot", () => {
+    useGame.getState().setConsumables([emperorConsumable(), hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots remaining after Emperor leaves, adds 0 tarots", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        emperorConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots, The Emperor is still consumed (wasted, matches Balatro)", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        emperorConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-emperor")).toBe(false);
+  });
+
+  test("every added consumable is a valid Tarot from the catalog", () => {
+    useGame.getState().setConsumables([emperorConsumable()]);
+    const validIds = new Set(createTarotCatalog().map((t) => t.id));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().consumables;
+    const allValid = added.every(
+      (c) => c.kind === "tarot" && validIds.has(c.card.id),
+    );
+    expect(allValid).toBe(true);
+  });
+
+  test("none of the added consumables is The Emperor itself (filters self)", () => {
+    useGame.getState().setConsumables([emperorConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-emperor")).toBe(false);
+  });
+
+  test("negative: using The Hanged Man does not add any tarot to the tray", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    useGame.getState().setConsumables([hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  describe("with 3 consumable slots (Crystal Ball voucher)", () => {
+    beforeEach(() => {
+      useGame.getState().setOwnedVoucherIds(new Set(["crystal-ball"]));
+    });
+
+    test("with 0 other consumables, adds 2 tarots", () => {
+      useGame.getState().setConsumables([emperorConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(2);
+    });
+
+    test("with 1 other consumable, adds 2 tarots (fills the 2 free slots)", () => {
+      useGame
+        .getState()
+        .setConsumables([emperorConsumable(), hangedManConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+
+    test("with 2 other consumables, adds 1 tarot (only 1 free slot after Emperor consumed)", () => {
+      useGame
+        .getState()
+        .setConsumables([
+          emperorConsumable(),
+          hangedManConsumable(),
+          strengthConsumable(),
+        ]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+  });
+});
+
+function highPriestessConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-high-priestess");
+  if (!tarot) throw new Error("The High Priestess missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — The High Priestess (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("with both slots free after consuming High Priestess, adds exactly 2 planets", () => {
+    useGame.getState().setConsumables([highPriestessConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with one tarot slot already taken alongside High Priestess, adds exactly 1 planet", () => {
+    useGame
+      .getState()
+      .setConsumables([highPriestessConsumable(), hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots remaining after High Priestess leaves, adds 0 planets", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        highPriestessConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("with no free slots, The High Priestess is still consumed (wasted, matches Balatro)", () => {
+    useGame
+      .getState()
+      .setConsumables([
+        highPriestessConsumable(),
+        hangedManConsumable(),
+        strengthConsumable(),
+      ]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-high-priestess")).toBe(false);
+  });
+
+  test("every added consumable is a planet (kind: planet)", () => {
+    useGame.getState().setConsumables([highPriestessConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().consumables;
+    expect(added.every((c) => c.kind === "planet")).toBe(true);
+  });
+
+  test("hidden planets (Planet X / Ceres / Eris) are excluded when their gating hand hasn't been played", () => {
+    const hiddenIds = new Set(["planet-x", "ceres", "eris"]);
+    for (let i = 0; i < 30; i += 1) {
+      useGame.getState().setConsumables([highPriestessConsumable()]);
+      const { result, unmount } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      unmount();
+      const added = useGame.getState().consumables;
+      const anyHidden = added.some(
+        (c) => c.kind === "planet" && hiddenIds.has(c.card.id),
+      );
+      expect(anyHidden).toBe(false);
+    }
+  });
+
+  test("hidden planets (Five of a Kind etc.) become eligible once their hand has been played", () => {
+    useGame.getState().setHandPlayCounts((prev) => ({
+      ...prev,
+      "Five of a Kind": 1,
+      "Flush House": 1,
+      "Flush Five": 1,
+    }));
+    const eligibleHiddenIds = new Set(["planet-x", "ceres", "eris"]);
+    let sawAtLeastOneHidden = false;
+    for (let i = 0; i < 80 && !sawAtLeastOneHidden; i += 1) {
+      useGame.getState().setConsumables([highPriestessConsumable()]);
+      const { result, unmount } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      unmount();
+      const added = useGame.getState().consumables;
+      if (
+        added.some(
+          (c) => c.kind === "planet" && eligibleHiddenIds.has(c.card.id),
+        )
+      ) {
+        sawAtLeastOneHidden = true;
+      }
+    }
+    expect(sawAtLeastOneHidden).toBe(true);
+  });
+
+  test("negative: using The Hanged Man does not add any planet to the tray", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    useGame.getState().setConsumables([hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const anyPlanet = useGame
+      .getState()
+      .consumables.some((c) => c.kind === "planet");
+    expect(anyPlanet).toBe(false);
+  });
+
+  describe("with 3 consumable slots (Crystal Ball voucher)", () => {
+    beforeEach(() => {
+      useGame.getState().setOwnedVoucherIds(new Set(["crystal-ball"]));
+    });
+
+    test("with 0 other consumables, adds 2 planets", () => {
+      useGame.getState().setConsumables([highPriestessConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(2);
+    });
+
+    test("with 1 other consumable, adds 2 planets (fills the 2 free slots)", () => {
+      useGame
+        .getState()
+        .setConsumables([highPriestessConsumable(), hangedManConsumable()]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+
+    test("with 2 other consumables, adds 1 planet (only 1 free slot after High Priestess consumed)", () => {
+      useGame
+        .getState()
+        .setConsumables([
+          highPriestessConsumable(),
+          hangedManConsumable(),
+          strengthConsumable(),
+        ]);
+      const { result } = renderHook(() => useConsumableActions());
+      act(() => result.current.useConsumable(0));
+      expect(useGame.getState().consumables).toHaveLength(3);
+    });
+  });
+});
+
+describe("useConsumableActions — The Fool (#618)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("after using a tarot, The Fool adds a copy of that tarot to the tray", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit, foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toEqual([hermit]);
+  });
+
+  test("after using a planet, The Fool adds a copy of that planet to the tray", () => {
+    const pluto = plutoConsumable();
+    useGame.getState().setConsumables([pluto, foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toEqual([pluto]);
+  });
+
+  test("The Fool with no previously-used consumable is a no-op (consumes the fool)", () => {
+    useGame.getState().setConsumables([foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("The Fool when consumable slots are full is a no-op (consumes the fool, adds nothing)", () => {
+    const hermit = hermitConsumable();
+    useGame.getState().setConsumables([hermit]);
+    const { result: result1, unmount: unmount1 } = renderHook(() =>
+      useConsumableActions(),
+    );
+    act(() => result1.current.useConsumable(0));
+    unmount1();
+    useGame
+      .getState()
+      .setConsumables([
+        hangedManConsumable(),
+        strengthConsumable(),
+        foolConsumable(),
+      ]);
+    const { result: result2 } = renderHook(() => useConsumableActions());
+    act(() => result2.current.useConsumable(2));
+    expect(useGame.getState().consumables).toHaveLength(2);
+  });
+
+  test("The Fool used after The Fool does NOT copy The Fool (self-copy guard)", () => {
+    useGame.getState().setConsumables([foolConsumable(), foolConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("The Fool is consumed regardless (even when no previously-used consumable exists)", () => {
+    useGame.getState().setConsumables([foolConsumable(), hangedManConsumable()]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const ids = useGame.getState().consumables.map((c) => c.card.id);
+    expect(ids.includes("the-fool")).toBe(false);
+  });
+});
+
+function setPackPreview(cards: ReadonlyArray<Card>, selectedIds: ReadonlyArray<number>): void {
+  useGame.getState().setOpenedPack({
+    pool: "arcana",
+    variant: "normal",
+    options: [],
+  });
+  useGame.getState().setPackPreviewHand([...cards]);
+  useGame.getState().setPackPreviewSelectedIds(new Set(selectedIds));
+}
+
+describe("useConsumableActions — The Hanged Man on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([hangedManConsumable()]);
+  });
+
+  test("destroys selected preview cards from packPreviewHand", () => {
+    const cards: ReadonlyArray<Card> = [
+      { id: 1, rank: "9", suit: "diamonds" },
+      { id: 2, rank: "8", suit: "hearts" },
+      { id: 3, rank: "7", suit: "clubs" },
+    ];
+    setPackPreview(cards, [1, 2]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand.map((c) => c.id)).toEqual([3]);
+  });
+
+  test("adds destroyed ids to destroyedCardIds (deck persistence)", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, [1]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().destroyedCardIds.has(1)).toBe(true);
+  });
+
+  test("consumes the tarot from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, [1]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+
+  test("does not dismiss the pack modal (openedPack persists)", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, [1]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().openedPack).not.toBeNull();
+  });
+
+  test("with 0 preview selection is a no-op and the tarot stays (negative)", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 1, rank: "9", suit: "diamonds" }];
+    setPackPreview(cards, []);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(1);
+  });
+});
+
+describe("useConsumableActions — Strength on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([strengthConsumable()]);
+  });
+
+  test("rank-ups the selected preview card", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 5, rank: "8", suit: "hearts" }];
+    setPackPreview(cards, [5]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const newCard = useGame.getState().packPreviewHand[0];
+    expect(newCard?.rank).toBe("9");
+  });
+
+  test("consumes the tarot from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 5, rank: "8", suit: "hearts" }];
+    setPackPreview(cards, [5]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+function cryptidConsumable(): Consumable {
+  const spec = createSpectralCatalog().find((s) => s.id === "cryptid");
+  if (!spec) throw new Error("Cryptid missing from catalog");
+  return { kind: "spectral", card: spec };
+}
+
+describe("useConsumableActions — Cryptid on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([cryptidConsumable()]);
+  });
+
+  test("duplicates the selected preview card", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 7, rank: "K", suit: "spades" }];
+    setPackPreview(cards, [7]);
+    const { result } = renderHook(() => useConsumableActions());
+    const before = useGame.getState().packPreviewHand.length;
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand.length).toBeGreaterThan(before);
+  });
+
+  test("consumes the spectral from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 7, rank: "K", suit: "spades" }];
+    setPackPreview(cards, [7]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+function auraConsumable(): Consumable {
+  const spec = createSpectralCatalog().find((s) => s.id === "aura");
+  if (!spec) throw new Error("Aura missing from catalog");
+  return { kind: "spectral", card: spec };
+}
+
+describe("useConsumableActions — Aura on pack preview (closes #843)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([auraConsumable()]);
+  });
+
+  test("applies an edition to the selected preview card", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 9, rank: "A", suit: "diamonds" }];
+    setPackPreview(cards, [9]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().packPreviewHand[0]?.edition).toBeDefined();
+  });
+
+  test("consumes the spectral from the tray", () => {
+    const cards: ReadonlyArray<Card> = [{ id: 9, rank: "A", suit: "diamonds" }];
+    setPackPreview(cards, [9]);
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+function catalogSpectralConsumable(id: string): Consumable {
+  const card = createSpectralCatalog().find((s) => s.id === id);
+  if (!card) throw new Error(`${id} missing from catalog`);
+  return { kind: "spectral", card };
+}
+
+function magicianConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-magician");
+  if (!tarot) throw new Error("The Magician missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — Talisman seal persists for the run (#999)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([catalogSpectralConsumable("talisman")]);
+  });
+
+  test("applying a seal in-round records it in cardSealsById", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardSealsById.get(card.id)).toBe("gold");
+  });
+
+  test("the in-hand card shows the seal immediately", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.seal).toBe("gold");
+  });
+
+  test("with no card selected, cardSealsById stays empty (negative)", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set());
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardSealsById.size).toBe(0);
+  });
+});
+
+describe("useConsumableActions — Cryptid copies persist for the run (#999)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([catalogSpectralConsumable("cryptid")]);
+  });
+
+  test("copies are appended to the dealt hand", () => {
+    const card: Card = { id: 1, rank: "K", suit: "hearts" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand).toHaveLength(1 + CRYPTID_COPY_COUNT);
+  });
+
+  test("copies are registered in addedCards", () => {
+    const card: Card = { id: 1, rank: "K", suit: "hearts" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().addedCards).toHaveLength(CRYPTID_COPY_COUNT);
+  });
+
+  test("registered copies preserve the original rank and suit", () => {
+    const card: Card = { id: 1, rank: "K", suit: "hearts" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().addedCards;
+    expect(added.every((c) => c.rank === "K" && c.suit === "hearts")).toBe(true);
+  });
+
+  test("with more than 1 card selected, addedCards stays empty (negative)", () => {
+    const a: Card = { id: 1, rank: "K", suit: "hearts" };
+    const b: Card = { id: 2, rank: "Q", suit: "spades" };
+    seedHand([a, b]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().addedCards).toHaveLength(0);
+  });
+});
+
+describe("useConsumableActions — The Magician enhancement persists for the run (#999)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([magicianConsumable()]);
+  });
+
+  test("applying an enhancement in-round records it in cardEnhancementsById", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardEnhancementsById.get(card.id)).toBe("lucky");
+  });
+
+  test("the in-hand card shows the enhancement immediately", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.enhancement).toBe("lucky");
+  });
+
+  test("with no card selected, cardEnhancementsById stays empty (negative)", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set());
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardEnhancementsById.size).toBe(0);
   });
 });

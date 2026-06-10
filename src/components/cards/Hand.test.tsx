@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Hand from "./Hand";
+import LiveAnnouncer from "../system/LiveAnnouncer";
 import type { Card as CardType } from "../../cards/types";
 import { createDeck as createGoldDeck } from "../../cards/deck";
 
@@ -9,7 +10,7 @@ function createDeck(): CardType[] {
 }
 
 function getHandRegion(): HTMLElement {
-  return screen.getByLabelText("Your hand");
+  return screen.getByTestId("hand-cards");
 }
 
 function getCardButtons(): HTMLElement[] {
@@ -341,7 +342,7 @@ describe("Hand drag-and-drop reordering", () => {
 
   test("the hand row widens its drop hitboxes while a drag is in flight", () => {
     renderHand({ hand: fourCards, remaining: [] });
-    const handRow = screen.getByLabelText("Your hand");
+    const handRow = screen.getByTestId("hand-cards");
     expect(handRow).not.toHaveClass("hand-cards-dragging");
     fireEvent.dragStart(getSlot(4));
     expect(handRow).toHaveClass("hand-cards-dragging");
@@ -350,7 +351,7 @@ describe("Hand drag-and-drop reordering", () => {
   test("the hand row stops widening its drop hitboxes once the drag ends", () => {
     renderHand({ hand: fourCards, remaining: [] });
     const source = getSlot(4);
-    const handRow = screen.getByLabelText("Your hand");
+    const handRow = screen.getByTestId("hand-cards");
     fireEvent.dragStart(source);
     fireEvent.dragEnd(source);
     expect(handRow).not.toHaveClass("hand-cards-dragging");
@@ -404,7 +405,7 @@ describe("Hand drag-and-drop reordering", () => {
     // drop on the container.
     renderHand({ hand: fourCards, remaining: [] });
     const source = getSlot(4);
-    const handRow = screen.getByLabelText("Your hand");
+    const handRow = screen.getByTestId("hand-cards");
     fireEvent.dragStart(source);
     fireEvent.dragOver(getGap(3));
     fireEvent.drop(handRow);
@@ -552,6 +553,210 @@ describe("Hand drag-and-drop reordering", () => {
       "10 of Clubs",
       "K of Hearts",
       "2 of Spades",
+    ]);
+  });
+});
+
+describe("Hand newly drawn markers (#929)", () => {
+  test("mounting with a non-empty newlyDrawnIds set does not mark cards (restored run)", () => {
+    const deck = createDeck();
+    renderHand({
+      hand: deck.slice(0, 8),
+      newlyDrawnIds: new Set([deck[0].id, deck[1].id]),
+    });
+    const marked = getCardButtons().filter((btn) =>
+      btn.classList.contains("card-newly-drawn")
+    );
+    expect(marked).toHaveLength(0);
+  });
+
+  test("cards drawn after mount are marked newly drawn, kept cards are not", () => {
+    const deck = createDeck();
+    const props = {
+      hand: deck.slice(0, 8),
+      remaining: deck.slice(8),
+      selectedIds: new Set<number>(),
+      discardingIds: new Set<number>(),
+      newlyDrawnIds: new Set<number>(),
+      onToggleCard: vi.fn(),
+      onCardDiscardEnd: vi.fn(),
+    };
+    const { rerender } = render(<Hand {...props} />);
+    rerender(
+      <Hand {...props} newlyDrawnIds={new Set([deck[0].id, deck[1].id])} />
+    );
+    const marked = getCardButtons().filter((btn) =>
+      btn.classList.contains("card-newly-drawn")
+    );
+    expect(marked).toHaveLength(2);
+  });
+});
+
+describe("Hand keyboard reordering (#908)", () => {
+  const fourCards: CardType[] = [
+    { id: 1, rank: "K", suit: "hearts" },
+    { id: 2, rank: "2", suit: "spades" },
+    { id: 3, rank: "10", suit: "clubs" },
+    { id: 4, rank: "A", suit: "diamonds" },
+  ];
+
+  function renderWithAnnouncer() {
+    return render(
+      <>
+        <Hand
+          hand={fourCards}
+          remaining={[]}
+          selectedIds={new Set()}
+          discardingIds={new Set()}
+          onToggleCard={vi.fn()}
+          onCardDiscardEnd={vi.fn()}
+        />
+        <LiveAnnouncer />
+      </>,
+    );
+  }
+
+  function getLabels(): Array<string | null> {
+    return getCardButtons().map((btn) => btn.getAttribute("aria-label"));
+  }
+
+  test("every card exposes a Move left control", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    expect(
+      screen.getAllByRole("button", { name: /^Move .+ left$/ }),
+    ).toHaveLength(4);
+  });
+
+  test("every card exposes a Move right control", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    expect(
+      screen.getAllByRole("button", { name: /^Move .+ right$/ }),
+    ).toHaveLength(4);
+  });
+
+  test("Tab from a focused card reaches its Move left control", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    act(() => {
+      getCardButtons()[1].focus();
+    });
+    await user.tab();
+    expect(screen.getByTestId("hand-move-left-1")).toHaveFocus();
+  });
+
+  test("pressing Enter on Move left swaps the card with its left neighbour", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    screen.getByTestId("hand-move-left-1").focus();
+    await user.keyboard("{Enter}");
+    expect(getLabels()).toEqual([
+      "K of Hearts",
+      "A of Diamonds",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("pressing Enter on Move right swaps the card with its right neighbour", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    screen.getByTestId("hand-move-right-1").focus();
+    await user.keyboard("{Enter}");
+    expect(getLabels()).toEqual([
+      "A of Diamonds",
+      "10 of Clubs",
+      "K of Hearts",
+      "2 of Spades",
+    ]);
+  });
+
+  test("a keyboard move announces the card's new position", async () => {
+    const user = userEvent.setup();
+    renderWithAnnouncer();
+    screen.getByTestId("hand-move-left-1").focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "K of Hearts moved to position 1 of 4",
+    );
+  });
+
+  test("focus remains on the move control after a reorder", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    screen.getByTestId("hand-move-left-1").focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("hand-move-left-1")).toHaveFocus();
+  });
+
+  test("a keyboard move activates the Manual sort indicator", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    screen.getByTestId("hand-move-right-4").focus();
+    await user.keyboard("{Enter}");
+    expect(
+      screen.getByRole("button", { name: "Manual order" }),
+    ).toHaveAttribute("aria-pressed", "true");
+  });
+
+  test("Move left on the first card leaves the order unchanged", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    screen.getByTestId("hand-move-left-4").focus();
+    await user.keyboard("{Enter}");
+    expect(getLabels()).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("Move left on the first card announces it is already first", async () => {
+    const user = userEvent.setup();
+    renderWithAnnouncer();
+    screen.getByTestId("hand-move-left-4").focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "A of Diamonds is already at the first position",
+    );
+  });
+
+  test("Move right on the last card leaves the order unchanged", async () => {
+    const user = userEvent.setup();
+    renderHand({ hand: fourCards, remaining: [] });
+    screen.getByTestId("hand-move-right-2").focus();
+    await user.keyboard("{Enter}");
+    expect(getLabels()).toEqual([
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
+      "2 of Spades",
+    ]);
+  });
+
+  test("Move right on the last card announces it is already last", async () => {
+    const user = userEvent.setup();
+    renderWithAnnouncer();
+    screen.getByTestId("hand-move-right-2").focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "2 of Spades is already at the last position",
+    );
+  });
+
+  test("mouse drag reordering still works alongside the move controls", () => {
+    renderHand({ hand: fourCards, remaining: [] });
+    const source = screen.getByTestId("hand-slot-2");
+    const gap = screen.getByTestId("hand-gap-0");
+    fireEvent.dragStart(source);
+    fireEvent.dragOver(gap);
+    fireEvent.drop(gap);
+    fireEvent.dragEnd(source);
+    expect(getLabels()).toEqual([
+      "2 of Spades",
+      "A of Diamonds",
+      "K of Hearts",
+      "10 of Clubs",
     ]);
   });
 });

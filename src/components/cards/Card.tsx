@@ -1,24 +1,19 @@
 import "./Card.css";
 import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
-import type { Card as CardType, Enhancement, Rank, Suit } from "../../cards/types";
-import { getSealInfo } from "../../cards/seals";
-import { CARD_EDITION_INFO } from "../../cards/editions";
+import { useTranslation } from "react-i18next";
+import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";
+import { tSuitName } from "../../i18n/strings";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
+import { useGame } from "../../store/game";
+import { probabilityMultiplierFromJokers } from "../../items/jokers";
 
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
   hearts: "♥",
   diamonds: "♦",
   clubs: "♣",
-};
-
-const SUIT_LABELS: Record<Suit, string> = {
-  spades: "Spades",
-  hearts: "Hearts",
-  diamonds: "Diamonds",
-  clubs: "Clubs",
 };
 
 type FaceRank = "J" | "Q" | "K";
@@ -38,16 +33,29 @@ const FACE_RANK_GLYPH: Record<FaceRank, string> = {
   K: "♚",
 };
 
-const ENHANCEMENT_LABEL: Record<Enhancement, string> = {
-  bonus: "Bonus",
-  mult: "Mult",
-  wild: "Wild",
-  glass: "Glass",
-  steel: "Steel",
-  stone: "Stone",
-  gold: "Gold",
-  lucky: "Lucky",
-};
+const ENHANCEMENT_LABEL_KEY = {
+  bonus: "cardLabels.enhancementBonus",
+  mult: "cardLabels.enhancementMult",
+  wild: "cardLabels.enhancementWild",
+  glass: "cardLabels.enhancementGlass",
+  steel: "cardLabels.enhancementSteel",
+  stone: "cardLabels.enhancementStone",
+  gold: "cardLabels.enhancementGold",
+  lucky: "cardLabels.enhancementLucky",
+} as const satisfies Record<Enhancement, string>;
+
+const SEAL_LABEL_KEY = {
+  gold: "cardLabels.sealGold",
+  red: "cardLabels.sealRed",
+  blue: "cardLabels.sealBlue",
+  purple: "cardLabels.sealPurple",
+} as const satisfies Record<Seal, string>;
+
+const CARD_EDITION_LABEL_KEY = {
+  foil: "cardLabels.editionFoil",
+  holographic: "cardLabels.editionHolographic",
+  polychrome: "cardLabels.editionPolychrome",
+} as const satisfies Record<CardEdition, string>;
 
 function isFaceRank(rank: Rank): rank is FaceRank {
   return rank === "J" || rank === "Q" || rank === "K";
@@ -57,6 +65,7 @@ interface CardProps {
   card: CardType;
   selected?: boolean;
   discarding?: boolean;
+  newlyDrawn?: boolean;
   debuffed?: boolean;
   scoring?: boolean;
   scoringPulseTick?: number;
@@ -66,12 +75,14 @@ interface CardProps {
   luckyMoneyScoring?: boolean;
   onToggle?: (card: CardType) => void;
   onDiscardEnd?: (card: CardType) => void;
+  decorative?: boolean;
 }
 
 export default function Card({
   card,
   selected = false,
   discarding = false,
+  newlyDrawn = false,
   debuffed = false,
   scoring = false,
   scoringPulseTick = 0,
@@ -81,10 +92,15 @@ export default function Card({
   luckyMoneyScoring = false,
   onToggle,
   onDiscardEnd,
+  decorative = false,
 }: CardProps) {
+  const { t } = useTranslation();
   const tooltipId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [tooltipRect, setTooltipRect] = useState<DOMRect | null>(null);
+  const probabilityMultiplier = useGame((s) =>
+    probabilityMultiplierFromJokers(s.jokers),
+  );
   const showTooltip = () => {
     const el = buttonRef.current;
     if (el) setTooltipRect(el.getBoundingClientRect());
@@ -107,6 +123,7 @@ export default function Card({
   const suitClass = `card-suit-${card.suit}`;
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
+  const newlyDrawnClass = newlyDrawn ? "card-newly-drawn" : "";
   const scoringClass = scoring
     ? `card-scoring card-scoring-tick-${scoringPulseTick % 2}`
     : "";
@@ -116,55 +133,55 @@ export default function Card({
   const luckyMoneyScoringClass = luckyMoneyScoring
     ? "card-lucky-money-scoring"
     : "";
-  const enhancementClass = card.enhancement
+  const showBack = card.faceDown === true && !scoring;
+  const enhancementClass = !showBack && card.enhancement
     ? `card-enhancement-${card.enhancement}`
     : "";
-  const sealClass = card.seal ? `card-seal-${card.seal}` : "";
-  const editionClass = card.edition ? `card-edition-${card.edition}` : "";
+  const sealClass = !showBack && card.seal ? `card-seal-${card.seal}` : "";
+  const editionClass = !showBack && card.edition
+    ? `card-edition-${card.edition}`
+    : "";
   const debuffedClass = debuffed ? "card-debuffed" : "";
   const baseName = isStone
-    ? "Stone card"
+    ? t("a11y.stoneCard")
     : card.enhancement
-      ? `${card.rank} of ${SUIT_LABELS[card.suit]} (${ENHANCEMENT_LABEL[card.enhancement]})`
-      : `${card.rank} of ${SUIT_LABELS[card.suit]}`;
-  const withSeal = card.seal ? `${baseName}, ${getSealInfo(card.seal).name}` : baseName;
+      ? t("a11y.cardNameEnhanced", {
+          rank: card.rank,
+          suit: tSuitName(t, card.suit),
+          enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
+        })
+      : t("a11y.cardName", { rank: card.rank, suit: tSuitName(t, card.suit) });
+  const withSeal = card.seal
+    ? t("a11y.cardWithDetail", {
+        name: baseName,
+        detail: t(SEAL_LABEL_KEY[card.seal]),
+      })
+    : baseName;
   const withEdition = card.edition
-    ? `${withSeal}, ${CARD_EDITION_INFO[card.edition].name}`
+    ? t("a11y.cardWithDetail", {
+        name: withSeal,
+        detail: t(CARD_EDITION_LABEL_KEY[card.edition]),
+      })
     : withSeal;
-  const showBack = card.faceDown === true && !scoring;
+  const withDebuff = debuffed
+    ? t("a11y.cardDebuffed", { name: withEdition })
+    : withEdition;
   const ariaLabel = showBack
-    ? "Face-down card"
-    : debuffed
-      ? `${withEdition}, debuffed`
-      : withEdition;
+    ? t("a11y.faceDownCard")
+    : newlyDrawn
+      ? t("a11y.cardNewlyDrawn", { name: withDebuff })
+      : withDebuff;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
   const faceDownClass = showBack ? "card-face-down" : "";
 
-  return (
-    <button
-      ref={buttonRef}
-      type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
-        .replace(/\s+/g, " ")
-        .trim()}
-      data-edition={card.edition ?? undefined}
-      aria-pressed={selected}
-      aria-label={ariaLabel}
-      aria-describedby={tooltipRect ? tooltipId : undefined}
-      data-testid={steelScoring ? `steel-scoring-${card.id}` : undefined}
-      onClick={() => onToggle?.(card)}
-      onMouseEnter={showTooltip}
-      onMouseLeave={hideTooltip}
-      onFocus={showTooltip}
-      onBlur={hideTooltip}
-      onAnimationEnd={() => {
-        if (discarding) {
-          onDiscardEnd?.(card);
-        }
-      }}
-    >
+  const cardClassName =
+    `card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
+      .replace(/\s+/g, " ")
+      .trim();
+  const content = (
+    <>
       {showBack ? (
         <span
           className="card-back-face"
@@ -192,7 +209,7 @@ export default function Card({
           )}
         </>
       )}
-      {card.seal && (
+      {card.seal && !showBack && (
         <span
           className={`card-seal card-seal-badge-${card.seal}`}
           aria-hidden="true"
@@ -217,8 +234,47 @@ export default function Card({
           +$20
         </span>
       )}
+    </>
+  );
+  if (decorative) {
+    return (
+      <span
+        className={cardClassName}
+        data-edition={showBack ? undefined : (card.edition ?? undefined)}
+        aria-hidden="true"
+      >
+        {content}
+      </span>
+    );
+  }
+  return (
+    <button
+      ref={buttonRef}
+      type="button"
+      className={cardClassName}
+      data-edition={showBack ? undefined : (card.edition ?? undefined)}
+      aria-pressed={selected}
+      aria-label={ariaLabel}
+      aria-describedby={tooltipRect ? tooltipId : undefined}
+      data-testid={steelScoring ? `steel-scoring-${card.id}` : undefined}
+      onClick={() => onToggle?.(card)}
+      onMouseEnter={showTooltip}
+      onMouseLeave={hideTooltip}
+      onFocus={showTooltip}
+      onBlur={hideTooltip}
+      onAnimationEnd={() => {
+        if (discarding) {
+          onDiscardEnd?.(card);
+        }
+      }}
+    >
+      {content}
       {tooltipRect && !showBack && (
-        <CardTooltip id={tooltipId} info={getCardInfo(card)} anchorRect={tooltipRect} />
+        <CardTooltip
+          id={tooltipId}
+          info={getCardInfo(card, { probabilityMultiplier })}
+          anchorRect={tooltipRect}
+        />
       )}
     </button>
   );

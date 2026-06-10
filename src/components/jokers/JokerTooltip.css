@@ -28,6 +28,29 @@
   color: #dee2e6;
 }
 
+.joker-tooltip-rarity {
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.joker-tooltip-rarity-common {
+  color: #74c0fc;
+}
+
+.joker-tooltip-rarity-uncommon {
+  color: #8ce99a;
+}
+
+.joker-tooltip-rarity-rare {
+  color: #ff8787;
+}
+
+.joker-tooltip-rarity-legendary {
+  color: #d0bfff;
+}
+
 .joker-tooltip-edition {
   color: #ffe066;
 }
@@ -50,6 +73,18 @@
 
 .joker-tooltip-progress {
   color: #b2f2bb;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.joker-tooltip-current-value {
+  color: #99e9f2;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.joker-tooltip-effective-odds {
+  color: #ffd8a8;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }

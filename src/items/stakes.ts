@@ -24,9 +24,16 @@ export const DEFAULT_STAKE: Stake = "white";
 export type StakeModifier =
   | { readonly kind: "red-small-blind-no-reward" }
   | { readonly kind: "green-ante-scaling" }
-  | { readonly kind: "black-eternal-roll"; readonly chance: number };
+  | { readonly kind: "black-eternal-roll"; readonly chance: number }
+  | { readonly kind: "blue-discard-delta"; readonly amount: number }
+  | { readonly kind: "purple-ante-scaling" }
+  | { readonly kind: "orange-perishable-roll"; readonly chance: number }
+  | { readonly kind: "gold-rental-roll"; readonly chance: number };
 
 export const BLACK_ETERNAL_ROLL_CHANCE = 0.3;
+export const BLUE_DISCARD_DELTA = -1;
+export const ORANGE_PERISHABLE_ROLL_CHANCE = 0.3;
+export const GOLD_RENTAL_ROLL_CHANCE = 0.3;
 
 export interface StakeSpec {
   readonly id: Stake;
@@ -70,30 +77,42 @@ const STAKE_SPECS: ReadonlyArray<StakeSpec> = [
   {
     id: "blue",
     name: "Blue Stake",
-    description: "-1 Discard.",
-    implemented: false,
-    modifiers: [],
+    description: "-1 Discard per round.",
+    implemented: true,
+    modifiers: [{ kind: "blue-discard-delta", amount: BLUE_DISCARD_DELTA }],
   },
   {
     id: "purple",
     name: "Purple Stake",
     description: "Required score scales faster per ante (cumulative with Green).",
-    implemented: false,
-    modifiers: [],
+    implemented: true,
+    modifiers: [{ kind: "purple-ante-scaling" }],
   },
   {
     id: "orange",
     name: "Orange Stake",
-    description: "Booster Packs cost $1 more per ante.",
-    implemented: false,
-    modifiers: [],
+    description:
+      "Shop and Booster Pack Jokers may roll Perishable (debuffed after a few rounds).",
+    implemented: true,
+    modifiers: [
+      {
+        kind: "orange-perishable-roll",
+        chance: ORANGE_PERISHABLE_ROLL_CHANCE,
+      },
+    ],
   },
   {
     id: "gold",
     name: "Gold Stake",
-    description: "-1 hand size.",
-    implemented: false,
-    modifiers: [],
+    description:
+      "Shop and Booster Pack Jokers may roll Rental (costs $1, drains $3 at end of round).",
+    implemented: true,
+    modifiers: [
+      {
+        kind: "gold-rental-roll",
+        chance: GOLD_RENTAL_ROLL_CHANCE,
+      },
+    ],
   },
 ];
 
@@ -131,10 +150,20 @@ export function hasStakeModifier(
 
 import type { StakeStickerOdds } from "./jokers";
 
+export function stakeStartingDiscardsDelta(stake: Stake): number {
+  let delta = 0;
+  for (const mod of getActiveStakeModifiers(stake)) {
+    if (mod.kind === "blue-discard-delta") delta += mod.amount;
+  }
+  return delta;
+}
+
 export function stakeStickerOdds(stake: Stake): StakeStickerOdds | undefined {
   const odds: { eternal?: number; perishable?: number; rental?: number } = {};
   for (const mod of getActiveStakeModifiers(stake)) {
     if (mod.kind === "black-eternal-roll") odds.eternal = mod.chance;
+    if (mod.kind === "orange-perishable-roll") odds.perishable = mod.chance;
+    if (mod.kind === "gold-rental-roll") odds.rental = mod.chance;
   }
   if (
     odds.eternal === undefined &&

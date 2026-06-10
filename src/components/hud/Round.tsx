@@ -1,4 +1,6 @@
+import { useTranslation } from "react-i18next";
 import type { Blind, BlindValuesMap } from "../../cards/types";
+import { tHandLabel } from "../../i18n/handLabels";
 import type { BossBlind } from "../../items/bosses";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import "./Round.css";
@@ -20,6 +22,7 @@ function Round({
   boss = null,
   firstPlayedHandLabel = null,
 }: RoundProps) {
+  const { t } = useTranslation();
   const award = "💲".repeat(2 + blind);
   const blindLabel = blind === 3 && boss ? boss.name : BlindValues[blind];
   const showLockedHand =
@@ -30,7 +33,7 @@ function Round({
   return (
     <>
       <div className="round-info">
-        <h3 className="blind-label">{blindLabel}</h3>
+        <h2 className="blind-label">{blindLabel}</h2>
         {blind === 3 && boss && (
           <p className="boss-effect">{boss.description}</p>
         )}
@@ -38,16 +41,21 @@ function Round({
           <p
             className="boss-locked-hand"
             data-testid="boss-locked-hand"
-            aria-label={`Locked to ${firstPlayedHandLabel}`}
+            aria-label={t("a11y.lockedTo", {
+              hand: firstPlayedHandLabel
+                ? tHandLabel(t, firstPlayedHandLabel)
+                : "",
+            })}
           >
-            Locked to: <strong>{firstPlayedHandLabel}</strong>
+            {t("sidebar.lockedTo")}{" "}
+            <strong>{firstPlayedHandLabel ? tHandLabel(t, firstPlayedHandLabel) : null}</strong>
           </p>
         )}
-        <h3>Score at least: {requiredScore}</h3>
-        <h4>to earn {award}</h4>
+        <h3>{t("sidebar.scoreAtLeast", { score: requiredScore })}</h3>
+        <h4>{t("sidebar.toEarn", { award })}</h4>
       </div>
       <div className="round-score">
-        <span className="round-score-label">Round score</span>
+        <span className="round-score-label">{t("sidebar.roundScore")}</span>
         <span className="round-score-value">{roundScore}</span>
       </div>
     </>

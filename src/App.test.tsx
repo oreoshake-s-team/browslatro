@@ -7,8 +7,9 @@ import {
 } from "./components/system/preferences";
 import { forceShopLayout, shopPickerRngConfig } from "./items/shop";
 import { createTagCatalog, tagOfferRngConfig, type TagId } from "./items/tags";
-import { createSpectralCatalog } from "./items/spectrals";
+import { createPoolSpectralCatalog, createSpectralCatalog } from "./items/spectrals";
 import { voucherPickerRngConfig, type VoucherId } from "./items/vouchers";
+import { createPlanetCatalog } from "./items/planets";
 import {
   MAX_JOKERS,
   createBusinessCardJoker,
@@ -597,25 +598,40 @@ describe("Submit Hand win integration", () => {
 });
 
 describe("Losing integration", () => {
-  beforeEach(() => {
-    vi.spyOn(window, "alert").mockImplementation(() => {});
-  });
+  async function dismissRoundLostModal(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await user.click(
+      await screen.findByRole("button", { name: /Try again/ }),
+    );
+  }
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  test("exhausting all hands without reaching the required score shows a game over alert", async () => {
+  test("exhausting all hands without reaching the required score shows the round-lost modal", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
-    expect(window.alert).toHaveBeenCalledWith("Game Over! Try again.");
+    expect(
+      await screen.findByRole("dialog", { name: "Game Over" }),
+    ).toBeInTheDocument();
   });
 
-  test("exhausting all hands without reaching the required score resets the game", async () => {
+  test("the round-lost modal renders the same Round Score the store committed for the final hand (no synchronous-alert staleness)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    await user.click(screen.getByText(/Submit Hand/));
+    const modalScore = Number(
+      (await screen.findByTestId("round-lost-score")).textContent,
+    );
+    expect(modalScore).toBe(useGame.getState().roundScore);
+  });
+
+  test("dismissing the round-lost modal returns the player to the Blind Select screen", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
@@ -623,27 +639,30 @@ describe("Losing integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
+    await dismissRoundLostModal(user);
     await dismissBlindSelect(user);
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
   });
 
-  test("losing and auto-restarting leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
+  test("dismissing the round-lost modal leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
 
-  test("losing and auto-restarting leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
+  test("dismissing the round-lost modal leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
 
@@ -663,6 +682,7 @@ describe("Losing integration", () => {
     await submitOneHighCard(user);
     await submitOneHighCard(user);
     await submitOneHighCard(user);
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
 
@@ -674,6 +694,7 @@ describe("Losing integration", () => {
     await submitOneHighCard(user);
     await submitOneHighCard(user);
     await submitOneHighCard(user);
+    await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
 
@@ -686,8 +707,66 @@ describe("Losing integration", () => {
       await submitOneHighCard(user);
       await submitOneHighCard(user);
       await submitOneHighCard(user);
+      await dismissRoundLostModal(user);
     }
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+  });
+});
+
+describe("Game Won integration (#384)", () => {
+  async function winFinalAnteBoss(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setBlind(3);
+    });
+    await user.click(screen.getByText(/^Win$/));
+  }
+
+  test("winning the Ante 8 Boss Blind shows the You Win! dialog", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    expect(
+      await screen.findByRole("dialog", { name: "You Win!" }),
+    ).toBeInTheDocument();
+  });
+
+  test("winning the Ante 8 Boss Blind does NOT open a shop", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    await screen.findByRole("dialog", { name: "You Win!" });
+    expect(screen.queryByRole("heading", { name: /^Shop$/ })).not.toBeInTheDocument();
+  });
+
+  test("winning the Ante 8 Boss Blind does NOT advance the ante past 8", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    await screen.findByRole("dialog", { name: "You Win!" });
+    expect(useGame.getState().ante).toBe(8);
+  });
+
+  test("clicking 'Start a new run' from the You Win! dialog returns the player to the New Run select screen", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await winFinalAnteBoss(user);
+    await screen.findByRole("dialog", { name: "You Win!" });
+    await user.click(screen.getByTestId("game-won-new-run"));
+    expect(screen.getByTestId("new-run-confirm")).toBeInTheDocument();
+  });
+
+  test("winning a pre-final-ante Boss Blind still advances to the next ante and does NOT show the You Win! dialog (negative)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(7);
+      useGame.getState().setBlind(3);
+    });
+    await user.click(screen.getByText(/^Win$/));
+    expect(
+      screen.queryByRole("dialog", { name: "You Win!" }),
+    ).not.toBeInTheDocument();
+    expect(useGame.getState().ante).toBe(8);
   });
 });
 
@@ -695,26 +774,53 @@ describe("High visibility preference integration", () => {
   beforeEach(resetHighVisibility);
   afterEach(resetHighVisibility);
 
-  test("App root does not carry the high-visibility class after the user disables it", () => {
-    const { container } = render(<App />);
-    expect(container.querySelector(".App")).not.toHaveClass("high-visibility");
+  test("document body does not carry the high-visibility class after the user disables it", () => {
+    render(<App />);
+    expect(document.body).not.toHaveClass("high-visibility");
   });
 
-  test("toggling high visibility adds the class to the App root", async () => {
+  test("toggling high visibility adds the class to the document body", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    const { container } = render(<App />);
+    render(<App />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
-    expect(container.querySelector(".App")).toHaveClass("high-visibility");
+    expect(document.body).toHaveClass("high-visibility");
   });
 
-  test("toggling high visibility off removes the class from the App root", async () => {
+  test("toggling high visibility off removes the class from the document body", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-    const { container } = render(<App />);
+    render(<App />);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText(/Enable high visibility suits/));
     await user.click(screen.getByText(/Disable high visibility suits/));
-    expect(container.querySelector(".App")).not.toHaveClass("high-visibility");
+    expect(document.body).not.toHaveClass("high-visibility");
+  });
+
+  test("high-visibility palette scope reaches cards inside the portaled deck modal", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = render(<App />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText(/Enable high visibility suits/));
+    await user.click(screen.getByText("Close"));
+    await user.click(
+      screen.getByRole("button", { name: /Deck \(\d+ cards remaining\)/ }),
+    );
+    const dialog = screen.getByRole("dialog", { name: "Remaining Cards" });
+    expect(container.contains(dialog)).toBe(false);
+    const diamond = dialog.querySelector(".card-suit-diamonds");
+    expect(diamond).not.toBeNull();
+    expect(diamond?.closest(".high-visibility")).toBe(document.body);
+  });
+
+  test("cards inside the portaled deck modal have no high-visibility ancestor when the preference is off", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(
+      screen.getByRole("button", { name: /Deck \(\d+ cards remaining\)/ }),
+    );
+    const dialog = screen.getByRole("dialog", { name: "Remaining Cards" });
+    const diamond = dialog.querySelector(".card-suit-diamonds");
+    expect(diamond?.closest(".high-visibility")).toBeNull();
   });
 
   test("toggling persists the preference value to localStorage", async () => {
@@ -1076,7 +1182,9 @@ describe("Jokers integration (issue #223 — runs start with no jokers)", () => 
 
 function resetAnimationSpeed(): void {
   if (getAnimationSpeed() !== "normal") {
-    setAnimationSpeed("normal");
+    act(() => {
+      setAnimationSpeed("normal");
+    });
   }
   window.localStorage.removeItem("browslatro:animationSpeed");
 }
@@ -1183,7 +1291,7 @@ describe("App scoring step honors animation speed preference", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = Array.from(
-      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+      screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
@@ -1199,7 +1307,7 @@ describe("App scoring step honors animation speed preference", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = Array.from(
-      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+      screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
@@ -1855,7 +1963,7 @@ describe("Voucher effects integration", () => {
   });
 
   test("buying Clearance Sale shows a discounted joker price and keeps the joker buy enabled", async () => {
-    const user = await openShopWithVoucher(0.15);
+    const user = await openShopWithVoucher(0.1);
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buyButton = screen
       .getByTestId(jokerSlotId)
@@ -1950,6 +2058,99 @@ describe("Voucher effects integration", () => {
   });
 });
 
+describe("Observatory voucher applies ×1.5 Mult per matching held Planet (#281)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  function plutoConsumable() {
+    const card = createPlanetCatalog().find((p) => p.id === "pluto");
+    if (!card) throw new Error("missing Pluto in catalog");
+    return { kind: "planet" as const, card };
+  }
+
+  function mercuryConsumable() {
+    const card = createPlanetCatalog().find((p) => p.id === "mercury");
+    if (!card) throw new Error("missing Mercury in catalog");
+    return { kind: "planet" as const, card };
+  }
+
+  function readRoundScore(): number {
+    return Number(
+      document.querySelector(".round-score-value")?.textContent ?? "0",
+    );
+  }
+
+  test("one matching Planet emits an Observatory ×1.5 Mult scoring-trace entry and bumps the round score by ×1.5", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([plutoConsumable()]);
+    useGame.getState().setOwnedVoucherIds(
+      new Set<VoucherId>(["telescope", "observatory"]),
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+      /×1\.5 Mult \(Observatory: 1 matching Planet\)/,
+    );
+    expect(readRoundScore()).toBe(Math.floor(14 * 1.5));
+  });
+
+  test("two matching Planets emit an Observatory ×2.25 Mult scoring-trace entry", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([
+      plutoConsumable(),
+      plutoConsumable(),
+    ]);
+    useGame.getState().setOwnedVoucherIds(
+      new Set<VoucherId>(["telescope", "observatory"]),
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+      /×2\.25 Mult \(Observatory: 2 matching Planets\)/,
+    );
+  });
+
+  test("non-matching held Planets do not trigger Observatory (negative)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([
+      mercuryConsumable(),
+      mercuryConsumable(),
+    ]);
+    useGame.getState().setOwnedVoucherIds(
+      new Set<VoucherId>(["telescope", "observatory"]),
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).not.toHaveTextContent(
+      /Observatory/,
+    );
+  });
+
+  test("matching Planets without the Observatory voucher do not multiply Mult (negative)", async () => {
+    mockShuffleConfig.useIdentity = true;
+    useGame.getState().setConsumables([plutoConsumable()]);
+    useGame.getState().setOwnedVoucherIds(new Set<VoucherId>());
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(document.querySelector(".scoring-trace")).not.toHaveTextContent(
+      /Observatory/,
+    );
+  });
+});
+
 describe("Consumable drag and sell integration", () => {
   async function buyPlanetAndCloseShop(): Promise<
     ReturnType<typeof userEvent.setup>
@@ -2030,7 +2231,7 @@ describe("Consumable drag and sell integration", () => {
   test("dragging a planet consumable onto the jokers area uses it", async () => {
     await buyPlanetAndCloseShop();
     const tile = screen.getByTestId("consumable-tile-filled-0");
-    const jokersSection = screen.getByLabelText("Equipped jokers");
+    const jokersSection = screen.getByTestId("jokers-tray");
     const dt = fakeDataTransfer();
     fireEvent.dragStart(tile, { dataTransfer: dt });
     fireEvent.dragOver(jokersSection, { dataTransfer: dt });
@@ -2072,7 +2273,7 @@ describe("Consumable drag and sell integration", () => {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
 
     const tile = screen.getByTestId("consumable-tile-filled-0");
-    const jokersSection = screen.getByLabelText("Equipped jokers");
+    const jokersSection = screen.getByTestId("jokers-tray");
     const dt = fakeDataTransfer();
     fireEvent.dragStart(tile, { dataTransfer: dt });
     fireEvent.dragOver(jokersSection, { dataTransfer: dt });
@@ -2512,7 +2713,7 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
 
   test("the player's hand is NOT in the document while the shop is open", async () => {
     await openShop();
-    expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("the Submit Hand button is NOT in the document while the shop is open", async () => {
@@ -2522,14 +2723,14 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
 
   test("the jokers row remains queryable while the shop is open", async () => {
     await openShop();
-    expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
+    expect(screen.getByTestId("jokers-tray")).toBeInTheDocument();
   });
 
   test("dismissing the shop re-mounts the hand", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
-    expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
+    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
   });
 });
 
@@ -2575,9 +2776,8 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
     const region = document
       .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
     expect(region).not.toHaveAttribute("aria-modal");
-    expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
-    expect(screen.getByLabelText("Consumable slots")).toBeInTheDocument();
+    expect(screen.getByTestId("jokers-tray")).toBeInTheDocument();
+    expect(screen.getByTestId("consumables-tray")).toBeInTheDocument();
     expect(nonPackBuyButtons().every((b) => b.disabled)).toBe(true);
     expect(
       screen.getByRole("button", { name: /Reroll shop offers/i }),
@@ -3229,14 +3429,25 @@ describe("Double tag", () => {
   });
 });
 
+function spectralPickerRng(values: ReadonlyArray<number>): () => number {
+  let i = 0;
+  return () => {
+    const v = i < values.length ? values[i] : 0.5;
+    i += 1;
+    return v;
+  };
+}
+
 describe("Ectoplasm spectral", () => {
   test("picking Ectoplasm from a Spectral pack adds Negative to a joker", async () => {
     const originalFactory = initialJokersConfig.factory;
     initialJokersConfig.factory = () => [createGreedyJoker()];
     tagOfferRngConfig.rng = rngForTag("ethereal");
-    const spectrals = createSpectralCatalog();
-    const ectoplasmIdx = spectrals.findIndex((s) => s.id === "ectoplasm");
-    shopPickerRngConfig.rng = () => ectoplasmIdx / spectrals.length + 1e-9;
+    const pool = createPoolSpectralCatalog();
+    const ectoplasmIdx = pool.findIndex((s) => s.id === "ectoplasm");
+    shopPickerRngConfig.rng = spectralPickerRng([
+      ectoplasmIdx / pool.length + 1e-9,
+    ]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     initialJokersConfig.factory = originalFactory;
@@ -3249,9 +3460,11 @@ describe("Ectoplasm spectral", () => {
 describe("Ouija spectral", () => {
   test("picking Ouija from a Spectral pack converts the hand to one rank", async () => {
     tagOfferRngConfig.rng = rngForTag("ethereal");
-    const spectrals = createSpectralCatalog();
-    const ouijaIdx = spectrals.findIndex((s) => s.id === "ouija");
-    shopPickerRngConfig.rng = () => ouijaIdx / spectrals.length + 1e-9;
+    const pool = createPoolSpectralCatalog();
+    const ouijaIdx = pool.findIndex((s) => s.id === "ouija");
+    shopPickerRngConfig.rng = spectralPickerRng([
+      ouijaIdx / pool.length + 1e-9,
+    ]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByTestId("blind-select-skip"));
@@ -3264,11 +3477,9 @@ describe("Ouija spectral", () => {
 });
 
 describe("The Soul spectral", () => {
-  test("picking The Soul from a Spectral pack creates a Legendary joker", async () => {
+  test("Soul replaces the first slot when its replacement roll hits", async () => {
     tagOfferRngConfig.rng = rngForTag("ethereal");
-    const spectrals = createSpectralCatalog();
-    const soulIdx = spectrals.findIndex((s) => s.id === "soul");
-    shopPickerRngConfig.rng = () => soulIdx / spectrals.length + 1e-9;
+    shopPickerRngConfig.rng = spectralPickerRng([0.004, 0.5]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const before = screen.queryAllByTestId(/^joker-tile-filled-/).length;

@@ -49,4 +49,14 @@ describe("progression store", () => {
     useGame.getState().resetProgression();
     expect(useGame.getState().pendingRunSelect).toBe(true);
   });
+
+  test("starts outside endless mode", () => {
+    expect(useGame.getState().endlessMode).toBe(false);
+  });
+
+  test("resetProgression turns endless mode off (#855)", () => {
+    useGame.getState().setEndlessMode(true);
+    useGame.getState().resetProgression();
+    expect(useGame.getState().endlessMode).toBe(false);
+  });
 });

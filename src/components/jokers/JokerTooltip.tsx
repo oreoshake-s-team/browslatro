@@ -1,16 +1,33 @@
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "./JokerTooltip.css";
+import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
 import {
   JOKER_EDITION_INFO,
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
+  jokerCurrentValue,
+  jokerCurrentValueLabel,
+  jokerEnhancementFilter,
   jokerSellValue,
   jokerStickers,
+  probabilityMultiplierFromJokers,
   type Joker,
+  type JokerCurrentValue,
+  type JokerRarity,
   type JokerSticker,
 } from "../../items/jokers";
 import { useGame } from "../../store/game";
-import { countEnhancedInFullDeck } from "../../cards/deckBuild";
+import {
+  countEnhancedInFullDeck,
+  countEnhancementInFullDeck,
+  countMissingFromFullDeck,
+  fullDeckSize,
+} from "../../cards/deckBuild";
+import { formatChanceRatio } from "../cards/cardInfo";
 
 interface JokerTooltipProps {
   id: string;
@@ -21,6 +38,7 @@ interface JokerTooltipProps {
 const TOOLTIP_OFFSET_PX = 8;
 
 export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProps) {
+  const { i18n } = useTranslation();
   const style: React.CSSProperties = {
     top: anchorRect.bottom + TOOLTIP_OFFSET_PX,
     left: anchorRect.left + anchorRect.width / 2,
@@ -31,10 +49,38 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
     : "";
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
+  const effectiveOdds = useEffectiveOdds(joker);
+  const currentValue = useCurrentValue(joker);
   return createPortal(
     <div id={id} role="tooltip" className="joker-tooltip" style={style}>
-      <p className="joker-tooltip-heading">{joker.name}</p>
-      <p className="joker-tooltip-description">{joker.description}</p>
+      <p className="joker-tooltip-heading">
+        {localizedJokerName(i18n.language, joker.id, joker.name)}
+      </p>
+      <p
+        className={`joker-tooltip-rarity joker-tooltip-rarity-${joker.rarity}`}
+        data-testid="joker-tooltip-rarity"
+      >
+        {rarityLabel(joker.rarity)}
+      </p>
+      <p className="joker-tooltip-description">
+        {localizedJokerDescription(i18n.language, joker.id, joker.description)}
+      </p>
+      {currentValue && (
+        <p
+          className="joker-tooltip-current-value"
+          data-testid="joker-tooltip-current-value"
+        >
+          {jokerCurrentValueLabel(currentValue)}
+        </p>
+      )}
+      {effectiveOdds && (
+        <p
+          className="joker-tooltip-effective-odds"
+          data-testid="joker-tooltip-effective-odds"
+        >
+          Effective odds: {effectiveOdds}
+        </p>
+      )}
       {progress && (
         <p
           className="joker-tooltip-progress"
@@ -63,9 +109,14 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
   );
 }
 
+function rarityLabel(rarity: JokerRarity): string {
+  return rarity.charAt(0).toUpperCase() + rarity.slice(1);
+}
+
 function stickerLine(sticker: JokerSticker): string {
   if (sticker.kind === "perishable") {
-    const remaining = Math.max(0, PERISHABLE_LIFE - sticker.roundsHeld);
+    if (sticker.roundsHeld >= PERISHABLE_LIFE) return "debuffed";
+    const remaining = PERISHABLE_LIFE - sticker.roundsHeld;
     return `${remaining} of ${PERISHABLE_LIFE} rounds left`;
   }
   return JOKER_STICKER_INFO[sticker.kind].description;
@@ -86,4 +137,60 @@ function useEnhancedThresholdProgress(
     cardEnhancementsById,
   );
   return { count, threshold: joker.effect.threshold };
+}
+
+function getJokerBaseChance(joker: Joker): number | null {
+  const e = joker.effect;
+  if (
+    e.kind === "business-card" ||
+    e.kind === "per-suit-chance-x-mult" ||
+    e.kind === "per-held-face-chance-money"
+  ) {
+    return e.chance;
+  }
+  return null;
+}
+
+function useCurrentValue(joker: Joker): JokerCurrentValue | null {
+  const blindsSkipped = useGame((s) => s.runStats.blindsSkipped);
+  const addedCardsCount = useGame((s) => s.addedCards.length);
+  const missingDeckCards = useGame((s) =>
+    countMissingFromFullDeck(s.baseDeckCards, s.destroyedCardIds, s.addedCards),
+  );
+  const money = useGame((s) => s.money);
+  const jokerCount = useGame((s) => s.jokers.length);
+  const remainingDiscards = useGame((s) => s.remainingDiscards);
+  const remainingDeckCards = useGame((s) =>
+    s.dealt.hand.length > 0
+      ? s.dealt.remaining.length
+      : fullDeckSize(s.baseDeckCards, s.destroyedCardIds, s.addedCards),
+  );
+  const enhancement = jokerEnhancementFilter(joker);
+  const matchingEnhancedDeckCards = useGame((s) =>
+    countEnhancementInFullDeck(
+      s.baseDeckCards,
+      s.destroyedCardIds,
+      s.addedCards,
+      s.cardEnhancementsById,
+      enhancement,
+    ),
+  );
+  return jokerCurrentValue(joker, {
+    blindsSkipped,
+    addedCardsCount,
+    missingDeckCards,
+    money,
+    jokerCount,
+    remainingDiscards,
+    remainingDeckCards,
+    matchingEnhancedDeckCards,
+  });
+}
+
+function useEffectiveOdds(joker: Joker): string | null {
+  const multiplier = useGame((s) => probabilityMultiplierFromJokers(s.jokers));
+  const baseChance = getJokerBaseChance(joker);
+  if (baseChance === null) return null;
+  if (multiplier === 1) return null;
+  return formatChanceRatio(baseChance, multiplier);
 }

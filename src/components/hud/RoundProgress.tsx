@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./RoundProgress.css";
 
 interface RoundProgressProps {
@@ -6,15 +7,26 @@ interface RoundProgressProps {
 }
 
 function RoundProgress({ remainingHands, remainingDiscards }: RoundProgressProps) {
+  const { t } = useTranslation();
   return (
     <div className="round-progress">
-      <div className="stat">
+      <div
+        className="stat"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="hands-stat"
+      >
         <span className="stat-value">{remainingHands}</span>
-        <span className="stat-label">Hands</span>
+        <span className="stat-label">{t("sidebar.hands")}</span>
       </div>
-      <div className="stat">
+      <div
+        className="stat"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="discards-stat"
+      >
         <span className="stat-value">{remainingDiscards}</span>
-        <span className="stat-label">Discards</span>
+        <span className="stat-label">{t("sidebar.discards")}</span>
       </div>
     </div>
   );

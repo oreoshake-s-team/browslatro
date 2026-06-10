@@ -51,6 +51,7 @@ function buildFakeContext() {
 }
 
 beforeEach(() => {
+  vi.useFakeTimers();
   isMutedMock.mockReset();
   isMutedMock.mockReturnValue(false);
   audioContextCtor.mockReset();
@@ -60,7 +61,11 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.clearAllTimers();
+  vi.useRealTimers();
+  vi.restoreAllMocks();
   vi.unstubAllGlobals();
+  subscribers.clear();
 });
 
 describe("play(\"gold\") synth", () => {
@@ -103,7 +108,6 @@ describe("sample preloading", () => {
     vi.resetModules();
     await import("./sounds");
     expect(setTimeoutSpy).not.toHaveBeenCalled();
-    setTimeoutSpy.mockRestore();
   });
 
   test("preloads the three samples after unmuting", async () => {
@@ -112,7 +116,6 @@ describe("sample preloading", () => {
       return { volume: 0, cloneNode: () => null };
     });
     vi.stubGlobal("Audio", audioCtor);
-    vi.useFakeTimers();
     vi.resetModules();
     await import("./sounds");
     expect(audioCtor).not.toHaveBeenCalled();
@@ -122,6 +125,5 @@ describe("sample preloading", () => {
     );
     vi.runAllTimers();
     expect(audioCtor).toHaveBeenCalledTimes(3);
-    vi.useRealTimers();
   });
 });

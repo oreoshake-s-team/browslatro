@@ -64,20 +64,5 @@
 .joker-grant-ok {
   align-self: center;
   padding: 0.8rem 2.4rem;
-  border-radius: 8px;
-  background-color: #51cf66;
-  color: #102b1c;
-  border: none;
-  font-weight: 700;
   font-size: 1.1rem;
-  cursor: pointer;
-}
-
-.joker-grant-ok:hover {
-  background-color: #69db7c;
-}
-
-.joker-grant-ok:focus-visible {
-  outline: 2px solid #74c0fc;
-  outline-offset: 2px;
 }

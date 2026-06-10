@@ -16,8 +16,8 @@ import {
   createBusinessCardJoker,
   createPlusFourMultJoker,
   type Joker,
-  type RandomSource,
 } from "./jokers";
+import { sequenceRng as fixedRng } from "../test/rng";
 
 function tarotById(id: string): TarotCard {
   const found = createTarotCatalog().find((t) => t.id === id);
@@ -26,8 +26,8 @@ function tarotById(id: string): TarotCard {
 }
 
 describe("createTarotCatalog", () => {
-  test("contains seventeen entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Star + Moon + Sun + World)", () => {
-    expect(createTarotCatalog()).toHaveLength(17);
+  test("contains twenty-two entries (eight apply-enhancement + Hermit + Temperance + Wheel of Fortune + Hanged Man + Strength + Death + Star + Moon + Sun + World + Judgement + Emperor + High Priestess + Fool)", () => {
+    expect(createTarotCatalog()).toHaveLength(22);
   });
 
   test("has unique ids", () => {
@@ -205,6 +205,29 @@ describe("Strength", () => {
   });
 });
 
+describe("Death", () => {
+  test("death is in the catalog", () => {
+    expect(tarotById("death").name).toBe("Death");
+  });
+
+  test("death effect kind is death-copy", () => {
+    expect(tarotById("death").effect.kind).toBe("death-copy");
+  });
+
+  test("death requires exactly 2 selected cards (matches Balatro)", () => {
+    expect(tarotById("death").effect).toEqual({
+      kind: "death-copy",
+      requiredTargets: 2,
+    });
+  });
+
+  test("death description names the left-becomes-right semantics", () => {
+    expect(tarotById("death").description).toBe(
+      "Select 2 cards in hand: left card becomes a copy of the right",
+    );
+  });
+});
+
 describe("nextRankUp", () => {
   test("advances 2 to 3", () => {
     expect(nextRankUp("2")).toBe("3");
@@ -248,15 +271,6 @@ describe("Wheel of Fortune", () => {
     expect(tarotById("wheel-of-fortune").effect.kind).toBe("edition-roll");
   });
 });
-
-function fixedRng(values: ReadonlyArray<number>): RandomSource {
-  let i = 0;
-  return (): number => {
-    const v = values[i % values.length];
-    i += 1;
-    return v;
-  };
-}
 
 describe("rollWheelOfFortune", () => {
   const jokers: ReadonlyArray<Joker> = [
@@ -303,6 +317,96 @@ describe("rollWheelOfFortune", () => {
     } finally {
       chanceOverrideConfig.force100 = false;
     }
+  });
+});
+
+describe("Judgement", () => {
+  test("judgement is in the catalog", () => {
+    expect(tarotById("judgement").name).toBe("Judgement");
+  });
+
+  test("judgement effect kind is create-joker", () => {
+    expect(tarotById("judgement").effect.kind).toBe("create-joker");
+  });
+
+  test("judgement effect carries no payload (any-rarity, matches Balatro)", () => {
+    expect(tarotById("judgement").effect).toEqual({ kind: "create-joker" });
+  });
+
+  test("judgement description names random Joker creation", () => {
+    expect(tarotById("judgement").description).toBe("Create a random Joker");
+  });
+});
+
+describe("The Emperor", () => {
+  test("the-emperor is in the catalog with the canonical name", () => {
+    expect(tarotById("the-emperor").name).toBe("The Emperor");
+  });
+
+  test("the-emperor effect kind is create-consumables", () => {
+    expect(tarotById("the-emperor").effect.kind).toBe("create-consumables");
+  });
+
+  test("the-emperor creates up to 2 tarots (matches Balatro)", () => {
+    expect(tarotById("the-emperor").effect).toEqual({
+      kind: "create-consumables",
+      consumableKind: "tarot",
+      count: 2,
+    });
+  });
+
+  test("the-emperor description names Tarot creation", () => {
+    expect(tarotById("the-emperor").description).toBe(
+      "Creates up to 2 random Tarots (must have room)",
+    );
+  });
+});
+
+describe("The High Priestess", () => {
+  test("the-high-priestess is in the catalog with the canonical name", () => {
+    expect(tarotById("the-high-priestess").name).toBe("The High Priestess");
+  });
+
+  test("the-high-priestess effect kind is create-consumables", () => {
+    expect(tarotById("the-high-priestess").effect.kind).toBe(
+      "create-consumables",
+    );
+  });
+
+  test("the-high-priestess creates up to 2 planets (matches Balatro)", () => {
+    expect(tarotById("the-high-priestess").effect).toEqual({
+      kind: "create-consumables",
+      consumableKind: "planet",
+      count: 2,
+    });
+  });
+
+  test("the-high-priestess description names Planet creation", () => {
+    expect(tarotById("the-high-priestess").description).toBe(
+      "Creates up to 2 random Planets (must have room)",
+    );
+  });
+});
+
+describe("The Fool", () => {
+  test("the-fool is in the catalog with the canonical name", () => {
+    expect(tarotById("the-fool").name).toBe("The Fool");
+  });
+
+  test("the-fool effect kind is copy-last-consumable", () => {
+    expect(tarotById("the-fool").effect.kind).toBe("copy-last-consumable");
+  });
+
+  test("the-fool effect carries no payload (matches Balatro)", () => {
+    expect(tarotById("the-fool").effect).toEqual({
+      kind: "copy-last-consumable",
+    });
+  });
+
+  test("the-fool description names the copy semantics", () => {
+    expect(tarotById("the-fool").description).toBe(
+      "Creates a copy of the last Tarot or Planet card used (must have room)",
+    );
   });
 });
 

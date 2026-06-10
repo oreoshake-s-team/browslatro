@@ -1,10 +1,13 @@
 import type { Card } from "../../../cards/types";
+import { RENTAL_END_OF_ROUND_DRAIN, hasSticker } from "../stickers";
 import type { Joker } from "../types";
+import { isJokerActive } from "../stickers";
 
 export interface EndOfRoundContext {
   readonly remainingDiscards?: number;
   readonly discardsUsedThisRound?: number;
   readonly fullDeck?: ReadonlyArray<Card>;
+  readonly uniquePlanetsUsed?: number;
 }
 
 export interface EndOfRoundStep {
@@ -19,14 +22,37 @@ export interface EndOfRoundResult {
 }
 
 export function applyEndOfRoundJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   context: EndOfRoundContext = {},
 ): EndOfRoundResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   const steps: EndOfRoundStep[] = [];
   for (const joker of jokers) {
     const effect = joker.effect;
-    if (effect.kind === "end-of-round-money") {
+    if (effect.kind === "end-of-round-money-per-unique-planet") {
+      const planets = context.uniquePlanetsUsed ?? 0;
+      const earned = effect.amount * planets;
+      if (earned > 0) {
+        moneyEarned += earned;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: earned,
+        });
+      }
+    } else if (effect.kind === "end-of-round-money-grows-on-boss") {
+      const payout =
+        joker.state?.kind === "counter" ? joker.state.value : effect.baseAmount;
+      if (payout > 0) {
+        moneyEarned += payout;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: payout,
+        });
+      }
+    } else if (effect.kind === "end-of-round-money") {
       if (effect.amount > 0) {
         moneyEarned += effect.amount;
         steps.push({
@@ -64,6 +90,16 @@ export function applyEndOfRoundJokers(
           moneyEarned: earned,
         });
       }
+    }
+  }
+  for (const joker of jokers) {
+    if (hasSticker(joker, "rental")) {
+      moneyEarned -= RENTAL_END_OF_ROUND_DRAIN;
+      steps.push({
+        jokerId: `${joker.id}-rental`,
+        jokerName: `${joker.name} (Rental)`,
+        moneyEarned: -RENTAL_END_OF_ROUND_DRAIN,
+      });
     }
   }
   return { moneyEarned, steps };

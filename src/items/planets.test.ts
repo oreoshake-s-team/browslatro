@@ -6,6 +6,8 @@ import {
   applyPlanetUpgrade,
   availablePlanets,
   createPlanetCatalog,
+  mostPlayedHand,
+  planetForHand,
   type PlanetCard,
 } from "./planets";
 
@@ -254,5 +256,45 @@ describe("availablePlanets", () => {
     expect(ids).not.toContain("planet-x");
     expect(ids).not.toContain("ceres");
     expect(ids).not.toContain("eris");
+  });
+});
+
+describe("mostPlayedHand (#281)", () => {
+  test("returns High Card when no hands have been played", () => {
+    expect(mostPlayedHand(countsWith({}))).toBe("High Card");
+  });
+
+  test("returns the hand with the highest play count", () => {
+    expect(mostPlayedHand(countsWith({ Pair: 3, Flush: 1 }))).toBe("Pair");
+  });
+
+  test("returns the higher-count hand when counts differ", () => {
+    expect(
+      mostPlayedHand(countsWith({ Pair: 2, Flush: 5, "Full House": 1 })),
+    ).toBe("Flush");
+  });
+
+  test("ties favor the earlier hand in HANDS order (deterministic)", () => {
+    expect(mostPlayedHand(countsWith({ Pair: 4, Flush: 4 }))).toBe("Pair");
+  });
+});
+
+describe("planetForHand (#281)", () => {
+  test("returns Pluto for High Card", () => {
+    expect(planetForHand(createPlanetCatalog(), "High Card")?.id).toBe("pluto");
+  });
+
+  test("returns Jupiter for Flush", () => {
+    expect(planetForHand(createPlanetCatalog(), "Flush")?.id).toBe("jupiter");
+  });
+
+  test("returns Neptune for Straight Flush", () => {
+    expect(planetForHand(createPlanetCatalog(), "Straight Flush")?.id).toBe(
+      "neptune",
+    );
+  });
+
+  test("returns null when the catalog is empty (negative)", () => {
+    expect(planetForHand([], "Pair")).toBeNull();
   });
 });

@@ -1,9 +1,11 @@
-import type { Card } from "../../../cards/types";
+import type { Card, Rank } from "../../../cards/types";
 import type { Joker } from "../types";
 import { isFaceCardWith } from "./utils";
+import { isJokerActive } from "../stickers";
 
 export interface OnDiscardContext {
   readonly discardsUsedThisRound?: number;
+  readonly rebateRank?: Rank | null;
 }
 
 export interface OnDiscardStep {
@@ -19,10 +21,11 @@ export interface OnDiscardResult {
 }
 
 export function applyOnDiscardJokers(
-  jokers: ReadonlyArray<Joker>,
+  allJokers: ReadonlyArray<Joker>,
   discardedCards: ReadonlyArray<Card>,
   context: OnDiscardContext = {},
 ): OnDiscardResult {
+  const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   const steps: OnDiscardStep[] = [];
   for (const joker of jokers) {
@@ -39,6 +42,20 @@ export function applyOnDiscardJokers(
           jokerName: joker.name,
           moneyEarned: effect.payout,
         });
+      }
+    } else if (effect.kind === "money-per-discarded-rebate-rank") {
+      const rank = context.rebateRank;
+      if (rank != null) {
+        const matches = discardedCards.filter((c) => c.rank === rank).length;
+        if (matches > 0) {
+          const earned = effect.payout * matches;
+          moneyEarned += earned;
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: earned,
+          });
+        }
       }
     } else if (effect.kind === "on-first-discard-of-round-money-when-size") {
       const isFirst = (context.discardsUsedThisRound ?? 0) === 1;
