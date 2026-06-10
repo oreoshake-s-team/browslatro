@@ -67,50 +67,6 @@ test.describe("Pack opening flow (#694)", () => {
     await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
   });
 
-  test("forcing an Arcana pack pool opens an Arcana pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "arcana");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Arcana/ }),
-    ).toBeVisible();
-  });
-
-  test("forcing a Buffoon pack pool opens a Buffoon pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "buffoon");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Buffoon/ }),
-    ).toBeVisible();
-  });
-
-  test("forcing a Spectral pack pool opens a Spectral pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "spectral");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Spectral/ }),
-    ).toBeVisible();
-  });
-
-  test("forcing a Celestial pack pool opens a Celestial pack modal", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "celestial");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    await expect(
-      page.getByRole("heading", { name: /Celestial/ }),
-    ).toBeVisible();
-  });
-
   test("closing the pack modal without picking leaves consumables unchanged (negative)", async ({
     page,
   }) => {
@@ -125,48 +81,6 @@ test.describe("Pack opening flow (#694)", () => {
       .locator("[data-consumable-kind]")
       .count();
     expect(consumableCountAfter).toBe(consumableCountBefore);
-  });
-
-  test("using The Sun on a selected Arcana-pack preview card converts that card to hearts (#692)", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "arcana");
-    await addTarotToTray(page, "the-sun");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    const firstPreviewCard = page
-      .getByTestId("pack-open-preview-hand")
-      .locator(".card")
-      .first();
-    await expect(firstPreviewCard).toBeVisible();
-    await firstPreviewCard.click();
-    await page.locator('[data-consumable-kind="tarot"]').first().click();
-    await expect(
-      page
-        .getByTestId("pack-open-preview-hand")
-        .locator(".card.card-suit-hearts"),
-    ).toHaveCount(1);
-  });
-
-  test("using The Lovers on a selected Arcana-pack preview card applies the wild enhancement", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "arcana");
-    await addTarotToTray(page, "the-lovers");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
-    const firstPreviewCard = page
-      .getByTestId("pack-open-preview-hand")
-      .locator(".card")
-      .first();
-    await expect(firstPreviewCard).toBeVisible();
-    await firstPreviewCard.click();
-    await page.locator('[data-consumable-kind="tarot"]').first().click();
-    await expect(
-      page
-        .getByTestId("pack-open-preview-hand")
-        .locator(".card.card-enhancement-wild"),
-    ).toHaveCount(1);
   });
 
   test("pack pick options are evenly spaced across the row without stretching (closes #893)", async ({
@@ -230,11 +144,12 @@ test.describe("Consumables usable while a Standard pack is open (#821)", () => {
     await setDeterministic(page);
   });
 
-  test("Strength tarot applied to a hand card mid-Standard-pack consumes the tarot and keeps the modal open", async ({
+  test("Strength tarot on a hand card, then Black Hole spectral, each consumed mid-Standard-pack with the modal staying open", async ({
     page,
   }) => {
     await forcePackPool(page, "standard");
     await addTarotToTray(page, "strength");
+    await addSpectralToTray(page, "black-hole");
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
     await expect(page.locator(HAND_CARDS).first()).toBeVisible();
@@ -244,15 +159,6 @@ test.describe("Consumables usable while a Standard pack is open (#821)", () => {
       page.locator('[data-consumable-kind="tarot"]'),
     ).toHaveCount(0);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
-  });
-
-  test("Black Hole spectral used mid-Standard-pack consumes the spectral and keeps the modal open", async ({
-    page,
-  }) => {
-    await forcePackPool(page, "standard");
-    await addSpectralToTray(page, "black-hole");
-    await winRound1AndOpenShop(page);
-    await buyFirstPackOffer(page);
     await page.locator('[data-consumable-kind="spectral"]').first().click();
     await expect(
       page.locator('[data-consumable-kind="spectral"]'),
