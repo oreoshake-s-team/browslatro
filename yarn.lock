@@ -1836,11 +1836,6 @@ __metadata:
     vitest: "npm:^4.0.0"
     web-vitals: "npm:^5.2.0"
     zustand: "npm:^5.0.13"
-  dependenciesMeta:
-    "@playwright/test":
-      unplugged: true
-    playwright:
-      unplugged: true
   languageName: unknown
   linkType: soft
 
