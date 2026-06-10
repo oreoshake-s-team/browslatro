@@ -1182,7 +1182,9 @@ describe("Jokers integration (issue #223 — runs start with no jokers)", () => 
 
 function resetAnimationSpeed(): void {
   if (getAnimationSpeed() !== "normal") {
-    setAnimationSpeed("normal");
+    act(() => {
+      setAnimationSpeed("normal");
+    });
   }
   window.localStorage.removeItem("browslatro:animationSpeed");
 }
