@@ -168,13 +168,16 @@ export function simulatePlay(
     remainingHands: input.remainingHands,
     money: input.money,
     heldInHandCards: getHeldInHand(input.dealt.hand, new Set(cardIds)),
-    fullDeck: fullDeckPile(
-      input.baseDeckCards,
-      input.destroyedCardIds,
-      input.addedCards,
-      input.cardEnhancementsById,
-      input.cardSealsById,
-    ).remaining,
+    fullDeck:
+      input.jokers.length === 0
+        ? []
+        : fullDeckPile(
+            input.baseDeckCards,
+            input.destroyedCardIds,
+            input.addedCards,
+            input.cardEnhancementsById,
+            input.cardSealsById,
+          ).remaining,
     remainingDeck: input.dealt.remaining,
     baseDeckSize: input.baseDeckCards.length,
     handPlayCounts: handPlayCountsWithThisHand,
