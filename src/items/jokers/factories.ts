@@ -101,6 +101,8 @@ import {
   MIME_HELD_RETRIGGERS,
   VAMPIRE_X_MULT_PER_ENHANCED,
   HIKER_CHIPS_PER_SCORED,
+  CAVENDISH_X_MULT,
+  CAVENDISH_BUST_CHANCE,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1623,6 +1625,30 @@ export function createMarbleJoker(): Joker {
     name: "Marble Joker",
     description: "Adds one Stone card to the deck when Blind is selected",
     effect: { kind: "blind-select-adds-stone-card" },
+  };
+}
+
+export function createCertificateJoker(): Joker {
+  return {
+    id: "certificate",
+    rarity: "uncommon",
+    name: "Certificate",
+    description: "When round begins, add a random playing card with a random seal attached to your hand",
+    effect: { kind: "round-begin-adds-sealed-card" },
+  };
+}
+
+export function createCavendishJoker(): Joker {
+  return {
+    id: "cavendish",
+    rarity: "common",
+    name: "Cavendish",
+    description: `X${CAVENDISH_X_MULT} Mult; 1 in 1000 chance this card is destroyed at the end of round`,
+    effect: {
+      kind: "x-mult-chance-bust",
+      amount: CAVENDISH_X_MULT,
+      bustChance: CAVENDISH_BUST_CHANCE,
+    },
   };
 }
 

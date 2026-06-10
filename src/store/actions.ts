@@ -182,7 +182,10 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
     : undefined;
   const baseOffers = pickShopOffers({
     jokerCatalog: createJokerCatalog(),
-    excludedJokerIds: s.jokers.map((j) => j.id),
+    excludedJokerIds: [
+      ...s.jokers.map((j) => j.id),
+      ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
+    ],
     planetCatalog: planetsForShop,
     tarotCatalog: createTarotCatalog(),
     spectralCatalog: createSpectralCatalog(),
@@ -372,6 +375,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
             excludedJokerIds: [
               ...s.jokers.map((j) => j.id),
               ...s.soldJokerIdsThisShopVisit,
+              ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
             ],
             planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
             tarotCatalog: createTarotCatalog(),
@@ -534,13 +538,19 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   handleWin: (precomputed) => {
     const s = get();
-    s.setJokers((prev) =>
-      applyRoundEndToJokerStates(
-        tickPerishableRounds(prev),
-        Math.random,
-        s.blind === 3,
-      ),
+    const jokersBeforeRoundEnd = get().jokers;
+    const jokersAfterRoundEnd = applyRoundEndToJokerStates(
+      tickPerishableRounds(jokersBeforeRoundEnd),
+      Math.random,
+      s.blind === 3,
     );
+    if (
+      jokersBeforeRoundEnd.some((j) => j.id === "gros-michel") &&
+      !jokersAfterRoundEnd.some((j) => j.id === "gros-michel")
+    ) {
+      s.setGrosMichelDestroyed(true);
+    }
+    s.setJokers(jokersAfterRoundEnd);
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
     const baseBlindReward = s.blind + 2;

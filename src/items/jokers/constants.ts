@@ -135,6 +135,8 @@ export const SELTZER_RETRIGGERS = 1;
 export const MIME_HELD_RETRIGGERS = 1;
 export const VAMPIRE_X_MULT_PER_ENHANCED = 0.1;
 export const HIKER_CHIPS_PER_SCORED = 5;
+export const CAVENDISH_X_MULT = 3;
+export const CAVENDISH_BUST_CHANCE = 1 / 1000;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

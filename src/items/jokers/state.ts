@@ -226,7 +226,10 @@ export function applyRoundEndToJokerStates(
       out.push({ ...joker, state: counterState(next) });
       continue;
     }
-    if (effect.kind === "additive-mult-chance-bust") {
+    if (
+      effect.kind === "additive-mult-chance-bust" ||
+      effect.kind === "x-mult-chance-bust"
+    ) {
       if (rollChance(effect.bustChance, rng) && isDestructible(joker)) continue;
       out.push(joker);
       continue;

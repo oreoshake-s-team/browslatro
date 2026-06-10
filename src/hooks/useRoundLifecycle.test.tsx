@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useGame } from "../store/game";
-import { createMarbleJoker } from "../items/jokers";
+import { createCertificateJoker, createMarbleJoker } from "../items/jokers";
 import { STARTING_MONEY } from "../store/economy";
 import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
 import { createGreedyJoker } from "../items/jokers";
@@ -285,5 +285,39 @@ describe("startNewRound — Marble Joker stone card (#980)", () => {
     );
     act(() => result.current.startNewRound());
     expect(useGame.getState().addedCards).toHaveLength(0);
+  });
+});
+
+describe("startNewRound — Certificate sealed card (#988)", () => {
+  test("a new round puts a sealed card in the opening hand", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createCertificateJoker()]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(
+      useGame.getState().dealt.hand.filter((c) => c.seal !== undefined),
+    ).toHaveLength(1);
+  });
+
+  test("the sealed card persists in addedCards", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createCertificateJoker()]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(
+      useGame.getState().addedCards.filter((c) => c.seal !== undefined),
+    ).toHaveLength(1);
   });
 });

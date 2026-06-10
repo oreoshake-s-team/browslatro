@@ -269,6 +269,12 @@ export type JokerEffect =
     }
   | { readonly kind: "scored-cards-gain-chips"; readonly amount: number }
   | { readonly kind: "blind-select-adds-stone-card" }
+  | {
+      readonly kind: "x-mult-chance-bust";
+      readonly amount: number;
+      readonly bustChance: number;
+    }
+  | { readonly kind: "round-begin-adds-sealed-card" }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

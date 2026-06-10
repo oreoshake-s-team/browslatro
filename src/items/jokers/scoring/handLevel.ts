@@ -492,6 +492,16 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "x-mult-chance-bust": {
+        xMult *= effect.amount;
+        fired.push(joker.id);
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          xMultFactor: effect.amount,
+        });
+        break;
+      }
       case "x-mult-shrink-per-discarded-card": {
         const factor = ramenXMultFactor(joker);
         if (factor > 1) {
@@ -547,6 +557,7 @@ export function applyHandLevelJokers(
       case "played-faces-become-gold":
       case "scored-cards-gain-chips":
       case "blind-select-adds-stone-card":
+      case "round-begin-adds-sealed-card":
       case "noop":
         break;
       default:
