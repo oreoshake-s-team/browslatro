@@ -57,6 +57,7 @@ export default function Game({
   const cardSealsById = useGame((s) => s.cardSealsById);
   const selectedIds = useGame((s) => s.selectedIds);
   const discardingIds = useGame((s) => s.discardingIds);
+  const newlyDrawnIds = useGame((s) => s.newlyDrawnIds);
   const jokers = useGame((s) => s.jokers);
   const jokerPulseCounters = useGame((s) => s.jokerPulseCounters);
   const consumables = useGame((s) => s.consumables);
@@ -204,6 +205,7 @@ export default function Game({
           remaining={inHandRemaining}
           selectedIds={selectedIds}
           discardingIds={discardingIds}
+          newlyDrawnIds={newlyDrawnIds}
           debuffedIds={debuffedIds}
           scoringId={scoringId}
           scoringPulseTick={scoringPulseTick}

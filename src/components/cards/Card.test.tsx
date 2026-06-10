@@ -110,6 +110,23 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveClass("card-discarding");
   });
 
+  test("applies the newly-drawn class when the newlyDrawn prop is set", () => {
+    render(<Card card={aceOfSpades} newlyDrawn />);
+    expect(screen.getByRole("button")).toHaveClass("card-newly-drawn");
+  });
+
+  test("marks the aria-label as newly drawn when the newlyDrawn prop is set", () => {
+    render(<Card card={aceOfSpades} newlyDrawn />);
+    expect(
+      screen.getByRole("button", { name: "A of Spades, newly drawn" })
+    ).toBeInTheDocument();
+  });
+
+  test("does not apply the newly-drawn class by default (negative)", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByRole("button")).not.toHaveClass("card-newly-drawn");
+  });
+
   test("invokes onDiscardEnd with the card when the discard animation ends", () => {
     const onDiscardEnd = vi.fn();
     render(

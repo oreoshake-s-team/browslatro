@@ -555,3 +555,38 @@ describe("Hand drag-and-drop reordering", () => {
     ]);
   });
 });
+
+describe("Hand newly drawn markers (#929)", () => {
+  test("mounting with a non-empty newlyDrawnIds set does not mark cards (restored run)", () => {
+    const deck = createDeck();
+    renderHand({
+      hand: deck.slice(0, 8),
+      newlyDrawnIds: new Set([deck[0].id, deck[1].id]),
+    });
+    const marked = getCardButtons().filter((btn) =>
+      btn.classList.contains("card-newly-drawn")
+    );
+    expect(marked).toHaveLength(0);
+  });
+
+  test("cards drawn after mount are marked newly drawn, kept cards are not", () => {
+    const deck = createDeck();
+    const props = {
+      hand: deck.slice(0, 8),
+      remaining: deck.slice(8),
+      selectedIds: new Set<number>(),
+      discardingIds: new Set<number>(),
+      newlyDrawnIds: new Set<number>(),
+      onToggleCard: vi.fn(),
+      onCardDiscardEnd: vi.fn(),
+    };
+    const { rerender } = render(<Hand {...props} />);
+    rerender(
+      <Hand {...props} newlyDrawnIds={new Set([deck[0].id, deck[1].id])} />
+    );
+    const marked = getCardButtons().filter((btn) =>
+      btn.classList.contains("card-newly-drawn")
+    );
+    expect(marked).toHaveLength(2);
+  });
+});

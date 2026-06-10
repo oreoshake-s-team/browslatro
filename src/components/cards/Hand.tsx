@@ -86,6 +86,7 @@ interface HandProps {
   remaining: ReadonlyArray<CardType>;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
+  newlyDrawnIds?: ReadonlySet<number>;
   debuffedIds?: ReadonlySet<number>;
   scoringId?: number | null;
   scoringPulseTick?: number;
@@ -108,6 +109,7 @@ export default function Hand({
   remaining,
   selectedIds,
   discardingIds,
+  newlyDrawnIds,
   debuffedIds,
   scoringId = null,
   scoringPulseTick = 0,
@@ -128,6 +130,12 @@ export default function Hand({
     useReducer(handUiReducer, initialHandUiState);
   const handCardsRef = useRef<HTMLDivElement | null>(null);
   const lastHandPlaySignalRef = useRef<number>(handPlaySignal);
+  // The newly-drawn set is part of the persisted run state, so a restored run
+  // can mount with a non-empty set; only mark cards when it changes after
+  // mount (same principle as the Nope! replay fix, issue #860).
+  const mountNewlyDrawnRef = useRef(newlyDrawnIds);
+  const showNewlyDrawn =
+    newlyDrawnIds !== undefined && newlyDrawnIds !== mountNewlyDrawnRef.current;
 
   useEffect(() => {
     if (lastHandPlaySignalRef.current === handPlaySignal) return;
@@ -366,6 +374,7 @@ export default function Hand({
                     card={card}
                     selected={selectedIds.has(card.id)}
                     discarding={discardingIds.has(card.id)}
+                    newlyDrawn={showNewlyDrawn && newlyDrawnIds.has(card.id)}
                     debuffed={debuffedIds?.has(card.id) ?? false}
                     scoring={scoringId === card.id}
                     scoringPulseTick={scoringPulseTick}

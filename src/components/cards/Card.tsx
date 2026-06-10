@@ -59,6 +59,7 @@ interface CardProps {
   card: CardType;
   selected?: boolean;
   discarding?: boolean;
+  newlyDrawn?: boolean;
   debuffed?: boolean;
   scoring?: boolean;
   scoringPulseTick?: number;
@@ -74,6 +75,7 @@ export default function Card({
   card,
   selected = false,
   discarding = false,
+  newlyDrawn = false,
   debuffed = false,
   scoring = false,
   scoringPulseTick = 0,
@@ -112,6 +114,7 @@ export default function Card({
   const suitClass = `card-suit-${card.suit}`;
   const selectedClass = selected ? "card-selected" : "";
   const discardingClass = discarding ? "card-discarding" : "";
+  const newlyDrawnClass = newlyDrawn ? "card-newly-drawn" : "";
   const scoringClass = scoring
     ? `card-scoring card-scoring-tick-${scoringPulseTick % 2}`
     : "";
@@ -139,11 +142,12 @@ export default function Card({
   const withEdition = card.edition
     ? `${withSeal}, ${CARD_EDITION_INFO[card.edition].name}`
     : withSeal;
+  const withDebuff = debuffed ? `${withEdition}, debuffed` : withEdition;
   const ariaLabel = showBack
     ? "Face-down card"
-    : debuffed
-      ? `${withEdition}, debuffed`
-      : withEdition;
+    : newlyDrawn
+      ? `${withDebuff}, newly drawn`
+      : withDebuff;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
@@ -153,7 +157,7 @@ export default function Card({
     <button
       ref={buttonRef}
       type="button"
-      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
+      className={`card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
         .replace(/\s+/g, " ")
         .trim()}
       data-edition={showBack ? undefined : (card.edition ?? undefined)}

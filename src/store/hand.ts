@@ -17,6 +17,7 @@ export interface HandState {
   selectedHand: Hand | null;
   selectedIds: ReadonlySet<number>;
   discardingIds: ReadonlySet<number>;
+  newlyDrawnIds: ReadonlySet<number>;
   handDisplayOrder: ReadonlyArray<number>;
   remainingHands: number;
   remainingDiscards: number;
@@ -24,6 +25,7 @@ export interface HandState {
   setSelectedHand: (update: Updater<Hand | null>) => void;
   setSelectedIds: (update: Updater<ReadonlySet<number>>) => void;
   setDiscardingIds: (update: Updater<ReadonlySet<number>>) => void;
+  setNewlyDrawnIds: (update: Updater<ReadonlySet<number>>) => void;
   setHandDisplayOrder: (update: Updater<ReadonlyArray<number>>) => void;
   setRemainingHands: (update: Updater<number>) => void;
   setRemainingDiscards: (update: Updater<number>) => void;
@@ -35,6 +37,7 @@ export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set)
   selectedHand: null,
   selectedIds: new Set(),
   discardingIds: new Set(),
+  newlyDrawnIds: new Set(),
   handDisplayOrder: [],
   remainingHands: STARTING_HANDS,
   remainingDiscards: STARTING_DISCARDS,
@@ -45,6 +48,8 @@ export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set)
     set((state) => ({ selectedIds: resolve(update, state.selectedIds) })),
   setDiscardingIds: (update) =>
     set((state) => ({ discardingIds: resolve(update, state.discardingIds) })),
+  setNewlyDrawnIds: (update) =>
+    set((state) => ({ newlyDrawnIds: resolve(update, state.newlyDrawnIds) })),
   setHandDisplayOrder: (update) =>
     set((state) => ({
       handDisplayOrder: resolve(update, state.handDisplayOrder),
@@ -64,6 +69,7 @@ export const createHandSlice: StateCreator<GameState, [], [], HandState> = (set)
       selectedHand: null,
       selectedIds: new Set(),
       discardingIds: new Set(),
+      newlyDrawnIds: new Set(),
       handDisplayOrder: [],
       remainingHands: STARTING_HANDS,
       remainingDiscards: STARTING_DISCARDS,
