@@ -1,4 +1,4 @@
-import { useCallback, useId, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./Options.css";
 import { createPortal } from "react-dom";
@@ -19,6 +19,7 @@ import {
   type AnimationSpeed,
 } from "../system/preferences";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 interface OptionsProps {
   onNewGame: () => void;
@@ -47,8 +48,11 @@ function Options({
   );
   const animationSpeedSelectId = useId();
   const languageSelectId = useId();
+  const titleId = useId();
+  const overlayRef = useRef<HTMLDivElement>(null);
   const handleClose = useCallback(() => setOpen(false), []);
   useEscapeToClose(handleClose, open);
+  useFocusTrap(overlayRef, open);
 
   function handleToggleMute() {
     toggleMute();
@@ -85,9 +89,16 @@ function Options({
       </button>
       {open &&
         createPortal(
-          <div className="modal-overlay" onClick={handleClose}>
+          <div
+            ref={overlayRef}
+            className="modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            onClick={handleClose}
+          >
             <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <h3>{t("sidebar.options")}</h3>
+              <h3 id={titleId}>{t("sidebar.options")}</h3>
               <button
                 className="options-button options-button--toggle"
                 aria-pressed={muted}

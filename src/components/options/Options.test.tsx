@@ -363,3 +363,36 @@ describe("Options i18n (#922)", () => {
     confirmSpy.mockRestore();
   });
 });
+
+describe("Options dialog semantics (#912)", () => {
+  beforeEach(resetPreferences);
+  afterEach(resetPreferences);
+
+  test("open modal exposes dialog semantics labelled by its title", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
+    expect(dialog).toHaveAccessibleName("Options");
+  });
+
+  test("moves focus into the dialog on open and restores it to the trigger on close", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    const trigger = screen.getByRole("button", { name: "Options" });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.tab();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
+  });
+
+  test("dialog is absent before the Options button is pressed", () => {
+    render(<Options onNewGame={() => {}} />);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
