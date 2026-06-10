@@ -193,6 +193,15 @@ export type JokerEffect =
       readonly n: number;
       readonly xmult: number;
     }
+  | {
+      readonly kind: "on-hand-stack-on-discard-shrink-mult";
+      readonly growAmount: number;
+      readonly shrinkAmount: number;
+    }
+  | { readonly kind: "stack-mult-on-shop-reroll"; readonly amount: number }
+  | { readonly kind: "x-mult-on-repeat-hand-this-round"; readonly amount: number }
+  | { readonly kind: "x-mult-per-blind-skipped"; readonly amount: number }
+  | { readonly kind: "x-mult-per-added-card"; readonly amount: number }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

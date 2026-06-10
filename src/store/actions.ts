@@ -23,6 +23,7 @@ import {
   jokerSellValue,
   polychromeRandomJokerDestroyOthers,
   tickPerishableRounds,
+  applyShopRerollToJokerStates,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -284,6 +285,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!s.shopOffers) return;
     if (s.money < cost) return;
     s.spend(cost);
+    s.setJokers((prev) => applyShopRerollToJokerStates(prev));
     const freshItems = pickShopItemOffers({
       jokerCatalog: createJokerCatalog(),
       excludedJokerIds: [

@@ -367,7 +367,9 @@ export function applyHandLevelJokers(
         }
         break;
       }
-      case "on-hand-type-stack-mult": {
+      case "on-hand-type-stack-mult":
+      case "on-hand-stack-on-discard-shrink-mult":
+      case "stack-mult-on-shop-reroll": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
           additiveMult += bonus;
@@ -404,6 +406,51 @@ export function applyHandLevelJokers(
             jokerId: joker.id,
             jokerName: joker.name,
             additiveMult: bonus,
+          });
+        }
+        break;
+      }
+      case "x-mult-on-repeat-hand-this-round": {
+        const label = context.playedHandLabel;
+        if (
+          label !== undefined &&
+          context.handLabelsThisRound !== undefined &&
+          context.handLabelsThisRound.includes(label)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-blind-skipped": {
+        const skips = context.blindsSkipped ?? 0;
+        if (skips > 0) {
+          const factor = 1 + effect.amount * skips;
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-added-card": {
+        const added = context.addedCardsCount ?? 0;
+        if (added > 0) {
+          const factor = 1 + effect.amount * added;
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
           });
         }
         break;

@@ -215,6 +215,11 @@ export function applyPerCardJokers(
       case "on-played-rank-stack-chips":
       case "on-no-face-stack-mult":
       case "every-n-hands-xmult":
+      case "on-hand-stack-on-discard-shrink-mult":
+      case "stack-mult-on-shop-reroll":
+      case "x-mult-on-repeat-hand-this-round":
+      case "x-mult-per-blind-skipped":
+      case "x-mult-per-added-card":
       case "noop":
         break;
       default:

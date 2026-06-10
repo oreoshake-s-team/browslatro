@@ -65,6 +65,12 @@ import {
   SMILEY_FACE_MULT,
   LOYALTY_CARD_HANDS_PER_TRIGGER,
   LOYALTY_CARD_X_MULT,
+  GREEN_JOKER_MULT_PER_HAND,
+  GREEN_JOKER_MULT_PER_DISCARD,
+  CARD_SHARP_X_MULT,
+  THROWBACK_X_MULT_PER_SKIP,
+  HOLOGRAM_X_MULT_PER_ADDED_CARD,
+  FLASH_CARD_MULT_PER_REROLL,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1176,6 +1182,74 @@ export function createAcrobatJoker(): Joker {
     name: "Acrobat",
     description: `X${ACROBAT_X_MULT} Mult on the final hand of the round`,
     effect: { kind: "x-mult-on-final-hand", amount: ACROBAT_X_MULT },
+  };
+}
+
+export function createGreenJokerJoker(): Joker {
+  return {
+    id: "green-joker",
+    rarity: "common",
+    name: "Green Joker",
+    description: `+${GREEN_JOKER_MULT_PER_HAND} Mult per hand played, -${GREEN_JOKER_MULT_PER_DISCARD} Mult per discard`,
+    effect: {
+      kind: "on-hand-stack-on-discard-shrink-mult",
+      growAmount: GREEN_JOKER_MULT_PER_HAND,
+      shrinkAmount: GREEN_JOKER_MULT_PER_DISCARD,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createCardSharpJoker(): Joker {
+  return {
+    id: "card-sharp",
+    rarity: "uncommon",
+    name: "Card Sharp",
+    description: `X${CARD_SHARP_X_MULT} Mult if played poker hand has already been played this round`,
+    effect: {
+      kind: "x-mult-on-repeat-hand-this-round",
+      amount: CARD_SHARP_X_MULT,
+    },
+  };
+}
+
+export function createThrowbackJoker(): Joker {
+  return {
+    id: "throwback",
+    rarity: "uncommon",
+    name: "Throwback",
+    description: `X${THROWBACK_X_MULT_PER_SKIP} Mult for each Blind skipped this run`,
+    effect: {
+      kind: "x-mult-per-blind-skipped",
+      amount: THROWBACK_X_MULT_PER_SKIP,
+    },
+  };
+}
+
+export function createHologramJoker(): Joker {
+  return {
+    id: "hologram",
+    rarity: "uncommon",
+    name: "Hologram",
+    description: `This Joker gains X${HOLOGRAM_X_MULT_PER_ADDED_CARD} Mult every time a playing card is added to your deck`,
+    effect: {
+      kind: "x-mult-per-added-card",
+      amount: HOLOGRAM_X_MULT_PER_ADDED_CARD,
+    },
+  };
+}
+
+export function createFlashCardJoker(): Joker {
+  return {
+    id: "flash-card",
+    rarity: "uncommon",
+    name: "Flash Card",
+    description: `This Joker gains +${FLASH_CARD_MULT_PER_REROLL} Mult per reroll in the shop`,
+    effect: {
+      kind: "stack-mult-on-shop-reroll",
+      amount: FLASH_CARD_MULT_PER_REROLL,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }
 

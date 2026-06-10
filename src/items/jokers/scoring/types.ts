@@ -64,4 +64,7 @@ export interface HandLevelContext {
   readonly remainingDeck?: ReadonlyArray<Card>;
   readonly baseDeckSize?: number;
   readonly handPlayCounts?: HandPlayCounts;
+  readonly handLabelsThisRound?: ReadonlyArray<HandLabel>;
+  readonly blindsSkipped?: number;
+  readonly addedCardsCount?: number;
 }
