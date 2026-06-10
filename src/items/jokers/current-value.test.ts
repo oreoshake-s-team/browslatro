@@ -5,16 +5,31 @@ import {
   LOYALTY_CARD_X_MULT,
   POPCORN_MULT,
   EROSION_MULT_PER_MISSING_CARD,
+  CAMPFIRE_X_MULT_PER_SOLD_CARD,
+  CONSTELLATION_X_MULT_PER_PLANET,
+  FORTUNE_TELLER_MULT_PER_TAROT,
+  HIT_THE_ROAD_X_MULT_PER_JACK,
+  JOKER_SELL_VALUE,
+  LUCKY_CAT_X_MULT_PER_TRIGGER,
+  OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
   applyDiscardToJokerStates,
+  createCampfireJoker,
+  createConstellationJoker,
+  createEggJoker,
   createErosionJoker,
   createFlashCardJoker,
+  createFortuneTellerJoker,
+  createHitTheRoadJoker,
   createHologramJoker,
   createIceCreamJoker,
   createJokerCatalog,
   createLoyaltyCardJoker,
+  createLuckyCatJoker,
+  createObeliskJoker,
   createPareidoliaJoker,
   createPopcornJoker,
   createRamenJoker,
+  createRedCardJoker,
   createRunnerJoker,
   createThrowbackJoker,
   jokerCurrentValue,
@@ -148,6 +163,75 @@ describe("jokerCurrentValue (#884)", () => {
       value: 1.97,
     });
   });
+
+  test("Red Card reports its accumulated Mult from skipped packs", () => {
+    expect(
+      jokerCurrentValue(withCounter(createRedCardJoker(), 6), CTX),
+    ).toEqual({ kind: "mult", value: 6 });
+  });
+
+  test("Fortune Teller reports its accumulated Mult from Tarots used", () => {
+    expect(
+      jokerCurrentValue(withCounter(createFortuneTellerJoker(), 5), CTX),
+    ).toEqual({ kind: "mult", value: FORTUNE_TELLER_MULT_PER_TAROT * 5 });
+  });
+
+  test("Hit the Road derives X Mult from Jacks discarded this round", () => {
+    expect(
+      jokerCurrentValue(withCounter(createHitTheRoadJoker(), 2), CTX),
+    ).toEqual({ kind: "x-mult", value: 1 + HIT_THE_ROAD_X_MULT_PER_JACK * 2 });
+  });
+
+  test("Lucky Cat derives X Mult from Lucky card triggers", () => {
+    expect(
+      jokerCurrentValue(withCounter(createLuckyCatJoker(), 4), CTX),
+    ).toEqual({ kind: "x-mult", value: 1 + LUCKY_CAT_X_MULT_PER_TRIGGER * 4 });
+  });
+
+  test("Constellation derives X Mult from Planets used", () => {
+    expect(
+      jokerCurrentValue(withCounter(createConstellationJoker(), 3), CTX),
+    ).toEqual({
+      kind: "x-mult",
+      value: 1 + CONSTELLATION_X_MULT_PER_PLANET * 3,
+    });
+  });
+
+  test("Campfire derives X Mult from cards sold", () => {
+    expect(
+      jokerCurrentValue(withCounter(createCampfireJoker(), 2), CTX),
+    ).toEqual({ kind: "x-mult", value: 1 + CAMPFIRE_X_MULT_PER_SOLD_CARD * 2 });
+  });
+
+  test("Obelisk derives X Mult from consecutive hands without the most played hand", () => {
+    expect(
+      jokerCurrentValue(withCounter(createObeliskJoker(), 4), CTX),
+    ).toEqual({
+      kind: "x-mult",
+      value: 1 + OBELISK_X_MULT_PER_CONSECUTIVE_HAND * 4,
+    });
+  });
+
+  test("a fresh Obelisk reports the X1 baseline", () => {
+    expect(jokerCurrentValue(createObeliskJoker(), CTX)).toEqual({
+      kind: "x-mult",
+      value: 1,
+    });
+  });
+
+  test("Egg reports its grown total sell value", () => {
+    expect(jokerCurrentValue(withCounter(createEggJoker(), 9), CTX)).toEqual({
+      kind: "sell-value",
+      value: JOKER_SELL_VALUE + 9,
+    });
+  });
+
+  test("a fresh Egg reports the base sell value", () => {
+    expect(jokerCurrentValue(createEggJoker(), CTX)).toEqual({
+      kind: "sell-value",
+      value: JOKER_SELL_VALUE,
+    });
+  });
 });
 
 describe("jokerCurrentValueLabel (#884)", () => {
@@ -160,6 +244,12 @@ describe("jokerCurrentValueLabel (#884)", () => {
   test("formats accumulated Chips", () => {
     expect(jokerCurrentValueLabel({ kind: "chips", value: 30 })).toBe(
       "Currently: +30 Chips",
+    );
+  });
+
+  test("formats a sell value", () => {
+    expect(jokerCurrentValueLabel({ kind: "sell-value", value: 12 })).toBe(
+      "Currently: $12 sell value",
     );
   });
 
