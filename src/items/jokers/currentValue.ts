@@ -1,4 +1,5 @@
 import { ramenXMultFactor } from "./state";
+import { jokerSellValue } from "./scoring/utils";
 import type { Joker } from "./types";
 
 export interface JokerCurrentValueContext {
@@ -11,6 +12,7 @@ export type JokerCurrentValue =
   | { readonly kind: "mult"; readonly value: number }
   | { readonly kind: "chips"; readonly value: number }
   | { readonly kind: "x-mult"; readonly value: number }
+  | { readonly kind: "sell-value"; readonly value: number }
   | {
       readonly kind: "hands-until-x-mult";
       readonly hands: number;
@@ -35,6 +37,8 @@ export function jokerCurrentValue(
     case "on-no-face-stack-mult":
     case "on-hand-stack-on-discard-shrink-mult":
     case "stack-mult-on-shop-reroll":
+    case "stack-mult-on-pack-skip":
+    case "stack-mult-per-tarot-used":
     case "mult-decay-per-round":
       return { kind: "mult", value: counterValue(joker) };
     case "per-missing-card-mult":
@@ -62,6 +66,17 @@ export function jokerCurrentValue(
       };
     case "x-mult-shrink-per-discarded-card":
       return { kind: "x-mult", value: ramenXMultFactor(joker) };
+    case "x-mult-per-jack-discarded-this-round":
+    case "x-mult-per-lucky-trigger":
+    case "x-mult-per-planet-used":
+    case "x-mult-per-sold-card":
+    case "x-mult-per-hand-without-most-played":
+      return {
+        kind: "x-mult",
+        value: perCountXMultFactor(effect.amount, counterValue(joker)),
+      };
+    case "sell-value-grows-per-round":
+      return { kind: "sell-value", value: jokerSellValue(joker) };
     default:
       return null;
   }
@@ -75,6 +90,8 @@ export function jokerCurrentValueLabel(value: JokerCurrentValue): string {
       return `Currently: +${value.value} Chips`;
     case "x-mult":
       return `Currently: X${formatFactor(value.value)} Mult`;
+    case "sell-value":
+      return `Currently: $${value.value} sell value`;
     case "hands-until-x-mult":
       return `X${value.xmult} Mult in ${value.hands} ${
         value.hands === 1 ? "hand" : "hands"
