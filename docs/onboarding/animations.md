@@ -1,102 +1,87 @@
 # Deep dive: the scoring animation
 
 Browslatro's signature feel is the score *building up* — chips and mult ticking, cards
-popping, Jokers pulsing, the trace scrolling. This document explains how that staged
-animation is sequenced on top of the (already-computed) final score. Read
+popping, jokers pulsing, the trace scrolling. This explains how that staged animation is
+sequenced on top of the already-computed final score. Read
 [`scoring-pipeline.md`](./scoring-pipeline.md) first; this picks up where it ends.
 
 ## The mental model
 
 The eager pass in `usePlayHand` has already computed `finalScore`. The animation's job is
 to **re-apply the same contributions, one at a time, on a timer**, mutating the store's
-live `chips` / `multiplier` until they land on that final number — while emitting sounds,
-`ScoringEvent`s (the trace), and visual "pulse" cues.
+live `chips` / `multiplier` until they land on that number — while emitting sounds,
+`ScoringEvent`s (the trace), and visual pulse cues.
 
-The animation is not one loop. It's **a chain of independent timed sequences**, each
-responsible for one phase, wired together with continuation refs so phase N's completion
-starts phase N+1.
+It is not one loop. It's **a chain of independent timed sequences**, each owning one
+phase, glued together with continuation refs so phase N's completion starts phase N+1.
 
 ## The primitive: `useScoringStepSequence`
 
-`src/hooks/useScoringStepSequence.ts` — ~30 lines, and everything else is built on it.
+`src/hooks/useScoringStepSequence.ts` — ~30 lines that everything else builds on:
 
 ```ts
 useScoringStepSequence({
   items,        // the array to walk
   index,        // current cursor (lives in the store)
-  setIndex,     // store setter to advance the cursor
+  setIndex,     // store setter to advance it
   stepMs,       // delay between steps
-  onStep,       // (item, index) => void  — apply this item's effect
-  onFinish,     // () => void — called once when index passes the end
+  onStep,       // (item, index) => apply this item's effect
+  onFinish,     // called once when the cursor passes the end
 });
 ```
 
-Internally it's a single `useEffect` keyed on `[items, index, setIndex, stepMs]`:
-
-```ts
-useEffect(() => {
-  if (items.length === 0) return;
-  if (index >= items.length) { onFinishRef.current(); return; }
-  const timer = window.setTimeout(() => {
-    onStepRef.current(items[index], index);
-    setIndex((prev) => prev + 1);
-  }, stepMs);
-  return () => window.clearTimeout(timer);
-}, [items, index, setIndex, stepMs]);
-```
+Internally: a single `useEffect` keyed on `[items, index, setIndex, stepMs]` that
+schedules one `setTimeout` per step, calls `onStep`, increments the cursor (which re-runs
+the effect), and calls `onFinish` when the cursor passes the end.
 
 Key properties:
 
-- **The cursor lives in the store, not the hook.** Advancing `index` re-runs the effect,
-  which schedules the next step. This is what makes the sequence survive re-renders and
-  stay in lockstep with the rendered UI.
-- **`onStep`/`onFinish` are captured in refs** (`onStepRef.current = onStep` every render)
-  so the latest closures are used without re-triggering the effect — only `items`/`index`/
-  `stepMs` drive it.
-- **`stepMs` can be 0.** `getScoringStepMs()` in `App.tsx` returns 0 when the OS requests
-  reduced motion (and a user override can scale it), so the whole thing degrades to
-  near-instant without special-casing.
+- **The cursor lives in the store, not the hook.** Advancing it re-runs the effect, so the
+  sequence survives re-renders and stays in lockstep with the rendered UI.
+- **`onStep`/`onFinish` are captured in refs** each render, so the freshest closures run
+  without re-triggering the effect.
+- **`stepMs` can be 0** — the whole pipeline degrades to near-instant without
+  special-casing (see "Speed control" below).
 
 ## The four sequences
 
-`src/hooks/useScoringPipeline.ts` instantiates **four** `useScoringStepSequence`s, each
-walking a different array in the scoring slice and each with its own *finalize ref*:
+`src/hooks/useScoringPipeline.ts` instantiates four sequences, each walking a different
+array in the scoring slice, each with its own *finalize ref*:
 
 | # | Phase | Items array | Cursor | Finalize ref |
 | --- | --- | --- | --- | --- |
 | 1 | Scoring cards | `scoringCards` | `scoringIndex` | `scoringFinalizeRef` |
 | 2 | Gold held (round win) | `goldScoringIds` | `goldScoringIndex` | `goldFinalizeRef` |
 | 3 | Steel held | `steelScoringIds` | `steelScoringIndex` | `steelFinalizeRef` |
-| 4 | Hand-level Jokers | `handLevelSteps` | `handLevelIndex` | `handLevelFinalizeRef` |
+| 4 | Hand-level jokers | `handLevelSteps` | `handLevelIndex` | `handLevelFinalizeRef` |
 
-Each sequence's `onStep` does the *incremental* version of one slice of the formula:
+Each `onStep` applies the *incremental* version of one slice of the formula:
 
-- **Cards (1)** is the busiest. For each scoring card it: adds rank chips; applies
-  enhancement chips/`+mult`/`×mult`; rolls Glass destruction; rolls Lucky procs (mult +
-  money); pays Gold seals; **re-runs the per-card Joker engine** (`applyPerCardJokers`) and
-  applies its money/chips/mult/×mult; applies card editions; plays the `pop` sound; and
-  **pulses** the Jokers that fired. Every one of these pushes a matching `ScoringEvent`.
-- **Gold (2)** pays `GOLD_HELD_BONUS_PER_CARD` per gold card held, plays `gold`.
-- **Steel (3)** multiplies mult by `STEEL_MULT_FACTOR` per steel card held.
-- **Hand-level Jokers (4)** replays the pre-computed `handJokerResult.steps` (so the
-  animation order matches the eager computation), applying each step's chips/mult/×mult/
-  money and pulsing that Joker.
+- **Cards (1)** is the busiest. Per scoring card: rank chips; enhancement
+  chips/`+mult`/`×mult`; Glass destruction roll; Lucky procs (mult + money); Gold seal
+  payouts; **a re-run of the per-card joker engine** (`applyPerCardJokers`) applying its
+  money/chips/mult/×mult; card editions; a `pop` sound; and a **pulse** for each joker
+  that fired. Every contribution pushes a matching `ScoringEvent`.
+- **Gold (2)** pays the held-gold bonus per card, with the `gold` sound.
+- **Steel (3)** multiplies mult by the steel factor per held steel card.
+- **Hand-level jokers (4)** replays the pre-computed `handJokerResult.steps` so the
+  animation order matches the eager computation exactly — applying each step's
+  chips/mult/×mult/money and pulsing that joker.
 
-> Why re-run the per-card Joker engine in the animation instead of replaying pre-computed
-> steps like the hand-level phase does? Because per-card effects include **random rolls**
-> (Business Card money, suit-chance ×mult) that are deliberately resolved at animation
-> time. The eager pass in `usePlayHand` doesn't try to predict those rolls — see the
-> two-pass discussion in [`scoring-pipeline.md`](./scoring-pipeline.md). Hand-level steps
-> are deterministic given context, so they're computed once and replayed.
+> Why re-run the per-card engine live instead of replaying steps like phase 4 does?
+> Because per-card effects include **random rolls** (Lucky cards, Bloodstone, Business
+> Card) that are deliberately resolved at animation time; the eager pass doesn't predict
+> them. Hand-level steps are deterministic given their context, so they're computed once
+> and replayed. See the two-pass section of
+> [`scoring-pipeline.md`](./scoring-pipeline.md).
 
 ## Continuations: how the phases chain
 
-The phases must run **in order**: all scoring cards, *then* steel, *then* hand-level
-Jokers, *then* finalize the hand. But each sequence only knows how to walk its own array.
-They're glued together with the finalize refs, set up in `usePlayHand.submitHand`:
+Phases must run in order — cards, *then* steel, *then* hand-level jokers, *then*
+finalize — but each sequence only knows its own array. `usePlayHand.submitHand` wires the
+chain up front through the finalize refs:
 
 ```ts
-// after computing finalScore and seeding the card sequence…
 pipeline.scoringFinalizeRef.current = () => {
   if (heldSteelIds.length === 0) { runHandLevel(); return; }
   pipeline.steelFinalizeRef.current = runHandLevel;   // steel → hand-level
@@ -109,8 +94,7 @@ function runHandLevel() {
   setHandLevelSteps(handJokerResult.steps);
   setHandLevelIndex(0);
 }
-// finally, start phase 1:
-setScoringCards(scoring);
+setScoringCards(scoring);   // start phase 1
 setScoringIndex(0);
 ```
 
@@ -119,92 +103,97 @@ So the chain is:
 ```
 seed scoringCards
   → card sequence runs, onFinish calls scoringFinalizeRef
-      → (if steel) seed steel, its onFinish = runHandLevel
-          → seed hand-level steps, its onFinish = finalize
+      → (if steel) seed steel; its onFinish = runHandLevel
+          → (if joker steps) seed hand-level; its onFinish = finalize
               → finalizeHandSubmission(finalScore, …)
 ```
 
-`finalizeHandSubmission` commits `roundScore += finalScore`, clears the live
-chips/mult/dev offsets, and then branches: if the round is won it may run the **gold**
-sequence (phase 2) before opening the Round-Won modal; otherwise it decrements remaining
-hands or calls `loseGame`.
+`finalizeHandSubmission` banks `roundScore += finalScore`, clears the live chips/mult and
+dev offsets, and branches: on a win it may run the **gold** phase before opening the
+Round Won modal; otherwise it decrements remaining hands or loses the game (after the
+Mr. Bones death-prevention check).
 
-Each sequence's own `onFinish` reads its finalize ref, **nulls it out first**, then calls
-it — so a continuation never fires twice. Phases with no work (no steel, no hand-level
-steps) short-circuit straight to the next continuation, so the chain is robust to empty
-phases.
+Each sequence's `onFinish` reads its finalize ref, **nulls it first**, then calls it — a
+continuation can never fire twice. Empty phases short-circuit to the next continuation,
+so the chain is robust.
 
 ### Why refs instead of `async/await` or a state machine?
 
-The sequencing is spread across renders and timers, and the "what comes next" depends on
-data known only at `submitHand` time (how many steel cards, how many Joker steps). Storing
-the next action in a ref lets `submitHand` *describe* the whole chain up front while the
-store-driven sequences *execute* it across many renders. It's a deliberate, if unusual,
-choice — internalize it before refactoring, because it's load-bearing.
+The sequencing spans renders and timers, and "what comes next" depends on data known only
+at `submitHand` time (how many steel cards, how many joker steps). Storing the next
+action in a ref lets `submitHand` *describe* the whole chain up front while the
+store-driven sequences *execute* it across many renders. Unusual, deliberate, and
+load-bearing — internalize it before refactoring.
 
-## Live values vs. committed values
+## Speed control & reduced motion
 
-While scoring animates, the **live** `chips` and `multiplier` in the store are mid-flight
-(partway to the final number). The Sidebar shows these live values (plus sticky dev
-offsets) so the player sees them climb. Only when `finalizeHandSubmission` runs does the
-score get *committed* into `roundScore` and the live chips/mult reset to 0 for the next
-hand. So: `chips`/`multiplier` = "this hand, so far"; `roundScore` = "banked this round".
+One knob controls everything. `getScoringStepMs` in `App.tsx`:
 
-The same `chips`/`multiplier` fields also serve as the **selection preview**: before any
-play, `toggleCard` (in the actions slice) sets them to the boss-adjusted base entry for
-the currently selected hand — select two 10s and two 4s and the Sidebar immediately shows
-"Two Pair, 20 × 2". `submitHand` then re-seeds them when the animation starts.
+1. If the user picked a speed in Options (`animationSpeed` in the preferences store:
+   `slow ×2 / normal ×1 / fast ×0.5 / instant ×0`), the base `SCORING_STEP_MS` (500ms) is
+   scaled by that multiplier.
+2. Otherwise, `prefers-reduced-motion` forces `0`.
 
-While a sequence is in flight, the game **locks input**: the Submit Hand and Discard
-buttons are disabled via `isScoring`, and `toggleCard` ignores clicks while
-`scoringIndex < scoringCards.length` (and while a discard fly-out is pending). If you add
-a new interaction, gate it the same way or the player can mutate state mid-animation.
+The same multiplier is also written to the **`--animation-speed` CSS custom property** on
+the `.App` root, so pure-CSS animations (card lifts, pulses) scale in sync with the JS
+timers. New CSS animations should multiply their durations by it; there are layout tests
+in `src/styles/` enforcing motion conventions.
 
-## Visual cues layered on top
+## Live values, selection preview, and input locking
 
-- **Card highlight.** `useScoringPipeline` exposes `currentScoringId` /
-  `currentGoldScoringId` / `currentSteelScoringId` (the id at the active cursor).
-  `App.tsx` passes these into `<Game>`, and the matching card renders its "scoring" state.
-- **Joker pulse.** `pulseJokers(firedIds)` bumps a per-Joker counter
-  (`jokerPulseCounters`); the Joker component animates on counter change. This is how you
-  see *which* Joker just contributed.
+- While scoring animates, the store's `chips`/`multiplier` are mid-flight; the Sidebar
+  shows them climbing. Only `finalizeHandSubmission` banks the result into `roundScore`
+  and resets them. So: `chips`/`multiplier` = "this hand, so far"; `roundScore` =
+  "banked".
+- The same fields double as the **selection preview**: before any play, `toggleCard` (in
+  the actions slice) sets them to the boss-adjusted base entry for the selected hand —
+  select two pairs and the sidebar immediately shows "Two Pair, 20 × 2".
+- While a sequence is in flight the game **locks input**: Submit Hand and Discard are
+  disabled via `isScoring`, and `toggleCard` ignores clicks while
+  `scoringIndex < scoringCards.length` (and during discard fly-outs). Gate any new
+  interaction the same way, or players can mutate state mid-animation.
+
+## Visual & audio cues layered on top
+
+- **Card highlight.** The pipeline exposes `currentScoringId` / `currentGoldScoringId` /
+  `currentSteelScoringId` (the id at the active cursor); `App.tsx` passes them into
+  `<Game>` and the matching card renders its scoring state.
+- **Joker pulse.** `pulseJokers(firedIds)` bumps per-joker counters
+  (`jokerPulseCounters`); the joker tile animates on counter change — that's how you see
+  *which* joker just contributed.
 - **Sounds.** `play("pop" | "gold" | "win" | "lose")` from
-  `src/components/system/sounds.ts`, fired inside `onStep`/finalize.
-- **The "Nope!" animation.** A separate, simpler mechanism: `animations.ts` slice holds a
-  `nopeTriggerKey` counter; `triggerNope()` increments it and `<NopeAnimation>` replays
-  when the key changes. Used for rejected actions (e.g. a blocked play). It's the template
-  for "fire-and-forget, key-bump-to-replay" animations.
+  `src/components/system/sounds.tsx`, fired inside `onStep`/finalize. Muted by default
+  (preferences store).
+- **The "Nope!" animation** is the template for fire-and-forget effects: the animations
+  slice holds a `nopeTriggerKey` counter; `triggerNope()` increments it and
+  `<NopeAnimation>` replays on key change. Used for rejected actions (e.g. Wheel of
+  Fortune missing).
 
-## The discard animation (a parallel, simpler pipeline)
+## The discard pipeline (a parallel, simpler pattern)
 
-`src/hooks/useDiscardPipeline.ts` handles discard (and the post-play card fly-out) with a
-different but related pattern — **count down a ref as cards finish their CSS transition**,
-then refill:
+`src/hooks/useDiscardPipeline.ts` handles discards (and the post-play card fly-out) with
+**a count-down ref over CSS transitions** instead of timers:
 
-1. `discardSelected` (or `submitHand`'s finalize) writes the ids into `discardingIds` and
-   sets `pendingDiscardCountRef.current = N`. Cards in `discardingIds` get the fly-out CSS
-   class.
-2. As each card's transition ends, the component calls `handleCardDiscardEnd(card)`, which
-   decrements the ref.
-3. When the ref hits 0, `finalizeDiscard` removes the discarded cards and draws
-   replacements (`drawCountForRefill`) — unless `skipDrawAfterDiscardRef` is set (true when
-   the play *won* the round, so we don't refill into a finished blind).
+1. `discardSelected` (or `submitHand`'s finalize) writes ids into `discardingIds` and
+   sets `pendingDiscardCountRef.current = N`; those cards get the fly-out CSS class.
+2. Each card's transition end calls `handleCardDiscardEnd(card)`, decrementing the ref.
+3. At zero, `finalizeDiscard` removes the cards and draws replacements
+   (`drawCountForRefill`) — unless `skipDrawAfterDiscardRef` is set (a winning play
+   doesn't refill into a finished blind).
 
-Note the two refs that bridge play→discard: `skipDrawAfterDiscardRef` (don't redraw on a
-winning play) and `pendingHandPlayResetRef` (bump `handPlaySignal` after the fly-out, which
-nudges UI that keys off "a hand was just played"). On-discard Joker effects and purple-seal
-Tarot creation also happen here, in `discardSelected`.
+`discardSelected` also fires on-discard joker effects (money, Trading Card destruction),
+purple-seal Tarot creation, and the discard-driven state reducers
+(`applyDiscardToJokerStates` — Ramen shrinks, Castle and Hit the Road grow).
 
 ## Editing the animation safely — a checklist
 
-1. Does your new contribution exist in **both** passes — eager (`usePlayHand`) and animated
-   (the right `onStep`)? If not, the animated total won't match `finalScore`.
-2. Is it applied on the correct side of the **add/multiply** boundary in both passes?
-3. Does it emit a `ScoringEvent` so the trace reflects it? Update/extend a trace test.
-4. If it's a *new phase*, you need: a new items array + cursor in the scoring slice, a new
-   `useScoringStepSequence` in `useScoringPipeline`, a new finalize ref, and a link in the
-   `submitHand` continuation chain. Place it at the correct point in the chain order.
-5. Does it behave when `stepMs === 0` (reduced motion) and when its phase is empty?
-6. Reset it: add it to `resetScoring()` (and the slice's `resetScoring`) so a new round
-   starts clean.
-</content>
+1. Does your contribution exist in **both** passes — eager (`usePlayHand`) and animated
+   (the right `onStep`)? Same add-vs-multiply boundary in both?
+2. Does it emit a `ScoringEvent`? Update or add a trace test.
+3. New *phase*? You need: an items array + cursor in the scoring slice, a
+   `useScoringStepSequence` in `useScoringPipeline`, a finalize ref, a link in the
+   `submitHand` chain at the right position, and a `resetScoring()` entry.
+4. Does it behave at `stepMs === 0` (instant / reduced motion) and when its phase is
+   empty?
+5. If it animates in CSS, does it scale with `--animation-speed` and respect
+   forced-colors/reduced-motion (see `src/styles/`)?

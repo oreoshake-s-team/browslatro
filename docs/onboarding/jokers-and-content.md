@@ -1,9 +1,9 @@
 # Jokers and adding game content
 
-Jokers are the most-extended part of the game, and their design — **effects as data, a
-central engine as code** — is the template for most content in Browslatro. Understand this
-one subsystem and the rest (tarots, planets, spectrals, vouchers, bosses, tags) feel
-familiar.
+The full Balatro catalog of **150 jokers** is implemented, and the joker subsystem is the
+template for most content in Browslatro: **effects as data, pure engines as code**.
+Understand this one subsystem and the rest (tarots, planets, spectrals, vouchers, bosses,
+tags) feel familiar.
 
 ## The shape of a Joker
 
@@ -11,256 +11,210 @@ familiar.
 
 ```ts
 export interface Joker {
-  readonly id: string;            // stable kebab-case id, e.g. "even-steven"
-  readonly name: string;          // display name
+  readonly id: string;            // stable kebab-case id, e.g. "green-joker"
+  readonly name: string;          // display name (canonical English; i18n overrides exist)
   readonly description: string;   // player-facing text (authentic Balatro wording)
-  readonly effect: JokerEffect;   // ← the behavior, as data
+  readonly effect: JokerEffect;   // ← the behavior, as data (~120-arm union)
   readonly rarity: JokerRarity;   // common | uncommon | rare | legendary
   readonly edition?: JokerEdition;      // foil | holographic | polychrome | negative
   readonly stickers?: ReadonlyArray<JokerSticker>; // eternal | perishable | rental
-  readonly state?: JokerStateValue;     // mutable counter for "scaling" jokers (see below)
-  readonly sellBonus?: number;          // added sell value (e.g. Gift Card)
+  readonly state?: JokerStateValue;     // mutable counter for scaling jokers
+  readonly sellBonus?: number;          // added sell value (Gift Card, Egg-style growth)
 }
 ```
 
-A Joker still has **no methods**. Its behavior is in `effect`, one arm of the `JokerEffect`
-discriminated union (now **~120 arms** after the #624 catalog backfill), plus — for
-"scaling" jokers — a small mutable `state` counter that lifecycle reducers update. Simple
-examples:
+A Joker has **no methods**. Behavior is in `effect` — one arm of the `JokerEffect`
+discriminated union (~120 arms) — plus, for scaling jokers, a `state` counter that
+lifecycle reducers update. Simple arms look like:
 
 ```ts
 { kind: "additive-mult", amount: 4 }                          // +4 Mult
 { kind: "per-suit-mult", suit: "hearts", amount: 3 }          // +3 Mult per scored Heart
-{ kind: "on-hand-type-x-mult", requires: "Pair", amount: 2 }  // ×2 Mult if hand contains a Pair
-{ kind: "stencil" }                                           // ×1 Mult per empty Joker slot
+{ kind: "on-hand-type-x-mult", requires: "Pair", amount: 2 }  // ×2 if hand contains a Pair
+{ kind: "on-hand-type-stack-mult", requires: "Pair", amount: 1 } // grows +1 each qualifying hand
 ```
-
-> The union got big. It started as a stateless scorer; reaching the full 150 jokers forced
-> whole new *capability classes* — mutable state, retriggers, joker-to-joker copying, card
-> mutation, and lifecycle event hooks. The sections below cover each. The good news: the
-> *shape* of the pattern (data + exhaustive switch) never changed, it just sprouted more
-> engines.
 
 ## The central pattern: tagged union + exhaustive switch
 
-This is the single most important pattern in the codebase. **Effects are data; a small set
-of engines interpret them.**
-
-- The union lives in `types.ts`.
-- The **engines** that consume it live in `src/items/jokers/scoring/`:
-  - `handLevel.ts` — fires once per hand (additive/×mult/chips/money; also applies editions)
-  - `perCard.ts` — fires once per scoring card
-  - `onDiscard.ts` — fires on discard (money, card destruction)
-  - `endOfRound.ts` — fires when a blind is cleared (money)
-  - `retriggers.ts` — decides how many extra times each card scores (`expandScoringRetriggers`)
-  - `copy.ts` — resolves Blueprint/Brainstorm delegation before scoring (`resolveJokerEffect`)
-  - `scoredCardMutations.ts` — permanently changes scored cards (Midas Mask, Vampire)
-  - `consumableCreators.ts` — spawns Tarot/Spectral cards from a played hand
-- Each scoring engine `switch`es over `effect.kind`. It handles the arms relevant to its phase and
-  **`break`s on every other arm**, ending with:
+**Effects are data; a small set of engines interpret them.** Each engine `switch`es over
+`effect.kind`, handles the arms relevant to its phase, `break`s on every other arm, and
+ends with:
 
 ```ts
 default:
   assertNeverEffect(effect);   // compile error if an effect.kind is unhandled
 ```
 
-`assertNeverEffect` (`scoring/utils.ts`) takes `never`. If you add a new `effect.kind` and
-forget to handle it *in every engine that switches over the union*, TypeScript fails the
-build. That's the safety net: **the type system forces you to decide, for each engine,
-whether a new effect participates.** This is why both `handLevel.ts` and `perCard.ts`
-contain long lists of bare `case` labels falling through to `break` — each engine is
-explicitly opting *out* of the kinds the other engine owns.
+`assertNeverEffect` (`scoring/utils.ts`) takes `never`: add a new kind and TypeScript
+fails the build at every engine until you've decided — for each one — whether the new
+effect participates. That's why `handLevel.ts` and `perCard.ts` contain long lists of
+bare `case` labels falling through to `break`: each engine explicitly opts out of the
+kinds the others own.
 
-Every handled arm pushes a **step** describing what it did
-(`{ jokerId, jokerName, additiveMult?, additiveChips?, xMultFactor?, moneyEarned? }`) and
-appends to `firedJokerIds`. Steps drive both the animation replay and the scoring trace
-(see [`animations.md`](./animations.md)).
+Every handled arm pushes a **step**
+(`{ jokerId, jokerName, additiveMult?, additiveChips?, xMultFactor?, moneyEarned? }`)
+and appends to `firedJokerIds` — steps drive the animation replay, the joker pulse, and
+the scoring trace.
 
-## Factories and the catalog
+## The engine files
 
-`src/items/jokers/factories.ts` + `catalog.ts`
+`src/items/jokers/scoring/`:
 
-- A **factory** is a `create<Name>Joker(): Joker` function that returns a fresh Joker
-  object. Numeric tuning lives in named constants in `constants.ts`, never inline:
+| File | Role |
+| --- | --- |
+| `handLevel.ts` | Once-per-hand contributions; also applies editions and held-card retriggers (Mime) |
+| `perCard.ts` | Per-scoring-card contributions (suit mults, face triggers, chance rolls) |
+| `retriggers.ts` | `expandScoringRetriggers` — how many extra times each card scores (red seals + Hack, Sock and Buskin, Dusk, Hanging Chad, Seltzer) |
+| `copy.ts` | `resolveJokerEffect` — Blueprint (copy right) / Brainstorm (copy leftmost), chain-following with cycle detection, `noop` when incompatible |
+| `scoredCardMutations.ts` | Permanent card changes from scoring (Midas Mask → gold faces; Vampire eats enhancements) |
+| `consumableCreators.ts` | Tarots/Spectrals spawned by playing a hand (8 Ball, Séance, Sixth Sense, Superposition, Vagabond) |
+| `onDiscard.ts` | Discard-triggered money (Faceless Joker, Mail-In Rebate, Trading Card's first-discard payout + destruction) |
+| `endOfRound.ts` | Round-end money (Golden Joker, Delayed Gratification, Cloud 9, Satellite's per-unique-planet payout, Rocket-style growth) |
 
-  ```ts
-  export function createGreedyJoker(): Joker {
-    return {
-      id: "greedy-joker",
-      rarity: "common",
-      name: "Greedy Joker",
-      description: "+3 Mult per scored Diamond",
-      effect: { kind: "per-suit-mult", suit: "diamonds", amount: SUIT_MULT_AMOUNT },
-    };
-  }
-  ```
-
-- The **catalog** (`createJokerCatalog()`) returns the list of all obtainable Jokers; it's
-  what the shop, packs, and spectral effects draw from. Legendary Jokers have their own
-  `createLegendaryJokerCatalog()`. Factories return *new* objects each call so two copies
-  of a Joker don't share state.
-
-The barrel file `src/items/jokers.ts` re-exports the public surface (types, engines,
-catalog, collection helpers, stickers, editions, state reducers). Import from
-`../items/jokers`, not deep paths, in app code.
+Engines that iterate equipped jokers for scoring resolve each effect **through
+`copy.ts`** (`resolveJokerEffect(jokers, i)`, not `jokers[i].effect`) so
+Blueprint/Brainstorm work for free, and they filter with `isJokerActive` so perished
+jokers stop contributing.
 
 ## Stateful ("scaling") jokers
 
-Many jokers grow over a run — Ride the Bus, Green Joker, Obelisk, Ramen, Popcorn, Castle,
-and friends. Their accumulator lives in `joker.state` (a `JokerStateValue`, currently just
-`{ kind: "counter", value }`), and it's updated by **pure lifecycle reducers** in
-`src/items/jokers/state.ts`. Each reducer takes the joker list + an event context and
-returns a *new* joker list (immutable, like everything else):
+Ride the Bus, Green Joker, Obelisk, Runner, Square Joker, Ramen, Ice Cream, Popcorn,
+Castle, Wee Joker, Hit the Road, Campfire, Madness… all grow (or decay) over a run. The
+machinery:
+
+- The accumulator is `joker.state` — currently `{ kind: "counter", value }`.
+- **Pure lifecycle reducers** in `src/items/jokers/state.ts` update it. Each takes the
+  joker list + an event context and returns a *new* list:
 
 | Event | Reducer | Wired in |
 | --- | --- | --- |
-| A hand is played | `applyHandPlayedToJokerStates` | `usePlayHand` |
+| Hand played | `applyHandPlayedToJokerStates` | `usePlayHand` |
 | Cards discarded | `applyDiscardToJokerStates` | `useDiscardPipeline` |
-| A consumable is used | `applyConsumableUsedToJokerStates` | `useConsumableActions` |
+| Consumable used | `applyConsumableUsedToJokerStates` | `useConsumableActions` |
 | Shop reroll / pack skip | `applyShopRerollToJokerStates` / `applyPackSkipToJokerStates` | `actions` |
-| A joker is sold | `applySellToJokerStates` | `actions` |
+| Joker sold | `applySellToJokerStates` | `actions` |
 | Blind selected | `applyMadnessOnBlindSelect`, `applyCeremonialDaggerOnBlindSelect` | `useRoundLifecycle` |
 | Round end | `applyRoundEndToJokerStates`, `applyGiftCardToJokerSellValues` | `actions` |
-| Lucky / glass / destroy procs | `applyLuckyTriggersToJokerStates`, `applyGlassShatterToJokerStates`, `applyCardsDestroyedToJokerStates`, `applyEnhancementsEatenToJokerStates` | `usePlayHand` |
+| Lucky / glass / destruction procs | `applyLuckyTriggersToJokerStates`, `applyGlassShatterToJokerStates`, `applyCardsDestroyedToJokerStates`, `applyEnhancementsEatenToJokerStates` | `usePlayHand` |
 
-Two important wrinkles these reducers also own:
-
-- **Self-destruct.** Depleting/bust jokers (Ramen, Ice Cream, Popcorn, Gros Michel,
-  Cavendish, Turtle Bean…) are *filtered out* of the returned list when they hit zero or
-  fail their bust roll — unless they're `eternal`. So "remove the joker" is just "don't
-  include it in the new array."
+- **Self-destruction is filtering.** Depleting/bust jokers (Ramen at ×1, Ice Cream at 0
+  chips, Gros Michel/Cavendish on a failed roll, Turtle Bean expired) are simply omitted
+  from the reducer's returned list — unless `eternal`.
 - **The live "Currently:" readout.** `src/items/jokers/currentValue.ts` →
-  `jokerCurrentValue(joker, context)` turns a joker's `state` (or a deck/money query) into
-  the value shown on its tile ("Currently: +14 Mult", "X3 Mult in 2 hands"). When you add a
-  scaling joker, add its arm here too or the tile won't show progress.
+  `jokerCurrentValue(joker, context)` turns state (or a deck/money query) into the value
+  shown on the tile and tooltip — *"Currently: +3 Mult"*, *"X3 Mult in 2 hands"*. Add an
+  arm here for every new scaling joker or the tile won't show progress (there's an e2e
+  spec for this: `e2e/joker-tooltip-current-value.spec.ts`).
 
-The scoring engines read `state` at score time (e.g. `handLevel.ts` uses the counter for
-`on-hand-type-stack-mult`); the reducers write it on events. Keep that read/write split
-clean — engines never mutate state, reducers never score.
-
-## Copy / delegation (Blueprint, Brainstorm)
-
-`src/items/jokers/scoring/copy.ts` → `resolveJokerEffect(jokers, index)`. Before scoring an
-equipped joker, the engines resolve its effect through this: a `copy-right-joker` (Blueprint)
-or `copy-leftmost-joker` (Brainstorm) returns the *target's* resolved effect, following
-chains, with **cycle detection** (a `visited` set) and out-of-bounds → `{ kind: "noop" }`.
-`handLevel.ts` and `retriggers.ts` call `resolveJokerEffect(jokers, i)` instead of reading
-`jokers[i].effect` directly. If you add an engine that iterates equipped jokers for scoring,
-resolve through `copy.ts` so Blueprint/Brainstorm copy your effect for free.
-
-## Retriggers
-
-`src/items/jokers/scoring/retriggers.ts` → `expandScoringRetriggers(cards, jokers, ctx)`
-generalizes what used to be red-seal-only retriggering. It walks the scoring cards and, for
-each, sums extra triggers from: red seals (still), plus joker effects like `retrigger-ranks`
-(Hack), `retrigger-face-cards` (Sock and Buskin), `retrigger-first-card`, and
-`retrigger-on-final-hand`. The card is emitted `1 + extra` times, so downstream per-card
-scoring naturally repeats. (Held-in-hand retriggers — Mime — are handled separately inside
-`handLevel.ts` via `heldRetriggerCountFromJokers`.)
-
-## Scored-card mutation & consumable creation
-
-- `scoredCardMutations.ts` → `applyScoredCardMutations(jokers, scoredCards)` returns the
-  permanent enhancement changes a played hand causes — Midas Mask turning played faces Gold,
-  Vampire eating enhancements (and counting them, which feeds its own state). `usePlayHand`
-  applies these to the run-level overlays so they persist.
-- `consumableCreators.ts` → `consumableCreationsOnHandPlayed(jokers, ctx)` returns how many
-  Tarots/Spectrals a hand spawns (Hallucination-adjacent jokers, Séance on a Straight Flush,
-  etc.) plus any card to destroy. `usePlayHand` adds them to the tray (respecting capacity).
+Keep the read/write split clean: **engines read state, reducers write it.** Scoring never
+mutates; events never score. `state` is plain serializable data, so save/restore covers
+it automatically.
 
 ## Passive run-state queries
 
-Not everything is a scoring contribution. `src/items/jokers/collection.ts` exposes pure
-"does the equipped set grant X?" helpers used all over the game loop — e.g.
-`allCardsScoreFromJokers` (Splash), `disablesBossBlindsFromJokers` (Chicot),
-`canPreventDeath` / `consumeDeathPreventer` (Mr. Bones), `allowsDuplicateJokers` (Showman),
-`probabilityMultiplierFromJokers` (Oops! All 6s), `handEvalOptionsFromJokers` (Four Fingers /
-Shortcut / Smeared), `interestMultiplierFromJokers`, and the various
-`extraStarting*FromJokers`. If a joker changes a *rule* rather than a *score*, it's usually
-a query here, consumed where that rule is enforced.
+If a joker changes a *rule* rather than a *score*, it's a pure query in
+`src/items/jokers/collection.ts`, consumed where that rule is enforced:
+
+- `handEvalOptionsFromJokers` — Four Fingers / Shortcut / Smeared bend hand detection.
+- `allCardsScoreFromJokers` (Splash), `chipsPerScoredCardFromJokers` (Hiker),
+  `firstHandCardCopyCount` (DNA), `handPlayUpgradeRolls` (Space Joker).
+- `canPreventDeath` / `consumeDeathPreventer` (Mr. Bones),
+  `disablesBossBlindsFromJokers` (Chicot), `allowsDuplicateJokers` (Showman).
+- `probabilityMultiplierFromJokers` (Oops! All 6s — multiplies every `rollChance`).
+- `interestMultiplierFromJokers`, `extraStartingHandsFromJokers`,
+  `extraStartingDiscardsFromJokers`, `extraStartingHandSizeFromJokers`,
+  `extraDebtFloorFromJokers` (Credit Card), `effectiveJokerCount` (negative editions),
+  `heldRetriggerCountFromJokers` (Mime), `shopExitConsumableCopies`,
+  `stoneCardsOnBlindSelectFromJokers`, `sealedCardsOnRoundBeginFromJokers`, …
+
+## Factories, catalog, and i18n
+
+`src/items/jokers/factories.ts` + `catalog.ts`:
+
+- A **factory** (`create<Name>Joker(): Joker`) returns a fresh object; numeric tuning
+  lives in named constants in `constants.ts`, never inline.
+- `createJokerCatalog()` is the obtainable pool (what the shop, packs, and spectral
+  effects draw from); `createLegendaryJokerCatalog()` is the separate legendary pool
+  (Yorick, Triboulet, Chicot, Canio, Perkeo, Invisible Joker). Factories return new
+  objects each call so two copies never share state.
+- **Names/descriptions are canonical English in the factory.** Locale-specific display
+  goes through per-id override maps in `src/i18n/jokerOverrides.ts` — don't translate in
+  the factory.
+
+The barrel `src/items/jokers.ts` re-exports the public surface; import from
+`../items/jokers`, not deep paths, in app code.
 
 ## How to add a Joker
 
 ### Case A — reuses an existing effect kind (pure data, the common case)
 
-Most new Jokers are a re-parameterization of an effect that already exists.
+1. Tuning constant in `constants.ts` if needed.
+2. Factory in `factories.ts` with the authentic Balatro name/description/effect.
+3. Register in `createJokerCatalog()`.
+4. Co-located test `src/items/jokers/<name>.test.ts`, including a negative case (it does
+   *nothing* when its condition isn't met).
 
-1. Add a tuning constant to `src/items/jokers/constants.ts` if needed.
-2. Add a `create<Name>Joker()` factory in `factories.ts`.
-3. Register it in `createJokerCatalog()` in `catalog.ts`.
-4. Add a `src/items/jokers/<name>.test.ts` covering the effect (include a negative case —
-   it does *nothing* when its condition isn't met).
+No engine changes. Done.
 
-No engine changes, no `switch` edits. Done.
+### Case B — needs a new effect kind
 
-### Case B — needs a new effect kind (data + one engine arm)
+1. Add the arm to `JokerEffect` in `types.ts`. **The build now fails** at every
+   `assertNeverEffect` — implement the arm in the engine whose phase it belongs to, add
+   it to the `break` list everywhere else.
+2. Push a `step` + `firedJokerIds` entry so it animates and traces.
+3. **Wire context if needed**: new situational data goes into `HandLevelContext`
+   (`scoring/types.ts`) and must be populated at the call sites — `usePlayHand` *and*,
+   for per-card effects, the animated re-run in `useScoringPipeline`. Forgetting the
+   second site is the classic "works in unit tests, wrong in the live game" bug.
+4. Factory + catalog + tests as in Case A.
 
-1. Add the new arm to `JokerEffect` in `types.ts`.
-2. **Build now fails** at every `assertNeverEffect`. For each engine that switches over the
-   union, either implement the arm or add it to the `break` list. Implement it in the
-   engine whose *phase* it belongs to (hand-level vs per-card vs discard vs end-of-round).
-3. When implemented, push a `step` and add to `firedJokerIds` so it animates and traces.
-4. **Wire context if needed.** If your effect reads new situational data (e.g. "cards in
-   the remaining deck"), add a field to `HandLevelContext` in `scoring/types.ts` and
-   populate it where the engine is called — `usePlayHand.submitHand` (and, for per-card
-   effects, also the animated re-run in `useScoringPipeline`, since random per-card effects
-   are resolved at animation time). **This is the step people forget**, and the symptom is
-   "works in unit tests, does nothing / wrong value in the live game" or "animated score ≠
-   final score." See the two-pass discussion in [`scoring-pipeline.md`](./scoring-pipeline.md).
-5. Add the factory + catalog entry (as in Case A) and write the test.
+### Case C — a scaling joker
 
-### Case C — a *scaling* joker (new state-driven kind)
+On top of Case B:
 
-On top of Case B, a joker that accumulates over the run needs:
+1. A reducer arm in `state.ts` for the event(s) that grow/reset/deplete its counter,
+   at the right lifecycle call site (table above).
+2. A `jokerCurrentValue` arm in `currentValue.ts` for the tile readout.
+3. The engine arm reads `joker.state`, not a fixed amount.
+4. If it self-destructs, omit it from the reducer's returned list when depleted
+   (respecting `eternal`).
 
-1. A reducer arm in `src/items/jokers/state.ts` for the event(s) that grow/reset/deplete its
-   `state` counter, wired at the matching lifecycle call site (table above).
-2. A `jokerCurrentValue` arm in `currentValue.ts` so the tile shows live progress.
-3. The scoring engine arm reads `joker.state` (the counter), not a fixed `effect.amount`.
-4. If it self-destructs, return it filtered-out of the reducer's list when depleted (respecting
-   `eternal`). Save/restore already persists `state` since it's plain serializable data.
+### Case D — rule-benders, copies, retriggers, mutations
 
-### Case D — copy / retrigger / mutation / passive-query
-
-These have their own dedicated engine files; add your arm to the relevant one
-(`copy.ts`, `retriggers.ts`, `scoredCardMutations.ts`, `consumableCreators.ts`, or a query in
-`collection.ts`) and wire it where that engine is consumed. The exhaustive-switch safety net
-applies the same way.
+Add the arm to the dedicated engine (`copy.ts`, `retriggers.ts`,
+`scoredCardMutations.ts`, `consumableCreators.ts`) or a query in `collection.ts`, and
+wire it where that engine/query is consumed. The exhaustiveness safety net applies the
+same way.
 
 ### Don't forget
 
-- Per `claude.md`: authentic Balatro effect (no invented numbers), full test coverage,
-  strict TS (no `any`), and keep a single change under ~150 lines of app code — split
-  bigger work into follow-ups.
+Per `claude.md`: authentic Balatro effects only, full test coverage, strict TS, no
+comments, ≤150 lines of app code per change — split bigger work into follow-up issues.
 
-## Editions, stickers, and "active" Jokers
+## Editions, stickers, and "active" jokers
 
-- **Editions** (`editions.ts`) modify a Joker: Foil/Holographic/Polychrome add
-  chips/mult/×mult (applied inside `handLevel.ts`); `negative` grants an extra slot via
+- **Editions** (`editions.ts`): Foil `+50` chips, Holographic `+10` Mult, Polychrome
+  `×1.5` (applied in `handLevel.ts`); `negative` grants an extra slot via
   `effectiveJokerCount`.
-- **Stickers** (`stickers.ts`): `eternal` (can't be sold/destroyed), `perishable` (expires
-  after N rounds — `tickPerishableRounds`), `rental` (drains money each round). A perished
-  Joker is **inactive**: scoring code filters with `jokers.filter(isJokerActive)` so it
-  stops contributing without being removed.
-- `effectiveJokerCount` counts toward the slot limit accounting for negative editions; use
-  it, not `jokers.length`, for capacity checks.
+- **Stickers** (`stickers.ts`): `eternal` (can't be sold/destroyed — reducers and
+  destroy paths must check it), `perishable` (expires after N rounds;
+  `tickPerishableRounds`), `rental` (drains money each round). Stakes stamp stickers
+  onto shop offers. A perished joker is **inactive**: filter with `isJokerActive`.
+- Use `effectiveJokerCount`, not `jokers.length`, for slot-capacity checks.
 
 ## The same pattern, elsewhere
-
-Once you see "data + central interpreter," you'll spot it across `src/items`:
 
 | Content | Effects as data | Catalog / picker |
 | --- | --- | --- |
 | Tarots | `tarots.ts` | `createTarotCatalog()` |
 | Planets (level up hands) | `planets.ts` (`applyPlanetUpgrade`) | `createPlanetCatalog()` |
-| Spectrals | `spectrals.ts` (`SpectralEffect`, applied in `actions.applySpectralEffect`) | `createSpectralCatalog()` |
-| Vouchers | `vouchers.ts` (queried via `extra*`/`*For` helpers) | `VOUCHER_CATALOG` / `pickVouchersForAnte` |
+| Spectrals | `spectrals.ts` (`SpectralEffect`, enacted in `actions.applySpectralEffect`) | `createSpectralCatalog()` |
+| Vouchers | `vouchers.ts` (queried via `extra*` / `*For` helpers) | `VOUCHER_CATALOG` / `pickVouchersForAnte` |
 | Bosses | `bosses.ts` (`bossAdjustHandEntry`, `bossBlocksHandLabel`, …) | `createBossCatalog()` / `pickBossForAnte` |
 | Tags (skip rewards) | `tags.ts` (`resolveTagEffect`) | `rollAnteSkipOffers` |
-| Card enhancements | `cards/enhancements.ts` (`applyCardEnhancement`) | — |
-| Card seals | `cards/seals.ts` | — |
+| Decks / Stakes | `decks.ts` / `stakes.ts` (modifier queries) | `NewRunScreen` options |
+| Card enhancements / seals / editions | `cards/enhancements.ts`, `cards/seals.ts`, `cards/editions.ts` | — |
 
-Spectral effects are interpreted in the store (`actions.applySpectralEffect`) rather than a
-pure engine because many of them mutate broad game state (destroy cards, add Jokers, set
-money). The principle is the same: the spectral *card* is data; one `switch` enacts it.
-</content>
+Spectral effects are enacted in the store (`actions.applySpectralEffect`) rather than a
+pure engine because many mutate broad game state (destroy cards, add jokers, set money) —
+but the principle holds: the card is data; one `switch` enacts it.
