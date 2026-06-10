@@ -1,5 +1,9 @@
 // @vitest-environment node
 import {
+  ABSTRACT_JOKER_MULT_PER_JOKER,
+  BANNER_CHIPS_PER_DISCARD,
+  BLUE_JOKER_CHIPS_PER_REMAINING_CARD,
+  BULL_CHIPS_PER_DOLLAR,
   ICE_CREAM_CHIPS,
   LOYALTY_CARD_HANDS_PER_TRIGGER,
   LOYALTY_CARD_X_MULT,
@@ -12,7 +16,12 @@ import {
   JOKER_SELL_VALUE,
   LUCKY_CAT_X_MULT_PER_TRIGGER,
   OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
+  STONE_JOKER_CHIPS_PER_STONE,
   applyDiscardToJokerStates,
+  createAbstractJoker,
+  createBannerJoker,
+  createBlueJoker,
+  createBullJoker,
   createCampfireJoker,
   createConstellationJoker,
   createEggJoker,
@@ -31,9 +40,12 @@ import {
   createRamenJoker,
   createRedCardJoker,
   createRunnerJoker,
+  createSteelJoker,
+  createStoneJoker,
   createThrowbackJoker,
   jokerCurrentValue,
   jokerCurrentValueLabel,
+  jokerEnhancementFilter,
   type Joker,
   type JokerCurrentValueContext,
 } from "../jokers";
@@ -42,7 +54,21 @@ const CTX: JokerCurrentValueContext = {
   blindsSkipped: 0,
   addedCardsCount: 0,
   missingDeckCards: 0,
+  money: 0,
+  jokerCount: 0,
+  remainingDiscards: 0,
+  remainingDeckCards: 0,
+  matchingEnhancedDeckCards: 0,
 };
+
+const LIVE_DERIVED_KINDS: ReadonlyArray<Joker["effect"]["kind"]> = [
+  "per-remaining-discard-chips",
+  "per-dollar-chips",
+  "per-joker-count-mult",
+  "per-remaining-deck-card-chips",
+  "per-enhanced-in-deck-chips",
+  "per-enhanced-in-deck-x-mult",
+];
 
 function withCounter(joker: Joker, value: number): Joker {
   return { ...joker, state: { kind: "counter", value } };
@@ -231,6 +257,81 @@ describe("jokerCurrentValue (#884)", () => {
       kind: "sell-value",
       value: JOKER_SELL_VALUE,
     });
+  });
+});
+
+describe("jokerCurrentValue — live-derived jokers (#898)", () => {
+  test("every catalog joker with a live-derived effect reports a current value", () => {
+    const missing = createJokerCatalog()
+      .filter((j) => LIVE_DERIVED_KINDS.includes(j.effect.kind))
+      .filter((j) => jokerCurrentValue(j, CTX) === null)
+      .map((j) => j.id);
+    expect(missing).toEqual([]);
+  });
+
+  test("Banner derives Chips from remaining discards", () => {
+    expect(
+      jokerCurrentValue(createBannerJoker(), { ...CTX, remainingDiscards: 3 }),
+    ).toEqual({ kind: "chips", value: BANNER_CHIPS_PER_DISCARD * 3 });
+  });
+
+  test("Bull derives Chips from current money", () => {
+    expect(jokerCurrentValue(createBullJoker(), { ...CTX, money: 25 })).toEqual(
+      { kind: "chips", value: BULL_CHIPS_PER_DOLLAR * 25 },
+    );
+  });
+
+  test("Bull clamps negative money to zero Chips", () => {
+    expect(jokerCurrentValue(createBullJoker(), { ...CTX, money: -5 })).toEqual(
+      { kind: "chips", value: 0 },
+    );
+  });
+
+  test("Abstract Joker derives Mult from the joker count", () => {
+    expect(
+      jokerCurrentValue(createAbstractJoker(), { ...CTX, jokerCount: 4 }),
+    ).toEqual({ kind: "mult", value: ABSTRACT_JOKER_MULT_PER_JOKER * 4 });
+  });
+
+  test("Blue Joker derives Chips from remaining deck cards", () => {
+    expect(
+      jokerCurrentValue(createBlueJoker(), { ...CTX, remainingDeckCards: 44 }),
+    ).toEqual({
+      kind: "chips",
+      value: BLUE_JOKER_CHIPS_PER_REMAINING_CARD * 44,
+    });
+  });
+
+  test("Stone Joker derives Chips from matching enhanced deck cards", () => {
+    expect(
+      jokerCurrentValue(createStoneJoker(), {
+        ...CTX,
+        matchingEnhancedDeckCards: 3,
+      }),
+    ).toEqual({ kind: "chips", value: STONE_JOKER_CHIPS_PER_STONE * 3 });
+  });
+
+  test("Steel Joker derives X Mult from matching enhanced deck cards", () => {
+    expect(
+      jokerCurrentValue(createSteelJoker(), {
+        ...CTX,
+        matchingEnhancedDeckCards: 5,
+      }),
+    ).toEqual({ kind: "x-mult", value: 2 });
+  });
+});
+
+describe("jokerEnhancementFilter (#898)", () => {
+  test("Stone Joker filters on the stone enhancement", () => {
+    expect(jokerEnhancementFilter(createStoneJoker())).toBe("stone");
+  });
+
+  test("Steel Joker filters on the steel enhancement", () => {
+    expect(jokerEnhancementFilter(createSteelJoker())).toBe("steel");
+  });
+
+  test("a non-enhancement joker has no filter", () => {
+    expect(jokerEnhancementFilter(createBannerJoker())).toBeNull();
   });
 });
 

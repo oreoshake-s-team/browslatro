@@ -1,3 +1,4 @@
+import type { Enhancement } from "../../cards/types";
 import { ramenXMultFactor } from "./state";
 import { jokerSellValue } from "./scoring/utils";
 import type { Joker } from "./types";
@@ -6,6 +7,11 @@ export interface JokerCurrentValueContext {
   readonly blindsSkipped: number;
   readonly addedCardsCount: number;
   readonly missingDeckCards: number;
+  readonly money: number;
+  readonly jokerCount: number;
+  readonly remainingDiscards: number;
+  readonly remainingDeckCards: number;
+  readonly matchingEnhancedDeckCards: number;
 }
 
 export type JokerCurrentValue =
@@ -29,6 +35,17 @@ function counterValue(joker: Joker): number {
   return joker.state?.kind === "counter" ? joker.state.value : 0;
 }
 
+export function jokerEnhancementFilter(joker: Joker): Enhancement | null {
+  const effect = joker.effect;
+  if (
+    effect.kind === "per-enhanced-in-deck-chips" ||
+    effect.kind === "per-enhanced-in-deck-x-mult"
+  ) {
+    return effect.enhancement;
+  }
+  return null;
+}
+
 export function jokerCurrentValue(
   joker: Joker,
   context: JokerCurrentValueContext,
@@ -45,11 +62,38 @@ export function jokerCurrentValue(
       return { kind: "mult", value: counterValue(joker) };
     case "per-missing-card-mult":
       return { kind: "mult", value: effect.amount * context.missingDeckCards };
+    case "per-joker-count-mult":
+      return { kind: "mult", value: effect.amount * context.jokerCount };
     case "on-hand-type-stack-chips":
     case "on-played-card-count-stack-chips":
     case "on-played-rank-stack-chips":
     case "chips-melt-per-hand":
       return { kind: "chips", value: counterValue(joker) };
+    case "per-remaining-discard-chips":
+      return { kind: "chips", value: effect.amount * context.remainingDiscards };
+    case "per-dollar-chips":
+      return {
+        kind: "chips",
+        value: effect.amount * Math.max(0, context.money),
+      };
+    case "per-remaining-deck-card-chips":
+      return {
+        kind: "chips",
+        value: effect.amount * context.remainingDeckCards,
+      };
+    case "per-enhanced-in-deck-chips":
+      return {
+        kind: "chips",
+        value: effect.amount * context.matchingEnhancedDeckCards,
+      };
+    case "per-enhanced-in-deck-x-mult":
+      return {
+        kind: "x-mult",
+        value: perCountXMultFactor(
+          effect.amount,
+          context.matchingEnhancedDeckCards,
+        ),
+      };
     case "every-n-hands-xmult":
       return {
         kind: "hands-until-x-mult",

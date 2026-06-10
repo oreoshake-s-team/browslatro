@@ -109,3 +109,19 @@ test.describe("Joker tooltip current scaling value (#884)", () => {
     );
   });
 });
+
+test.describe("Joker tooltip live-derived current value (#898)", () => {
+  test("Abstract Joker tooltip shows the Mult derived from the joker count", async ({
+    page,
+  }) => {
+    await setDeterministic(page);
+    await page.goto("/");
+    await page.getByTestId("new-run-confirm").click();
+    await addJokerById(page, "abstract-joker");
+    await winRound1IntoShop(page);
+
+    await expect(await hoveredCurrentValue(page, "abstract-joker")).toHaveText(
+      "Currently: +3 Mult",
+    );
+  });
+});

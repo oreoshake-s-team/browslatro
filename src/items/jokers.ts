@@ -102,6 +102,7 @@ export type { JokerStateValue } from "./jokers/types";
 export {
   jokerCurrentValue,
   jokerCurrentValueLabel,
+  jokerEnhancementFilter,
   perCountXMultFactor,
 } from "./jokers/currentValue";
 export type {
