@@ -24,6 +24,18 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --animation-speed: 0;
+  }
+}
+
+@media (forced-colors: active) {
+  :root {
+    --focus-ring: Highlight;
+  }
+}
+
 html {
   font-size: 62.5%;
   font-family:
