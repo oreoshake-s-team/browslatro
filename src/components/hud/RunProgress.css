@@ -24,7 +24,7 @@
   }
   30% {
     transform: scale(1.22);
-    color: #2f9e44;
+    color: var(--accent-success);
   }
   60% {
     transform: scale(0.96);

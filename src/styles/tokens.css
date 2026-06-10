@@ -1,0 +1,22 @@
+:root {
+  --bg: #12161f;
+  --surface: #1a1f2e;
+  --surface-raised: #232b3f;
+  --surface-sunken: #10131b;
+  --surface-hover: #2c3550;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.24);
+  --text-primary: #f8f9fa;
+  --text-secondary: #ced4da;
+  --text-muted: #adb5bd;
+  --accent-chips: #339af0;
+  --accent-chips-strong: #1971c2;
+  --accent-chips-text: #74c0fc;
+  --accent-mult: #fa5252;
+  --accent-mult-strong: #e03131;
+  --accent-mult-text: #ffa8a8;
+  --accent-money: #ffd43b;
+  --accent-success: #51cf66;
+  --accent-danger: #e03131;
+  --focus-ring: #74c0fc;
+}

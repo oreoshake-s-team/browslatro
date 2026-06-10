@@ -57,7 +57,7 @@
 
 .deck-modal-group h4 {
   margin: 0 0 0.6rem;
-  color: #495057;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.9rem;
@@ -76,9 +76,9 @@
 }
 
 .modal {
-  background-color: #f8f9fa;
-  color: #495057;
-  border: 1px solid #dee2e6;
+  background-color: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   padding: 1rem;
 }

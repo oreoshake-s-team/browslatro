@@ -41,6 +41,11 @@
 .submit-hand-button {
   padding: 1.6rem 4rem;
   font-size: 2rem;
+  background-color: var(--surface-raised);
+  color: var(--text-primary);
+  border: 2px solid var(--border-strong);
+  border-radius: 4px;
+  cursor: pointer;
   flex: 1;
   display: flex;
   flex-wrap: wrap;
@@ -72,12 +77,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+.submit-hand-button:hover:not(:disabled) {
+  background-color: var(--surface-hover);
+}
+
+.submit-hand-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .submit-hand-button-chips {
-  color: #74c0fc;
+  color: var(--accent-chips-text);
 }
 
 .submit-hand-button-mult {
-  color: #ffa8a8;
+  color: var(--accent-mult-text);
 }
 
 .play-actions {
@@ -89,7 +103,7 @@
 .discard-button {
   padding: 1.6rem 2rem;
   font-size: 1.4rem;
-  background-color: #c92a2a;
+  background-color: var(--accent-danger);
   color: white;
   border: 2px solid #a51111;
   border-radius: 4px;
@@ -97,8 +111,9 @@
 }
 
 .discard-button:disabled {
-  background-color: #adb5bd;
-  border-color: #868e96;
+  background-color: var(--surface-raised);
+  border-color: var(--border-strong);
+  color: var(--text-muted);
   cursor: not-allowed;
   opacity: 0.7;
 }
