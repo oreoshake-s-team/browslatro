@@ -180,6 +180,38 @@ test.describe("Pack opening flow (#694)", () => {
     ).toHaveCount(1);
   });
 
+  test("pack pick options are evenly spaced across the row without stretching (closes #893)", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "arcana");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    const list = page.locator(".pack-open-options");
+    const options = list.locator(".pack-open-option");
+    await expect(options.first()).toBeVisible();
+    const count = await options.count();
+    expect(count).toBeGreaterThan(1);
+    const listBox = await list.boundingBox();
+    const boxes: Array<{ x: number; width: number }> = [];
+    for (let i = 0; i < count; i += 1) {
+      const box = await options.nth(i).boundingBox();
+      if (box) boxes.push(box);
+    }
+    const first = boxes[0];
+    const last = boxes[boxes.length - 1];
+    if (!listBox || !first || !last || boxes.length !== count) {
+      throw new Error("missing bounding boxes");
+    }
+    const leading = first.x - listBox.x;
+    const trailing = listBox.x + listBox.width - (last.x + last.width);
+    expect(leading).toBeGreaterThan(8);
+    expect(Math.abs(leading - trailing)).toBeLessThanOrEqual(1);
+    for (const box of boxes) {
+      expect(Math.abs(box.width - first.width)).toBeLessThanOrEqual(1);
+    }
+    expect(first.width).toBeLessThanOrEqual(13 * 16 + 2);
+  });
+
   test("Standard pack: picking a card increments the shop overlay deck pile count (closes #747)", async ({
     page,
   }) => {
