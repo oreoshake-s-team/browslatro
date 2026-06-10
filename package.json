@@ -22,7 +22,9 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "browserslist": {
     "production": [
@@ -46,6 +48,8 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
+    "@storybook/addon-a11y": "10.4.2",
+    "@storybook/react-vite": "10.4.2",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -57,6 +61,7 @@
     "@vitest/coverage-istanbul": "^4.1.7",
     "jsdom": "^29.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
+    "storybook": "10.4.2",
     "typescript": "^6.0.3",
     "vite": "^8.0.0",
     "vitest": "^4.0.0"
