@@ -44,12 +44,26 @@ test("portrait: Run info and Options are compact and sit above the stacked stats
     .getByRole("button", { name: "Options" })
     .boundingBox();
   const stats = await page.locator(".progress").boundingBox();
+  const handsStat = await page.locator(".round-progress > .stat").first().boundingBox();
   expect(runInfo).not.toBeNull();
   expect(options).not.toBeNull();
   expect(stats).not.toBeNull();
+  expect(handsStat).not.toBeNull();
   expect(runInfo!.height).toBeLessThan(40);
   expect(Math.round(options!.y)).toBe(Math.round(runInfo!.y));
   expect(stats!.y).toBeGreaterThan(runInfo!.y + runInfo!.height);
+  expect(Math.abs(runInfo!.width - handsStat!.width)).toBeLessThanOrEqual(2);
+  expect(Math.abs(options!.width - handsStat!.width)).toBeLessThanOrEqual(2);
+});
+
+test("portrait: the sidebar strip fits the viewport without a horizontal scrollbar (issue #880)", async ({
+  page,
+}) => {
+  await startRound(page);
+  const overflow = await page
+    .locator(".sidebar")
+    .evaluate((el) => el.scrollWidth - el.clientWidth);
+  expect(overflow).toBe(0);
 });
 
 test("negative: landscape keeps the vertical sidebar column (issue #880)", async ({

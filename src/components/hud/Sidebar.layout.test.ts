@@ -104,8 +104,8 @@ describe("Portrait sidebar grid — issue #880", () => {
     );
   });
 
-  test("portrait Run info/Options buttons are compact instead of stretched", () => {
+  test("portrait Run info/Options buttons split the row evenly like the stat rows", () => {
     const block = portraitBlock(sidebarCss);
-    expect(block).toMatch(/\.sub-info > button\s*{[^}]*flex\s*:\s*0 0 auto/);
+    expect(block).toMatch(/\.sub-info > button\s*{[^}]*flex\s*:\s*1 1 0/);
   });
 });
