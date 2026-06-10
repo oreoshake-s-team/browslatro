@@ -62,6 +62,7 @@ import {
   hasChaosTheClownInJokers,
   initialJokersConfig,
   probabilityMultiplierFromJokers,
+  shopExitConsumableCopies,
 } from "./items/jokers";
 import {
   applyShopDiscount,
@@ -335,6 +336,13 @@ function App() {
   };
 
   function closeShopAndStartNextRound() {
+    const copies = shopExitConsumableCopies(
+      jokers,
+      useGame.getState().consumables,
+    );
+    if (copies.length > 0) {
+      setConsumables((prev) => [...prev, ...copies]);
+    }
     setShopOffers(null);
     setSoldJokerIdsThisShopVisit([]);
     setPendingShopMods([]);

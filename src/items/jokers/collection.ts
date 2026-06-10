@@ -36,6 +36,22 @@ export function heldRetriggerCountFromJokers(
   return total;
 }
 
+export function shopExitConsumableCopies<T>(
+  allJokers: ReadonlyArray<Joker>,
+  consumables: ReadonlyArray<T>,
+  rng: RandomSource = Math.random,
+): T[] {
+  if (consumables.length === 0) return [];
+  const jokers = allJokers.filter(isJokerActive);
+  const copies: T[] = [];
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind !== "shop-exit-copies-consumable") continue;
+    copies.push(consumables[Math.floor(rng() * consumables.length)]);
+  }
+  return copies;
+}
+
 export function chipsPerScoredCardFromJokers(
   allJokers: ReadonlyArray<Joker>,
 ): number {

@@ -481,6 +481,7 @@ export function applyHandLevelJokers(
       case "x-mult-per-enhancement-eaten":
       case "x-mult-per-glass-shattered":
       case "blind-select-x-mult-destroys-joker":
+      case "x-mult-per-face-destroyed":
       case "x-mult-per-hand-without-most-played": {
         const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (counter > 0) {
@@ -606,6 +607,8 @@ export function applyHandLevelJokers(
       case "end-of-round-money-per-unique-planet":
       case "allows-duplicate-jokers":
       case "round-end-grows-all-sell-values":
+      case "shop-exit-copies-consumable":
+      case "sell-after-rounds-duplicates-joker":
       case "noop":
         break;
       default:
