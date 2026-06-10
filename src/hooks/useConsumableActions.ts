@@ -76,6 +76,8 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
   const setAddedCards = useGame((s) => s.setAddedCards);
+  const setCardSealsById = useGame((s) => s.setCardSealsById);
+  const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
   const handDisplayOrder = useGame((s) => s.handDisplayOrder);
 
@@ -141,6 +143,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
           ),
           remaining: prev.remaining,
         }));
+        setCardSealsById((prev) => {
+          const next = new Map(prev);
+          for (const id of selectedIds) next.set(id, spectralEffect.seal);
+          return next;
+        });
         setSelectedIds(new Set());
         setSelectedHand(null);
         setChips(0);
@@ -158,10 +165,16 @@ export function useConsumableActions(): UseConsumableActionsResult {
         }
         if (selectedIds.size !== spectralEffect.maxTargets) return;
         play("pop");
+        const duplicated = duplicateSelectedInHand(
+          useGame.getState().dealt.hand,
+          selectedIds,
+          spectralEffect.copies,
+        );
         setDealt((prev) => ({
-          hand: duplicateSelectedInHand(prev.hand, selectedIds, spectralEffect.copies),
+          hand: duplicated.hand,
           remaining: prev.remaining,
         }));
+        setAddedCards((prev) => [...prev, ...duplicated.additions]);
         setSelectedIds(new Set());
         setSelectedHand(null);
         setChips(0);
@@ -460,6 +473,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
       ),
       remaining: prev.remaining,
     }));
+    setCardEnhancementsById((prev) => {
+      const next = new Map(prev);
+      for (const id of selectedIds) next.set(id, effect.enhancement);
+      return next;
+    });
     setSelectedIds(new Set());
     setSelectedHand(null);
     setChips(0);

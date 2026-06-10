@@ -36,12 +36,13 @@ export function buildShuffledDeck(
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
 ): Card[] {
   const survivingBase = baseDeckCards.filter((c) => !destroyedCardIds.has(c.id));
+  const survivingAdded = addedCards.filter((c) => !destroyedCardIds.has(c.id));
   const base = applySealOverrides(
     applyEnhancementOverrides(survivingBase, enhancementOverrides),
     sealOverrides,
   );
   const extras = applySealOverrides(
-    applyEnhancementOverrides(addedCards, enhancementOverrides),
+    applyEnhancementOverrides(survivingAdded, enhancementOverrides),
     sealOverrides,
   );
   return shuffle([...base, ...extras]);
@@ -76,8 +77,9 @@ export function countEnhancedInFullDeck(
   const survivingBase = baseDeckCards.filter(
     (c) => !destroyedCardIds.has(c.id),
   );
+  const survivingAdded = addedCards.filter((c) => !destroyedCardIds.has(c.id));
   const base = applyEnhancementOverrides(survivingBase, enhancementOverrides);
-  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
+  const extras = applyEnhancementOverrides(survivingAdded, enhancementOverrides);
   let count = 0;
   for (const c of base) if (c.enhancement !== undefined) count += 1;
   for (const c of extras) if (c.enhancement !== undefined) count += 1;
@@ -92,7 +94,8 @@ export function fullDeckSize(
   const survivingBase = baseDeckCards.filter(
     (c) => !destroyedCardIds.has(c.id),
   );
-  return survivingBase.length + addedCards.length;
+  const survivingAdded = addedCards.filter((c) => !destroyedCardIds.has(c.id));
+  return survivingBase.length + survivingAdded.length;
 }
 
 export function countMissingFromFullDeck(
@@ -118,8 +121,9 @@ export function countEnhancementInFullDeck(
   const survivingBase = baseDeckCards.filter(
     (c) => !destroyedCardIds.has(c.id),
   );
+  const survivingAdded = addedCards.filter((c) => !destroyedCardIds.has(c.id));
   const base = applyEnhancementOverrides(survivingBase, enhancementOverrides);
-  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
+  const extras = applyEnhancementOverrides(survivingAdded, enhancementOverrides);
   let count = 0;
   for (const c of base) if (c.enhancement === enhancement) count += 1;
   for (const c of extras) if (c.enhancement === enhancement) count += 1;

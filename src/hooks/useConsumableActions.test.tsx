@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { useConsumableActions } from "./useConsumableActions";
 import { useGame } from "../store/game";
 import { createTarotCatalog } from "../items/tarots";
-import { createSpectralCatalog } from "../items/spectrals";
+import { CRYPTID_COPY_COUNT, createSpectralCatalog } from "../items/spectrals";
 import { MAX_JOKERS, createJokerCatalog } from "../items/jokers";
 import type { Consumable } from "../items/consumables";
 import type { Card } from "../cards/types";
@@ -1150,5 +1150,130 @@ describe("useConsumableActions — Aura on pack preview (closes #843)", () => {
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
     expect(useGame.getState().consumables).toHaveLength(0);
+  });
+});
+
+function catalogSpectralConsumable(id: string): Consumable {
+  const card = createSpectralCatalog().find((s) => s.id === id);
+  if (!card) throw new Error(`${id} missing from catalog`);
+  return { kind: "spectral", card };
+}
+
+function magicianConsumable(): Consumable {
+  const tarot = createTarotCatalog().find((t) => t.id === "the-magician");
+  if (!tarot) throw new Error("The Magician missing from catalog");
+  return { kind: "tarot", card: tarot };
+}
+
+describe("useConsumableActions — Talisman seal persists for the run (#999)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([catalogSpectralConsumable("talisman")]);
+  });
+
+  test("applying a seal in-round records it in cardSealsById", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardSealsById.get(card.id)).toBe("gold");
+  });
+
+  test("the in-hand card shows the seal immediately", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.seal).toBe("gold");
+  });
+
+  test("with no card selected, cardSealsById stays empty (negative)", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set());
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardSealsById.size).toBe(0);
+  });
+});
+
+describe("useConsumableActions — Cryptid copies persist for the run (#999)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([catalogSpectralConsumable("cryptid")]);
+  });
+
+  test("copies are appended to the dealt hand", () => {
+    const card: Card = { id: 1, rank: "K", suit: "hearts" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand).toHaveLength(1 + CRYPTID_COPY_COUNT);
+  });
+
+  test("copies are registered in addedCards", () => {
+    const card: Card = { id: 1, rank: "K", suit: "hearts" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().addedCards).toHaveLength(CRYPTID_COPY_COUNT);
+  });
+
+  test("registered copies preserve the original rank and suit", () => {
+    const card: Card = { id: 1, rank: "K", suit: "hearts" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    const added = useGame.getState().addedCards;
+    expect(added.every((c) => c.rank === "K" && c.suit === "hearts")).toBe(true);
+  });
+
+  test("with more than 1 card selected, addedCards stays empty (negative)", () => {
+    const a: Card = { id: 1, rank: "K", suit: "hearts" };
+    const b: Card = { id: 2, rank: "Q", suit: "spades" };
+    seedHand([a, b]);
+    useGame.getState().setSelectedIds(new Set([a.id, b.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().addedCards).toHaveLength(0);
+  });
+});
+
+describe("useConsumableActions — The Magician enhancement persists for the run (#999)", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([magicianConsumable()]);
+  });
+
+  test("applying an enhancement in-round records it in cardEnhancementsById", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardEnhancementsById.get(card.id)).toBe("lucky");
+  });
+
+  test("the in-hand card shows the enhancement immediately", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().dealt.hand[0]?.enhancement).toBe("lucky");
+  });
+
+  test("with no card selected, cardEnhancementsById stays empty (negative)", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set());
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().cardEnhancementsById.size).toBe(0);
   });
 });
