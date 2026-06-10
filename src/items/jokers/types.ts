@@ -244,6 +244,18 @@ export type JokerEffect =
       readonly kind: "x-mult-per-hand-without-most-played";
       readonly amount: number;
     }
+  | {
+      readonly kind: "end-of-round-money-grows-on-boss";
+      readonly baseAmount: number;
+      readonly growth: number;
+    }
+  | { readonly kind: "extra-interest-per-five" }
+  | { readonly kind: "sell-creates-double-tag" }
+  | {
+      readonly kind: "hand-size-decay-per-round";
+      readonly amount: number;
+      readonly lossPerRound: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

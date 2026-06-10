@@ -214,6 +214,20 @@ export function applyRoundEndToJokerStates(
       out.push({ ...joker, state: counterState(0) });
       continue;
     }
+    if (effect.kind === "end-of-round-money-grows-on-boss") {
+      if (!bossBlindDefeated) {
+        out.push(joker);
+        continue;
+      }
+      out.push({ ...joker, state: counterState(prevCount(joker) + effect.growth) });
+      continue;
+    }
+    if (effect.kind === "hand-size-decay-per-round") {
+      const next = Math.max(0, prevCount(joker) - effect.lossPerRound);
+      if (next <= 0 && isDestructible(joker)) continue;
+      out.push({ ...joker, state: counterState(next) });
+      continue;
+    }
     if (effect.kind === "x-mult-per-sold-card" && bossBlindDefeated) {
       out.push({ ...joker, state: counterState(0) });
       continue;

@@ -16,8 +16,21 @@ export function extraStartingHandSizeFromJokers(
     if (j.effect.kind === "passive-run-stats" && j.effect.handSize !== undefined) {
       total += j.effect.handSize;
     }
+    if (j.effect.kind === "hand-size-decay-per-round") {
+      total += j.state?.kind === "counter" ? j.state.value : j.effect.amount;
+    }
   }
   return total;
+}
+
+export function interestMultiplierFromJokers(
+  jokers: ReadonlyArray<Joker>,
+): number {
+  let extraStreams = 0;
+  for (const j of jokers) {
+    if (j.effect.kind === "extra-interest-per-five") extraStreams += 1;
+  }
+  return 1 + extraStreams;
 }
 
 export function extraStartingDiscardsFromJokers(

@@ -30,6 +30,7 @@ import {
   applyHandPlayedToJokerStates,
   expandScoringRetriggers,
   applyLuckyTriggersToJokerStates,
+  interestMultiplierFromJokers,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -274,7 +275,7 @@ export function usePlayHand({
             : calculateInterest(
                 postGoldWallet,
                 interestCapFor(ownedVoucherIds),
-              ),
+              ) * interestMultiplierFromJokers(jokers),
           goldHeldCount: heldGoldIds.length,
           remainingHandsCount,
           remainingDiscardsCount: remainingDiscards,

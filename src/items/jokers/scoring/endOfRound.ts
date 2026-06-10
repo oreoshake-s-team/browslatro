@@ -29,7 +29,18 @@ export function applyEndOfRoundJokers(
   const steps: EndOfRoundStep[] = [];
   for (const joker of jokers) {
     const effect = joker.effect;
-    if (effect.kind === "end-of-round-money") {
+    if (effect.kind === "end-of-round-money-grows-on-boss") {
+      const payout =
+        joker.state?.kind === "counter" ? joker.state.value : effect.baseAmount;
+      if (payout > 0) {
+        moneyEarned += payout;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: payout,
+        });
+      }
+    } else if (effect.kind === "end-of-round-money") {
       if (effect.amount > 0) {
         moneyEarned += effect.amount;
         steps.push({
