@@ -1,4 +1,5 @@
 import type { Card } from "../../cards/types";
+import type { HandPlayCounts } from "../../components/hud/handPlayCounts";
 import { handContains, type HandLabel } from "../../scoring/handEvaluator";
 import { rollChance } from "../../dev/chanceOverride";
 import { isFaceCardWith } from "./scoring/utils";
@@ -30,6 +31,7 @@ export interface HandPlayedContext {
   readonly playedHandLabel: HandLabel;
   readonly playedCardCount: number;
   readonly scoredCards: ReadonlyArray<Card>;
+  readonly handPlayCounts?: HandPlayCounts;
 }
 
 export function applyHandPlayedToJokerStates(
@@ -72,6 +74,15 @@ export function applyHandPlayedToJokerStates(
           ...joker,
           state: counterState(prevCount(joker) + effect.growAmount),
         };
+      }
+      case "x-mult-per-hand-without-most-played": {
+        const counts = ctx.handPlayCounts;
+        if (counts === undefined) return joker;
+        const max = Math.max(...Object.values(counts));
+        if (counts[ctx.playedHandLabel] >= max) {
+          return { ...joker, state: counterState(0) };
+        }
+        return { ...joker, state: counterState(prevCount(joker) + 1) };
       }
       case "chips-melt-per-hand": {
         return {
@@ -156,9 +167,34 @@ export function applyLuckyTriggersToJokerStates(
   });
 }
 
+export function applyConsumableUsedToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  kind: "tarot" | "planet" | "spectral",
+): Joker[] {
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind === "stack-mult-per-tarot-used" && kind === "tarot") {
+      return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
+    }
+    if (effect.kind === "x-mult-per-planet-used" && kind === "planet") {
+      return { ...joker, state: counterState(prevCount(joker) + 1) };
+    }
+    return joker;
+  });
+}
+
+export function applySellToJokerStates(jokers: ReadonlyArray<Joker>): Joker[] {
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-sold-card") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + 1) };
+  });
+}
+
 export function applyRoundEndToJokerStates(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
+  bossBlindDefeated = false,
 ): Joker[] {
   const out: Joker[] = [];
   for (const joker of jokers) {
@@ -175,6 +211,10 @@ export function applyRoundEndToJokerStates(
       continue;
     }
     if (effect.kind === "x-mult-per-jack-discarded-this-round") {
+      out.push({ ...joker, state: counterState(0) });
+      continue;
+    }
+    if (effect.kind === "x-mult-per-sold-card" && bossBlindDefeated) {
       out.push({ ...joker, state: counterState(0) });
       continue;
     }

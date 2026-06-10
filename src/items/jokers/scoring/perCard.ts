@@ -232,6 +232,10 @@ export function applyPerCardJokers(
       case "x-mult-per-jack-discarded-this-round":
       case "x-mult-per-lucky-trigger":
       case "sell-value-grows-per-round":
+      case "stack-mult-per-tarot-used":
+      case "x-mult-per-planet-used":
+      case "x-mult-per-sold-card":
+      case "x-mult-per-hand-without-most-played":
       case "noop":
         break;
       default:

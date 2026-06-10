@@ -122,6 +122,10 @@ export const RED_CARD_MULT_PER_SKIPPED_PACK = 3;
 export const HIT_THE_ROAD_X_MULT_PER_JACK = 0.5;
 export const LUCKY_CAT_X_MULT_PER_TRIGGER = 0.25;
 export const EGG_SELL_VALUE_PER_ROUND = 3;
+export const FORTUNE_TELLER_MULT_PER_TAROT = 1;
+export const CONSTELLATION_X_MULT_PER_PLANET = 0.1;
+export const CAMPFIRE_X_MULT_PER_SOLD_CARD = 0.25;
+export const OBELISK_X_MULT_PER_CONSECUTIVE_HAND = 0.2;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

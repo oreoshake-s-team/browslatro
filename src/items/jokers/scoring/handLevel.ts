@@ -374,6 +374,7 @@ export function applyHandLevelJokers(
       case "on-hand-stack-on-discard-shrink-mult":
       case "stack-mult-on-shop-reroll":
       case "stack-mult-on-pack-skip":
+      case "stack-mult-per-tarot-used":
       case "mult-decay-per-round": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
@@ -462,7 +463,10 @@ export function applyHandLevelJokers(
         break;
       }
       case "x-mult-per-jack-discarded-this-round":
-      case "x-mult-per-lucky-trigger": {
+      case "x-mult-per-lucky-trigger":
+      case "x-mult-per-planet-used":
+      case "x-mult-per-sold-card":
+      case "x-mult-per-hand-without-most-played": {
         const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (counter > 0) {
           const factor = 1 + effect.amount * counter;

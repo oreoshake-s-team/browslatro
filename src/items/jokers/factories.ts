@@ -88,6 +88,10 @@ import {
   HIT_THE_ROAD_X_MULT_PER_JACK,
   LUCKY_CAT_X_MULT_PER_TRIGGER,
   EGG_SELL_VALUE_PER_ROUND,
+  FORTUNE_TELLER_MULT_PER_TAROT,
+  CONSTELLATION_X_MULT_PER_PLANET,
+  CAMPFIRE_X_MULT_PER_SOLD_CARD,
+  OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1427,6 +1431,62 @@ export function createEggJoker(): Joker {
     effect: {
       kind: "sell-value-grows-per-round",
       amount: EGG_SELL_VALUE_PER_ROUND,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createFortuneTellerJoker(): Joker {
+  return {
+    id: "fortune-teller",
+    rarity: "common",
+    name: "Fortune Teller",
+    description: `+${FORTUNE_TELLER_MULT_PER_TAROT} Mult per Tarot card used this run`,
+    effect: {
+      kind: "stack-mult-per-tarot-used",
+      amount: FORTUNE_TELLER_MULT_PER_TAROT,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createConstellationJoker(): Joker {
+  return {
+    id: "constellation",
+    rarity: "uncommon",
+    name: "Constellation",
+    description: `This Joker gains X${CONSTELLATION_X_MULT_PER_PLANET} Mult per Planet card used`,
+    effect: {
+      kind: "x-mult-per-planet-used",
+      amount: CONSTELLATION_X_MULT_PER_PLANET,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createCampfireJoker(): Joker {
+  return {
+    id: "campfire",
+    rarity: "rare",
+    name: "Campfire",
+    description: `This Joker gains X${CAMPFIRE_X_MULT_PER_SOLD_CARD} Mult for each card sold, resets when Boss Blind is defeated`,
+    effect: {
+      kind: "x-mult-per-sold-card",
+      amount: CAMPFIRE_X_MULT_PER_SOLD_CARD,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createObeliskJoker(): Joker {
+  return {
+    id: "obelisk",
+    rarity: "rare",
+    name: "Obelisk",
+    description: `X${OBELISK_X_MULT_PER_CONSECUTIVE_HAND} Mult per consecutive hand played without playing your most played poker hand`,
+    effect: {
+      kind: "x-mult-per-hand-without-most-played",
+      amount: OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
     },
     state: { kind: "counter", value: 0 },
   };

@@ -89,8 +89,10 @@ export { expandScoringRetriggers } from "./jokers/scoring/retriggers";
 export {
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,
+  applyConsumableUsedToJokerStates,
   applyLuckyTriggersToJokerStates,
   applyPackSkipToJokerStates,
+  applySellToJokerStates,
   applyRoundEndToJokerStates,
   applyShopRerollToJokerStates,
   ramenXMultFactor,
