@@ -27,7 +27,9 @@ import {
 } from "../../items/jokers";
 import Card from "../cards/Card";
 import JokerStickerBadges from "../jokers/JokerStickerBadges";
+import { announce } from "../system/LiveAnnouncer";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { cardName } from "../../i18n/strings";
 
 function applyManualOrder(
   hand: ReadonlyArray<CardType>,
@@ -239,6 +241,33 @@ export default function PackOpenModal({
     next.splice(insertIdx, 0, sourceId);
     setManualOrder(next);
   }
+
+  function movePreviewCard(card: CardType, direction: -1 | 1) {
+    const ids = displayedPreviewHand.map((c) => c.id);
+    const idx = ids.indexOf(card.id);
+    if (idx < 0) return;
+    const name = cardName(t, card);
+    if (direction === -1 && idx === 0) {
+      announce(t("a11y.atStart", { item: name }));
+      return;
+    }
+    if (direction === 1 && idx === ids.length - 1) {
+      announce(t("a11y.atEnd", { item: name }));
+      return;
+    }
+    const next = ids.slice();
+    next.splice(idx, 1);
+    next.splice(idx + direction, 0, card.id);
+    setManualOrder(next);
+    announce(
+      t("a11y.movedTo", {
+        item: name,
+        position: idx + direction + 1,
+        total: ids.length,
+      }),
+    );
+  }
+
   const totalPicks = packPickLimit(pack.variant);
   const title = packDisplayName(pack);
   const selectedCount = previewSelectedIds?.size ?? 0;
@@ -421,6 +450,26 @@ export default function PackOpenModal({
                         : undefined
                     }
                   />
+                  <div className="pack-open-preview-move-controls">
+                    <button
+                      type="button"
+                      className="pack-open-preview-move-button"
+                      aria-label={t("a11y.moveLeft", { item: cardName(t, card) })}
+                      data-testid={`pack-open-preview-move-left-${card.id}`}
+                      onClick={() => movePreviewCard(card, -1)}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="pack-open-preview-move-button"
+                      aria-label={t("a11y.moveRight", { item: cardName(t, card) })}
+                      data-testid={`pack-open-preview-move-right-${card.id}`}
+                      onClick={() => movePreviewCard(card, 1)}
+                    >
+                      ▶
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

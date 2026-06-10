@@ -25,17 +25,43 @@ const pwaPlugin: PluginOption[] = process.env.VITEST
       },
     });
 
+const siteUrl =
+  process.env.SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
+const siteUrlPlugin: PluginOption = {
+  name: "browslatro:site-url",
+  transformIndexHtml(html) {
+    return html.replaceAll("%SITE_URL%", siteUrl);
+  },
+};
+
 export default defineConfig({
   define: {
     "import.meta.env.VITE_ON_VERCEL": JSON.stringify(process.env.VERCEL ?? "0"),
   },
   plugins: [
     react(),
+    siteUrlPlugin,
     ...pwaPlugin,
     ...(analyzePlugin ? [analyzePlugin] : []),
   ],
   build: {
     outDir: "build",
+    rolldownOptions: {
+      output: {
+        advancedChunks: {
+          groups: [
+            {
+              name: "vendor",
+              test: /node_modules[\\/].*(react|scheduler|i18next|zustand|drag-drop-touch)/,
+            },
+          ],
+        },
+      },
+    },
   },
   server: {
     port: 3000,

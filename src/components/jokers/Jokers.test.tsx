@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import Jokers from "./Jokers";
+import LiveAnnouncer from "../system/LiveAnnouncer";
 import {
   MAX_JOKERS,
   PERISHABLE_LIFE,
@@ -10,6 +11,7 @@ import {
   createLustyJoker,
   createPlusFourMultJoker,
   createWrathfulJoker,
+  jokerSellValue,
   withEdition,
   type Joker,
 } from "../../items/jokers";
@@ -412,29 +414,33 @@ describe("Jokers sell", () => {
     createBusinessCardJoker(),
   ];
 
-  test("does not render a Sell chip at rest, even when onSell is provided", () => {
+  function sellChips(): Element[] {
+    return Array.from(document.querySelectorAll(".joker-tile-sell"));
+  }
+
+  test("does not render a Sell drag chip at rest, even when onSell is provided", () => {
     render(<Jokers jokers={filled} onSell={() => {}} />);
-    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
+    expect(sellChips()).toHaveLength(0);
   });
 
-  test("renders a Sell chip on the dragged tile only after dragstart", () => {
+  test("renders a Sell drag chip on the dragged tile only after dragstart", () => {
     render(<Jokers jokers={filled} onSell={() => {}} />);
     fireEvent.dragStart(screen.getByTestId("joker-tile-filled-business-card"));
-    expect(screen.getAllByText(/^Sell \$/)).toHaveLength(1);
+    expect(sellChips()).toHaveLength(1);
   });
 
-  test("Sell chip disappears after dragend", () => {
+  test("Sell drag chip disappears after dragend", () => {
     render(<Jokers jokers={filled} onSell={() => {}} />);
     const tile = screen.getByTestId("joker-tile-filled-business-card");
     fireEvent.dragStart(tile);
     fireEvent.dragEnd(tile);
-    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
+    expect(sellChips()).toHaveLength(0);
   });
 
-  test("does not render a Sell chip when onSell is not provided", () => {
+  test("does not render a Sell drag chip when onSell is not provided", () => {
     render(<Jokers jokers={filled} />);
     fireEvent.dragStart(screen.getByTestId("joker-tile-filled-business-card"));
-    expect(screen.queryByText(/^Sell \$/)).not.toBeInTheDocument();
+    expect(sellChips()).toHaveLength(0);
   });
 
   test("shift-clicking a tile invokes onSell with its index", () => {
@@ -534,6 +540,142 @@ describe("Jokers sell — Eternal joker guard (#555)", () => {
         .getByTestId("joker-tile-filled-business-card")
         .getAttribute("aria-label") ?? "";
     expect(label).not.toMatch(/Shift-click/);
+  });
+});
+
+describe("Jokers keyboard reorder and sell (#909)", () => {
+  const three: ReadonlyArray<Joker> = [
+    createPlusFourMultJoker(),
+    createBusinessCardJoker(),
+    createJokerStencilJoker(),
+  ];
+
+  test("Move right reorders the joker one slot to the right", () => {
+    const onReorder = vi.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    fireEvent.click(screen.getByTestId("joker-move-right-plus-four-mult"));
+    expect(onReorder).toHaveBeenCalledWith([
+      "business-card",
+      "plus-four-mult",
+      "joker-stencil",
+    ]);
+  });
+
+  test("Move left reorders the joker one slot to the left", () => {
+    const onReorder = vi.fn();
+    render(<Jokers jokers={three} onReorder={onReorder} />);
+    fireEvent.click(screen.getByTestId("joker-move-left-joker-stencil"));
+    expect(onReorder).toHaveBeenCalledWith([
+      "plus-four-mult",
+      "joker-stencil",
+      "business-card",
+    ]);
+  });
+
+  test("a keyboard move announces the joker's new position", () => {
+    render(
+      <>
+        <Jokers jokers={three} onReorder={() => {}} />
+        <LiveAnnouncer />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId("joker-move-right-plus-four-mult"));
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "+4 Mult moved to position 2 of 3",
+    );
+  });
+
+  test("Move left on the first joker announces it is already first and does not reorder", () => {
+    const onReorder = vi.fn();
+    render(
+      <>
+        <Jokers jokers={three} onReorder={onReorder} />
+        <LiveAnnouncer />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId("joker-move-left-plus-four-mult"));
+    expect(onReorder).not.toHaveBeenCalled();
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "+4 Mult is already at the first position",
+    );
+  });
+
+  test("Move right on the last joker announces it is already last and does not reorder", () => {
+    const onReorder = vi.fn();
+    render(
+      <>
+        <Jokers jokers={three} onReorder={onReorder} />
+        <LiveAnnouncer />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId("joker-move-right-joker-stencil"));
+    expect(onReorder).not.toHaveBeenCalled();
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "Joker Stencil is already at the last position",
+    );
+  });
+
+  test("move controls are not rendered when onReorder is missing", () => {
+    render(<Jokers jokers={three} onSell={() => {}} />);
+    expect(
+      screen.queryByTestId("joker-move-left-plus-four-mult"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("the sell button invokes onSell with the joker's index", () => {
+    const onSell = vi.fn();
+    render(<Jokers jokers={three} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId("joker-sell-business-card"));
+    expect(onSell).toHaveBeenCalledWith(1);
+  });
+
+  test("the sell button names the joker and its sell value", () => {
+    render(<Jokers jokers={three} onSell={() => {}} />);
+    const value = jokerSellValue(three[0]);
+    expect(screen.getByTestId("joker-sell-plus-four-mult")).toHaveAttribute(
+      "aria-label",
+      `Sell +4 Mult (worth $${value})`,
+    );
+  });
+
+  test("selling via the button announces the sale", () => {
+    render(
+      <>
+        <Jokers jokers={three} onSell={() => {}} />
+        <LiveAnnouncer />
+      </>,
+    );
+    fireEvent.click(screen.getByTestId("joker-sell-business-card"));
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      `Sold Business Card for $${jokerSellValue(three[1])}`,
+    );
+  });
+
+  test("no sell button is rendered when onSell is missing", () => {
+    render(<Jokers jokers={three} onReorder={() => {}} />);
+    expect(
+      screen.queryByTestId("joker-sell-plus-four-mult"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("no sell button is rendered for an Eternal joker", () => {
+    const eternal: Joker = {
+      ...createBusinessCardJoker(),
+      stickers: [{ kind: "eternal" }],
+    };
+    render(<Jokers jokers={[eternal]} onSell={() => {}} />);
+    expect(
+      screen.queryByTestId("joker-sell-business-card"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("clicking the sell button does not double-fire via the tile's shift-click path", () => {
+    const onSell = vi.fn();
+    render(<Jokers jokers={three} onSell={onSell} />);
+    fireEvent.click(screen.getByTestId("joker-sell-business-card"), {
+      shiftKey: true,
+    });
+    expect(onSell).toHaveBeenCalledTimes(1);
   });
 });
 

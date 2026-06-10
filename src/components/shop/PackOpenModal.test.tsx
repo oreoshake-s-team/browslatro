@@ -11,6 +11,7 @@ import {
   type JokerSticker,
 } from "../../items/jokers";
 import { createSpectralCatalog } from "../../items/spectrals";
+import LiveAnnouncer from "../system/LiveAnnouncer";
 
 const PLANETS = createPlanetCatalog();
 const TAROTS = createTarotCatalog();
@@ -1076,6 +1077,110 @@ describe("PackOpenModal — preview-hand reorder (#763)", () => {
     const before = previewCardTestIds();
     dispatchDragSequence(3001, 3001);
     expect(previewCardTestIds()).toEqual(before);
+  });
+});
+
+describe("PackOpenModal — keyboard preview reorder (#910)", () => {
+  // Rank sort is descending, so the display order is K♠ (3002),
+  // 5♥ (3001), 2♣ (3003).
+  const reorderPreview = [
+    { id: 3001, rank: "5" as const, suit: "hearts" as const },
+    { id: 3002, rank: "K" as const, suit: "spades" as const },
+    { id: 3003, rank: "2" as const, suit: "clubs" as const },
+  ];
+
+  function renderModal(onReorder = vi.fn()) {
+    render(
+      <>
+        <PackOpenModal
+          pack={arcanaPack("normal", 3)}
+          picksRemaining={1}
+          previewHand={reorderPreview}
+          onReorderPreview={onReorder}
+          onPick={vi.fn()}
+          onClose={vi.fn()}
+        />
+        <LiveAnnouncer />
+      </>,
+    );
+    return onReorder;
+  }
+
+  function previewIds(): number[] {
+    return Array.from(
+      screen
+        .getByTestId("pack-open-preview-hand")
+        .querySelectorAll("[data-testid^='pack-open-preview-card-']"),
+    ).map((el) =>
+      Number(
+        (el.getAttribute("data-testid") ?? "").replace(
+          "pack-open-preview-card-",
+          "",
+        ),
+      ),
+    );
+  }
+
+  test("Move right shifts the card one position to the right", () => {
+    const onReorder = renderModal();
+    fireEvent.click(screen.getByTestId("pack-open-preview-move-right-3002"));
+    expect(previewIds()).toEqual([3001, 3002, 3003]);
+    expect(onReorder).toHaveBeenLastCalledWith([3001, 3002, 3003]);
+  });
+
+  test("Move left shifts the card one position to the left", () => {
+    renderModal();
+    fireEvent.click(screen.getByTestId("pack-open-preview-move-left-3003"));
+    expect(previewIds()).toEqual([3002, 3003, 3001]);
+  });
+
+  test("a keyboard move announces the card's new position", () => {
+    renderModal();
+    fireEvent.click(screen.getByTestId("pack-open-preview-move-right-3002"));
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "K of Spades moved to position 2 of 3",
+    );
+  });
+
+  test("Move left on the first card announces it is already first and keeps the order", () => {
+    renderModal();
+    const before = previewIds();
+    fireEvent.click(screen.getByTestId("pack-open-preview-move-left-3002"));
+    expect(previewIds()).toEqual(before);
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "K of Spades is already at the first position",
+    );
+  });
+
+  test("Move right on the last card announces it is already last and keeps the order", () => {
+    renderModal();
+    const before = previewIds();
+    fireEvent.click(screen.getByTestId("pack-open-preview-move-right-3003"));
+    expect(previewIds()).toEqual(before);
+    expect(screen.getByTestId("live-announcer")).toHaveTextContent(
+      "2 of Clubs is already at the last position",
+    );
+  });
+
+  test("mouse drag reordering still works after a keyboard move", () => {
+    renderModal();
+    fireEvent.click(screen.getByTestId("pack-open-preview-move-right-3002"));
+    const source = screen.getByTestId("pack-open-preview-card-3003");
+    const target = screen.getByTestId("pack-open-preview-card-3001");
+    const data: Record<string, string> = {};
+    const dataTransfer = {
+      effectAllowed: "",
+      dropEffect: "",
+      setData: (k: string, v: string) => {
+        data[k] = v;
+      },
+      getData: (k: string) => data[k] ?? "",
+    };
+    fireEvent.dragStart(source, { dataTransfer });
+    fireEvent.dragOver(target, { dataTransfer });
+    fireEvent.drop(target, { dataTransfer });
+    fireEvent.dragEnd(source, { dataTransfer });
+    expect(previewIds()).toEqual([3003, 3001, 3002]);
   });
 });
 
