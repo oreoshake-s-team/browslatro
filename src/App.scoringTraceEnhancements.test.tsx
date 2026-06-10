@@ -175,8 +175,8 @@ describe("Scoring trace — enhancement events", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    await user.click(screen.getByRole("button", { name: /A of Spades/ }));
-    await user.click(screen.getByRole("button", { name: /A of Hearts/ }));
+    await user.click(screen.getByRole("button", { name: /^A of Spades/ }));
+    await user.click(screen.getByRole("button", { name: /^A of Hearts/ }));
     await user.click(screen.getByRole("button", { name: /Stone card/i }));
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
