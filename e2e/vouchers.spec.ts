@@ -20,17 +20,11 @@ async function clickWin(page: Page): Promise<void> {
   await page.locator("button.win-button").click();
 }
 
-async function startRound(page: Page): Promise<void> {
-  await page.goto("/");
-  await page.getByTestId("new-run-confirm").click();
-}
-
 async function reachShop(page: Page): Promise<void> {
-  await startRound(page);
-  await page.getByTestId("blind-select-play").click();
-  await clickWin(page);
-  await clickWin(page);
-  await clickWin(page);
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:bootShop", "1");
+  });
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
 }
 

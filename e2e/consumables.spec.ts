@@ -1,8 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^Submit Hand/;
-const CONTINUE_BUTTON = /Continue/;
 const NEXT_ROUND_BUTTON = /Next Round/;
 const SHOP_HEADING = /Shop/;
 
@@ -32,15 +29,10 @@ async function buyForcedKindThenLeaveShop(
   page: Page,
   kind: string,
 ): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:bootShop", "1");
+  });
   await page.goto("/");
-  await page.getByTestId("new-run-confirm").click();
-  await page.getByTestId("blind-select-play").click();
-  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  for (let i = 0; i < 5; i += 1) {
-    await page.locator(HAND_CARDS).nth(i).click();
-  }
-  await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
-  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
   await page
     .locator(`.shop-offer[data-offer-kind="${kind}"]`)
