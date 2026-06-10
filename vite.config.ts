@@ -13,11 +13,24 @@ const analyzePlugin: PluginOption | false =
     open: false,
   });
 
+const siteUrl =
+  process.env.SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : "http://localhost:3000");
+
+const siteUrlPlugin: PluginOption = {
+  name: "browslatro:site-url",
+  transformIndexHtml(html) {
+    return html.replaceAll("%SITE_URL%", siteUrl);
+  },
+};
+
 export default defineConfig({
   define: {
     "import.meta.env.VITE_ON_VERCEL": JSON.stringify(process.env.VERCEL ?? "0"),
   },
-  plugins: [react(), ...(analyzePlugin ? [analyzePlugin] : [])],
+  plugins: [react(), siteUrlPlugin, ...(analyzePlugin ? [analyzePlugin] : [])],
   build: {
     outDir: "build",
     rolldownOptions: {
