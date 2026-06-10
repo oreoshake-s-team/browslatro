@@ -15,133 +15,22 @@ async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
   }, tarotId);
 }
 
-async function startRound(page: Page): Promise<void> {
+// Effect-by-effect in-hand tarot coverage (destroy, rank-up, convert,
+// copy, money, no-op guards) lives in src/hooks/useConsumableActions.test.tsx;
+// this journey only proves the select-card → click-tarot wiring (#932).
+test("The Sun: selecting a hand card and clicking the tarot converts it to hearts and consumes the tile", async ({
+  page,
+}) => {
+  await setDeterministic(page);
+  await addTarotToTray(page, "the-sun");
   await page.goto("/");
   await page.getByTestId("new-run-confirm").click();
-}
-
-async function enterRoundWithTarot(
-  page: Page,
-  tarotId: string,
-): Promise<void> {
-  await addTarotToTray(page, tarotId);
-  await startRound(page);
   await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-}
-
-function tarotTile(page: Page) {
-  return page.locator('[data-consumable-kind="tarot"]').first();
-}
-
-function handCardAt(page: Page, index: number) {
-  return page.locator(HAND_CARDS).nth(index);
-}
-
-test.describe("Tarots in-hand (#696)", () => {
-  test.beforeEach(async ({ page }) => {
-    await setDeterministic(page);
-  });
-
-  test("The Hanged Man: selecting 1 hand card and clicking the tarot removes that card from the hand", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "the-hanged-man");
-    await handCardAt(page, 0).click();
-    await tarotTile(page).click();
-    await expect(page.locator(HAND_CARDS)).toHaveCount(7);
-  });
-
-  test("Strength: selecting a hand card and clicking the tarot increases its rank by 1", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "strength");
-    const target = handCardAt(page, 0);
-    const rankBefore =
-      (await target.locator(".card-rank").first().textContent()) ?? "";
-    await target.click();
-    await tarotTile(page).click();
-    const rankAfter =
-      (await handCardAt(page, 0).locator(".card-rank").first().textContent()) ??
-      "";
-    expect(rankAfter).not.toBe(rankBefore);
-  });
-
-  test("The Lovers: selecting a hand card and clicking the tarot applies the wild enhancement", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "the-lovers");
-    await handCardAt(page, 0).click();
-    await tarotTile(page).click();
-    await expect(
-      page.locator(`${HAND_CARDS}.card-enhancement-wild`),
-    ).toHaveCount(1);
-  });
-
-  test("The Sun: selecting a hand card and clicking the tarot converts that card to hearts (#692 in-hand path)", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "the-sun");
-    await handCardAt(page, 0).click();
-    await tarotTile(page).click();
-    await expect(
-      page.locator(`${HAND_CARDS}.card-suit-hearts`).first(),
-    ).toBeVisible();
-  });
-
-  test("The Hermit: clicking the tarot doubles money (capped per HERMIT_MONEY_CAP)", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "the-hermit");
-    const moneyValue = page
-      .locator(".stat", {
-        has: page.locator(".stat-label", { hasText: "Money" }),
-      })
-      .locator(".stat-value");
-    const before = Number(
-      ((await moneyValue.textContent()) ?? "$0").replace(/[^0-9-]/g, ""),
-    );
-    await tarotTile(page).click();
-    const after = Number(
-      ((await moneyValue.textContent()) ?? "$0").replace(/[^0-9-]/g, ""),
-    );
-    expect(after).toBeGreaterThan(before);
-  });
-
-  test("The Hanged Man with no card selected is a no-op (consumable stays in tray) — negative", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "the-hanged-man");
-    await tarotTile(page).click();
-    await expect(page.locator('[data-consumable-kind="tarot"]')).toHaveCount(1);
-  });
-
-  test("Death: with 2 cards selected, the left card's rank changes to match the right (#617)", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "death");
-    const left = handCardAt(page, 0);
-    const right = handCardAt(page, 1);
-    const rightRankBefore =
-      (await right.locator(".card-rank").first().textContent()) ?? "";
-    const leftRankBefore =
-      (await left.locator(".card-rank").first().textContent()) ?? "";
-    expect(rightRankBefore).not.toBe(leftRankBefore);
-    await left.click();
-    await right.click();
-    await tarotTile(page).click();
-    const leftRankAfter =
-      (await handCardAt(page, 0).locator(".card-rank").first().textContent()) ??
-      "";
-    expect(leftRankAfter).toBe(rightRankBefore);
-  });
-
-  test("Death with only 1 card selected is a no-op (consumable stays in tray) — negative", async ({
-    page,
-  }) => {
-    await enterRoundWithTarot(page, "death");
-    await handCardAt(page, 0).click();
-    await tarotTile(page).click();
-    await expect(page.locator('[data-consumable-kind="tarot"]')).toHaveCount(1);
-  });
+  await page.locator(HAND_CARDS).first().click();
+  await page.locator('[data-consumable-kind="tarot"]').first().click();
+  await expect(
+    page.locator(`${HAND_CARDS}.card-suit-hearts`).first(),
+  ).toBeVisible();
+  await expect(page.locator('[data-consumable-kind="tarot"]')).toHaveCount(0);
 });
