@@ -18,6 +18,7 @@ import {
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import { bootIntoShop, shouldBootIntoShop } from "./dev/bootShop";
+import { devToolsEnabled } from "./dev/devTools";
 import { readSeededConsumables } from "./dev/seedConsumables";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
@@ -540,11 +541,21 @@ function App() {
                 onSkip={skipBlind}
                 tags={pendingTags}
                 skipRewards={skipTagOffers}
-                bossOptions={availableBosses(createBossCatalog(), ante)}
-                onSetBoss={(id) => {
-                  const next = createBossCatalog().find((b) => b.id === id);
-                  if (next) setCurrentBoss(next);
-                }}
+                bossOptions={
+                  devToolsEnabled()
+                    ? availableBosses(createBossCatalog(), ante)
+                    : undefined
+                }
+                onSetBoss={
+                  devToolsEnabled()
+                    ? (id) => {
+                        const next = createBossCatalog().find(
+                          (b) => b.id === id,
+                        );
+                        if (next) setCurrentBoss(next);
+                      }
+                    : undefined
+                }
                 onRerollBoss={() => {
                   useGame.getState().rerollBoss();
                 }}

@@ -3,6 +3,7 @@ import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import type { Joker } from "../../items/jokers";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
 
 interface JokerGrantAcknowledgeProps {
@@ -16,6 +17,7 @@ export default function JokerGrantAcknowledge({
 }: JokerGrantAcknowledgeProps) {
   const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
+  useEscapeToClose(onAcknowledge, jokers.length > 0);
   useFocusTrap(overlayRef, jokers.length > 0);
   if (jokers.length === 0) return null;
   const title =
