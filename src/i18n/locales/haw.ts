@@ -251,6 +251,8 @@ export const haw: LocaleMessages = {
     jokerDebuffed: "Debuffed — ʻaʻole helu ʻia.",
     jokerEdition: "{{name}} edition: {{description}}.",
     sellHint: "Shift-kaomi a kauō paha i ka pūʻulu e kūʻai aku no ${{value}}.",
+    sellJoker: "E kūʻai aku iā {{name}} (${{value}} ka waiwai)",
+    soldJoker: "Ua kūʻai ʻia ʻo {{name}} no ${{value}}",
     consumableSlots: "Nā wahi consumable",
     emptyConsumableSlot: "Wahi consumable hakahaka",
     consumableTile:

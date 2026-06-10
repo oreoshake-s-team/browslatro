@@ -133,10 +133,52 @@
 }
 
 .pack-open-preview-card {
+  position: relative;
   display: flex;
   flex: 0 1 var(--card-width);
   min-width: 0;
   cursor: grab;
+}
+
+/* Keyboard reorder controls for pack picks (issue #910). Hidden until the
+ * card holds focus; opacity-only hiding keeps them in the tab order, and
+ * tabbing onto a control reveals it via :focus-within. They sit in the
+ * preview hand's top padding, mirroring the Hand controls. */
+.pack-open-preview-move-controls {
+  position: absolute;
+  top: -1.4rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.2rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pack-open-preview-card:focus-within .pack-open-preview-move-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pack-open-preview-move-button {
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+}
+
+.pack-open-preview-move-button:hover {
+  background-color: var(--surface-hover);
+}
+
+.pack-open-preview-move-button:focus-visible {
+  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline-offset: 1px;
 }
 
 .pack-open-preview-card:active {

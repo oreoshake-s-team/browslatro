@@ -43,6 +43,7 @@
 }
 
 .joker-tile {
+  position: relative;
   display: flex;
   flex: 0 1 var(--card-width);
   min-width: 0;
@@ -128,6 +129,84 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+
+/* Keyboard reorder + sell controls (issue #909). Hidden until the tile is
+ * hovered or holds focus; opacity-only hiding keeps them in the tab order,
+ * and tabbing onto a control reveals it via :focus-within. The tile clips
+ * its content (overflow: hidden), so the controls sit inside its bounds. */
+.joker-move-controls {
+  position: absolute;
+  top: 0.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.2rem;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.joker-tile:hover .joker-move-controls,
+.joker-tile:focus-within .joker-move-controls {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.joker-move-button {
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.25rem 0.45rem;
+  cursor: pointer;
+}
+
+.joker-move-button:hover {
+  background-color: var(--surface-hover);
+}
+
+.joker-move-button:focus-visible {
+  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline-offset: 1px;
+}
+
+.joker-sell-button {
+  position: absolute;
+  bottom: 0.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 1px solid #5c3c00;
+  border-radius: 999px;
+  background-color: #fff3bf;
+  color: #5c3a00;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  white-space: nowrap;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.joker-tile:hover .joker-sell-button,
+.joker-tile:focus-within .joker-sell-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.joker-sell-button:hover {
+  background-color: #ffe066;
+}
+
+.joker-sell-button:focus-visible {
+  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline-offset: 1px;
 }
 
 .joker-tile-empty {
