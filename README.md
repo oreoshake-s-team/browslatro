@@ -4,7 +4,7 @@ A slimmed-down React + TypeScript implementation of the popular poker game, Bala
 
 ## Package manager
 
-This project uses [Yarn 4 (Berry)](https://yarnpkg.com/) (pinned via the `packageManager` field in `package.json`) with the Plug'n'Play (PnP) linker.
+This project uses [Yarn 4 (Berry)](https://yarnpkg.com/) (pinned via the `packageManager` field in `package.json`) with the [pnpm `nodeLinker`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) — a real `node_modules/` materialized from hardlinks into Yarn's global store (see `.yarnrc.yml`).
 
 Activate the pinned version through Corepack, then install:
 
@@ -17,12 +17,12 @@ Corepack ships with Node.js and reads `packageManager` from `package.json` to pi
 
 ### Worktrees
 
-PnP keeps dependencies in a shared `.yarn/` cache and resolves modules through `.pnp.cjs`, so worktrees do not need their own `node_modules/`:
+The pnpm linker builds a per-checkout `node_modules/` from the shared global store, so each worktree needs its own install (sub-second once the store is warm):
 
 ```sh
 git worktree add ../some-branch some-branch
 cd ../some-branch
-yarn install   # near-instant under PnP
+yarn install
 ```
 
 ## Available Scripts
