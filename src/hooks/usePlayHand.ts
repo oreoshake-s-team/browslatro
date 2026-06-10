@@ -35,6 +35,7 @@ import {
   applyScoredCardMutations,
   applyScoredMutationsToCards,
   applyEnhancementsEatenToJokerStates,
+  chipsPerScoredCardFromJokers,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -422,6 +423,18 @@ export function usePlayHand({
       setJokers((prev) =>
         applyEnhancementsEatenToJokerStates(prev, mutations.enhancementsEaten),
       );
+    }
+    const chipsPerScored = chipsPerScoredCardFromJokers(jokers);
+    if (chipsPerScored > 0) {
+      const scoredIds = new Set(scoring.map((c) => c.id));
+      const addBonus = (cards: ReadonlyArray<Card>): Card[] =>
+        cards.map((c) =>
+          scoredIds.has(c.id)
+            ? { ...c, bonusChips: (c.bonusChips ?? 0) + chipsPerScored }
+            : c,
+        );
+      useGame.getState().setBaseDeckCards(addBonus);
+      useGame.getState().setAddedCards(addBonus);
     }
     setJokers((prev) =>
       applyHandPlayedToJokerStates(prev, {

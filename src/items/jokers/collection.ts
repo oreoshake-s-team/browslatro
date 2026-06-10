@@ -36,6 +36,26 @@ export function heldRetriggerCountFromJokers(
   return total;
 }
 
+export function chipsPerScoredCardFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let total = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "scored-cards-gain-chips") total += j.effect.amount;
+  }
+  return total;
+}
+
+export function stoneCardsOnBlindSelectFromJokers(
+  allJokers: ReadonlyArray<Joker>,
+): number {
+  let count = 0;
+  for (const j of allJokers.filter(isJokerActive)) {
+    if (j.effect.kind === "blind-select-adds-stone-card") count += 1;
+  }
+  return count;
+}
+
 export function interestMultiplierFromJokers(
   jokers: ReadonlyArray<Joker>,
 ): number {

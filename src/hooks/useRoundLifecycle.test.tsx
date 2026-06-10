@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useGame } from "../store/game";
+import { createMarbleJoker } from "../items/jokers";
 import { STARTING_MONEY } from "../store/economy";
 import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
 import { createGreedyJoker } from "../items/jokers";
@@ -252,5 +253,37 @@ describe("useRoundLifecycle.startNewGame preserves the run selection (#851)", ()
     useGame.getState().setSelectedStake("red");
     runStartNewGame();
     expect(useGame.getState().selectedStake).toBe("red");
+  });
+});
+
+describe("startNewRound — Marble Joker stone card (#980)", () => {
+  test("a new round adds a stone card to addedCards", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([createMarbleJoker()]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(
+      useGame.getState().addedCards.filter((c) => c.enhancement === "stone"),
+    ).toHaveLength(1);
+  });
+
+  test("a new round without Marble Joker adds nothing (negative)", () => {
+    useGame.getState().resetGame();
+    useGame.getState().setJokers([]);
+    const { result } = renderHook(() =>
+      useRoundLifecycle({
+        applyGainedTag: vi.fn(),
+        resetScoring: vi.fn(),
+        resetDiscardPipeline: vi.fn(),
+      }),
+    );
+    act(() => result.current.startNewRound());
+    expect(useGame.getState().addedCards).toHaveLength(0);
   });
 });

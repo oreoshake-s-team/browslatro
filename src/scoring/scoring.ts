@@ -45,7 +45,7 @@ export function getRankChips(rank: Rank): number {
 export function getCardChips(card: Card): number {
   const evalRank = cardRankForEvaluation(card);
   const rankChips = evalRank === null ? 0 : RANK_CHIPS[evalRank];
-  return rankChips + applyCardEnhancement(card).chipsDelta;
+  return rankChips + applyCardEnhancement(card).chipsDelta + (card.bonusChips ?? 0);
 }
 
 export function getCardMultDelta(card: Card): number {

@@ -267,6 +267,8 @@ export type JokerEffect =
       readonly kind: "x-mult-per-enhancement-eaten";
       readonly amount: number;
     }
+  | { readonly kind: "scored-cards-gain-chips"; readonly amount: number }
+  | { readonly kind: "blind-select-adds-stone-card" }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

@@ -100,6 +100,7 @@ import {
   SELTZER_RETRIGGERS,
   MIME_HELD_RETRIGGERS,
   VAMPIRE_X_MULT_PER_ENHANCED,
+  HIKER_CHIPS_PER_SCORED,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1599,6 +1600,29 @@ export function createVampireJoker(): Joker {
       amount: VAMPIRE_X_MULT_PER_ENHANCED,
     },
     state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createHikerJoker(): Joker {
+  return {
+    id: "hiker",
+    rarity: "uncommon",
+    name: "Hiker",
+    description: `Every played card permanently gains +${HIKER_CHIPS_PER_SCORED} Chips when scored`,
+    effect: {
+      kind: "scored-cards-gain-chips",
+      amount: HIKER_CHIPS_PER_SCORED,
+    },
+  };
+}
+
+export function createMarbleJoker(): Joker {
+  return {
+    id: "marble-joker",
+    rarity: "uncommon",
+    name: "Marble Joker",
+    description: "Adds one Stone card to the deck when Blind is selected",
+    effect: { kind: "blind-select-adds-stone-card" },
   };
 }
 
