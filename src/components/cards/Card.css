@@ -36,21 +36,35 @@
 }
 
 .card-newly-drawn {
-  animation: card-newly-drawn-fade calc(1600ms * var(--animation-speed, 1))
-    ease-out forwards;
+  animation:
+    card-newly-drawn-enter calc(500ms * var(--animation-speed, 1)) ease-out
+      backwards,
+    card-newly-drawn-fade calc(2400ms * var(--animation-speed, 1)) ease-out
+      forwards;
+}
+
+@keyframes card-newly-drawn-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(1.2rem) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @keyframes card-newly-drawn-fade {
   0% {
     box-shadow:
-      0 0 0 2px var(--focus-ring),
-      0 0 14px var(--focus-ring),
+      0 0 0 3px var(--focus-ring),
+      0 0 18px var(--focus-ring),
       0 2px 4px rgba(0, 0, 0, 0.15);
   }
-  70% {
+  75% {
     box-shadow:
-      0 0 0 2px var(--focus-ring),
-      0 0 10px var(--focus-ring),
+      0 0 0 3px var(--focus-ring),
+      0 0 14px var(--focus-ring),
       0 2px 4px rgba(0, 0, 0, 0.15);
   }
   100% {
