@@ -6,8 +6,8 @@
 }
 
 .shop-inner {
-  background-color: #f8f9fa;
-  border: 2px solid #dee2e6;
+  background-color: var(--surface);
+  border: 2px solid var(--border);
   border-radius: 12px;
   padding: 1.4rem 1.8rem;
   width: 100%;
@@ -20,14 +20,14 @@
 .shop-title {
   margin: 0;
   font-size: 1.6rem;
-  color: #495057;
+  color: var(--text-primary);
   text-align: center;
 }
 
 .shop-money {
   margin: 0;
   font-size: 1rem;
-  color: #495057;
+  color: var(--text-secondary);
   text-align: center;
   font-weight: 600;
 }

@@ -7,16 +7,16 @@
   align-items: stretch;
   gap: 0.6rem;
   padding: 1rem 1.4rem;
-  border: 2px solid #f59f00;
+  border: 2px solid rgba(245, 159, 0, 0.55);
   border-radius: 8px;
-  background-color: #fff9db;
+  background-color: #221d12;
   box-sizing: border-box;
 }
 
 .jokers-label {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #5c3c00;
+  color: var(--accent-money);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -122,10 +122,10 @@
 }
 
 .joker-tile-empty {
-  background-color: #fff3bf;
+  background-color: rgba(255, 255, 255, 0.04);
   border-style: dashed;
-  border-color: #f1c40f;
-  color: #495057;
+  border-color: rgba(245, 159, 0, 0.35);
+  color: var(--text-muted);
   font-style: italic;
   font-size: 0.85rem;
 }
@@ -171,8 +171,8 @@
 }
 
 .jokers-consumable-target.jokers-consumable-hover {
-  outline-color: #2f9e44;
-  background-color: #ebfbee;
+  outline-color: var(--accent-success);
+  background-color: rgba(47, 158, 68, 0.15);
 }
 
 .consumable-drop-overlay {

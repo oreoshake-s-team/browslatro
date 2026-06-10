@@ -57,8 +57,8 @@ describe("Sidebar layout — issue #136", () => {
 describe("Stat boxes — issue #136 visual treatment", () => {
   test(".stat renders as a visually distinct box (background, border, radius)", () => {
     const body = topLevelRuleBody(indexCss, ".stat");
-    expect(body).toMatch(/background-color\s*:\s*#ffffff/);
-    expect(body).toMatch(/border\s*:\s*1px\s+solid\s+#dee2e6/);
+    expect(body).toMatch(/background-color\s*:\s*var\(--surface-raised\)/);
+    expect(body).toMatch(/border\s*:\s*1px\s+solid\s+var\(--border\)/);
     expect(body).toMatch(/border-radius\s*:\s*6px/);
   });
 });

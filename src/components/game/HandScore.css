@@ -22,9 +22,9 @@
   font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
-  color: #495057;
-  background-color: #e9ecef;
-  border: 1px solid #ced4da;
+  color: var(--text-secondary);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
   padding: 0.1rem 0.55rem;
   line-height: 1.2;
@@ -45,7 +45,7 @@
 }
 
 .chips {
-  background-color: #1971c2;
+  background-color: var(--accent-chips-strong);
   color: white;
   font-weight: 700;
   font-size: 2.4rem;
@@ -56,7 +56,7 @@
 }
 
 .multiplier {
-  background-color: #e03131;
+  background-color: var(--accent-mult-strong);
   color: white;
   font-weight: 700;
   font-size: 2.4rem;
@@ -87,7 +87,7 @@
 .multiplier.hand-score-leveling {
   animation: hand-score-level-up calc(0.7s * var(--animation-speed, 1))
     ease-out;
-  outline: 2px solid #ffd43b;
+  outline: 2px solid var(--accent-money);
   outline-offset: 2px;
 }
 
@@ -95,7 +95,7 @@
   .chips.hand-score-leveling,
   .multiplier.hand-score-leveling {
     animation: none;
-    outline: 2px solid #ffd43b;
+    outline: 2px solid var(--accent-money);
     outline-offset: 2px;
   }
 }
