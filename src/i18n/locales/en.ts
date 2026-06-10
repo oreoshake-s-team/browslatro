@@ -1,4 +1,8 @@
 export const en = {
+  app: {
+    titleMenu: "Browlatro — Main menu",
+    titleRun: "Browlatro — Run in progress",
+  },
   sidebar: {
     runInfo: "Run info",
     options: "Options",
