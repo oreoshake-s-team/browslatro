@@ -28,6 +28,27 @@ async function heightOf(page: Page, selector: string): Promise<number> {
   return box.height;
 }
 
+test("Remaining Cards summary rows are readable on the dark theme (#887)", async ({
+  page,
+}) => {
+  await openDeckModal(page);
+  const oddRowBg = await page
+    .locator(".deck-summary-row:nth-child(odd)")
+    .first()
+    .evaluate((el) => getComputedStyle(el).backgroundColor);
+  const countColor = await page
+    .locator(".deck-summary-count")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  const headingColor = await page
+    .locator(".deck-summary-heading")
+    .first()
+    .evaluate((el) => getComputedStyle(el).color);
+  expect(oddRowBg).toBe("rgb(35, 43, 63)");
+  expect(countColor).toBe("rgb(248, 249, 250)");
+  expect(headingColor).toBe("rgb(173, 181, 189)");
+});
+
 test("Remaining Cards summary column matches the card grid height (#437)", async ({
   page,
 }) => {
