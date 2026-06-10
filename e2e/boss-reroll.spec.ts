@@ -73,46 +73,22 @@ test.describe("Director's Cut boss reroll (#280)", () => {
     await setDeterministic(page);
   });
 
-  test("renders the Reroll Boss button on the Boss row when owned", async ({
+  test("Reroll Boss on the Boss row: renders when owned, deducts $10, replaces the boss, then disappears (1/ante limit)", async ({
     page,
   }) => {
     await buyDirectorsCutAndAdvanceToBossBlindSelect(page);
-    await expect(
-      page.getByTestId("blind-select-boss-reroll"),
-    ).toBeVisible();
-  });
-
-  test("clicking Reroll Boss deducts $10 from the player's money", async ({
-    page,
-  }) => {
-    await buyDirectorsCutAndAdvanceToBossBlindSelect(page);
-    const before = await moneyOf(page);
-    await page.getByTestId("blind-select-boss-reroll").click();
-    expect(await moneyOf(page)).toBe(before - 10);
-  });
-
-  test("clicking Reroll Boss replaces the boss displayed on the row", async ({
-    page,
-  }) => {
-    await buyDirectorsCutAndAdvanceToBossBlindSelect(page);
-    const before = await page
+    await expect(page.getByTestId("blind-select-boss-reroll")).toBeVisible();
+    const moneyBefore = await moneyOf(page);
+    const bossBefore = await page
       .getByTestId("blind-select-boss-description")
       .textContent();
     await page.getByTestId("blind-select-boss-reroll").click();
-    const after = await page
+    expect(await moneyOf(page)).toBe(moneyBefore - 10);
+    const bossAfter = await page
       .getByTestId("blind-select-boss-description")
       .textContent();
-    expect(after).not.toBe(before);
-  });
-
-  test("after one reroll the button no longer renders (directors-cut limits to 1/ante)", async ({
-    page,
-  }) => {
-    await buyDirectorsCutAndAdvanceToBossBlindSelect(page);
-    await page.getByTestId("blind-select-boss-reroll").click();
-    await expect(
-      page.getByTestId("blind-select-boss-reroll"),
-    ).toHaveCount(0);
+    expect(bossAfter).not.toBe(bossBefore);
+    await expect(page.getByTestId("blind-select-boss-reroll")).toHaveCount(0);
   });
 
   test("the Reroll Boss button is not rendered when no reroll voucher is owned (negative)", async ({
@@ -122,9 +98,7 @@ test.describe("Director's Cut boss reroll (#280)", () => {
     await page.getByRole("button", { name: /Next Round/ }).click();
     await page.getByTestId("blind-select-skip").click();
     await page.getByTestId("blind-select-skip").click();
-    await expect(
-      page.getByTestId("blind-select-boss-reroll"),
-    ).toHaveCount(0);
+    await expect(page.getByTestId("blind-select-boss-reroll")).toHaveCount(0);
   });
 
   test("the player can preview-reroll the Boss from the Small Blind row (any-blind)", async ({
