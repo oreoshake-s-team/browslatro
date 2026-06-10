@@ -237,6 +237,13 @@ export type JokerEffect =
     }
   | { readonly kind: "x-mult-per-lucky-trigger"; readonly amount: number }
   | { readonly kind: "sell-value-grows-per-round"; readonly amount: number }
+  | { readonly kind: "stack-mult-per-tarot-used"; readonly amount: number }
+  | { readonly kind: "x-mult-per-planet-used"; readonly amount: number }
+  | { readonly kind: "x-mult-per-sold-card"; readonly amount: number }
+  | {
+      readonly kind: "x-mult-per-hand-without-most-played";
+      readonly amount: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

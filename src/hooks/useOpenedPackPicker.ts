@@ -26,6 +26,7 @@ import {
   createRandomJoker,
   effectiveJokerCount,
   withEdition,
+  applyConsumableUsedToJokerStates,
 } from "../items/jokers";
 import { spectralNeedsTarget } from "../items/spectrals";
 import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
@@ -79,9 +80,13 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
     if (!openedPack || packPicksRemaining <= 0) return;
     const option = openedPack.options[optionIdx];
     if (!option) return;
+    function markUsed(kind: "tarot" | "planet"): void {
+      setJokers((prev) => applyConsumableUsedToJokerStates(prev, kind));
+    }
     if (option.kind === "planet") {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
+      markUsed("planet");
     } else if (option.kind === "tarot") {
       const effect = option.tarot.effect;
       if (effect.kind === "apply-enhancement") {
@@ -99,18 +104,22 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
             return;
           }
           play("pop");
+          markUsed("tarot");
           applyEnhancementToSelectedPreviewCards(effect.enhancement);
         }
       } else if (effect.kind === "money-multiply") {
         play("pop");
+        markUsed("tarot");
         useGame
           .getState()
           .earn(resolveHermitPayout(useGame.getState().money, effect.bonusCap));
       } else if (effect.kind === "joker-sell-value-payout") {
         play("pop");
+        markUsed("tarot");
         useGame.getState().earn(resolveTemperancePayout(jokers, effect.cap));
       } else if (effect.kind === "edition-roll") {
         play("pop");
+        markUsed("tarot");
         const result = rollWheelOfFortune(jokers, effect.chance);
         if (result.hit && result.targetIdx >= 0) {
           setJokers((prev) =>
@@ -124,6 +133,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         const created = createRandomJoker(jokers, createJokerCatalog(), capacity);
         if (!created) return;
         play("pop");
+        markUsed("tarot");
         setJokers((prev) => [...prev, created]);
       } else if (effect.kind === "destroy-selected") {
         if (packPreviewHand.length === 0) {
@@ -140,6 +150,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
             return;
           }
           play("pop");
+          markUsed("tarot");
           destroySelectedPreviewCards();
         }
       } else if (effect.kind === "rank-up-selected") {
@@ -157,6 +168,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
             return;
           }
           play("pop");
+          markUsed("tarot");
           rankUpSelectedPreviewCards();
         }
       } else if (effect.kind === "death-copy") {
@@ -169,6 +181,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         } else {
           if (packPreviewSelectedIds.size !== effect.requiredTargets) return;
           play("pop");
+          markUsed("tarot");
           applyDeathCopyToSelectedPreviewCards();
         }
       } else if (effect.kind === "convert-suit") {
@@ -186,6 +199,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
             return;
           }
           play("pop");
+          markUsed("tarot");
           applySuitToSelectedPreviewCards(effect.suit);
         }
       } else if (effect.kind === "copy-last-consumable") {
@@ -193,11 +207,13 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         if (lastUsedConsumable.kind === "tarot" && lastUsedConsumable.card.id === "the-fool") return;
         if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
         play("pop");
+        markUsed("tarot");
         setConsumables((prev) =>
           addConsumable(prev, lastUsedConsumable, consumableCapacity),
         );
       } else if (effect.kind === "create-consumables") {
         if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
+        markUsed("tarot");
         const rng = tarotRngConfig.rng;
         const tarotPool: ReadonlyArray<TarotCard> =
           effect.consumableKind === "tarot"

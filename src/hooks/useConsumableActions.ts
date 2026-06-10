@@ -22,6 +22,7 @@ import {
   createRandomJoker,
   MAX_JOKERS,
   withEdition,
+  applyConsumableUsedToJokerStates,
 } from "../items/jokers";
 import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
 import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
@@ -85,6 +86,9 @@ export function useConsumableActions(): UseConsumableActionsResult {
     function consume(): void {
       const idx = consumableIdx;
       setConsumables((prev) => removeConsumableAt(prev, idx));
+      useGame
+        .getState()
+        .setJokers((prev) => applyConsumableUsedToJokerStates(prev, entry.kind));
       if (entry.kind === "planet") {
         setLastUsedConsumable(entry);
         return;

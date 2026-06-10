@@ -135,7 +135,14 @@ describe("jokerCurrentValue (#884)", () => {
   });
 
   test("Ramen reports its shrunken X Mult after discards", () => {
-    const [ramen] = applyDiscardToJokerStates([createRamenJoker()], 3);
+    const [ramen] = applyDiscardToJokerStates(
+      [createRamenJoker()],
+      [
+        { id: 1, rank: "7", suit: "clubs" },
+        { id: 2, rank: "7", suit: "clubs" },
+        { id: 3, rank: "7", suit: "clubs" },
+      ],
+    );
     expect(jokerCurrentValue(ramen, CTX)).toEqual({
       kind: "x-mult",
       value: 1.97,

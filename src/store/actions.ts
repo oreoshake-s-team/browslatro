@@ -26,6 +26,7 @@ import {
   applyShopRerollToJokerStates,
   applyRoundEndToJokerStates,
   applyPackSkipToJokerStates,
+  applySellToJokerStates,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -265,6 +266,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!entry) return;
     s.earn(consumableSellValue(entry));
     s.setConsumables((prev) => removeConsumableAt(prev, consumableIdx));
+    s.setJokers((prev) => applySellToJokerStates(prev));
   },
   sellJoker: (jokerIdx) => {
     const s = get();
@@ -272,7 +274,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (!entry) return;
     if (!canSellJoker(entry)) return;
     s.earn(jokerSellValue(entry));
-    s.setJokers((prev) => prev.filter((_, i) => i !== jokerIdx));
+    s.setJokers((prev) =>
+      applySellToJokerStates(prev.filter((_, i) => i !== jokerIdx)),
+    );
   },
   reorderJokers: (orderedIds) => {
     get().setJokers((prev) => {
@@ -527,7 +531,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   handleWin: (precomputed) => {
     const s = get();
     s.setJokers((prev) =>
-      applyRoundEndToJokerStates(tickPerishableRounds(prev)),
+      applyRoundEndToJokerStates(
+        tickPerishableRounds(prev),
+        Math.random,
+        s.blind === 3,
+      ),
     );
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
