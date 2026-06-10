@@ -130,7 +130,7 @@
   grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 0.4rem 0.8rem;
-  transition: opacity 120ms linear;
+  transition: opacity calc(120ms * var(--animation-speed, 1)) linear;
 }
 
 .shop-voucher-sold {
@@ -204,7 +204,7 @@
   border-left-width: 6px;
   border-radius: 8px;
   background-color: white;
-  transition: opacity 120ms linear;
+  transition: opacity calc(120ms * var(--animation-speed, 1)) linear;
 }
 
 .shop-offer-joker {

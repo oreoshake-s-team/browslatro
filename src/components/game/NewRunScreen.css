@@ -119,7 +119,7 @@
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 120ms ease;
+  transition: border-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .new-run-deck-tile:hover {
@@ -198,7 +198,8 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 60ms ease, border-color 120ms ease;
+  transition: transform calc(60ms * var(--animation-speed, 1)) ease,
+    border-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .new-run-stake-tile:hover {

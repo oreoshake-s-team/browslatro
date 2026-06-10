@@ -96,7 +96,8 @@
 .deck-pile-drop-target {
   outline: 2px dashed transparent;
   outline-offset: 4px;
-  transition: outline-color 120ms ease, background-color 120ms ease;
+  transition: outline-color calc(120ms * var(--animation-speed, 1)) ease,
+    background-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
 .deck-pile-drop-target.deck-pile-drop-hover {
