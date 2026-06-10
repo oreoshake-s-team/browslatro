@@ -528,6 +528,7 @@ export function usePlayHand({
           handLabelsThisRound: handHistoryThisRound,
           blindsSkipped: runStats.blindsSkipped,
           addedCardsCount: addedCards.length,
+          todoHand: useGame.getState().todoHand,
         },
       );
       const noCardsMatchingObservatoryPlanets = consumables.filter(
@@ -577,6 +578,7 @@ export function usePlayHand({
       handLabelsThisRound: handHistoryThisRound,
       blindsSkipped: runStats.blindsSkipped,
       addedCardsCount: addedCards.length,
+      todoHand: useGame.getState().todoHand,
     });
 
     let perCardAdditiveMult = 0;

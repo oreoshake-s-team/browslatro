@@ -29,6 +29,8 @@ import {
 import { fullDeckPile, initialDeal } from "../cards/deckBuild";
 import { SEAL_KINDS, pickRandomTarot } from "../cards/seals";
 import type { Card } from "../cards/types";
+import { emptyHandCounts } from "../components/hud/handPlayCounts";
+import type { HandLabel } from "../scoring/handEvaluator";
 import {
   MAX_CONSUMABLE_SLOTS,
   addConsumable,
@@ -44,6 +46,7 @@ import {
   sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
   type Joker,
+  applyMadnessOnBlindSelect,
 } from "../items/jokers";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
@@ -106,6 +109,7 @@ export function useRoundLifecycle({
   const setAncientSuit = useGame((s) => s.setAncientSuit);
   const setCastleSuit = useGame((s) => s.setCastleSuit);
   const setRebateRank = useGame((s) => s.setRebateRank);
+  const setTodoHand = useGame((s) => s.setTodoHand);
   const setRecentBossIds = useGame((s) => s.setRecentBossIds);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
@@ -237,6 +241,17 @@ export function useRoundLifecycle({
         ? SUITS[Math.floor(Math.random() * SUITS.length)]
         : null,
     );
+    if (
+      equippedJokers.some((j) => j.effect.kind === "money-on-todo-hand")
+    ) {
+      const labels = Object.keys(emptyHandCounts()) as HandLabel[];
+      setTodoHand(labels[Math.floor(Math.random() * labels.length)]);
+    } else {
+      setTodoHand(null);
+    }
+    if (effectiveBlind !== 3) {
+      setJokers((prev) => applyMadnessOnBlindSelect(prev));
+    }
     setRebateRank(
       equippedJokers.some(
         (j) => j.effect.kind === "money-per-discarded-rebate-rank",

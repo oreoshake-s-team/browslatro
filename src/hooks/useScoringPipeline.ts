@@ -17,6 +17,7 @@ import {
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
+  applyGlassShatterToJokerStates,
 } from "../items/jokers";
 import { CARD_EDITION_INFO, applyCardEdition } from "../cards/editions";
 import { GOLD_HELD_BONUS_PER_CARD } from "../scoring/payout";
@@ -178,6 +179,9 @@ export function useScoringPipeline({
           cardLabel: stepCardLabel,
           source: "Glass roll",
         });
+        useGame
+          .getState()
+          .setJokers((prev) => applyGlassShatterToJokerStates(prev, 1));
       }
       const luckyResult = useGame.getState().luckyRollsByScoringIndex[stepIdx] ?? {
         multBonus: 0,

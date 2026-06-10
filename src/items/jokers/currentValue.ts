@@ -119,6 +119,8 @@ export function jokerCurrentValue(
     case "x-mult-per-planet-used":
     case "x-mult-per-sold-card":
     case "x-mult-per-enhancement-eaten":
+    case "x-mult-per-glass-shattered":
+    case "blind-select-x-mult-destroys-joker":
     case "x-mult-per-hand-without-most-played":
       return {
         kind: "x-mult",

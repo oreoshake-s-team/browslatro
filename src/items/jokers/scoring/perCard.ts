@@ -293,6 +293,9 @@ export function applyPerCardJokers(
       case "money-per-discarded-rebate-rank":
       case "first-discard-upgrades-hand":
       case "end-of-round-money-per-unique-planet":
+      case "x-mult-per-glass-shattered":
+      case "money-on-todo-hand":
+      case "blind-select-x-mult-destroys-joker":
       case "noop":
         break;
       default:

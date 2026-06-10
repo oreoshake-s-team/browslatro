@@ -222,6 +222,48 @@ export function applySellToJokerStates(jokers: ReadonlyArray<Joker>): Joker[] {
   });
 }
 
+export function applyGlassShatterToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  shatteredCount: number,
+): Joker[] {
+  if (shatteredCount <= 0) return [...jokers];
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-glass-shattered") return joker;
+    return {
+      ...joker,
+      state: counterState(prevCount(joker) + shatteredCount),
+    };
+  });
+}
+
+export function applyMadnessOnBlindSelect(
+  jokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  const madnessIndices = jokers.flatMap((j, i) =>
+    j.effect.kind === "blind-select-x-mult-destroys-joker" ? [i] : [],
+  );
+  if (madnessIndices.length === 0) return [...jokers];
+  let next = jokers.map((joker) =>
+    joker.effect.kind === "blind-select-x-mult-destroys-joker"
+      ? { ...joker, state: counterState(prevCount(joker) + 1) }
+      : joker,
+  );
+  for (const _ of madnessIndices) {
+    const victims = next.flatMap((j, i) =>
+      j.effect.kind !== "blind-select-x-mult-destroys-joker" &&
+      isDestructible(j)
+        ? [i]
+        : [],
+    );
+    if (victims.length === 0) break;
+    const victim = victims[Math.floor(rng() * victims.length)];
+    next = next.filter((_, i) => i !== victim);
+  }
+  return next;
+}
+
 export function applyRoundEndToJokerStates(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
