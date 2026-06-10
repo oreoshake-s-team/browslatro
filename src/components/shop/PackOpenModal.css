@@ -33,12 +33,14 @@
   list-style: none;
   margin: 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
   gap: 0.8rem;
 }
 
 .pack-open-option {
+  flex: 0 1 13rem;
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: 0.4rem;
