@@ -42,7 +42,7 @@ git worktree add ~/.cache/browslatro-worktrees/<branch> -b <branch> main
 
 ```bash
 yarn typecheck
-yarn test --run
+yarn test
 ```
 
 Fix all type errors and test failures before proceeding. Add new tests covering:
@@ -68,20 +68,16 @@ Then prefer `mcp__github__create_pull_request` to open the PR.
 
 After the PR is created, fetch the Vercel preview URL for the branch and add it to the PR body.
 
-Use the Vercel MCP tool `mcp__plugin_vercel_vercel__list_deployments` to find the deployment for this branch. Poll until the deployment state is `READY` (retry up to ~10 times with a short delay). Then edit the PR body to append:
+If the Vercel MCP tool `mcp__plugin_vercel_vercel__list_deployments` is available, use it to find the deployment for this branch. Poll until the deployment state is `READY` (retry up to ~10 times with a short delay). Then edit the PR body to append:
 
 ```
 ## Preview
 [Vercel Preview](<url>)
 ```
 
-Use `mcp__github__update_pull_request` to update the PR body, or fall back to:
+Use `mcp__github__update_pull_request` to update the PR body.
 
-```bash
-gh pr edit <PR_NUMBER> --body "<updated body with preview URL appended>"
-```
-
-If Vercel is not connected to this repo or the deployment is not found after polling, skip silently — do not block on this step.
+If the Vercel MCP tool is not loaded, Vercel is not connected to this repo, or the deployment is not found after polling, skip silently — do not block on this step.
 
 ### 8. Rebase loop
 
@@ -93,15 +89,19 @@ git push --force-with-lease
 
 Repeat until `git status` shows 0 commits behind `origin/main`.
 
-### 8. Wait for CI
+### 9. Wait for CI
+
+Poll CI with the GitHub MCP — `gh` is not installed in web sessions. Use `mcp__github__pull_request_read` (or `mcp__github__actions_list` / `mcp__github__actions_get` for the branch's workflow runs) to read check status. Re-poll with a short delay until every check has concluded.
+
+Fall back only if the MCP is unavailable:
 
 ```bash
 gh run watch
 ```
 
-If any check fails: diagnose, fix, push a new commit, and re-watch. Do not stop until all checks are green.
+If any check fails: diagnose, fix, push a new commit, and re-poll. Do not stop until all checks are green.
 
-### 9. Report
+### 10. Report
 
 One sentence: PR number, link, and CI status. Nothing else.
 
