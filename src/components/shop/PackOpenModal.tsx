@@ -7,6 +7,10 @@ import {
   localizedConsumableName,
 } from "../../i18n/contentOverrides";
 import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
+import {
   type PackOffer,
   type PackOption,
   packDisplayName,
@@ -132,8 +136,12 @@ function describeOption(
     return {
       id: option.joker.id,
       icon: "🎭",
-      name: option.joker.name,
-      description: option.joker.description,
+      name: localizedJokerName(locale, option.joker.id, option.joker.name),
+      description: localizedJokerDescription(
+        locale,
+        option.joker.id,
+        option.joker.description,
+      ),
       needsConsumableSlot: false,
       needsJokerSlot: true,
       joker: option.joker,

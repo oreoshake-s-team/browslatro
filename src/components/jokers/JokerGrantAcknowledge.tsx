@@ -1,6 +1,10 @@
 import "./JokerGrantAcknowledge.css";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
+import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
 import { createPortal } from "react-dom";
 import type { Joker } from "../../items/jokers";
 import { useFocusTrap } from "../system/useFocusTrap";
@@ -14,7 +18,7 @@ export default function JokerGrantAcknowledge({
   jokers,
   onAcknowledge,
 }: JokerGrantAcknowledgeProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
   useFocusTrap(overlayRef, jokers.length > 0);
   if (jokers.length === 0) return null;
@@ -42,9 +46,15 @@ export default function JokerGrantAcknowledge({
               className="joker-grant-list-item"
               data-testid={`joker-grant-item-${idx}`}
             >
-              <span className="joker-grant-name">{joker.name}</span>
+              <span className="joker-grant-name">
+                {localizedJokerName(i18n.language, joker.id, joker.name)}
+              </span>
               <span className="joker-grant-description">
-                {joker.description}
+                {localizedJokerDescription(
+                  i18n.language,
+                  joker.id,
+                  joker.description,
+                )}
               </span>
             </li>
           ))}

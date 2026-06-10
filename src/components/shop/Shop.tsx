@@ -6,6 +6,10 @@ import {
   localizedConsumableDescription,
   localizedConsumableName,
 } from "../../i18n/contentOverrides";
+import {
+  localizedJokerDescription,
+  localizedJokerName,
+} from "../../i18n/jokerOverrides";
 import type {
   CardEdition,
   Enhancement,
@@ -227,7 +231,15 @@ function offerSubject(
 } {
   switch (offer.kind) {
     case "joker":
-      return offer.joker;
+      return {
+        id: offer.joker.id,
+        name: localizedJokerName(locale, offer.joker.id, offer.joker.name),
+        description: localizedJokerDescription(
+          locale,
+          offer.joker.id,
+          offer.joker.description,
+        ),
+      };
     case "planet":
       return localizedSubject(locale, offer.planet);
     case "tarot":
