@@ -18,9 +18,9 @@ This folder is a guided tour for a new developer. Read in roughly this order:
 | [`jokers-and-content.md`](./jokers-and-content.md) | The full joker engine (effects, state, copying, retriggers) and how to add content |
 | [`patterns.md`](./patterns.md) | Recurring conventions: slices, RNG, persistence, i18n, a11y, design tokens, Storybook, testing |
 
-Alongside these, **read `claude.md` at the repo root** — it's the authoritative list of
+Alongside these, **read `CLAUDE.md` at the repo root** — it's the authoritative list of
 project rules (strict TS, no comments, test requirements, workflow). Where any prose
-disagrees, `claude.md` and the config files (`.yarnrc.yml`, `package.json`) win.
+disagrees, `CLAUDE.md` and the config files (`.yarnrc.yml`, `package.json`) win.
 
 ---
 
@@ -91,7 +91,7 @@ Most interesting work lands in one of three places:
   (`src/dev/rngConfig.ts`), and `rollChance` honors a global force-100% override for
   testing probabilistic effects.
 
-- **Authentic mechanics.** Per `claude.md`, effects must match real Balatro — no invented
+- **Authentic mechanics.** Per `CLAUDE.md`, effects must match real Balatro — no invented
   numbers. When in doubt, check the Balatro wiki.
 
 ---
@@ -101,7 +101,7 @@ Most interesting work lands in one of three places:
 ```
 browslatro/
 ├── index.html, vite.config.ts          Vite entry + build config
-├── claude.md                            Project rules & conventions (READ THIS)
+├── CLAUDE.md                            Project rules & conventions (READ THIS)
 ├── e2e/                                 Playwright end-to-end specs (~36)
 ├── src/
 │   ├── index.tsx                        Boot: tokens/buttons CSS → i18n → restore save → render
@@ -155,13 +155,13 @@ yarn build               # tsc + production bundle
 ```
 
 Before opening a PR, the baseline is `yarn typecheck && yarn test` green, plus tests for
-whatever you changed. See `claude.md` for the full ruleset (squash-merge, ≤150 lines of
+whatever you changed. See `CLAUDE.md` for the full ruleset (squash-merge, ≤150 lines of
 app code per change, strict TS / no `any`, no code comments, work in worktrees, semantic
 commits).
 
 ### Visually verifying your work
 
-`claude.md` asks you to visually verify changes in a browser whenever possible, and the
+`CLAUDE.md` asks you to visually verify changes in a browser whenever possible, and the
 app ships tooling for it (`yarn start`, then):
 
 - **The "Apply modifiers" panel** — a disclosure under the game board
@@ -206,7 +206,7 @@ seams section in [`patterns.md`](./patterns.md).
   add a key to `src/i18n/locales/en.ts` (and `haw.ts`) and use `t(...)`. Translation keys
   are typed, so a missing key is a compile error. Aria-labels too.
 
-- **No comments.** `claude.md` forbids comments in code and CSS. Put explanation in names,
+- **No comments.** `CLAUDE.md` forbids comments in code and CSS. Put explanation in names,
   commit messages, tests, or these docs.
 
 - **Randomness is injected.** Don't call `Math.random()` directly in logic you want to

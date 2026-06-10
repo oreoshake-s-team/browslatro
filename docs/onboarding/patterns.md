@@ -95,7 +95,7 @@ spec (`e2e/save-restore.spec.ts`) covering the round-trip.
 - `src/styles/buttons.css` provides shared `.btn` / `.btn--primary` / `--secondary` /
   `--danger` classes; use them instead of restyling buttons per component.
 - Component CSS is co-located (`Foo.tsx` + `Foo.css`) and scoped by a component-specific
-  class prefix (`claude.md`: compartmentalize, no comments in CSS).
+  class prefix (`CLAUDE.md`: compartmentalize, no comments in CSS).
 - **Layout tests** (`*.layout.test.ts` in `src/styles/` and next to components) are unit
   tests that parse CSS and assert conventions — token usage, focus-visible rules, motion
   rules. If you add CSS that breaks one, the test names the convention you missed.
@@ -104,7 +104,7 @@ spec (`e2e/save-restore.spec.ts`) covering the round-trip.
 
 ## Accessibility
 
-a11y is a `claude.md` hard requirement with dedicated machinery:
+a11y is a `CLAUDE.md` hard requirement with dedicated machinery:
 
 - **`LiveAnnouncer`** (`components/system/`) — shared `aria-live` region for dynamic
   announcements (hands/discards remaining, chips × mult, drag reorders).
@@ -148,7 +148,7 @@ When you add a component, add a story; when you add a visual state, add it to th
 
 ## Testing conventions
 
-From `claude.md` (authoritative) plus the suite's own structure:
+From `CLAUDE.md` (authoritative) plus the suite's own structure:
 
 - **Coverage is required.** CI shards the unit suite eight ways and publishes coverage +
   the Playwright report to GitHub Pages.

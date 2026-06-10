@@ -20,6 +20,7 @@ export interface Joker {
   readonly stickers?: ReadonlyArray<JokerSticker>; // eternal | perishable | rental
   readonly state?: JokerStateValue;     // mutable counter for scaling jokers
   readonly sellBonus?: number;          // added sell value (Gift Card, Egg-style growth)
+  readonly requiresEnhancementInDeck?: Enhancement; // shop-availability gate (Stone/Steel Joker)
 }
 ```
 
@@ -137,6 +138,13 @@ If a joker changes a *rule* rather than a *score*, it's a pure query in
   effects draw from); `createLegendaryJokerCatalog()` is the separate legendary pool
   (Yorick, Triboulet, Chicot, Canio, Perkeo, Invisible Joker). Factories return new
   objects each call so two copies never share state.
+- **Availability gating.** Some jokers shouldn't appear until the deck can support them.
+  A factory sets `requiresEnhancementInDeck` (Stone Joker → `"stone"`, Steel Joker →
+  `"steel"`), and `availableJokers(catalog, deckEnhancements)` filters them out until a
+  matching enhanced card exists. The shop/pack roll sites in the actions slice go through
+  `availableJokerCatalog(state)` (`src/store/jokerCatalog.ts`), which feeds the deck's
+  enhancements (`enhancementsInFullDeck`) into that filter — so a gated joker only enters
+  the pool once you own the right card.
 - **Names/descriptions are canonical English in the factory.** Locale-specific display
   goes through per-id override maps in `src/i18n/jokerOverrides.ts` — don't translate in
   the factory.
@@ -188,7 +196,7 @@ same way.
 
 ### Don't forget
 
-Per `claude.md`: authentic Balatro effects only, full test coverage, strict TS, no
+Per `CLAUDE.md`: authentic Balatro effects only, full test coverage, strict TS, no
 comments, ≤150 lines of app code per change — split bigger work into follow-up issues.
 
 ## Editions, stickers, and "active" jokers
