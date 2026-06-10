@@ -1,7 +1,6 @@
-import i18n from "i18next";
+import i18n, { type BackendModule, type ResourceLanguage } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { en } from "./locales/en";
-import { haw } from "./locales/haw";
 
 export const SUPPORTED_LOCALES = ["en", "haw"] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
@@ -29,17 +28,39 @@ export function persistLocale(locale: Locale): void {
   window.localStorage.setItem(STORAGE_KEY, locale);
 }
 
+const lazyLocaleLoaders: Record<
+  Exclude<Locale, "en">,
+  () => Promise<ResourceLanguage>
+> = {
+  haw: async () => (await import("./locales/haw")).haw,
+};
+
+const lazyLocaleBackend: BackendModule = {
+  type: "backend",
+  init: () => undefined,
+  read: (language, _namespace, callback) => {
+    if (!isLocale(language) || language === "en") {
+      callback(null, en);
+      return;
+    }
+    lazyLocaleLoaders[language]().then(
+      (resources) => callback(null, resources),
+      (error: unknown) => callback(error as Error, false),
+    );
+  },
+};
+
 i18n.on("languageChanged", (lng) => {
   if (typeof document !== "undefined") {
     document.documentElement.lang = lng;
   }
 });
 
-void i18n.use(initReactI18next).init({
+void i18n.use(lazyLocaleBackend).use(initReactI18next).init({
   resources: {
     en: { translation: en },
-    haw: { translation: haw },
   },
+  partialBundledLanguages: true,
   lng: detectLocale(),
   fallbackLng: "en",
   interpolation: { escapeValue: false },
