@@ -126,6 +126,31 @@ export function countEnhancementInFullDeck(
   return count;
 }
 
+export function enhancementsInFullDeck(
+  baseDeckCards: ReadonlyArray<Card> = [],
+  destroyedCardIds: ReadonlySet<number> = new Set(),
+  addedCards: ReadonlyArray<Card> = [],
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
+): ReadonlySet<Enhancement> {
+  const survivingBase = baseDeckCards.filter(
+    (c) => !destroyedCardIds.has(c.id),
+  );
+  const base = applyEnhancementOverrides(survivingBase, enhancementOverrides);
+  const extras = applyEnhancementOverrides(addedCards, enhancementOverrides);
+  const present = new Set<Enhancement>();
+  for (const c of base) {
+    if (c.enhancement !== undefined && c.enhancement !== null) {
+      present.add(c.enhancement);
+    }
+  }
+  for (const c of extras) {
+    if (c.enhancement !== undefined && c.enhancement !== null) {
+      present.add(c.enhancement);
+    }
+  }
+  return present;
+}
+
 export function fullDeckPile(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),

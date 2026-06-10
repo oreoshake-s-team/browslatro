@@ -18,7 +18,6 @@ import {
   type TarotCard,
 } from "../items/tarots";
 import {
-  createJokerCatalog,
   createRandomJoker,
   MAX_JOKERS,
   withEdition,
@@ -26,6 +25,7 @@ import {
 } from "../items/jokers";
 import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
 import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
+import { availableJokerCatalog } from "../store/jokerCatalog";
 import { nextCardId } from "../cards/deck";
 import type { Card } from "../cards/types";
 
@@ -226,7 +226,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
     if (effect.kind === "create-joker") {
       const ownedVoucherIds = useGame.getState().ownedVoucherIds;
       const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
-      const created = createRandomJoker(jokers, createJokerCatalog(), capacity);
+      const created = createRandomJoker(
+        jokers,
+        availableJokerCatalog(useGame.getState()),
+        capacity,
+      );
       if (!created) return;
       play("pop");
       setJokers((prev) => [...prev, created]);

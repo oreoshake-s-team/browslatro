@@ -14,7 +14,6 @@ import {
   canSellJoker,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
-  createJokerCatalog,
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   extraStartingHandSizeFromJokers,
@@ -105,6 +104,7 @@ import {
   pickBossForAnte,
 } from "../items/bosses";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
+import { availableJokerCatalog } from "./jokerCatalog";
 
 export interface ActionsState {
   sellConsumable: (consumableIdx: number) => void;
@@ -181,7 +181,7 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
     ? planetForHand(planetsForShop, mostPlayedHand(s.handPlayCounts))?.id
     : undefined;
   const baseOffers = pickShopOffers({
-    jokerCatalog: createJokerCatalog(),
+    jokerCatalog: availableJokerCatalog(s),
     excludedJokerIds: s.jokers.map((j) => j.id),
     planetCatalog: planetsForShop,
     tarotCatalog: createTarotCatalog(),
@@ -202,7 +202,7 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
     : baseOffers;
   const freeJokerOffers = buildFreeJokerOffers(
     shopAdjustments.freeJokerRarities,
-    createJokerCatalog(),
+    availableJokerCatalog(s),
     new Set(s.jokers.map((j) => j.id)),
     shopPickerRngConfig.rng,
   );
@@ -211,7 +211,7 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
     (offers, edition) => {
       const ensured = ensureBaseJokerForEdition(
         offers,
-        createJokerCatalog(),
+        availableJokerCatalog(s),
         ownedJokerIds,
         shopPickerRngConfig.rng,
       );
@@ -297,7 +297,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.spend(cost);
     s.setJokers((prev) => applyShopRerollToJokerStates(prev));
     const freshItems = pickShopItemOffers({
-      jokerCatalog: createJokerCatalog(),
+      jokerCatalog: availableJokerCatalog(s),
       excludedJokerIds: [
         ...s.jokers.map((j) => j.id),
         ...s.soldJokerIdsThisShopVisit,
@@ -368,7 +368,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         if (!current) return current;
         const extra = pickSingleShopOffer(
           {
-            jokerCatalog: createJokerCatalog(),
+            jokerCatalog: availableJokerCatalog(s),
             excludedJokerIds: [
               ...s.jokers.map((j) => j.id),
               ...s.soldJokerIdsThisShopVisit,
@@ -667,7 +667,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         );
         const created = createJokerByRarity(
           s.jokers,
-          createJokerCatalog(),
+          availableJokerCatalog(s),
           effect.rarity,
           capacity,
           Math.random,

@@ -298,4 +298,6 @@ export interface Joker {
   readonly edition?: JokerEdition;
   readonly stickers?: ReadonlyArray<JokerSticker>;
   readonly state?: JokerStateValue;
+  /** Excluded from random generation until the full deck holds a card with this enhancement. */
+  readonly requiresEnhancementInDeck?: Enhancement;
 }

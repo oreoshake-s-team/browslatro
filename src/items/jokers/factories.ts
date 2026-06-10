@@ -777,6 +777,7 @@ export function createStoneJoker(): Joker {
     rarity: "common",
     name: "Stone Joker",
     description: `+${STONE_JOKER_CHIPS_PER_STONE} Chips for each Stone Card in your full deck`,
+    requiresEnhancementInDeck: "stone",
     effect: {
       kind: "per-enhanced-in-deck-chips",
       enhancement: "stone",
@@ -791,6 +792,7 @@ export function createSteelJoker(): Joker {
     rarity: "uncommon",
     name: "Steel Joker",
     description: `Gives X(1 + ${STEEL_JOKER_X_MULT_PER_STEEL} × N) Mult, where N is the number of Steel Cards in your full deck`,
+    requiresEnhancementInDeck: "steel",
     effect: {
       kind: "per-enhanced-in-deck-x-mult",
       enhancement: "steel",
