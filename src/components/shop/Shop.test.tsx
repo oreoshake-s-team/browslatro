@@ -990,3 +990,39 @@ describe("Shop i18n (#921)", () => {
     expect(screen.getByRole("heading", { name: /Shop/ })).toBeInTheDocument();
   });
 });
+
+describe("Shop card-label i18n (#923)", () => {
+  function playingCardOffer(
+    overrides: Partial<import("../../cards/types").Card> = {},
+  ): ShopItem {
+    return {
+      kind: "playing-card",
+      card: { id: 1, rank: "A", suit: "spades", ...overrides },
+      price: 4,
+      sold: false,
+    };
+  }
+
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("a stone-enhanced playing-card offer renders Pōhaku under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    renderShop({ offers: [playingCardOffer({ enhancement: "stone" })] });
+    expect(screen.getByTestId("shop-card-enhancement-0")).toHaveTextContent(
+      "Pōhaku",
+    );
+  });
+
+  test("a gold-sealed playing-card offer keeps the English seal fallback under the haw locale (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    renderShop({ offers: [playingCardOffer({ seal: "gold" })] });
+    expect(screen.getByTestId("shop-card-seal-0")).toHaveTextContent(
+      "Gold Seal",
+    );
+  });
+});

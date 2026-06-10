@@ -1,6 +1,7 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./RunInfo.css";
 import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
@@ -134,7 +135,7 @@ export default function RunInfoDialog({
                   const stats = handStats[label];
                   return (
                     <tr key={label} data-testid={`run-info-row-${label}`}>
-                      <th scope="row">{label}</th>
+                      <th scope="row">{tHandLabel(t, label)}</th>
                       <td
                         className="run-info-level"
                         data-testid={`run-info-level-${label}`}

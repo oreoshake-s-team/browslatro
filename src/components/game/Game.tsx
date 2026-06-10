@@ -1,4 +1,6 @@
 import { Suspense, lazy, useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { tHandLabel } from "../../i18n/handLabels";
 import "./Game.css";
 import type { Card } from "../../cards/types";
 import HandComponent from "../cards/Hand";
@@ -48,6 +50,7 @@ export default function Game({
   packOpen,
   onCardDiscardEnd,
 }: GameProps) {
+  const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
@@ -243,7 +246,7 @@ export default function Game({
                   data-testid="submit-hand-detected"
                 >
                   <span className="submit-hand-button-detected-label">
-                    {selectedHand.label}
+                    {tHandLabel(t, selectedHand.label)}
                   </span>
                   <span className="submit-hand-button-detected-score">
                     <span className="submit-hand-button-chips">
