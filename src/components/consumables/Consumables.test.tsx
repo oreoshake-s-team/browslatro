@@ -224,3 +224,15 @@ describe("Consumables", () => {
     );
   });
 });
+
+describe("Empty tray treatment (issue #875)", () => {
+  test("the tray carries the consumables-tray-empty class when empty", () => {
+    renderConsumables();
+    expect(screen.getByLabelText("Consumable slots")).toHaveClass("consumables-tray-empty");
+  });
+
+  test("negative: the tray drops the empty class once a consumable is held", () => {
+    renderConsumables({ consumables: [{ kind: "tarot", card: tarot }] as Consumable[] });
+    expect(screen.getByLabelText("Consumable slots")).not.toHaveClass("consumables-tray-empty");
+  });
+});

@@ -21,6 +21,15 @@
   letter-spacing: 0.08em;
 }
 
+.jokers-tray-empty {
+  border-color: rgba(245, 159, 0, 0.25);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.jokers-tray-empty .jokers-label {
+  color: var(--text-muted);
+}
+
 .jokers-list {
   display: flex;
   flex-wrap: nowrap;

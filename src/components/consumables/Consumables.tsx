@@ -36,7 +36,10 @@ export default function Consumables({
   const emptyCount = Math.max(0, capacity - consumables.length);
 
   return (
-    <section className="consumables" aria-label="Consumable slots">
+    <section
+      className={`consumables${consumables.length === 0 ? " consumables-tray-empty" : ""}`}
+      aria-label="Consumable slots"
+    >
       <span className="consumables-label">Consumables</span>
       <ul className="consumables-list">
         {consumables.map((entry, idx) => {
