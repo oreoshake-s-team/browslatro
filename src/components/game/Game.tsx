@@ -243,7 +243,8 @@ export default function Game({
                   : t("a11y.submitHand")
               }
             >
-              <span aria-hidden="true">🃏 </span>Submit Hand
+              <span aria-hidden="true">🃏 </span>
+              {t("game.submitHand")}
               {selectedHand && (
                 <span
                   className="submit-hand-button-detected"

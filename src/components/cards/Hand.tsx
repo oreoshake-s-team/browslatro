@@ -365,9 +365,9 @@ export default function Hand({
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
             aria-label={t("a11y.manualOrder")}
-            title="Manual order (drag a card to rearrange)"
+            title={t("hand.manualOrderHint")}
           >
-            Manual
+            {t("hand.sortManual")}
           </button>
         </div>
       </div>

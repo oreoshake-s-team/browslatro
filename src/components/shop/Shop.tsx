@@ -448,7 +448,7 @@ export default function Shop({
               ? lockTooltip
               : buyButtonTooltip(t, state, consumableCapacity, jokerCapacity)
           }
-          aria-label={`${label}: ${subject.name}`}
+          aria-label={t("a11y.buyOffer", { label, name: subject.name })}
           onClick={() => onBuy(idx)}
         >
           {label}
@@ -477,11 +477,11 @@ export default function Shop({
             onClick={handleReroll}
             disabled={disabled || !canAffordReroll}
             title={rerollTooltip}
-            aria-label={`Reroll shop offers for $${currentRerollCost}`}
+            aria-label={t("a11y.rerollShopOffers", { cost: currentRerollCost })}
           >
             {t("shop.reroll", { cost: currentRerollCost })}
           </button>
-          <ul className="shop-offers shop-offers-cards" aria-label="Items for sale">
+          <ul className="shop-offers shop-offers-cards" aria-label={t("a11y.itemsForSale")}>
             {offers.map((offer, idx) => {
               if (offer.kind === "pack") return null;
               return renderOffer(offer, idx);
@@ -492,7 +492,7 @@ export default function Shop({
           <section
             className="shop-voucher"
             data-testid="shop-voucher"
-            aria-label="Vouchers for this ante"
+            aria-label={t("a11y.vouchersForAnte")}
           >
             <h3 className="shop-voucher-heading">
               {vouchers.length === 1
@@ -503,7 +503,7 @@ export default function Shop({
               <select
                 className="shop-voucher-override"
                 data-testid="shop-voucher-override"
-                aria-label="Override offered voucher (dev)"
+                aria-label={t("a11y.overrideVoucherDev")}
                 value={vouchers[0]?.id ?? voucherOptions[0].id}
                 onChange={(e) => onSetVoucher?.(e.target.value)}
               >
@@ -552,7 +552,7 @@ export default function Shop({
                         data-testid={`shop-voucher-buy-${idx}`}
                         disabled={disabled || btn.disabled}
                         title={disabled ? lockTooltip : btn.title}
-                        aria-label={`${btn.label}: ${voucher.name}`}
+                        aria-label={t("a11y.buyOffer", { label: btn.label, name: voucher.name })}
                         onClick={() => onBuyVoucher(idx)}
                       >
                         {btn.label}
@@ -566,10 +566,10 @@ export default function Shop({
           <section
             className="shop-packs"
             data-testid="shop-packs"
-            aria-label="Booster packs for sale"
+            aria-label={t("a11y.boosterPacksForSale")}
           >
             <h3 className="shop-packs-heading">{t("shop.boosterPacks")}</h3>
-            <ul className="shop-offers shop-offers-packs" aria-label="Packs for sale">
+            <ul className="shop-offers shop-offers-packs" aria-label={t("a11y.packsForSale")}>
               {offers.map((offer, idx) => {
                 if (offer.kind !== "pack") return null;
                 return renderOffer(offer, idx);
