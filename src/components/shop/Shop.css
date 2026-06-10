@@ -116,10 +116,13 @@
   cursor: pointer;
 }
 
-.shop-voucher-override:hover,
-.shop-voucher-override:focus-visible {
+.shop-voucher-override:hover {
   border-color: #7048e8;
-  outline: none;
+}
+
+.shop-voucher-override:focus-visible {
+  outline: 2px solid #5f3dc4;
+  outline-offset: 2px;
 }
 
 .shop-voucher-card {

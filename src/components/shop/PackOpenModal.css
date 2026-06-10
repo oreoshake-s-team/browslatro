@@ -103,6 +103,11 @@
   background-color: rgba(92, 124, 250, 0.25);
 }
 
+.pack-open-preview-sort-button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
 .pack-open-preview-sort-button-active {
   background-color: #5c7cfa;
   color: #fff;

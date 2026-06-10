@@ -127,10 +127,13 @@
   cursor: pointer;
 }
 
-.blind-select-boss-override:hover,
-.blind-select-boss-override:focus-visible {
+.blind-select-boss-override:hover {
   border-color: #748ffc;
-  outline: none;
+}
+
+.blind-select-boss-override:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .blind-select-row-boss-description {
