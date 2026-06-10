@@ -44,7 +44,7 @@ export default function JokerGrantAcknowledge({
         </ul>
         <button
           type="button"
-          className="joker-grant-ok"
+          className="btn btn--primary joker-grant-ok"
           data-testid="joker-grant-ok"
           onClick={onAcknowledge}
           autoFocus

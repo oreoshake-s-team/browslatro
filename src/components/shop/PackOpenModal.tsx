@@ -288,7 +288,7 @@ export default function PackOpenModal({
                 {view.joker && <JokerStickerBadges joker={view.joker} />}
                 <button
                   type="button"
-                  className="pack-open-option-pick"
+                  className="btn btn--primary pack-open-option-pick"
                   data-testid={`pack-open-pick-${idx}`}
                   disabled={disabled}
                   title={tooltip}
@@ -389,7 +389,7 @@ export default function PackOpenModal({
         )}
         <button
           type="button"
-          className="pack-open-close"
+          className="btn btn--secondary pack-open-close"
           data-testid="pack-open-close"
           onClick={onClose}
         >

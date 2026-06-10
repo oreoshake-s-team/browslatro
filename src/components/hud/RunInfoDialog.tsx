@@ -173,7 +173,7 @@ export default function RunInfoDialog({
         </div>
         <button
           type="button"
-          className="run-info-close"
+          className="btn btn--primary run-info-close"
           onClick={handleClose}
           autoFocus
         >

@@ -113,20 +113,5 @@
 
 .round-won-continue {
   padding: 0.7rem 1.2rem;
-  border: 1px solid #1864ab;
-  background-color: #1971c2;
-  color: white;
   font-size: 1rem;
-  font-weight: 600;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.round-won-continue:hover {
-  background-color: #1864ab;
-}
-
-.round-won-continue:focus-visible {
-  outline: 2px solid #1864ab;
-  outline-offset: 2px;
 }

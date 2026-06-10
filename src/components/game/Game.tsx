@@ -225,7 +225,7 @@ export default function Game({
         <div className="submit-hand">
           <div className="play-actions">
             <button
-              className="submit-hand-button"
+              className="btn btn--primary submit-hand-button"
               onClick={onSubmitHand}
               disabled={isScoring || !canSubmit}
               aria-label={
@@ -256,7 +256,7 @@ export default function Game({
               )}
             </button>
             <button
-              className="discard-button"
+              className="btn btn--danger discard-button"
               onClick={onDiscard}
               disabled={!canDiscard}
             >

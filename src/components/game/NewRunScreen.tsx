@@ -227,7 +227,7 @@ export default function NewRunScreen({
         <div className="new-run-actions">
           <button
             type="button"
-            className="new-run-confirm"
+            className="btn btn--primary new-run-confirm"
             data-testid="new-run-confirm"
             onClick={() => onConfirm({ stake, deck })}
             autoFocus
