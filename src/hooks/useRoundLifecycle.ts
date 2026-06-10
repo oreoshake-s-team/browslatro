@@ -38,7 +38,9 @@ import {
 import {
   deckCompositionTransforms,
   deckStartingMoneyDelta,
+  type Deck,
 } from "../items/decks";
+import type { Stake } from "../items/stakes";
 import {
   computeStartingDiscards,
   computeStartingHands,
@@ -61,6 +63,10 @@ export interface UseRoundLifecycleResult {
     handSizeOverride?: number;
   }) => void;
   readonly startNewGame: () => void;
+  readonly confirmRunSelection: (selection: {
+    readonly stake: Stake;
+    readonly deck: Deck;
+  }) => void;
   readonly loseGame: (info: RoundLostInfo) => void;
   readonly skipBlind: () => void;
 }
@@ -83,6 +89,10 @@ export function useRoundLifecycle({
   const equippedJokers = useGame((s) => s.jokers);
   const selectedDeck = useGame((s) => s.selectedDeck);
   const selectedStake = useGame((s) => s.selectedStake);
+  const setSelectedStake = useGame((s) => s.setSelectedStake);
+  const setSelectedDeck = useGame((s) => s.setSelectedDeck);
+  const setEndlessMode = useGame((s) => s.setEndlessMode);
+  const setPendingGameWon = useGame((s) => s.setPendingGameWon);
   const setCurrentAnteVouchers = useGame((s) => s.setCurrentAnteVouchers);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
   const setBaseDeckCards = useGame((s) => s.setBaseDeckCards);
@@ -199,12 +209,14 @@ export function useRoundLifecycle({
     setPendingWin(null);
   }
 
-  function startNewGame(): void {
+  function resetForNewRun(deck: Deck): void {
     setBlind(1);
     setRound(1);
     setAnte(1);
+    setEndlessMode(false);
+    setPendingGameWon(null);
     useGame.getState().resetEconomy();
-    const moneyDelta = deckStartingMoneyDelta(selectedDeck);
+    const moneyDelta = deckStartingMoneyDelta(deck);
     if (moneyDelta !== 0) {
       useGame.getState().setMoney(useGame.getState().money + moneyDelta);
     }
@@ -220,7 +232,7 @@ export function useRoundLifecycle({
     resetCardIds();
     const freshBaseDeck = applyDeckCompositionTransforms(
       createDeck(),
-      deckCompositionTransforms(selectedDeck),
+      deckCompositionTransforms(deck),
     );
     setBaseDeckCards(freshBaseDeck);
     setDestroyedCardIds(new Set());
@@ -256,7 +268,21 @@ export function useRoundLifecycle({
     resetDiscardPipeline();
     resetScoring();
     setPendingBlindSelect(true);
+  }
+
+  function startNewGame(): void {
+    resetForNewRun(selectedDeck);
     setPendingRunSelect(true);
+  }
+
+  function confirmRunSelection(selection: {
+    readonly stake: Stake;
+    readonly deck: Deck;
+  }): void {
+    setSelectedStake(selection.stake);
+    setSelectedDeck(selection.deck);
+    resetForNewRun(selection.deck);
+    setPendingRunSelect(false);
   }
 
   function loseGame(info: RoundLostInfo): void {
@@ -285,5 +311,5 @@ export function useRoundLifecycle({
     for (let i = 0; i < times; i += 1) applyGainedTag(offered, nextStats);
   }
 
-  return { startNewRound, startNewGame, loseGame, skipBlind };
+  return { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind };
 }

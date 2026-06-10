@@ -2,7 +2,9 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { useRoundLifecycle } from "./useRoundLifecycle";
 import { useGame } from "../store/game";
+import { STARTING_MONEY } from "../store/economy";
 import { STARTING_DISCARDS, STARTING_HANDS } from "../store/hand";
+import { createGreedyJoker } from "../items/jokers";
 import type { Card } from "../cards/types";
 
 function card(id: number): Card {
@@ -44,6 +46,29 @@ function runStartNewGame(): void {
     }),
   );
   act(() => result.current.startNewGame());
+}
+
+function runConfirmRunSelection(): void {
+  const { result } = renderHook(() =>
+    useRoundLifecycle({
+      applyGainedTag: vi.fn(),
+      resetScoring: vi.fn(),
+      resetDiscardPipeline: vi.fn(),
+    }),
+  );
+  act(() => result.current.confirmRunSelection({ stake: "white", deck: "red-deck" }));
+}
+
+function seedStaleRestoredRun(): void {
+  const s = useGame.getState();
+  s.setAnte(9);
+  s.setRound(27);
+  s.setBlind(3);
+  s.setEndlessMode(true);
+  s.setJokers([createGreedyJoker()]);
+  s.setScoringEvents([{ kind: "chips-delta", amount: 10, source: "stale" }]);
+  s.setMoney(223);
+  s.setPendingRunSelect(true);
 }
 
 describe("useRoundLifecycle.startNewGame board reset (closes #851)", () => {
@@ -149,6 +174,70 @@ describe("useRoundLifecycle.startNewGame board reset (closes #851)", () => {
   test("clears a dragging consumable index", () => {
     runStartNewGame();
     expect(useGame.getState().draggingConsumableIndex).toBeNull();
+  });
+});
+
+describe("useRoundLifecycle.confirmRunSelection fully resets a restored stale run (closes #870)", () => {
+  beforeEach(() => {
+    seedStaleRestoredRun();
+  });
+
+  test("resets the ante to 1", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().ante).toBe(1);
+  });
+
+  test("resets the round to 1", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().round).toBe(1);
+  });
+
+  test("resets the blind to the Small Blind", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().blind).toBe(1);
+  });
+
+  test("turns endless mode off", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().endlessMode).toBe(false);
+  });
+
+  test("removes jokers equipped during the previous run", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().jokers.length).toBe(0);
+  });
+
+  test("clears the previous run's scoring trace", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().scoringEvents.length).toBe(0);
+  });
+
+  test("resets money to the starting amount", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().money).toBe(STARTING_MONEY);
+  });
+
+  test("dismisses the run-select modal", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().pendingRunSelect).toBe(false);
+  });
+
+  test("re-opens the blind select for the fresh run", () => {
+    runConfirmRunSelection();
+    expect(useGame.getState().pendingBlindSelect).toBe(true);
+  });
+
+  test("negative: startNewGame keeps the run-select modal open instead of dismissing it", () => {
+    runStartNewGame();
+    expect(useGame.getState().pendingRunSelect).toBe(true);
+  });
+});
+
+describe("useRoundLifecycle.startNewGame after an endless run (closes #870)", () => {
+  test("turns endless mode off", () => {
+    useGame.getState().setEndlessMode(true);
+    runStartNewGame();
+    expect(useGame.getState().endlessMode).toBe(false);
   });
 });
 

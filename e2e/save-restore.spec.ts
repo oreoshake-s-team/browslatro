@@ -108,6 +108,37 @@ test("refreshing on Blind Select preserves the boss and skip-tag offers", async 
   expect(bossRowAfter).toBe(bossRowBefore);
 });
 
+test("Start Run over a restored stale run fully resets ante, round, and scoring trace (issue #870)", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await dismissBlindSelect(page);
+  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+
+  await page.evaluate(() => {
+    const raw = window.localStorage.getItem("browslatro:run:v1");
+    if (!raw) throw new Error("expected a saved snapshot");
+    const snapshot = JSON.parse(raw) as { state: Record<string, unknown> };
+    snapshot.state.ante = 9;
+    snapshot.state.round = 27;
+    snapshot.state.endlessMode = true;
+    snapshot.state.pendingRunSelect = true;
+    snapshot.state.scoringEvents = [
+      { kind: "chips-delta", amount: 10, source: "stale" },
+    ];
+    window.localStorage.setItem("browslatro:run:v1", JSON.stringify(snapshot));
+  });
+  await page.reload();
+
+  await expect(page.getByTestId("new-run-confirm")).toBeVisible();
+  await page.getByTestId("new-run-confirm").click();
+
+  await expect(page.getByTestId("blind-select-play")).toBeVisible();
+  await expect(statValue(page, "Ante")).toHaveText("1");
+  await expect(statValue(page, "Round")).toHaveText("1");
+  await expect(page.locator(".scoring-trace")).not.toContainText("stale");
+});
+
 test("refreshing in the shop preserves the offered voucher", async ({
   page,
 }) => {
