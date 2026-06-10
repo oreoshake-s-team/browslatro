@@ -54,3 +54,5 @@ yarn-error.log*
 
 # npm lockfile (this project uses yarn berry, not npm)
 package-lock.json
+__pycache__/
+*.pyc

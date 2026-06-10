@@ -1,0 +1,123 @@
+"""Observation/candidate encoding for the advisor policy network.
+
+Mirrors the TypeScript `ModelState` / `HandOption` JSON shapes produced by
+`src/ai/dataset.ts` (DATASET_SCHEMA_VERSION 1). The in-browser encoder
+(issue #1055) must reproduce these vectors exactly; bump ENCODING_VERSION
+on any change.
+"""
+
+ENCODING_VERSION = 1
+
+HAND_SLOTS = 8
+RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
+SUITS = ["spades", "hearts", "diamonds", "clubs"]
+ENHANCEMENTS = ["bonus", "mult", "wild", "glass", "steel", "stone", "gold", "lucky"]
+SEALS = ["gold", "red", "blue", "purple"]
+EDITIONS = ["foil", "holographic", "polychrome"]
+BLIND_KINDS = ["small", "big", "boss"]
+HAND_LABELS = [
+    "High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
+    "Full House", "Four of a Kind", "Straight Flush", "Royal Flush",
+    "Five of a Kind", "Flush House", "Flush Five",
+]
+NOTE_KINDS = [
+    "best-immediate-score", "best-of-hand-type",
+    "commits-to-flush-build", "keeps-paired-ranks",
+]
+
+CARD_FEATURES = 2 + len(RANKS) + len(SUITS) + len(ENHANCEMENTS) + len(SEALS) + len(EDITIONS) + 1
+CONTEXT_FEATURES = 6 + len(BLIND_KINDS) + 1 + len(SUITS) + len(RANKS)
+STATE_FEATURES = HAND_SLOTS * CARD_FEATURES + CONTEXT_FEATURES
+CANDIDATE_FEATURES = 2 + HAND_SLOTS + len(HAND_LABELS) + 3 + len(NOTE_KINDS)
+INPUT_FEATURES = STATE_FEATURES + CANDIDATE_FEATURES
+
+
+def _one_hot(value, vocabulary):
+    vector = [0.0] * len(vocabulary)
+    if value is not None:
+        vector[vocabulary.index(value)] = 1.0
+    return vector
+
+
+def _encode_card_slot(card):
+    if card is None:
+        return [0.0] * CARD_FEATURES
+    if card["faceDown"]:
+        return [1.0, 1.0] + [0.0] * (CARD_FEATURES - 2)
+    return (
+        [1.0, 0.0]
+        + _one_hot(card["rank"], RANKS)
+        + _one_hot(card["suit"], SUITS)
+        + _one_hot(card["enhancement"], ENHANCEMENTS)
+        + _one_hot(card["seal"], SEALS)
+        + _one_hot(card["edition"], EDITIONS)
+        + [card["bonusChips"] / 100.0]
+    )
+
+
+def encode_state(state):
+    hand = state["hand"]
+    if len(hand) > HAND_SLOTS:
+        raise ValueError(f"hand has {len(hand)} cards, max {HAND_SLOTS}")
+    slots = []
+    for i in range(HAND_SLOTS):
+        slots.extend(_encode_card_slot(hand[i] if i < len(hand) else None))
+    target = max(1, state["blind"]["scoreTarget"])
+    deck = state["deck"]
+    deck_total = max(1, deck["total"])
+    context = (
+        [
+            state["money"] / 20.0,
+            state["remainingHands"] / 4.0,
+            state["remainingDiscards"] / 4.0,
+            min(state["roundScore"] / target, 2.0) / 2.0,
+            state["ante"] / 8.0,
+            state["round"] / 24.0,
+        ]
+        + _one_hot(state["blind"]["kind"], BLIND_KINDS)
+        + [deck["total"] / 52.0]
+        + [deck["bySuit"][suit] / deck_total for suit in SUITS]
+        + [deck["byRank"][rank] / deck_total for rank in RANKS]
+    )
+    return slots + context
+
+
+def encode_candidate(candidate, state):
+    import math
+
+    hand_ids = [card["id"] for card in state["hand"]]
+    mask = [0.0] * HAND_SLOTS
+    for card_id in candidate["cardIds"]:
+        mask[hand_ids.index(card_id)] = 1.0
+    is_play = candidate["action"] == "play"
+    target = max(1, state["blind"]["scoreTarget"])
+    if is_play:
+        score_features = [
+            min(math.log1p(candidate["score"]) / math.log1p(target), 2.0) / 2.0,
+            math.log1p(candidate["chips"]) / 10.0,
+            math.log1p(candidate["mult"]) / 10.0,
+        ]
+        label = _one_hot(candidate["handLabel"], HAND_LABELS)
+    else:
+        score_features = [0.0, 0.0, 0.0]
+        label = [0.0] * len(HAND_LABELS)
+    notes = [0.0] * len(NOTE_KINDS)
+    for note in candidate["notes"]:
+        notes[NOTE_KINDS.index(note["kind"])] = 1.0
+    return (
+        [1.0 if is_play else 0.0, 0.0 if is_play else 1.0]
+        + mask
+        + label
+        + score_features
+        + notes
+    )
+
+
+def encode_decision(record):
+    """Returns (per-candidate input vectors, chosen index) for one record."""
+    state_vector = encode_state(record["state"])
+    inputs = [
+        state_vector + encode_candidate(candidate, record["state"])
+        for candidate in record["candidates"]
+    ]
+    return inputs, record["chosenIndex"]

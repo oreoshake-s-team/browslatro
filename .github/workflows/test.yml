@@ -35,6 +35,15 @@ jobs:
       - name: Run tests
         run: yarn test --shard=${{ matrix.shard }}/${{ strategy.job-total }}
 
+  ml:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run ml encoding tests
+        run: python3 -m unittest discover -s ml/tests
+
   e2e:
     runs-on: ubuntu-latest
     steps:
