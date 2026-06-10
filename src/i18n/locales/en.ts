@@ -185,7 +185,20 @@ export const en = {
   game: {
     submitHand: "Submit Hand",
   },
+  suits: {
+    spades: "Spades",
+    hearts: "Hearts",
+    diamonds: "Diamonds",
+    clubs: "Clubs",
+  },
   a11y: {
+    faceDownCard: "Face-down card",
+    stoneCard: "Stone card",
+    cardName: "{{rank}} of {{suit}}",
+    cardNameEnhanced: "{{rank}} of {{suit}} ({{enhancement}})",
+    cardWithDetail: "{{name}}, {{detail}}",
+    cardDebuffed: "{{name}}, debuffed",
+    cardNewlyDrawn: "{{name}}, newly drawn",
     itemsForSale: "Items for sale",
     vouchersForAnte: "Vouchers for this ante",
     boosterPacksForSale: "Booster packs for sale",

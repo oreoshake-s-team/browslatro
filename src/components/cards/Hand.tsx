@@ -188,7 +188,7 @@ export default function Hand({
   function moveCard(card: CardType, direction: -1 | 1) {
     const idx = displayedHand.findIndex((c) => c.id === card.id);
     if (idx < 0) return;
-    const name = cardName(card);
+    const name = cardName(t, card);
     if (direction === -1 && idx === 0) {
       announce(t("a11y.atStart", { item: name }));
       return;
@@ -420,7 +420,7 @@ export default function Hand({
                     <button
                       type="button"
                       className="hand-move-button"
-                      aria-label={t("a11y.moveLeft", { item: cardName(card) })}
+                      aria-label={t("a11y.moveLeft", { item: cardName(t, card) })}
                       data-testid={`hand-move-left-${card.id}`}
                       onClick={() => moveCard(card, -1)}
                     >
@@ -429,7 +429,7 @@ export default function Hand({
                     <button
                       type="button"
                       className="hand-move-button"
-                      aria-label={t("a11y.moveRight", { item: cardName(card) })}
+                      aria-label={t("a11y.moveRight", { item: cardName(t, card) })}
                       data-testid={`hand-move-right-${card.id}`}
                       onClick={() => moveCard(card, 1)}
                     >
