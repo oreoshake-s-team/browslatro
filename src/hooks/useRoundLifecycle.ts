@@ -134,6 +134,7 @@ export function useRoundLifecycle({
   const setDealt = useGame((s) => s.setDealt);
   const setSelectedIds = useGame((s) => s.setSelectedIds);
   const setDiscardingIds = useGame((s) => s.setDiscardingIds);
+  const setNewlyDrawnIds = useGame((s) => s.setNewlyDrawnIds);
   const setSelectedHand = useGame((s) => s.setSelectedHand);
   const setChips = useGame((s) => s.setChips);
   const setMultiplier = useGame((s) => s.setMultiplier);
@@ -198,6 +199,7 @@ export function useRoundLifecycle({
     });
     setSelectedIds(new Set());
     setDiscardingIds(new Set());
+    setNewlyDrawnIds(new Set());
     setSelectedHand(null);
     setChips(0);
     setMultiplier(0);

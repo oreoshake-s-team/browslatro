@@ -61,6 +61,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const setMultiplier = useGame((s) => s.setMultiplier);
   const setHandPlaySignal = useGame((s) => s.setHandPlaySignal);
   const setConsumables = useGame((s) => s.setConsumables);
+  const setNewlyDrawnIds = useGame((s) => s.setNewlyDrawnIds);
   const setRemainingDiscards = useGame((s) => s.setRemainingDiscards);
   const setDiscardsUsedThisRound = useGame((s) => s.setDiscardsUsedThisRound);
 
@@ -90,6 +91,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     if (skippedDraw) {
       skipDrawAfterDiscardRef.current = false;
       setDealt({ hand: kept, remaining: dealt.remaining });
+      setNewlyDrawnIds(new Set());
     } else if (deferRefillForHook) {
       setDealt({ hand: kept, remaining: dealt.remaining });
     } else {
@@ -114,6 +116,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
         "refill",
       );
       setDealt({ hand: [...kept, ...drawnWithFaceDown], remaining: newRemaining });
+      setNewlyDrawnIds(new Set(drawnWithFaceDown.map((c) => c.id)));
     }
     setSelectedIds(new Set());
     setDiscardingIds(new Set());

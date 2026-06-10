@@ -436,3 +436,38 @@ describe("useDiscardPipeline — Green Joker counter shrinks on discard (#868)",
     });
   });
 });
+
+describe("newly drawn ids (#929)", () => {
+  beforeEach(() => {
+    useGame.getState().setJokers([]);
+    useGame.getState().setRemainingDiscards(3);
+  });
+
+  test("a discard records the replacement card ids as newly drawn", () => {
+    seed([card(1), card(2)], [card(10), card(11)]);
+    useGame.getState().setSelectedIds(new Set([1]));
+    const { result } = renderHook(() => useDiscardPipeline());
+    act(() => result.current.discardSelected());
+    act(() => result.current.handleCardDiscardEnd(card(1)));
+    expect([...useGame.getState().newlyDrawnIds].sort()).toEqual([10, 11]);
+  });
+
+  test("negative: kept cards are not in the newly drawn set", () => {
+    seed([card(1), card(2)], [card(10)]);
+    useGame.getState().setSelectedIds(new Set([1]));
+    const { result } = renderHook(() => useDiscardPipeline());
+    act(() => result.current.discardSelected());
+    act(() => result.current.handleCardDiscardEnd(card(1)));
+    expect(useGame.getState().newlyDrawnIds.has(2)).toBe(false);
+  });
+
+  test("a discard with an empty deck clears the previous newly drawn set", () => {
+    useGame.getState().setNewlyDrawnIds(new Set([99]));
+    seed([card(1), card(2)], []);
+    useGame.getState().setSelectedIds(new Set([1]));
+    const { result } = renderHook(() => useDiscardPipeline());
+    act(() => result.current.discardSelected());
+    act(() => result.current.handleCardDiscardEnd(card(1)));
+    expect(useGame.getState().newlyDrawnIds.size).toBe(0);
+  });
+});
