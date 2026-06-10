@@ -5,6 +5,7 @@ import ModifierSpectralPicker from "./ModifierSpectralPicker";
 import { useGame } from "../../store/game";
 import { createSpectralCatalog } from "../../items/spectrals";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
+import { sortByDisplayName } from "./displayNameSort";
 
 const SPECTRALS = createSpectralCatalog();
 
@@ -34,6 +35,18 @@ describe("ModifierSpectralPicker", () => {
     expect(
       document.querySelectorAll("button[data-spectral-id]"),
     ).toHaveLength(SPECTRALS.length);
+  });
+
+  test("renders spectrals alphabetically ignoring a leading 'The '", async () => {
+    const user = userEvent.setup();
+    render(<ModifierSpectralPicker />);
+    await openPicker(user);
+    const ids = Array.from(
+      document.querySelectorAll("button[data-spectral-id]"),
+    ).map((el) => el.getAttribute("data-spectral-id"));
+    expect(ids).toEqual(
+      sortByDisplayName(SPECTRALS, (c) => c.name).map((c) => c.id),
+    );
   });
 
   test("clicking Black Hole appends a Black Hole spectral to consumables", async () => {

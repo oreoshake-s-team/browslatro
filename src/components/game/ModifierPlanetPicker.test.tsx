@@ -5,6 +5,7 @@ import ModifierPlanetPicker from "./ModifierPlanetPicker";
 import { useGame } from "../../store/game";
 import { createPlanetCatalog } from "../../items/planets";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
+import { sortByDisplayName } from "./displayNameSort";
 
 const PLANETS = createPlanetCatalog();
 
@@ -34,6 +35,18 @@ describe("ModifierPlanetPicker", () => {
     expect(
       document.querySelectorAll("button[data-planet-id]"),
     ).toHaveLength(PLANETS.length);
+  });
+
+  test("renders planets alphabetically by name", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPlanetPicker />);
+    await openPicker(user);
+    const ids = Array.from(
+      document.querySelectorAll("button[data-planet-id]"),
+    ).map((el) => el.getAttribute("data-planet-id"));
+    expect(ids).toEqual(
+      sortByDisplayName(PLANETS, (c) => c.name).map((c) => c.id),
+    );
   });
 
   test("clicking Pluto appends a Pluto planet to consumables", async () => {

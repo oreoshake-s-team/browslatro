@@ -9,9 +9,11 @@ import {
   createLegendaryJokerCatalog,
   type Joker,
 } from "../../items/jokers";
+import { sortByDisplayName } from "./displayNameSort";
 
-const ALL = [...createJokerCatalog(), ...createLegendaryJokerCatalog()].sort(
-  (a, b) => a.name.localeCompare(b.name),
+const ALL = sortByDisplayName(
+  [...createJokerCatalog(), ...createLegendaryJokerCatalog()],
+  (j) => j.name,
 );
 const PAGE_SIZE = 12;
 const TOTAL_PAGES = Math.ceil(ALL.length / PAGE_SIZE);
@@ -48,12 +50,24 @@ describe("ModifierJokerPicker", () => {
     expect(visibleTileIds()).toHaveLength(PAGE_SIZE);
   });
 
-  test("first page is sorted alphabetically by name — stable pin", async () => {
+  test("first page is sorted alphabetically by name ignoring a leading 'The ' — stable pin", async () => {
     const user = userEvent.setup();
     render(<ModifierJokerPicker />);
     await openPicker(user);
     const expected = ALL.slice(0, PAGE_SIZE).map((j) => j.id);
     expect(visibleTileIds()).toEqual(expected);
+  });
+
+  test("a 'The …' joker sorts under its real name, not under T (negative)", async () => {
+    const user = userEvent.setup();
+    render(<ModifierJokerPicker />);
+    await openPicker(user);
+    const duoIndex = ALL.findIndex((j) => j.name === "The Duo");
+    const targetPage = Math.floor(duoIndex / PAGE_SIZE) + 1;
+    for (let i = 1; i < targetPage; i += 1) {
+      await user.click(screen.getByTestId("modifier-joker-picker-next"));
+    }
+    expect(visibleTileIds()[duoIndex % PAGE_SIZE]).toBe(ALL[duoIndex].id);
   });
 
   test("clicking Next advances to page 2 contents", async () => {

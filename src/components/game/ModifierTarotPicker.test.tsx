@@ -5,6 +5,7 @@ import ModifierTarotPicker from "./ModifierTarotPicker";
 import { useGame } from "../../store/game";
 import { createTarotCatalog } from "../../items/tarots";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
+import { sortByDisplayName } from "./displayNameSort";
 
 const TAROTS = createTarotCatalog();
 
@@ -34,6 +35,18 @@ describe("ModifierTarotPicker", () => {
     expect(
       document.querySelectorAll("button[data-tarot-id]"),
     ).toHaveLength(TAROTS.length);
+  });
+
+  test("renders tarots alphabetically ignoring a leading 'The '", async () => {
+    const user = userEvent.setup();
+    render(<ModifierTarotPicker />);
+    await openPicker(user);
+    const ids = Array.from(
+      document.querySelectorAll("button[data-tarot-id]"),
+    ).map((el) => el.getAttribute("data-tarot-id"));
+    expect(ids).toEqual(
+      sortByDisplayName(TAROTS, (c) => c.name).map((c) => c.id),
+    );
   });
 
   test("clicking The Magician appends a The Magician tarot to consumables", async () => {

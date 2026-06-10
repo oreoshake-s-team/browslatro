@@ -8,13 +8,17 @@ import {
 } from "../../items/consumables";
 import { extraConsumableSlots } from "../../items/vouchers";
 import { createPlanetCatalog } from "../../items/planets";
+import { sortByDisplayName } from "./displayNameSort";
 import PlanetTooltip from "./PlanetTooltip";
 
 export default function ModifierPlanetPicker() {
   const consumables = useGame((s) => s.consumables);
   const setConsumables = useGame((s) => s.setConsumables);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
-  const planets = useMemo(() => createPlanetCatalog(), []);
+  const planets = useMemo(
+    () => sortByDisplayName(createPlanetCatalog(), (c) => c.name),
+    [],
+  );
   const capacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
