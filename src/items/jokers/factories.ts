@@ -79,6 +79,11 @@ import {
   RAMEN_X_MULT_LOSS_PER_CARD,
   GROS_MICHEL_MULT,
   GROS_MICHEL_BUST_CHANCE,
+  HACK_RANKS,
+  HACK_RETRIGGERS,
+  DUSK_RETRIGGERS,
+  SOCK_AND_BUSKIN_RETRIGGERS,
+  HANGING_CHAD_RETRIGGERS,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1317,6 +1322,53 @@ export function createGrosMichelJoker(): Joker {
       amount: GROS_MICHEL_MULT,
       bustChance: GROS_MICHEL_BUST_CHANCE,
     },
+  };
+}
+
+export function createHackJoker(): Joker {
+  return {
+    id: "hack",
+    rarity: "uncommon",
+    name: "Hack",
+    description: "Retrigger each played 2, 3, 4, or 5",
+    effect: {
+      kind: "retrigger-ranks",
+      ranks: HACK_RANKS,
+      times: HACK_RETRIGGERS,
+    },
+  };
+}
+
+export function createDuskJoker(): Joker {
+  return {
+    id: "dusk",
+    rarity: "uncommon",
+    name: "Dusk",
+    description: "Retrigger all played cards in final hand of the round",
+    effect: { kind: "retrigger-on-final-hand", times: DUSK_RETRIGGERS },
+  };
+}
+
+export function createSockAndBuskinJoker(): Joker {
+  return {
+    id: "sock-and-buskin",
+    rarity: "uncommon",
+    name: "Sock and Buskin",
+    description: "Retrigger all played face cards",
+    effect: {
+      kind: "retrigger-face-cards",
+      times: SOCK_AND_BUSKIN_RETRIGGERS,
+    },
+  };
+}
+
+export function createHangingChadJoker(): Joker {
+  return {
+    id: "hanging-chad",
+    rarity: "common",
+    name: "Hanging Chad",
+    description: `Retrigger first played card used in scoring ${HANGING_CHAD_RETRIGGERS} additional times`,
+    effect: { kind: "retrigger-first-card", times: HANGING_CHAD_RETRIGGERS },
   };
 }
 

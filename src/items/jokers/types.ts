@@ -222,6 +222,14 @@ export type JokerEffect =
       readonly amount: number;
       readonly bustChance: number;
     }
+  | {
+      readonly kind: "retrigger-ranks";
+      readonly ranks: ReadonlyArray<Rank>;
+      readonly times: number;
+    }
+  | { readonly kind: "retrigger-face-cards"; readonly times: number }
+  | { readonly kind: "retrigger-first-card"; readonly times: number }
+  | { readonly kind: "retrigger-on-final-hand"; readonly times: number }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

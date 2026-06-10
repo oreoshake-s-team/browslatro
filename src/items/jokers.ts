@@ -85,6 +85,7 @@ export type {
 } from "./jokers/scoring/onDiscard";
 export { applyOnDiscardJokers } from "./jokers/scoring/onDiscard";
 export { isFaceCard, jokerSellValue } from "./jokers/scoring/utils";
+export { expandScoringRetriggers } from "./jokers/scoring/retriggers";
 export {
   applyDiscardToJokerStates,
   applyHandPlayedToJokerStates,

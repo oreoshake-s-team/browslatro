@@ -500,6 +500,10 @@ export function applyHandLevelJokers(
       case "per-rank-in-deck-end-of-round-money":
       case "on-discard-money-when-face-count-at-least":
       case "on-first-discard-of-round-money-when-size":
+      case "retrigger-ranks":
+      case "retrigger-face-cards":
+      case "retrigger-first-card":
+      case "retrigger-on-final-hand":
       case "noop":
         break;
       default:
