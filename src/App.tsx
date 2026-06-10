@@ -25,8 +25,7 @@ const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
 const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
-import { STARTING_MONEY } from "./store/economy";
-import { deckJokerSlotsDelta, deckStartingMoneyDelta } from "./items/decks";
+import { deckJokerSlotsDelta } from "./items/decks";
 import {
   pruneTagsByCategory,
   rollAnteSkipOffers,
@@ -181,11 +180,12 @@ function App() {
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
   });
-  const { startNewRound, startNewGame, loseGame, skipBlind } = useRoundLifecycle({
-    applyGainedTag,
-    resetScoring,
-    resetDiscardPipeline,
-  });
+  const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
+    useRoundLifecycle({
+      applyGainedTag,
+      resetScoring,
+      resetDiscardPipeline,
+    });
   loseGameRef.current = loseGame;
 
   // Round-won modal: when non-null, the player has met the required score and
@@ -204,11 +204,13 @@ function App() {
   );
   const consumables = useGame((state) => state.consumables);
   const setConsumables = useGame((state) => state.setConsumables);
+  const pendingRunSelect = useGame((state) => state.pendingRunSelect);
   useEffect(() => {
     if (didRestoreFromSnapshot()) return;
+    if (pendingRunSelect) return;
     const seeded = readSeededConsumables();
     if (seeded.length > 0) setConsumables(seeded);
-  }, [setConsumables]);
+  }, [pendingRunSelect, setConsumables]);
   const openedPack = useGame((state) => state.openedPack);
   const packPicksRemaining = useGame((state) => state.packPicksRemaining);
   const packPreviewHand = useGame((state) => state.packPreviewHand);
@@ -242,13 +244,8 @@ function App() {
   const setPendingJokerGrantIds = useGame(
     (state) => state.setPendingJokerGrantIds,
   );
-  const pendingRunSelect = useGame((state) => state.pendingRunSelect);
-  const setPendingRunSelect = useGame((state) => state.setPendingRunSelect);
   const selectedStake = useGame((state) => state.selectedStake);
-  const setSelectedStake = useGame((state) => state.setSelectedStake);
   const selectedDeck = useGame((state) => state.selectedDeck);
-  const setSelectedDeck = useGame((state) => state.setSelectedDeck);
-  const setMoney = useGame((state) => state.setMoney);
   const pendingTags = useGame((state) => state.pendingTags);
   const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
@@ -492,10 +489,7 @@ function App() {
           initialStake={selectedStake}
           initialDeck={selectedDeck}
           onConfirm={({ stake, deck }) => {
-            setSelectedStake(stake);
-            setSelectedDeck(deck);
-            setMoney(STARTING_MONEY + deckStartingMoneyDelta(deck));
-            setPendingRunSelect(false);
+            confirmRunSelection({ stake, deck });
           }}
         />
       )}
