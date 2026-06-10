@@ -1,5 +1,5 @@
 import { afterEach } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Card from "./Card";
 import type { Card as CardType } from "../../cards/types";
@@ -168,7 +168,9 @@ describe("Card tooltip — content per card state", () => {
 
 describe("Card tooltip — effective odds with a probability multiplier (#774)", () => {
   afterEach(() => {
-    useGame.getState().resetGame();
+    act(() => {
+      useGame.getState().resetGame();
+    });
   });
 
   test("Lucky card tooltip shows 1-in-5 by default (no probability multiplier)", async () => {

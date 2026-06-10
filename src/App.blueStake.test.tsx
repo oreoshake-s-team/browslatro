@@ -1,4 +1,4 @@
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import App from "./App";
 import {
@@ -15,8 +15,10 @@ describe("Blue Stake — -1 discard per round (#556)", () => {
     useGame.getState().setSelectedDeck("yellow-deck");
   });
   afterEach(() => {
-    useGame.getState().setSelectedDeck("red-deck");
-    useGame.getState().setSelectedStake("white");
+    act(() => {
+      useGame.getState().setSelectedDeck("red-deck");
+      useGame.getState().setSelectedStake("white");
+    });
   });
 
   test("starting Small Blind with Blue Stake + Yellow Deck shows 2 discards (base 3 − 1)", async () => {

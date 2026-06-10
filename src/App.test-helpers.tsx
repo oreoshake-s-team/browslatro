@@ -127,6 +127,8 @@ export function withDeck(deck: Deck): void {
     useGame.getState().setSelectedDeck(deck);
   });
   afterEach(() => {
-    useGame.getState().setSelectedDeck("red-deck");
+    act(() => {
+      useGame.getState().setSelectedDeck("red-deck");
+    });
   });
 }

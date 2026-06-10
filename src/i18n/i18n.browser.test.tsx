@@ -1,5 +1,6 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import i18n, { detectLocale, persistLocale } from "./index";
+import { restoreEnglishLocale } from "./i18n.test-helpers";
 import RunProgress from "../components/hud/RunProgress";
 import Consumables from "../components/consumables/Consumables";
 import DiscardPile from "../components/cards/DiscardPile";
@@ -83,11 +84,7 @@ describe("Hawaiian rendering", () => {
 });
 
 describe("Hawaiian aria-labels (issue #924)", () => {
-  afterEach(async () => {
-    await act(async () => {
-      await i18n.changeLanguage("en");
-    });
-  });
+  afterEach(restoreEnglishLocale);
 
   test("Consumables tray exposes the Hawaiian aria-label", async () => {
     await i18n.changeLanguage("haw");

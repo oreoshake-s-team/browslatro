@@ -861,8 +861,9 @@ describe("useConsumableActions — The High Priestess (#618)", () => {
     const hiddenIds = new Set(["planet-x", "ceres", "eris"]);
     for (let i = 0; i < 30; i += 1) {
       useGame.getState().setConsumables([highPriestessConsumable()]);
-      const { result } = renderHook(() => useConsumableActions());
+      const { result, unmount } = renderHook(() => useConsumableActions());
       act(() => result.current.useConsumable(0));
+      unmount();
       const added = useGame.getState().consumables;
       const anyHidden = added.some(
         (c) => c.kind === "planet" && hiddenIds.has(c.card.id),
@@ -882,8 +883,9 @@ describe("useConsumableActions — The High Priestess (#618)", () => {
     let sawAtLeastOneHidden = false;
     for (let i = 0; i < 80 && !sawAtLeastOneHidden; i += 1) {
       useGame.getState().setConsumables([highPriestessConsumable()]);
-      const { result } = renderHook(() => useConsumableActions());
+      const { result, unmount } = renderHook(() => useConsumableActions());
       act(() => result.current.useConsumable(0));
+      unmount();
       const added = useGame.getState().consumables;
       if (
         added.some(
@@ -978,8 +980,11 @@ describe("useConsumableActions — The Fool (#618)", () => {
   test("The Fool when consumable slots are full is a no-op (consumes the fool, adds nothing)", () => {
     const hermit = hermitConsumable();
     useGame.getState().setConsumables([hermit]);
-    const { result: result1 } = renderHook(() => useConsumableActions());
+    const { result: result1, unmount: unmount1 } = renderHook(() =>
+      useConsumableActions(),
+    );
     act(() => result1.current.useConsumable(0));
+    unmount1();
     useGame
       .getState()
       .setConsumables([

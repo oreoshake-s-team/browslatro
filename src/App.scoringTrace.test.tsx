@@ -61,7 +61,9 @@ afterEach(() => {
     vi.runOnlyPendingTimers();
   });
   vi.useRealTimers();
-  setAnimationSpeed(priorSpeed);
+  act(() => {
+    setAnimationSpeed(priorSpeed);
+  });
   bossPickerRngConfig.rng = Math.random;
 });
 
