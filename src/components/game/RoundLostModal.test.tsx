@@ -56,3 +56,24 @@ describe("RoundLostModal", () => {
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("RoundLostModal i18n (#922)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the try-again button renders E hoʻāʻo hou under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(
+      <RoundLostModal
+        info={{ roundScore: 10, requiredScore: 300 }}
+        onContinue={() => {}}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "E hoʻāʻo hou →" }),
+    ).toBeInTheDocument();
+  });
+});

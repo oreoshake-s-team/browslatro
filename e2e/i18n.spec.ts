@@ -73,3 +73,25 @@ test("the shop renders Hawaiian strings under the haw locale (issue #921)", asyn
   ).toHaveText(/Kūʻai mai|Wehe|Ua kūʻai ʻia|Slots full/);
   await expect(page.getByRole("heading", { name: /^Shop$/ })).toHaveCount(0);
 });
+
+test("winning round 1 under the haw locale shows Hawaiian Round Won strings (issue #922)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:locale", "haw");
+    window.localStorage.setItem("browslatro:deterministicShuffle", "1");
+  });
+  await page.goto("/");
+  await page.getByTestId("new-run-confirm").click();
+  await page.getByTestId("blind-select-play").click();
+  const handCards = page.locator('[aria-label="Your hand"] .card');
+  await expect(handCards).toHaveCount(8);
+  for (let i = 0; i < 5; i += 1) {
+    await handCards.nth(i).click();
+  }
+  await page.getByRole("button", { name: /^Submit Hand/ }).click();
+  await expect(page.getByText("Kālā i loaʻa")).toBeVisible();
+  await expect(page.getByText("Huina")).toBeVisible();
+  await page.getByRole("button", { name: "Hoʻomau →" }).click();
+  await expect(page.getByRole("heading", { name: /Hale kūʻai/ })).toBeVisible();
+});

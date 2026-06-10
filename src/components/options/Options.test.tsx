@@ -318,3 +318,48 @@ describe("Options — language picker", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Options i18n (#922)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the New game button renders Pāʻani hou under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    expect(screen.getByRole("button", { name: "Pāʻani hou" })).toBeInTheDocument();
+  });
+
+  test("the Close button renders Pani under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    expect(screen.getByRole("button", { name: "Pani" })).toBeInTheDocument();
+  });
+
+  test("animation speed options render Lohi and Wikiwiki under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    expect(screen.getByRole("option", { name: "Lohi" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Wikiwiki" })).toBeInTheDocument();
+  });
+
+  test("the New game confirm copy stays English fallback under the haw locale (negative)", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    render(<Options onNewGame={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    await userEvent.click(screen.getByRole("button", { name: "Pāʻani hou" }));
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Start a new game? This will end your current run.",
+    );
+    confirmSpy.mockRestore();
+  });
+});

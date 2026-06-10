@@ -1,4 +1,5 @@
 import { useCallback, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import "./RunInfo.css";
 import { HANDS } from "../../constants";
@@ -26,6 +27,7 @@ export default function RunInfoDialog({
   ownedVouchers,
   onClose,
 }: RunInfoDialogProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<TabId>("hands");
   const titleId = useId();
   const tabIdPrefix = useId();
@@ -101,25 +103,29 @@ export default function RunInfoDialog({
     >
       <div className="run-info-modal" onClick={(e) => e.stopPropagation()}>
         <h2 id={titleId} className="run-info-title">
-          Run Information
+          {t("runInfo.title")}
         </h2>
         <div
           className="run-info-tablist"
           role="tablist"
           aria-label="Run Information sections"
         >
-          <button {...tabButtonProps("hands")}>Hands</button>
-          <button {...tabButtonProps("vouchers")}>Vouchers</button>
+          <button {...tabButtonProps("hands")}>{t("runInfo.handsTab")}</button>
+          <button {...tabButtonProps("vouchers")}>
+            {t("runInfo.vouchersTab")}
+          </button>
         </div>
         <div className="run-info-panels">
           <div {...panelProps("hands")}>
             <table className="run-info-table">
               <thead>
                 <tr>
-                  <th scope="col">Hand</th>
-                  <th scope="col" aria-label="Level">Lvl</th>
-                  <th scope="col">Chips × Mult</th>
-                  <th scope="col">Played</th>
+                  <th scope="col">{t("runInfo.handHeader")}</th>
+                  <th scope="col" aria-label="Level">
+                    {t("runInfo.levelHeader")}
+                  </th>
+                  <th scope="col">{t("runInfo.chipsTimesMult")}</th>
+                  <th scope="col">{t("runInfo.playedHeader")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -153,7 +159,7 @@ export default function RunInfoDialog({
                 className="run-info-voucher-empty"
                 data-testid="run-info-voucher-empty"
               >
-                No vouchers purchased yet.
+                {t("runInfo.noVouchers")}
               </p>
             ) : (
               <ul className="run-info-voucher-list">
@@ -181,7 +187,7 @@ export default function RunInfoDialog({
           onClick={handleClose}
           autoFocus
         >
-          Close
+          {t("runInfo.close")}
         </button>
       </div>
     </div>,

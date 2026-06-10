@@ -87,3 +87,21 @@ describe("GameWonScreen", () => {
     expect(onNewRun).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("GameWonScreen i18n (#922)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the title renders Lanakila! under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(
+      <GameWonScreen info={buildInfo()} onNewRun={() => {}} onEndless={() => {}} />,
+    );
+    expect(
+      screen.getByRole("heading", { name: "Lanakila!" }),
+    ).toBeInTheDocument();
+  });
+});
