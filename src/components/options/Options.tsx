@@ -64,7 +64,9 @@ function Options({
 
   return (
     <>
-      <button onClick={() => setOpen(true)}>Options</button>
+      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+        Options
+      </button>
       {open &&
         createPortal(
           <div className="modal-overlay" onClick={handleClose}>

@@ -283,20 +283,5 @@
 .new-run-confirm {
   padding: 0.8rem 2rem;
   font-size: 1.1rem;
-  font-weight: 600;
-  background-color: #1f7a33;
-  color: #f8f9fa;
-  border: 2px solid #186626;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.new-run-confirm:hover {
-  background-color: #287d3a;
-}
-
-.new-run-confirm:focus-visible {
-  outline: 2px solid #74c0fc;
-  outline-offset: 2px;
 }
 

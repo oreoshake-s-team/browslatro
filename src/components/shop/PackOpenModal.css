@@ -66,36 +66,11 @@
 
 .pack-open-option-pick {
   padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  background-color: #5c7cfa;
-  color: #fff;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.pack-open-option-pick:hover:not(:disabled) {
-  background-color: #748ffc;
-}
-
-.pack-open-option-pick:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .pack-open-close {
   align-self: flex-end;
   padding: 0.5rem 1.2rem;
-  border-radius: 6px;
-  background-color: #495057;
-  color: #fff;
-  border: none;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pack-open-close:hover {
-  background-color: #6c757d;
 }
 
 .pack-open-preview-sort {

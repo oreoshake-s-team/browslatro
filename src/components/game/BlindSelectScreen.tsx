@@ -270,7 +270,7 @@ export default function BlindSelectScreen({
         <div className="blind-select-actions">
           <button
             type="button"
-            className="blind-select-play"
+            className="btn btn--primary blind-select-play"
             data-testid="blind-select-play"
             onClick={onPlay}
             autoFocus
@@ -280,7 +280,7 @@ export default function BlindSelectScreen({
           {canSkip && (
             <button
               type="button"
-              className="blind-select-skip"
+              className="btn btn--ghost blind-select-skip"
               data-testid="blind-select-skip"
               onClick={onSkip}
               aria-label={`Skip ${currentName} (no reward, no penalty)`}

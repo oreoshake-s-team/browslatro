@@ -417,7 +417,7 @@ export default function Shop({
         <div className="shop-cards-row">
           <button
             type="button"
-            className="shop-reroll"
+            className="btn shop-reroll"
             onClick={handleReroll}
             disabled={disabled || !canAffordReroll}
             title={rerollTooltip}
@@ -516,7 +516,7 @@ export default function Shop({
         <div className="shop-actions">
           <button
             type="button"
-            className="shop-next"
+            className="btn btn--secondary shop-next"
             onClick={onNext}
             disabled={disabled}
             title={disabled ? LOCK_TOOLTIP : undefined}

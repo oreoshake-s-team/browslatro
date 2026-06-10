@@ -151,7 +151,7 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         </div>
         <button
           type="button"
-          className="round-won-continue"
+          className="btn btn--primary round-won-continue"
           onClick={onContinue}
           autoFocus
         >

@@ -23,7 +23,9 @@ function RunInfo({
 
   return (
     <>
-      <button onClick={() => setOpen(true)}>Run info</button>
+      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+        Run info
+      </button>
       {open && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <RunInfoDialog

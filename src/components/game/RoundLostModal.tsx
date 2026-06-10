@@ -47,7 +47,7 @@ export default function RoundLostModal({ info, onContinue }: RoundLostModalProps
         </dl>
         <button
           type="button"
-          className="round-lost-continue"
+          className="btn btn--primary round-lost-continue"
           onClick={onContinue}
           autoFocus
         >

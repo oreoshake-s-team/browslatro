@@ -558,40 +558,18 @@
 
 .shop-reroll {
   padding: 0.6rem 1.2rem;
-  background-color: #f59f00;
-  color: white;
-  border: none;
-  border-radius: 6px;
   font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
+  background-color: var(--surface-raised);
+  color: #ffa94d;
+  border-color: #e8590c;
 }
 
 .shop-reroll:hover:not(:disabled) {
-  background-color: #e67700;
-}
-
-.shop-reroll:disabled {
-  background-color: #adb5bd;
-  cursor: not-allowed;
+  background-color: var(--surface-hover);
+  color: #ffc078;
 }
 
 .shop-next {
   padding: 0.6rem 1.4rem;
-  background-color: #495057;
-  color: white;
-  border: none;
-  border-radius: 6px;
   font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.shop-next:hover:not(:disabled) {
-  background-color: #343a40;
-}
-
-.shop-next:disabled {
-  background-color: #adb5bd;
-  cursor: not-allowed;
 }

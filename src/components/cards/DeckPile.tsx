@@ -111,7 +111,7 @@ export default function DeckPile({
                   ))}
                 </div>
               </div>
-              <button className="modal-close" onClick={handleClose}>
+              <button className="btn btn--secondary modal-close" onClick={handleClose}>
                 Close
               </button>
             </div>
