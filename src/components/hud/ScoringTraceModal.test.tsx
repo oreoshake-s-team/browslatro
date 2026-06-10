@@ -86,3 +86,34 @@ describe("ScoringTraceModal", () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 });
+
+describe("ScoringTraceModal focus trap (#949)", () => {
+  test("traps Tab inside the dialog and restores focus to the opener on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = render(<ScoringTraceModal events={[]} onClose={() => {}} />);
+    const close = screen.getByRole("button", { name: /close scoring trace/i });
+    const body = screen.getByRole("log");
+    expect(close).toHaveFocus();
+    await user.tab();
+    expect(body).toHaveFocus();
+    await user.tab();
+    expect(close).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(body).toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+
+  test("marks the app shell inert while the dialog is open", () => {
+    const shell = document.createElement("div");
+    shell.setAttribute("data-app-shell", "");
+    document.body.appendChild(shell);
+    const view = render(<ScoringTraceModal events={[]} onClose={() => {}} />);
+    expect(shell).toHaveAttribute("inert");
+    view.unmount();
+    expect(shell).not.toHaveAttribute("inert");
+    shell.remove();
+  });
+});

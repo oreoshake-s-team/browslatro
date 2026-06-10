@@ -1,8 +1,10 @@
+import { useRef } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 import "./ScoringTraceModal.css";
 
 interface ScoringTraceModalProps {
@@ -12,9 +14,12 @@ interface ScoringTraceModalProps {
 
 export default function ScoringTraceModal({ events, onClose }: ScoringTraceModalProps) {
   const { t } = useTranslation();
+  const overlayRef = useRef<HTMLDivElement>(null);
   useEscapeToClose(onClose, true);
+  useFocusTrap(overlayRef);
   return createPortal(
     <div
+      ref={overlayRef}
       className="scoring-trace-modal__overlay"
       role="dialog"
       aria-modal="true"

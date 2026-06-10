@@ -1,4 +1,4 @@
-import type { Card, Enhancement, Rank, Seal, Suit } from "../cards/types";
+import type { Card, CardEdition, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import { SUITS, nextCardId } from "../cards/deck";
 import { pickRandomCardEdition } from "../cards/editions";
 import type { JokerRarity } from "./jokers";
@@ -138,14 +138,85 @@ export function transmuteHand(
   return { hand: [...kept, ...additions], destroyedIds, additions };
 }
 
+export interface AuraResult {
+  readonly hand: ReadonlyArray<Card>;
+  /** Id of the card the edition was applied to, for the run-level overlay. */
+  readonly targetId: number | null;
+  readonly edition: CardEdition | null;
+}
+
 export function applyAuraToSelectedInHand(
   hand: ReadonlyArray<Card>,
   selectedIds: ReadonlySet<number>,
   rng: SpectralRandomSource,
-): ReadonlyArray<Card> {
-  if (selectedIds.size !== 1) return hand;
+): AuraResult {
+  if (selectedIds.size !== 1) return { hand, targetId: null, edition: null };
+  const targetId = [...selectedIds][0];
+  if (!hand.some((c) => c.id === targetId)) {
+    return { hand, targetId: null, edition: null };
+  }
   const edition = pickRandomCardEdition(rng);
-  return hand.map((c) => (selectedIds.has(c.id) ? { ...c, edition } : c));
+  return {
+    hand: hand.map((c) => (c.id === targetId ? { ...c, edition } : c)),
+    targetId,
+    edition,
+  };
+}
+
+export interface ConvertHandResult {
+  readonly hand: ReadonlyArray<Card>;
+  /** Old ids of the replaced cards; pairs index-for-index with `additions`. */
+  readonly destroyedIds: ReadonlyArray<number>;
+  readonly additions: ReadonlyArray<Card>;
+}
+
+/**
+ * Sigil/Ouija permanently modify the deck in Balatro, so converted cards are
+ * replaced by new-id copies: originals go into destroyedCardIds and the
+ * copies (carrying the converted suit/rank plus the card's inline seal,
+ * enhancement, and edition) into addedCards (issue #1005). Cards already
+ * matching the target keep their id and are not re-registered. The in-hand
+ * copy keeps any transient faceDown flag, but the registered addition does
+ * not — face-down state belongs to the current boss round only.
+ */
+function convertHand(
+  hand: ReadonlyArray<Card>,
+  alreadyConverted: (card: Card) => boolean,
+  convert: (card: Card) => Card,
+): ConvertHandResult {
+  const destroyedIds: number[] = [];
+  const additions: Card[] = [];
+  const next = hand.map((c) => {
+    if (alreadyConverted(c)) return c;
+    const { faceDown, ...rest } = c;
+    const addition = { ...convert(rest), id: nextCardId() };
+    destroyedIds.push(c.id);
+    additions.push(addition);
+    return faceDown === true ? { ...addition, faceDown } : addition;
+  });
+  return { hand: next, destroyedIds, additions };
+}
+
+export function convertHandToSuit(
+  hand: ReadonlyArray<Card>,
+  suit: Suit,
+): ConvertHandResult {
+  return convertHand(
+    hand,
+    (c) => c.suit === suit,
+    (c) => ({ ...c, suit }),
+  );
+}
+
+export function convertHandToRank(
+  hand: ReadonlyArray<Card>,
+  rank: Rank,
+): ConvertHandResult {
+  return convertHand(
+    hand,
+    (c) => c.rank === rank,
+    (c) => ({ ...c, rank }),
+  );
 }
 
 export interface DuplicateSelectedResult {

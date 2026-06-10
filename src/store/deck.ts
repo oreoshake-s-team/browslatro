@@ -1,7 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { GameState } from "./game";
 import type { DealResult } from "../cards/deck";
-import type { Card, Enhancement, Seal } from "../cards/types";
+import type { Card, CardEdition, Enhancement, Seal } from "../cards/types";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -22,6 +22,10 @@ function emptyDeck() {
       Enhancement | null
     >,
     cardSealsById: new Map<number, Seal>() as ReadonlyMap<number, Seal>,
+    cardEditionsById: new Map<number, CardEdition>() as ReadonlyMap<
+      number,
+      CardEdition
+    >,
   };
 }
 
@@ -32,6 +36,7 @@ export interface DeckState {
   addedCards: ReadonlyArray<Card>;
   cardEnhancementsById: ReadonlyMap<number, Enhancement | null>;
   cardSealsById: ReadonlyMap<number, Seal>;
+  cardEditionsById: ReadonlyMap<number, CardEdition>;
   setBaseDeckCards: (update: Updater<ReadonlyArray<Card>>) => void;
   setDealt: (update: Updater<DealResult>) => void;
   setDestroyedCardIds: (update: Updater<ReadonlySet<number>>) => void;
@@ -40,6 +45,9 @@ export interface DeckState {
     update: Updater<ReadonlyMap<number, Enhancement | null>>,
   ) => void;
   setCardSealsById: (update: Updater<ReadonlyMap<number, Seal>>) => void;
+  setCardEditionsById: (
+    update: Updater<ReadonlyMap<number, CardEdition>>,
+  ) => void;
   resetDeck: () => void;
 }
 
@@ -60,5 +68,9 @@ export const createDeckSlice: StateCreator<GameState, [], [], DeckState> = (set)
     })),
   setCardSealsById: (update) =>
     set((state) => ({ cardSealsById: resolve(update, state.cardSealsById) })),
+  setCardEditionsById: (update) =>
+    set((state) => ({
+      cardEditionsById: resolve(update, state.cardEditionsById),
+    })),
   resetDeck: () => set(emptyDeck()),
 });

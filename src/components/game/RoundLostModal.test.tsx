@@ -77,3 +77,31 @@ describe("RoundLostModal i18n (#922)", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("RoundLostModal focus trap (#949)", () => {
+  test("traps Tab on the Try again button and restores focus to the opener on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = render(<RoundLostModal info={buildInfo()} onContinue={() => {}} />);
+    const tryAgain = screen.getByRole("button", { name: /Try again/ });
+    expect(tryAgain).toHaveFocus();
+    await user.tab();
+    expect(tryAgain).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(tryAgain).toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+
+  test("marks the app shell inert while the dialog is open", () => {
+    const shell = document.createElement("div");
+    shell.setAttribute("data-app-shell", "");
+    document.body.appendChild(shell);
+    const view = render(<RoundLostModal info={buildInfo()} onContinue={() => {}} />);
+    expect(shell).toHaveAttribute("inert");
+    view.unmount();
+    expect(shell).not.toHaveAttribute("inert");
+    shell.remove();
+  });
+});

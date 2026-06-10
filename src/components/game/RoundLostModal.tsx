@@ -1,7 +1,9 @@
 import "./RoundLostModal.css";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useFocusTrap } from "../system/useFocusTrap";
 
 export interface RoundLostInfo {
   readonly roundScore: number;
@@ -17,10 +19,13 @@ export default function RoundLostModal({ info, onContinue }: RoundLostModalProps
   const { t } = useTranslation();
   const { roundScore, requiredScore } = info;
   const shortBy = Math.max(0, requiredScore - roundScore);
+  const overlayRef = useRef<HTMLDivElement>(null);
   useEscapeToClose(onContinue, true);
+  useFocusTrap(overlayRef);
 
   return createPortal(
     <div
+      ref={overlayRef}
       className="round-lost-overlay"
       role="dialog"
       aria-modal="true"

@@ -105,3 +105,38 @@ describe("GameWonScreen i18n (#922)", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("GameWonScreen focus trap (#949)", () => {
+  test("traps Tab inside the dialog and restores focus to the opener on close", async () => {
+    const user = userEvent.setup();
+    render(<button data-testid="opener">opener</button>);
+    screen.getByTestId("opener").focus();
+    const view = render(
+      <GameWonScreen info={buildInfo()} onNewRun={() => {}} onEndless={() => {}} />,
+    );
+    const endless = screen.getByTestId("game-won-endless");
+    const newRun = screen.getByTestId("game-won-new-run");
+    expect(endless).toHaveFocus();
+    await user.tab();
+    expect(newRun).toHaveFocus();
+    await user.tab();
+    expect(endless).toHaveFocus();
+    await user.tab({ shift: true });
+    expect(newRun).toHaveFocus();
+    view.unmount();
+    expect(screen.getByTestId("opener")).toHaveFocus();
+  });
+
+  test("marks the app shell inert while the dialog is open", () => {
+    const shell = document.createElement("div");
+    shell.setAttribute("data-app-shell", "");
+    document.body.appendChild(shell);
+    const view = render(
+      <GameWonScreen info={buildInfo()} onNewRun={() => {}} onEndless={() => {}} />,
+    );
+    expect(shell).toHaveAttribute("inert");
+    view.unmount();
+    expect(shell).not.toHaveAttribute("inert");
+    shell.remove();
+  });
+});

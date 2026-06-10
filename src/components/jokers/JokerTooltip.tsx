@@ -28,6 +28,7 @@ import {
   fullDeckSize,
 } from "../../cards/deckBuild";
 import { formatChanceRatio } from "../cards/cardInfo";
+import { useTooltipPosition } from "../system/useTooltipPosition";
 
 interface JokerTooltipProps {
   id: string;
@@ -35,14 +36,9 @@ interface JokerTooltipProps {
   anchorRect: DOMRect;
 }
 
-const TOOLTIP_OFFSET_PX = 8;
-
 export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProps) {
   const { i18n } = useTranslation();
-  const style: React.CSSProperties = {
-    top: anchorRect.bottom + TOOLTIP_OFFSET_PX,
-    left: anchorRect.left + anchorRect.width / 2,
-  };
+  const { ref, style } = useTooltipPosition(anchorRect);
   const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
   const editionClass = joker.edition
     ? `joker-tooltip-edition-${joker.edition}`
@@ -52,7 +48,7 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
   const effectiveOdds = useEffectiveOdds(joker);
   const currentValue = useCurrentValue(joker);
   return createPortal(
-    <div id={id} role="tooltip" className="joker-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="joker-tooltip" style={style}>
       <p className="joker-tooltip-heading">
         {localizedJokerName(i18n.language, joker.id, joker.name)}
       </p>

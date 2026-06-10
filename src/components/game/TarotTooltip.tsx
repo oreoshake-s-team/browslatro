@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "./TarotTooltip.css";
+import { useTooltipPosition } from "../system/useTooltipPosition";
 import {
   localizedConsumableDescription,
   localizedConsumableName,
@@ -13,20 +14,15 @@ interface TarotTooltipProps {
   anchorRect: DOMRect;
 }
 
-const TOOLTIP_OFFSET_PX = 8;
-
 export default function TarotTooltip({
   id,
   card,
   anchorRect,
 }: TarotTooltipProps) {
   const { i18n } = useTranslation();
-  const style: React.CSSProperties = {
-    top: anchorRect.bottom + TOOLTIP_OFFSET_PX,
-    left: anchorRect.left + anchorRect.width / 2,
-  };
+  const { ref, style } = useTooltipPosition(anchorRect);
   return createPortal(
-    <div id={id} role="tooltip" className="tarot-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="tarot-tooltip" style={style}>
       <p className="tarot-tooltip-heading">
         {localizedConsumableName(i18n.language, card.id, card.name)}
       </p>
