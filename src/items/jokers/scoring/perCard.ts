@@ -164,6 +164,36 @@ export function applyPerCardJokers(
         }
         break;
       }
+      case "x-mult-on-idol-card": {
+        const target = context.idolTarget;
+        if (
+          target != null &&
+          card.rank === target.rank &&
+          cardSuit === mergedSuit(target.suit, smeared)
+        ) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
+      case "x-mult-per-suit-rotating": {
+        const suit = context.ancientSuit;
+        if (suit != null && cardSuit === mergedSuit(suit, smeared)) {
+          xMult *= effect.amount;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: effect.amount,
+          });
+        }
+        break;
+      }
       case "per-scored-rank-x-mult": {
         if (effect.ranks.includes(card.rank)) {
           xMult *= effect.amount;
@@ -251,6 +281,7 @@ export function applyPerCardJokers(
       case "prevent-death-at-quarter":
       case "sell-disables-boss-blind":
       case "disables-boss-blinds":
+      case "stack-chips-per-rotating-suit-discard":
       case "noop":
         break;
       default:

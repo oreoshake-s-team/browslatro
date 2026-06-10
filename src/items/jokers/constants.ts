@@ -138,6 +138,9 @@ export const HIKER_CHIPS_PER_SCORED = 5;
 export const CAVENDISH_X_MULT = 3;
 export const CAVENDISH_BUST_CHANCE = 1 / 1000;
 export const MR_BONES_SAVE_THRESHOLD = 0.25;
+export const THE_IDOL_X_MULT = 2;
+export const ANCIENT_JOKER_X_MULT = 1.5;
+export const CASTLE_CHIPS_PER_DISCARD = 3;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

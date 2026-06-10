@@ -90,6 +90,9 @@ export function useRoundLifecycle({
   const setAnte = useGame((s) => s.setAnte);
   const currentBoss = useGame((s) => s.currentBoss);
   const setCurrentBoss = useGame((s) => s.setCurrentBoss);
+  const setIdolTarget = useGame((s) => s.setIdolTarget);
+  const setAncientSuit = useGame((s) => s.setAncientSuit);
+  const setCastleSuit = useGame((s) => s.setCastleSuit);
   const setRecentBossIds = useGame((s) => s.setRecentBossIds);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
@@ -202,6 +205,31 @@ export function useRoundLifecycle({
     setRemainingDiscards(startingDiscards);
     setDiscardsUsedThisRound(0);
     setHandHistoryThisRound([]);
+    const deckForTargets = [...baseDeckCards, ...addedCards].filter(
+      (c) => !destroyedCardIds.has(c.id),
+    );
+    const needsIdol = equippedJokers.some(
+      (j) => j.effect.kind === "x-mult-on-idol-card",
+    );
+    if (needsIdol && deckForTargets.length > 0) {
+      const pick =
+        deckForTargets[Math.floor(Math.random() * deckForTargets.length)];
+      setIdolTarget({ rank: pick.rank, suit: pick.suit });
+    } else {
+      setIdolTarget(null);
+    }
+    setAncientSuit(
+      equippedJokers.some((j) => j.effect.kind === "x-mult-per-suit-rotating")
+        ? SUITS[Math.floor(Math.random() * SUITS.length)]
+        : null,
+    );
+    setCastleSuit(
+      equippedJokers.some(
+        (j) => j.effect.kind === "stack-chips-per-rotating-suit-discard",
+      )
+        ? SUITS[Math.floor(Math.random() * SUITS.length)]
+        : null,
+    );
     const stoneCount = stoneCardsOnBlindSelectFromJokers(equippedJokers);
     const newStones: Card[] = Array.from({ length: stoneCount }, () => ({
       id: nextCardId(),

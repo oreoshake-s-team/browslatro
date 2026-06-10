@@ -281,6 +281,12 @@ export type JokerEffect =
     }
   | { readonly kind: "sell-disables-boss-blind" }
   | { readonly kind: "disables-boss-blinds" }
+  | { readonly kind: "x-mult-on-idol-card"; readonly amount: number }
+  | { readonly kind: "x-mult-per-suit-rotating"; readonly amount: number }
+  | {
+      readonly kind: "stack-chips-per-rotating-suit-discard";
+      readonly amount: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

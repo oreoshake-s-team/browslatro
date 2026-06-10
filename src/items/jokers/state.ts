@@ -1,4 +1,4 @@
-import type { Card } from "../../cards/types";
+import type { Card, Suit } from "../../cards/types";
 import type { HandPlayCounts } from "../../components/hud/handPlayCounts";
 import { handContains, type HandLabel } from "../../scoring/handEvaluator";
 import { rollChance } from "../../dev/chanceOverride";
@@ -114,6 +114,7 @@ export function applyHandPlayedToJokerStates(
 export function applyDiscardToJokerStates(
   jokers: ReadonlyArray<Joker>,
   discardedCards: ReadonlyArray<Card> = [],
+  castleSuit: Suit | null = null,
 ): Joker[] {
   const updated = jokers.map((joker) => {
     const effect = joker.effect;
@@ -127,6 +128,15 @@ export function applyDiscardToJokerStates(
       return {
         ...joker,
         state: counterState(prevCount(joker) + discardedCards.length),
+      };
+    }
+    if (effect.kind === "stack-chips-per-rotating-suit-discard") {
+      if (castleSuit === null) return joker;
+      const matches = discardedCards.filter((c) => c.suit === castleSuit).length;
+      if (matches === 0) return joker;
+      return {
+        ...joker,
+        state: counterState(prevCount(joker) + effect.amount * matches),
       };
     }
     if (effect.kind === "x-mult-per-jack-discarded-this-round") {
