@@ -152,9 +152,9 @@ export default function Jokers({
   const showDropZone = Boolean(dropZone.onDrop);
   return (
     <section
-      className={`jokers${showDropZone ? " jokers-consumable-target" : ""}${
-        dropZone.hover ? " jokers-consumable-hover" : ""
-      }`}
+      className={`jokers${jokers.length === 0 ? " jokers-tray-empty" : ""}${
+        showDropZone ? " jokers-consumable-target" : ""
+      }${dropZone.hover ? " jokers-consumable-hover" : ""}`}
       style={{ "--joker-capacity": capacity } as React.CSSProperties}
       aria-label="Equipped jokers"
       data-consumable-drop-active={showDropZone || undefined}
