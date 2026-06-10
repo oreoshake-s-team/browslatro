@@ -44,7 +44,7 @@ test("8 hand cards fit on one row at desktop width without wrapping (issue #214)
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/");
   await page.waitForSelector(".card");
-  const cards = page.locator('[aria-label="Your hand"] .card');
+  const cards = page.locator('[data-testid="hand-cards"] .card');
   await expect(cards).toHaveCount(8);
   const firstTop = (await cards.first().boundingBox())?.y;
   const lastTop = (await cards.last().boundingBox())?.y;
@@ -67,7 +67,7 @@ test("13 hand cards squish instead of producing a horizontal scrollbar (issue #2
   await page.getByRole("button", { name: /Next Round/ }).click();
   await dismissBlindSelect(page);
   await expect(
-    page.locator('[aria-label="Your hand"] .card'),
+    page.locator('[data-testid="hand-cards"] .card'),
   ).toHaveCount(13);
   const overflow = await page.locator(".hand-cards").evaluate((el) => ({
     scrollWidth: el.scrollWidth,

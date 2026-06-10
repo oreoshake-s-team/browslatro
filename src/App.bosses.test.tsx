@@ -125,7 +125,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     await advanceToBossBlindAfterStartingTheRound(user);
     expect(screen.getByText("The Manacle")).toBeInTheDocument();
     expect(
-      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+      screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
     ).toHaveLength(7);
   });
 
@@ -136,7 +136,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     await advanceToBossBlindAfterStartingTheRound(user);
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0] as HTMLElement);
@@ -156,7 +156,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     flushScoringSequence();
     Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
       .filter((btn) => btn.classList.contains("card-discarding"))
@@ -173,7 +173,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     );
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 4; i += 1) await user.click(cards[i] as HTMLElement);
@@ -194,7 +194,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     await advanceToBossBlindAfterStartingTheRound(user);
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 5; i += 1) await user.click(cards[i] as HTMLElement);
@@ -370,7 +370,7 @@ describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
     ).toBeInTheDocument();
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0] as HTMLElement);
@@ -417,7 +417,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
     ).toBeInTheDocument();
     const handCards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     expect(
@@ -436,7 +436,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
     ).toBeInTheDocument();
     const handCards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll<HTMLElement>("button[aria-pressed]"),
     );
     for (const el of handCards) {
@@ -455,7 +455,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
     await dismissBlindSelect(user);
     expect(
-      document.querySelectorAll('[aria-label="Your hand"] .card-face-down'),
+      document.querySelectorAll('[data-testid="hand-cards"] .card-face-down'),
     ).toHaveLength(0);
   });
 });
@@ -501,7 +501,7 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
     }
     Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
       .filter((btn) => btn.classList.contains("card-discarding"))
@@ -518,7 +518,7 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
     const remainingBefore = dealtBefore.remaining.length;
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0] as HTMLElement);
@@ -537,7 +537,7 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
     const discardsBefore = useGame.getState().remainingDiscards;
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0] as HTMLElement);
@@ -564,7 +564,7 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
     const remainingBefore = useGame.getState().dealt.remaining.length;
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0] as HTMLElement);
@@ -587,7 +587,7 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
     );
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0] as HTMLElement);
@@ -617,7 +617,7 @@ describe("Boss Blinds — Phase 5 The Serpent (#811)", () => {
     }
     Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
       .filter((btn) => btn.classList.contains("card-discarding"))
@@ -635,7 +635,7 @@ describe("Boss Blinds — Phase 5 The Serpent (#811)", () => {
     const handBeforeIds = useGame.getState().dealt.hand.map((c) => c.id);
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     fireEvent.click(cards[0] as HTMLElement);
@@ -659,7 +659,7 @@ describe("Boss Blinds — Phase 5 The Serpent (#811)", () => {
     });
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     fireEvent.click(cards[0] as HTMLElement);
@@ -679,7 +679,7 @@ describe("Boss Blinds — Phase 5 The Ox (#812)", () => {
     }
     Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
       .filter((btn) => btn.classList.contains("card-discarding"))
@@ -704,7 +704,7 @@ describe("Boss Blinds — Phase 5 The Ox (#812)", () => {
     });
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     fireEvent.click(cards[0] as HTMLElement);
@@ -732,7 +732,7 @@ describe("Boss Blinds — Phase 5 The Ox (#812)", () => {
     });
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     fireEvent.click(cards[0] as HTMLElement);
@@ -753,7 +753,7 @@ describe("Boss Blinds — Phase 5 The Ox (#812)", () => {
     });
     const cards = Array.from(
       screen
-        .getByLabelText("Your hand")
+        .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
     fireEvent.click(cards[0] as HTMLElement);

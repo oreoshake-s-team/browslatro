@@ -109,7 +109,7 @@ export default function RunInfoDialog({
         <div
           className="run-info-tablist"
           role="tablist"
-          aria-label="Run Information sections"
+          aria-label={t("a11y.runInfoSections")}
         >
           <button {...tabButtonProps("hands")}>{t("runInfo.handsTab")}</button>
           <button {...tabButtonProps("vouchers")}>
@@ -122,7 +122,7 @@ export default function RunInfoDialog({
               <thead>
                 <tr>
                   <th scope="col">{t("runInfo.handHeader")}</th>
-                  <th scope="col" aria-label="Level">
+                  <th scope="col" aria-label={t("a11y.level")}>
                     {t("runInfo.levelHeader")}
                   </th>
                   <th scope="col">{t("runInfo.chipsTimesMult")}</th>

@@ -41,7 +41,11 @@ function Round({
           <p
             className="boss-locked-hand"
             data-testid="boss-locked-hand"
-            aria-label={`Locked to ${firstPlayedHandLabel}`}
+            aria-label={t("a11y.lockedTo", {
+              hand: firstPlayedHandLabel
+                ? tHandLabel(t, firstPlayedHandLabel)
+                : "",
+            })}
           >
             {t("sidebar.lockedTo")}{" "}
             <strong>{firstPlayedHandLabel ? tHandLabel(t, firstPlayedHandLabel) : null}</strong>

@@ -345,7 +345,7 @@ describe("Jokers consumable drop zone", () => {
         onConsumableDrop={onConsumableDrop}
       />,
     );
-    const section = screen.getByLabelText("Equipped jokers");
+    const section = screen.getByTestId("jokers-tray");
     dispatchDrag(section, "dragover", ["application/x-browslatro-consumable"]);
     dispatchDrag(section, "drop", ["application/x-browslatro-consumable"]);
     expect(onConsumableDrop).toHaveBeenCalledTimes(1);
@@ -360,7 +360,7 @@ describe("Jokers consumable drop zone", () => {
         onConsumableDrop={onConsumableDrop}
       />,
     );
-    const section = screen.getByLabelText("Equipped jokers");
+    const section = screen.getByTestId("jokers-tray");
     dispatchDrag(section, "drop", ["text/plain"]);
     expect(onConsumableDrop).not.toHaveBeenCalled();
   });
@@ -374,7 +374,7 @@ describe("Jokers consumable drop zone", () => {
         onConsumableDrop={onConsumableDrop}
       />,
     );
-    const section = screen.getByLabelText("Equipped jokers");
+    const section = screen.getByTestId("jokers-tray");
     dispatchDrag(section, "drop", ["application/x-browslatro-consumable"]);
     expect(onConsumableDrop).not.toHaveBeenCalled();
   });
@@ -678,11 +678,11 @@ describe("Jokers UI — Perishable debuffed visual (closes #579)", () => {
 describe("Empty tray treatment (issue #875)", () => {
   test("the tray carries the jokers-tray-empty class when no jokers are equipped", () => {
     render(<Jokers jokers={[]} />);
-    expect(screen.getByLabelText("Equipped jokers")).toHaveClass("jokers-tray-empty");
+    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers-tray-empty");
   });
 
   test("negative: the tray drops the empty class once a joker is equipped", () => {
     render(<Jokers jokers={[createGreedyJoker()]} />);
-    expect(screen.getByLabelText("Equipped jokers")).not.toHaveClass("jokers-tray-empty");
+    expect(screen.getByTestId("jokers-tray")).not.toHaveClass("jokers-tray-empty");
   });
 });

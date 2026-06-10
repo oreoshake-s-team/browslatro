@@ -4,8 +4,9 @@ import Card from "./Card";
 import DeckPile from "./DeckPile";
 import type { Card as CardType } from "../../cards/types";
 import { sortCards, type SortMode } from "../../cards/deck";
+import { useTranslation } from "react-i18next";
 import { announce } from "../system/LiveAnnouncer";
-import { cardName, reorderStrings } from "../../i18n/strings";
+import { cardName } from "../../i18n/strings";
 
 export const MAX_SELECTED = 5;
 
@@ -128,6 +129,7 @@ export default function Hand({
   jokerDropEnabled,
   onJokerSellDrop,
 }: HandProps) {
+  const { t } = useTranslation();
   const [{ sortMode, manualOrder, draggingId, dragOverGap }, dispatch] =
     useReducer(handUiReducer, initialHandUiState);
   const handCardsRef = useRef<HTMLDivElement | null>(null);
@@ -188,16 +190,20 @@ export default function Hand({
     if (idx < 0) return;
     const name = cardName(card);
     if (direction === -1 && idx === 0) {
-      announce(reorderStrings.atStart(name));
+      announce(t("a11y.atStart", { item: name }));
       return;
     }
     if (direction === 1 && idx === displayedHand.length - 1) {
-      announce(reorderStrings.atEnd(name));
+      announce(t("a11y.atEnd", { item: name }));
       return;
     }
     insertAtGap(card.id, direction === -1 ? idx - 1 : idx + 2);
     announce(
-      reorderStrings.moved(name, idx + direction + 1, displayedHand.length),
+      t("a11y.movedTo", {
+        item: name,
+        position: idx + direction + 1,
+        total: displayedHand.length,
+      }),
     );
   }
 
@@ -322,7 +328,11 @@ export default function Hand({
     <div className="hand">
       <div className="hand-toolbar">
         <span className="hand-sort-label">Sort:</span>
-        <div className="hand-sort-group" role="group" aria-label="Sort hand">
+        <div
+          className="hand-sort-group"
+          role="group"
+          aria-label={t("a11y.sortHand")}
+        >
           <button
             type="button"
             className={`hand-sort-button ${
@@ -354,7 +364,7 @@ export default function Hand({
             }`.trim()}
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
-            aria-label="Manual order"
+            aria-label={t("a11y.manualOrder")}
             title="Manual order (drag a card to rearrange)"
           >
             Manual
@@ -367,7 +377,8 @@ export default function Hand({
           className={`hand-cards${
             draggingId !== null ? " hand-cards-dragging" : ""
           }`}
-          aria-label="Your hand"
+          aria-label={t("a11y.yourHand")}
+          data-testid="hand-cards"
           onDragOver={handleHandDragOver}
           onDrop={handleHandDrop}
         >
@@ -409,7 +420,7 @@ export default function Hand({
                     <button
                       type="button"
                       className="hand-move-button"
-                      aria-label={reorderStrings.moveLeft(cardName(card))}
+                      aria-label={t("a11y.moveLeft", { item: cardName(card) })}
                       data-testid={`hand-move-left-${card.id}`}
                       onClick={() => moveCard(card, -1)}
                     >
@@ -418,7 +429,7 @@ export default function Hand({
                     <button
                       type="button"
                       className="hand-move-button"
-                      aria-label={reorderStrings.moveRight(cardName(card))}
+                      aria-label={t("a11y.moveRight", { item: cardName(card) })}
                       data-testid={`hand-move-right-${card.id}`}
                       onClick={() => moveCard(card, 1)}
                     >

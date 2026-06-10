@@ -11,7 +11,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const NEXT_ROUND_BUTTON = /Next Round/;

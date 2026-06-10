@@ -107,7 +107,7 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings (iss
   await page.goto("/");
   await page.getByTestId("new-run-confirm").click();
   await page.getByTestId("blind-select-play").click();
-  const handCards = page.locator('[aria-label="Your hand"] .card');
+  const handCards = page.locator('[data-testid="hand-cards"] .card');
   await expect(handCards).toHaveCount(8);
   for (let i = 0; i < 5; i += 1) {
     await handCards.nth(i).click();
@@ -117,4 +117,30 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings (iss
   await expect(page.getByText("Huina")).toBeVisible();
   await page.getByRole("button", { name: "Hoʻomau →" }).click();
   await expect(page.getByRole("heading", { name: /Hale kūʻai/ })).toBeVisible();
+});
+
+test("aria-labels are translated under the haw locale (issue #924)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:locale", "haw");
+  });
+  await startRound(page);
+  await expect(page.getByTestId("hand-cards")).toHaveAttribute(
+    "aria-label",
+    "Kāu lima",
+  );
+  await expect(page.getByTestId("jokers-tray")).toHaveAttribute(
+    "aria-label",
+    "Nā Joker i hoʻokomo ʻia",
+  );
+  await expect(page.getByTestId("consumables-tray")).toHaveAttribute(
+    "aria-label",
+    "Nā wahi consumable",
+  );
+  await expect(page.getByTestId("deck-pile")).toHaveAttribute(
+    "aria-label",
+    /^Pūʻulu kāleka \(\d+ kāleka i koe\)$/,
+  );
+  await expect(page.locator('[aria-label="Your hand"]')).toHaveCount(0);
 });

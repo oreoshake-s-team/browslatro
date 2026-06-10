@@ -66,7 +66,7 @@ describe("Game", () => {
 
   test("renders the player's hand of cards", () => {
     renderGame();
-    expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
+    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
   });
 
   test("Discard button calls onDiscard when enabled", async () => {

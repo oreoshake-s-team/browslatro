@@ -1262,7 +1262,7 @@ describe("App scoring step honors animation speed preference", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = Array.from(
-      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+      screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
@@ -1278,7 +1278,7 @@ describe("App scoring step honors animation speed preference", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     const cards = Array.from(
-      screen.getByLabelText("Your hand").querySelectorAll("button[aria-pressed]"),
+      screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
     );
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
@@ -2202,7 +2202,7 @@ describe("Consumable drag and sell integration", () => {
   test("dragging a planet consumable onto the jokers area uses it", async () => {
     await buyPlanetAndCloseShop();
     const tile = screen.getByTestId("consumable-tile-filled-0");
-    const jokersSection = screen.getByLabelText("Equipped jokers");
+    const jokersSection = screen.getByTestId("jokers-tray");
     const dt = fakeDataTransfer();
     fireEvent.dragStart(tile, { dataTransfer: dt });
     fireEvent.dragOver(jokersSection, { dataTransfer: dt });
@@ -2244,7 +2244,7 @@ describe("Consumable drag and sell integration", () => {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
 
     const tile = screen.getByTestId("consumable-tile-filled-0");
-    const jokersSection = screen.getByLabelText("Equipped jokers");
+    const jokersSection = screen.getByTestId("jokers-tray");
     const dt = fakeDataTransfer();
     fireEvent.dragStart(tile, { dataTransfer: dt });
     fireEvent.dragOver(jokersSection, { dataTransfer: dt });
@@ -2684,7 +2684,7 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
 
   test("the player's hand is NOT in the document while the shop is open", async () => {
     await openShop();
-    expect(screen.queryByLabelText("Your hand")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("the Submit Hand button is NOT in the document while the shop is open", async () => {
@@ -2694,14 +2694,14 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
 
   test("the jokers row remains queryable while the shop is open", async () => {
     await openShop();
-    expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
+    expect(screen.getByTestId("jokers-tray")).toBeInTheDocument();
   });
 
   test("dismissing the shop re-mounts the hand", async () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
-    expect(screen.getByLabelText("Your hand")).toBeInTheDocument();
+    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
   });
 });
 
@@ -2747,8 +2747,8 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
     const region = document
       .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
     expect(region).not.toHaveAttribute("aria-modal");
-    expect(screen.getByLabelText("Equipped jokers")).toBeInTheDocument();
-    expect(screen.getByLabelText("Consumable slots")).toBeInTheDocument();
+    expect(screen.getByTestId("jokers-tray")).toBeInTheDocument();
+    expect(screen.getByTestId("consumables-tray")).toBeInTheDocument();
     expect(nonPackBuyButtons().every((b) => b.disabled)).toBe(true);
     expect(
       screen.getByRole("button", { name: /Reroll shop offers/i }),

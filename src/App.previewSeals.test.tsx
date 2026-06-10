@@ -146,7 +146,7 @@ describe("Applying owned apply-seal spectrals to the preview hand (#404)", () =>
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     const sealed = screen
-      .getByLabelText("Your hand")
+      .getByTestId("hand-cards")
       .querySelector(".card-seal-gold");
     expect(sealed).not.toBeNull();
   });

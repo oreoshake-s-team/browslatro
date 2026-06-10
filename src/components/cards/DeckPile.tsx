@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState, type DragEvent } from "react";
 import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import "./DeckPile.css";
 import Card from "./Card";
 import DeckSummary from "./DeckSummary";
@@ -33,6 +34,7 @@ export default function DeckPile({
   jokerDropEnabled = false,
   onJokerDrop,
 }: DeckPileProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const grouped = groupBySuit(remaining);
   const titleId = useId();
@@ -72,7 +74,8 @@ export default function DeckPile({
         className={`deck-pile${showDropZone ? " deck-pile-drop-target" : ""}${
           hover ? " deck-pile-drop-hover" : ""
         }`}
-        aria-label={`Deck (${remaining.length} cards remaining)`}
+        aria-label={t("a11y.deckPile", { total: remaining.length })}
+        data-testid="deck-pile"
         data-consumable-drop-active={showDropZone || undefined}
         onClick={() => setOpen(true)}
         onDragOver={showDropZone ? handleDragOver : undefined}

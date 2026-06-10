@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const DECK_COUNT = ".deck-pile-count";
 
 async function startRunAndDealHand(page: Page): Promise<void> {

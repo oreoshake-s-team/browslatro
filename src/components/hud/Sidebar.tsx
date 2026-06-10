@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { Blind } from "../../cards/types";
 import "./Sidebar.css";
 import { BlindValues } from "../../constants";
@@ -61,8 +62,9 @@ export default function Sidebar({
   onHighVisibilityChange,
   onAnimationSpeedChange,
 }: SidebarProps) {
+  const { t } = useTranslation();
   return (
-    <aside className="sidebar" aria-label="Game status">
+    <aside className="sidebar" aria-label={t("a11y.gameStatus")}>
       <Round
         blind={blind}
         BlindValues={BlindValues}

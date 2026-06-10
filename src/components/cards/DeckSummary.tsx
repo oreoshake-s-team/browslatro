@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import "./DeckSummary.css";
 import type { Card, Suit } from "../../cards/types";
 import { RANKS, SUITS, summarizeDeck } from "../../cards/deck";
@@ -23,11 +24,12 @@ interface DeckSummaryProps {
 }
 
 export default function DeckSummary({ remaining }: DeckSummaryProps) {
+  const { t } = useTranslation();
   const { suitCounts, rankCounts } = summarizeDeck(remaining);
   return (
     <section
       className="deck-summary"
-      aria-label="Remaining cards summary"
+      aria-label={t("a11y.remainingCardsSummary")}
       data-testid="deck-summary"
     >
       <div className="deck-summary-section deck-summary-section-suits">
