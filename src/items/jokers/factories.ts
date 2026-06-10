@@ -84,6 +84,10 @@ import {
   DUSK_RETRIGGERS,
   SOCK_AND_BUSKIN_RETRIGGERS,
   HANGING_CHAD_RETRIGGERS,
+  RED_CARD_MULT_PER_SKIPPED_PACK,
+  HIT_THE_ROAD_X_MULT_PER_JACK,
+  LUCKY_CAT_X_MULT_PER_TRIGGER,
+  EGG_SELL_VALUE_PER_ROUND,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1369,6 +1373,62 @@ export function createHangingChadJoker(): Joker {
     name: "Hanging Chad",
     description: `Retrigger first played card used in scoring ${HANGING_CHAD_RETRIGGERS} additional times`,
     effect: { kind: "retrigger-first-card", times: HANGING_CHAD_RETRIGGERS },
+  };
+}
+
+export function createRedCardJoker(): Joker {
+  return {
+    id: "red-card",
+    rarity: "common",
+    name: "Red Card",
+    description: `This Joker gains +${RED_CARD_MULT_PER_SKIPPED_PACK} Mult when any Booster Pack is skipped`,
+    effect: {
+      kind: "stack-mult-on-pack-skip",
+      amount: RED_CARD_MULT_PER_SKIPPED_PACK,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createHitTheRoadJoker(): Joker {
+  return {
+    id: "hit-the-road",
+    rarity: "rare",
+    name: "Hit the Road",
+    description: `This Joker gains X${HIT_THE_ROAD_X_MULT_PER_JACK} Mult for every Jack discarded this round`,
+    effect: {
+      kind: "x-mult-per-jack-discarded-this-round",
+      amount: HIT_THE_ROAD_X_MULT_PER_JACK,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createLuckyCatJoker(): Joker {
+  return {
+    id: "lucky-cat",
+    rarity: "uncommon",
+    name: "Lucky Cat",
+    description: `This Joker gains X${LUCKY_CAT_X_MULT_PER_TRIGGER} Mult every time a Lucky card successfully triggers`,
+    effect: {
+      kind: "x-mult-per-lucky-trigger",
+      amount: LUCKY_CAT_X_MULT_PER_TRIGGER,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createEggJoker(): Joker {
+  return {
+    id: "egg",
+    rarity: "common",
+    name: "Egg",
+    description: `Gains $${EGG_SELL_VALUE_PER_ROUND} of sell value at end of round`,
+    effect: {
+      kind: "sell-value-grows-per-round",
+      amount: EGG_SELL_VALUE_PER_ROUND,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }
 

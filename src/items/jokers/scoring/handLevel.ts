@@ -372,6 +372,7 @@ export function applyHandLevelJokers(
       case "on-hand-type-stack-mult":
       case "on-hand-stack-on-discard-shrink-mult":
       case "stack-mult-on-shop-reroll":
+      case "stack-mult-on-pack-skip":
       case "mult-decay-per-round": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
@@ -459,6 +460,21 @@ export function applyHandLevelJokers(
         }
         break;
       }
+      case "x-mult-per-jack-discarded-this-round":
+      case "x-mult-per-lucky-trigger": {
+        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        if (counter > 0) {
+          const factor = 1 + effect.amount * counter;
+          xMult *= factor;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            xMultFactor: factor,
+          });
+        }
+        break;
+      }
       case "x-mult-shrink-per-discarded-card": {
         const factor = ramenXMultFactor(joker);
         if (factor > 1) {
@@ -504,6 +520,7 @@ export function applyHandLevelJokers(
       case "retrigger-face-cards":
       case "retrigger-first-card":
       case "retrigger-on-final-hand":
+      case "sell-value-grows-per-round":
       case "noop":
         break;
       default:

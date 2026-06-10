@@ -8,6 +8,15 @@ import {
   createRamenJoker,
 } from "../jokers";
 import type { Joker } from "../jokers";
+import type { Card } from "../../cards/types";
+
+function cards(count: number): Card[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    rank: "7" as const,
+    suit: "clubs" as const,
+  }));
+}
 
 describe("Ramen (#871)", () => {
   test("is registered in the joker catalog", () => {
@@ -23,15 +32,15 @@ describe("Ramen (#871)", () => {
   });
 
   test("discarding 3 cards drops the factor to X1.97", () => {
-    const jokers = applyDiscardToJokerStates([createRamenJoker()], 3);
+    const jokers = applyDiscardToJokerStates([createRamenJoker()], cards(3));
     const result = applyHandLevelJokers(jokers, { playedHandLabel: "Pair" });
     expect(result.xMult).toBe(RAMEN_X_MULT - 3 * RAMEN_X_MULT_LOSS_PER_CARD);
   });
 
   test("discards accumulate across separate discard actions", () => {
     const jokers = applyDiscardToJokerStates(
-      applyDiscardToJokerStates([createRamenJoker()], 2),
-      2,
+      applyDiscardToJokerStates([createRamenJoker()], cards(2)),
+      cards(2),
     );
     const result = applyHandLevelJokers(jokers, { playedHandLabel: "Pair" });
     expect(result.xMult).toBe(RAMEN_X_MULT - 4 * RAMEN_X_MULT_LOSS_PER_CARD);
@@ -43,7 +52,7 @@ describe("Ramen (#871)", () => {
     );
     const jokers = applyDiscardToJokerStates(
       [createRamenJoker()],
-      cardsToDeplete,
+      cards(cardsToDeplete),
     );
     expect(jokers).toHaveLength(0);
   });
@@ -54,7 +63,7 @@ describe("Ramen (#871)", () => {
     );
     const jokers = applyDiscardToJokerStates(
       [createRamenJoker()],
-      cardsToDeplete - 1,
+      cards(cardsToDeplete - 1),
     );
     expect(jokers).toHaveLength(1);
   });
@@ -67,11 +76,11 @@ describe("Ramen (#871)", () => {
     const cardsToDeplete = Math.round(
       (RAMEN_X_MULT - 1) / RAMEN_X_MULT_LOSS_PER_CARD,
     );
-    expect(applyDiscardToJokerStates([eternal], cardsToDeplete)).toHaveLength(1);
+    expect(applyDiscardToJokerStates([eternal], cards(cardsToDeplete))).toHaveLength(1);
   });
 
   test("a discard action with 0 cards leaves the factor unchanged (negative)", () => {
-    const jokers = applyDiscardToJokerStates([createRamenJoker()], 0);
+    const jokers = applyDiscardToJokerStates([createRamenJoker()], cards(0));
     const result = applyHandLevelJokers(jokers, { playedHandLabel: "Pair" });
     expect(result.xMult).toBe(RAMEN_X_MULT);
   });

@@ -25,6 +25,7 @@ import {
   tickPerishableRounds,
   applyShopRerollToJokerStates,
   applyRoundEndToJokerStates,
+  applyPackSkipToJokerStates,
 } from "../items/jokers";
 import {
   applyAstronomerPricing,
@@ -468,6 +469,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   closeOpenedPack: () => {
     const s = get();
+    s.setJokers((prev) => applyPackSkipToJokerStates(prev));
     s.setOpenedPack(null);
     s.setPackPicksRemaining(0);
     s.setPackPreviewHand([]);

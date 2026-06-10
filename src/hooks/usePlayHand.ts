@@ -29,6 +29,7 @@ import {
   applyHandLevelJokers,
   applyHandPlayedToJokerStates,
   expandScoringRetriggers,
+  applyLuckyTriggersToJokerStates,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -501,6 +502,16 @@ export function usePlayHand({
       if (isFaceCard(scoring[i])) firstFaceAlreadyScoredUpfront = true;
     }
     setLuckyRollsByScoringIndex(luckyRollsByScoringIndex);
+    const luckyTriggerCount = luckyRollsByScoringIndex.reduce(
+      (sum, roll) =>
+        sum + (roll.multBonus > 0 ? 1 : 0) + (roll.moneyBonus > 0 ? 1 : 0),
+      0,
+    );
+    if (luckyTriggerCount > 0) {
+      setJokers((prev) =>
+        applyLuckyTriggersToJokerStates(prev, luckyTriggerCount),
+      );
+    }
 
     const heldSteelIds = heldEnhancementIdsWithRedSeal(
       dealt.hand,

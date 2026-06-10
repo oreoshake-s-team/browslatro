@@ -230,6 +230,13 @@ export type JokerEffect =
   | { readonly kind: "retrigger-face-cards"; readonly times: number }
   | { readonly kind: "retrigger-first-card"; readonly times: number }
   | { readonly kind: "retrigger-on-final-hand"; readonly times: number }
+  | { readonly kind: "stack-mult-on-pack-skip"; readonly amount: number }
+  | {
+      readonly kind: "x-mult-per-jack-discarded-this-round";
+      readonly amount: number;
+    }
+  | { readonly kind: "x-mult-per-lucky-trigger"; readonly amount: number }
+  | { readonly kind: "sell-value-grows-per-round"; readonly amount: number }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 
