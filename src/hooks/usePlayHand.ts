@@ -543,6 +543,8 @@ export function usePlayHand({
       const perCard = applyPerCardJokers(jokers, scoring[i], Math.random, {
         firstFaceAlreadyScored: firstFaceAlreadyScoredUpfront,
         smearedSuits: smearedSuitsActive,
+        idolTarget: useGame.getState().idolTarget,
+        ancientSuit: useGame.getState().ancientSuit,
       });
       perCardAdditiveMult += perCard.additiveMult;
       perCardAdditiveChips += perCard.additiveChips;

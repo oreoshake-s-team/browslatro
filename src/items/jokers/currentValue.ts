@@ -68,6 +68,7 @@ export function jokerCurrentValue(
     case "on-hand-type-stack-chips":
     case "on-played-card-count-stack-chips":
     case "on-played-rank-stack-chips":
+    case "stack-chips-per-rotating-suit-discard":
     case "chips-melt-per-hand":
       return { kind: "chips", value: counterValue(joker) };
     case "per-remaining-discard-chips":

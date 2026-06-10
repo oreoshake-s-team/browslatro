@@ -228,7 +228,12 @@ export function useScoringPipeline({
         jokers,
         stepCard,
         Math.random,
-        { firstFaceAlreadyScored, smearedSuits },
+        {
+          firstFaceAlreadyScored,
+          smearedSuits,
+          idolTarget: useGame.getState().idolTarget,
+          ancientSuit: useGame.getState().ancientSuit,
+        },
       );
       if (cardJokerResult.moneyEarned > 0) {
         useGame.getState().earn(cardJokerResult.moneyEarned);

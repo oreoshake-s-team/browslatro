@@ -9,6 +9,7 @@ import { initialRunStats, type RunStats } from "../run/runStats";
 import type { NextShopModifier } from "../run/nextShopMods";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
 import { DEFAULT_DECK, type Deck } from "../items/decks";
+import type { Rank, Suit } from "../cards/types";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -29,6 +30,9 @@ export interface RunState {
   pendingNextRoundHandSize: number;
   pendingDouble: boolean;
   grosMichelDestroyed: boolean;
+  idolTarget: { readonly rank: Rank; readonly suit: Suit } | null;
+  ancientSuit: Suit | null;
+  castleSuit: Suit | null;
   selectedStake: Stake;
   selectedDeck: Deck;
   setRunStats: (update: Updater<RunStats>) => void;
@@ -37,6 +41,11 @@ export interface RunState {
   setPendingNextRoundHandSize: (update: Updater<number>) => void;
   setPendingDouble: (update: Updater<boolean>) => void;
   setGrosMichelDestroyed: (update: Updater<boolean>) => void;
+  setIdolTarget: (
+    update: Updater<{ readonly rank: Rank; readonly suit: Suit } | null>,
+  ) => void;
+  setAncientSuit: (update: Updater<Suit | null>) => void;
+  setCastleSuit: (update: Updater<Suit | null>) => void;
   setSelectedStake: (update: Updater<Stake>) => void;
   setSelectedDeck: (update: Updater<Deck>) => void;
   resetRun: () => void;
@@ -49,6 +58,9 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
   pendingNextRoundHandSize: 0,
   pendingDouble: false,
   grosMichelDestroyed: false,
+  idolTarget: null,
+  ancientSuit: null,
+  castleSuit: null,
   selectedStake: DEFAULT_STAKE,
   selectedDeck: DEFAULT_DECK,
   setRunStats: (update) =>
@@ -67,6 +79,12 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
     set((state) => ({
       grosMichelDestroyed: resolve(update, state.grosMichelDestroyed),
     })),
+  setIdolTarget: (update) =>
+    set((state) => ({ idolTarget: resolve(update, state.idolTarget) })),
+  setAncientSuit: (update) =>
+    set((state) => ({ ancientSuit: resolve(update, state.ancientSuit) })),
+  setCastleSuit: (update) =>
+    set((state) => ({ castleSuit: resolve(update, state.castleSuit) })),
   setSelectedStake: (update) =>
     set((state) => ({ selectedStake: resolve(update, state.selectedStake) })),
   setSelectedDeck: (update) =>
@@ -79,6 +97,9 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
       pendingNextRoundHandSize: 0,
       pendingDouble: false,
       grosMichelDestroyed: false,
+      idolTarget: null,
+      ancientSuit: null,
+      castleSuit: null,
       selectedStake: DEFAULT_STAKE,
       selectedDeck: DEFAULT_DECK,
     }),

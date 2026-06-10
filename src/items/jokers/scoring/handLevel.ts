@@ -402,6 +402,7 @@ export function applyHandLevelJokers(
       case "on-hand-type-stack-chips":
       case "on-played-card-count-stack-chips":
       case "on-played-rank-stack-chips":
+      case "stack-chips-per-rotating-suit-discard":
       case "chips-melt-per-hand": {
         const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (bonus > 0) {
@@ -561,6 +562,8 @@ export function applyHandLevelJokers(
       case "prevent-death-at-quarter":
       case "sell-disables-boss-blind":
       case "disables-boss-blinds":
+      case "x-mult-on-idol-card":
+      case "x-mult-per-suit-rotating":
       case "noop":
         break;
       default:

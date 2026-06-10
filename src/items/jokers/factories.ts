@@ -104,6 +104,9 @@ import {
   CAVENDISH_X_MULT,
   CAVENDISH_BUST_CHANCE,
   MR_BONES_SAVE_THRESHOLD,
+  THE_IDOL_X_MULT,
+  ANCIENT_JOKER_X_MULT,
+  CASTLE_CHIPS_PER_DISCARD,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1683,6 +1686,40 @@ export function createChicotJoker(): Joker {
     name: "Chicot",
     description: "Disables effect of every Boss Blind",
     effect: { kind: "disables-boss-blinds" },
+  };
+}
+
+export function createTheIdolJoker(): Joker {
+  return {
+    id: "the-idol",
+    rarity: "uncommon",
+    name: "The Idol",
+    description: `Each played card of the chosen rank and suit gives X${THE_IDOL_X_MULT} Mult when scored; card changes every round`,
+    effect: { kind: "x-mult-on-idol-card", amount: THE_IDOL_X_MULT },
+  };
+}
+
+export function createAncientJoker(): Joker {
+  return {
+    id: "ancient-joker",
+    rarity: "rare",
+    name: "Ancient Joker",
+    description: `Each played card of the chosen suit gives X${ANCIENT_JOKER_X_MULT} Mult when scored; suit changes every round`,
+    effect: { kind: "x-mult-per-suit-rotating", amount: ANCIENT_JOKER_X_MULT },
+  };
+}
+
+export function createCastleJoker(): Joker {
+  return {
+    id: "castle",
+    rarity: "uncommon",
+    name: "Castle",
+    description: `This Joker gains +${CASTLE_CHIPS_PER_DISCARD} Chips per discarded card of the chosen suit; suit changes every round`,
+    effect: {
+      kind: "stack-chips-per-rotating-suit-discard",
+      amount: CASTLE_CHIPS_PER_DISCARD,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }
 
