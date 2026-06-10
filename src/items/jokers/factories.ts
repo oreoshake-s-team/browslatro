@@ -113,6 +113,9 @@ import {
   RIFF_RAFF_JOKER_COUNT,
   MAIL_IN_REBATE_PAYOUT,
   SATELLITE_MONEY_PER_PLANET,
+  GLASS_JOKER_X_MULT_PER_SHATTER,
+  TO_DO_LIST_PAYOUT,
+  MADNESS_X_MULT_PER_BLIND,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1855,6 +1858,44 @@ export function createSatelliteJoker(): Joker {
       kind: "end-of-round-money-per-unique-planet",
       amount: SATELLITE_MONEY_PER_PLANET,
     },
+  };
+}
+
+export function createGlassJoker(): Joker {
+  return {
+    id: "glass-joker",
+    rarity: "uncommon",
+    name: "Glass Joker",
+    description: `This Joker gains X${GLASS_JOKER_X_MULT_PER_SHATTER} Mult for every Glass card that is destroyed`,
+    effect: {
+      kind: "x-mult-per-glass-shattered",
+      amount: GLASS_JOKER_X_MULT_PER_SHATTER,
+    },
+    state: { kind: "counter", value: 0 },
+  };
+}
+
+export function createToDoListJoker(): Joker {
+  return {
+    id: "to-do-list",
+    rarity: "common",
+    name: "To Do List",
+    description: `Earn $${TO_DO_LIST_PAYOUT} if poker hand is the listed hand; hand changes every round`,
+    effect: { kind: "money-on-todo-hand", payout: TO_DO_LIST_PAYOUT },
+  };
+}
+
+export function createMadnessJoker(): Joker {
+  return {
+    id: "madness",
+    rarity: "uncommon",
+    name: "Madness",
+    description: `When Small or Big Blind is selected, gain X${MADNESS_X_MULT_PER_BLIND} Mult and destroy a random Joker`,
+    effect: {
+      kind: "blind-select-x-mult-destroys-joker",
+      amount: MADNESS_X_MULT_PER_BLIND,
+    },
+    state: { kind: "counter", value: 0 },
   };
 }
 

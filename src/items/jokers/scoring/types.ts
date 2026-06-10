@@ -69,4 +69,5 @@ export interface HandLevelContext {
   readonly handLabelsThisRound?: ReadonlyArray<HandLabel>;
   readonly blindsSkipped?: number;
   readonly addedCardsCount?: number;
+  readonly todoHand?: HandLabel | null;
 }

@@ -479,6 +479,8 @@ export function applyHandLevelJokers(
       case "x-mult-per-planet-used":
       case "x-mult-per-sold-card":
       case "x-mult-per-enhancement-eaten":
+      case "x-mult-per-glass-shattered":
+      case "blind-select-x-mult-destroys-joker":
       case "x-mult-per-hand-without-most-played": {
         const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (counter > 0) {
@@ -489,6 +491,21 @@ export function applyHandLevelJokers(
             jokerId: joker.id,
             jokerName: joker.name,
             xMultFactor: factor,
+          });
+        }
+        break;
+      }
+      case "money-on-todo-hand": {
+        if (
+          context.todoHand != null &&
+          context.playedHandLabel === context.todoHand
+        ) {
+          moneyEarned += effect.payout;
+          fired.push(joker.id);
+          steps.push({
+            jokerId: joker.id,
+            jokerName: joker.name,
+            moneyEarned: effect.payout,
           });
         }
         break;

@@ -10,6 +10,7 @@ import type { NextShopModifier } from "../run/nextShopMods";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
 import { DEFAULT_DECK, type Deck } from "../items/decks";
 import type { Rank, Suit } from "../cards/types";
+import type { HandLabel } from "../scoring/handEvaluator";
 
 type Updater<T> = T | ((prev: T) => T);
 
@@ -34,6 +35,7 @@ export interface RunState {
   ancientSuit: Suit | null;
   castleSuit: Suit | null;
   rebateRank: Rank | null;
+  todoHand: HandLabel | null;
   planetsUsed: ReadonlySet<string>;
   selectedStake: Stake;
   selectedDeck: Deck;
@@ -49,6 +51,7 @@ export interface RunState {
   setAncientSuit: (update: Updater<Suit | null>) => void;
   setCastleSuit: (update: Updater<Suit | null>) => void;
   setRebateRank: (update: Updater<Rank | null>) => void;
+  setTodoHand: (update: Updater<HandLabel | null>) => void;
   setPlanetsUsed: (update: Updater<ReadonlySet<string>>) => void;
   setSelectedStake: (update: Updater<Stake>) => void;
   setSelectedDeck: (update: Updater<Deck>) => void;
@@ -66,6 +69,7 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
   ancientSuit: null,
   castleSuit: null,
   rebateRank: null,
+  todoHand: null,
   planetsUsed: new Set<string>(),
   selectedStake: DEFAULT_STAKE,
   selectedDeck: DEFAULT_DECK,
@@ -93,6 +97,8 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
     set((state) => ({ castleSuit: resolve(update, state.castleSuit) })),
   setRebateRank: (update) =>
     set((state) => ({ rebateRank: resolve(update, state.rebateRank) })),
+  setTodoHand: (update) =>
+    set((state) => ({ todoHand: resolve(update, state.todoHand) })),
   setPlanetsUsed: (update) =>
     set((state) => ({ planetsUsed: resolve(update, state.planetsUsed) })),
   setSelectedStake: (update) =>
@@ -111,6 +117,7 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
       ancientSuit: null,
       castleSuit: null,
       rebateRank: null,
+      todoHand: null,
       planetsUsed: new Set<string>(),
       selectedStake: DEFAULT_STAKE,
       selectedDeck: DEFAULT_DECK,

@@ -317,6 +317,15 @@ export type JokerEffect =
       readonly kind: "end-of-round-money-per-unique-planet";
       readonly amount: number;
     }
+  | {
+      readonly kind: "x-mult-per-glass-shattered";
+      readonly amount: number;
+    }
+  | { readonly kind: "money-on-todo-hand"; readonly payout: number }
+  | {
+      readonly kind: "blind-select-x-mult-destroys-joker";
+      readonly amount: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

@@ -104,6 +104,8 @@ export {
   applyHandPlayedToJokerStates,
   applyConsumableUsedToJokerStates,
   applyEnhancementsEatenToJokerStates,
+  applyGlassShatterToJokerStates,
+  applyMadnessOnBlindSelect,
   applyLuckyTriggersToJokerStates,
   applyPackSkipToJokerStates,
   applySellToJokerStates,
