@@ -59,3 +59,22 @@
   line-height: 1;
   color: var(--accent-success);
 }
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .round-info {
+    max-width: 16rem;
+  }
+
+  .blind-label {
+    font-size: 2.2rem;
+  }
+
+  .round-score-value {
+    font-size: 2.4rem;
+  }
+
+  .boss-effect,
+  .boss-locked-hand {
+    max-width: 14rem;
+  }
+}

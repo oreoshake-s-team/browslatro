@@ -79,3 +79,33 @@ describe("Progress rows — issue #136 row composition", () => {
     expect(body).toMatch(/flex\s*:\s*1\s+1\s+0/);
   });
 });
+
+describe("Portrait sidebar grid — issue #880", () => {
+  function portraitBlock(source: string): string {
+    const idx = source.indexOf("@media (orientation: portrait)");
+    if (idx === -1) throw new Error("portrait media query not found");
+    return source.slice(idx);
+  }
+
+  test("the portrait sidebar uses a column-flow grid so sections stack vertically", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(/grid-auto-flow\s*:\s*column/);
+  });
+
+  test("the portrait grid has three rows for the blind/score/chips stack", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(/grid-template-rows\s*:\s*repeat\(3,/);
+  });
+
+  test("controls and scoring trace each span the full strip height", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(
+      /\.sidebar > \.sub-info-progress,\s*\.sidebar > \.scoring-trace\s*{[^}]*grid-row\s*:\s*1 \/ -1/,
+    );
+  });
+
+  test("portrait Run info/Options buttons are compact instead of stretched", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(/\.sub-info > button\s*{[^}]*flex\s*:\s*0 0 auto/);
+  });
+});
