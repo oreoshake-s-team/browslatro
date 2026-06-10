@@ -1,4 +1,5 @@
 import "./GameWonScreen.css";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import type { GameWonInfo } from "../../store/progression";
@@ -14,6 +15,7 @@ export default function GameWonScreen({
   onNewRun,
   onEndless,
 }: GameWonScreenProps) {
+  const { t } = useTranslation();
   const { finalAnte, finalMoney, handsPlayed, blindsSkipped } = info;
   useEscapeToClose(onNewRun, true);
 
@@ -29,26 +31,26 @@ export default function GameWonScreen({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="game-won-title" className="game-won-title">
-          You Win!
+          {t("gameWon.title")}
         </h2>
         <p className="game-won-subtitle">
-          You cleared Ante {finalAnte}'s Boss Blind and finished the run.
+          {t("gameWon.subtitle", { ante: finalAnte })}
         </p>
         <dl className="game-won-stats">
           <div className="game-won-stat">
-            <dt>Final ante</dt>
+            <dt>{t("gameWon.finalAnte")}</dt>
             <dd data-testid="game-won-final-ante">{finalAnte}</dd>
           </div>
           <div className="game-won-stat">
-            <dt>Final money</dt>
+            <dt>{t("gameWon.finalMoney")}</dt>
             <dd data-testid="game-won-final-money">${finalMoney}</dd>
           </div>
           <div className="game-won-stat">
-            <dt>Hands played</dt>
+            <dt>{t("gameWon.handsPlayed")}</dt>
             <dd data-testid="game-won-hands-played">{handsPlayed}</dd>
           </div>
           <div className="game-won-stat">
-            <dt>Blinds skipped</dt>
+            <dt>{t("gameWon.blindsSkipped")}</dt>
             <dd data-testid="game-won-blinds-skipped">{blindsSkipped}</dd>
           </div>
         </dl>
@@ -60,7 +62,7 @@ export default function GameWonScreen({
             onClick={onEndless}
             autoFocus
           >
-            Endless mode →
+            {t("gameWon.endlessMode")}
           </button>
           <button
             type="button"
@@ -68,7 +70,7 @@ export default function GameWonScreen({
             data-testid="game-won-new-run"
             onClick={onNewRun}
           >
-            Start a new run →
+            {t("gameWon.newRun")}
           </button>
         </div>
       </div>

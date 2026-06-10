@@ -26,12 +26,12 @@ interface OptionsProps {
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
 }
 
-const ANIMATION_SPEED_LABELS: Readonly<Record<AnimationSpeed, string>> = {
-  slow: "Slow",
-  normal: "Normal",
-  fast: "Fast",
-  instant: "Instant",
-};
+const ANIMATION_SPEED_LABEL_KEYS = {
+  slow: "options.speedSlow",
+  normal: "options.speedNormal",
+  fast: "options.speedFast",
+  instant: "options.speedInstant",
+} as const satisfies Record<AnimationSpeed, string>;
 
 function Options({
   onNewGame,
@@ -93,7 +93,9 @@ function Options({
                 aria-pressed={muted}
                 onClick={handleToggleMute}
               >
-                {muted ? "🔇 Unmute sounds" : "🔊 Mute sounds"}
+                {muted
+                  ? `🔇 ${t("options.unmuteSounds")}`
+                  : `🔊 ${t("options.muteSounds")}`}
               </button>
               <button
                 className="options-button options-button--toggle"
@@ -101,14 +103,16 @@ function Options({
                 onClick={handleToggleHighVisibility}
               >
                 {highVisibility
-                  ? "🎨 Disable high visibility suits"
-                  : "🎨 Enable high visibility suits"}
+                  ? `🎨 ${t("options.disableHighVisibility")}`
+                  : `🎨 ${t("options.enableHighVisibility")}`}
               </button>
               <label
                 className="options-field"
                 htmlFor={animationSpeedSelectId}
               >
-                <span className="options-field-label">Animation speed</span>
+                <span className="options-field-label">
+                  {t("options.animationSpeed")}
+                </span>
                 <select
                   id={animationSpeedSelectId}
                   className="options-select"
@@ -117,7 +121,7 @@ function Options({
                 >
                   {ANIMATION_SPEED_VALUES.map((value) => (
                     <option key={value} value={value}>
-                      {ANIMATION_SPEED_LABELS[value]}
+                      {t(ANIMATION_SPEED_LABEL_KEYS[value])}
                     </option>
                   ))}
                 </select>
@@ -144,17 +148,17 @@ function Options({
                 className="options-button options-button--destructive"
                 onClick={() => {
                   const confirmed = window.confirm(
-                    "Start a new game? This will end your current run.",
+                    t("options.newGameConfirm"),
                   );
                   if (!confirmed) return;
                   onNewGame();
                   handleClose();
                 }}
               >
-                New game
+                {t("options.newGame")}
               </button>
               <button className="options-button" onClick={handleClose}>
-                Close
+                {t("options.close")}
               </button>
             </div>
           </div>,

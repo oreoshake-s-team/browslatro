@@ -1,4 +1,5 @@
 import "./RoundLostModal.css";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
@@ -13,6 +14,7 @@ interface RoundLostModalProps {
 }
 
 export default function RoundLostModal({ info, onContinue }: RoundLostModalProps) {
+  const { t } = useTranslation();
   const { roundScore, requiredScore } = info;
   const shortBy = Math.max(0, requiredScore - roundScore);
   useEscapeToClose(onContinue, true);
@@ -29,19 +31,19 @@ export default function RoundLostModal({ info, onContinue }: RoundLostModalProps
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="round-lost-title" className="round-lost-title">
-          Game Over
+          {t("roundEnd.lostTitle")}
         </h2>
         <dl className="round-lost-stats">
           <div className="round-lost-stat">
-            <dt>Round score</dt>
+            <dt>{t("roundEnd.roundScore")}</dt>
             <dd data-testid="round-lost-score">{roundScore}</dd>
           </div>
           <div className="round-lost-stat">
-            <dt>Required score</dt>
+            <dt>{t("roundEnd.requiredScore")}</dt>
             <dd data-testid="round-lost-required">{requiredScore}</dd>
           </div>
           <div className="round-lost-stat round-lost-stat-short">
-            <dt>Short by</dt>
+            <dt>{t("roundEnd.shortBy")}</dt>
             <dd data-testid="round-lost-short-by">{shortBy}</dd>
           </div>
         </dl>
@@ -51,7 +53,7 @@ export default function RoundLostModal({ info, onContinue }: RoundLostModalProps
           onClick={onContinue}
           autoFocus
         >
-          Try again →
+          {t("roundEnd.tryAgain")}
         </button>
       </div>
     </div>,

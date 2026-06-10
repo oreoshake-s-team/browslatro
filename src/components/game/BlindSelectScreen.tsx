@@ -1,5 +1,6 @@
 import "./BlindSelectScreen.css";
 import { useEffect, useId, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
@@ -32,11 +33,11 @@ interface BlindSelectScreenProps {
   canAffordBossReroll?: boolean;
 }
 
-const BLIND_NAMES: Readonly<Record<Blind, string>> = {
-  1: "Small Blind",
-  2: "Big Blind",
-  3: "Boss Blind",
-};
+const BLIND_NAME_KEYS = {
+  1: "blinds.smallBlind",
+  2: "blinds.bigBlind",
+  3: "blinds.bossBlind",
+} as const satisfies Record<Blind, string>;
 
 
 function payoutFor(blind: Blind, stake?: Stake): number {
@@ -66,8 +67,10 @@ export default function BlindSelectScreen({
   bossRerollCost,
   canAffordBossReroll,
 }: BlindSelectScreenProps) {
+  const { t } = useTranslation();
   const blinds: ReadonlyArray<Blind> = [1, 2, 3];
-  const currentName = currentBlind === 3 ? boss.name : BLIND_NAMES[currentBlind];
+  const currentName =
+    currentBlind === 3 ? boss.name : t(BLIND_NAME_KEYS[currentBlind]);
   const canSkip = currentBlind !== 3 && Boolean(onSkip);
   const skipOfferForBlind = (blind: Blind): AnteSkipOffer | undefined =>
     blind === 1 ? skipRewards?.small : blind === 2 ? skipRewards?.big : undefined;
@@ -114,7 +117,7 @@ export default function BlindSelectScreen({
     >
       <div className="blind-select-modal" onClick={(e) => e.stopPropagation()}>
         <h2 id="blind-select-title" className="blind-select-title">
-          Ante {ante}
+          {t("blinds.anteHeading", { ante })}
         </h2>
         {tags.length > 0 && (
           <ul
@@ -160,7 +163,7 @@ export default function BlindSelectScreen({
           {blinds.map((b) => {
             const isCurrent = b === currentBlind;
             const isCompleted = b < currentBlind;
-            const name = b === 3 ? boss.name : BLIND_NAMES[b];
+            const name = b === 3 ? boss.name : t(BLIND_NAME_KEYS[b]);
             const rowSkipOffer = skipOfferForBlind(b);
             const rowSkipSpec = rowSkipOffer ? describeSkipOffer(rowSkipOffer) : null;
             const skipKey = `skip-${b}`;
@@ -218,18 +221,18 @@ export default function BlindSelectScreen({
                         : `Reroll Boss ($${bossRerollCost ?? 10})`
                     }
                   >
-                    Reroll Boss (${bossRerollCost ?? 10})
+                    {t("blinds.rerollBoss", { cost: bossRerollCost ?? 10 })}
                   </button>
                 )}
                 <dl className="blind-select-row-stats">
                   <div className="blind-select-row-stat">
-                    <dt>Score at least</dt>
+                    <dt>{t("blinds.scoreAtLeast")}</dt>
                     <dd data-testid={`blind-select-required-${b}`}>
                       {requiredChipsForBlind({ ante, blind: b, boss, stake })}
                     </dd>
                   </div>
                   <div className="blind-select-row-stat">
-                    <dt>Payout</dt>
+                    <dt>{t("blinds.payout")}</dt>
                     <dd data-testid={`blind-select-payout-${b}`}>
                       ${payoutFor(b, stake)}
                     </dd>
@@ -253,7 +256,7 @@ export default function BlindSelectScreen({
                     onBlur={() => closeTooltip(skipKey)}
                   >
                     <span className="blind-select-row-skip-reward-label">
-                      Skip reward
+                      {t("blinds.skipReward")}
                     </span>
                     <span className="blind-select-row-skip-reward-name">
                       + {rowSkipSpec.name}
@@ -279,7 +282,7 @@ export default function BlindSelectScreen({
             onClick={onPlay}
             autoFocus
           >
-            Play {currentName} →
+            {t("blinds.play", { blind: currentName })}
           </button>
           {canSkip && (
             <button
@@ -289,7 +292,7 @@ export default function BlindSelectScreen({
               onClick={onSkip}
               aria-label={`Skip ${currentName} (no reward, no penalty)`}
             >
-              Skip
+              {t("blinds.skip")}
             </button>
           )}
         </div>

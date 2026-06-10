@@ -402,3 +402,38 @@ describe("RoundWonModal focus trap (#907)", () => {
     expect(screen.getByTestId("opener")).toHaveFocus();
   });
 });
+
+describe("RoundWonModal i18n (#922)", () => {
+  afterEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the continue button renders Hoʻomau under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.getByRole("button", { name: "Hoʻomau →" })).toBeInTheDocument();
+  });
+
+  test("the total row label renders Huina under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.getByText("Huina")).toBeInTheDocument();
+  });
+
+  test("the interest label keeps its interpolated values under the haw locale", async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("haw");
+    render(
+      <RoundWonModal
+        info={buildInfo({ interestWallet: 15 })}
+        onContinue={() => {}}
+      />,
+    );
+    expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
+      "on $15",
+    );
+  });
+});

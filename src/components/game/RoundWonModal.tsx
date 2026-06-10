@@ -1,5 +1,6 @@
 import "./RoundWonModal.css";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import {
   GOLD_HELD_BONUS_PER_CARD,
@@ -42,6 +43,7 @@ interface RoundWonModalProps {
 }
 
 export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) {
+  const { t } = useTranslation();
   const {
     roundScore,
     requiredScore,
@@ -65,11 +67,24 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
   const jokerTotal = jokerSteps.reduce((sum, step) => sum + step.moneyEarned, 0);
   const total =
     baseReward + interest + goldBonus + remainingHandsBonus + jokerTotal;
-  const interestLabel = `Interest ($1 per $${INTEREST_RATE_PER}, max $${INTEREST_CAP}) on $${interestWallet}`;
-  const goldLabel = `Gold cards (${goldHeldCount} × $${GOLD_HELD_BONUS_PER_CARD})`;
+  const interestLabel = t("roundEnd.interest", {
+    per: INTEREST_RATE_PER,
+    cap: INTEREST_CAP,
+    wallet: interestWallet,
+  });
+  const goldLabel = t("roundEnd.goldCards", {
+    count: goldHeldCount,
+    per: GOLD_HELD_BONUS_PER_CARD,
+  });
   const handsLabel = usesHandsAndDiscardsBonus
-    ? `Remaining hands + discards (${bonusUnits} × $${remainingHandsBonusPerUnit})`
-    : `Remaining hands (${bonusUnits} × $${remainingHandsBonusPerUnit})`;
+    ? t("roundEnd.remainingHandsAndDiscards", {
+        units: bonusUnits,
+        per: remainingHandsBonusPerUnit,
+      })
+    : t("roundEnd.remainingHands", {
+        units: bonusUnits,
+        per: remainingHandsBonusPerUnit,
+      });
   useEscapeToClose(onContinue, true);
   const overlayRef = useRef<HTMLDivElement>(null);
   useFocusTrap(overlayRef);
@@ -87,27 +102,27 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="round-won-title" className="round-won-title">
-          🏆 Round Won!
+          🏆 {t("roundEnd.wonTitle")}
         </h2>
         <dl className="round-won-stats">
           <div className="round-won-stat">
-            <dt>Round score</dt>
+            <dt>{t("roundEnd.roundScore")}</dt>
             <dd data-testid="round-won-score">{roundScore}</dd>
           </div>
           <div className="round-won-stat">
-            <dt>Required score</dt>
+            <dt>{t("roundEnd.requiredScore")}</dt>
             <dd data-testid="round-won-required">{requiredScore}</dd>
           </div>
           <div className="round-won-stat round-won-stat-beat">
-            <dt>Beat by</dt>
+            <dt>{t("roundEnd.beatBy")}</dt>
             <dd data-testid="round-won-beat-by">+{beatBy}</dd>
           </div>
         </dl>
         <div className="round-won-payout">
-          <h3 className="round-won-payout-title">Money won</h3>
+          <h3 className="round-won-payout-title">{t("roundEnd.moneyWon")}</h3>
           <dl className="round-won-payout-list">
             <div className="round-won-payout-row">
-              <dt>Base reward</dt>
+              <dt>{t("roundEnd.baseReward")}</dt>
               <dd data-testid="round-won-base-reward">${baseReward}</dd>
             </div>
             {goldHeldCount > 0 && (
@@ -149,7 +164,7 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
               </div>
             ))}
             <div className="round-won-payout-row round-won-payout-total">
-              <dt>Total</dt>
+              <dt>{t("roundEnd.total")}</dt>
               <dd data-testid="round-won-total">${total}</dd>
             </div>
           </dl>
@@ -160,7 +175,7 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
           onClick={onContinue}
           autoFocus
         >
-          Continue →
+          {t("roundEnd.continue")}
         </button>
       </div>
     </div>,
