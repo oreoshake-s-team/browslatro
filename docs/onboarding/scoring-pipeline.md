@@ -113,6 +113,13 @@ Jokers contribute through several engines, each a pure function that takes
 | Per-card | `perCard.ts` | Once per *scoring card* | additive chips/mult, ×mult, money, `steps` |
 | On-discard | `onDiscard.ts` | When cards are discarded | money, destroyed-card ids |
 | End-of-round | `endOfRound.ts` | When a blind is cleared | money |
+| Retriggers | `retriggers.ts` | Before per-card scoring | scoring cards expanded to `1 + extra` copies each |
+| Copy | `copy.ts` | Per equipped joker, during scoring | the resolved effect for Blueprint/Brainstorm |
+| Scored-card mutation | `scoredCardMutations.ts` | After a hand is played | permanent enhancement changes (Midas Mask, Vampire) |
+
+The hand-level engine resolves each equipped joker through `copy.ts`'s `resolveJokerEffect`
+(so Blueprint/Brainstorm score as their target) and reads `joker.state` for scaling jokers.
+See [`jokers-and-content.md`](./jokers-and-content.md) for the state/copy/retrigger model.
 
 `finalScore.ts` (`applyJokersToScoring`, `computeFinalScoreWithJokers`) composes
 hand-level + per-card into a single `JokerScoringResult`. This combined helper is used by
@@ -121,7 +128,7 @@ unit tests and `scoreHand`-style flows; the live game inlines the same compositi
 
 ### Effects are data; the engine is the switch
 
-A Joker carries a `JokerEffect` — one member of a ~50-arm discriminated union in
+A Joker carries a `JokerEffect` — one member of a ~120-arm discriminated union in
 `src/items/jokers/types.ts`. Each engine `switch`es over `effect.kind`, applies the math
 for the arms it handles, and **explicitly `break`s on the arms it doesn't** (so the
 `default: assertNeverEffect(effect)` exhaustiveness check still holds). That's why you'll
@@ -166,9 +173,10 @@ bottom is the best way to understand scoring. The sequence:
 3. **Detect label**, then **boss-adjust** the hand entry (`bossAdjustHandEntry`) — a boss
    can change a hand's chips/mult/level. Some bosses force an exact card count; playing the
    wrong count "zeroes" the hand (`psychicZeroed` → chips & mult set to 0).
-4. **Pick scoring cards** with `getScoringCards`, then **expand red-seal retriggers**
-   (`expandRedSealRetriggers` duplicates red-sealed cards so they score twice), then
-   **drop boss-debuffed cards** (`debuffedHandIds`).
+4. **Pick scoring cards** with `getScoringCards`, then **expand retriggers**
+   (`expandScoringRetriggers` — red seals *and* retrigger jokers like Hack / Sock and Buskin
+   emit a card `1 + extra` times), apply **scored-card mutations** (`applyScoredCardMutations`
+   — Midas Mask, Vampire), then **drop boss-debuffed cards** (`debuffedHandIds`).
 5. **Sum card chips** over the scoring cards.
 6. **Run the hand-level Joker engine** with full context (only *active* Jokers —
    `jokers.filter(isJokerActive)` excludes perished ones).

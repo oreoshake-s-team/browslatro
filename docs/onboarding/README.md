@@ -62,10 +62,13 @@ Almost every interesting bug or feature lives in one of two places:
   store assembled from ~20 focused slices (`src/store/*.ts`). See
   [`architecture.md`](./architecture.md).
 
-- **Effects are data, not code.** A Joker doesn't contain a function; it contains a
-  `JokerEffect` — a tagged member of a big discriminated union. A handful of central
-  engines `switch` over the union. Adding a Joker that reuses an existing effect kind is
-  *pure data*. See [`jokers-and-content.md`](./jokers-and-content.md).
+- **Effects are mostly data, with engines as code.** A Joker doesn't *primarily* contain a
+  function; it contains a `JokerEffect` — a tagged member of a ~120-arm discriminated union
+  — and an optional mutable `state` counter. A set of pure engines `switch` over the union
+  (for scoring, retriggers, copy/delegation, card mutation) and a set of lifecycle reducers
+  update `state` on events (hand played, discard, sell, round end…). Adding a Joker that
+  reuses an existing effect kind is *pure data*. See
+  [`jokers-and-content.md`](./jokers-and-content.md).
 
 - **The score is computed twice.** Once eagerly (to know the final number and whether the
   round is won) and once again, incrementally, to drive the animation. Keeping those two
@@ -81,8 +84,11 @@ Almost every interesting bug or feature lives in one of two places:
   (`src/dev/rngConfig.ts`) and there's a global `force100` chance override
   (`src/dev/chanceOverride.ts`) so probabilistic effects can be tested deterministically.
 
-- **Authentic mechanics.** Per `claude.md`, game effects must match real Balatro — no
-  placeholder numbers. When in doubt, check the Balatro wiki.
+- **Authentic mechanics, at scale.** Per `claude.md`, game effects must match real Balatro —
+  no placeholder numbers. The catalog is the **full 150 jokers** (the #624 backfill epic),
+  which is why the joker engine grew from a stateless scorer into one with mutable state,
+  retriggers, joker-to-joker copying, and lifecycle event hooks. When in doubt, check the
+  Balatro wiki.
 
 ---
 
@@ -100,8 +106,9 @@ browslatro/
 │   ├── scoring/                         Pure scoring: hand detection, base hand score, payout, trace
 │   │
 │   ├── items/                           Game content (mostly pure logic + catalogs)
-│   │   ├── jokers/                      Jokers: effect union, factories, catalog, scoring engines
-│   │   │   └── scoring/                 The Joker scoring engines (hand-level, per-card, end-of-round…)
+│   │   ├── jokers/                      Jokers: effect union, factories, catalog (150), state, currentValue
+│   │   │   └── scoring/                 Engines: handLevel, perCard, retriggers, copy, scoredCardMutations,
+│   │   │                                consumableCreators, onDiscard, endOfRound
 │   │   ├── bosses.ts  tags.ts  vouchers.ts  stakes.ts  decks.ts
 │   │   ├── tarots.ts  planets.ts  spectrals.ts  consumables.ts  packs.ts  shop.ts
 │   │
@@ -126,12 +133,14 @@ A useful heuristic: **`src/items` and `src/scoring` are where the *rules* live;
 
 ## Getting started
 
-This is a **Yarn 4 (Berry) + Plug'n'Play** project — there is **no `node_modules/`** and
-you must use `yarn`, never `npm`.
+This is a **Yarn 4 (Berry)** project using the **pnpm `nodeLinker`** (migrated off
+Plug'n'Play in #1006). So there *is* a real `node_modules/` — built from hardlinks into
+Yarn's global store — and each fresh clone or worktree runs `yarn install` to materialize
+its own (sub-second once the store is warm). Use `yarn`, never `npm`.
 
 ```sh
 corepack enable          # lets Node pick the pinned Yarn from package.json
-yarn install             # near-instant under PnP (release binary is committed)
+yarn install             # materializes node_modules from the global store
 
 yarn start               # dev server with HMR at http://localhost:3000
 yarn test                # Vitest once (use yarn test:watch while iterating)
@@ -164,6 +173,10 @@ app ships the tooling to make that fast. Run `yarn start` and use:
 ---
 
 ## Gotchas a new dev hits in week one
+
+- **The root `README.md` still says PnP.** As of this writing the top-level README hasn't
+  caught up with the pnpm migration (#1006) — trust `.yarnrc.yml` (`nodeLinker: pnpm`) and
+  the presence of `node_modules/`, not the stale README prose.
 
 - **Two `scoring.ts` files.** `src/scoring/scoring.ts` is the *pure base-hand* scorer.
   `src/store/scoring.ts` is the Zustand *slice* that holds live chips/mult and animation
