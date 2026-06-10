@@ -32,6 +32,9 @@ import {
   applyLuckyTriggersToJokerStates,
   interestMultiplierFromJokers,
   heldRetriggerCountFromJokers,
+  applyScoredCardMutations,
+  applyScoredMutationsToCards,
+  applyEnhancementsEatenToJokerStates,
   applyPerCardJokers,
   handEvalOptionsFromJokers,
   isFaceCard,
@@ -117,6 +120,7 @@ export function usePlayHand({
   const destroyedCardIds = useGame((s) => s.destroyedCardIds);
   const addedCards = useGame((s) => s.addedCards);
   const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
+  const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
   const cardSealsById = useGame((s) => s.cardSealsById);
   const consumables = useGame((s) => s.consumables);
   const selectedDeck = useGame((s) => s.selectedDeck);
@@ -389,7 +393,7 @@ export function usePlayHand({
       isBossRound,
       playedCardKeysThisAnte,
     );
-    const scoring = expandScoringRetriggers(
+    const preMutationScoring = expandScoringRetriggers(
       getScoringCards(playedCards, label, {
         allCardsScore: allCardsScoreFromJokers(jokers),
         evalOptions,
@@ -397,6 +401,28 @@ export function usePlayHand({
       jokers,
       { remainingHands },
     ).filter((c) => !playedDebuffedIds.has(c.id));
+    const mutations = applyScoredCardMutations(jokers, preMutationScoring);
+    const scoring =
+      mutations.enhancementChanges.size > 0
+        ? applyScoredMutationsToCards(
+            preMutationScoring,
+            mutations.enhancementChanges,
+          )
+        : preMutationScoring;
+    if (mutations.enhancementChanges.size > 0) {
+      setCardEnhancementsById((prev) => {
+        const next = new Map(prev);
+        for (const [id, change] of mutations.enhancementChanges) {
+          next.set(id, change);
+        }
+        return next;
+      });
+    }
+    if (mutations.enhancementsEaten > 0) {
+      setJokers((prev) =>
+        applyEnhancementsEatenToJokerStates(prev, mutations.enhancementsEaten),
+      );
+    }
     setJokers((prev) =>
       applyHandPlayedToJokerStates(prev, {
         playedHandLabel: label,

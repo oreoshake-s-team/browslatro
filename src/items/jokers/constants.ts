@@ -133,6 +133,7 @@ export const TURTLE_BEAN_LOSS_PER_ROUND = 1;
 export const SELTZER_HANDS = 10;
 export const SELTZER_RETRIGGERS = 1;
 export const MIME_HELD_RETRIGGERS = 1;
+export const VAMPIRE_X_MULT_PER_ENHANCED = 0.1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

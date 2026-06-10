@@ -176,6 +176,18 @@ export function applyLuckyTriggersToJokerStates(
   });
 }
 
+export function applyEnhancementsEatenToJokerStates(
+  jokers: ReadonlyArray<Joker>,
+  eatenCount: number,
+): Joker[] {
+  if (eatenCount <= 0) return [...jokers];
+  return jokers.map((joker) => {
+    const effect = joker.effect;
+    if (effect.kind !== "x-mult-per-enhancement-eaten") return joker;
+    return { ...joker, state: counterState(prevCount(joker) + eatenCount) };
+  });
+}
+
 export function applyConsumableUsedToJokerStates(
   jokers: ReadonlyArray<Joker>,
   kind: "tarot" | "planet" | "spectral",

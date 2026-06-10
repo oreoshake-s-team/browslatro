@@ -3,11 +3,16 @@ import type { Card, Enhancement, Seal } from "./types";
 
 export function applyEnhancementOverrides(
   cards: ReadonlyArray<Card>,
-  overrides: ReadonlyMap<number, Enhancement>,
+  overrides: ReadonlyMap<number, Enhancement | null>,
 ): Card[] {
   return cards.map((c) => {
-    if (c.enhancement !== undefined) return c;
     const override = overrides.get(c.id);
+    if (override === null) {
+      if (c.enhancement === undefined) return c;
+      const { enhancement: removed, ...rest } = c;
+      return rest;
+    }
+    if (c.enhancement !== undefined) return c;
     return override === undefined ? c : { ...c, enhancement: override };
   });
 }
@@ -27,7 +32,7 @@ export function buildShuffledDeck(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),
   addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<number, Enhancement> = new Map(),
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
 ): Card[] {
   const survivingBase = baseDeckCards.filter((c) => !destroyedCardIds.has(c.id));
@@ -47,7 +52,7 @@ export function initialDeal(
   destroyedCardIds: ReadonlySet<number> = new Set(),
   handSize: number = HAND_SIZE,
   addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<number, Enhancement> = new Map(),
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
 ): DealResult {
   return deal(
@@ -66,7 +71,7 @@ export function countEnhancedInFullDeck(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),
   addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<number, Enhancement> = new Map(),
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
 ): number {
   const survivingBase = baseDeckCards.filter(
     (c) => !destroyedCardIds.has(c.id),
@@ -106,7 +111,7 @@ export function countEnhancementInFullDeck(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),
   addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<number, Enhancement> = new Map(),
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   enhancement: Enhancement | null = null,
 ): number {
   if (enhancement === null) return 0;
@@ -125,7 +130,7 @@ export function fullDeckPile(
   baseDeckCards: ReadonlyArray<Card> = [],
   destroyedCardIds: ReadonlySet<number> = new Set(),
   addedCards: ReadonlyArray<Card> = [],
-  enhancementOverrides: ReadonlyMap<number, Enhancement> = new Map(),
+  enhancementOverrides: ReadonlyMap<number, Enhancement | null> = new Map(),
   sealOverrides: ReadonlyMap<number, Seal> = new Map(),
 ): DealResult {
   return {

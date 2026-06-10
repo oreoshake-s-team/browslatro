@@ -262,6 +262,11 @@ export type JokerEffect =
       readonly hands: number;
     }
   | { readonly kind: "retrigger-held-abilities"; readonly times: number }
+  | { readonly kind: "played-faces-become-gold" }
+  | {
+      readonly kind: "x-mult-per-enhancement-eaten";
+      readonly amount: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

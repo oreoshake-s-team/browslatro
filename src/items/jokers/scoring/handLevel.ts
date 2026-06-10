@@ -477,6 +477,7 @@ export function applyHandLevelJokers(
       case "x-mult-per-lucky-trigger":
       case "x-mult-per-planet-used":
       case "x-mult-per-sold-card":
+      case "x-mult-per-enhancement-eaten":
       case "x-mult-per-hand-without-most-played": {
         const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
         if (counter > 0) {
@@ -543,6 +544,7 @@ export function applyHandLevelJokers(
       case "hand-size-decay-per-round":
       case "retrigger-all-depleting":
       case "retrigger-held-abilities":
+      case "played-faces-become-gold":
       case "noop":
         break;
       default:
