@@ -308,6 +308,15 @@ export type JokerEffect =
       readonly count: number;
     }
   | { readonly kind: "blind-select-creates-tarot" }
+  | {
+      readonly kind: "money-per-discarded-rebate-rank";
+      readonly payout: number;
+    }
+  | { readonly kind: "first-discard-upgrades-hand" }
+  | {
+      readonly kind: "end-of-round-money-per-unique-planet";
+      readonly amount: number;
+    }
   | { readonly kind: "copy-right-joker" }
   | { readonly kind: "copy-leftmost-joker" };
 

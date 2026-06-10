@@ -33,6 +33,8 @@ export interface RunState {
   idolTarget: { readonly rank: Rank; readonly suit: Suit } | null;
   ancientSuit: Suit | null;
   castleSuit: Suit | null;
+  rebateRank: Rank | null;
+  planetsUsed: ReadonlySet<string>;
   selectedStake: Stake;
   selectedDeck: Deck;
   setRunStats: (update: Updater<RunStats>) => void;
@@ -46,6 +48,8 @@ export interface RunState {
   ) => void;
   setAncientSuit: (update: Updater<Suit | null>) => void;
   setCastleSuit: (update: Updater<Suit | null>) => void;
+  setRebateRank: (update: Updater<Rank | null>) => void;
+  setPlanetsUsed: (update: Updater<ReadonlySet<string>>) => void;
   setSelectedStake: (update: Updater<Stake>) => void;
   setSelectedDeck: (update: Updater<Deck>) => void;
   resetRun: () => void;
@@ -61,6 +65,8 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
   idolTarget: null,
   ancientSuit: null,
   castleSuit: null,
+  rebateRank: null,
+  planetsUsed: new Set<string>(),
   selectedStake: DEFAULT_STAKE,
   selectedDeck: DEFAULT_DECK,
   setRunStats: (update) =>
@@ -85,6 +91,10 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
     set((state) => ({ ancientSuit: resolve(update, state.ancientSuit) })),
   setCastleSuit: (update) =>
     set((state) => ({ castleSuit: resolve(update, state.castleSuit) })),
+  setRebateRank: (update) =>
+    set((state) => ({ rebateRank: resolve(update, state.rebateRank) })),
+  setPlanetsUsed: (update) =>
+    set((state) => ({ planetsUsed: resolve(update, state.planetsUsed) })),
   setSelectedStake: (update) =>
     set((state) => ({ selectedStake: resolve(update, state.selectedStake) })),
   setSelectedDeck: (update) =>
@@ -100,6 +110,8 @@ export const createRunSlice: StateCreator<GameState, [], [], RunState> = (set) =
       idolTarget: null,
       ancientSuit: null,
       castleSuit: null,
+      rebateRank: null,
+      planetsUsed: new Set<string>(),
       selectedStake: DEFAULT_STAKE,
       selectedDeck: DEFAULT_DECK,
     }),

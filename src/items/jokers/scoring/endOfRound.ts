@@ -7,6 +7,7 @@ export interface EndOfRoundContext {
   readonly remainingDiscards?: number;
   readonly discardsUsedThisRound?: number;
   readonly fullDeck?: ReadonlyArray<Card>;
+  readonly uniquePlanetsUsed?: number;
 }
 
 export interface EndOfRoundStep {
@@ -29,7 +30,18 @@ export function applyEndOfRoundJokers(
   const steps: EndOfRoundStep[] = [];
   for (const joker of jokers) {
     const effect = joker.effect;
-    if (effect.kind === "end-of-round-money-grows-on-boss") {
+    if (effect.kind === "end-of-round-money-per-unique-planet") {
+      const planets = context.uniquePlanetsUsed ?? 0;
+      const earned = effect.amount * planets;
+      if (earned > 0) {
+        moneyEarned += earned;
+        steps.push({
+          jokerId: joker.id,
+          jokerName: joker.name,
+          moneyEarned: earned,
+        });
+      }
+    } else if (effect.kind === "end-of-round-money-grows-on-boss") {
       const payout =
         joker.state?.kind === "counter" ? joker.state.value : effect.baseAmount;
       if (payout > 0) {

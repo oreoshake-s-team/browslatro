@@ -572,6 +572,9 @@ export function applyHandLevelJokers(
       case "pack-open-chance-creates-tarot":
       case "blind-select-creates-common-jokers":
       case "blind-select-creates-tarot":
+      case "money-per-discarded-rebate-rank":
+      case "first-discard-upgrades-hand":
+      case "end-of-round-money-per-unique-planet":
       case "noop":
         break;
       default:

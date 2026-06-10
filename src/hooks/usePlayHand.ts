@@ -254,6 +254,7 @@ export function usePlayHand({
         remainingDiscards,
         discardsUsedThisRound,
         fullDeck,
+        uniquePlanetsUsed: useGame.getState().planetsUsed.size,
       });
       const postJokerWallet = postBonusesWallet + endOfRoundJokerResult.moneyEarned;
       const openModal = () => {

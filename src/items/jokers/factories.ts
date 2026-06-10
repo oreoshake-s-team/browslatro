@@ -111,6 +111,8 @@ import {
   VAGABOND_MONEY_THRESHOLD,
   HALLUCINATION_TAROT_CHANCE,
   RIFF_RAFF_JOKER_COUNT,
+  MAIL_IN_REBATE_PAYOUT,
+  SATELLITE_MONEY_PER_PLANET,
   RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
@@ -1817,6 +1819,42 @@ export function createCartomancerJoker(): Joker {
     name: "Cartomancer",
     description: "Create a Tarot card when Blind is selected",
     effect: { kind: "blind-select-creates-tarot" },
+  };
+}
+
+export function createMailInRebateJoker(): Joker {
+  return {
+    id: "mail-in-rebate",
+    rarity: "common",
+    name: "Mail-In Rebate",
+    description: `Earn $${MAIL_IN_REBATE_PAYOUT} per discarded card of the chosen rank; rank changes every round`,
+    effect: {
+      kind: "money-per-discarded-rebate-rank",
+      payout: MAIL_IN_REBATE_PAYOUT,
+    },
+  };
+}
+
+export function createBurntJoker(): Joker {
+  return {
+    id: "burnt-joker",
+    rarity: "rare",
+    name: "Burnt Joker",
+    description: "Upgrade the level of the first discarded poker hand each round",
+    effect: { kind: "first-discard-upgrades-hand" },
+  };
+}
+
+export function createSatelliteJoker(): Joker {
+  return {
+    id: "satellite",
+    rarity: "uncommon",
+    name: "Satellite",
+    description: `Earn $${SATELLITE_MONEY_PER_PLANET} at end of round per unique Planet card used this run`,
+    effect: {
+      kind: "end-of-round-money-per-unique-planet",
+      amount: SATELLITE_MONEY_PER_PLANET,
+    },
   };
 }
 
