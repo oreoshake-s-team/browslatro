@@ -105,6 +105,7 @@ export function useRoundLifecycle({
   const setIdolTarget = useGame((s) => s.setIdolTarget);
   const setAncientSuit = useGame((s) => s.setAncientSuit);
   const setCastleSuit = useGame((s) => s.setCastleSuit);
+  const setRebateRank = useGame((s) => s.setRebateRank);
   const setRecentBossIds = useGame((s) => s.setRecentBossIds);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const setHandSizeModifier = useGame((s) => s.setHandSizeModifier);
@@ -234,6 +235,13 @@ export function useRoundLifecycle({
     setAncientSuit(
       equippedJokers.some((j) => j.effect.kind === "x-mult-per-suit-rotating")
         ? SUITS[Math.floor(Math.random() * SUITS.length)]
+        : null,
+    );
+    setRebateRank(
+      equippedJokers.some(
+        (j) => j.effect.kind === "money-per-discarded-rebate-rank",
+      )
+        ? RANKS[Math.floor(Math.random() * RANKS.length)]
         : null,
     );
     setCastleSuit(

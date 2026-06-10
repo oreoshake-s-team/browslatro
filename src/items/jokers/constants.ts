@@ -145,6 +145,8 @@ export const EIGHT_BALL_TAROT_CHANCE = 0.25;
 export const VAGABOND_MONEY_THRESHOLD = 4;
 export const HALLUCINATION_TAROT_CHANCE = 0.5;
 export const RIFF_RAFF_JOKER_COUNT = 2;
+export const MAIL_IN_REBATE_PAYOUT = 5;
+export const SATELLITE_MONEY_PER_PLANET = 1;
 
 export const FOIL_CHIPS = 50;
 export const HOLOGRAPHIC_MULT = 10;

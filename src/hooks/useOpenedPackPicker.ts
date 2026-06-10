@@ -87,6 +87,9 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
       play("pop");
       setHandStats((prev) => applyPlanetUpgrade(prev, option.planet));
       markUsed("planet");
+      useGame
+        .getState()
+        .setPlanetsUsed((prev) => new Set(prev).add(option.planet.id));
     } else if (option.kind === "tarot") {
       const effect = option.tarot.effect;
       if (effect.kind === "apply-enhancement") {

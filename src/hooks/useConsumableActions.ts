@@ -92,6 +92,11 @@ export function useConsumableActions(): UseConsumableActionsResult {
         .getState()
         .setJokers((prev) => applyConsumableUsedToJokerStates(prev, entry.kind));
       if (entry.kind === "planet") {
+        useGame
+          .getState()
+          .setPlanetsUsed((prev) => new Set(prev).add(entry.card.id));
+      }
+      if (entry.kind === "planet") {
         setLastUsedConsumable(entry);
         return;
       }
