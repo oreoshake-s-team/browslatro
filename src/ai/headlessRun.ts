@@ -49,6 +49,8 @@ export type AgentAction =
 
 export interface HeadlessRoundView extends SimulatePlayInput {
   readonly ante: number;
+  readonly round: number;
+  readonly selectedStake: Stake;
   readonly roundScore: number;
   readonly scoreTarget: number;
 }
@@ -76,12 +78,15 @@ const STARTING_MONEY = 4;
 const BLIND_CLEAR_REWARD_BASE = 2;
 const MAX_DISCARD_SIZE = 5;
 
-interface Pile {
+export interface Pile {
   readonly hand: ReadonlyArray<Card>;
   readonly remaining: ReadonlyArray<Card>;
 }
 
-function removeAndRefill(pile: Pile, cardIds: ReadonlyArray<number>): Pile {
+export function removeAndRefill(
+  pile: Pile,
+  cardIds: ReadonlyArray<number>,
+): Pile {
   const removed = new Set(cardIds);
   const kept = pile.hand.filter((c) => !removed.has(c.id));
   const drawCount = Math.min(
@@ -159,6 +164,8 @@ export function playHeadlessRun(
           idolTarget: null,
           ancientSuit: null,
           ante,
+          round: blindsCleared + 1,
+          selectedStake: stake,
           roundScore,
           scoreTarget,
         };
