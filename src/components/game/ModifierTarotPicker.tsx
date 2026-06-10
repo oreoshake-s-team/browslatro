@@ -8,13 +8,17 @@ import {
 } from "../../items/consumables";
 import { extraConsumableSlots } from "../../items/vouchers";
 import { createTarotCatalog } from "../../items/tarots";
+import { sortByDisplayName } from "./displayNameSort";
 import TarotTooltip from "./TarotTooltip";
 
 export default function ModifierTarotPicker() {
   const consumables = useGame((s) => s.consumables);
   const setConsumables = useGame((s) => s.setConsumables);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
-  const tarots = useMemo(() => createTarotCatalog(), []);
+  const tarots = useMemo(
+    () => sortByDisplayName(createTarotCatalog(), (c) => c.name),
+    [],
+  );
   const capacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
   const isFull = consumables.length >= capacity;

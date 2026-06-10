@@ -32,6 +32,22 @@ describe("ModifierPackPicker", () => {
     ).toHaveLength(5);
   });
 
+  test("renders pack pools alphabetically by label", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPackPicker />);
+    await openPicker(user);
+    const ids = Array.from(
+      document.querySelectorAll("button[data-pack-pool]"),
+    ).map((el) => el.getAttribute("data-pack-pool"));
+    expect(ids).toEqual([
+      "arcana",
+      "buffoon",
+      "celestial",
+      "spectral",
+      "standard",
+    ]);
+  });
+
   test("clicking Standard appends 'standard' to pendingForcedPacks", async () => {
     const user = userEvent.setup();
     render(<ModifierPackPicker />);

@@ -12,6 +12,7 @@ import {
 } from "../../items/jokers";
 import { deckJokerSlotsDelta } from "../../items/decks";
 import { extraJokerSlots } from "../../items/vouchers";
+import { sortByDisplayName } from "./displayNameSort";
 import JokerTooltip from "../jokers/JokerTooltip";
 
 const PAGE_SIZE = 12;
@@ -32,8 +33,9 @@ export default function ModifierJokerPicker() {
 
   const sortedCatalog = useMemo<ReadonlyArray<Joker>>(
     () =>
-      [...createJokerCatalog(), ...createLegendaryJokerCatalog()].sort((a, b) =>
-        a.name.localeCompare(b.name),
+      sortByDisplayName(
+        [...createJokerCatalog(), ...createLegendaryJokerCatalog()],
+        (j) => j.name,
       ),
     [],
   );

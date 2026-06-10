@@ -8,13 +8,17 @@ import {
 } from "../../items/consumables";
 import { extraConsumableSlots } from "../../items/vouchers";
 import { createSpectralCatalog } from "../../items/spectrals";
+import { sortByDisplayName } from "./displayNameSort";
 import SpectralTooltip from "./SpectralTooltip";
 
 export default function ModifierSpectralPicker() {
   const consumables = useGame((s) => s.consumables);
   const setConsumables = useGame((s) => s.setConsumables);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
-  const spectrals = useMemo(() => createSpectralCatalog(), []);
+  const spectrals = useMemo(
+    () => sortByDisplayName(createSpectralCatalog(), (c) => c.name),
+    [],
+  );
   const capacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
