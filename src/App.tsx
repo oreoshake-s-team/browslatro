@@ -16,6 +16,7 @@ import {
   pickBossForAnte,
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
+import { bootIntoShop, shouldBootIntoShop } from "./dev/bootShop";
 import { readSeededConsumables } from "./dev/seedConsumables";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
@@ -279,6 +280,11 @@ function App() {
   });
 
   const handleWin = useGame((s) => s.handleWin);
+
+  useEffect(() => {
+    if (didRestoreFromSnapshot()) return;
+    if (shouldBootIntoShop()) bootIntoShop();
+  }, []);
 
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);

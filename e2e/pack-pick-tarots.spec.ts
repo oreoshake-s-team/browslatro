@@ -1,8 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
-const SUBMIT_BUTTON = /^Submit Hand/;
-const CONTINUE_BUTTON = /Continue/;
 const SHOP_HEADING = /Shop/;
 
 async function setDeterministic(page: Page): Promise<void> {
@@ -49,13 +46,10 @@ async function forcePackVariant(
 }
 
 async function winRound1AndOpenShop(page: Page): Promise<void> {
-  await page.getByTestId("blind-select-play").click();
-  await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  for (let i = 0; i < 5; i += 1) {
-    await page.locator(HAND_CARDS).nth(i).click();
-  }
-  await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
-  await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:bootShop", "1");
+  });
+  await page.goto("/");
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 }
 
@@ -77,8 +71,6 @@ async function setupArcanaPackWith(
   await forcePackTarots(page, tarotIds);
   await forcePackVariant(page, variant);
   await forcePackPool(page, "arcana");
-  await page.goto("/");
-  await page.getByTestId("new-run-confirm").click();
   await winRound1AndOpenShop(page);
   await buyFirstPackOffer(page);
 }
@@ -91,8 +83,6 @@ async function setupSpectralPackWith(
   await forcePackSpectrals(page, spectralIds);
   await forcePackVariant(page, "normal");
   await forcePackPool(page, "spectral");
-  await page.goto("/");
-  await page.getByTestId("new-run-confirm").click();
   await winRound1AndOpenShop(page);
   await buyFirstPackOffer(page);
 }
