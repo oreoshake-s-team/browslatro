@@ -17,6 +17,7 @@ import type {
 } from "./types";
 import { assertNeverEffect, isFaceCardWith, jokerSellValue } from "./utils";
 import { isJokerActive } from "../stickers";
+import { ramenXMultFactor } from "../state";
 
 export function applyHandLevelJokers(
   allJokers: ReadonlyArray<Joker>,
@@ -459,11 +460,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "x-mult-shrink-per-discarded-card": {
-        const discarded = joker.state?.kind === "counter" ? joker.state.value : 0;
-        const hundredths =
-          Math.round(effect.base * 100) -
-          Math.round(effect.lossPerCard * 100) * discarded;
-        const factor = Math.max(100, hundredths) / 100;
+        const factor = ramenXMultFactor(joker);
         if (factor > 1) {
           xMult *= factor;
           fired.push(joker.id);
