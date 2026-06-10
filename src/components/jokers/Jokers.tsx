@@ -15,6 +15,7 @@ import {
   type Joker,
 } from "../../items/jokers";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
+import { announce } from "../system/LiveAnnouncer";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
 import JokerStickerBadges from "./JokerStickerBadges";
@@ -102,6 +103,37 @@ export default function Jokers({
     if (next !== ids) onReorder(next);
   }
 
+  function moveJoker(joker: Joker, idx: number, direction: -1 | 1) {
+    const name = localizedJokerName(i18n.language, joker.id, joker.name);
+    if (direction === -1 && idx === 0) {
+      announce(t("a11y.atStart", { item: name }));
+      return;
+    }
+    if (direction === 1 && idx === jokers.length - 1) {
+      announce(t("a11y.atEnd", { item: name }));
+      return;
+    }
+    applyDrop(joker.id, direction === -1 ? idx - 1 : idx + 2);
+    announce(
+      t("a11y.movedTo", {
+        item: name,
+        position: idx + direction + 1,
+        total: jokers.length,
+      }),
+    );
+  }
+
+  function sellJokerAt(joker: Joker, idx: number) {
+    if (!onSell) return;
+    announce(
+      t("a11y.soldJoker", {
+        name: localizedJokerName(i18n.language, joker.id, joker.name),
+        value: jokerSellValue(joker),
+      }),
+    );
+    onSell(idx);
+  }
+
   function handleListDragOver(e: React.DragEvent<HTMLUListElement>) {
     if (draggingId === null) return;
     const target = e.target as HTMLElement | null;
@@ -154,6 +186,15 @@ export default function Jokers({
       />
     );
   }
+
+  // Keys follow the joker (not its index) so the focused move/sell button
+  // survives a reorder; the occurrence suffix disambiguates duplicates.
+  const seenIds = new Map<string, number>();
+  const jokerKeys = jokers.map((j) => {
+    const n = seenIds.get(j.id) ?? 0;
+    seenIds.set(j.id, n + 1);
+    return `${j.id}-${n}`;
+  });
 
   const showDropZone = Boolean(dropZone.onDrop);
   return (
@@ -211,7 +252,7 @@ export default function Jokers({
           const tooltipId = `${tooltipIdBase}-${joker.id}`;
           const tooltipOpen = tooltipOpenId === joker.id;
           return (
-            <Fragment key={`${joker.id}-${idx}`}>
+            <Fragment key={jokerKeys[idx]}>
               {reorderable && renderGap(idx)}
               <li
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
@@ -253,7 +294,7 @@ export default function Jokers({
                 onClick={
                   jokerSellable
                     ? (e) => {
-                        if (e.shiftKey) onSell?.(idx);
+                        if (e.shiftKey) sellJokerAt(joker, idx);
                       }
                     : undefined
                 }
@@ -283,6 +324,55 @@ export default function Jokers({
                     </span>
                   )}
                 </div>
+                {reorderable && (
+                  <div className="joker-move-controls">
+                    <button
+                      type="button"
+                      className="joker-move-button"
+                      aria-label={t("a11y.moveLeft", {
+                        item: localizedJokerName(i18n.language, joker.id, joker.name),
+                      })}
+                      data-testid={`joker-move-left-${joker.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveJoker(joker, idx, -1);
+                      }}
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      className="joker-move-button"
+                      aria-label={t("a11y.moveRight", {
+                        item: localizedJokerName(i18n.language, joker.id, joker.name),
+                      })}
+                      data-testid={`joker-move-right-${joker.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveJoker(joker, idx, 1);
+                      }}
+                    >
+                      ▶
+                    </button>
+                  </div>
+                )}
+                {jokerSellable && (
+                  <button
+                    type="button"
+                    className="joker-sell-button"
+                    aria-label={t("a11y.sellJoker", {
+                      name: localizedJokerName(i18n.language, joker.id, joker.name),
+                      value: sellValue,
+                    })}
+                    data-testid={`joker-sell-${joker.id}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sellJokerAt(joker, idx);
+                    }}
+                  >
+                    Sell ${sellValue}
+                  </button>
+                )}
                 {tooltipOpen && tooltipRect && (
                   <JokerTooltip id={tooltipId} joker={joker} anchorRect={tooltipRect} />
                 )}

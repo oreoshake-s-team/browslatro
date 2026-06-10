@@ -243,6 +243,8 @@ export const en = {
     jokerDebuffed: "Debuffed — does not score.",
     jokerEdition: "{{name}} edition: {{description}}.",
     sellHint: "Shift-click or drag to deck to sell for ${{value}}.",
+    sellJoker: "Sell {{name}} (worth ${{value}})",
+    soldJoker: "Sold {{name}} for ${{value}}",
     consumableSlots: "Consumable slots",
     emptyConsumableSlot: "Empty consumable slot",
     consumableTile:
