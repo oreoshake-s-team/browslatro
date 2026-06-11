@@ -1,0 +1,139 @@
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { HandOption } from "../getHandOptions";
+import { useGame } from "../../store/game";
+import type { Advice } from "./advice";
+import type { MoveExplanationDeps } from "./useMoveExplanation";
+import { useMoveExplanation } from "./useMoveExplanation";
+
+function proposal(): HandOption {
+  return {
+    action: "play",
+    cardIds: [1, 2],
+    handLabel: "Pair",
+    score: 40,
+    chips: 20,
+    mult: 2,
+    notes: [],
+  };
+}
+
+function adviceFixture(): Advice {
+  return {
+    recommendationIndex: 0,
+    alternativeIndex: 0,
+    whyAlternativeWorse: "No other option here.",
+    explanation: "Play the pair to bank guaranteed chips.",
+    concept: "Lock in value before chasing draws.",
+  };
+}
+
+function makeDeps(extra?: Partial<MoveExplanationDeps>): MoveExplanationDeps {
+  return {
+    fetchAdviceFn: vi.fn().mockResolvedValue({ ok: true, advice: adviceFixture() }),
+    getState: () => useGame.getState(),
+    ...extra,
+  };
+}
+
+beforeEach(() => {
+  useGame.getState().resetGame();
+});
+
+describe("useMoveExplanation", () => {
+  test("starts idle", () => {
+    const { result } = renderHook(() => useMoveExplanation(makeDeps()));
+    expect(result.current.state).toEqual({ phase: "idle" });
+  });
+
+  test("sends the proposal as the only candidate", async () => {
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() =>
+      useMoveExplanation(makeDeps({ fetchAdviceFn })),
+    );
+    await act(() => result.current.explain(proposal()));
+    expect(fetchAdviceFn.mock.calls[0][1]).toEqual([proposal()]);
+  });
+
+  test("reaches ready with the explanation on success", async () => {
+    const { result } = renderHook(() => useMoveExplanation(makeDeps()));
+    await act(() => result.current.explain(proposal()));
+    const state = result.current.state;
+    expect(state.phase === "ready" && state.explanation).toBe(
+      "Play the pair to bank guaranteed chips.",
+    );
+  });
+
+  test("reaches ready carrying the transferable concept", async () => {
+    const { result } = renderHook(() => useMoveExplanation(makeDeps()));
+    await act(() => result.current.explain(proposal()));
+    const state = result.current.state;
+    expect(state.phase === "ready" && state.concept).toBe(
+      "Lock in value before chasing draws.",
+    );
+  });
+
+  test("reaches error with the client code on failure", async () => {
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: false, code: "model_timeout" });
+    const { result } = renderHook(() =>
+      useMoveExplanation(makeDeps({ fetchAdviceFn })),
+    );
+    await act(() => result.current.explain(proposal()));
+    const state = result.current.state;
+    expect(state.phase === "error" && state.code).toBe("model_timeout");
+  });
+
+  test("shows loading while the request is in flight", async () => {
+    let release: (value: { ok: true; advice: Advice }) => void = () => {};
+    const fetchAdviceFn = vi.fn().mockReturnValue(
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+    );
+    const { result } = renderHook(() =>
+      useMoveExplanation(makeDeps({ fetchAdviceFn })),
+    );
+    let pending: Promise<void> = Promise.resolve();
+    act(() => {
+      pending = result.current.explain(proposal());
+    });
+    expect(result.current.state).toEqual({ phase: "loading" });
+    await act(async () => {
+      release({ ok: true, advice: adviceFixture() });
+      await pending;
+    });
+  });
+
+  test("reset returns to idle", async () => {
+    const { result } = renderHook(() => useMoveExplanation(makeDeps()));
+    await act(() => result.current.explain(proposal()));
+    act(() => result.current.reset());
+    expect(result.current.state).toEqual({ phase: "idle" });
+  });
+
+  test("reset ignores a stale in-flight result", async () => {
+    let release: (value: { ok: true; advice: Advice }) => void = () => {};
+    const fetchAdviceFn = vi.fn().mockReturnValue(
+      new Promise((resolve) => {
+        release = resolve;
+      }),
+    );
+    const { result } = renderHook(() =>
+      useMoveExplanation(makeDeps({ fetchAdviceFn })),
+    );
+    let pending: Promise<void> = Promise.resolve();
+    act(() => {
+      pending = result.current.explain(proposal());
+    });
+    act(() => result.current.reset());
+    await act(async () => {
+      release({ ok: true, advice: adviceFixture() });
+      await pending;
+    });
+    expect(result.current.state).toEqual({ phase: "idle" });
+  });
+});

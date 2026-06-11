@@ -12,6 +12,7 @@ import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
 import AutopilotControls from "./AutopilotControls";
 import type { HandOption } from "../../ai/getHandOptions";
+import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
 import type { DownloadProgress } from "../../ai/policy";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 import LazyChunkErrorBoundary from "../system/LazyChunkErrorBoundary";
@@ -38,8 +39,10 @@ interface GameProps {
   onToggleAutopilot?: () => void;
   autopilotProposal?: HandOption | null;
   autopilotModelProgress?: DownloadProgress | null;
+  autopilotExplanation?: MoveExplanationState;
   onApproveAutopilot?: () => void;
   onStopAutopilot?: () => void;
+  onExplainAutopilot?: () => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -57,8 +60,10 @@ export default function Game({
   onToggleAutopilot,
   autopilotProposal = null,
   autopilotModelProgress = null,
+  autopilotExplanation = { phase: "idle" },
   onApproveAutopilot,
   onStopAutopilot,
+  onExplainAutopilot,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -314,8 +319,10 @@ export default function Game({
                 <AutopilotControls
                   proposal={autopilotProposal}
                   modelProgress={autopilotModelProgress}
+                  explanation={autopilotExplanation}
                   onApprove={onApproveAutopilot}
                   onStop={onStopAutopilot}
+                  onExplain={onExplainAutopilot ?? (() => {})}
                 />
               )}
           </div>

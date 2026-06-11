@@ -65,3 +65,20 @@
   border-color: #e03131;
   color: #1a1a1a;
 }
+
+.autopilot-explanation {
+  margin: 0;
+  max-width: 22rem;
+  color: #343a40;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.autopilot-explanation p {
+  margin: 0 0 0.3rem;
+}
+
+.autopilot-concept {
+  font-style: italic;
+  color: #1c7ed6;
+}

@@ -197,6 +197,8 @@ export const en = {
     autopilot: "Autopilot",
     autopilotApprove: "Approve move",
     autopilotStop: "Stop autopilot",
+    autopilotExplain: "Explain this move",
+    autopilotExplainError: "The coach couldn't explain this move right now.",
     autopilotPlayProposal: "Autopilot suggests playing {{hand}}",
     autopilotDiscardProposal: "Autopilot suggests discarding the selected cards",
     title: "Coach",

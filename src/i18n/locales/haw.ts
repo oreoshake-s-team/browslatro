@@ -205,6 +205,8 @@ export const haw: LocaleMessages = {
     autopilot: "Autopilot",
     autopilotApprove: "ʻApono i ka neʻe",
     autopilotStop: "Hoʻōki i ka autopilot",
+    autopilotExplain: "Wehewehe i kēia neʻe",
+    autopilotExplainError: "ʻAʻole hiki i ke kumu aʻo ke wehewehe i kēia neʻe i kēia manawa.",
     autopilotPlayProposal: "Ke koho nei ka autopilot e pāʻani {{hand}}",
     autopilotDiscardProposal: "Ke koho nei ka autopilot e kiola i nā kāleka i koho ʻia",
     title: "Coach",
