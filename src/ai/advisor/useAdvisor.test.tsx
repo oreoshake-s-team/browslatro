@@ -5,7 +5,7 @@ import { useGame } from "../../store/game";
 import type { CandidateRanker } from "../policy";
 import type { Advice } from "./advice";
 import type { AdvisorDeps } from "./useAdvisor";
-import { useAdvisor } from "./useAdvisor";
+import { clearAdvisorAdviceCache, useAdvisor } from "./useAdvisor";
 
 function pairHand(): Card[] {
   return [
@@ -42,6 +42,7 @@ function makeDeps(extra?: Partial<AdvisorDeps>): AdvisorDeps {
 }
 
 beforeEach(() => {
+  clearAdvisorAdviceCache();
   useGame.getState().resetGame();
 });
 
@@ -92,6 +93,63 @@ describe("useAdvisor", () => {
     expect(
       readyState.phase === "ready" && readyState.report.candidates,
     ).toEqual(sent);
+  });
+
+
+  test("reuses the cached advice while the hand is unchanged", async () => {
+    dealPairHand();
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() => useAdvisor(makeDeps({ fetchAdviceFn })));
+    await act(() => result.current.requestAdvice());
+    await act(() => result.current.requestAdvice());
+    expect(fetchAdviceFn).toHaveBeenCalledTimes(1);
+  });
+
+  test("serves cached advice when flipping from just-the-move back to the walkthrough", async () => {
+    dealPairHand();
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() => useAdvisor(makeDeps({ fetchAdviceFn })));
+    await act(() => result.current.requestAdvice());
+    await act(() => result.current.requestAdvice({ explain: false }));
+    await act(() => result.current.requestAdvice());
+    const state = result.current.state;
+    expect(fetchAdviceFn).toHaveBeenCalledTimes(1);
+    expect(state.phase === "ready" && state.report.advice).toEqual(adviceFixture());
+  });
+
+  test("refetches once the hand changes", async () => {
+    dealPairHand();
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() => useAdvisor(makeDeps({ fetchAdviceFn })));
+    await act(() => result.current.requestAdvice());
+    useGame.getState().setDealt({
+      hand: [
+        { id: 7, rank: "A", suit: "clubs" },
+        { id: 8, rank: "A", suit: "spades" },
+        { id: 9, rank: "2", suit: "hearts" },
+      ],
+      remaining: [],
+    });
+    await act(() => result.current.requestAdvice());
+    expect(fetchAdviceFn).toHaveBeenCalledTimes(2);
+  });
+
+  test("a failed fetch is not cached", async () => {
+    dealPairHand();
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValueOnce({ ok: false, code: "model_timeout" })
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() => useAdvisor(makeDeps({ fetchAdviceFn })));
+    await act(() => result.current.requestAdvice());
+    await act(() => result.current.requestAdvice());
+    expect(fetchAdviceFn).toHaveBeenCalledTimes(2);
   });
 
   test("skips the API entirely when explanation is not requested", async () => {

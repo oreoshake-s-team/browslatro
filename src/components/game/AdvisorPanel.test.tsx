@@ -7,6 +7,7 @@ import type { CandidateRanker } from "../../ai/policy";
 import type { Card } from "../../cards/types";
 import { useGame } from "../../store/game";
 import AdvisorPanel from "./AdvisorPanel";
+import { clearAdvisorAdviceCache } from "../../ai/advisor/useAdvisor";
 
 function pairHand(): Card[] {
   return [
@@ -43,6 +44,7 @@ function makeDeps(extra?: Partial<AdvisorDeps>): AdvisorDeps {
 }
 
 beforeEach(() => {
+  clearAdvisorAdviceCache();
   window.localStorage.clear();
   window.localStorage.setItem("browslatro:advisor-verbosity", "full");
   useGame.getState().resetGame();

@@ -113,3 +113,30 @@ test("just-the-move verbosity skips the API and persists", async ({ page }) => {
   await expect(page.getByTestId("advisor-move-only")).toBeVisible();
   expect(adviceCalls).toBe(callsAfterToggle);
 });
+
+test("flipping modes reuses the cached explanation without a second API call", async ({
+  page,
+}) => {
+  await preferWalkthrough(page);
+  let adviceCalls = 0;
+  await page.route("**/api/advice", (route) => {
+    adviceCalls += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(ADVICE_BODY),
+    });
+  });
+  await startRound(page);
+  await page.getByRole("button", { name: /Advisor/ }).click();
+  await expect(
+    page.getByText("Coach says: take the strongest engine-vetted line."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Just the move" }).click();
+  await expect(page.getByTestId("advisor-move-only")).toBeVisible();
+  await page.getByRole("button", { name: "Walk me through it" }).click();
+  await expect(
+    page.getByText("Coach says: take the strongest engine-vetted line."),
+  ).toBeVisible();
+  expect(adviceCalls).toBe(1);
+});
