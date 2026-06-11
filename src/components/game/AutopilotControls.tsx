@@ -4,7 +4,10 @@ import type { HandOption } from "../../ai/getHandOptions";
 import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
 import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
 import type { DownloadProgress } from "../../ai/policy";
+import type { Card } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
+import { cardLabel } from "../../scoring/scoringTrace";
+import { useGame } from "../../store/game";
 import PlayerKeyForm from "./PlayerKeyForm";
 import "./AutopilotControls.css";
 
@@ -28,6 +31,26 @@ function describeProposal(t: TFunction, proposal: HandOption): string {
   return t("advisor.autopilotDiscardProposal");
 }
 
+function describeCandidate(
+  t: TFunction,
+  candidate: HandOption,
+  hand: ReadonlyArray<Card>,
+): string {
+  const cards = candidate.cardIds
+    .map((id) => hand.find((card) => card.id === id))
+    .filter((card): card is Card => card !== undefined)
+    .map(cardLabel)
+    .join(" ");
+  if (candidate.action === "play") {
+    return t("advisor.playCandidate", {
+      hand: tHandLabel(t, candidate.handLabel),
+      cards,
+      score: candidate.score,
+    });
+  }
+  return t("advisor.discardCandidate", { cards });
+}
+
 function explanationError(
   t: TFunction,
   code: string,
@@ -47,6 +70,7 @@ function explanationError(
 function renderExplanation(
   t: TFunction,
   explanation: MoveExplanationState,
+  hand: ReadonlyArray<Card>,
   onRetry: () => void,
 ): React.JSX.Element | null {
   switch (explanation.phase) {
@@ -77,13 +101,40 @@ function renderExplanation(
         </div>
       );
     }
-    case "ready":
+    case "ready": {
+      const { candidates, advice } = explanation;
+      const recommended = candidates[advice.recommendationIndex];
+      const alternative = candidates[advice.alternativeIndex];
+      const showAlternative =
+        advice.alternativeIndex !== advice.recommendationIndex &&
+        alternative !== undefined;
       return (
         <div className="autopilot-explanation">
-          <p>{explanation.explanation}</p>
-          <p className="autopilot-concept">{explanation.concept}</p>
+          <section className="autopilot-advice autopilot-advice--recommendation">
+            <p className="autopilot-advice-label">{t("advisor.recommendation")}</p>
+            {recommended !== undefined && (
+              <p className="autopilot-advice-move">
+                {describeCandidate(t, recommended, hand)}
+              </p>
+            )}
+            <p>{advice.explanation}</p>
+          </section>
+          {showAlternative && (
+            <section className="autopilot-advice">
+              <p className="autopilot-advice-label">{t("advisor.alternative")}</p>
+              <p className="autopilot-advice-move">
+                {describeCandidate(t, alternative, hand)}
+              </p>
+              <p>{advice.whyAlternativeWorse}</p>
+            </section>
+          )}
+          <section className="autopilot-advice autopilot-advice--concept">
+            <p className="autopilot-advice-label">{t("advisor.concept")}</p>
+            <p className="autopilot-concept">{advice.concept}</p>
+          </section>
         </div>
       );
+    }
   }
 }
 
@@ -98,6 +149,7 @@ export default function AutopilotControls({
   onRetry,
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const hand = useGame((s) => s.dealt.hand);
   return (
     <div
       className="autopilot-controls"
@@ -159,7 +211,7 @@ export default function AutopilotControls({
           {t("advisor.autopilotStop")}
         </button>
       </div>
-      {renderExplanation(t, explanation, onRetry)}
+      {renderExplanation(t, explanation, hand, onRetry)}
     </div>
   );
 }

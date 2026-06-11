@@ -205,6 +205,11 @@ export const en = {
   advisor: {
     autopilot: "Suggest",
     suggestTitle: "Suggested move",
+    recommendation: "Recommended move",
+    alternative: "Tempting alternative",
+    concept: "Concept",
+    playCandidate: "Play {{hand}} ({{cards}}) — {{score}} points",
+    discardCandidate: "Discard {{cards}}",
     autopilotApprove: "Approve move",
     autopilotStop: "Stop suggesting",
     autopilotExplain: "Explain this move",

@@ -2,13 +2,18 @@ import { useCallback, useRef, useState } from "react";
 import { useGame, type GameState } from "../../store/game";
 import { getHandOptions, type HandOption } from "../getHandOptions";
 import { toModelState } from "../modelState";
+import type { Advice } from "./advice";
 import { fetchAdvice, type AdviceClientErrorCode } from "./client";
 import { toModelStateInput, toSimulatePlayInput } from "./snapshot";
 
 export type MoveExplanationState =
   | { readonly phase: "idle" }
   | { readonly phase: "loading" }
-  | { readonly phase: "ready"; readonly explanation: string; readonly concept: string }
+  | {
+      readonly phase: "ready";
+      readonly candidates: ReadonlyArray<HandOption>;
+      readonly advice: Advice;
+    }
   | {
       readonly phase: "error";
       readonly code: AdviceClientErrorCode;
@@ -54,11 +59,7 @@ export function useMoveExplanation(
         });
         return;
       }
-      setState({
-        phase: "ready",
-        explanation: result.advice.explanation,
-        concept: result.advice.concept,
-      });
+      setState({ phase: "ready", candidates: [proposal], advice: result.advice });
     },
     [deps],
   );
@@ -82,11 +83,7 @@ export function useMoveExplanation(
       });
       return null;
     }
-    setState({
-      phase: "ready",
-      explanation: result.advice.explanation,
-      concept: result.advice.concept,
-    });
+    setState({ phase: "ready", candidates, advice: result.advice });
     return candidates[result.advice.recommendationIndex] ?? null;
   }, [deps]);
 

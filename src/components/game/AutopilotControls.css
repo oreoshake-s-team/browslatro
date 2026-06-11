@@ -106,12 +106,49 @@
 
 .autopilot-explanation {
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
   color: #dee2e6;
   line-height: 1.45;
 }
 
-.autopilot-explanation p {
-  margin: 0 0 0.4rem;
+.autopilot-explanation > p {
+  margin: 0;
+}
+
+.autopilot-advice {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 0.7rem;
+}
+
+.autopilot-advice--recommendation {
+  border-left-color: #51cf66;
+}
+
+.autopilot-advice--concept {
+  border-left-color: #4dabf7;
+}
+
+.autopilot-advice p {
+  margin: 0 0 0.25rem;
+}
+
+.autopilot-advice p:last-child {
+  margin-bottom: 0;
+}
+
+.autopilot-advice-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.autopilot-advice-move {
+  font-weight: 700;
+  color: #e7f5ff;
 }
 
 .autopilot-concept {

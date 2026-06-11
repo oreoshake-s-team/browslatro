@@ -81,7 +81,7 @@ describe("useMoveExplanation", () => {
     const { result } = renderHook(() => useMoveExplanation(makeDeps()));
     await act(() => result.current.explain(proposal()));
     const state = result.current.state;
-    expect(state.phase === "ready" && state.explanation).toBe(
+    expect(state.phase === "ready" && state.advice.explanation).toBe(
       "Play the pair to bank guaranteed chips.",
     );
   });
@@ -90,7 +90,7 @@ describe("useMoveExplanation", () => {
     const { result } = renderHook(() => useMoveExplanation(makeDeps()));
     await act(() => result.current.explain(proposal()));
     const state = result.current.state;
-    expect(state.phase === "ready" && state.concept).toBe(
+    expect(state.phase === "ready" && state.advice.concept).toBe(
       "Lock in value before chasing draws.",
     );
   });
@@ -204,7 +204,7 @@ describe("useMoveExplanation", () => {
     const { result } = renderHook(() => useMoveExplanation(makeDeps()));
     await act(() => result.current.suggestMove());
     const state = result.current.state;
-    expect(state.phase === "ready" && state.explanation).toBe(
+    expect(state.phase === "ready" && state.advice.explanation).toBe(
       "Play the pair to bank guaranteed chips.",
     );
   });
