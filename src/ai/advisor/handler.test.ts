@@ -11,6 +11,7 @@ import type { Advice, AdviceModelResult } from "./model";
 import { createRateLimiter } from "./rateLimit";
 import {
   adviceRequestFixture,
+  blindAdviceRequestFixture,
   postAdvice,
   packAdviceRequestFixture,
   shopAdviceRequestFixture,
@@ -95,6 +96,14 @@ describe("handleAdviceRequest", () => {
   test("accepts a pack-context request", async () => {
     const response = await handleAdviceRequest(
       postAdvice(packAdviceRequestFixture()),
+      makeDeps(),
+    );
+    expect(response.status).toBe(200);
+  });
+
+  test("accepts a blind-context request", async () => {
+    const response = await handleAdviceRequest(
+      postAdvice(blindAdviceRequestFixture()),
       makeDeps(),
     );
     expect(response.status).toBe(200);

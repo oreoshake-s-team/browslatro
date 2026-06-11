@@ -2,15 +2,18 @@ import Anthropic from "@anthropic-ai/sdk";
 import { isAdvice, type Advice } from "./advice.js";
 import type {
   AdviceRequest,
+  BlindAdviceRequest,
   HandAdviceRequest,
   PackAdviceRequest,
   ShopAdviceRequest,
 } from "./types";
 import {
+  BOSS_WIKI,
   retrieveJokerWikiEntries,
   retrieveShopWikiEntries,
   retrieveWikiEntries,
   type JokerRef,
+  type WikiEntry,
 } from "./wiki.js";
 
 export type { Advice } from "./advice";
@@ -123,6 +126,30 @@ function buildPackMessage(request: PackAdviceRequest): string {
   return lines.join("\n");
 }
 
+function buildBlindMessage(request: BlindAdviceRequest): string {
+  const lines = [
+    "The player is on the blind selection screen, deciding whether to play the current blind or skip it for the offered tag. Skipping forfeits the blind's cash payout.",
+    "Blind state (the upcoming boss and any other skippable blind's offer are included for planning):",
+    JSON.stringify(request.blind),
+  ];
+  const wiki: WikiEntry[] = [...retrieveShopWikiEntries(request.blind.jokers)];
+  const bossNote = BOSS_WIKI[request.blind.boss.id];
+  if (bossNote !== undefined) {
+    wiki.push({
+      key: request.blind.boss.id,
+      kind: "boss",
+      title: request.blind.boss.name,
+      text: bossNote,
+    });
+  }
+  pushWikiLines(lines, wiki);
+  lines.push(
+    "Candidate blind actions (choose by index):",
+    indexedCandidates(request),
+  );
+  return lines.join("\n");
+}
+
 function buildHandMessage(request: HandAdviceRequest): string {
   const lines = ["Game state:", JSON.stringify(request.state)];
   if (request.state.jokers.length > 0) {
@@ -141,6 +168,7 @@ function buildHandMessage(request: HandAdviceRequest): string {
 export function buildUserMessage(request: AdviceRequest): string {
   if (request.context === "shop") return buildShopMessage(request);
   if (request.context === "pack") return buildPackMessage(request);
+  if (request.context === "blind") return buildBlindMessage(request);
   return buildHandMessage(request);
 }
 
