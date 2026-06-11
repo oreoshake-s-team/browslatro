@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import Round from "./Round";
 import type { BlindValuesMap } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
+import { formatNumber } from "../../utils/formatNumber";
 
 const BlindValues: BlindValuesMap = {
   1: "Small Blind",
@@ -28,7 +29,9 @@ describe("Round", () => {
         />,
       );
       expect(screen.getByText(label)).toBeInTheDocument();
-      expect(screen.getByText(`Score at least: ${score}`)).toBeInTheDocument();
+      expect(
+        screen.getByText(`Score at least: ${formatNumber(score)}`),
+      ).toBeInTheDocument();
       expect(screen.getByText(`to earn ${award}`)).toBeInTheDocument();
     },
   );

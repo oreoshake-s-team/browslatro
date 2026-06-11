@@ -35,6 +35,29 @@ describe("Burnt Joker (#1029)", () => {
     expect(useGame.getState().handStats.Pair.level).toBe(before + 1);
   });
 
+  test("records a hand-upgraded scoring log entry sourced to Burnt Joker", () => {
+    useGame.getState().setJokers([createBurntJoker()]);
+    discardCards(pairOfNines);
+    const entry = useGame
+      .getState()
+      .scoringEvents.find((e) => e.kind === "hand-upgraded");
+    expect(entry).toEqual({
+      kind: "hand-upgraded",
+      handLabel: "Pair",
+      level: useGame.getState().handStats.Pair.level,
+      source: "Burnt Joker",
+    });
+  });
+
+  test("does not record a hand-upgraded entry without Burnt Joker (negative)", () => {
+    useGame.getState().setJokers([]);
+    discardCards(pairOfNines);
+    const entry = useGame
+      .getState()
+      .scoringEvents.find((e) => e.kind === "hand-upgraded");
+    expect(entry).toBeUndefined();
+  });
+
   test("a second discard does not upgrade (negative)", () => {
     useGame.getState().setJokers([createBurntJoker()]);
     useGame.getState().setDiscardsUsedThisRound(1);

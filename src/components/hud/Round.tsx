@@ -3,6 +3,7 @@ import type { Blind, BlindValuesMap } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
 import type { BossBlind } from "../../items/bosses";
 import type { HandLabel } from "../../scoring/handEvaluator";
+import { formatNumber } from "../../utils/formatNumber";
 import "./Round.css";
 
 interface RoundProps {
@@ -51,12 +52,12 @@ function Round({
             <strong>{firstPlayedHandLabel ? tHandLabel(t, firstPlayedHandLabel) : null}</strong>
           </p>
         )}
-        <h3>{t("sidebar.scoreAtLeast", { score: requiredScore })}</h3>
+        <h3>{t("sidebar.scoreAtLeast", { score: formatNumber(requiredScore) })}</h3>
         <h4>{t("sidebar.toEarn", { award })}</h4>
       </div>
       <div className="round-score">
         <span className="round-score-label">{t("sidebar.roundScore")}</span>
-        <span className="round-score-value">{roundScore}</span>
+        <span className="round-score-value">{formatNumber(roundScore)}</span>
       </div>
     </>
   );

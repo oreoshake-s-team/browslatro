@@ -13,12 +13,12 @@ function buildInfo(overrides: Partial<RoundLostInfo> = {}): RoundLostInfo {
 describe("RoundLostModal", () => {
   test("renders the post-final-hand round score", () => {
     render(<RoundLostModal info={buildInfo()} onContinue={() => {}} />);
-    expect(screen.getByTestId("round-lost-score")).toHaveTextContent("1724");
+    expect(screen.getByTestId("round-lost-score")).toHaveTextContent("1,724");
   });
 
   test("renders the required score", () => {
     render(<RoundLostModal info={buildInfo()} onContinue={() => {}} />);
-    expect(screen.getByTestId("round-lost-required")).toHaveTextContent("1800");
+    expect(screen.getByTestId("round-lost-required")).toHaveTextContent("1,800");
   });
 
   test("renders the deficit as Short by", () => {

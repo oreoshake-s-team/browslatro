@@ -406,11 +406,13 @@ export function usePlayHand({
     const planetForUpgrade =
       upgradeRolls > 0 ? planetForHand(label) : undefined;
     let statsForThisHand = handStats;
+    let spaceUpgradeApplied = false;
     if (planetForUpgrade !== undefined) {
       for (let u = 0; u < upgradeRolls; u += 1) {
         statsForThisHand = applyPlanetUpgrade(statsForThisHand, planetForUpgrade);
       }
       useGame.getState().setHandStats(statsForThisHand);
+      spaceUpgradeApplied = true;
     }
     const baseHandEntry = statsForThisHand[label];
     const adjustedHandEntry = isBossRound
@@ -750,6 +752,14 @@ export function usePlayHand({
       level: handEntry.level,
     };
     const submitEvents: ScoringEvent[] = [baseEvent];
+    if (spaceUpgradeApplied) {
+      submitEvents.push({
+        kind: "hand-upgraded",
+        handLabel: label,
+        level: statsForThisHand[label].level,
+        source: "Space Joker",
+      });
+    }
     if (psychicZeroed) {
       submitEvents.push({
         kind: "boss-adjustment",

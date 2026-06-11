@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Hand } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
+import { formatNumber } from "../../utils/formatNumber";
 import "./HandScore.css";
 
 interface HandScoreProps {
@@ -111,7 +112,10 @@ function HandScore({
 }: HandScoreProps) {
   const { t } = useTranslation();
   const announcement = useDebouncedText(
-    t("handScore.preview", { chips, mult: multiplier }),
+    t("handScore.preview", {
+      chips: formatNumber(chips),
+      mult: formatNumber(multiplier),
+    }),
   );
   const hasLevel =
     selectedHand !== null && typeof selectedHandLevel === "number";
@@ -146,7 +150,7 @@ function HandScore({
           className={`chips${chipsAnim.leveling ? " hand-score-leveling" : ""}`}
           data-leveling={chipsAnim.leveling || undefined}
         >
-          {chipsAnim.value}
+          {formatNumber(chipsAnim.value)}
         </span>
         <span>X</span>
         <span
@@ -154,7 +158,7 @@ function HandScore({
           className={`multiplier${multAnim.leveling ? " hand-score-leveling" : ""}`}
           data-leveling={multAnim.leveling || undefined}
         >
-          {multAnim.value}
+          {formatNumber(multAnim.value)}
         </span>
       </p>
       <p

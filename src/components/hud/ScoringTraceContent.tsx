@@ -6,6 +6,7 @@ import {
   partitionByCategory,
   type ScoringEvent,
 } from "../../scoring/scoringTrace";
+import { formatNumber } from "../../utils/formatNumber";
 
 interface ScoringTraceContentProps {
   readonly events: ReadonlyArray<ScoringEvent>;
@@ -44,7 +45,8 @@ export default function ScoringTraceContent({
                 })}
                 {" "}
                 <span className="scoring-trace__group-base">
-                  +{group.base.chips} Chips, +{group.base.mult} Mult
+                  +{formatNumber(group.base.chips)} Chips, +
+                  {formatNumber(group.base.mult)} Mult
                 </span>
               </h3>
             ) : null}

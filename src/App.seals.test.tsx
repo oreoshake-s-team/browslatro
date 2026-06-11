@@ -100,7 +100,7 @@ function moneyValue(): number {
 
 function roundScoreValue(): number {
   const el = document.querySelector(".round-score-value");
-  return Number(el?.textContent ?? "0");
+  return Number(el?.textContent?.replace(/,/g, "") ?? "0");
 }
 
 function consumableCount(): number {

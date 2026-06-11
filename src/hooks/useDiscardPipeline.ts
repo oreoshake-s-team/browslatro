@@ -198,10 +198,19 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
         discardedLabel !== null
           ? planetForHand(createPlanetCatalog(), discardedLabel)
           : null;
-      if (planet) {
+      if (planet && discardedLabel !== null) {
         useGame
           .getState()
           .setHandStats((prev) => applyPlanetUpgrade(prev, planet));
+        setScoringEvents((prev) => [
+          ...prev,
+          {
+            kind: "hand-upgraded",
+            handLabel: discardedLabel,
+            level: useGame.getState().handStats[discardedLabel].level,
+            source: "Burnt Joker",
+          },
+        ]);
       }
     }
     for (const step of onDiscardResult.steps) {
