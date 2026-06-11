@@ -74,6 +74,35 @@ describe("Card tooltip — accessibility wiring", () => {
 });
 
 describe("Card tooltip — content per card state", () => {
+  test("shows accumulated bonus chips when the card has them", async () => {
+    const upgraded: CardType = { id: 21, rank: "9", suit: "spades", bonusChips: 15 };
+    const user = userEvent.setup();
+    render(<Card card={upgraded} />);
+    await user.hover(screen.getByRole("button"));
+    expect(screen.getByTestId("card-tooltip-bonus-chips")).toHaveTextContent(
+      "+15 extra Chips",
+    );
+  });
+
+  test("shows no bonus-chips row for a card without bonus chips (negative)", async () => {
+    const user = userEvent.setup();
+    render(<Card card={plain} />);
+    await user.hover(screen.getByRole("button"));
+    expect(
+      screen.queryByTestId("card-tooltip-bonus-chips"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("shows no bonus-chips row when bonusChips is zero (negative)", async () => {
+    const zero: CardType = { id: 22, rank: "9", suit: "spades", bonusChips: 0 };
+    const user = userEvent.setup();
+    render(<Card card={zero} />);
+    await user.hover(screen.getByRole("button"));
+    expect(
+      screen.queryByTestId("card-tooltip-bonus-chips"),
+    ).not.toBeInTheDocument();
+  });
+
   test("renders the rank for a plain card", async () => {
     const user = userEvent.setup();
     render(<Card card={plain} />);

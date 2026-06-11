@@ -46,6 +46,7 @@ export const en = {
     editionPolychrome: "Polychrome",
     editionNegative: "Negative",
     luckyOdds: "1 in {{n}}",
+    extraChips: "+{{value}} extra Chips",
     valueInHand: "in hand",
     valueIfHeld: "if held",
     luckyOddsMult: "1/{{n}} +{{amount}}",

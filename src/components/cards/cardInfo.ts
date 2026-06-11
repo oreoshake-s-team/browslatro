@@ -81,6 +81,7 @@ export interface CardInfo {
   readonly suitGlyph: string;
   readonly suitClass: Suit;
   readonly chips: number;
+  readonly bonusChips: number;
   readonly isStone: boolean;
   readonly enhancement?: EnhancementInfo;
   readonly seal?: SealInfo;
@@ -107,6 +108,7 @@ export function getCardInfo(
     suitGlyph: SUIT_GLYPHS[card.suit],
     suitClass: card.suit,
     chips: isStone ? 0 : getRankChips(card.rank),
+    bonusChips: card.bonusChips ?? 0,
     isStone,
     enhancement: card.enhancement ? enhancementInfo[card.enhancement] : undefined,
     seal: card.seal ? getSealInfo(card.seal) : undefined,

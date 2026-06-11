@@ -27,6 +27,19 @@ describe("formatChanceRatio", () => {
 });
 
 describe("getCardInfo — lucky enhancement description", () => {
+  test("exposes a card's accumulated bonus chips", () => {
+    expect(
+      getCardInfo({ id: 51, rank: "9", suit: "spades", bonusChips: 10 })
+        .bonusChips,
+    ).toBe(10);
+  });
+
+  test("defaults bonus chips to zero when unset (negative)", () => {
+    expect(getCardInfo({ id: 52, rank: "9", suit: "spades" }).bonusChips).toBe(
+      0,
+    );
+  });
+
   test("shows 1-in-5 / 1-in-15 by default (no probability multiplier)", () => {
     expect(getCardInfo(luckyCard).enhancement?.description).toContain("1-in-5");
   });
