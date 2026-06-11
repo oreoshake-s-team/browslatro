@@ -755,7 +755,7 @@
   );
 }
 
-.card-enhancement-lucky::after {
+.card-enhancement-lucky.card-face::after {
   content: "☘";
   position: absolute;
   top: 0.2rem;

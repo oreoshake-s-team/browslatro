@@ -52,6 +52,7 @@ export const haw: LocaleMessages = {
     editionHolographic: "Holographic",
     editionPolychrome: "Polychrome",
     editionNegative: "Negative",
+    luckyOdds: "1 in {{n}}",
     sealGold: "Gold Seal",
     sealRed: "Red Seal",
     sealBlue: "Blue Seal",
@@ -263,6 +264,8 @@ export const haw: LocaleMessages = {
     enhancementValueChips: "{{value}} chips",
     enhancementValueMult: "{{value}} Mult",
     enhancementValueMoney: "{{value}}",
+    enhancementValueLucky:
+      "{{multOdds}} for +{{mult}} Mult, {{moneyOdds}} for +${{money}}",
     cardWithDetail: "{{name}}, {{detail}}",
     cardDebuffed: "{{name}}, debuffed",
     cardNewlyDrawn: "{{name}}, newly drawn",
