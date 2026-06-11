@@ -2,6 +2,7 @@ import type { Card } from "../../../cards/types";
 import { RENTAL_END_OF_ROUND_DRAIN, hasSticker } from "../stickers";
 import type { Joker } from "../types";
 import { isJokerActive } from "../stickers";
+import { resolveJokerEffect, resolveJokerTargetIndex } from "./copy";
 
 export interface EndOfRoundContext {
   readonly remainingDiscards?: number;
@@ -28,8 +29,9 @@ export function applyEndOfRoundJokers(
   const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   const steps: EndOfRoundStep[] = [];
-  for (const joker of jokers) {
-    const effect = joker.effect;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const joker = jokers[i];
+    const effect = resolveJokerEffect(jokers, i);
     if (effect.kind === "end-of-round-money-per-unique-planet") {
       const planets = context.uniquePlanetsUsed ?? 0;
       const earned = effect.amount * planets;
@@ -42,8 +44,9 @@ export function applyEndOfRoundJokers(
         });
       }
     } else if (effect.kind === "end-of-round-money-grows-on-boss") {
+      const src = jokers[resolveJokerTargetIndex(jokers, i)];
       const payout =
-        joker.state?.kind === "counter" ? joker.state.value : effect.baseAmount;
+        src.state?.kind === "counter" ? src.state.value : effect.baseAmount;
       if (payout > 0) {
         moneyEarned += payout;
         steps.push({

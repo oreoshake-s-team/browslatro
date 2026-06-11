@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { renderHook, act } from "@testing-library/react";
-import { createBurntJoker, createJokerCatalog } from "../jokers";
+import { createBlueprintJoker, createBrainstormJoker, createBurntJoker, createJokerCatalog } from "../jokers";
 import { useDiscardPipeline } from "../../hooks/useDiscardPipeline";
 import { useGame } from "../../store/game";
 import type { Card } from "../../cards/types";
@@ -71,5 +71,26 @@ describe("Burnt Joker", () => {
     const before = useGame.getState().handStats.Pair.level;
     discardCards(pairOfNines);
     expect(useGame.getState().handStats.Pair.level).toBe(before);
+  });
+
+  test("Blueprint copying Burnt Joker upgrades the hand on first discard", () => {
+    useGame.getState().setJokers([createBlueprintJoker(), createBurntJoker()]);
+    const before = useGame.getState().handStats.Pair.level;
+    discardCards(pairOfNines);
+    expect(useGame.getState().handStats.Pair.level).toBe(before + 2);
+  });
+
+  test("Brainstorm copying Burnt Joker upgrades the hand on first discard", () => {
+    useGame.getState().setJokers([createBurntJoker(), createBrainstormJoker()]);
+    const before = useGame.getState().handStats.Pair.level;
+    discardCards(pairOfNines);
+    expect(useGame.getState().handStats.Pair.level).toBe(before + 2);
+  });
+
+  test("Blueprint at rightmost does not copy (negative)", () => {
+    useGame.getState().setJokers([createBurntJoker(), createBlueprintJoker()]);
+    const before = useGame.getState().handStats.Pair.level;
+    discardCards(pairOfNines);
+    expect(useGame.getState().handStats.Pair.level).toBe(before + 1);
   });
 });

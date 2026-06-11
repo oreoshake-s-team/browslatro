@@ -6,6 +6,8 @@ import {
   applyHandLevelJokers,
   applyOnDiscardJokers,
   applyPerCardJokers,
+  createBlueprintJoker,
+  createBrainstormJoker,
   createFacelessJoker,
 } from "../jokers";
 import type { JokerRarity } from "../jokers";
@@ -99,5 +101,32 @@ describe("Faceless Joker", () => {
 
   test("is a common joker", () => {
     expect(createFacelessJoker().rarity).toBe<JokerRarity>("common");
+  });
+
+  test("Blueprint copying Faceless Joker doubles the on-discard payout", () => {
+    const discarded = [card("J"), card("Q"), card("K")];
+    const result = applyOnDiscardJokers(
+      [createBlueprintJoker(), createFacelessJoker()],
+      discarded,
+    );
+    expect(result.moneyEarned).toBe(FACELESS_JOKER_PAYOUT * 2);
+  });
+
+  test("Brainstorm copying Faceless Joker doubles the on-discard payout", () => {
+    const discarded = [card("J"), card("Q"), card("K")];
+    const result = applyOnDiscardJokers(
+      [createFacelessJoker(), createBrainstormJoker()],
+      discarded,
+    );
+    expect(result.moneyEarned).toBe(FACELESS_JOKER_PAYOUT * 2);
+  });
+
+  test("Blueprint with no right neighbor contributes nothing extra (negative)", () => {
+    const discarded = [card("J"), card("Q"), card("K")];
+    const result = applyOnDiscardJokers(
+      [createFacelessJoker(), createBlueprintJoker()],
+      discarded,
+    );
+    expect(result.moneyEarned).toBe(FACELESS_JOKER_PAYOUT);
   });
 });

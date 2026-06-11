@@ -4,6 +4,7 @@ import { handContains } from "../../../scoring/handEvaluator";
 import { rollChance } from "../../../dev/chanceOverride";
 import type { Joker, RandomSource } from "../types";
 import { isJokerActive } from "../stickers";
+import { resolveJokerEffect } from "./copy";
 
 export interface HandPlayedCreationsContext {
   readonly playedHandLabel: HandLabel;
@@ -29,8 +30,8 @@ export function consumableCreationsOnHandPlayed(
   let tarots = 0;
   let spectrals = 0;
   let destroyedCardId: number | null = null;
-  for (const joker of jokers) {
-    const effect = joker.effect;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
     switch (effect.kind) {
       case "scored-rank-chance-creates-tarot": {
         for (const card of ctx.scoredCards) {
