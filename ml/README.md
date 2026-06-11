@@ -34,16 +34,21 @@ dependency-free encoding tests run in CI; training itself runs locally.
    python train.py ../dataset.jsonl --epochs 30 --out advisor-policy.onnx
    ```
 
-   `train.py` accepts any number of dataset files, so an in-game export
-   trains alongside the generated data:
+   `train.py` accepts any number of dataset files. Pass in-game exports
+   via `--human` so they train at a higher per-decision weight (default 5x,
+   tunable with `--human-weight`) — human play is scarce and covers state
+   space the generator never reaches, so each decision should count for
+   more than one expert rollout:
 
    ```sh
-   python train.py ../dataset.jsonl ../browslatro-human-play.jsonl --out advisor-policy.onnx
+   python train.py ../dataset.jsonl --human ../browslatro-human-play.jsonl --out advisor-policy.onnx
    ```
 
-   The train/validation split is keyed on `runSeed`; an in-game export uses
-   one seed per browser session, so your decisions land wholly on one side
-   of the split and never leak across it.
+   Positional files train at weight 1; the weight scales the cross-entropy
+   loss per decision. Human files are never held out: the train/validation
+   split (keyed on `runSeed`) applies to the generated set only, so every
+   human decision trains and validation accuracy stays an unweighted
+   measure against the search expert.
 
    Reports per-epoch loss and validation accuracy versus the expert
    (train/validation split is by run seed so games never straddle the split),
