@@ -13,14 +13,14 @@
   border: 2px solid var(--border);
   border-radius: 12px;
   padding: 1.8rem 2rem;
-  min-width: 22rem;
-  max-width: 32rem;
+  width: min(90vw, 32rem);
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 10px 30px var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
+  box-sizing: border-box;
 }
 
 .help-title {
