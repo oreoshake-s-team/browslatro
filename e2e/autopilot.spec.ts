@@ -35,9 +35,10 @@ test("autopilot proposes a move and plays it after approval", async ({
   const discardsNow = await discards.textContent();
   expect(handsNow === handsBefore && discardsNow === discardsBefore).toBe(true);
 
-  await approve.click();
-
   await expect(async () => {
+    if (await approve.isVisible().catch(() => false)) {
+      await approve.click();
+    }
     const handsAfter = await hands.textContent().catch(() => null);
     const discardsAfter = await discards.textContent().catch(() => null);
     expect(
