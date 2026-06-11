@@ -42,7 +42,30 @@ export interface ComboWikiEntry {
  *    do the same." The adapted text in those tables is shared under the
  *    same terms.
  */
+const CONTAINS_HAND_JOKERS: Readonly<Record<string, string>> = {
+  "jolly-joker": "a Pair",
+  "zany-joker": "Three of a Kind",
+  "mad-joker": "Two Pair",
+  "crazy-joker": "a Straight",
+  "droll-joker": "a Flush",
+  "sly-joker": "a Pair",
+  "wily-joker": "Three of a Kind",
+  "clever-joker": "Two Pair",
+  "devious-joker": "a Straight",
+  "crafty-joker": "a Flush",
+};
+
+function containsHandNote(hand: string): string {
+  return `Triggers whenever the played hand contains ${hand} — stronger hands that include it still count, so a Full House triggers Pair, Two Pair, and Three of a Kind bonuses alike.`;
+}
+
 export const JOKER_WIKI: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(
+    Object.entries(CONTAINS_HAND_JOKERS).map(([id, hand]) => [
+      id,
+      containsHandNote(hand),
+    ]),
+  ),
   blueprint:
     "Copies the ability of the joker directly to its right. Jokers trigger left to right, and reordering changes what Blueprint copies.",
   brainstorm:
@@ -81,6 +104,41 @@ export const JOKER_WIKI: Readonly<Record<string, string>> = {
     "Gains Mult per hand played but loses Mult per discard. Each discard has a real cost here — discard only when it clearly upgrades the play.",
   supernova:
     "Adds the number of times the played hand type has been played this run to Mult. Repeating your signature hand type keeps this strong.",
+  "half-joker":
+    "Bonus Mult when the played hand has 3 or fewer cards — small plays get a real boost, so don't pad hands out of habit.",
+  "delayed-gratification":
+    "Pays per remaining discard at end of round, but only if you used none — a single discard zeroes it. Decide at round start whether this is a no-discard round.",
+  "to-the-moon":
+    "Extra interest for money held at end of round. Banked cash is worth more than marginal plays; avoid spending that drops you below the next interest step.",
+  "golden-joker":
+    "Pays at the end of every round, so it rewards surviving rounds — its value is time, not big plays.",
+  "cloud-9":
+    "Pays for every 9 in your full deck at end of round. Playing and discarding 9s is harmless — destroying or transforming them cuts the payout permanently.",
+  rocket:
+    "Pays every round and the payout grows each time you defeat a Boss Blind, so it compounds over a long run.",
+  satellite:
+    "Pays per unique Planet card used this run — varied Planets raise the payout faster than repeating one.",
+  "credit-card":
+    "Lets your money go negative, so you can buy now and repay later — but negative money earns no interest, so debt has a quiet cost.",
+  egg: "Gains sell value at the end of every round — an investment that pays only when sold; the longer you can spare the slot, the better.",
+  "gros-michel":
+    "Has a random chance to be destroyed at the end of each round — enjoy it while it lasts, but don't build a long-term plan around it.",
+  "glass-joker":
+    "Gains permanent Mult every time a Glass card shatters — playing Glass cards aggressively feeds it.",
+  "ceremonial-dagger":
+    "Destroys the joker to its right when a Blind is selected, converting double its sell value into permanent Mult. Position the sacrifice deliberately before picking a blind.",
+  madness:
+    "Each Small or Big Blind you select feeds it Mult and destroys a random other joker — strong alone, dangerous beside jokers you want to keep.",
+  "ice-cream":
+    "Loses Chips with every hand played and melts at 0 — front-load its value with fewer, bigger hands while it lasts.",
+  popcorn:
+    "Loses Mult every round and is destroyed at 0 — early-run value only; spend it while it's hot.",
+  ramen:
+    "Loses X Mult for every card you discard and is destroyed at X1 — every discard has a direct price here; prefer plays over discards while it's alive.",
+  seltzer:
+    "Retriggers every played card for a limited number of hands — make those hands your biggest; don't waste its charges on small plays.",
+  "turtle-bean":
+    "Extra hand size that shrinks every round — exploit the bigger hand early; it's a temporary window, not a permanent upgrade.",
 };
 
 export const BOSS_WIKI: Readonly<Record<string, string>> = {
