@@ -72,3 +72,18 @@ test("autopilot can be switched off", async ({ page }) => {
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
 });
+
+test("a pending suggestion fills the Submit Hand preview and sidebar hand score", async ({
+  page,
+}) => {
+  await startRound(page);
+  const toggle = page.getByRole("button", { name: "Suggest" });
+  await toggle.click();
+
+  const approve = page.getByRole("button", { name: /Approve move/ });
+  await expect(approve).toBeVisible({ timeout: 30_000 });
+
+  await expect(page.getByTestId("submit-hand-detected")).toBeVisible();
+  await expect(page.locator(".hand-score .chips")).not.toHaveText("0");
+  await expect(page.locator(".hand-score .multiplier")).not.toHaveText("0");
+});

@@ -99,7 +99,7 @@ export function useAutopilot(
         if (cancelled || !autopilotIdle(fresh)) return;
         const action = await chooseAutopilotAction(fresh, ranker);
         if (cancelled || action === null) return;
-        fresh.setSelectedIds(new Set(action.cardIds));
+        fresh.selectCards(action.cardIds);
         setPendingProposal(action);
       })();
     }, stepMs);
@@ -120,11 +120,23 @@ export function useAutopilot(
     discardingIds,
   ]);
 
+  useEffect(() => {
+    if (pendingProposal === null) return;
+    const proposed = pendingProposal.cardIds;
+    const selectionMatches =
+      selectedIds.size === proposed.length &&
+      proposed.every((id) => selectedIds.has(id));
+    if (selectionMatches) return;
+    setPendingProposal(null);
+    setModelProgress(null);
+    onStopRef.current();
+  }, [selectedIds, pendingProposal]);
+
   const approve = useCallback((): void => {
     const proposal = proposalRef.current;
     if (proposal === null) return;
     const { getState } = depsRef.current ?? defaultDeps();
-    getState().setSelectedIds(new Set(proposal.cardIds));
+    getState().selectCards(proposal.cardIds);
     setPendingProposal(null);
     setModelProgress(null);
     if (proposal.action === "play") executorRef.current.play();
@@ -140,7 +152,7 @@ export function useAutopilot(
 
   const setProposal = useCallback((option: HandOption): void => {
     const { getState } = depsRef.current ?? defaultDeps();
-    getState().setSelectedIds(new Set(option.cardIds));
+    getState().selectCards(option.cardIds);
     setPendingProposal(option);
   }, []);
 
