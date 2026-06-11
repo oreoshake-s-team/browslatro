@@ -173,6 +173,39 @@ describe("useAutopilot", () => {
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
+  test("exposes model download progress while loading", async () => {
+    const ranker: CandidateRanker = {
+      load: async (onProgress) => {
+        onProgress?.({ loaded: 64, total: 128 });
+        return new Promise<void>(() => {});
+      },
+      rank: playFirstRanker.rank,
+    };
+    const { result } = renderAutopilot({ executor: makeExecutor(), ranker });
+    await waitFor(() =>
+      expect(result.current.modelProgress).toEqual({ loaded: 64, total: 128 }),
+    );
+  });
+
+  test("does not propose while the model is still downloading", async () => {
+    const ranker: CandidateRanker = {
+      load: () => new Promise<void>(() => {}),
+      rank: playFirstRanker.rank,
+    };
+    const { result } = renderAutopilot({ executor: makeExecutor(), ranker });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
+  test("clears model progress once a proposal is ready", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    expect(result.current.modelProgress).toBeNull();
+  });
+
   test("does not propose while disabled", async () => {
     const { result } = renderAutopilot({
       enabled: false,

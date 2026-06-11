@@ -25,6 +25,7 @@ describe("AutopilotControls", () => {
     render(
       <AutopilotControls
         proposal={playProposal()}
+        modelProgress={null}
         onApprove={vi.fn()}
         onStop={vi.fn()}
       />,
@@ -38,6 +39,7 @@ describe("AutopilotControls", () => {
     render(
       <AutopilotControls
         proposal={discardProposal()}
+        modelProgress={null}
         onApprove={vi.fn()}
         onStop={vi.fn()}
       />,
@@ -53,6 +55,7 @@ describe("AutopilotControls", () => {
     render(
       <AutopilotControls
         proposal={playProposal()}
+        modelProgress={null}
         onApprove={onApprove}
         onStop={vi.fn()}
       />,
@@ -67,6 +70,48 @@ describe("AutopilotControls", () => {
     render(
       <AutopilotControls
         proposal={playProposal()}
+        modelProgress={null}
+        onApprove={vi.fn()}
+        onStop={onStop}
+      />,
+    );
+    await user.click(screen.getByRole("button", { name: /Stop autopilot/ }));
+    expect(onStop).toHaveBeenCalledTimes(1);
+  });
+
+  test("shows a download progress bar while the model loads", () => {
+    render(
+      <AutopilotControls
+        proposal={null}
+        modelProgress={{ loaded: 64, total: 128 }}
+        onApprove={vi.fn()}
+        onStop={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("progressbar")).toHaveAttribute("value", "64");
+  });
+
+  test("does not offer approve while the model is downloading", () => {
+    render(
+      <AutopilotControls
+        proposal={null}
+        modelProgress={{ loaded: 0, total: null }}
+        onApprove={vi.fn()}
+        onStop={vi.fn()}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: /Approve move/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("stop is available while the model is downloading", async () => {
+    const onStop = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AutopilotControls
+        proposal={null}
+        modelProgress={{ loaded: 0, total: null }}
         onApprove={vi.fn()}
         onStop={onStop}
       />,

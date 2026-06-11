@@ -5,7 +5,7 @@ import {
 } from "../ai/advisor/autopilot";
 import { sharedAdvisorRanker } from "../ai/advisor/useAdvisor";
 import { setHumanPlayRecordingSuppressed } from "../ai/humanPlayWiring";
-import type { CandidateRanker } from "../ai/policy";
+import type { CandidateRanker, DownloadProgress } from "../ai/policy";
 import type { HandOption } from "../ai/getHandOptions";
 import { useGame, type GameState } from "../store/game";
 
@@ -24,6 +24,7 @@ export interface AutopilotDeps {
 
 export interface AutopilotControls {
   readonly pendingProposal: HandOption | null;
+  readonly modelProgress: DownloadProgress | null;
   readonly approve: () => void;
   readonly stop: () => void;
 }
@@ -44,6 +45,10 @@ export function useAutopilot(
   deps?: AutopilotDeps,
 ): AutopilotControls {
   const [pendingProposal, setPendingProposal] = useState<HandOption | null>(null);
+  const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
+    null,
+  );
+  const modelLoadedRef = useRef(false);
   const proposalRef = useRef<HandOption | null>(null);
   proposalRef.current = pendingProposal;
   const executorRef = useRef(executor);
@@ -70,6 +75,7 @@ export function useAutopilot(
   useEffect(() => {
     if (!enabled) {
       setPendingProposal(null);
+      setModelProgress(null);
       return;
     }
     if (isScoring || pendingProposal !== null) return;
@@ -78,6 +84,16 @@ export function useAutopilot(
     let cancelled = false;
     const timer = setTimeout(() => {
       void (async () => {
+        if (cancelled || !autopilotIdle(getState())) return;
+        if (!modelLoadedRef.current) {
+          setModelProgress({ loaded: 0, total: null });
+          await ranker.load((progress) => {
+            if (!cancelled) setModelProgress(progress);
+          });
+          if (cancelled) return;
+          modelLoadedRef.current = true;
+          setModelProgress(null);
+        }
         const fresh = getState();
         if (cancelled || !autopilotIdle(fresh)) return;
         const action = await chooseAutopilotAction(fresh, ranker);
@@ -115,8 +131,9 @@ export function useAutopilot(
 
   const stop = useCallback((): void => {
     setPendingProposal(null);
+    setModelProgress(null);
     onStopRef.current();
   }, []);
 
-  return { pendingProposal, approve, stop };
+  return { pendingProposal, modelProgress, approve, stop };
 }

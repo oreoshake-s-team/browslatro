@@ -12,6 +12,7 @@ import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
 import AutopilotControls from "./AutopilotControls";
 import type { HandOption } from "../../ai/getHandOptions";
+import type { DownloadProgress } from "../../ai/policy";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 import LazyChunkErrorBoundary from "../system/LazyChunkErrorBoundary";
 const Shop = lazy(() => import("../shop/Shop"));
@@ -36,6 +37,7 @@ interface GameProps {
   autopilotEnabled?: boolean;
   onToggleAutopilot?: () => void;
   autopilotProposal?: HandOption | null;
+  autopilotModelProgress?: DownloadProgress | null;
   onApproveAutopilot?: () => void;
   onStopAutopilot?: () => void;
   isScoring?: boolean;
@@ -54,6 +56,7 @@ export default function Game({
   autopilotEnabled = false,
   onToggleAutopilot,
   autopilotProposal = null,
+  autopilotModelProgress = null,
   onApproveAutopilot,
   onStopAutopilot,
   isScoring = false,
@@ -305,13 +308,16 @@ export default function Game({
                 {t("advisor.autopilot")}
               </button>
             )}
-            {autopilotProposal && onApproveAutopilot && onStopAutopilot && (
-              <AutopilotControls
-                proposal={autopilotProposal}
-                onApprove={onApproveAutopilot}
-                onStop={onStopAutopilot}
-              />
-            )}
+            {(autopilotProposal || autopilotModelProgress) &&
+              onApproveAutopilot &&
+              onStopAutopilot && (
+                <AutopilotControls
+                  proposal={autopilotProposal}
+                  modelProgress={autopilotModelProgress}
+                  onApprove={onApproveAutopilot}
+                  onStop={onStopAutopilot}
+                />
+              )}
           </div>
         </div>
       )}

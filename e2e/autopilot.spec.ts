@@ -13,7 +13,9 @@ async function startRound(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
 }
 
-test("autopilot plays the round without user input", async ({ page }) => {
+test("autopilot proposes a move and plays it after approval", async ({
+  page,
+}) => {
   await startRound(page);
   const hands = page.getByTestId("hands-stat");
   const discards = page.getByTestId("discards-stat");
@@ -24,13 +26,43 @@ test("autopilot plays the round without user input", async ({ page }) => {
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
 
+  const approve = page.getByRole("button", { name: /Approve move/ });
+  await expect(approve).toBeVisible({ timeout: 30_000 });
+
+  const handsNow = await hands.textContent();
+  const discardsNow = await discards.textContent();
+  expect(handsNow === handsBefore && discardsNow === discardsBefore).toBe(true);
+
+  await approve.click();
+
   await expect(async () => {
-    const handsNow = await hands.textContent().catch(() => null);
-    const discardsNow = await discards.textContent().catch(() => null);
+    const handsAfter = await hands.textContent().catch(() => null);
+    const discardsAfter = await discards.textContent().catch(() => null);
     expect(
-      handsNow !== handsBefore || discardsNow !== discardsBefore,
+      handsAfter !== handsBefore || discardsAfter !== discardsBefore,
     ).toBe(true);
   }).toPass({ timeout: 30_000 });
+});
+
+test("autopilot stops without executing the proposed move", async ({
+  page,
+}) => {
+  await startRound(page);
+  const hands = page.getByTestId("hands-stat");
+  const discards = page.getByTestId("discards-stat");
+  const handsBefore = await hands.textContent();
+  const discardsBefore = await discards.textContent();
+
+  const toggle = page.getByRole("button", { name: /Autopilot/ });
+  await toggle.click();
+
+  const stop = page.getByRole("button", { name: /Stop autopilot/ });
+  await expect(stop).toBeVisible({ timeout: 30_000 });
+  await stop.click();
+
+  await expect(toggle).toHaveAttribute("aria-pressed", "false");
+  expect(await hands.textContent()).toBe(handsBefore);
+  expect(await discards.textContent()).toBe(discardsBefore);
 });
 
 test("autopilot can be switched off", async ({ page }) => {
