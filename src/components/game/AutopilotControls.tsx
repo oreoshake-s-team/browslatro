@@ -2,8 +2,10 @@ import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import type { HandOption } from "../../ai/getHandOptions";
 import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
+import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
 import type { DownloadProgress } from "../../ai/policy";
 import { tHandLabel } from "../../i18n/handLabels";
+import PlayerKeyForm from "./PlayerKeyForm";
 import "./AutopilotControls.css";
 
 export interface AutopilotControlsProps {
@@ -24,9 +26,26 @@ function describeProposal(t: TFunction, proposal: HandOption): string {
   return t("advisor.autopilotDiscardProposal");
 }
 
+function explanationError(
+  t: TFunction,
+  code: string,
+  retryAfterSeconds: number | undefined,
+): string {
+  if (code === "rate_limited") {
+    return retryAfterSeconds !== undefined
+      ? t("advisor.limitReached", {
+          minutes: Math.max(1, Math.ceil(retryAfterSeconds / 60)),
+        })
+      : t("advisor.limitReachedNoEta");
+  }
+  if (code === "invalid_player_key") return t("advisor.keyRejected");
+  return t("advisor.autopilotExplainError");
+}
+
 function renderExplanation(
   t: TFunction,
   explanation: MoveExplanationState,
+  onRetry: () => void,
 ): React.JSX.Element | null {
   switch (explanation.phase) {
     case "idle":
@@ -37,12 +56,25 @@ function renderExplanation(
           {t("advisor.thinking")}
         </p>
       );
-    case "error":
+    case "error": {
+      const showKeyForm =
+        explanation.code === "invalid_player_key" ||
+        (explanation.code === "rate_limited" &&
+          readStoredPlayerKey() === null);
       return (
-        <p className="autopilot-explanation" role="status">
-          {t("advisor.autopilotExplainError")}
-        </p>
+        <div className="autopilot-explanation">
+          <p role="status">
+            {explanationError(t, explanation.code, explanation.retryAfterSeconds)}
+          </p>
+          {showKeyForm && (
+            <PlayerKeyForm
+              focusOnMount={explanation.code === "invalid_player_key"}
+              onSaved={onRetry}
+            />
+          )}
+        </div>
       );
+    }
     case "ready":
       return (
         <div className="autopilot-explanation">
@@ -109,7 +141,7 @@ export default function AutopilotControls({
           {t("advisor.autopilotStop")}
         </button>
       </div>
-      {renderExplanation(t, explanation)}
+      {renderExplanation(t, explanation, onExplain)}
     </div>
   );
 }

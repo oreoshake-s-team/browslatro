@@ -1,9 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { HandOption } from "../../ai/getHandOptions";
 import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
+import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
 import AutopilotControls from "./AutopilotControls";
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
 
 function playProposal(): HandOption {
   return {
@@ -136,5 +141,63 @@ describe("AutopilotControls", () => {
     expect(
       screen.getByText(/couldn't explain this move/),
     ).toBeInTheDocument();
+  });
+
+  test("shows a wait-time message when rate-limited", () => {
+    renderControls({
+      explanation: {
+        phase: "error",
+        code: "rate_limited",
+        retryAfterSeconds: 120,
+      },
+    });
+    expect(screen.getByText(/about 2 min/)).toBeInTheDocument();
+  });
+
+  test("shows the no-eta limit message when there is no retry-after", () => {
+    renderControls({
+      explanation: { phase: "error", code: "rate_limited" },
+    });
+    expect(
+      screen.getByText(/Free explanations are used up for now/),
+    ).toBeInTheDocument();
+  });
+
+  test("offers an inline key form when rate-limited without a stored key", () => {
+    renderControls({
+      explanation: { phase: "error", code: "rate_limited" },
+    });
+    expect(screen.getByTestId("player-key-input")).toBeInTheDocument();
+  });
+
+  test("hides the key form when rate-limited but a key is already stored", () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-stored",
+    );
+    renderControls({
+      explanation: { phase: "error", code: "rate_limited" },
+    });
+    expect(screen.queryByTestId("player-key-input")).not.toBeInTheDocument();
+  });
+
+  test("shows a key-rejected message when the player key is invalid", () => {
+    renderControls({
+      explanation: { phase: "error", code: "invalid_player_key" },
+    });
+    expect(screen.getByText(/key was rejected/)).toBeInTheDocument();
+  });
+
+  test("saving a key from the rescue form retries the explanation", async () => {
+    const onExplain = vi.fn();
+    const user = userEvent.setup();
+    renderControls({
+      explanation: { phase: "error", code: "invalid_player_key" },
+      onExplain,
+    });
+    await user.type(screen.getByTestId("player-key-input"), "sk-ant-new");
+    await user.click(screen.getByRole("button", { name: /Save key/ }));
+    expect(onExplain).toHaveBeenCalledTimes(1);
+    expect(readStoredPlayerKey()).toBe("sk-ant-new");
   });
 });
