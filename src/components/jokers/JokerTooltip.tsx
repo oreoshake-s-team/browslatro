@@ -18,6 +18,8 @@ import {
   jokerSellValue,
   jokerStickers,
   probabilityMultiplierFromJokers,
+  resolveJokerEffect,
+  resolveJokerTargetIndex,
   type Joker,
   type JokerCurrentValue,
   type JokerRarity,
@@ -36,12 +38,15 @@ import { useTooltipPosition } from "../system/useTooltipPosition";
 interface JokerTooltipProps {
   id: string;
   joker: Joker;
+  jokers?: ReadonlyArray<Joker>;
+  jokerIndex?: number;
   anchorRect: DOMRect;
 }
 
-export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProps) {
+export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, anchorRect }: JokerTooltipProps) {
   const { i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
+  const copyTargetLabel = computeCopyTargetLabel(jokers, jokerIndex);
   const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
   const editionClass = joker.edition
     ? `joker-tooltip-edition-${joker.edition}`
@@ -56,6 +61,11 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
       <p className="joker-tooltip-heading">
         {localizedJokerName(i18n.language, joker.id, joker.name)}
       </p>
+      {copyTargetLabel !== null && (
+        <p className="joker-tooltip-copy-target" data-testid="joker-tooltip-copy-target">
+          Copying: {copyTargetLabel}
+        </p>
+      )}
       <p
         className={`joker-tooltip-rarity joker-tooltip-rarity-${joker.rarity}`}
         data-testid="joker-tooltip-rarity"
@@ -112,6 +122,20 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
     </div>,
     document.body,
   );
+}
+
+function computeCopyTargetLabel(
+  jokers: ReadonlyArray<Joker>,
+  index: number,
+): string | null {
+  const effect = jokers[index]?.effect;
+  if (effect?.kind !== "copy-right-joker" && effect?.kind !== "copy-leftmost-joker") {
+    return null;
+  }
+  if (resolveJokerEffect(jokers, index).kind === "noop") {
+    return "incompatible";
+  }
+  return jokers[resolveJokerTargetIndex(jokers, index)].name;
 }
 
 function rarityLabel(rarity: JokerRarity): string {
