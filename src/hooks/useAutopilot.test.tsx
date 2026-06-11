@@ -123,6 +123,28 @@ describe("useAutopilot", () => {
     expect(executor.play).toHaveBeenCalledTimes(1);
   });
 
+  test("approve closes suggest mode by calling onStop", async () => {
+    const onStop = vi.fn();
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+      onStop,
+    });
+    await waitForProposal(result);
+    act(() => result.current.approve());
+    expect(onStop).toHaveBeenCalledTimes(1);
+  });
+
+  test("approve clears the pending proposal", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    act(() => result.current.approve());
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
   test("approve re-applies the proposed selection before playing", async () => {
     const { result } = renderAutopilot({
       executor: makeExecutor(),
