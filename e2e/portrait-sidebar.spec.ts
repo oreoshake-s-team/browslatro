@@ -73,6 +73,71 @@ test("portrait: the sidebar strip fits the viewport without a horizontal scrollb
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
+async function scrollPage(page: Page, top: number): Promise<void> {
+  await page.evaluate((value) => {
+    const candidates = [document.body, document.documentElement];
+    const scroller =
+      candidates.find((el) => el.scrollHeight - el.clientHeight > 0) ??
+      document.body;
+    scroller.scrollTop = value;
+    scroller.dispatchEvent(new Event("scroll"));
+  }, top);
+}
+
+test.describe("auto-hide on a short portrait viewport", () => {
+  test.use({ viewport: { width: 480, height: 500 } });
+
+  test("the sidebar slides up out of view after a deliberate scroll down", async ({
+    page,
+  }) => {
+    await startRound(page);
+    const before = await page.locator(".sidebar").boundingBox();
+    await scrollPage(page, 130);
+    await expect(page.locator(".sidebar")).toHaveClass(/sidebar--hidden/);
+    await expect
+      .poll(async () => (await page.locator(".sidebar").boundingBox())?.y ?? 0)
+      .toBeLessThan(before!.y);
+  });
+
+  test("negative: a small accidental scroll does not hide the sidebar", async ({
+    page,
+  }) => {
+    await startRound(page);
+    await scrollPage(page, 24);
+    await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar--hidden/);
+  });
+
+  test("scrolling back up reveals the hidden sidebar again", async ({
+    page,
+  }) => {
+    await startRound(page);
+    await scrollPage(page, 130);
+    await expect(page.locator(".sidebar")).toHaveClass(/sidebar--hidden/);
+    await scrollPage(page, 50);
+    await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar--hidden/);
+  });
+
+  test("returning the board to the top keeps the sidebar visible", async ({
+    page,
+  }) => {
+    await startRound(page);
+    await scrollPage(page, 130);
+    await scrollPage(page, 0);
+    await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar--hidden/);
+  });
+
+  test("negative: scrolling the scoring trace inside the sidebar does not hide it", async ({
+    page,
+  }) => {
+    await startRound(page);
+    await page.locator(".scoring-trace").evaluate((el) => {
+      el.scrollTop = 200;
+      el.dispatchEvent(new Event("scroll"));
+    });
+    await expect(page.locator(".sidebar")).not.toHaveClass(/sidebar--hidden/);
+  });
+});
+
 test("negative: landscape keeps the vertical sidebar column", async ({
   browser,
 }) => {

@@ -102,6 +102,16 @@
     overflow-x: auto;
     overflow-y: hidden;
     gap: 0.6rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    transition: transform calc(240ms * var(--animation-speed, 1)) ease;
+    will-change: transform;
+  }
+
+  .sidebar--hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
   }
 
   .sidebar > * {

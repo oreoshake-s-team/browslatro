@@ -98,6 +98,13 @@
   }
 }
 
+@media (orientation: portrait) and (max-width: 768px) {
+  .game {
+    flex: 0 0 auto;
+    overflow-y: visible;
+  }
+}
+
 .autopilot-toggle-button[aria-pressed="true"] {
   background-color: var(--accent-chips);
   border-color: var(--accent-chips-mid);

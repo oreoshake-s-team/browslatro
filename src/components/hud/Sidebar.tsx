@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Blind } from "../../cards/types";
 import "./Sidebar.css";
+import { useAutoHideSidebar } from "./useAutoHideSidebar";
 import { BlindValues } from "../../constants";
 import Round from "./Round";
 import RunInfo, { type HandPlayCounts } from "./RunInfo";
@@ -64,8 +65,12 @@ export default function Sidebar({
   onAnimationSpeedChange,
 }: SidebarProps) {
   const { t } = useTranslation();
+  const hidden = useAutoHideSidebar();
   return (
-    <aside className="sidebar" aria-label={t("a11y.gameStatus")}>
+    <aside
+      className={hidden ? "sidebar sidebar--hidden" : "sidebar"}
+      aria-label={t("a11y.gameStatus")}
+    >
       <Round
         blind={blind}
         BlindValues={BlindValues}

@@ -10,6 +10,8 @@
 @media (orientation: portrait) and (max-width: 768px) {
   .App {
     flex-direction: column;
+    height: auto;
+    min-height: 100dvh;
   }
 }
 
