@@ -195,6 +195,10 @@ export const en = {
   advisor: {
     open: "Advisor",
     autopilot: "Autopilot",
+    autopilotApprove: "Approve move",
+    autopilotStop: "Stop autopilot",
+    autopilotPlayProposal: "Autopilot suggests playing {{hand}}",
+    autopilotDiscardProposal: "Autopilot suggests discarding the selected cards",
     title: "Coach",
     downloadingModel: "Downloading the coach\u2026",
     thinking: "The coach is thinking\u2026",

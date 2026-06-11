@@ -195,10 +195,12 @@ function App() {
     skipDrawAfterDiscardRef,
   });
   const [autopilotEnabled, setAutopilotEnabled] = useState(false);
-  useAutopilot(autopilotEnabled, isScoring, {
-    play: submitHand,
-    discard: discardSelected,
-  });
+  const autopilot = useAutopilot(
+    autopilotEnabled,
+    isScoring,
+    { play: submitHand, discard: discardSelected },
+    () => setAutopilotEnabled(false),
+  );
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
       applyGainedTag,
@@ -437,6 +439,9 @@ function App() {
         onDiscard={discardSelected}
         autopilotEnabled={autopilotEnabled}
         onToggleAutopilot={() => setAutopilotEnabled((prev) => !prev)}
+        autopilotProposal={autopilot.pendingProposal}
+        onApproveAutopilot={autopilot.approve}
+        onStopAutopilot={autopilot.stop}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

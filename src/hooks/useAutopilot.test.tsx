@@ -1,9 +1,14 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { CandidateRanker } from "../ai/policy";
 import type { Card } from "../cards/types";
 import { useGame } from "../store/game";
-import { useAutopilot, type AutopilotDeps } from "./useAutopilot";
+import {
+  useAutopilot,
+  type AutopilotControls,
+  type AutopilotDeps,
+  type AutopilotExecutor,
+} from "./useAutopilot";
 
 function pairHand(): Card[] {
   return [
@@ -47,8 +52,35 @@ function makeDeps(ranker: CandidateRanker): AutopilotDeps {
   };
 }
 
-function makeExecutor() {
+function makeExecutor(): AutopilotExecutor & {
+  play: ReturnType<typeof vi.fn>;
+  discard: ReturnType<typeof vi.fn>;
+} {
   return { play: vi.fn<() => void>(), discard: vi.fn<() => void>() };
+}
+
+function renderAutopilot(options: {
+  enabled?: boolean;
+  isScoring?: boolean;
+  executor: AutopilotExecutor;
+  ranker: CandidateRanker;
+  onStop?: () => void;
+}) {
+  return renderHook(() =>
+    useAutopilot(
+      options.enabled ?? true,
+      options.isScoring ?? false,
+      options.executor,
+      options.onStop ?? vi.fn(),
+      makeDeps(options.ranker),
+    ),
+  );
+}
+
+async function waitForProposal(result: {
+  current: AutopilotControls;
+}): Promise<void> {
+  await waitFor(() => expect(result.current.pendingProposal).not.toBeNull());
 }
 
 beforeEach(() => {
@@ -58,56 +90,116 @@ beforeEach(() => {
 });
 
 describe("useAutopilot", () => {
-  test("plays the top-ranked candidate after the step delay", async () => {
-    const executor = makeExecutor();
-    renderHook(() =>
-      useAutopilot(true, false, executor, makeDeps(playFirstRanker)),
-    );
-    await waitFor(() => expect(executor.play).toHaveBeenCalled());
+  test("proposes the top-ranked play after the step delay", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    expect(result.current.pendingProposal?.action).toBe("play");
   });
 
-  test("applies the planned selection before playing", async () => {
-    const executor = makeExecutor();
-    renderHook(() =>
-      useAutopilot(true, false, executor, makeDeps(playFirstRanker)),
-    );
-    await waitFor(() => expect(executor.play).toHaveBeenCalled());
+  test("selects the proposed cards while awaiting approval", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
     expect(useGame.getState().selectedIds.size).toBeGreaterThan(0);
   });
 
-  test("discards when the ranker prefers a discard", async () => {
+  test("does not execute the move before it is approved", async () => {
     const executor = makeExecutor();
-    renderHook(() =>
-      useAutopilot(true, false, executor, makeDeps(discardFirstRanker)),
-    );
-    await waitFor(() => expect(executor.discard).toHaveBeenCalled());
-  });
-
-  test("does nothing while disabled", async () => {
-    const executor = makeExecutor();
-    renderHook(() =>
-      useAutopilot(false, false, executor, makeDeps(playFirstRanker)),
-    );
-    await new Promise((resolve) => setTimeout(resolve, 60));
+    const { result } = renderAutopilot({ executor, ranker: playFirstRanker });
+    await waitForProposal(result);
     expect(executor.play).not.toHaveBeenCalled();
   });
 
-  test("does nothing while scoring", async () => {
+  test("approve plays the proposed move", async () => {
     const executor = makeExecutor();
-    renderHook(() =>
-      useAutopilot(true, true, executor, makeDeps(playFirstRanker)),
-    );
-    await new Promise((resolve) => setTimeout(resolve, 60));
-    expect(executor.play).not.toHaveBeenCalled();
+    const { result } = renderAutopilot({ executor, ranker: playFirstRanker });
+    await waitForProposal(result);
+    act(() => result.current.approve());
+    expect(executor.play).toHaveBeenCalledTimes(1);
   });
 
-  test("does nothing while the shop is open", async () => {
+  test("approve re-applies the proposed selection before playing", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    const proposed = new Set(result.current.pendingProposal?.cardIds);
+    act(() => result.current.approve());
+    expect(useGame.getState().selectedIds).toEqual(proposed);
+  });
+
+  test("proposes a discard when the ranker prefers a discard", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: discardFirstRanker,
+    });
+    await waitForProposal(result);
+    expect(result.current.pendingProposal?.action).toBe("discard");
+  });
+
+  test("approve discards when the proposal is a discard", async () => {
+    const executor = makeExecutor();
+    const { result } = renderAutopilot({ executor, ranker: discardFirstRanker });
+    await waitForProposal(result);
+    act(() => result.current.approve());
+    expect(executor.discard).toHaveBeenCalledTimes(1);
+  });
+
+  test("stop clears the pending proposal", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    act(() => result.current.stop());
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
+  test("stop calls onStop to disable autopilot", async () => {
+    const onStop = vi.fn();
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+      onStop,
+    });
+    await waitForProposal(result);
+    act(() => result.current.stop());
+    expect(onStop).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not propose while disabled", async () => {
+    const { result } = renderAutopilot({
+      enabled: false,
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
+  test("does not propose while scoring", async () => {
+    const { result } = renderAutopilot({
+      isScoring: true,
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 60));
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
+  test("does not propose while the shop is open", async () => {
     useGame.setState({ shopOffers: [] });
-    const executor = makeExecutor();
-    renderHook(() =>
-      useAutopilot(true, false, executor, makeDeps(playFirstRanker)),
-    );
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
     await new Promise((resolve) => setTimeout(resolve, 60));
-    expect(executor.play).not.toHaveBeenCalled();
+    expect(result.current.pendingProposal).toBeNull();
   });
 });

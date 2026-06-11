@@ -10,6 +10,8 @@ import Consumables from "../consumables/Consumables";
 import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
+import AutopilotControls from "./AutopilotControls";
+import type { HandOption } from "../../ai/getHandOptions";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 import LazyChunkErrorBoundary from "../system/LazyChunkErrorBoundary";
 const Shop = lazy(() => import("../shop/Shop"));
@@ -33,6 +35,9 @@ interface GameProps {
   canDiscard: boolean;
   autopilotEnabled?: boolean;
   onToggleAutopilot?: () => void;
+  autopilotProposal?: HandOption | null;
+  onApproveAutopilot?: () => void;
+  onStopAutopilot?: () => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -48,6 +53,9 @@ export default function Game({
   canDiscard,
   autopilotEnabled = false,
   onToggleAutopilot,
+  autopilotProposal = null,
+  onApproveAutopilot,
+  onStopAutopilot,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -296,6 +304,13 @@ export default function Game({
                 <span aria-hidden="true">🤖 </span>
                 {t("advisor.autopilot")}
               </button>
+            )}
+            {autopilotProposal && onApproveAutopilot && onStopAutopilot && (
+              <AutopilotControls
+                proposal={autopilotProposal}
+                onApprove={onApproveAutopilot}
+                onStop={onStopAutopilot}
+              />
             )}
           </div>
         </div>

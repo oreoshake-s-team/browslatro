@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   autopilotIdle,
   chooseAutopilotAction,
@@ -22,6 +22,12 @@ export interface AutopilotDeps {
   readonly stepMs: number;
 }
 
+export interface AutopilotControls {
+  readonly pendingProposal: HandOption | null;
+  readonly approve: () => void;
+  readonly stop: () => void;
+}
+
 function defaultDeps(): AutopilotDeps {
   return {
     ranker: sharedAdvisorRanker(),
@@ -30,25 +36,20 @@ function defaultDeps(): AutopilotDeps {
   };
 }
 
-function selectionMatches(
-  plan: HandOption,
-  selectedIds: ReadonlySet<number>,
-): boolean {
-  return (
-    plan.cardIds.length === selectedIds.size &&
-    plan.cardIds.every((id) => selectedIds.has(id))
-  );
-}
-
 export function useAutopilot(
   enabled: boolean,
   isScoring: boolean,
   executor: AutopilotExecutor,
+  onStop: () => void,
   deps?: AutopilotDeps,
-): void {
-  const planRef = useRef<HandOption | null>(null);
+): AutopilotControls {
+  const [pendingProposal, setPendingProposal] = useState<HandOption | null>(null);
+  const proposalRef = useRef<HandOption | null>(null);
+  proposalRef.current = pendingProposal;
   const executorRef = useRef(executor);
   executorRef.current = executor;
+  const onStopRef = useRef(onStop);
+  onStopRef.current = onStop;
   const depsRef = useRef(deps);
   depsRef.current = deps;
   const selectedIds = useGame((s) => s.selectedIds);
@@ -67,21 +68,13 @@ export function useAutopilot(
   }, [enabled]);
 
   useEffect(() => {
-    const { ranker, getState, stepMs } = depsRef.current ?? defaultDeps();
     if (!enabled) {
-      planRef.current = null;
+      setPendingProposal(null);
       return;
     }
-    if (isScoring) return;
-    const state = getState();
-    if (!autopilotIdle(state)) return;
-    const plan = planRef.current;
-    if (plan !== null && selectionMatches(plan, state.selectedIds)) {
-      planRef.current = null;
-      if (plan.action === "play") executorRef.current.play();
-      else executorRef.current.discard();
-      return;
-    }
+    if (isScoring || pendingProposal !== null) return;
+    const { ranker, getState, stepMs } = depsRef.current ?? defaultDeps();
+    if (!autopilotIdle(getState())) return;
     let cancelled = false;
     const timer = setTimeout(() => {
       void (async () => {
@@ -89,8 +82,8 @@ export function useAutopilot(
         if (cancelled || !autopilotIdle(fresh)) return;
         const action = await chooseAutopilotAction(fresh, ranker);
         if (cancelled || action === null) return;
-        planRef.current = action;
         fresh.setSelectedIds(new Set(action.cardIds));
+        setPendingProposal(action);
       })();
     }, stepMs);
     return () => {
@@ -100,6 +93,7 @@ export function useAutopilot(
   }, [
     enabled,
     isScoring,
+    pendingProposal,
     selectedIds,
     dealt,
     remainingHands,
@@ -108,4 +102,21 @@ export function useAutopilot(
     shopOffers,
     discardingIds,
   ]);
+
+  const approve = useCallback((): void => {
+    const proposal = proposalRef.current;
+    if (proposal === null) return;
+    const { getState } = depsRef.current ?? defaultDeps();
+    getState().setSelectedIds(new Set(proposal.cardIds));
+    setPendingProposal(null);
+    if (proposal.action === "play") executorRef.current.play();
+    else executorRef.current.discard();
+  }, []);
+
+  const stop = useCallback((): void => {
+    setPendingProposal(null);
+    onStopRef.current();
+  }, []);
+
+  return { pendingProposal, approve, stop };
 }
