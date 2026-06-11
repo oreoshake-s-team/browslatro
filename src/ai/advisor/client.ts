@@ -1,6 +1,7 @@
 import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
 import { isAdvice, type Advice } from "./advice";
+import { readStoredPlayerKey } from "./playerKey";
 
 export type AdviceClientErrorCode =
   | "method_not_allowed"
@@ -20,7 +21,11 @@ export type AdviceClientErrorCode =
 
 export type AdviceClientResult =
   | { readonly ok: true; readonly advice: Advice }
-  | { readonly ok: false; readonly code: AdviceClientErrorCode };
+  | {
+      readonly ok: false;
+      readonly code: AdviceClientErrorCode;
+      readonly retryAfterSeconds?: number;
+    };
 
 export const ADVICE_ENDPOINT = "/api/advice";
 export const ADVICE_CLIENT_TIMEOUT_MS = 30_000;
@@ -39,9 +44,19 @@ const SERVER_CODES: ReadonlySet<AdviceClientErrorCode> = new Set([
   "model_error",
 ]);
 
+export const PLAYER_KEY_HEADER = "x-advisor-key";
+
 export interface FetchAdviceOptions {
   readonly fetchFn?: typeof fetch;
   readonly timeoutMs?: number;
+  readonly playerKey?: string | null;
+}
+
+function retryAfterSeconds(response: Response): number | undefined {
+  const header = response.headers.get("retry-after");
+  if (header === null) return undefined;
+  const seconds = Number(header);
+  return Number.isFinite(seconds) && seconds > 0 ? seconds : undefined;
 }
 
 function isTimeout(error: unknown): boolean {
@@ -68,11 +83,19 @@ export async function fetchAdvice(
 ): Promise<AdviceClientResult> {
   const fetchFn = options.fetchFn ?? fetch;
   const timeoutMs = options.timeoutMs ?? ADVICE_CLIENT_TIMEOUT_MS;
+  const playerKey =
+    options.playerKey === undefined ? readStoredPlayerKey() : options.playerKey;
+  const headers: Record<string, string> = {
+    "content-type": "application/json",
+  };
+  if (playerKey !== null && playerKey !== "") {
+    headers[PLAYER_KEY_HEADER] = playerKey;
+  }
   let response: Response;
   try {
     response = await fetchFn(ADVICE_ENDPOINT, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers,
       body: JSON.stringify({ state, candidates }),
       signal: AbortSignal.timeout(timeoutMs),
     });
@@ -86,7 +109,11 @@ export async function fetchAdvice(
     return { ok: false, code: "invalid_response" };
   }
   if (!response.ok) {
-    return { ok: false, code: serverErrorCode(body) };
+    return {
+      ok: false,
+      code: serverErrorCode(body),
+      retryAfterSeconds: retryAfterSeconds(response),
+    };
   }
   const advice = (body as { advice?: unknown } | null)?.advice;
   if (!isAdvice(advice, candidates.length)) {

@@ -131,3 +131,42 @@
   color: #fff;
   border-color: #1c7ed6;
 }
+
+.advisor-key-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-top: 1px solid #dee2e6;
+  padding-top: 0.8rem;
+}
+
+.advisor-key-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #495057;
+}
+
+.advisor-key-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.advisor-key-input {
+  flex: 1;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.advisor-key-steps {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: 0.8rem;
+  color: #868e96;
+}
+
+.advisor-key-link {
+  font-size: 0.85rem;
+  color: #1c7ed6;
+}

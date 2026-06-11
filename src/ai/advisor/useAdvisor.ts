@@ -31,6 +31,7 @@ export type AdvisorState =
       readonly phase: "degraded";
       readonly topCandidate: HandOption | null;
       readonly code: AdvisorDegradedCode;
+      readonly retryAfterSeconds?: number;
     };
 
 export interface RequestAdviceOptions {
@@ -116,7 +117,12 @@ export function useAdvisor(deps?: AdvisorDeps): UseAdvisorResult {
       apply({ phase: "querying" });
       const result = await fetchAdviceFn(modelState, ordered);
       if (!result.ok) {
-        apply({ phase: "degraded", topCandidate: ordered[0], code: result.code });
+        apply({
+          phase: "degraded",
+          topCandidate: ordered[0],
+          code: result.code,
+          retryAfterSeconds: result.retryAfterSeconds,
+        });
         return;
       }
       const report: AdvisorReport = {

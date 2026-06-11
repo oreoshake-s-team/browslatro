@@ -399,3 +399,38 @@ describe("Options dialog semantics (#912)", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });
+
+describe("Options — coach API key", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    resetPreferences();
+  });
+
+  test("saving a key shows the masked tail", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.type(
+      screen.getByTestId("options-advisor-key-input"),
+      "sk-ant-api03-abcdefgh1234",
+    );
+    await user.click(screen.getByRole("button", { name: "Save key" }));
+    expect(screen.getByTestId("options-advisor-key-masked")).toHaveTextContent(
+      "sk-ant-…1234",
+    );
+  });
+
+  test("removing the key clears storage", async () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-api03-abcdefgh1234",
+    );
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+    expect(
+      window.localStorage.getItem("browslatro:advisor-player-key"),
+    ).toBeNull();
+  });
+});

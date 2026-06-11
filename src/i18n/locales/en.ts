@@ -70,6 +70,9 @@ export const en = {
     speedNormal: "Normal",
     speedFast: "Fast",
     speedInstant: "Instant",
+    advisorKey: "Coach API key",
+    advisorKeyReplace: "Replace",
+    advisorKeyRemove: "Remove",
     newGame: "New game",
     newGameConfirm: "Start a new game? This will end your current run.",
     close: "Close",
@@ -211,6 +214,18 @@ export const en = {
     unavailable: "The coach's explanation is unavailable right now \u2014 this is the engine's top-ranked move.",
     noCandidates: "No legal moves to analyze right now.",
     verbosityLabel: "Advice detail",
+    keyLabel: "Your Anthropic API key",
+    keySave: "Save key",
+    keyRejected:
+      "Your API key was rejected \u2014 paste a valid key to keep unlimited coaching.",
+    limitReached:
+      "Free explanations are used up \u2014 the next one unlocks in about {{minutes}} min. Add your own key for unlimited coaching.",
+    limitReachedNoEta:
+      "Free explanations are used up for now. Add your own key for unlimited coaching.",
+    keyStep1: "Create an Anthropic account at console.anthropic.com",
+    keyStep2: "Add billing under Plans & billing",
+    keyStep3: "Create a key under API Keys and paste it here",
+    keyLink: "Get an API key \u2192",
     justTheMove: "Just the move",
     walkMeThrough: "Walk me through it",
     close: "Close",
