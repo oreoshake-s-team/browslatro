@@ -7,6 +7,15 @@ export interface WikiEntry {
   readonly text: string;
 }
 
+/**
+ * Joker and boss strategy notes adapted (condensed and reworded) from the
+ * Balatro Wiki: https://balatrogame.fandom.com/wiki/Balatro_Wiki
+ *
+ * That material is licensed under CC BY-NC-SA 4.0
+ * (https://creativecommons.org/licenses/by-nc-sa/4.0/). As a derivative,
+ * the entry text in JOKER_WIKI and BOSS_WIKI below is shared under the
+ * same license and may be used for non-commercial purposes only.
+ */
 export const JOKER_WIKI: Readonly<Record<string, string>> = {
   blueprint:
     "Copies the ability of the joker directly to its right. Jokers trigger left to right, and reordering changes what Blueprint copies.",
