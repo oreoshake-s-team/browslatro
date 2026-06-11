@@ -6,7 +6,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from dataset import load_all, load_decisions
+from dataset import load_all, load_decisions, split_by_seed
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
 
@@ -56,6 +56,22 @@ class LoadAllTest(unittest.TestCase):
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write("\n" + json.dumps(record) + "\n\n")
             self.assertEqual(len(load_all([path])), 1)
+
+
+class WeightTest(unittest.TestCase):
+    def test_decisions_default_to_weight_one(self):
+        for _, _, _, weight in load_decisions(FIXTURE):
+            self.assertEqual(weight, 1.0)
+
+    def test_load_all_applies_the_given_weight(self):
+        for _, _, _, weight in load_all([FIXTURE], weight=5.0):
+            self.assertEqual(weight, 5.0)
+
+    def test_split_preserves_weights(self):
+        decisions = [([[0.0]], 0, seed, 3.0) for seed in [1, 1, 2, 2, 3, 3]]
+        train, validation = split_by_seed(decisions, validation_fraction=0.34)
+        weights = {w for _, _, w in train + validation}
+        self.assertEqual(weights, {3.0})
 
 
 if __name__ == "__main__":
