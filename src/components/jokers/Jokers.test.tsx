@@ -680,6 +680,31 @@ describe("Jokers keyboard reorder and sell", () => {
 });
 
 describe("Jokers edition rendering", () => {
+  test("an editioned joker tile renders its edition badge", () => {
+    const j = withEdition(createPlusFourMultJoker(), "foil");
+    render(<Jokers jokers={[j]} />);
+    expect(screen.getByTestId("joker-edition-badge-foil")).toBeInTheDocument();
+  });
+
+  test("an un-editioned joker tile renders no edition badge (negative)", () => {
+    const j = createPlusFourMultJoker();
+    render(<Jokers jokers={[j]} />);
+    expect(
+      screen.queryByTestId(/^joker-edition-badge-/),
+    ).not.toBeInTheDocument();
+  });
+
+  test("an edition badge shares the badge row with sticker badges", () => {
+    const j = {
+      ...withEdition(createPlusFourMultJoker(), "foil"),
+      stickers: [{ kind: "eternal" }],
+    } satisfies Joker;
+    const { container } = render(<Jokers jokers={[j]} />);
+    const row = container.querySelector(".joker-tile-badges");
+    expect(row?.querySelector(".joker-edition-badge")).not.toBeNull();
+    expect(row?.querySelector(".joker-sticker-badge")).not.toBeNull();
+  });
+
   test("a Foil joker tile carries the foil edition class", () => {
     const j = withEdition(createPlusFourMultJoker(), "foil");
     render(<Jokers jokers={[j]} />);

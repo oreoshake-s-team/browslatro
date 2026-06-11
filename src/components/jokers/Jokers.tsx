@@ -12,12 +12,14 @@ import {
   effectiveJokerCount,
   isJokerActive,
   jokerSellValue,
+  jokerStickers,
   type Joker,
 } from "../../items/jokers";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { announce } from "../system/LiveAnnouncer";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
+import JokerEditionBadge from "./JokerEditionBadge";
 import JokerStickerBadges from "./JokerStickerBadges";
 import JokerTooltip from "./JokerTooltip";
 
@@ -317,7 +319,14 @@ export default function Jokers({
                       joker.description,
                     )}
                   </span>
-                  <JokerStickerBadges joker={joker} />
+                  {(joker.edition || jokerStickers(joker).length > 0) && (
+                    <div className="joker-tile-badges">
+                      {joker.edition && (
+                        <JokerEditionBadge edition={joker.edition} />
+                      )}
+                      <JokerStickerBadges joker={joker} />
+                    </div>
+                  )}
                   {jokerSellable && isDragging && (
                     <span className="joker-tile-sell" aria-hidden="true">
                       Sell ${sellValue}
