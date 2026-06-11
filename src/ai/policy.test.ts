@@ -2,6 +2,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
+import { HAND_SLOTS } from "./encode";
 import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
 import {
@@ -108,6 +109,52 @@ describe("createAdvisorRanker", () => {
     await ranker.load();
     await ranker.rank(record.state, record.candidates);
     expect(failures).toHaveLength(1);
+  });
+
+  test("an unencodable state falls back to greedy for that decision", async () => {
+    const failures: unknown[] = [];
+    const ranker = createAdvisorRanker(readFileSync(MODEL_PATH), (e) =>
+      failures.push(e),
+    );
+    const record = fixtureRecord(0);
+    const wideState: ModelState = {
+      ...record.state,
+      hand: new Array(HAND_SLOTS + 1).fill(record.state.hand[0]),
+    };
+    const ranking = await ranker.rank(wideState, record.candidates);
+    expect({ ranking, failures: failures.length }).toEqual({
+      ranking: greedyRanking(record.candidates),
+      failures: 1,
+    });
+  });
+
+  test("ranks with the model again after a per-decision failure", async () => {
+    const ranker = createAdvisorRanker(readFileSync(MODEL_PATH));
+    const direct = await loadPolicyRanker(readFileSync(MODEL_PATH));
+    const record = fixtureRecord(0);
+    const wideState: ModelState = {
+      ...record.state,
+      hand: new Array(HAND_SLOTS + 1).fill(record.state.hand[0]),
+    };
+    await ranker.rank(wideState, record.candidates);
+    expect(await ranker.rank(record.state, record.candidates)).toEqual(
+      await direct.rank(record.state, record.candidates),
+    );
+  });
+
+  test("reports every per-decision fallback", async () => {
+    const failures: unknown[] = [];
+    const ranker = createAdvisorRanker(readFileSync(MODEL_PATH), (e) =>
+      failures.push(e),
+    );
+    const record = fixtureRecord(0);
+    const wideState: ModelState = {
+      ...record.state,
+      hand: new Array(HAND_SLOTS + 1).fill(record.state.hand[0]),
+    };
+    await ranker.rank(wideState, record.candidates);
+    await ranker.rank(wideState, record.candidates);
+    expect(failures).toHaveLength(2);
   });
 });
 
