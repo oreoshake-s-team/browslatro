@@ -38,9 +38,10 @@ test("main menu has a single sr-only h1 and passes axe heading rules", async ({
 }) => {
   await page.goto("/");
   await expect(page.getByTestId("new-run-confirm")).toBeVisible();
+  await expect(page.locator("[data-seo-shell]")).toHaveCount(0);
   const h1 = page.getByRole("heading", { level: 1 });
   await expect(h1).toHaveCount(1);
-  await expect(h1).toHaveText("Browlatro — Main menu");
+  await expect(h1).toHaveText("Browslatro — Main menu");
   await expectHeadingRulesPass(page);
 });
 
@@ -50,7 +51,7 @@ test("gameplay surface switches the h1 to run-in-progress and passes axe heading
   await page.goto("/");
   await startRun(page);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
-    "Browlatro — Run in progress",
+    "Browslatro — Run in progress",
   );
   await expectHeadingRulesPass(page);
 });

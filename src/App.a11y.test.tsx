@@ -28,7 +28,7 @@ describe("App heading hierarchy", () => {
     useGame.getState().setPendingRunSelect(true);
     render(<App />);
     expect(
-      screen.getByRole("heading", { level: 1, name: "Browlatro — Main menu" }),
+      screen.getByRole("heading", { level: 1, name: "Browslatro — Main menu" }),
     ).toHaveClass("sr-only");
   });
 
@@ -36,7 +36,7 @@ describe("App heading hierarchy", () => {
     useGame.getState().setPendingRunSelect(false);
     render(<App />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Browlatro — Run in progress",
+      "Browslatro — Run in progress",
     );
   });
 
