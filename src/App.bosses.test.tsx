@@ -82,7 +82,7 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
     await advanceToAnte2BossBlind(user);
     expect(screen.getByText("The Wall")).toBeInTheDocument();
     expect(getStatValue("Ante")).toHaveTextContent("2");
-    expect(screen.getByText("Score at least: 3200")).toBeInTheDocument();
+    expect(screen.getByText("Score at least: 3,200")).toBeInTheDocument();
   });
 });
 
@@ -201,7 +201,9 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const value = document.querySelector(".round-score-value");
-    expect(Number(value?.textContent ?? "0")).toBeGreaterThan(0);
+    expect(
+      Number(value?.textContent?.replace(/,/g, "") ?? "0"),
+    ).toBeGreaterThan(0);
   });
 
   function statByLabel(label: string): HTMLElement {

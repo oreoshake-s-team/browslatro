@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
+import { formatNumber } from "../../utils/formatNumber";
 
 export interface RoundLostInfo {
   readonly roundScore: number;
@@ -41,15 +42,15 @@ export default function RoundLostModal({ info, onContinue }: RoundLostModalProps
         <dl className="round-lost-stats">
           <div className="round-lost-stat">
             <dt>{t("roundEnd.roundScore")}</dt>
-            <dd data-testid="round-lost-score">{roundScore}</dd>
+            <dd data-testid="round-lost-score">{formatNumber(roundScore)}</dd>
           </div>
           <div className="round-lost-stat">
             <dt>{t("roundEnd.requiredScore")}</dt>
-            <dd data-testid="round-lost-required">{requiredScore}</dd>
+            <dd data-testid="round-lost-required">{formatNumber(requiredScore)}</dd>
           </div>
           <div className="round-lost-stat round-lost-stat-short">
             <dt>{t("roundEnd.shortBy")}</dt>
-            <dd data-testid="round-lost-short-by">{shortBy}</dd>
+            <dd data-testid="round-lost-short-by">{formatNumber(shortBy)}</dd>
           </div>
         </dl>
         <button

@@ -10,6 +10,7 @@ import {
 } from "../../scoring/payout";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
+import { formatNumber } from "../../utils/formatNumber";
 
 export interface RoundWonJokerPayoutStep {
   readonly jokerId: string;
@@ -107,15 +108,15 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         <dl className="round-won-stats">
           <div className="round-won-stat">
             <dt>{t("roundEnd.roundScore")}</dt>
-            <dd data-testid="round-won-score">{roundScore}</dd>
+            <dd data-testid="round-won-score">{formatNumber(roundScore)}</dd>
           </div>
           <div className="round-won-stat">
             <dt>{t("roundEnd.requiredScore")}</dt>
-            <dd data-testid="round-won-required">{requiredScore}</dd>
+            <dd data-testid="round-won-required">{formatNumber(requiredScore)}</dd>
           </div>
           <div className="round-won-stat round-won-stat-beat">
             <dt>{t("roundEnd.beatBy")}</dt>
-            <dd data-testid="round-won-beat-by">+{beatBy}</dd>
+            <dd data-testid="round-won-beat-by">+{formatNumber(beatBy)}</dd>
           </div>
         </dl>
         <div className="round-won-payout">

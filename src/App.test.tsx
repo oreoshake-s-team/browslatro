@@ -17,6 +17,7 @@ import {
   createJokerStencilJoker,
   createPhotographJoker,
   createPlusFourMultJoker,
+  createSpaceJoker,
   initialJokersConfig,
 } from "./items/jokers";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
@@ -626,7 +627,10 @@ describe("Losing integration", () => {
     await user.click(screen.getByText(/Submit Hand/));
     await user.click(screen.getByText(/Submit Hand/));
     const modalScore = Number(
-      (await screen.findByTestId("round-lost-score")).textContent,
+      (await screen.findByTestId("round-lost-score")).textContent?.replace(
+        /,/g,
+        "",
+      ),
     );
     expect(modalScore).toBe(useGame.getState().roundScore);
   });
@@ -1010,7 +1014,7 @@ describe("Hand-level joker ordering (issue #192)", () => {
     await submitFirstFiveSpades();
     tickScoring(7);
     expect(document.querySelector(".round-score-value")).toHaveTextContent(
-      "3240",
+      "3,240",
     );
   });
 
@@ -1087,7 +1091,7 @@ describe("Photograph joker per-card timing (issue #204)", () => {
     await submitRoyalFlushOfClubs();
     tickScoring(5);
     expect(document.querySelector(".round-score-value")).toHaveTextContent(
-      "2416",
+      "2,416",
     );
   });
 
@@ -1100,8 +1104,49 @@ describe("Photograph joker per-card timing (issue #204)", () => {
     await user.click(screen.getByText(/Submit Hand/));
     tickScoring(5);
     expect(document.querySelector(".round-score-value")).toHaveTextContent(
-      "1080",
+      "1,080",
     );
+  });
+});
+
+describe("Space Joker scoring log (#1112)", () => {
+  const originalFactory = initialJokersConfig.factory;
+
+  beforeEach(() => {
+    initialJokersConfig.factory = () => [createSpaceJoker()];
+  });
+
+  afterEach(() => {
+    initialJokersConfig.factory = originalFactory;
+  });
+
+  async function playHighCardWithSpaceJoker(rollValue: number): Promise<void> {
+    vi.spyOn(Math, "random").mockReturnValue(rollValue);
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+  }
+
+  test("records a hand-upgraded scoring log entry sourced to Space Joker when the roll succeeds", async () => {
+    await playHighCardWithSpaceJoker(0);
+    const upgrade = useGame
+      .getState()
+      .scoringEvents.find((e) => e.kind === "hand-upgraded");
+    expect(upgrade).toMatchObject({
+      kind: "hand-upgraded",
+      handLabel: "High Card",
+      source: "Space Joker",
+    });
+  });
+
+  test("does not record a hand-upgraded entry when the upgrade roll fails (negative)", async () => {
+    await playHighCardWithSpaceJoker(0.9);
+    const upgrade = useGame
+      .getState()
+      .scoringEvents.find((e) => e.kind === "hand-upgraded");
+    expect(upgrade).toBeUndefined();
   });
 });
 
@@ -2077,7 +2122,10 @@ describe("Observatory voucher applies ×1.5 Mult per matching held Planet (#281)
 
   function readRoundScore(): number {
     return Number(
-      document.querySelector(".round-score-value")?.textContent ?? "0",
+      document.querySelector(".round-score-value")?.textContent?.replace(
+        /,/g,
+        "",
+      ) ?? "0",
     );
   }
 
@@ -2636,7 +2684,10 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     await userA.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const baseline = Number(
-      document.querySelector(".round-score-value")?.textContent ?? "0",
+      document.querySelector(".round-score-value")?.textContent?.replace(
+        /,/g,
+        "",
+      ) ?? "0",
     );
     unmount();
     useGame.getState().resetScoring();
@@ -2650,7 +2701,10 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     await userB.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const withDev = Number(
-      document.querySelector(".round-score-value")?.textContent ?? "0",
+      document.querySelector(".round-score-value")?.textContent?.replace(
+        /,/g,
+        "",
+      ) ?? "0",
     );
     expect(withDev).toBeGreaterThan(baseline);
   });
@@ -2664,7 +2718,10 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     await userA.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const baseline = Number(
-      document.querySelector(".round-score-value")?.textContent ?? "0",
+      document.querySelector(".round-score-value")?.textContent?.replace(
+        /,/g,
+        "",
+      ) ?? "0",
     );
     unmount();
     useGame.getState().resetScoring();
@@ -2678,7 +2735,10 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     await userB.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const withDev = Number(
-      document.querySelector(".round-score-value")?.textContent ?? "0",
+      document.querySelector(".round-score-value")?.textContent?.replace(
+        /,/g,
+        "",
+      ) ?? "0",
     );
     expect(withDev).toBe(baseline * 2);
   });

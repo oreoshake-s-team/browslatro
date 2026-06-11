@@ -100,6 +100,40 @@ describe("formatScoringEvent", () => {
     expect(formatScoringEvent(event)).toBe("5♠ destroyed (Glass roll)");
   });
 
+  test("formats a hand-upgraded event naming the hand, level and source", () => {
+    const event: ScoringEvent = {
+      kind: "hand-upgraded",
+      handLabel: "Pair",
+      level: 3,
+      source: "Space Joker",
+    };
+    expect(formatScoringEvent(event)).toBe(
+      "Pair upgraded to Lv 3 (Space Joker)",
+    );
+  });
+
+  test("groups thousands in a hand-base event with a comma", () => {
+    const event: ScoringEvent = {
+      kind: "hand-base",
+      chips: 1200,
+      mult: 16,
+      handLabel: "Flush",
+      level: 8,
+    };
+    expect(formatScoringEvent(event)).toBe(
+      "+1,200 Chips, +16 Mult (Flush base, Lv 8)",
+    );
+  });
+
+  test("groups thousands in a chips delta with a comma", () => {
+    const event: ScoringEvent = {
+      kind: "chips-delta",
+      amount: 1500,
+      source: "Bull",
+    };
+    expect(formatScoringEvent(event)).toBe("+1,500 Chips (Bull)");
+  });
+
   test("formats a boss-adjustment event", () => {
     const event: ScoringEvent = {
       kind: "boss-adjustment",
