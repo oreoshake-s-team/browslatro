@@ -3,10 +3,10 @@
   width: var(--card-width);
   height: var(--card-height);
   padding: 0.4rem;
-  border: 2px solid #495057;
+  border: 2px solid var(--shop-muted-on-light);
   border-radius: 8px;
-  background-color: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  background-color: var(--white);
+  box-shadow: 0 2px 4px var(--shadow-sm);
   cursor: pointer;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -21,8 +21,8 @@
 
 .card-selected {
   transform: translateY(-1.4rem);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.45);
-  border-color: #339af0;
+  box-shadow: 0 10px 18px color-mix(in srgb, var(--black) 45%, transparent);
+  border-color: var(--accent-chips);
 }
 
 .card-selected:hover {
@@ -59,19 +59,19 @@
     box-shadow:
       0 0 0 3px var(--focus-ring),
       0 0 18px var(--focus-ring),
-      0 2px 4px rgba(0, 0, 0, 0.15);
+      0 2px 4px var(--shadow-sm);
   }
   75% {
     box-shadow:
       0 0 0 3px var(--focus-ring),
       0 0 14px var(--focus-ring),
-      0 2px 4px rgba(0, 0, 0, 0.15);
+      0 2px 4px var(--shadow-sm);
   }
   100% {
     box-shadow:
       0 0 0 0 transparent,
       0 0 0 transparent,
-      0 2px 4px rgba(0, 0, 0, 0.15);
+      0 2px 4px var(--shadow-sm);
   }
 }
 
@@ -80,7 +80,7 @@
     animation: none;
     box-shadow:
       0 0 0 2px var(--focus-ring),
-      0 2px 4px rgba(0, 0, 0, 0.15);
+      0 2px 4px var(--shadow-sm);
   }
 }
 
@@ -102,7 +102,7 @@
 }
 
 .card-scoring {
-  box-shadow: 0 0 18px rgba(51, 154, 240, 0.7);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--accent-chips) 70%, transparent);
 }
 
 .card-scoring-tick-0 {
@@ -146,11 +146,11 @@
 }
 
 .card-red {
-  color: #c92a2a;
+  color: var(--accent-red-deep);
 }
 
 .card-black {
-  color: #212529;
+  color: var(--text-on-light);
 }
 
 /*
@@ -160,7 +160,7 @@
  * ancestor is set (driven by the user preference in `preferences.ts`).
  */
 .card-suit-spades {
-  /* default: black, inherited from .card-black */
+  /* default: var(--black), inherited from .card-black */
 }
 
 .card-suit-hearts {
@@ -172,17 +172,17 @@
 }
 
 .card-suit-clubs {
-  /* default: black, inherited from .card-black */
+  /* default: var(--black), inherited from .card-black */
 }
 
 /*
  * High-visibility four-color palette. Tuned for sufficient contrast against
- * the card background (#f8f9fa, see `index.css`). Exposed as CSS variables
+ * the card background (var(--text-primary), see `index.css`). Exposed as CSS variables
  * so palettes can be tweaked without touching selector rules.
  */
 .high-visibility {
-  --card-suit-spades-color: #212529;
-  --card-suit-hearts-color: #c92a2a;
+  --card-suit-spades-color: var(--text-on-light);
+  --card-suit-hearts-color: var(--accent-red-deep);
   --card-suit-diamonds-color: var(--suit-blue-on-light);
   --card-suit-clubs-color: var(--suit-green-on-light);
 }
@@ -233,7 +233,7 @@
   content: "";
   position: absolute;
   inset: 0.35rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--text-secondary);
   border-radius: 5px;
   pointer-events: none;
 }
@@ -275,25 +275,25 @@
 }
 
 .card-enhancement-gold {
-  border-color: #f59f00;
+  border-color: var(--accent-money-strong);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(245, 159, 0, 0.45),
-    0 2px 8px rgba(245, 159, 0, 0.5),
-    inset 0 0 14px rgba(255, 224, 102, 0.55);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-money-strong) 45%, transparent),
+    0 2px 8px color-mix(in srgb, var(--accent-money-strong) 50%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--accent-money-light) 55%, transparent);
   background-image: linear-gradient(
     135deg,
-    rgba(255, 224, 102, 0.55) 0%,
-    rgba(255, 255, 255, 0.85) 45%,
-    rgba(255, 224, 102, 0.55) 100%
+    color-mix(in srgb, var(--accent-money-light) 55%, transparent) 0%,
+    color-mix(in srgb, var(--white) 85%, transparent) 45%,
+    color-mix(in srgb, var(--accent-money-light) 55%, transparent) 100%
   );
 }
 
 .card-gold-scoring {
   position: relative;
   animation: card-gold-pulse calc(380ms * var(--animation-speed, 1)) ease-out;
-  box-shadow: 0 0 32px rgba(245, 159, 0, 0.95),
-    0 0 12px rgba(255, 215, 0, 0.8),
-    0 0 4px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--accent-money-strong) 95%, transparent),
+    0 0 12px color-mix(in srgb, var(--accent-money) 80%, transparent),
+    0 0 4px color-mix(in srgb, var(--white) 90%, transparent);
   z-index: 2;
   overflow: hidden;
 }
@@ -308,7 +308,7 @@
     115deg,
     transparent 0%,
     transparent 35%,
-    rgba(255, 255, 255, 0.9) 50%,
+    color-mix(in srgb, var(--white) 90%, transparent) 50%,
     transparent 65%,
     transparent 100%
   );
@@ -322,9 +322,9 @@
   top: -1.4rem;
   left: 50%;
   transform: translateX(-50%);
-  color: #5c3c00;
-  background-color: #ffe066;
-  border: 2px solid #f59f00;
+  color: var(--accent-money-text);
+  background-color: var(--accent-money-light);
+  border: 2px solid var(--accent-money-strong);
   border-radius: 999px;
   padding: 0.15rem 0.7rem;
   font-weight: 800;
@@ -332,7 +332,7 @@
   line-height: 1.1;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 2px 6px rgba(245, 159, 0, 0.55);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent-money-strong) 55%, transparent);
   animation: card-gold-bonus-float calc(480ms * var(--animation-speed, 1)) ease-out;
   z-index: 3;
 }
@@ -400,9 +400,9 @@
 .card-steel-scoring {
   position: relative;
   animation: card-steel-pulse calc(380ms * var(--animation-speed, 1)) ease-out;
-  box-shadow: 0 0 28px rgba(173, 181, 189, 0.95),
-    0 0 12px rgba(222, 226, 230, 0.85),
-    0 0 4px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 28px color-mix(in srgb, var(--text-muted) 95%, transparent),
+    0 0 12px color-mix(in srgb, var(--border-on-light) 85%, transparent),
+    0 0 4px color-mix(in srgb, var(--white) 90%, transparent);
   z-index: 2;
   overflow: hidden;
 }
@@ -417,7 +417,7 @@
     115deg,
     transparent 0%,
     transparent 35%,
-    rgba(255, 255, 255, 0.95) 50%,
+    color-mix(in srgb, var(--white) 95%, transparent) 50%,
     transparent 65%,
     transparent 100%
   );
@@ -431,9 +431,9 @@
   top: -1.4rem;
   left: 50%;
   transform: translateX(-50%);
-  color: #212529;
-  background-color: #dee2e6;
-  border: 2px solid #495057;
+  color: var(--text-on-light);
+  background-color: var(--border-on-light);
+  border: 2px solid var(--shop-muted-on-light);
   border-radius: 999px;
   padding: 0.15rem 0.7rem;
   font-weight: 800;
@@ -441,7 +441,7 @@
   line-height: 1.1;
   white-space: nowrap;
   pointer-events: none;
-  box-shadow: 0 2px 6px rgba(73, 80, 87, 0.55);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--shop-muted-on-light) 55%, transparent);
   animation: card-steel-mult-float calc(480ms * var(--animation-speed, 1)) ease-out;
   z-index: 3;
 }
@@ -510,9 +510,9 @@
 .card-lucky-money-scoring {
   position: relative;
   z-index: 2;
-  box-shadow: 0 0 24px rgba(47, 158, 68, 0.85),
-    0 0 10px rgba(143, 240, 164, 0.8),
-    0 0 4px rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--enhance-lucky-border) 85%, transparent),
+    0 0 10px color-mix(in srgb, var(--enhance-lucky-inner) 80%, transparent),
+    0 0 4px color-mix(in srgb, var(--white) 90%, transparent);
   animation: card-lucky-pulse calc(420ms * var(--animation-speed, 1)) ease-out;
 }
 
@@ -521,7 +521,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  color: #ffffff;
+  color: var(--white);
   border-radius: 999px;
   padding: 0.15rem 0.55rem;
   font-weight: 800;
@@ -534,18 +534,18 @@
 
 .card-lucky-mult-badge {
   top: -1.4rem;
-  background-color: #d6336c;
-  border: 2px solid #a61e4d;
-  box-shadow: 0 2px 6px rgba(166, 30, 77, 0.55);
+  background-color: var(--lucky-mult-bg);
+  border: 2px solid var(--rarity-rare-text);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--lucky-mult-border) 55%, transparent);
   animation: card-lucky-mult-float calc(520ms * var(--animation-speed, 1)) ease-out;
 }
 
 .card-lucky-money-badge {
   top: -1.4rem;
-  background-color: #ffd43b;
-  color: #5c3c00;
-  border: 2px solid #f59f00;
-  box-shadow: 0 2px 6px rgba(245, 159, 0, 0.55);
+  background-color: var(--accent-money);
+  color: var(--accent-money-text);
+  border: 2px solid var(--accent-money-strong);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent-money-strong) 55%, transparent);
   animation: card-lucky-money-float calc(520ms * var(--animation-speed, 1)) ease-out;
 }
 
@@ -624,98 +624,98 @@
 }
 
 .card-enhancement-steel {
-  border-color: #495057;
+  border-color: var(--shop-muted-on-light);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(73, 80, 87, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    inset 0 0 14px rgba(173, 181, 189, 0.4);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--shop-muted-on-light) 40%, transparent),
+    0 2px 6px color-mix(in srgb, var(--black) 25%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--text-muted) 40%, transparent);
   background-image: linear-gradient(
     135deg,
-    rgba(206, 212, 218, 0.5) 0%,
-    rgba(255, 255, 255, 0.9) 45%,
-    rgba(173, 181, 189, 0.55) 100%
+    color-mix(in srgb, var(--text-secondary) 50%, transparent) 0%,
+    color-mix(in srgb, var(--white) 90%, transparent) 45%,
+    color-mix(in srgb, var(--text-muted) 55%, transparent) 100%
   );
 }
 
 .card-enhancement-bonus {
-  border-color: #1971c2;
+  border-color: var(--accent-chips-strong);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(25, 113, 194, 0.4),
-    0 2px 6px rgba(25, 113, 194, 0.4),
-    inset 0 0 14px rgba(116, 192, 252, 0.4);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-chips-strong) 40%, transparent),
+    0 2px 6px color-mix(in srgb, var(--accent-chips-strong) 40%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--accent-chips-text) 40%, transparent);
   background-image: linear-gradient(
     135deg,
-    rgba(116, 192, 252, 0.55) 0%,
-    rgba(255, 255, 255, 0.85) 45%,
-    rgba(116, 192, 252, 0.55) 100%
+    color-mix(in srgb, var(--accent-chips-text) 55%, transparent) 0%,
+    color-mix(in srgb, var(--white) 85%, transparent) 45%,
+    color-mix(in srgb, var(--accent-chips-text) 55%, transparent) 100%
   );
 }
 
 .card-enhancement-mult {
-  border-color: #c92a2a;
+  border-color: var(--accent-red-deep);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(201, 42, 42, 0.4),
-    0 2px 6px rgba(201, 42, 42, 0.4),
-    inset 0 0 14px rgba(255, 138, 128, 0.4);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-red-deep) 40%, transparent),
+    0 2px 6px color-mix(in srgb, var(--accent-red-deep) 40%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--enhance-mult-inner) 40%, transparent);
   background-image: linear-gradient(
     135deg,
-    rgba(255, 138, 128, 0.55) 0%,
-    rgba(255, 255, 255, 0.85) 45%,
-    rgba(255, 138, 128, 0.55) 100%
+    color-mix(in srgb, var(--enhance-mult-inner) 55%, transparent) 0%,
+    color-mix(in srgb, var(--white) 85%, transparent) 45%,
+    color-mix(in srgb, var(--enhance-mult-inner) 55%, transparent) 100%
   );
 }
 
 .card-enhancement-wild {
-  border-color: #845ef7;
+  border-color: var(--enhance-wild-border);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(132, 94, 247, 0.4),
-    0 2px 6px rgba(132, 94, 247, 0.45),
-    inset 0 0 14px rgba(244, 191, 255, 0.45);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--enhance-wild-border) 40%, transparent),
+    0 2px 6px color-mix(in srgb, var(--enhance-wild-border) 45%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--enhance-wild-border) 45%, transparent);
   background-image: conic-gradient(
     from 45deg,
-    rgba(255, 138, 128, 0.55),
-    rgba(255, 224, 102, 0.55),
-    rgba(143, 240, 164, 0.55),
-    rgba(116, 192, 252, 0.55),
-    rgba(177, 151, 252, 0.55),
-    rgba(255, 138, 128, 0.55)
+    color-mix(in srgb, var(--enhance-mult-inner) 55%, transparent),
+    color-mix(in srgb, var(--accent-money-light) 55%, transparent),
+    color-mix(in srgb, var(--enhance-lucky-inner) 55%, transparent),
+    color-mix(in srgb, var(--accent-chips-text) 55%, transparent),
+    color-mix(in srgb, var(--type-tarot-border) 55%, transparent),
+    color-mix(in srgb, var(--enhance-mult-inner) 55%, transparent)
   );
 }
 
 .card-enhancement-glass {
-  border-color: rgba(116, 192, 252, 0.85);
+  border-color: color-mix(in srgb, var(--accent-chips-text) 85%, transparent);
   border-width: 3px;
-  background-color: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 0 0 2px rgba(116, 192, 252, 0.35),
-    0 2px 8px rgba(116, 192, 252, 0.35),
-    inset 0 0 18px rgba(255, 255, 255, 0.75);
+  background-color: color-mix(in srgb, var(--white) 55%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-chips-text) 35%, transparent),
+    0 2px 8px color-mix(in srgb, var(--accent-chips-text) 35%, transparent),
+    inset 0 0 18px color-mix(in srgb, var(--white) 75%, transparent);
   background-image: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.7) 0%,
-    rgba(214, 240, 255, 0.55) 35%,
-    rgba(255, 255, 255, 0.85) 60%,
-    rgba(214, 240, 255, 0.55) 100%
+    color-mix(in srgb, var(--white) 70%, transparent) 0%,
+    color-mix(in srgb, var(--enhance-glass-tint) 55%, transparent) 35%,
+    color-mix(in srgb, var(--white) 85%, transparent) 60%,
+    color-mix(in srgb, var(--enhance-glass-tint) 55%, transparent) 100%
   );
 }
 
 .card-enhancement-stone {
-  border-color: #495057;
+  border-color: var(--shop-muted-on-light);
   border-width: 3px;
-  background-color: #adb5bd;
+  background-color: var(--text-muted);
   background-image: linear-gradient(
     140deg,
-    #ced4da 0%,
-    #868e96 35%,
-    #adb5bd 55%,
-    #6c757d 80%,
-    #adb5bd 100%
+    var(--text-secondary) 0%,
+    var(--text-on-light-dimmed) 35%,
+    var(--text-muted) 55%,
+    var(--enhance-steel-deep) 80%,
+    var(--text-muted) 100%
   );
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35),
-    inset 0 0 12px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 2px 6px var(--shadow-md),
+    inset 0 0 12px var(--shadow-md);
 }
 
 .card-stone-text {
-  color: #212529;
+  color: var(--text-on-light);
 }
 
 .card-stone-face {
@@ -726,32 +726,32 @@
   border-radius: 4px;
   background-image: radial-gradient(
       circle at 25% 30%,
-      rgba(0, 0, 0, 0.18) 0%,
+      var(--shadow-subtle) 0%,
       transparent 28%
     ),
     radial-gradient(
       circle at 70% 65%,
-      rgba(0, 0, 0, 0.22) 0%,
+      color-mix(in srgb, var(--black) 22%, transparent) 0%,
       transparent 30%
     ),
     radial-gradient(
       circle at 55% 20%,
-      rgba(0, 0, 0, 0.16) 0%,
+      color-mix(in srgb, var(--black) 16%, transparent) 0%,
       transparent 18%
     );
 }
 
 .card-enhancement-lucky {
-  border-color: #2f9e44;
+  border-color: var(--enhance-lucky-border);
   border-width: 3px;
-  box-shadow: 0 0 0 2px rgba(47, 158, 68, 0.4),
-    0 2px 6px rgba(47, 158, 68, 0.4),
-    inset 0 0 14px rgba(143, 240, 164, 0.45);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--enhance-lucky-border) 40%, transparent),
+    0 2px 6px color-mix(in srgb, var(--enhance-lucky-border) 40%, transparent),
+    inset 0 0 14px color-mix(in srgb, var(--enhance-lucky-inner) 45%, transparent);
   background-image: linear-gradient(
     135deg,
-    rgba(143, 240, 164, 0.55) 0%,
-    rgba(255, 255, 255, 0.85) 45%,
-    rgba(143, 240, 164, 0.55) 100%
+    color-mix(in srgb, var(--enhance-lucky-inner) 55%, transparent) 0%,
+    color-mix(in srgb, var(--white) 85%, transparent) 45%,
+    color-mix(in srgb, var(--enhance-lucky-inner) 55%, transparent) 100%
   );
 }
 
@@ -762,7 +762,7 @@
   right: 0.2rem;
   font-size: 1.1rem;
   color: var(--positive-money-on-light);
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.85);
+  text-shadow: 0 1px 1px color-mix(in srgb, var(--white) 85%, transparent);
   pointer-events: none;
 }
 
@@ -774,31 +774,31 @@
   width: 0.95rem;
   height: 0.95rem;
   border-radius: 50%;
-  border: 1.5px solid rgba(33, 37, 41, 0.55);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35),
-    inset 0 1px 2px rgba(255, 255, 255, 0.55);
+  border: 1.5px solid color-mix(in srgb, var(--text-on-light) 55%, transparent);
+  box-shadow: 0 1px 2px var(--shadow-md),
+    inset 0 1px 2px color-mix(in srgb, var(--white) 55%, transparent);
   pointer-events: none;
   z-index: 3;
 }
 
 .card-seal-badge-gold {
-  background: radial-gradient(circle at 30% 30%, #fff3bf 0%, #f59f00 70%);
-  border-color: #b46d00;
+  background: radial-gradient(circle at 30% 30%, var(--accent-money-muted) 0%, var(--accent-money-strong) 70%);
+  border-color: var(--seal-gold-deep);
 }
 
 .card-seal-badge-red {
-  background: radial-gradient(circle at 30% 30%, #ffc9c9 0%, #c92a2a 70%);
-  border-color: #8b1818;
+  background: radial-gradient(circle at 30% 30%, var(--seal-red-light) 0%, var(--accent-red-deep) 70%);
+  border-color: var(--seal-red-deep);
 }
 
 .card-seal-badge-blue {
-  background: radial-gradient(circle at 30% 30%, #c5e6ff 0%, #339af0 70%);
-  border-color: #1864ab;
+  background: radial-gradient(circle at 30% 30%, var(--seal-blue-light) 0%, var(--accent-chips) 70%);
+  border-color: var(--edition-foil-deep);
 }
 
 .card-seal-badge-purple {
-  background: radial-gradient(circle at 30% 30%, #e5d6ff 0%, #845ef7 70%);
-  border-color: #5f3dc4;
+  background: radial-gradient(circle at 30% 30%, var(--seal-purple-light) 0%, var(--enhance-wild-border) 70%);
+  border-color: var(--type-tarot-accent);
 }
 
 .card-debuffed {
@@ -814,29 +814,29 @@
   transform: translate(-50%, -50%);
   font-size: 3rem;
   font-weight: 800;
-  color: rgba(73, 80, 87, 0.85);
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+  color: color-mix(in srgb, var(--shop-muted-on-light) 85%, transparent);
+  text-shadow: 0 1px 2px color-mix(in srgb, var(--white) 60%, transparent);
   pointer-events: none;
   z-index: 4;
 }
 
 .card-face-down {
-  background-color: #1864ab;
+  background-color: var(--edition-foil-deep);
   background-image: repeating-linear-gradient(
       45deg,
-      rgba(255, 255, 255, 0.12) 0,
-      rgba(255, 255, 255, 0.12) 4px,
+      var(--border) 0,
+      var(--border) 4px,
       transparent 4px,
       transparent 10px
     ),
     repeating-linear-gradient(
       -45deg,
-      rgba(255, 255, 255, 0.08) 0,
-      rgba(255, 255, 255, 0.08) 4px,
+      color-mix(in srgb, var(--white) 8%, transparent) 0,
+      color-mix(in srgb, var(--white) 8%, transparent) 4px,
       transparent 4px,
       transparent 10px
     );
-  border-color: #0b3d7a;
+  border-color: var(--card-facedown-border);
   color: transparent;
 }
 
@@ -845,7 +845,7 @@
   justify-self: stretch;
   grid-row: 1 / -1;
   grid-column: 1 / -1;
-  border: 2px solid rgba(255, 255, 255, 0.35);
+  border: 2px solid color-mix(in srgb, var(--white) 35%, transparent);
   border-radius: 4px;
   margin: 0.3rem;
   pointer-events: none;

@@ -5,10 +5,10 @@
   min-width: 12rem;
   max-width: 20rem;
   padding: 0.55rem 0.8rem;
-  background-color: #212529;
-  color: #f8f9fa;
+  background-color: var(--text-on-light);
+  color: var(--text-primary);
   border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px var(--shadow-md);
   font-size: 0.85rem;
   line-height: 1.3;
   pointer-events: none;
@@ -22,9 +22,9 @@
 .deck-tooltip-heading {
   font-weight: 700;
   font-size: 1rem;
-  color: #ffd43b;
+  color: var(--accent-money);
 }
 
 .deck-tooltip-description {
-  color: #dee2e6;
+  color: var(--border-on-light);
 }

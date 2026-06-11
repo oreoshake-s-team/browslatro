@@ -1,16 +1,16 @@
 .modifier-tarot-picker {
   width: 100%;
   padding: 0.4rem 0.7rem 0.7rem;
-  border: 1px dashed #adb5bd;
+  border: 1px dashed var(--text-muted);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.55);
+  background-color: color-mix(in srgb, var(--white) 55%, transparent);
   box-sizing: border-box;
 }
 
 .modifier-tarot-picker-summary {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #495057;
+  color: var(--shop-muted-on-light);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -19,7 +19,7 @@
 }
 
 .modifier-tarot-picker-summary:hover {
-  color: #d9480f;
+  color: var(--accent-orange-deep);
 }
 
 .modifier-tarot-picker[open] .modifier-tarot-picker-grid {
@@ -42,9 +42,9 @@
   font-weight: 600;
   text-align: left;
   line-height: 1.2;
-  background-color: #fff4e6;
-  color: #d9480f;
-  border: 1px solid #ffd8a8;
+  background-color: var(--accent-orange-pale);
+  color: var(--accent-orange-deep);
+  border: 1px solid var(--accent-orange-light);
   border-radius: 6px;
   cursor: pointer;
   transition:
@@ -55,12 +55,12 @@
 }
 
 .add-tarot-button:hover:not(:disabled) {
-  background-color: #ffe8cc;
-  border-color: #ffc078;
+  background-color: var(--edition-poly-tint-orange);
+  border-color: var(--accent-money-on-dark-hover);
 }
 
 .add-tarot-button:focus-visible {
-  outline: 2px solid #d9480f;
+  outline: 2px solid var(--accent-orange-deep);
   outline-offset: 2px;
 }
 

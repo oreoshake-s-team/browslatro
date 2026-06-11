@@ -11,7 +11,7 @@
   border-radius: 12px;
   padding: 1.4rem 1.8rem;
   width: 100%;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 4px 14px var(--shadow-subtle);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -64,9 +64,9 @@
 .shop-packs {
   margin: 0;
   padding: 0.8rem 1rem;
-  border: 2px solid #fab005;
+  border: 2px solid var(--accent-stone);
   border-radius: 8px;
-  background-color: #fff9db;
+  background-color: var(--accent-money-pale);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -78,7 +78,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #5c3c00;
+  color: var(--accent-money-text);
 }
 
 .shop-packs .shop-offers {
@@ -88,9 +88,9 @@
 .shop-voucher {
   margin: 0;
   padding: 0.8rem 1rem;
-  border: 2px solid #b197fc;
+  border: 2px solid var(--type-tarot-border);
   border-radius: 8px;
-  background-color: #f3f0ff;
+  background-color: var(--type-tarot-bg);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -102,14 +102,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #5f3dc4;
+  color: var(--type-tarot-accent);
 }
 
 .shop-voucher-override {
   align-self: flex-start;
-  background-color: #fff;
-  color: #5f3dc4;
-  border: 1px solid #b197fc;
+  background-color: var(--white);
+  color: var(--type-tarot-accent);
+  border: 1px solid var(--type-tarot-border);
   border-radius: 6px;
   padding: 0.3rem 0.5rem;
   font-size: 0.85rem;
@@ -117,11 +117,11 @@
 }
 
 .shop-voucher-override:hover {
-  border-color: #7048e8;
+  border-color: var(--type-tarot-hover);
 }
 
 .shop-voucher-override:focus-visible {
-  outline: 2px solid #5f3dc4;
+  outline: 2px solid var(--type-tarot-accent);
   outline-offset: 2px;
 }
 
@@ -140,7 +140,7 @@
 .shop-voucher-name {
   grid-column: 1 / 2;
   font-weight: 600;
-  color: #343a40;
+  color: var(--text-on-light-subtle);
 }
 
 .shop-voucher-description {
@@ -160,8 +160,8 @@
   grid-column: 3 / 4;
   grid-row: 1;
   padding: 0.4rem 0.9rem;
-  background-color: #7048e8;
-  color: white;
+  background-color: var(--type-tarot-hover);
+  color: var(--white);
   border: none;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -170,11 +170,11 @@
 }
 
 .shop-voucher-buy:hover:not(:disabled) {
-  background-color: #5f3dc4;
+  background-color: var(--type-tarot-accent);
 }
 
 .shop-voucher-buy:disabled {
-  background-color: #adb5bd;
+  background-color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -200,41 +200,41 @@
   align-items: center;
   gap: 0.4rem 0.8rem;
   padding: 0.8rem 1rem;
-  border: 2px solid #dee2e6;
+  border: 2px solid var(--border-on-light);
   border-left-width: 6px;
   border-radius: 8px;
-  background-color: white;
+  background-color: var(--white);
   transition: opacity calc(120ms * var(--animation-speed, 1)) linear;
 }
 
 .shop-offer-joker {
-  border-color: #ffa8a8;
-  border-left-color: #e03131;
-  background-color: #fff5f5;
+  border-color: var(--accent-mult-text);
+  border-left-color: var(--accent-mult-strong);
+  background-color: var(--type-joker-bg);
 }
 
 .shop-offer-planet {
-  border-color: #91a7ff;
-  border-left-color: #364fc7;
-  background-color: #edf2ff;
+  border-color: var(--type-planet-border);
+  border-left-color: var(--rarity-common-text);
+  background-color: var(--rarity-common-bg);
 }
 
 .shop-offer-tarot {
-  border-color: #b197fc;
-  border-left-color: #5f3dc4;
-  background-color: #f3f0ff;
+  border-color: var(--type-tarot-border);
+  border-left-color: var(--type-tarot-accent);
+  background-color: var(--type-tarot-bg);
 }
 
 .shop-offer-spectral {
-  border-color: #63e6be;
-  border-left-color: #099268;
-  background-color: #e6fcf5;
+  border-color: var(--type-spectral-border);
+  border-left-color: var(--type-spectral-accent);
+  background-color: var(--rarity-uncommon-bg);
 }
 
 .shop-offer-playing-card {
-  border-color: #ffd43b;
-  border-left-color: #f08c00;
-  background-color: #fff9db;
+  border-color: var(--accent-money);
+  border-left-color: var(--accent-money-deeper);
+  background-color: var(--accent-money-pale);
 }
 
 .shop-offer-sold {
@@ -264,37 +264,37 @@
 }
 
 .shop-offer-kind-joker {
-  background-color: #ffe3e3;
-  color: #862e2e;
+  background-color: var(--type-joker-badge-bg);
+  color: var(--type-joker-badge-text);
 }
 
 .shop-offer-kind-planet {
-  background-color: #dbe4ff;
-  color: #1c3faa;
+  background-color: var(--type-planet-badge-bg);
+  color: var(--type-planet-badge-text);
 }
 
 .shop-offer-kind-tarot {
-  background-color: #e5dbff;
-  color: #3b1f7a;
+  background-color: var(--type-tarot-badge-bg);
+  color: var(--type-tarot-badge-text);
 }
 
 .shop-offer-kind-spectral {
-  background-color: #c3fae8;
-  color: #0b5d3b;
+  background-color: var(--type-spectral-badge-bg);
+  color: var(--type-spectral-badge-text);
 }
 
 .shop-offer-name {
   grid-column: 1 / 2;
   grid-row: 2;
   font-weight: 600;
-  color: #343a40;
+  color: var(--text-on-light-subtle);
 }
 
 .shop-offer-description {
   grid-column: 1 / 4;
   grid-row: 3;
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--shop-muted-on-light);
 }
 
 .shop-offer-price {
@@ -309,12 +309,12 @@
 
 .shop-offer-price-original {
   text-decoration: line-through;
-  color: #adb5bd;
+  color: var(--text-muted);
   font-size: 0.9rem;
 }
 
 .shop-offer-price-discounted {
-  color: #c92a2a;
+  color: var(--accent-red-deep);
   font-weight: 700;
 }
 
@@ -334,103 +334,103 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   vertical-align: middle;
-  background-color: #f1f3f5;
-  color: #343a40;
+  background-color: var(--surface-on-light-2);
+  color: var(--text-on-light-subtle);
 }
 
 .shop-offer[data-edition="foil"] {
-  border-color: #4dabf7;
-  border-left-color: #1864ab;
-  box-shadow: 0 0 10px rgba(77, 171, 247, 0.55);
-  background: linear-gradient(135deg, #e7f5ff 0%, #fff9db 100%);
+  border-color: var(--edition-foil);
+  border-left-color: var(--edition-foil-deep);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--edition-foil) 55%, transparent);
+  background: linear-gradient(135deg, var(--edition-foil-tint) 0%, var(--accent-money-pale) 100%);
 }
 
 .shop-offer[data-edition="foil"] .shop-offer-edition-badge {
-  background-color: #4dabf7;
-  color: #fff;
+  background-color: var(--edition-foil);
+  color: var(--white);
 }
 
 .shop-offer[data-edition="holographic"] {
-  border-color: #cc5de8;
-  border-left-color: #862e9c;
-  box-shadow: 0 0 10px rgba(204, 93, 232, 0.55);
-  background: linear-gradient(135deg, #f8f0fc 0%, #fff9db 50%, #e3fafc 100%);
+  border-color: var(--edition-holo);
+  border-left-color: var(--edition-holo-deep);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--edition-holo) 55%, transparent);
+  background: linear-gradient(135deg, var(--edition-holo-tint) 0%, var(--accent-money-pale) 50%, var(--edition-holo-tint-2) 100%);
 }
 
 .shop-offer[data-edition="holographic"] .shop-offer-edition-badge {
-  background-color: #cc5de8;
-  color: #fff;
+  background-color: var(--edition-holo);
+  color: var(--white);
 }
 
 .shop-offer[data-edition="polychrome"] {
-  border-color: #ff8787;
-  border-left-color: #c92a2a;
-  box-shadow: 0 0 12px rgba(255, 135, 135, 0.6);
+  border-color: var(--edition-poly);
+  border-left-color: var(--accent-red-deep);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--edition-poly) 60%, transparent);
   background: linear-gradient(
     135deg,
-    #ffe8cc 0%,
-    #fff3bf 25%,
-    #d3f9d8 50%,
-    #d0ebff 75%,
-    #f3d9fa 100%
+    var(--edition-poly-tint-orange) 0%,
+    var(--accent-money-muted) 25%,
+    var(--edition-poly-tint-green) 50%,
+    var(--edition-poly-tint-blue) 75%,
+    var(--edition-poly-tint-purple) 100%
   );
 }
 
 .shop-offer[data-edition="polychrome"] .shop-offer-edition-badge {
-  background-color: #ff8787;
-  color: #fff;
+  background-color: var(--edition-poly);
+  color: var(--white);
 }
 
 .shop-offer[data-edition="negative"] {
-  border-color: #495057;
-  border-left-color: #212529;
-  box-shadow: 0 0 12px rgba(73, 80, 87, 0.6), inset 0 0 14px rgba(0, 0, 0, 0.5);
-  background-color: #212529;
-  color: #ffe066;
+  border-color: var(--shop-muted-on-light);
+  border-left-color: var(--text-on-light);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--shop-muted-on-light) 60%, transparent), inset 0 0 14px var(--shadow-lg);
+  background-color: var(--text-on-light);
+  color: var(--accent-money-light);
 }
 
 .shop-offer[data-edition="negative"] .shop-offer-name,
 .shop-offer[data-edition="negative"] .shop-offer-description {
-  color: #f1f3f5;
+  color: var(--surface-on-light-2);
 }
 
 .shop-offer[data-edition="negative"] .shop-offer-edition-badge {
-  background-color: #ffe066;
-  color: #212529;
+  background-color: var(--accent-money-light);
+  color: var(--text-on-light);
 }
 
 .shop-offer-playing-card-enhanced {
-  border-color: #b197fc;
-  border-left-color: #5f3dc4;
-  background: linear-gradient(135deg, #fff9db 0%, #f3f0ff 65%, #fff3bf 100%);
-  box-shadow: 0 0 10px rgba(177, 151, 252, 0.5);
+  border-color: var(--type-tarot-border);
+  border-left-color: var(--type-tarot-accent);
+  background: linear-gradient(135deg, var(--accent-money-pale) 0%, var(--type-tarot-bg) 65%, var(--accent-money-muted) 100%);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--type-tarot-border) 50%, transparent);
 }
 
 .shop-offer-playing-card[data-card-edition="foil"] {
-  border-color: #4dabf7;
-  border-left-color: #1864ab;
-  box-shadow: 0 0 10px rgba(77, 171, 247, 0.55);
-  background: linear-gradient(135deg, #e7f5ff 0%, #fff9db 100%);
+  border-color: var(--edition-foil);
+  border-left-color: var(--edition-foil-deep);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--edition-foil) 55%, transparent);
+  background: linear-gradient(135deg, var(--edition-foil-tint) 0%, var(--accent-money-pale) 100%);
 }
 
 .shop-offer-playing-card[data-card-edition="holographic"] {
-  border-color: #cc5de8;
-  border-left-color: #862e9c;
-  box-shadow: 0 0 10px rgba(204, 93, 232, 0.55);
-  background: linear-gradient(135deg, #f8f0fc 0%, #fff9db 50%, #e3fafc 100%);
+  border-color: var(--edition-holo);
+  border-left-color: var(--edition-holo-deep);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--edition-holo) 55%, transparent);
+  background: linear-gradient(135deg, var(--edition-holo-tint) 0%, var(--accent-money-pale) 50%, var(--edition-holo-tint-2) 100%);
 }
 
 .shop-offer-playing-card[data-card-edition="polychrome"] {
-  border-color: #ff8787;
-  border-left-color: #c92a2a;
-  box-shadow: 0 0 12px rgba(255, 135, 135, 0.6);
+  border-color: var(--edition-poly);
+  border-left-color: var(--accent-red-deep);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--edition-poly) 60%, transparent);
   background: linear-gradient(
     135deg,
-    #ffe8cc 0%,
-    #fff3bf 25%,
-    #d3f9d8 50%,
-    #d0ebff 75%,
-    #f3d9fa 100%
+    var(--edition-poly-tint-orange) 0%,
+    var(--accent-money-muted) 25%,
+    var(--edition-poly-tint-green) 50%,
+    var(--edition-poly-tint-blue) 75%,
+    var(--edition-poly-tint-purple) 100%
   );
 }
 
@@ -444,83 +444,83 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   vertical-align: middle;
-  background-color: #f1f3f5;
-  color: #343a40;
+  background-color: var(--surface-on-light-2);
+  color: var(--text-on-light-subtle);
 }
 
 .shop-offer-card-enhancement-bonus {
-  background-color: #4dabf7;
-  color: #fff;
+  background-color: var(--edition-foil);
+  color: var(--white);
 }
 
 .shop-offer-card-enhancement-mult {
-  background-color: #ff6b6b;
-  color: #fff;
+  background-color: var(--accent-mult-lighter);
+  color: var(--white);
 }
 
 .shop-offer-card-enhancement-wild {
-  background-color: #cc5de8;
-  color: #fff;
+  background-color: var(--edition-holo);
+  color: var(--white);
 }
 
 .shop-offer-card-enhancement-glass {
-  background-color: #66d9e8;
-  color: #1a2540;
+  background-color: var(--enhance-glass-badge);
+  color: var(--enhance-glass-badge-text);
 }
 
 .shop-offer-card-enhancement-steel {
-  background-color: #adb5bd;
-  color: #212529;
+  background-color: var(--text-muted);
+  color: var(--text-on-light);
 }
 
 .shop-offer-card-enhancement-stone {
-  background-color: #fab005;
-  color: #3b2300;
+  background-color: var(--accent-stone);
+  color: var(--enhance-stone-text);
 }
 
 .shop-offer-card-enhancement-gold {
-  background-color: #ffd43b;
-  color: #5c3c00;
+  background-color: var(--accent-money);
+  color: var(--accent-money-text);
 }
 
 .shop-offer-card-enhancement-lucky {
-  background-color: #51cf66;
-  color: #1a3d20;
+  background-color: var(--accent-success);
+  color: var(--enhance-lucky-text);
 }
 
 .shop-offer-card-edition-foil {
-  background-color: #4dabf7;
-  color: #fff;
+  background-color: var(--edition-foil);
+  color: var(--white);
 }
 
 .shop-offer-card-edition-holographic {
-  background-color: #cc5de8;
-  color: #fff;
+  background-color: var(--edition-holo);
+  color: var(--white);
 }
 
 .shop-offer-card-edition-polychrome {
-  background: linear-gradient(90deg, #ff8787, #ffd43b, #51cf66, #4dabf7, #cc5de8);
-  color: #fff;
+  background: linear-gradient(90deg, var(--edition-poly), var(--accent-money), var(--accent-success), var(--edition-foil), var(--edition-holo));
+  color: var(--white);
 }
 
 .shop-offer-card-seal-gold {
-  background-color: #ffd43b;
-  color: #5c3c00;
+  background-color: var(--accent-money);
+  color: var(--accent-money-text);
 }
 
 .shop-offer-card-seal-red {
-  background-color: #ff6b6b;
-  color: #fff;
+  background-color: var(--accent-mult-lighter);
+  color: var(--white);
 }
 
 .shop-offer-card-seal-blue {
-  background-color: #4dabf7;
-  color: #fff;
+  background-color: var(--edition-foil);
+  color: var(--white);
 }
 
 .shop-offer-card-seal-purple {
-  background-color: #b197fc;
-  color: #fff;
+  background-color: var(--type-tarot-border);
+  color: var(--white);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -535,8 +535,8 @@
   grid-column: 3 / 4;
   grid-row: 2;
   padding: 0.4rem 0.9rem;
-  background-color: #1971c2;
-  color: white;
+  background-color: var(--accent-chips-strong);
+  color: var(--white);
   border: none;
   border-radius: 4px;
   font-size: 0.9rem;
@@ -545,11 +545,11 @@
 }
 
 .shop-offer-buy:hover:not(:disabled) {
-  background-color: #1864ab;
+  background-color: var(--edition-foil-deep);
 }
 
 .shop-offer-buy:disabled {
-  background-color: #adb5bd;
+  background-color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -564,13 +564,13 @@
   padding: 0.6rem 1.2rem;
   font-size: 1rem;
   background-color: var(--surface-raised);
-  color: #ffa94d;
-  border-color: #e8590c;
+  color: var(--accent-money-on-dark);
+  border-color: var(--accent-reroll);
 }
 
 .shop-reroll:hover:not(:disabled) {
   background-color: var(--surface-hover);
-  color: #ffc078;
+  color: var(--accent-money-on-dark-hover);
 }
 
 .shop-next {

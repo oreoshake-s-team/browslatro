@@ -1,7 +1,7 @@
 .round-lost-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.55);
+  background-color: color-mix(in srgb, var(--black) 55%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,13 +9,13 @@
 }
 
 .round-lost-modal {
-  background-color: #f8f9fa;
-  border: 2px solid #dee2e6;
+  background-color: var(--text-primary);
+  border: 2px solid var(--border-on-light);
   border-radius: 12px;
   padding: 2rem 2.4rem;
   min-width: 22rem;
   max-width: 32rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 10px 30px var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -24,7 +24,7 @@
 .round-lost-title {
   margin: 0;
   font-size: 1.6rem;
-  color: #c92a2a;
+  color: var(--accent-red-deep);
   text-align: center;
 }
 
@@ -40,14 +40,14 @@
   justify-content: space-between;
   align-items: baseline;
   padding: 0.4rem 0.6rem;
-  background-color: white;
-  border: 1px solid #dee2e6;
+  background-color: var(--white);
+  border: 1px solid var(--border-on-light);
   border-radius: 6px;
 }
 
 .round-lost-stat dt {
   font-size: 0.9rem;
-  color: #495057;
+  color: var(--shop-muted-on-light);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -56,11 +56,11 @@
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #212529;
+  color: var(--text-on-light);
 }
 
 .round-lost-stat-short dd {
-  color: #c92a2a;
+  color: var(--accent-red-deep);
 }
 
 .round-lost-continue {

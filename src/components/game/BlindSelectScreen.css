@@ -1,7 +1,7 @@
 .blind-select-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: color-mix(in srgb, var(--black) 65%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -19,16 +19,16 @@
 }
 
 .blind-select-modal {
-  background-color: #1a1f2e;
-  color: #f8f9fa;
-  border: 2px solid #748ffc;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 2px solid var(--accent-boss-blind);
   border-radius: 12px;
   padding: 2.4rem 2.8rem;
   width: 100%;
   max-width: 70rem;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px var(--shadow-xl);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -40,7 +40,7 @@
   font-size: 2.6rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #adb5bd;
+  color: var(--text-muted);
 }
 
 .blind-select-tags {
@@ -58,9 +58,9 @@
   gap: 0.2rem;
   padding: 0.6rem 1rem;
   border-radius: 999px;
-  border: 1px solid #51cf66;
-  background-color: rgba(81, 207, 102, 0.12);
-  color: #c3fae8;
+  border: 1px solid var(--accent-success);
+  background-color: color-mix(in srgb, var(--accent-success) 12%, transparent);
+  color: var(--type-spectral-badge-bg);
   font-size: 1rem;
 }
 
@@ -71,11 +71,11 @@
 
 .blind-select-tag-description {
   font-size: 0.95rem;
-  color: #b2f2bb;
+  color: var(--accent-success-light);
 }
 
 .blind-select-tag:focus-visible {
-  outline: 2px solid #74c0fc;
+  outline: 2px solid var(--accent-chips-text);
   outline-offset: 2px;
 }
 
@@ -95,14 +95,14 @@
   gap: 0.8rem;
   padding: 1.6rem 1.8rem;
   border-radius: 10px;
-  border: 2px solid #495057;
-  background-color: rgba(73, 80, 87, 0.25);
+  border: 2px solid var(--shop-muted-on-light);
+  background-color: color-mix(in srgb, var(--shop-muted-on-light) 25%, transparent);
 }
 
 .blind-select-row-current {
-  border-color: #ffe066;
-  background-color: rgba(255, 224, 102, 0.12);
-  box-shadow: 0 0 0 3px rgba(255, 224, 102, 0.3);
+  border-color: var(--accent-money-light);
+  background-color: color-mix(in srgb, var(--accent-money-light) 12%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-money-light) 30%, transparent);
 }
 
 .blind-select-row-completed {
@@ -119,16 +119,16 @@
 }
 
 .blind-select-boss-override {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: color-mix(in srgb, var(--white) 6%, transparent);
   color: inherit;
-  border: 1px solid #495057;
+  border: 1px solid var(--shop-muted-on-light);
   border-radius: 6px;
   padding: 0.4rem 0.6rem;
   cursor: pointer;
 }
 
 .blind-select-boss-override:hover {
-  border-color: #748ffc;
+  border-color: var(--accent-boss-blind);
 }
 
 .blind-select-boss-override:focus-visible {
@@ -138,7 +138,7 @@
 
 .blind-select-row-boss-description {
   font-size: 1.3rem;
-  color: #ced4da;
+  color: var(--text-secondary);
   font-style: italic;
   line-height: 1.4;
 }
@@ -157,19 +157,19 @@
   margin-top: 0.6rem;
   padding: 0.6rem 0.8rem;
   border-radius: 8px;
-  border: 1px dashed #51cf66;
-  background-color: rgba(81, 207, 102, 0.08);
+  border: 1px dashed var(--accent-success);
+  background-color: color-mix(in srgb, var(--accent-success) 8%, transparent);
   cursor: help;
 }
 
 .blind-select-row-skip-reward:focus-visible {
-  outline: 2px solid #74c0fc;
+  outline: 2px solid var(--accent-chips-text);
   outline-offset: 2px;
 }
 
 .blind-select-row-skip-reward-label {
   font-size: 0.95rem;
-  color: #adb5bd;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -177,7 +177,7 @@
 .blind-select-row-skip-reward-name {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #b2f2bb;
+  color: var(--accent-success-light);
 }
 
 .blind-select-row-stat {
@@ -187,7 +187,7 @@
 }
 
 .blind-select-row-stat dt {
-  color: #adb5bd;
+  color: var(--text-muted);
 }
 
 .blind-select-row-stat dd {
@@ -216,20 +216,20 @@
   align-self: flex-start;
   padding: 0.5rem 0.9rem;
   border-radius: 8px;
-  background-color: rgba(116, 143, 252, 0.18);
-  color: #dbe4ff;
-  border: 1px solid #748ffc;
+  background-color: color-mix(in srgb, var(--accent-boss-blind) 18%, transparent);
+  color: var(--type-planet-badge-bg);
+  border: 1px solid var(--accent-boss-blind);
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
 }
 
 .blind-select-boss-reroll:hover:not(:disabled) {
-  background-color: rgba(116, 143, 252, 0.32);
+  background-color: color-mix(in srgb, var(--accent-boss-blind) 32%, transparent);
 }
 
 .blind-select-boss-reroll:focus-visible {
-  outline: 2px solid #adb5bd;
+  outline: 2px solid var(--text-muted);
   outline-offset: 2px;
 }
 

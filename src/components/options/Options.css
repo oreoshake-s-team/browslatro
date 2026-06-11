@@ -1,7 +1,7 @@
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--shadow-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -49,17 +49,17 @@
 /* Toggle variant: neutral when off, green-tinted "on" state driven by
  * aria-pressed=true so the active affordance is clearly distinguishable. */
 .options-button--toggle[aria-pressed="true"] {
-  background-color: rgba(81, 207, 102, 0.18);
+  background-color: color-mix(in srgb, var(--accent-success) 18%, transparent);
   border-color: var(--accent-success);
-  color: #8ce99a;
+  color: var(--enhance-lucky-inner);
 }
 
 /* Destructive variant: red treatment for actions that wipe state
  * (currently just "New game"). */
 .options-button--destructive {
-  background-color: #e03131;
-  color: white;
-  border-color: #c92a2a;
+  background-color: var(--accent-mult-strong);
+  color: var(--white);
+  border-color: var(--accent-red-deep);
 }
 
 .options-field {
@@ -102,12 +102,12 @@
   flex: 1;
   min-width: 0;
   padding: 0.4rem 0.6rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--text-secondary);
   border-radius: 6px;
   font-family: monospace;
 }
 
 .options-key-link {
   font-size: 0.85rem;
-  color: #1c7ed6;
+  color: var(--accent-chips-mid);
 }
