@@ -37,6 +37,13 @@ async function openPackFromShop(page: Page): Promise<void> {
   await expect(page.getByTestId("pack-suggest")).toBeVisible();
 }
 
+test("the suggest button sits in the Skip action row", async ({ page }) => {
+  await openPackFromShop(page);
+  const row = page.locator(".pack-open-actions");
+  await expect(row.getByTestId("pack-suggest")).toBeVisible();
+  await expect(row.getByTestId("pack-open-close")).toBeVisible();
+});
+
 test("suggesting a pack pick and applying it takes the option without logging human play", async ({
   page,
 }) => {

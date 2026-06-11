@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   buildPackAdvicePlan,
@@ -29,6 +30,7 @@ export interface PackSuggestionProps {
   readonly onPick: (optionIdx: number) => void;
   readonly onClose: () => void;
   readonly suggestionDeps?: SuggestionDeps;
+  readonly triggerContainer?: HTMLElement | null;
 }
 
 export default function PackSuggestion(
@@ -79,19 +81,25 @@ export default function PackSuggestion(
     reset();
   }
 
+  const trigger = (
+    <button
+      type="button"
+      className="btn pack-suggest-button"
+      data-testid="pack-suggest"
+      disabled={state.phase === "loading"}
+      aria-label={t("advisor.suggestPackButton")}
+      onClick={() => void suggest()}
+    >
+      <span aria-hidden="true">💡 </span>
+      {t("advisor.suggestPackButton")}
+    </button>
+  );
+
   return (
     <div className="pack-suggestion">
-      <button
-        type="button"
-        className="btn pack-suggest-button"
-        data-testid="pack-suggest"
-        disabled={state.phase === "loading"}
-        aria-label={t("advisor.suggestPackButton")}
-        onClick={() => void suggest()}
-      >
-        <span aria-hidden="true">💡 </span>
-        {t("advisor.suggestPackButton")}
-      </button>
+      {props.triggerContainer
+        ? createPortal(trigger, props.triggerContainer)
+        : trigger}
       <SuggestionAdvice
         state={state}
         onApply={apply}

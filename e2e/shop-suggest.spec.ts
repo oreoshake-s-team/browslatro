@@ -65,6 +65,15 @@ test("suggesting a purchase and applying it buys the offer without logging human
   expect(log).not.toContain('"kind":"purchase"');
 });
 
+test("the suggest button sits in the Next Round action row", async ({
+  page,
+}) => {
+  await openShop(page);
+  const row = page.locator(".shop-actions");
+  await expect(row.getByTestId("shop-suggest")).toBeVisible();
+  await expect(row.locator(".shop-next")).toBeVisible();
+});
+
 test("a rate-limited keyless player gets the key form inline", async ({
   page,
 }) => {

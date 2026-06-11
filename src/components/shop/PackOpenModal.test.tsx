@@ -1324,3 +1324,43 @@ describe("PackOpenModal i18n", () => {
     expect(screen.getByTestId("pack-open-close")).toHaveTextContent("Pau");
   });
 });
+
+describe("PackOpenModal — suggest trigger placement", () => {
+  beforeEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the suggest button renders inside the Skip action row", async () => {
+    renderModal();
+    const suggest = await screen.findByTestId("pack-suggest");
+    expect(suggest.closest(".pack-open-actions")).not.toBeNull();
+  });
+
+  test("the Skip button shares the action row with the suggest button", async () => {
+    renderModal();
+    await screen.findByTestId("pack-suggest");
+    expect(
+      screen.getByTestId("pack-open-close").closest(".pack-open-actions"),
+    ).not.toBeNull();
+  });
+
+  test("the suggest button comes before the Skip button in the row", async () => {
+    renderModal();
+    const suggest = await screen.findByTestId("pack-suggest");
+    const close = screen.getByTestId("pack-open-close");
+    expect(
+      Boolean(
+        suggest.compareDocumentPosition(close) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+  });
+
+  test("the suggestion panel host stays outside the action row", async () => {
+    const { container } = renderModal();
+    await screen.findByTestId("pack-suggest");
+    const panelHost = container.querySelector(".pack-suggestion");
+    expect(panelHost?.closest(".pack-open-actions")).toBeNull();
+  });
+});

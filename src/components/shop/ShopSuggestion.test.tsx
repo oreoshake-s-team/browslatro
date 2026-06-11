@@ -130,4 +130,28 @@ describe("ShopSuggestion", () => {
       screen.findByTestId("suggestion-error"),
     ).resolves.toBeInTheDocument();
   });
+
+  test("the trigger renders into the provided container instead of inline", () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    renderSuggestion({ triggerContainer: container });
+    expect(container.contains(screen.getByTestId("shop-suggest"))).toBe(true);
+    container.remove();
+  });
+
+  test("the advice panel stays in the inline host when the trigger is portaled", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    renderSuggestion({ triggerContainer: container });
+    await userEvent.click(screen.getByTestId("shop-suggest"));
+    const panel = await screen.findByTestId("suggestion-advice");
+    expect(container.contains(panel)).toBe(false);
+    container.remove();
+  });
+
+  test("negative: the trigger renders inline when no container is provided", () => {
+    renderSuggestion();
+    const suggest = screen.getByTestId("shop-suggest");
+    expect(suggest.closest(".shop-suggestion")).not.toBeNull();
+  });
 });

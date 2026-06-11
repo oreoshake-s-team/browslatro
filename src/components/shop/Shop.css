@@ -558,6 +558,11 @@
   align-items: center;
   justify-content: center;
   gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.shop-suggest-slot {
+  display: contents;
 }
 
 .shop-reroll {
