@@ -22,10 +22,10 @@ export interface EvaluationResult {
   readonly averageHandsPlayed: number;
 }
 
-export function evaluateAgent(
+export async function evaluateAgent(
   agentForSeed: (seed: number) => HeadlessAgent,
   config: EvaluateAgentConfig,
-): EvaluationResult {
+): Promise<EvaluationResult> {
   if (config.games <= 0) {
     throw new Error(`games must be positive, got ${config.games}`);
   }
@@ -37,7 +37,7 @@ export function evaluateAgent(
     const agent = agentForSeed(seed);
     agentName = agent.name;
     results.push(
-      playHeadlessRun(agent, {
+      await playHeadlessRun(agent, {
         seed,
         maxAnte: config.maxAnte,
         jokers: config.jokers,
