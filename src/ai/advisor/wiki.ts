@@ -1,23 +1,46 @@
+import type { Stake } from "../../items/stakes";
+import { getStakeSpec } from "../../items/stakes";
+import {
+  INTEREST_CAP,
+  INTEREST_RATE_PER,
+  REMAINING_HAND_BONUS,
+} from "../../scoring/payout";
 import type { ModelState } from "../modelState";
 
 export interface WikiEntry {
   readonly key: string;
-  readonly kind: "joker" | "boss";
+  readonly kind: "joker" | "boss" | "combo" | "strategy" | "stake";
   readonly title: string;
   readonly text: string;
 }
 
+export interface ComboWikiEntry {
+  readonly key: string;
+  readonly title: string;
+  readonly jokers: ReadonlyArray<string>;
+  readonly text: string;
+}
+
 /**
- * Joker and boss strategy notes merged and adapted (condensed and reworded)
- * from two community-maintained sources:
- * - Balatro Wiki: https://balatrowiki.org/
- *   (CC BY-NC-SA 3.0, https://creativecommons.org/licenses/by-nc-sa/3.0/)
- * - Balatro Fandom Wiki: https://balatrogame.fandom.com/wiki/Balatro_Wiki
- *   (CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/)
+ * Reference content in this module is adapted (condensed and reworded) from
+ * community sources, each table under its own source's terms:
  *
- * As a derivative, the entry text in JOKER_WIKI and BOSS_WIKI below is
- * shared under CC BY-NC-SA 3.0, the more restrictive of the two, and may
- * be used for non-commercial purposes only.
+ * 1. JOKER_WIKI and BOSS_WIKI — merged from two community-maintained wikis:
+ *    - Balatro Wiki: https://balatrowiki.org/
+ *      (CC BY-NC-SA 3.0, https://creativecommons.org/licenses/by-nc-sa/3.0/)
+ *    - Balatro Fandom Wiki: https://balatrogame.fandom.com/wiki/Balatro_Wiki
+ *      (CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/)
+ *    As a derivative, the entry text in those two tables is shared under
+ *    CC BY-NC-SA 3.0, the more restrictive of the two, and may be used for
+ *    non-commercial purposes only.
+ *
+ * 2. COMBO_WIKI, ECONOMY_WIKI, and STAKE_WIKI — adapted from
+ *    "Balatro Beginner Bguide" by calderracrusade:
+ *    https://steamcommunity.com/sharedfiles/filedetails/?id=3197193231
+ *    Used under the author's stated terms: "Feel free to use, translate,
+ *    or repost this guide, so long as you give credit and allow others to
+ *    do the same." The adapted text in those tables is shared under the
+ *    same terms.
  */
 export const JOKER_WIKI: Readonly<Record<string, string>> = {
   blueprint:
@@ -109,6 +132,86 @@ export const BOSS_WIKI: Readonly<Record<string, string>> = {
     "Playing your most-played hand type drops your money to $0. Avoid that type unless it is the only way to survive — losing savings also kills interest.",
 };
 
+export const COMBO_WIKI: ReadonlyArray<ComboWikiEntry> = [
+  {
+    key: "lucky-cat-engine",
+    title: "Lucky Cat engine",
+    jokers: ["lucky-cat"],
+    text: "Lucky Cat grows its X Mult every time a Lucky card successfully triggers. Keep Lucky cards in scoring positions; retrigger jokers (Hack, Dusk, Sock and Buskin, Hanging Chad) and doubled odds from Oops! All 6s multiply the growth chances.",
+  },
+  {
+    key: "photochad",
+    title: "Photograph + Hanging Chad",
+    jokers: ["photograph", "hanging-chad"],
+    text: "Photograph multiplies Mult when the first face card scores, and Hanging Chad retriggers the first scored card. Arrange the play so the first scoring card is a face card and the retriggers re-apply Photograph's multiplier on the same card.",
+  },
+  {
+    key: "steel-hand-engine",
+    title: "Steel Kings held in hand",
+    jokers: ["mime", "baron", "steel-joker"],
+    text: "Mime retriggers abilities of cards held in hand and Baron multiplies Mult per held King, so Steel Kings kept in hand stack multipliers without being played. Red Seals retrigger them again, and Steel Joker grows with every Steel card in the deck. Play few cards; keep the engine in hand.",
+  },
+  {
+    key: "obelisk-rotation",
+    title: "Obelisk rotation",
+    jokers: ["obelisk"],
+    text: "Obelisk multiplies Mult for each consecutive hand that is not your most-played hand type, and playing the favorite resets it. Level a signature hand early, then deliberately rotate through other hand types to keep the streak alive.",
+  },
+  {
+    key: "deck-thinning",
+    title: "Deck thinning",
+    jokers: ["erosion", "trading-card"],
+    text: "A deck below its starting size draws its strong cards more often, and Erosion adds Mult for every missing card. Trading Card turns a single-card first discard into money and removes the card — trimming junk one discard at a time.",
+  },
+  {
+    key: "deck-duplication",
+    title: "Deck duplication",
+    jokers: ["hologram", "dna"],
+    text: "Hologram grows its X Mult every time a playing card is added to your deck, and DNA permanently copies a single-card first hand. Duplicating strong enhanced cards concentrates the deck and feeds Hologram at the same time.",
+  },
+  {
+    key: "copy-chain",
+    title: "Copy chaining",
+    jokers: ["blueprint", "brainstorm"],
+    text: "Copies resolve through other copies. Put Blueprint leftmost with your strongest joker directly to its right: Blueprint copies that joker, and Brainstorm copies leftmost Blueprint and resolves through to the same target — three jokers acting as one.",
+  },
+  {
+    key: "burnt-leveling",
+    title: "Burnt Joker leveling",
+    jokers: ["burnt-joker"],
+    text: "Burnt Joker upgrades the level of the first discarded poker hand each round. Shape the round's first discard to match your signature hand type and it levels up for free before you ever play it.",
+  },
+  {
+    key: "economy-engine",
+    title: "Economy engine",
+    jokers: [
+      "golden-joker",
+      "rocket",
+      "egg",
+      "business-card",
+      "to-the-moon",
+      "delayed-gratification",
+    ],
+    text: "End-of-round payout jokers compound with interest the longer money stays banked. With Delayed Gratification, discards have a real price — it pays out only if none were used this round — so either discard with purpose or not at all.",
+  },
+];
+
+export const ECONOMY_WIKI = `Money compounds between rounds: every $${INTEREST_RATE_PER} held earns $1 interest (capped at $${INTEREST_CAP}, reached at $${INTEREST_CAP * INTEREST_RATE_PER} banked), and each unused hand pays $${REMAINING_HAND_BONUS}. Win in as few hands as possible and avoid spending that drops you below the next $${INTEREST_RATE_PER} step — early money snowballs into better shop options.`;
+
+export const STAKE_WIKI: Readonly<Partial<Record<Stake, string>>> = {
+  red: "Small Blind pays no reward money, so early cash comes from interest and unused hands — efficient wins matter more than usual.",
+  green:
+    "Required score scales faster per ante, so targets outpace a slow build — prioritize raw scoring power earlier than feels natural.",
+  black:
+    "Shop jokers can roll Eternal (cannot be sold or destroyed), so a lineup mistake is harder to undo — and all lower-stake pressures still apply.",
+  blue: "One fewer discard per round on top of lower-stake effects. Each discard is scarcer — spend one only when it clearly upgrades the play.",
+  purple:
+    "Required score scales even faster, cumulative with Green Stake. Stay ahead of the curve: survival hands now need real scoring behind them.",
+  orange:
+    "Shop jokers may roll Perishable (debuffed after a few rounds). Favor jokers that pay off fast and expect parts of the engine to expire.",
+  gold: "Jokers may roll Rental ($1 to buy, drains $3 each round) on top of every lower-stake effect. Economy carries the early game; late game, accept Rentals that raise the final score.",
+};
+
 export function retrieveWikiEntries(state: ModelState): ReadonlyArray<WikiEntry> {
   const entries: WikiEntry[] = [];
   const seen = new Set<string>();
@@ -124,6 +227,34 @@ export function retrieveWikiEntries(state: ModelState): ReadonlyArray<WikiEntry>
     if (text !== undefined) {
       entries.push({ key: boss.id, kind: "boss", title: boss.name, text });
     }
+  }
+  const inPlay = new Set(state.jokers.map((joker) => joker.id));
+  for (const combo of COMBO_WIKI) {
+    if (combo.jokers.some((id) => inPlay.has(id))) {
+      entries.push({
+        key: combo.key,
+        kind: "combo",
+        title: combo.title,
+        text: combo.text,
+      });
+    }
+  }
+  if (state.money >= INTEREST_RATE_PER) {
+    entries.push({
+      key: "economy",
+      kind: "strategy",
+      title: "Economy",
+      text: ECONOMY_WIKI,
+    });
+  }
+  const stakeText = STAKE_WIKI[state.stake];
+  if (stakeText !== undefined) {
+    entries.push({
+      key: state.stake,
+      kind: "stake",
+      title: getStakeSpec(state.stake).name,
+      text: stakeText,
+    });
   }
   return entries;
 }

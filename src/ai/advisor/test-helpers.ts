@@ -30,6 +30,7 @@ export function modelStateFixture(): ModelState {
     blind: { kind: "small", name: "Small Blind", scoreTarget: 300, boss: null },
     ante: 1,
     round: 1,
+    stake: "white",
     money: 4,
     remainingHands: 4,
     remainingDiscards: 3,
