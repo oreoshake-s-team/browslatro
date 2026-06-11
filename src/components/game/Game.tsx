@@ -298,23 +298,23 @@ export default function Game({
                 onClick={onToggleAutopilot}
                 aria-pressed={autopilotEnabled}
               >
-                <span aria-hidden="true">🤖 </span>
+                <span aria-hidden="true">💡 </span>
                 {t("advisor.autopilot")}
               </button>
             )}
-            {(autopilotProposal || autopilotModelProgress) &&
-              onApproveAutopilot &&
-              onStopAutopilot && (
-                <AutopilotControls
-                  proposal={autopilotProposal}
-                  modelProgress={autopilotModelProgress}
-                  explanation={autopilotExplanation}
-                  onApprove={onApproveAutopilot}
-                  onStop={onStopAutopilot}
-                  onExplain={onExplainAutopilot ?? (() => {})}
-                />
-              )}
           </div>
+          {(autopilotProposal || autopilotModelProgress) &&
+            onApproveAutopilot &&
+            onStopAutopilot && (
+              <AutopilotControls
+                proposal={autopilotProposal}
+                modelProgress={autopilotModelProgress}
+                explanation={autopilotExplanation}
+                onApprove={onApproveAutopilot}
+                onStop={onStopAutopilot}
+                onExplain={onExplainAutopilot ?? (() => {})}
+              />
+            )}
         </div>
       )}
       <ModifierPanel />

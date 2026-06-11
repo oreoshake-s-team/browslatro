@@ -49,15 +49,20 @@ function renderControls(
 }
 
 describe("AutopilotControls", () => {
+  test("labels the panel as a suggested move", () => {
+    renderControls({ proposal: playProposal() });
+    expect(screen.getByText(/Suggested move/)).toBeInTheDocument();
+  });
+
   test("describes a play proposal with its hand label", () => {
     renderControls({ proposal: playProposal() });
-    expect(screen.getByText(/Autopilot suggests playing/)).toBeInTheDocument();
+    expect(screen.getByText(/Play Pair/)).toBeInTheDocument();
   });
 
   test("describes a discard proposal", () => {
     renderControls({ proposal: discardProposal() });
     expect(
-      screen.getByText(/Autopilot suggests discarding/),
+      screen.getByText(/Discard the selected cards/),
     ).toBeInTheDocument();
   });
 
@@ -73,7 +78,7 @@ describe("AutopilotControls", () => {
     const onStop = vi.fn();
     const user = userEvent.setup();
     renderControls({ onStop });
-    await user.click(screen.getByRole("button", { name: /Stop autopilot/ }));
+    await user.click(screen.getByRole("button", { name: /Stop suggesting/ }));
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
@@ -97,7 +102,7 @@ describe("AutopilotControls", () => {
       modelProgress: { loaded: 0, total: null },
       onStop,
     });
-    await user.click(screen.getByRole("button", { name: /Stop autopilot/ }));
+    await user.click(screen.getByRole("button", { name: /Stop suggesting/ }));
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
