@@ -7,6 +7,16 @@ Browlatro is an educational journey meant to help the author brush up on their f
 - This is a Balatro clone. Terms like 'tags', 'spectral cards', 'vouchers', 'boss blinds', etc. refer to **in-game Balatro mechanics**, not GitHub/repo concepts.
 - When implementing Balatro features (spectral cards, tarots, jokers, etc.), match the **authentic Balatro effects** - do not invent placeholder effects. Reference the Balatro wiki or ask the user if unsure.
 
+# Design & UX questions
+
+The author is still learning frontend and relies on Claude to surface design decisions early. Front-load discovery before writing UI code.
+
+- Before starting any new task that touches UI, layout, visuals, interaction, or UX, ask **at least 3 design/UX clarifying questions** before making changes. Use the `AskUserQuestion` tool so options are easy to pick.
+- Cover the dimensions that are actually ambiguous for the task — e.g. layout/placement, visual hierarchy and styling, interaction and feedback (hover/focus/active/disabled), empty/loading/error states, responsiveness across breakpoints, animation/motion, and accessibility (keyboard, screen reader, contrast). Don't ask about things already settled in the request or the codebase.
+- Ask **more** questions, not fewer, when new evidence arrives mid-task — a screenshot, the rendered result in the browser, a changed requirement, or anything that reveals a fork the original questions didn't cover. Treat each new piece of evidence as a prompt to re-check assumptions and clarify before proceeding.
+- Prefer a single batched round of questions (up to 4 per `AskUserQuestion` call) over a slow back-and-forth, but never skip the round entirely to "just start coding."
+- This raises the baseline permanently: err toward asking when in doubt rather than guessing on the author's behalf.
+
 # Hard requirements
 
 - Squash all PRs into a single commit instead of merging/rebasing.
