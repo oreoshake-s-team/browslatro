@@ -1,5 +1,5 @@
 import "./Shop.css";
-import { useState } from "react";
+import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
@@ -26,6 +26,8 @@ import {
 } from "../../items/vouchers";
 import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+
+const ShopSuggestion = lazy(() => import("./ShopSuggestion"));
 
 export interface ShopProps {
   money: number;
@@ -589,6 +591,25 @@ export default function Shop({
             </ul>
           </section>
         </div>
+        <Suspense fallback={null}>
+          <ShopSuggestion
+            money={money}
+            equippedJokerCount={equippedJokerCount}
+            jokerCapacity={jokerCapacity}
+            consumableCount={consumableCount}
+            consumableCapacity={consumableCapacity}
+            offers={offers}
+            vouchers={vouchers}
+            soldVoucherIds={soldVoucherIds}
+            ownedVoucherIds={ownedVoucherIds}
+            rerollCost={currentRerollCost}
+            disabled={disabled}
+            onBuy={onBuy}
+            onBuyVoucher={onBuyVoucher}
+            onApplyReroll={handleReroll}
+            onNext={onNext}
+          />
+        </Suspense>
         <div className="shop-actions">
           <button
             type="button"

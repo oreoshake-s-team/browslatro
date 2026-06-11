@@ -4,6 +4,7 @@ import { useGame } from "../store/game";
 import { createHumanPlayLog, type HumanPlayLog, type LogStorage } from "./humanPlayLog";
 import {
   captureHumanDecision,
+  captureRunEvent,
   setHumanPlayRecordingSuppressed,
 } from "./humanPlayWiring";
 
@@ -113,6 +114,18 @@ describe("captureHumanDecision", () => {
     const recorded = captureHumanDecision(
       useGame.getState(),
       { kind: "play", cardIds: [1, 2] },
+      { log, seed: 7 },
+    );
+    setHumanPlayRecordingSuppressed(false);
+    expect(recorded).toBe(false);
+  });
+
+  test("records no run events while recording is suppressed", () => {
+    const log = makeLog();
+    setHumanPlayRecordingSuppressed(true);
+    const recorded = captureRunEvent(
+      useGame.getState(),
+      { kind: "blind-skip", tag: null },
       { log, seed: 7 },
     );
     setHumanPlayRecordingSuppressed(false);
