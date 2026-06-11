@@ -212,6 +212,11 @@ export const haw: LocaleMessages = {
   advisor: {
     autopilot: "Kūkākūkā",
     suggestTitle: "Neʻe i koho ʻia",
+    recommendation: "Neʻe i ʻōlelo ʻia",
+    alternative: "Koho ʻē aʻe hoʻowalewale",
+    concept: "Manaʻo nui",
+    playCandidate: "Pāʻani {{hand}} ({{cards}}) — {{score}} helu",
+    discardCandidate: "Kiola {{cards}}",
     autopilotApprove: "ʻApono i ka neʻe",
     autopilotStop: "Hoʻōki i ke kūkākūkā",
     autopilotExplain: "Wehewehe i kēia neʻe",

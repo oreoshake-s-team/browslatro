@@ -4,10 +4,12 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { HandOption } from "../../ai/getHandOptions";
 import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
 import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
+import { useGame } from "../../store/game";
 import AutopilotControls from "./AutopilotControls";
 
 beforeEach(() => {
   window.localStorage.clear();
+  useGame.getState().resetGame();
 });
 
 function playProposal(): HandOption {
@@ -24,6 +26,29 @@ function playProposal(): HandOption {
 
 function discardProposal(): HandOption {
   return { action: "discard", cardIds: [3, 4], notes: [] };
+}
+
+function readyExplanation(
+  advice?: Partial<{
+    recommendationIndex: number;
+    alternativeIndex: number;
+    whyAlternativeWorse: string;
+    explanation: string;
+    concept: string;
+  }>,
+): MoveExplanationState {
+  return {
+    phase: "ready",
+    candidates: [playProposal(), discardProposal()],
+    advice: {
+      recommendationIndex: 0,
+      alternativeIndex: 1,
+      whyAlternativeWorse: "Discarding wastes the pair.",
+      explanation: "Play the pair to bank chips.",
+      concept: "Lock in value.",
+      ...advice,
+    },
+  };
 }
 
 function renderControls(
@@ -133,16 +158,34 @@ describe("AutopilotControls", () => {
   });
 
   test("renders the explanation text when ready", () => {
-    renderControls({
-      explanation: {
-        phase: "ready",
-        explanation: "Play the pair to bank chips.",
-        concept: "Lock in value.",
-      },
-    });
+    renderControls({ explanation: readyExplanation() });
     expect(
       screen.getByText("Play the pair to bank chips."),
     ).toBeInTheDocument();
+  });
+
+  test("labels the recommended move when ready", () => {
+    renderControls({ explanation: readyExplanation() });
+    expect(screen.getByText("Recommended move")).toBeInTheDocument();
+  });
+
+  test("shows the tempting alternative when it differs from the recommendation", () => {
+    renderControls({ explanation: readyExplanation() });
+    expect(
+      screen.getByText("Discarding wastes the pair."),
+    ).toBeInTheDocument();
+  });
+
+  test("hides the alternative when it matches the recommendation", () => {
+    renderControls({
+      explanation: readyExplanation({ alternativeIndex: 0 }),
+    });
+    expect(screen.queryByText("Tempting alternative")).not.toBeInTheDocument();
+  });
+
+  test("renders the transferable concept when ready", () => {
+    renderControls({ explanation: readyExplanation() });
+    expect(screen.getByText("Lock in value.")).toBeInTheDocument();
   });
 
   test("renders an error message when the explanation fails", () => {
