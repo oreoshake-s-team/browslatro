@@ -30,8 +30,13 @@ async function openPackFromShop(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
   await page.getByText("Apply modifiers").click();
   await page.getByText(/Win/).click();
+  const addMoney = page.getByRole("button", { name: "Add $10" });
+  if (!(await addMoney.isVisible().catch(() => false))) {
+    await page.getByText("Apply modifiers").click();
+  }
+  await addMoney.click();
   await page
-    .locator('[data-offer-kind="pack"] .shop-offer-buy')
+    .locator('[data-offer-kind="pack"] .shop-offer-buy:not([disabled])')
     .first()
     .click();
   await expect(page.getByTestId("pack-suggest")).toBeVisible();
