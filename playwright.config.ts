@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: 0,
   workers: process.env.CI ? 2 : undefined,
   // In CI we also emit an HTML report into ./playwright-report so the
   // workflow can upload it as a build artifact (see .github/workflows/test.yml).
