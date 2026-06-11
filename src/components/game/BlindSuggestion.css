@@ -1,0 +1,10 @@
+.blind-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.blind-suggest-slot {
+  display: contents;
+}

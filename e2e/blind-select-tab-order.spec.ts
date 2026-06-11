@@ -14,7 +14,7 @@ async function openBlindSelect(page: Page): Promise<void> {
 }
 
 test.describe("BlindSelect tab order", () => {
-  test("Tab cycles Play → Skip → Play with no tooltip or dev-override stops in between", async ({
+  test("Tab cycles Play → Skip → Worth skipping? → Play with no tooltip or dev-override stops in between", async ({
     page,
   }) => {
     await openBlindSelect(page);
@@ -22,9 +22,12 @@ test.describe("BlindSelect tab order", () => {
     await expect(
       page.getByTestId("blind-select-row-skip-reward-1"),
     ).toBeVisible();
+    await expect(page.getByTestId("blind-suggest")).toBeVisible();
     await expect(page.getByTestId("blind-select-play")).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByTestId("blind-select-skip")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(page.getByTestId("blind-suggest")).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(page.getByTestId("blind-select-play")).toBeFocused();
   });
