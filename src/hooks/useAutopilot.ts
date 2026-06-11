@@ -3,7 +3,7 @@ import {
   autopilotIdle,
   chooseAutopilotAction,
 } from "../ai/advisor/autopilot";
-import { sharedAdvisorRanker } from "../ai/advisor/useAdvisor";
+import { sharedAdvisorRanker } from "../ai/advisor/advisorRanker";
 import { setHumanPlayRecordingSuppressed } from "../ai/humanPlayWiring";
 import type { CandidateRanker, DownloadProgress } from "../ai/policy";
 import type { HandOption } from "../ai/getHandOptions";
