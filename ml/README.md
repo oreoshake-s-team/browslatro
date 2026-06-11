@@ -19,6 +19,12 @@ dependency-free encoding tests run in CI; training itself runs locally.
    candidate list from `getHandOptions`, and which candidate the search
    expert chose (`schemaVersion: 1`).
 
+   **Optionally add your own play.** The game records every play/discard
+   decision you make (same schema). In the game, open *Apply modifiers* →
+   *Export log* to download `browslatro-human-play.jsonl`. Human play
+   covers state space the headless generator never produces — real jokers,
+   bosses, and economies.
+
 2. **Train and export** (Python 3.11+):
 
    ```sh
@@ -27,6 +33,17 @@ dependency-free encoding tests run in CI; training itself runs locally.
    pip install -r requirements.txt
    python train.py ../dataset.jsonl --epochs 30 --out advisor-policy.onnx
    ```
+
+   `train.py` accepts any number of dataset files, so an in-game export
+   trains alongside the generated data:
+
+   ```sh
+   python train.py ../dataset.jsonl ../browslatro-human-play.jsonl --out advisor-policy.onnx
+   ```
+
+   The train/validation split is keyed on `runSeed`; an in-game export uses
+   one seed per browser session, so your decisions land wholly on one side
+   of the split and never leak across it.
 
    Reports per-epoch loss and validation accuracy versus the expert
    (train/validation split is by run seed so games never straddle the split),
