@@ -219,19 +219,19 @@ export default function Card({
             <span className="card-rank">{card.rank}</span>
             <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
           </span>
-          {isFaceRank(card.rank) ? (
-            <span className="card-face-decoration" aria-hidden="true">
-              <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
-              <span className="card-face-monogram">{card.rank}</span>
-              <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
-            </span>
-          ) : displayValue ? (
+          {displayValue ? (
             <span
               className={`card-center-value card-center-value-${displayValue.color}`}
               aria-hidden="true"
               data-testid={`card-center-value-${card.id}`}
             >
               {displayValue.text}
+            </span>
+          ) : isFaceRank(card.rank) ? (
+            <span className="card-face-decoration" aria-hidden="true">
+              <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
+              <span className="card-face-monogram">{card.rank}</span>
+              <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
             </span>
           ) : (
             <span className="card-center" aria-hidden="true">

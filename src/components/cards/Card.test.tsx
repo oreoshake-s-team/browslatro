@@ -288,10 +288,16 @@ describe("Card", () => {
     expect(screen.queryByTestId("card-center-value-63")).not.toBeInTheDocument();
   });
 
-  test("keeps the center decoration on an enhanced face card", () => {
+  test("renders the enhancement value on an enhanced face card", () => {
     const gold: CardType = { id: 64, rank: "K", suit: "hearts", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.queryByTestId("card-center-value-64")).not.toBeInTheDocument();
+    expect(screen.getByTestId("card-center-value-64")).toHaveTextContent("+$3");
+  });
+
+  test("keeps the face decoration on a wild face card with no display value", () => {
+    const wild: CardType = { id: 66, rank: "K", suit: "hearts", enhancement: "wild" };
+    const { container } = render(<Card card={wild} />);
+    expect(container.querySelector(".card-face-monogram")).toHaveTextContent("K");
   });
 
   test("keeps the center suit pip on a wild card with no display value", () => {
