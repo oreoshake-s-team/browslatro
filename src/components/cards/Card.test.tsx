@@ -248,7 +248,7 @@ describe("Card", () => {
     { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus, +30 chips)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
     { enhancement: "mult", accessibleName: "9 of Diamonds (Mult, +4 Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
     { enhancement: "wild", accessibleName: "K of Hearts (Wild)", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
-    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
+    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky, 1 in 5 for +20 Mult, 1 in 15 for +$20)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
   ])("appends the $enhancement suffix to the accessible label", ({ accessibleName, card }) => {
     render(<Card card={card} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(accessibleName);
@@ -304,6 +304,39 @@ describe("Card", () => {
     const wild: CardType = { id: 65, rank: "3", suit: "hearts", enhancement: "wild" };
     const { container } = render(<Card card={wild} />);
     expect(container.querySelector(".card-center")).toHaveTextContent("\u2665");
+  });
+
+  test("renders the clover icon and both odds in the center of a lucky number card", () => {
+    const lucky: CardType = { id: 71, rank: "9", suit: "hearts", enhancement: "lucky" };
+    render(<Card card={lucky} />);
+    const center = screen.getByTestId("card-center-lucky-71");
+    expect(center).toHaveTextContent("\u2618");
+    expect(center).toHaveTextContent("1 in 5 \u2605");
+    expect(center).toHaveTextContent("1 in 15 $");
+  });
+
+  test("does not render the lucky center treatment on a non-lucky card", () => {
+    const bonus: CardType = { id: 72, rank: "9", suit: "clubs", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.queryByTestId("card-center-lucky-72")).not.toBeInTheDocument();
+  });
+
+  test("hides the lucky center treatment on a face-down lucky card", () => {
+    const lucky: CardType = {
+      id: 73,
+      rank: "9",
+      suit: "hearts",
+      enhancement: "lucky",
+      faceDown: true,
+    };
+    render(<Card card={lucky} />);
+    expect(screen.queryByTestId("card-center-lucky-73")).not.toBeInTheDocument();
+  });
+
+  test("renders the lucky treatment on a lucky face card", () => {
+    const lucky: CardType = { id: 74, rank: "Q", suit: "diamonds", enhancement: "lucky" };
+    render(<Card card={lucky} />);
+    expect(screen.getByTestId("card-center-lucky-74")).toHaveTextContent("1 in 5 \u2605");
   });
 
   test("applies the stone enhancement class when the card is stone", () => {
