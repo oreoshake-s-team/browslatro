@@ -5,16 +5,21 @@ import {
   type AdviceClientErrorCode,
 } from "./client";
 import type {
+  BlindAdviceCandidate,
+  BlindAdviceRequest,
   PackAdviceCandidate,
   PackAdviceRequest,
   ShopAdviceCandidate,
   ShopAdviceRequest,
 } from "./types";
 
-export type ContextAdviceCandidate = ShopAdviceCandidate | PackAdviceCandidate;
+export type ContextAdviceCandidate =
+  | ShopAdviceCandidate
+  | PackAdviceCandidate
+  | BlindAdviceCandidate;
 
 export interface SuggestionPlan<TAction> {
-  readonly request: ShopAdviceRequest | PackAdviceRequest;
+  readonly request: ShopAdviceRequest | PackAdviceRequest | BlindAdviceRequest;
   readonly actions: ReadonlyArray<TAction>;
 }
 

@@ -24,8 +24,15 @@ export function describeContextCandidate(
       return t("advisor.leaveCandidate");
     case "pick":
       return t("advisor.pickCandidate", { name: candidate.option.name });
+    case "play":
+      return t("advisor.playBlindCandidate", {
+        scoreTarget: candidate.scoreTarget,
+        payout: candidate.payout,
+      });
     case "skip":
-      return t("advisor.skipCandidate");
+      return "tag" in candidate
+        ? t("advisor.skipBlindCandidate", { name: candidate.tag.name })
+        : t("advisor.skipCandidate");
   }
 }
 
