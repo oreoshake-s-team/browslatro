@@ -97,3 +97,9 @@
     gap: 1rem;
   }
 }
+
+.autopilot-toggle-button[aria-pressed="true"] {
+  background-color: #339af0;
+  border-color: #1c7ed6;
+  color: #fff;
+}

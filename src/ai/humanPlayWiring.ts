@@ -18,6 +18,12 @@ function currentSessionSeed(): number {
   return sessionSeed;
 }
 
+let recordingSuppressed = false;
+
+export function setHumanPlayRecordingSuppressed(suppressed: boolean): void {
+  recordingSuppressed = suppressed;
+}
+
 export interface CaptureDeps {
   readonly log: HumanPlayLog;
   readonly seed: number;
@@ -28,6 +34,7 @@ export function captureHumanDecision(
   action: AgentAction,
   deps?: CaptureDeps,
 ): boolean {
+  if (recordingSuppressed) return false;
   try {
     const record = recordHumanDecision(
       { ...toSimulatePlayInput(state), ...toModelStateInput(state) },

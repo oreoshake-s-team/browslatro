@@ -194,6 +194,7 @@ export const en = {
   },
   advisor: {
     open: "Advisor",
+    autopilot: "Autopilot",
     title: "Coach",
     thinking: "The coach is thinking\u2026",
     recommendation: "Recommended move",

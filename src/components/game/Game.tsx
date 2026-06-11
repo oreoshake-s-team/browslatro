@@ -31,6 +31,8 @@ interface GameProps {
   onSubmitHand: () => void;
   onDiscard: () => void;
   canDiscard: boolean;
+  autopilotEnabled?: boolean;
+  onToggleAutopilot?: () => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -44,6 +46,8 @@ export default function Game({
   onSubmitHand,
   onDiscard,
   canDiscard,
+  autopilotEnabled = false,
+  onToggleAutopilot,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -283,6 +287,16 @@ export default function Game({
               <span aria-hidden="true">🎓 </span>
               {t("advisor.open")}
             </button>
+            {onToggleAutopilot && (
+              <button
+                className="btn autopilot-toggle-button"
+                onClick={onToggleAutopilot}
+                aria-pressed={autopilotEnabled}
+              >
+                <span aria-hidden="true">🤖 </span>
+                {t("advisor.autopilot")}
+              </button>
+            )}
           </div>
         </div>
       )}
