@@ -159,6 +159,28 @@ describe("retrieveWikiEntries", () => {
 });
 
 describe("wiki content keys", () => {
+  test("every contains-a-hand joker has a generated entry", () => {
+    const family = [
+      "jolly-joker",
+      "zany-joker",
+      "mad-joker",
+      "crazy-joker",
+      "droll-joker",
+      "sly-joker",
+      "wily-joker",
+      "clever-joker",
+      "devious-joker",
+      "crafty-joker",
+    ];
+    expect(family.filter((id) => JOKER_WIKI[id] === undefined)).toEqual([]);
+  });
+
+  test("the generated entries explain the contains-a-hand mechanic", () => {
+    expect(JOKER_WIKI["sly-joker"]).toContain(
+      "Triggers whenever the played hand contains a Pair",
+    );
+  });
+
   test("every joker wiki key exists in the joker catalog", () => {
     const known = new Set(
       [...createJokerCatalog(), ...createLegendaryJokerCatalog()].map(
