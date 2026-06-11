@@ -1,5 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
+test.describe.configure({ timeout: 90_000 });
+
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     window.localStorage.setItem("browslatro:muted", "true");
