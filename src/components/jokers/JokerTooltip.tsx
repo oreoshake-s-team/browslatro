@@ -6,6 +6,9 @@ import {
   localizedJokerName,
 } from "../../i18n/jokerOverrides";
 import {
+  toDoListDescriptionNode,
+} from "../../items/jokers/toDoListDescription";
+import {
   JOKER_EDITION_INFO,
   JOKER_STICKER_INFO,
   PERISHABLE_LIFE,
@@ -43,6 +46,7 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
   const editionClass = joker.edition
     ? `joker-tooltip-edition-${joker.edition}`
     : "";
+  const todoHand = useGame((s) => s.todoHand);
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
   const effectiveOdds = useEffectiveOdds(joker);
@@ -58,8 +62,13 @@ export default function JokerTooltip({ id, joker, anchorRect }: JokerTooltipProp
       >
         {rarityLabel(joker.rarity)}
       </p>
-      <p className="joker-tooltip-description">
-        {localizedJokerDescription(i18n.language, joker.id, joker.description)}
+      <p className="joker-tooltip-description" data-testid="joker-tooltip-description">
+        {joker.id === "to-do-list"
+          ? toDoListDescriptionNode(
+              localizedJokerDescription(i18n.language, joker.id, joker.description),
+              todoHand,
+            )
+          : localizedJokerDescription(i18n.language, joker.id, joker.description)}
       </p>
       {currentValue && (
         <p

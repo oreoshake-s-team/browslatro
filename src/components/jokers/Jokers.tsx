@@ -15,7 +15,12 @@ import {
   jokerStickers,
   type Joker,
 } from "../../items/jokers";
+import {
+  toDoListDescriptionNode,
+  toDoListDescriptionText,
+} from "../../items/jokers/toDoListDescription";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
+import { useGame } from "../../store/game";
 import { announce } from "../system/LiveAnnouncer";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
@@ -49,6 +54,7 @@ export default function Jokers({
   onConsumableDrop,
 }: JokersProps) {
   const { t, i18n } = useTranslation();
+  const todoHand = useGame((s) => s.todoHand);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
@@ -260,11 +266,14 @@ export default function Jokers({
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
                 }${editionClass}${debuffedClass}`}
-                title={localizedJokerDescription(
-                  i18n.language,
-                  joker.id,
-                  joker.description,
-                )}
+                title={
+                  joker.id === "to-do-list"
+                    ? toDoListDescriptionText(
+                        localizedJokerDescription(i18n.language, joker.id, joker.description),
+                        todoHand,
+                      )
+                    : localizedJokerDescription(i18n.language, joker.id, joker.description)
+                }
                 aria-label={ariaLabel}
                 aria-describedby={tooltipOpen ? tooltipId : undefined}
                 tabIndex={0}
@@ -312,12 +321,16 @@ export default function Jokers({
                   <span className="joker-tile-name">
                     {localizedJokerName(i18n.language, joker.id, joker.name)}
                   </span>
-                  <span className="joker-tile-description">
-                    {localizedJokerDescription(
-                      i18n.language,
-                      joker.id,
-                      joker.description,
-                    )}
+                  <span
+                    className="joker-tile-description"
+                    data-testid={`joker-tile-description-${joker.id}`}
+                  >
+                    {joker.id === "to-do-list"
+                      ? toDoListDescriptionNode(
+                          localizedJokerDescription(i18n.language, joker.id, joker.description),
+                          todoHand,
+                        )
+                      : localizedJokerDescription(i18n.language, joker.id, joker.description)}
                   </span>
                   {(joker.edition || jokerStickers(joker).length > 0) && (
                     <div className="joker-tile-badges">
