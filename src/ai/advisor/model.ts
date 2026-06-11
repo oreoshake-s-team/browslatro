@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AdviceRequest } from "./types";
+import { retrieveWikiEntries } from "./wiki";
 
 export interface Advice {
   readonly recommendationIndex: number;
@@ -57,12 +58,21 @@ export function buildUserMessage(request: AdviceRequest): string {
     index,
     ...candidate,
   }));
-  return [
-    "Game state:",
-    JSON.stringify(request.state),
-    "Candidate actions (choose by index):",
-    JSON.stringify(candidates),
-  ].join("\n");
+  const lines = ["Game state:", JSON.stringify(request.state)];
+  if (request.state.jokers.length > 0) {
+    lines.push(
+      "Joker order matters: jokers trigger left to right, in the order listed.",
+    );
+  }
+  const wiki = retrieveWikiEntries(request.state);
+  if (wiki.length > 0) {
+    lines.push("Reference notes:");
+    for (const entry of wiki) {
+      lines.push(`- ${entry.title}: ${entry.text}`);
+    }
+  }
+  lines.push("Candidate actions (choose by index):", JSON.stringify(candidates));
+  return lines.join("\n");
 }
 
 export function parseAdvice(text: string, candidateCount: number): Advice | null {
