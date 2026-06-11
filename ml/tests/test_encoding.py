@@ -9,6 +9,8 @@ from encoding import (
     CANDIDATE_FEATURES,
     CARD_FEATURES,
     INPUT_FEATURES,
+    JOKER_SLOT_FEATURES,
+    JOKER_SLOTS,
     STATE_FEATURES,
     encode_candidate,
     encode_decision,
@@ -102,6 +104,23 @@ class EncodeStateTests(unittest.TestCase):
         hand = [card(i, "A", "spades") for i in range(17)]
         with self.assertRaises(ValueError):
             encode_state(state(hand))
+
+    def test_equipped_joker_sets_presence_flag(self):
+        joker = {
+            "id": "jolly", "name": "Jolly Joker", "description": "",
+            "effectKind": "on-hand-type-mult", "rarity": "common",
+            "edition": None, "stickers": [], "counter": None,
+        }
+        context_bytes = STATE_FEATURES - 16 * CARD_FEATURES - JOKER_SLOTS * JOKER_SLOT_FEATURES
+        joker_start = 16 * CARD_FEATURES + context_bytes
+        vector = encode_state(state([card(1, "A", "spades")], jokers=[joker]))
+        self.assertEqual(vector[joker_start], 1.0)
+
+    def test_empty_joker_slot_encodes_to_zeros(self):
+        context_bytes = STATE_FEATURES - 16 * CARD_FEATURES - JOKER_SLOTS * JOKER_SLOT_FEATURES
+        joker_start = 16 * CARD_FEATURES + context_bytes
+        vector = encode_state(state([card(1, "A", "spades")]))
+        self.assertEqual(vector[joker_start:joker_start + JOKER_SLOT_FEATURES], [0.0] * JOKER_SLOT_FEATURES)
 
 
 class EncodeCandidateTests(unittest.TestCase):

@@ -5,13 +5,16 @@ import type {
   Seal,
   Suit,
 } from "../cards/types";
+import type { JokerEdition, JokerRarity } from "../items/jokers/types";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandOption, HandOptionNote } from "./getHandOptions";
-import type { ModelHandCard, ModelState } from "./modelState";
+import type { ModelHandCard, ModelJoker, ModelState } from "./modelState";
 
-export const ENCODING_VERSION = 2;
+export const ENCODING_VERSION = 3;
 
 export const HAND_SLOTS = 16;
+export const JOKER_SLOTS = 5;
+
 const RANKS: ReadonlyArray<Rank> = [
   "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A",
 ];
@@ -23,6 +26,14 @@ const SEALS: ReadonlyArray<Seal> = ["gold", "red", "blue", "purple"];
 const EDITIONS: ReadonlyArray<CardEdition> = [
   "foil", "holographic", "polychrome",
 ];
+const JOKER_EFFECT_CATEGORIES = ["mult", "x-mult", "retrigger", "money", "passive"] as const;
+const JOKER_RARITIES: ReadonlyArray<JokerRarity> = [
+  "common", "uncommon", "rare", "legendary",
+];
+const JOKER_EDITIONS: ReadonlyArray<JokerEdition> = [
+  "foil", "holographic", "polychrome", "negative",
+];
+
 const BLIND_KINDS = ["small", "big", "boss"] as const;
 const HAND_LABELS: ReadonlyArray<HandLabel> = [
   "High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
@@ -38,10 +49,31 @@ export const CARD_FEATURES =
   2 + RANKS.length + SUITS.length + ENHANCEMENTS.length + SEALS.length + EDITIONS.length + 1;
 export const CONTEXT_FEATURES =
   6 + BLIND_KINDS.length + 1 + SUITS.length + RANKS.length;
-export const STATE_FEATURES = HAND_SLOTS * CARD_FEATURES + CONTEXT_FEATURES;
+export const JOKER_SLOT_FEATURES =
+  1 + JOKER_EFFECT_CATEGORIES.length + JOKER_RARITIES.length + JOKER_EDITIONS.length + 1;
+export const JOKER_FEATURES = JOKER_SLOTS * JOKER_SLOT_FEATURES;
+export const STATE_FEATURES = HAND_SLOTS * CARD_FEATURES + CONTEXT_FEATURES + JOKER_FEATURES;
 export const CANDIDATE_FEATURES =
   2 + HAND_SLOTS + HAND_LABELS.length + 3 + NOTE_KINDS.length;
 export const INPUT_FEATURES = STATE_FEATURES + CANDIDATE_FEATURES;
+
+type JokerEffectCategory = (typeof JOKER_EFFECT_CATEGORIES)[number];
+
+function jokerEffectCategory(effectKind: string): JokerEffectCategory {
+  if (effectKind.includes("x-mult") || effectKind.includes("xmult") || effectKind === "stencil") {
+    return "x-mult";
+  }
+  if (effectKind.includes("retrigger")) return "retrigger";
+  if (
+    effectKind.includes("money") ||
+    effectKind === "business-card" ||
+    effectKind === "extra-interest-per-five"
+  ) {
+    return "money";
+  }
+  if (effectKind === "passive-run-stats") return "passive";
+  return "mult";
+}
 
 function oneHot<T>(value: T | null, vocabulary: ReadonlyArray<T>): number[] {
   const vector = new Array<number>(vocabulary.length).fill(0);
@@ -70,6 +102,17 @@ function encodeCardSlot(card: ModelHandCard | null): number[] {
   ];
 }
 
+function encodeJokerSlot(joker: ModelJoker | null): number[] {
+  if (joker === null) return new Array<number>(JOKER_SLOT_FEATURES).fill(0);
+  return [
+    1,
+    ...oneHot(jokerEffectCategory(joker.effectKind), JOKER_EFFECT_CATEGORIES),
+    ...oneHot(joker.rarity, JOKER_RARITIES),
+    ...oneHot(joker.edition, JOKER_EDITIONS),
+    Math.min((joker.counter ?? 0) / 50, 1),
+  ];
+}
+
 export function encodeState(state: ModelState): number[] {
   if (state.hand.length > HAND_SLOTS) {
     throw new Error(`hand has ${state.hand.length} cards, max ${HAND_SLOTS}`);
@@ -80,6 +123,10 @@ export function encodeState(state: ModelState): number[] {
   }
   const target = Math.max(1, state.blind.scoreTarget);
   const deckTotal = Math.max(1, state.deck.total);
+  const jokerSlots: number[] = [];
+  for (let i = 0; i < JOKER_SLOTS; i += 1) {
+    jokerSlots.push(...encodeJokerSlot(i < state.jokers.length ? state.jokers[i] : null));
+  }
   return [
     ...slots,
     state.money / 20,
@@ -92,6 +139,7 @@ export function encodeState(state: ModelState): number[] {
     state.deck.total / 52,
     ...SUITS.map((suit) => state.deck.bySuit[suit] / deckTotal),
     ...RANKS.map((rank) => state.deck.byRank[rank] / deckTotal),
+    ...jokerSlots,
   ];
 }
 
