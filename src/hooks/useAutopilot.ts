@@ -126,8 +126,10 @@ export function useAutopilot(
     const { getState } = depsRef.current ?? defaultDeps();
     getState().setSelectedIds(new Set(proposal.cardIds));
     setPendingProposal(null);
+    setModelProgress(null);
     if (proposal.action === "play") executorRef.current.play();
     else executorRef.current.discard();
+    onStopRef.current();
   }, []);
 
   const stop = useCallback((): void => {

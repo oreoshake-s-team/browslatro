@@ -2,6 +2,8 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test } from "vitest";
 import { useOpenedPackPicker } from "./useOpenedPackPicker";
 import { useGame } from "../store/game";
+import { humanPlayLog } from "../ai/humanPlayWiring";
+import { createPlanetCatalog } from "../items/planets";
 import { createTarotCatalog, HERMIT_MONEY_CAP } from "../items/tarots";
 import { createJokerCatalog, withEdition } from "../items/jokers";
 import type { PackOffer, PackOption } from "../items/packs";
@@ -427,5 +429,36 @@ describe("pickFromOpenedPack — The Fool (copy-last-consumable) fires on pick (
     const { result } = renderHook(() => useOpenedPackPicker());
     act(() => result.current.pickFromOpenedPack(0));
     expect(useGame.getState().packPicksRemaining).toBe(2);
+  });
+});
+
+describe("pickFromOpenedPack — decision recording", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    useGame.getState().resetGame();
+  });
+
+  test("a successful pick records a pack-pick event", () => {
+    const planet = createPlanetCatalog()[0];
+    openPack([{ kind: "planet", planet }]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(humanPlayLog().counts()).toEqual({ "pack-pick": 1 });
+  });
+
+  test("the pick record carries the chosen index", () => {
+    const planet = createPlanetCatalog()[0];
+    openPack([{ kind: "planet", planet }]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(humanPlayLog().toJsonl()).toContain('"pickedIndex":0');
+  });
+
+  test("a rejected pick records nothing", () => {
+    const planet = createPlanetCatalog()[0];
+    openPack([{ kind: "planet", planet }], [], 0);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(humanPlayLog().count()).toBe(0);
   });
 });
