@@ -93,8 +93,13 @@ class EncodeStateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             encode_state(state([card(1, "1", "spades")]))
 
+    def test_ten_card_hand_fills_the_ninth_and_tenth_slots(self):
+        hand = [card(i, "A", "spades") for i in range(10)]
+        vector = encode_state(state(hand))
+        self.assertEqual([vector[9 * CARD_FEATURES], vector[10 * CARD_FEATURES]], [1.0, 0.0])
+
     def test_oversized_hand_raises(self):
-        hand = [card(i, "A", "spades") for i in range(9)]
+        hand = [card(i, "A", "spades") for i in range(17)]
         with self.assertRaises(ValueError):
             encode_state(state(hand))
 
@@ -108,7 +113,7 @@ class EncodeCandidateTests(unittest.TestCase):
     def test_selection_mask_aligns_with_hand_slots(self):
         s = state([card(7, "9", "hearts"), card(8, "9", "spades"), card(9, "2", "clubs")])
         vector = encode_candidate(play_candidate([9]), s)
-        self.assertEqual(vector[2:10], [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+        self.assertEqual(vector[2:18], [0.0, 0.0, 1.0] + [0.0] * 13)
 
     def test_discard_candidates_carry_no_score_features(self):
         s = state([card(1, "9", "hearts")])

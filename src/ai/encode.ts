@@ -9,9 +9,9 @@ import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandOption, HandOptionNote } from "./getHandOptions";
 import type { ModelHandCard, ModelState } from "./modelState";
 
-export const ENCODING_VERSION = 1;
+export const ENCODING_VERSION = 2;
 
-export const HAND_SLOTS = 8;
+export const HAND_SLOTS = 16;
 const RANKS: ReadonlyArray<Rank> = [
   "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A",
 ];

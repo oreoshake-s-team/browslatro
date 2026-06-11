@@ -6,9 +6,9 @@ Mirrors the TypeScript `ModelState` / `HandOption` JSON shapes produced by
 on any change.
 """
 
-ENCODING_VERSION = 1
+ENCODING_VERSION = 2
 
-HAND_SLOTS = 8
+HAND_SLOTS = 16
 RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 SUITS = ["spades", "hearts", "diamonds", "clubs"]
 ENHANCEMENTS = ["bonus", "mult", "wild", "glass", "steel", "stone", "gold", "lucky"]
