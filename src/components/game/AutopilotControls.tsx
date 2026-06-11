@@ -100,6 +100,10 @@ export default function AutopilotControls({
       role="group"
       aria-label={t("advisor.autopilot")}
     >
+      <p className="autopilot-title">
+        <span aria-hidden="true">💡 </span>
+        {t("advisor.suggestTitle")}
+      </p>
       {proposal !== null ? (
         <p className="autopilot-proposal" role="status">
           {describeProposal(t, proposal)}

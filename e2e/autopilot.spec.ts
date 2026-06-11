@@ -22,7 +22,7 @@ test("autopilot proposes a move and plays it after approval", async ({
   const handsBefore = await hands.textContent();
   const discardsBefore = await discards.textContent();
 
-  const toggle = page.getByRole("button", { name: /Autopilot/ });
+  const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
 
@@ -53,10 +53,10 @@ test("autopilot stops without executing the proposed move", async ({
   const handsBefore = await hands.textContent();
   const discardsBefore = await discards.textContent();
 
-  const toggle = page.getByRole("button", { name: /Autopilot/ });
+  const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
 
-  const stop = page.getByRole("button", { name: /Stop autopilot/ });
+  const stop = page.getByRole("button", { name: /Stop suggesting/ });
   await expect(stop).toBeVisible({ timeout: 30_000 });
   await stop.click();
 
@@ -67,7 +67,7 @@ test("autopilot stops without executing the proposed move", async ({
 
 test("autopilot can be switched off", async ({ page }) => {
   await startRound(page);
-  const toggle = page.getByRole("button", { name: /Autopilot/ });
+  const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
