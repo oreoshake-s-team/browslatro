@@ -1,10 +1,10 @@
 import type { Stake } from "../../items/stakes";
-import { getStakeSpec } from "../../items/stakes";
+import { getStakeSpec } from "../../items/stakes.js";
 import {
   INTEREST_CAP,
   INTEREST_RATE_PER,
   REMAINING_HAND_BONUS,
-} from "../../scoring/payout";
+} from "../../scoring/payout.js";
 import type { ModelState } from "../modelState";
 
 export interface WikiEntry {
