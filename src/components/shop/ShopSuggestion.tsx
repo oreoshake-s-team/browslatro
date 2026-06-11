@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   buildShopAdvicePlan,
@@ -31,6 +32,7 @@ export interface ShopSuggestionProps {
   readonly onApplyReroll: () => void;
   readonly onNext: () => void;
   readonly suggestionDeps?: SuggestionDeps;
+  readonly triggerContainer?: HTMLElement | null;
 }
 
 export default function ShopSuggestion(
@@ -76,19 +78,25 @@ export default function ShopSuggestion(
     reset();
   }
 
+  const trigger = (
+    <button
+      type="button"
+      className="btn shop-suggest-button"
+      data-testid="shop-suggest"
+      disabled={props.disabled || state.phase === "loading"}
+      aria-label={t("advisor.suggestShopButton")}
+      onClick={() => void suggest()}
+    >
+      <span aria-hidden="true">💡 </span>
+      {t("advisor.suggestShopButton")}
+    </button>
+  );
+
   return (
     <div className="shop-suggestion">
-      <button
-        type="button"
-        className="btn shop-suggest-button"
-        data-testid="shop-suggest"
-        disabled={props.disabled || state.phase === "loading"}
-        aria-label={t("advisor.suggestShopButton")}
-        onClick={() => void suggest()}
-      >
-        <span aria-hidden="true">💡 </span>
-        {t("advisor.suggestShopButton")}
-      </button>
+      {props.triggerContainer
+        ? createPortal(trigger, props.triggerContainer)
+        : trigger}
       <SuggestionAdvice
         state={state}
         onApply={apply}

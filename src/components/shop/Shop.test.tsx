@@ -1026,3 +1026,41 @@ describe("Shop card-label i18n", () => {
     );
   });
 });
+
+describe("Shop — suggest trigger placement", () => {
+  beforeEach(async () => {
+    const { default: i18n } = await import("../../i18n");
+    await i18n.changeLanguage("en");
+  });
+
+  test("the suggest button renders inside the Next Round action row", async () => {
+    renderShop();
+    const suggest = await screen.findByTestId("shop-suggest");
+    expect(suggest.closest(".shop-actions")).not.toBeNull();
+  });
+
+  test("the suggest button comes before the Next Round button in the row", async () => {
+    const { container } = renderShop();
+    const suggest = await screen.findByTestId("shop-suggest");
+    const next = container.querySelector(".shop-next");
+    expect(
+      next !== null &&
+        Boolean(
+          suggest.compareDocumentPosition(next) &
+            Node.DOCUMENT_POSITION_FOLLOWING,
+        ),
+    ).toBe(true);
+  });
+
+  test("the suggestion panel host stays outside the action row", async () => {
+    const { container } = renderShop();
+    await screen.findByTestId("shop-suggest");
+    const panelHost = container.querySelector(".shop-suggestion");
+    expect(panelHost?.closest(".shop-actions")).toBeNull();
+  });
+
+  test("negative: the suggest button is disabled while the shop is locked", async () => {
+    renderShop({ disabled: true });
+    expect(await screen.findByTestId("shop-suggest")).toBeDisabled();
+  });
+});

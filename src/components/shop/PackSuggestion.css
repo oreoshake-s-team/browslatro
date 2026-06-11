@@ -5,6 +5,6 @@
   width: 100%;
 }
 
-.pack-suggest-button {
+.pack-suggestion > .pack-suggest-button {
   align-self: flex-start;
 }
