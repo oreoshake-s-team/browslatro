@@ -1,5 +1,12 @@
+import { STEEL_MULT_FACTOR } from "../cards/heldInHand";
 import type { Card, Rank, Suit } from "../cards/types";
-import type { HandLabel } from "../scoring/handEvaluator";
+import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
+import {
+  getCardChips,
+  getCardMultDelta,
+  getCardMultTimes,
+  getScoringCards,
+} from "../scoring/scoring";
 import {
   MAX_PLAYED_CARDS,
   simulatePlay,
@@ -52,9 +59,102 @@ function* combinations(
   }
 }
 
+function fastScore(
+  input: SimulatePlayInput,
+  playedCards: ReadonlyArray<Card>,
+  heldSteelWeight: number,
+): { readonly label: HandLabel; readonly score: number } {
+  const label = detectHandLabel(playedCards);
+  const entry = input.handStats[label];
+  let chips = entry.chips;
+  let multDelta = 0;
+  let multTimes = 1;
+  for (const card of getScoringCards(playedCards, label)) {
+    const weight = card.seal === "red" ? 2 : 1;
+    chips += weight * getCardChips(card);
+    multDelta += weight * getCardMultDelta(card);
+    const times = getCardMultTimes(card);
+    multTimes *= weight === 2 ? times * times : times;
+  }
+  const steelMult = STEEL_MULT_FACTOR ** heldSteelWeight;
+  return {
+    label,
+    score: Math.floor(
+      chips * ((entry.multiplier + multDelta) * multTimes * steelMult),
+    ),
+  };
+}
+
+function fastBestPlayPerLabel(
+  input: SimulatePlayInput,
+): Map<HandLabel, Omit<PlayOption, "notes">> {
+  const hand = input.dealt.hand;
+  const handSize = hand.length;
+  const maxSize = Math.min(MAX_PLAYED_CARDS, handSize);
+  const steelWeights = hand.map((c) =>
+    c.enhancement === "steel" ? 1 + (c.seal === "red" ? 1 : 0) : 0,
+  );
+  const totalSteelWeight = steelWeights.reduce((sum, w) => sum + w, 0);
+  const winners = new Map<
+    HandLabel,
+    { cardIds: ReadonlyArray<number>; score: number }
+  >();
+  const indices = [0, 0, 0, 0, 0];
+  const subsetCards: Card[] = [];
+  for (let size = 1; size <= maxSize; size += 1) {
+    for (let i = 0; i < size; i += 1) indices[i] = i;
+    subsetCards.length = size;
+    while (true) {
+      let steelInSubset = 0;
+      for (let i = 0; i < size; i += 1) {
+        subsetCards[i] = hand[indices[i]];
+        steelInSubset += steelWeights[indices[i]];
+      }
+      const { label, score } = fastScore(
+        input,
+        subsetCards,
+        totalSteelWeight - steelInSubset,
+      );
+      const current = winners.get(label);
+      if (current === undefined || score > current.score) {
+        winners.set(label, {
+          cardIds: subsetCards.map((c) => c.id),
+          score,
+        });
+      }
+      let pivot = size - 1;
+      while (pivot >= 0 && indices[pivot] === handSize - size + pivot) {
+        pivot -= 1;
+      }
+      if (pivot < 0) break;
+      indices[pivot] += 1;
+      for (let i = pivot + 1; i < size; i += 1) {
+        indices[i] = indices[i - 1] + 1;
+      }
+    }
+  }
+  const best = new Map<HandLabel, Omit<PlayOption, "notes">>();
+  for (const [label, winner] of winners) {
+    const result = simulatePlay(input, winner.cardIds);
+    if (!result.legal) continue;
+    best.set(label, {
+      action: "play",
+      cardIds: winner.cardIds,
+      handLabel: result.handLabel,
+      score: result.score,
+      chips: result.chips,
+      mult: result.mult,
+    });
+  }
+  return best;
+}
+
 function bestPlayPerLabel(
   input: SimulatePlayInput,
 ): Map<HandLabel, Omit<PlayOption, "notes">> {
+  if (input.jokers.length === 0 && input.blind !== 3) {
+    return fastBestPlayPerLabel(input);
+  }
   const handIds = input.dealt.hand.map((c) => c.id);
   const maxSize = Math.min(MAX_PLAYED_CARDS, handIds.length);
   const best = new Map<HandLabel, Omit<PlayOption, "notes">>();
