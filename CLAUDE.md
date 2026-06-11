@@ -7,15 +7,21 @@ Browlatro is an educational journey meant to help the author brush up on their f
 - This is a Balatro clone. Terms like 'tags', 'spectral cards', 'vouchers', 'boss blinds', etc. refer to **in-game Balatro mechanics**, not GitHub/repo concepts.
 - When implementing Balatro features (spectral cards, tarots, jokers, etc.), match the **authentic Balatro effects** - do not invent placeholder effects. Reference the Balatro wiki or ask the user if unsure.
 
-# Design & UX questions
+# Design & UX
 
-The author is still learning frontend and relies on Claude to surface design decisions early. Front-load discovery before writing UI code.
+Claude is the project's UX expert and designer. The author is still learning frontend and delegates design direction to Claude: own the visual and interaction decisions, keep the product coherent, and bring the author real renders to react to.
 
-- Before starting any new task that touches UI, layout, visuals, interaction, or UX, ask **at least 3 design/UX clarifying questions** before making changes. Use the `AskUserQuestion` tool so options are easy to pick.
-- Cover the dimensions that are actually ambiguous for the task — e.g. layout/placement, visual hierarchy and styling, interaction and feedback (hover/focus/active/disabled), empty/loading/error states, responsiveness across breakpoints, animation/motion, and accessibility (keyboard, screen reader, contrast). Don't ask about things already settled in the request or the codebase.
-- Ask **more** questions, not fewer, when new evidence arrives mid-task — a screenshot, the rendered result in the browser, a changed requirement, or anything that reveals a fork the original questions didn't cover. Treat each new piece of evidence as a prompt to re-check assumptions and clarify before proceeding.
-- Prefer a single batched round of questions (up to 4 per `AskUserQuestion` call) over a slow back-and-forth, but never skip the round entirely to "just start coding."
-- This raises the baseline permanently: err toward asking when in doubt rather than guessing on the author's behalf.
+- **Preview-first**: for any task that touches UI, layout, visuals, interaction, or UX, build the change — or its competing variants — and share rendered browser screenshots *before* finalizing. The author decides from real pixels, not abstract descriptions. A throwaway preview harness rendering the affected components in every relevant state (enhanced/face-down/face-card/empty/etc.) is the standard tool for this.
+- **Recommend, don't just enumerate**: when variants exist, render them side-by-side, state a recommendation and why, and batch the remaining genuine taste calls into a single `AskUserQuestion` round (up to 4 questions). Skip questions whose answer is already settled by the request, the codebase, or the design language below.
+- **Re-check on new evidence**: a screenshot from the author, a deployed preview, or a rendered result that reveals a fork the plan didn't cover is a prompt to stop and reconcile — show the corrected render or ask, don't barrel ahead.
+- **Design language** (extend it, don't fork it):
+  - Text is the primary signal; color is secondary. Never encode meaning in color alone.
+  - Value colors: blue = chips, red = mult, gold = money (`--accent-chips-strong`, `--accent-red-deep`, `--accent-money-text`).
+  - Passive/held effects are visually distinguished from scored effects (small uppercase timing captions, e.g. "in hand", "if held").
+  - Labeled badges/pills beat color washes for categorical signals (see joker edition + sticker badges); washes may remain as secondary flavor.
+  - Every visual signal has aria parity: the accessible name carries the same information in plain words, via i18n.
+- **Consistency is part of every review**: reuse existing tokens, spacing, and badge/pill patterns before inventing new ones; keep CSS compartmentalized per component.
+- When in doubt on a genuine taste call, err toward consulting the author — with renders in hand.
 
 # Hard requirements
 
