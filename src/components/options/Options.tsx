@@ -24,7 +24,7 @@ import {
   readStoredPlayerKey,
   storePlayerKey,
 } from "../../ai/advisor/playerKey";
-import { GET_KEY_URL } from "../game/AdvisorPanel";
+import { GET_KEY_URL } from "../game/PlayerKeyForm";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
 
