@@ -256,7 +256,7 @@ export default function Game({
             <button
               className="btn btn--primary submit-hand-button"
               onClick={onSubmitHand}
-              disabled={isScoring || !canSubmit}
+              disabled={isScoring || selectedIds.size === 0 || !canSubmit}
               aria-label={
                 selectedHand
                   ? t("a11y.submitHandWith", {
