@@ -420,11 +420,12 @@ describe("Options — coach API key", () => {
     );
   });
 
-  test("removing the key clears storage", async () => {
+  test("removing the key clears storage after confirming", async () => {
     window.localStorage.setItem(
       "browslatro:advisor-player-key",
       "sk-ant-api03-abcdefgh1234",
     );
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
@@ -432,5 +433,31 @@ describe("Options — coach API key", () => {
     expect(
       window.localStorage.getItem("browslatro:advisor-player-key"),
     ).toBeNull();
+    confirmSpy.mockRestore();
+  });
+
+  test("cancelling the remove confirm keeps the stored key", async () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-api03-abcdefgh1234",
+    );
+    const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+    expect(
+      window.localStorage.getItem("browslatro:advisor-player-key"),
+    ).toBe("sk-ant-api03-abcdefgh1234");
+    confirmSpy.mockRestore();
+  });
+
+  test("the key field shows the storage and proxy disclosure", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByTestId("key-storage-disclosure")).toHaveTextContent(
+      "forwards it to Anthropic",
+    );
   });
 });

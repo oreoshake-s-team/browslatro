@@ -1,0 +1,29 @@
+.key-storage-disclosure {
+  border: 1px solid #ffd8a8;
+  background: #fff4e6;
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+
+.key-storage-disclosure-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #495057;
+}
+
+.key-storage-disclosure-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #5c5c5c;
+}
+
+.key-storage-disclosure-list li + li {
+  margin-top: 0.25rem;
+}
+
+.key-storage-disclosure-caution {
+  color: #c92a2a;
+}
