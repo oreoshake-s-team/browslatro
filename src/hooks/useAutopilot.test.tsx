@@ -99,6 +99,55 @@ describe("useAutopilot", () => {
     expect(result.current.pendingProposal?.action).toBe("play");
   });
 
+  test("a proposal sets the hand preview for the suggested cards", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    expect(useGame.getState().selectedHand).not.toBeNull();
+  });
+
+  test("a manual card toggle while a proposal is pending dismisses it", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    const proposal = result.current.pendingProposal;
+    const toggled = pairHand().find((c) => c.id === proposal?.cardIds[0]);
+    if (!toggled) throw new Error("expected a proposed card to toggle");
+    act(() => useGame.getState().toggleCard(toggled));
+    await waitFor(() => expect(result.current.pendingProposal).toBeNull());
+  });
+
+  test("a manual card toggle while a proposal is pending calls onStop", async () => {
+    const onStop = vi.fn();
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+      onStop,
+    });
+    await waitForProposal(result);
+    const proposal = result.current.pendingProposal;
+    const toggled = pairHand().find((c) => c.id === proposal?.cardIds[0]);
+    if (!toggled) throw new Error("expected a proposed card to toggle");
+    act(() => useGame.getState().toggleCard(toggled));
+    await waitFor(() => expect(onStop).toHaveBeenCalledTimes(1));
+  });
+
+  test("a manual toggle without a pending proposal does not call onStop (negative)", () => {
+    const onStop = vi.fn();
+    renderAutopilot({
+      enabled: false,
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+      onStop,
+    });
+    act(() => useGame.getState().toggleCard(pairHand()[0]));
+    expect(onStop).not.toHaveBeenCalled();
+  });
+
   test("selects the proposed cards while awaiting approval", async () => {
     const { result } = renderAutopilot({
       executor: makeExecutor(),

@@ -145,6 +145,7 @@ export interface ActionsState {
   destroySelectedPreviewCards: () => void;
   rankUpSelectedPreviewCards: () => void;
   applyAuraSelectedPreviewCards: () => void;
+  selectCards: (ids: Iterable<number>) => void;
   toggleCard: (card: Card) => void;
   adjustVoucherSlots: (delta: number) => void;
   rerollBoss: () => boolean;
@@ -1051,28 +1052,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     });
     s.setPackPreviewSelectedIds(new Set());
   },
-  toggleCard: (card) => {
+  selectCards: (ids) => {
     const s = get();
-    if (s.discardingIds.size > 0) return;
-    const scoringInProgress =
-      s.scoringCards.length > 0 && s.scoringIndex < s.scoringCards.length;
-    if (scoringInProgress) return;
-    let nextIds: Set<number>;
-    if (s.selectedIds.has(card.id)) {
-      nextIds = new Set(s.selectedIds);
-      nextIds.delete(card.id);
-    } else {
-      if (s.selectedIds.size >= MAX_SELECTED) return;
-      nextIds = new Set(s.selectedIds);
-      nextIds.add(card.id);
-    }
+    const nextIds = new Set(ids);
     s.setSelectedIds(nextIds);
-    if (nextIds.size === 0) {
-      s.setSelectedHand(null);
-      s.setChips(0);
-      s.setMultiplier(0);
-      return;
-    }
     const nextSelected = s.dealt.hand.filter((c) => nextIds.has(c.id));
     const visibleSelected = nextSelected.filter((c) => c.faceDown !== true);
     if (visibleSelected.length === 0) {
@@ -1097,6 +1080,23 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setSelectedHand(hand);
     s.setChips(entry.chips);
     s.setMultiplier(entry.multiplier);
+  },
+  toggleCard: (card) => {
+    const s = get();
+    if (s.discardingIds.size > 0) return;
+    const scoringInProgress =
+      s.scoringCards.length > 0 && s.scoringIndex < s.scoringCards.length;
+    if (scoringInProgress) return;
+    let nextIds: Set<number>;
+    if (s.selectedIds.has(card.id)) {
+      nextIds = new Set(s.selectedIds);
+      nextIds.delete(card.id);
+    } else {
+      if (s.selectedIds.size >= MAX_SELECTED) return;
+      nextIds = new Set(s.selectedIds);
+      nextIds.add(card.id);
+    }
+    s.selectCards(nextIds);
   },
   adjustVoucherSlots: (delta) => {
     const s = get();

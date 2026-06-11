@@ -1443,6 +1443,99 @@ describe("game actions slice", () => {
     expect(useGame.getState().chips).toBe(Math.floor(baseChips * 0.5));
   });
 
+  test("selectCards selects the given card ids", () => {
+    const hand = createDeck().slice(0, 5);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.selectCards([hand[0].id, hand[1].id]);
+    expect(useGame.getState().selectedIds).toEqual(
+      new Set([hand[0].id, hand[1].id]),
+    );
+  });
+
+  test("selectCards sets the detected hand preview", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.selectCards(hand.map((c) => c.id));
+    expect(useGame.getState().selectedHand?.label).toBe("Pair");
+  });
+
+  test("selectCards sets chips and multiplier from the hand stats", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    const entry = game.handStats["Pair"];
+    game.selectCards(hand.map((c) => c.id));
+    const state = useGame.getState();
+    expect([state.chips, state.multiplier]).toEqual([
+      entry.chips,
+      entry.multiplier,
+    ]);
+  });
+
+  test("selectCards clears the hand preview when the selection is empty (negative)", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.selectCards(hand.map((c) => c.id));
+    game.selectCards([]);
+    expect(useGame.getState().selectedHand).toBeNull();
+  });
+
+  test("selectCards clears chips and multiplier when the selection is empty (negative)", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.selectCards(hand.map((c) => c.id));
+    game.selectCards([]);
+    const state = useGame.getState();
+    expect([state.chips, state.multiplier]).toEqual([0, 0]);
+  });
+
+  test("selectCards clears the hand preview when every selected card is face down (negative)", () => {
+    const hand = createDeck()
+      .slice(0, 2)
+      .map((c) => ({ ...c, faceDown: true }));
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.selectCards(hand.map((c) => c.id));
+    expect(useGame.getState().selectedHand).toBeNull();
+  });
+
+  test("selectCards halves chips on blind 3 against The Flint", () => {
+    const hand = createDeck()
+      .filter((c) => c.rank === "5")
+      .slice(0, 2);
+    const game = useGame.getState();
+    game.setDealt({ hand, remaining: [] });
+    game.setBlind(3);
+    const flint = {
+      id: "the-flint",
+      name: "The Flint",
+      description: "Base Chips and Mult for played hands are halved.",
+      scoreMultiplier: 2,
+      anteMin: 2,
+      effect: {
+        kind: "hand-stats-multiplier" as const,
+        chipsFactor: 0.5,
+        multFactor: 0.5,
+      },
+    };
+    game.setCurrentBoss(flint);
+    const baseChips = game.handStats["Pair"].chips;
+    game.selectCards(hand.map((c) => c.id));
+    expect(useGame.getState().chips).toBe(Math.floor(baseChips * 0.5));
+  });
+
   test("adjustVoucherSlots grows the row by appending fresh picks", () => {
     const [first] = VOUCHER_CATALOG;
     const game = useGame.getState();
