@@ -1,5 +1,5 @@
 import "./PackOpenModal.css";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
@@ -30,6 +30,8 @@ import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { announce } from "../system/LiveAnnouncer";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { cardName } from "../../i18n/strings";
+
+const PackSuggestion = lazy(() => import("./PackSuggestion"));
 
 function applyManualOrder(
   hand: ReadonlyArray<CardType>,
@@ -475,6 +477,17 @@ export default function PackOpenModal({
             </div>
           </>
         )}
+        <Suspense fallback={null}>
+          <PackSuggestion
+            pack={pack}
+            picksRemaining={picksRemaining}
+            pickedIndices={pickedIndices ?? new Set()}
+            jokerSlotsFull={jokerSlotsFull}
+            consumableSlotsFull={consumableSlotsFull}
+            onPick={onPick}
+            onClose={onClose}
+          />
+        </Suspense>
         <button
           type="button"
           className="btn btn--secondary pack-open-close"

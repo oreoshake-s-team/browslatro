@@ -1,0 +1,10 @@
+.pack-suggestion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+}
+
+.pack-suggest-button {
+  align-self: flex-start;
+}
