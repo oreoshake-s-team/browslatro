@@ -43,6 +43,7 @@ function makeDeps(extra?: Partial<AdvisorDeps>): AdvisorDeps {
 
 beforeEach(() => {
   window.localStorage.clear();
+  window.localStorage.setItem("browslatro:advisor-verbosity", "full");
   useGame.getState().resetGame();
   useGame.getState().setDealt({ hand: pairHand(), remaining: [] });
 });
@@ -52,6 +53,24 @@ describe("AdvisorPanel", () => {
     render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps()} />);
     const dialog = await screen.findByRole("dialog");
     expect(dialog).toHaveAttribute("aria-modal", "true");
+  });
+
+  test("defaults to just the move without a stored preference", async () => {
+    window.localStorage.removeItem("browslatro:advisor-verbosity");
+    render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps()} />);
+    expect(await screen.findByTestId("advisor-move-only")).toBeInTheDocument();
+  });
+
+  test("never calls the API without a stored preference", async () => {
+    window.localStorage.removeItem("browslatro:advisor-verbosity");
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    render(
+      <AdvisorPanel onClose={vi.fn()} deps={makeDeps({ fetchAdviceFn })} />,
+    );
+    await screen.findByTestId("advisor-move-only");
+    expect(fetchAdviceFn).not.toHaveBeenCalled();
   });
 
   test("shows the thinking status while the request is in flight", () => {
