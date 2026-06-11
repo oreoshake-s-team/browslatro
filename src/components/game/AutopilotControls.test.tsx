@@ -58,7 +58,6 @@ function renderControls(
     explanation?: MoveExplanationState;
     onApprove?: () => void;
     onStop?: () => void;
-    onExplain?: () => void;
     onAskAi?: () => void;
     onRetry?: () => void;
   } = {},
@@ -70,7 +69,6 @@ function renderControls(
       explanation={overrides.explanation ?? { phase: "idle" }}
       onApprove={overrides.onApprove ?? vi.fn()}
       onStop={overrides.onStop ?? vi.fn()}
-      onExplain={overrides.onExplain ?? vi.fn()}
       onAskAi={overrides.onAskAi ?? vi.fn()}
       onRetry={overrides.onRetry ?? vi.fn()}
     />,
@@ -135,27 +133,6 @@ describe("AutopilotControls", () => {
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
-  test("the explain button invokes onExplain", async () => {
-    const onExplain = vi.fn();
-    const user = userEvent.setup();
-    renderControls({ onExplain });
-    await user.click(screen.getByRole("button", { name: /Explain this move/ }));
-    expect(onExplain).toHaveBeenCalledTimes(1);
-  });
-
-  test("does not offer explain while the model is downloading", () => {
-    renderControls({ proposal: null, modelProgress: { loaded: 0, total: null } });
-    expect(
-      screen.queryByRole("button", { name: /Explain this move/ }),
-    ).not.toBeInTheDocument();
-  });
-
-  test("disables the explain button while the explanation loads", () => {
-    renderControls({ explanation: { phase: "loading" } });
-    expect(
-      screen.getByRole("button", { name: /Explain this move/ }),
-    ).toBeDisabled();
-  });
 
   test("renders the explanation text when ready", () => {
     renderControls({ explanation: readyExplanation() });

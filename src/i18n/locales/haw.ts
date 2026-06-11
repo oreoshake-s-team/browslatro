@@ -221,7 +221,6 @@ export const haw: LocaleMessages = {
     discardCandidate: "Kiola {{cards}}",
     autopilotApprove: "ʻApono i ka neʻe",
     autopilotStop: "Hoʻōki i ke kūkākūkā",
-    autopilotExplain: "Wehewehe i kēia neʻe",
     autopilotAskAi: "Nīnau i ka AI",
     autopilotExplainError: "ʻAʻole hiki i ke kumu aʻo ke wehewehe i kēia neʻe i kēia manawa.",
     autopilotPlayProposal: "Pāʻani {{hand}}",

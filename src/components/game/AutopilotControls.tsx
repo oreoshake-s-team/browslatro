@@ -17,7 +17,6 @@ export interface AutopilotControlsProps {
   readonly explanation: MoveExplanationState;
   readonly onApprove: () => void;
   readonly onStop: () => void;
-  readonly onExplain: () => void;
   readonly onAskAi: () => void;
   readonly onRetry: () => void;
 }
@@ -144,7 +143,6 @@ export default function AutopilotControls({
   explanation,
   onApprove,
   onStop,
-  onExplain,
   onAskAi,
   onRetry,
 }: AutopilotControlsProps): React.JSX.Element {
@@ -184,16 +182,6 @@ export default function AutopilotControls({
           <button className="btn autopilot-approve-button" onClick={onApprove}>
             <span aria-hidden="true">✅ </span>
             {t("advisor.autopilotApprove")}
-          </button>
-        )}
-        {proposal !== null && (
-          <button
-            className="btn autopilot-explain-button"
-            onClick={onExplain}
-            disabled={explanation.phase === "loading"}
-          >
-            <span aria-hidden="true">🎓 </span>
-            {t("advisor.autopilotExplain")}
           </button>
         )}
         {proposal !== null && (

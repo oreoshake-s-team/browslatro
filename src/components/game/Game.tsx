@@ -40,7 +40,6 @@ interface GameProps {
   autopilotExplanation?: MoveExplanationState;
   onApproveAutopilot?: () => void;
   onStopAutopilot?: () => void;
-  onExplainAutopilot?: () => void;
   onAskAiAutopilot?: () => void;
   onRetryAutopilot?: () => void;
   isScoring?: boolean;
@@ -63,7 +62,6 @@ export default function Game({
   autopilotExplanation = { phase: "idle" },
   onApproveAutopilot,
   onStopAutopilot,
-  onExplainAutopilot,
   onAskAiAutopilot,
   onRetryAutopilot,
   isScoring = false,
@@ -316,9 +314,8 @@ export default function Game({
                 explanation={autopilotExplanation}
                 onApprove={onApproveAutopilot}
                 onStop={onStopAutopilot}
-                onExplain={onExplainAutopilot ?? (() => {})}
                 onAskAi={onAskAiAutopilot ?? (() => {})}
-                onRetry={onRetryAutopilot ?? onExplainAutopilot ?? (() => {})}
+                onRetry={onRetryAutopilot ?? (() => {})}
               />
             )}
         </div>

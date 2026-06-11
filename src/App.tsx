@@ -205,7 +205,6 @@ function App() {
   const autopilotExplanation = useMoveExplanation();
   const autopilotProposal = autopilot.pendingProposal;
   const skipExplanationResetRef = useRef(false);
-  const lastAdviceRef = useRef<() => void>(() => {});
   useEffect(() => {
     if (skipExplanationResetRef.current) {
       skipExplanationResetRef.current = false;
@@ -213,11 +212,6 @@ function App() {
     }
     autopilotExplanation.reset();
   }, [autopilotProposal, autopilotExplanation.reset]);
-  const explainCurrentMove = (): void => {
-    if (autopilot.pendingProposal !== null) {
-      void autopilotExplanation.explain(autopilot.pendingProposal);
-    }
-  };
   const askAiForMove = (): void => {
     void autopilotExplanation.suggestMove().then((picked) => {
       if (picked !== null) {
@@ -469,15 +463,8 @@ function App() {
         autopilotExplanation={autopilotExplanation.state}
         onApproveAutopilot={autopilot.approve}
         onStopAutopilot={autopilot.stop}
-        onExplainAutopilot={() => {
-          lastAdviceRef.current = explainCurrentMove;
-          explainCurrentMove();
-        }}
-        onAskAiAutopilot={() => {
-          lastAdviceRef.current = askAiForMove;
-          askAiForMove();
-        }}
-        onRetryAutopilot={() => lastAdviceRef.current()}
+        onAskAiAutopilot={askAiForMove}
+        onRetryAutopilot={askAiForMove}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

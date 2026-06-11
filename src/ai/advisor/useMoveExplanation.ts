@@ -27,7 +27,6 @@ export interface MoveExplanationDeps {
 
 export interface UseMoveExplanationResult {
   readonly state: MoveExplanationState;
-  readonly explain: (proposal: HandOption) => Promise<void>;
   readonly suggestMove: () => Promise<HandOption | null>;
   readonly reset: () => void;
 }
@@ -41,28 +40,6 @@ export function useMoveExplanation(
 ): UseMoveExplanationResult {
   const [state, setState] = useState<MoveExplanationState>({ phase: "idle" });
   const requestIdRef = useRef(0);
-
-  const explain = useCallback(
-    async (proposal: HandOption): Promise<void> => {
-      const { fetchAdviceFn, getState } = deps ?? defaultDeps();
-      const requestId = requestIdRef.current + 1;
-      requestIdRef.current = requestId;
-      setState({ phase: "loading" });
-      const modelState = toModelState(toModelStateInput(getState()));
-      const result = await fetchAdviceFn(modelState, [proposal]);
-      if (requestIdRef.current !== requestId) return;
-      if (!result.ok) {
-        setState({
-          phase: "error",
-          code: result.code,
-          retryAfterSeconds: result.retryAfterSeconds,
-        });
-        return;
-      }
-      setState({ phase: "ready", candidates: [proposal], advice: result.advice });
-    },
-    [deps],
-  );
 
   const suggestMove = useCallback(async (): Promise<HandOption | null> => {
     const { fetchAdviceFn, getState } = deps ?? defaultDeps();
@@ -92,5 +69,5 @@ export function useMoveExplanation(
     setState({ phase: "idle" });
   }, []);
 
-  return { state, explain, suggestMove, reset };
+  return { state, suggestMove, reset };
 }

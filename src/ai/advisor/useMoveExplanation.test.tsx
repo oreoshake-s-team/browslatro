@@ -66,60 +66,31 @@ describe("useMoveExplanation", () => {
     expect(result.current.state).toEqual({ phase: "idle" });
   });
 
-  test("sends the proposal as the only candidate", async () => {
-    const fetchAdviceFn = vi
-      .fn()
-      .mockResolvedValue({ ok: true, advice: adviceFixture() });
-    const { result } = renderHook(() =>
-      useMoveExplanation(makeDeps({ fetchAdviceFn })),
-    );
-    await act(() => result.current.explain(proposal()));
-    expect(fetchAdviceFn.mock.calls[0][1]).toEqual([proposal()]);
-  });
-
-  test("reaches ready with the explanation on success", async () => {
+  test("suggestMove reaches ready carrying the transferable concept", async () => {
+    dealPairHand();
     const { result } = renderHook(() => useMoveExplanation(makeDeps()));
-    await act(() => result.current.explain(proposal()));
-    const state = result.current.state;
-    expect(state.phase === "ready" && state.advice.explanation).toBe(
-      "Play the pair to bank guaranteed chips.",
-    );
-  });
-
-  test("reaches ready carrying the transferable concept", async () => {
-    const { result } = renderHook(() => useMoveExplanation(makeDeps()));
-    await act(() => result.current.explain(proposal()));
+    await act(() => result.current.suggestMove());
     const state = result.current.state;
     expect(state.phase === "ready" && state.advice.concept).toBe(
       "Lock in value before chasing draws.",
     );
   });
 
-  test("reaches error with the client code on failure", async () => {
-    const fetchAdviceFn = vi
-      .fn()
-      .mockResolvedValue({ ok: false, code: "model_timeout" });
-    const { result } = renderHook(() =>
-      useMoveExplanation(makeDeps({ fetchAdviceFn })),
-    );
-    await act(() => result.current.explain(proposal()));
-    const state = result.current.state;
-    expect(state.phase === "error" && state.code).toBe("model_timeout");
-  });
-
-  test("carries the retry-after seconds on a rate-limited error", async () => {
+  test("suggestMove carries the retry-after seconds on a rate-limited error", async () => {
+    dealPairHand();
     const fetchAdviceFn = vi
       .fn()
       .mockResolvedValue({ ok: false, code: "rate_limited", retryAfterSeconds: 90 });
     const { result } = renderHook(() =>
       useMoveExplanation(makeDeps({ fetchAdviceFn })),
     );
-    await act(() => result.current.explain(proposal()));
+    await act(() => result.current.suggestMove());
     const state = result.current.state;
     expect(state.phase === "error" && state.retryAfterSeconds).toBe(90);
   });
 
   test("shows loading while the request is in flight", async () => {
+    dealPairHand();
     let release: (value: { ok: true; advice: Advice }) => void = () => {};
     const fetchAdviceFn = vi.fn().mockReturnValue(
       new Promise((resolve) => {
@@ -129,9 +100,9 @@ describe("useMoveExplanation", () => {
     const { result } = renderHook(() =>
       useMoveExplanation(makeDeps({ fetchAdviceFn })),
     );
-    let pending: Promise<void> = Promise.resolve();
+    let pending: Promise<HandOption | null> = Promise.resolve(null);
     act(() => {
-      pending = result.current.explain(proposal());
+      pending = result.current.suggestMove();
     });
     expect(result.current.state).toEqual({ phase: "loading" });
     await act(async () => {
@@ -141,13 +112,15 @@ describe("useMoveExplanation", () => {
   });
 
   test("reset returns to idle", async () => {
+    dealPairHand();
     const { result } = renderHook(() => useMoveExplanation(makeDeps()));
-    await act(() => result.current.explain(proposal()));
+    await act(() => result.current.suggestMove());
     act(() => result.current.reset());
     expect(result.current.state).toEqual({ phase: "idle" });
   });
 
   test("reset ignores a stale in-flight result", async () => {
+    dealPairHand();
     let release: (value: { ok: true; advice: Advice }) => void = () => {};
     const fetchAdviceFn = vi.fn().mockReturnValue(
       new Promise((resolve) => {
@@ -157,9 +130,9 @@ describe("useMoveExplanation", () => {
     const { result } = renderHook(() =>
       useMoveExplanation(makeDeps({ fetchAdviceFn })),
     );
-    let pending: Promise<void> = Promise.resolve();
+    let pending: Promise<HandOption | null> = Promise.resolve(null);
     act(() => {
-      pending = result.current.explain(proposal());
+      pending = result.current.suggestMove();
     });
     act(() => result.current.reset());
     await act(async () => {
