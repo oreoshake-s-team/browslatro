@@ -187,7 +187,7 @@ describe("Card", () => {
   test("appends the enhancement to the accessible label when gold", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold)");
+    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold, +$3)");
   });
 
   test("does not append an enhancement suffix to a vanilla card's accessible label", () => {
@@ -244,14 +244,60 @@ describe("Card", () => {
   });
 
   test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
-    { enhancement: "steel", accessibleName: "A of Hearts (Steel)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
-    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
-    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
+    { enhancement: "steel", accessibleName: "A of Hearts (Steel, ×1.5 Mult)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
+    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus, +30 chips)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
+    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult, +4 Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
     { enhancement: "wild", accessibleName: "K of Hearts (Wild)", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
     { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
   ])("appends the $enhancement suffix to the accessible label", ({ accessibleName, card }) => {
     render(<Card card={card} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(accessibleName);
+  });
+
+  test("renders the enhancement value in the center slot of an enhanced number card", () => {
+    const bonus: CardType = { id: 61, rank: "5", suit: "spades", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.getByTestId("card-center-value-61")).toHaveTextContent("+30");
+  });
+
+  test("keeps the corner suit pip on a card with a center value", () => {
+    const bonus: CardType = { id: 62, rank: "5", suit: "spades", enhancement: "bonus" };
+    const { container } = render(<Card card={bonus} />);
+    expect(container.querySelector(".card-corner-top .card-suit")).toHaveTextContent("\u2660");
+  });
+
+  test("does not render a center value on a non-enhanced card", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.queryByTestId("card-center-value-1")).not.toBeInTheDocument();
+  });
+
+  test("keeps the center suit pip on a non-enhanced card", () => {
+    const { container } = render(<Card card={aceOfSpades} />);
+    expect(container.querySelector(".card-center")).toHaveTextContent("\u2660");
+  });
+
+  test("hides the center value on a face-down enhanced card", () => {
+    const bonus: CardType = {
+      id: 63,
+      rank: "5",
+      suit: "spades",
+      enhancement: "bonus",
+      faceDown: true,
+    };
+    render(<Card card={bonus} />);
+    expect(screen.queryByTestId("card-center-value-63")).not.toBeInTheDocument();
+  });
+
+  test("keeps the center decoration on an enhanced face card", () => {
+    const gold: CardType = { id: 64, rank: "K", suit: "hearts", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.queryByTestId("card-center-value-64")).not.toBeInTheDocument();
+  });
+
+  test("keeps the center suit pip on a wild card with no display value", () => {
+    const wild: CardType = { id: 65, rank: "3", suit: "hearts", enhancement: "wild" };
+    const { container } = render(<Card card={wild} />);
+    expect(container.querySelector(".card-center")).toHaveTextContent("\u2665");
   });
 
   test("applies the stone enhancement class when the card is stone", () => {
@@ -319,7 +365,7 @@ describe("Card", () => {
     };
     render(<Card card={sealed} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(
-      "K of Diamonds (Gold), Red Seal",
+      "K of Diamonds (Gold, +$3), Red Seal",
     );
   });
 });

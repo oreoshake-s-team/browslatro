@@ -1,9 +1,14 @@
 import "./Card.css";
+import "./CardCenterValue.css";
 import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";
 import { tSuitName } from "../../i18n/strings";
+import {
+  enhancementDisplayValue,
+  type EnhancementValueColor,
+} from "../../cards/enhancementDisplay";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 import { useGame } from "../../store/game";
@@ -43,6 +48,12 @@ const ENHANCEMENT_LABEL_KEY = {
   gold: "cardLabels.enhancementGold",
   lucky: "cardLabels.enhancementLucky",
 } as const satisfies Record<Enhancement, string>;
+
+const ENHANCEMENT_VALUE_LABEL_KEY = {
+  chips: "a11y.enhancementValueChips",
+  mult: "a11y.enhancementValueMult",
+  money: "a11y.enhancementValueMoney",
+} as const satisfies Record<EnhancementValueColor, string>;
 
 const SEAL_LABEL_KEY = {
   gold: "cardLabels.sealGold",
@@ -142,14 +153,26 @@ export default function Card({
     ? `card-edition-${card.edition}`
     : "";
   const debuffedClass = debuffed ? "card-debuffed" : "";
+  const displayValue = card.enhancement
+    ? enhancementDisplayValue(card.enhancement)
+    : null;
   const baseName = isStone
     ? t("a11y.stoneCard")
     : card.enhancement
-      ? t("a11y.cardNameEnhanced", {
-          rank: card.rank,
-          suit: tSuitName(t, card.suit),
-          enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
-        })
+      ? displayValue
+        ? t("a11y.cardNameEnhancedValue", {
+            rank: card.rank,
+            suit: tSuitName(t, card.suit),
+            enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
+            value: t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
+              value: displayValue.text,
+            }),
+          })
+        : t("a11y.cardNameEnhanced", {
+            rank: card.rank,
+            suit: tSuitName(t, card.suit),
+            enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
+          })
       : t("a11y.cardName", { rank: card.rank, suit: tSuitName(t, card.suit) });
   const withSeal = card.seal
     ? t("a11y.cardWithDetail", {
@@ -201,6 +224,14 @@ export default function Card({
               <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
               <span className="card-face-monogram">{card.rank}</span>
               <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
+            </span>
+          ) : displayValue ? (
+            <span
+              className={`card-center-value card-center-value-${displayValue.color}`}
+              aria-hidden="true"
+              data-testid={`card-center-value-${card.id}`}
+            >
+              {displayValue.text}
             </span>
           ) : (
             <span className="card-center" aria-hidden="true">
