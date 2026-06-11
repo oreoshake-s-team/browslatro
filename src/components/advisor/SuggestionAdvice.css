@@ -1,0 +1,63 @@
+.suggestion-advice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid var(--accent-chips-mid);
+  border-radius: 12px;
+  background-color: color-mix(in srgb, var(--accent-chips) 12%, transparent);
+}
+
+.suggestion-advice p {
+  margin: 0;
+}
+
+.suggestion-advice-status {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.suggestion-section {
+  border-left: 3px solid var(--border-strong);
+  padding-left: 0.7rem;
+}
+
+.suggestion-section--recommendation {
+  border-left-color: var(--accent-success);
+}
+
+.suggestion-section--concept {
+  border-left-color: var(--edition-foil);
+}
+
+.suggestion-section p {
+  margin: 0 0 0.25rem;
+}
+
+.suggestion-section p:last-child {
+  margin-bottom: 0;
+}
+
+.suggestion-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.suggestion-move {
+  font-weight: 700;
+  color: var(--edition-foil-tint);
+}
+
+.suggestion-concept {
+  font-style: italic;
+  color: var(--accent-chips-text);
+}
+
+.suggestion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
