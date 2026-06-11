@@ -54,6 +54,7 @@ export function captureRunEvent(
   event: RunEvent,
   deps?: CaptureDeps,
 ): boolean {
+  if (recordingSuppressed) return false;
   try {
     const record = buildRunEventRecord(
       state,
