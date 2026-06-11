@@ -13,9 +13,10 @@ export interface AdviceHandlerDeps {
   ) => Promise<AdviceModelResult>;
 }
 
-export const IP_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
+export const IP_RATE_LIMIT = { limit: 3, windowMs: 3_600_000 };
 export const GLOBAL_RATE_LIMIT = { limit: 100, windowMs: 60_000 };
 export const MAX_BODY_CHARS = 60_000;
+export const PLAYER_KEY_HEADER = "x-advisor-key";
 
 const defaultDeps: AdviceHandlerDeps = {
   ipLimiter: createAdviceRateLimiter(IP_RATE_LIMIT, "ip"),
@@ -53,14 +54,19 @@ export async function handleAdviceRequest(
   if (request.method !== "POST") {
     return json(405, { error: "method_not_allowed" }, { allow: "POST" });
   }
-  const apiKey = deps.getApiKey();
+  const playerKey = request.headers.get(PLAYER_KEY_HEADER)?.trim();
+  const usingPlayerKey = playerKey !== undefined && playerKey !== "";
+  const serverKey = deps.getApiKey();
+  const apiKey = usingPlayerKey ? playerKey : serverKey;
   if (apiKey === undefined || apiKey === "") {
     return json(503, { error: "not_configured" });
   }
-  const perIp = await deps.ipLimiter.check(clientIp(request));
-  if (!perIp.allowed) return rateLimited(perIp.retryAfterSeconds);
-  const global = await deps.globalLimiter.check("global");
-  if (!global.allowed) return rateLimited(global.retryAfterSeconds);
+  if (!usingPlayerKey) {
+    const perIp = await deps.ipLimiter.check(clientIp(request));
+    if (!perIp.allowed) return rateLimited(perIp.retryAfterSeconds);
+    const global = await deps.globalLimiter.check("global");
+    if (!global.allowed) return rateLimited(global.retryAfterSeconds);
+  }
   const raw = await request.text();
   if (raw.length > MAX_BODY_CHARS) {
     return json(413, { error: "payload_too_large" });
@@ -77,6 +83,9 @@ export async function handleAdviceRequest(
   }
   const result = await deps.requestAdvice(parsed, apiKey);
   if (!result.ok) {
+    if (result.code === "invalid_player_key" && !usingPlayerKey) {
+      return json(502, { error: "model_error" });
+    }
     return json(result.status, { error: result.code });
   }
   return json(200, { advice: result.advice });

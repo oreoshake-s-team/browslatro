@@ -12,6 +12,7 @@ export type AdviceClientErrorCode =
   | "advisor_busy"
   | "model_timeout"
   | "model_refusal"
+  | "invalid_player_key"
   | "model_error"
   | "network_error"
   | "timeout"
@@ -34,6 +35,7 @@ const SERVER_CODES: ReadonlySet<AdviceClientErrorCode> = new Set([
   "advisor_busy",
   "model_timeout",
   "model_refusal",
+  "invalid_player_key",
   "model_error",
 ]);
 
