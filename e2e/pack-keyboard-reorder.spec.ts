@@ -36,7 +36,7 @@ async function previewLabels(page: Page): Promise<string[]> {
     .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
 }
 
-test("keyboard-only reorder of pack-preview picks announces the move (issue #910)", async ({
+test("keyboard-only reorder of pack-preview picks announces the move", async ({
   page,
 }) => {
   await setupArcanaPack(page);
@@ -59,7 +59,7 @@ test("keyboard-only reorder of pack-preview picks announces the move (issue #910
   expect((await previewLabels(page)).slice(2)).toEqual(before.slice(2));
 });
 
-test("mouse drag reordering of pack-preview picks still works (issue #910)", async ({
+test("mouse drag reordering of pack-preview picks still works", async ({
   page,
 }) => {
   await setupArcanaPack(page);

@@ -11,7 +11,7 @@ import { useGame } from "./store/game";
 
 setupAppTestEnvironment();
 
-describe("Blue Deck — +1 hand per round (#563)", () => {
+describe("Blue Deck — +1 hand per round", () => {
   withDeck("blue-deck");
 
   test("starting Small Blind with Blue Deck shows 5 hands (base 4 + deck 1)", async () => {

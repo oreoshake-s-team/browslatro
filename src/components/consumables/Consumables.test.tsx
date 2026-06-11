@@ -225,7 +225,7 @@ describe("Consumables", () => {
   });
 });
 
-describe("Empty tray treatment (issue #875)", () => {
+describe("Empty tray treatment", () => {
   test("the tray carries the consumables-tray-empty class when empty", () => {
     renderConsumables();
     expect(screen.getByTestId("consumables-tray")).toHaveClass("consumables-tray-empty");
@@ -237,7 +237,7 @@ describe("Empty tray treatment (issue #875)", () => {
   });
 });
 
-describe("Consumables content overrides (#978)", () => {
+describe("Consumables content overrides", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();

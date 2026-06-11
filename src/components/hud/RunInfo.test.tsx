@@ -413,7 +413,7 @@ describe("RunInfo vouchers panel", () => {
   });
 });
 
-describe("RunInfo dialog focus trap (#907)", () => {
+describe("RunInfo dialog focus trap", () => {
   test("traps Tab inside the dialog and restores focus to the Run info trigger on close", async () => {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);

@@ -13,7 +13,7 @@ function eternal(joker: Joker): Joker {
   return { ...joker, stickers: [{ kind: "eternal" }] };
 }
 
-describe("Ceremonial Dagger (#1039)", () => {
+describe("Ceremonial Dagger", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("ceremonial-dagger");

@@ -6,7 +6,7 @@ import {
   createMatadorJoker,
 } from "../jokers";
 
-describe("Matador (#1033)", () => {
+describe("Matador", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("matador");

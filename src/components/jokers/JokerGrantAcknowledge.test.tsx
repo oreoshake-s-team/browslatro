@@ -33,7 +33,7 @@ describe("JokerGrantAcknowledge", () => {
     expect(onAcknowledge).toHaveBeenCalledTimes(1);
   });
 
-  test("pressing Escape invokes onAcknowledge (#915)", async () => {
+  test("pressing Escape invokes onAcknowledge", async () => {
     const user = userEvent.setup();
     const onAcknowledge = vi.fn();
     render(
@@ -46,7 +46,7 @@ describe("JokerGrantAcknowledge", () => {
     expect(onAcknowledge).toHaveBeenCalledTimes(1);
   });
 
-  test("Escape does nothing while no jokers are pending (negative, #915)", async () => {
+  test("Escape does nothing while no jokers are pending (negative)", async () => {
     const user = userEvent.setup();
     const onAcknowledge = vi.fn();
     render(<JokerGrantAcknowledge jokers={[]} onAcknowledge={onAcknowledge} />);
@@ -55,7 +55,7 @@ describe("JokerGrantAcknowledge", () => {
   });
 });
 
-describe("JokerGrantAcknowledge focus trap (#907)", () => {
+describe("JokerGrantAcknowledge focus trap", () => {
   test("traps Tab on the OK button and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);

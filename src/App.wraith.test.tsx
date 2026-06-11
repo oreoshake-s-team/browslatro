@@ -108,7 +108,7 @@ async function useWraith(
   await user.click(screen.getByTestId("consumable-tile-filled-0"));
 }
 
-describe("Wraith (#359)", () => {
+describe("Wraith", () => {
   test("using Wraith creates a Rare Joker (Baron) in the equipped row", async () => {
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
     try {

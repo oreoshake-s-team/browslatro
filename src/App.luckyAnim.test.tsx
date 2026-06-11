@@ -101,7 +101,7 @@ async function playFirstTwo(): Promise<void> {
   flushScoringSequence();
 }
 
-describe("Lucky proc visual indicator (#368)", () => {
+describe("Lucky proc visual indicator", () => {
   test("shows the lucky-mult-scoring testid on the scored Lucky card when the mult roll hits", async () => {
     enhancementRngConfig.rng = () => 0;
     deckConfig.hand = [
@@ -158,7 +158,7 @@ describe("Lucky proc visual indicator (#368)", () => {
     ).toBeNull();
   });
 
-  test("a Lucky mult proc on a Three of a Kind contributes +20 Mult to the round score (#746)", async () => {
+  test("a Lucky mult proc on a Three of a Kind contributes +20 Mult to the round score", async () => {
     enhancementRngConfig.rng = () => 0;
     deckConfig.hand = [
       makeCard("Q", "diamonds"),
@@ -203,7 +203,7 @@ describe("Lucky proc visual indicator (#368)", () => {
   });
 });
 
-describe("Lucky proc dual-fire on the same scoring event (#751)", () => {
+describe("Lucky proc dual-fire on the same scoring event", () => {
   test("rng forced to 0 fires BOTH the mult proc and the money proc on the same Lucky card", async () => {
     enhancementRngConfig.rng = () => 0;
     deckConfig.hand = [
@@ -278,7 +278,7 @@ describe("Lucky proc dual-fire on the same scoring event (#751)", () => {
   });
 });
 
-describe("Lucky proc with Force Probabilities dev modifier (#751)", () => {
+describe("Lucky proc with Force Probabilities dev modifier", () => {
   test("Force Probabilities makes every Lucky card in a played hand fire both procs", async () => {
     useGame.getState().setForceProbabilities(true);
     deckConfig.hand = [

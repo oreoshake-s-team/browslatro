@@ -76,19 +76,19 @@ describe("steelHeldMultiplier", () => {
     expect(steelHeldMultiplier(hand, new Set([1, 2]))).toBe(1);
   });
 
-  test("retriggers a Red-sealed held Steel for x2.25 (#762)", () => {
+  test("retriggers a Red-sealed held Steel for x2.25", () => {
     const hand = [card(1, "steel", "red")];
     expect(steelHeldMultiplier(hand, new Set())).toBeCloseTo(2.25);
   });
 
-  test("only the Red-sealed Steel retriggers, plain Steel does not (#762)", () => {
+  test("only the Red-sealed Steel retriggers, plain Steel does not", () => {
     const hand = [card(1, "steel", "red"), card(2, "steel")];
     expect(steelHeldMultiplier(hand, new Set())).toBeCloseTo(
       STEEL_MULT_FACTOR ** 3,
     );
   });
 
-  test("a Gold seal on a held Steel does not retrigger (negative, #762)", () => {
+  test("a Gold seal on a held Steel does not retrigger (negative)", () => {
     const hand = [card(1, "steel", "gold")];
     expect(steelHeldMultiplier(hand, new Set())).toBe(STEEL_MULT_FACTOR);
   });
@@ -102,14 +102,14 @@ describe("heldEnhancementIdsWithRedSeal", () => {
     ]);
   });
 
-  test("duplicates a Red-sealed Steel id (#762)", () => {
+  test("duplicates a Red-sealed Steel id", () => {
     const hand = [card(1, "steel", "red")];
     expect(heldEnhancementIdsWithRedSeal(hand, new Set(), "steel")).toEqual([
       1, 1,
     ]);
   });
 
-  test("duplicates a Red-sealed Gold id (#762)", () => {
+  test("duplicates a Red-sealed Gold id", () => {
     const hand = [card(1, "gold", "red")];
     expect(heldEnhancementIdsWithRedSeal(hand, new Set(), "gold")).toEqual([
       1, 1,

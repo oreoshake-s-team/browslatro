@@ -5,7 +5,7 @@ import {
   sealedCardsOnRoundBeginFromJokers,
 } from "../jokers";
 
-describe("Certificate (#988)", () => {
+describe("Certificate", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("certificate");

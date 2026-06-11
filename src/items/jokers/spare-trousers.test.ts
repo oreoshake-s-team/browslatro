@@ -7,7 +7,7 @@ import {
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
 } from "../jokers";
 
-describe("Spare Trousers joker (#804)", () => {
+describe("Spare Trousers joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("spare-trousers");
@@ -90,7 +90,7 @@ describe("Spare Trousers joker (#804)", () => {
     expect(jokers[0].state).toEqual({ kind: "counter", value: 0 });
   });
 
-  test("Full House increments state (contains Two Pair, issue #895)", () => {
+  test("Full House increments state (contains Two Pair)", () => {
     const [updated] = applyHandPlayedToJokerStates(
       [createSpareTrousersJoker()],
       { playedHandLabel: "Full House", playedCardCount: 5, scoredCards: [] },

@@ -19,7 +19,7 @@ describe("RunProgress", () => {
   });
 });
 
-describe("RunProgress money bounce (#270)", () => {
+describe("RunProgress money bounce", () => {
   test("does not apply the bounce class on initial mount", () => {
     render(<RunProgress ante={1} round={1} money={4} />);
     expect(screen.getByTestId("money-value").className).not.toMatch(

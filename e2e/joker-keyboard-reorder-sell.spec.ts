@@ -64,7 +64,7 @@ test.beforeEach(async ({ page }) => {
   await setDeterministic(page);
 });
 
-test("keyboard-only reorder of jokers announces the move (issue #909)", async ({
+test("keyboard-only reorder of jokers announces the move", async ({
   page,
 }) => {
   await startRoundWithJokers(page, ["blueprint", "plus-four-mult"]);
@@ -87,7 +87,7 @@ test("keyboard-only reorder of jokers announces the move (issue #909)", async ({
   );
 });
 
-test("keyboard-only sell of a joker announces the sale (issue #909)", async ({
+test("keyboard-only sell of a joker announces the sale", async ({
   page,
 }) => {
   await startRoundWithJokers(page, ["blueprint", "plus-four-mult"]);
@@ -103,7 +103,7 @@ test("keyboard-only sell of a joker announces the sale (issue #909)", async ({
   );
 });
 
-test("mouse drag reordering of jokers still works (issue #909)", async ({
+test("mouse drag reordering of jokers still works", async ({
   page,
 }) => {
   await startRoundWithJokers(page, ["blueprint", "plus-four-mult"]);
@@ -116,7 +116,7 @@ test("mouse drag reordering of jokers still works (issue #909)", async ({
   ]);
 });
 
-test("shift-click sell of a joker still works (issue #909)", async ({
+test("shift-click sell of a joker still works", async ({
   page,
 }) => {
   await startRoundWithJokers(page, ["blueprint", "plus-four-mult"]);

@@ -34,7 +34,7 @@ function topLevelRuleBody(source: string, selector: string): string {
   throw new Error(`Unterminated rule for ${selector}`);
 }
 
-describe("Sidebar layout — issue #136", () => {
+describe("Sidebar layout", () => {
   test(".sub-info-progress places buttons and stats side by side and stretches them to equal height", () => {
     const body = topLevelRuleBody(sidebarCss, ".sub-info-progress");
     expect(body).toMatch(/flex-direction\s*:\s*row/);
@@ -54,7 +54,7 @@ describe("Sidebar layout — issue #136", () => {
   });
 });
 
-describe("Stat boxes — issue #136 visual treatment", () => {
+describe("Stat boxes visual treatment", () => {
   test(".stat renders as a visually distinct box (background, border, radius)", () => {
     const body = topLevelRuleBody(indexCss, ".stat");
     expect(body).toMatch(/background-color\s*:\s*var\(--surface-raised\)/);
@@ -63,7 +63,7 @@ describe("Stat boxes — issue #136 visual treatment", () => {
   });
 });
 
-describe("Progress rows — issue #136 row composition", () => {
+describe("Progress rows row composition", () => {
   test(".round-progress > .stat splits hands and discards evenly", () => {
     const body = topLevelRuleBody(roundProgressCss, ".round-progress > .stat");
     expect(body).toMatch(/flex\s*:\s*1\s+1\s+0/);
@@ -80,7 +80,7 @@ describe("Progress rows — issue #136 row composition", () => {
   });
 });
 
-describe("Portrait sidebar grid — issue #880", () => {
+describe("Portrait sidebar grid", () => {
   function portraitBlock(source: string): string {
     const idx = source.indexOf("@media (orientation: portrait)");
     if (idx === -1) throw new Error("portrait media query not found");

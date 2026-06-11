@@ -13,7 +13,7 @@ const STRAIGHT_CTX = {
   scoredCards: [],
 };
 
-describe("Runner joker (#825)", () => {
+describe("Runner joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("runner");

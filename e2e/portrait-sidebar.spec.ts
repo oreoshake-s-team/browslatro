@@ -17,7 +17,7 @@ async function startRound(page: Page): Promise<void> {
   await expect(page.locator('[data-testid="hand-cards"] .card').first()).toBeVisible();
 }
 
-test("portrait: blind, round score, and chips×mult stack in one column (issue #880)", async ({
+test("portrait: blind, round score, and chips×mult stack in one column", async ({
   page,
 }) => {
   await startRound(page);
@@ -33,7 +33,7 @@ test("portrait: blind, round score, and chips×mult stack in one column (issue #
   expect(handScore!.y).toBeGreaterThan(roundScore!.y);
 });
 
-test("portrait: Run info and Options are compact and sit above the stacked stats (issue #880)", async ({
+test("portrait: Run info and Options are compact and sit above the stacked stats", async ({
   page,
 }) => {
   await startRound(page);
@@ -56,7 +56,7 @@ test("portrait: Run info and Options are compact and sit above the stacked stats
   expect(Math.abs(options!.width - handsStat!.width)).toBeLessThanOrEqual(2);
 });
 
-test("portrait: the sidebar strip fits the viewport without a horizontal scrollbar (issue #880)", async ({
+test("portrait: the sidebar strip fits the viewport without a horizontal scrollbar", async ({
   page,
 }) => {
   await startRound(page);
@@ -66,7 +66,7 @@ test("portrait: the sidebar strip fits the viewport without a horizontal scrollb
   expect(overflow).toBeLessThanOrEqual(1);
 });
 
-test("negative: landscape keeps the vertical sidebar column (issue #880)", async ({
+test("negative: landscape keeps the vertical sidebar column", async ({
   browser,
 }) => {
   const context = await browser.newContext({

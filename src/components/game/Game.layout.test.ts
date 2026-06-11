@@ -18,7 +18,7 @@ function appRuleBody(): string {
   return match[1];
 }
 
-describe("Game layout — landscape mobile regression (issue #50)", () => {
+describe("Game layout — landscape mobile regression", () => {
   test(".game allows its content to scroll when it overflows the viewport", () => {
     expect(gameRuleBody()).toMatch(/overflow-y\s*:\s*auto/);
   });

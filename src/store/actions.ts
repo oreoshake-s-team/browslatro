@@ -275,7 +275,7 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
 }
 
 // Sigil/Ouija replace converted cards with new-id copies so the conversion
-// persists into future deals (issue #1005): originals are registered as
+// persists into future deals: originals are registered as
 // destroyed, copies as added, and any current selection is remapped onto the
 // new ids (destroyedIds pairs index-for-index with additions).
 function applyHandConversion(s: GameState, converted: ConvertHandResult): void {
@@ -1033,7 +1033,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const ids = s.packPreviewSelectedIds;
     if (ids.size === 0) return;
     // Roll outside the updater and record the edition in the run-level
-    // overlay so it survives future deals (issue #1005).
+    // overlay so it survives future deals.
     const rolled = s.packPreviewHand.map((c) =>
       ids.has(c.id)
         ? { ...c, edition: pickRandomCardEdition(Math.random) }

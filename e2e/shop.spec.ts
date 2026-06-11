@@ -52,7 +52,7 @@ function offerOfKind(page: Page, kind: string) {
   return page.locator(`.shop-offer[data-offer-kind="${kind}"]`).first();
 }
 
-test.describe("Shop purchases (issue #240)", () => {
+test.describe("Shop purchases", () => {
   test("buying the offered joker deducts the price, adds it to the equipped row, flips the button to Sold; then Reroll deducts the base $5", async ({
     page,
   }) => {
@@ -124,7 +124,7 @@ test.describe("Shop purchases (issue #240)", () => {
 
 });
 
-test.describe("Reroll refreshes sold offers (issue #267)", () => {
+test.describe("Reroll refreshes sold offers", () => {
   test("Reroll replaces a sold joker offer with a buyable one", async ({
     page,
   }) => {

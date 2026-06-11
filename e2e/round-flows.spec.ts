@@ -126,7 +126,7 @@ test("post-round shop flow: round-won modal → Continue → shop with 2 items +
   await expect(page.getByRole("heading", { name: "Big Blind" })).toBeVisible();
 });
 
-test("losing 3 games in a row leaves exactly one chips/multiplier span in the sidebar HandScore (issue #118)", async ({
+test("losing 3 games in a row leaves exactly one chips/multiplier span in the sidebar HandScore", async ({
   page,
 }) => {
   await page.goto("/");

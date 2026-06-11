@@ -16,7 +16,7 @@ function ruleBody(selector: string): string {
   return match[2];
 }
 
-describe("button variant system (issue #874)", () => {
+describe("button variant system", () => {
   test.each(["primary", "secondary", "danger", "ghost"])(
     "buttons.css defines the %s variant",
     (variant) => {

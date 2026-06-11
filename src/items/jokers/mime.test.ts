@@ -22,7 +22,7 @@ const heldSteelFive: Card = {
   enhancement: "steel",
 };
 
-describe("Mime (#920)", () => {
+describe("Mime", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("mime");

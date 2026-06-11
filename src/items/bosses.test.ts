@@ -25,7 +25,7 @@ import type { Card, Hand } from "../cards/types";
 import type { HandLabel } from "../scoring/handEvaluator";
 
 describe("createBossCatalog", () => {
-  test("does not include the abilityless generic boss-default entry (#672)", () => {
+  test("does not include the abilityless generic boss-default entry", () => {
     expect(createBossCatalog().some((b) => b.id === "boss-default")).toBe(false);
   });
 
@@ -117,7 +117,7 @@ describe("pickBossForAnte", () => {
   });
 });
 
-describe("Phase 1 boss catalog entries (#245)", () => {
+describe("Phase 1 boss catalog entries", () => {
   test.each([
     ["the-needle", { kind: "start-with-hands", value: 1 }],
     ["the-water", { kind: "start-with-discards", value: 0 }],
@@ -209,7 +209,7 @@ describe("bossMoneyPenaltyPerCard", () => {
   });
 });
 
-describe("Phase 2 debuff catalog entries (#245)", () => {
+describe("Phase 2 debuff catalog entries", () => {
   test.each([
     ["the-club", "clubs"],
     ["the-goad", "spades"],
@@ -295,7 +295,7 @@ describe("debuffedHandIds", () => {
   });
 });
 
-describe("Phase 3 round-state catalog entries (#245)", () => {
+describe("Phase 3 round-state catalog entries", () => {
   test.each([
     ["the-mouth", { kind: "single-hand-type" }, 2],
     ["the-eye", { kind: "no-repeat-hand-type" }, 3],
@@ -450,7 +450,7 @@ describe("bossAdjustHandEntry (The Arm / The Flint)", () => {
   });
 });
 
-describe("Phase 4 face-down catalog entries (#245)", () => {
+describe("Phase 4 face-down catalog entries", () => {
   test.each([
     ["the-house", { kind: "face-down-initial" }, 2],
     ["the-fish", { kind: "face-down-on-refill" }, 2],
@@ -547,7 +547,7 @@ describe("applyBossFaceDown", () => {
   });
 });
 
-describe("Phase 5 boss catalog — The Hook (#810)", () => {
+describe("Phase 5 boss catalog — The Hook", () => {
   test("the-hook has the post-play-random-held-discard effect with count 2", () => {
     const hook = createBossCatalog().find((b) => b.id === "the-hook");
     expect(hook?.effect).toEqual({
@@ -604,7 +604,7 @@ function makeHandPlayCounts(
   };
 }
 
-describe("Phase 5 boss catalog — The Serpent (#811)", () => {
+describe("Phase 5 boss catalog — The Serpent", () => {
   test("the-serpent has the fixed-refill-count effect with value 3", () => {
     const serpent = createBossCatalog().find((b) => b.id === "the-serpent");
     expect(serpent?.effect).toEqual({ kind: "fixed-refill-count", value: 3 });
@@ -660,7 +660,7 @@ describe("bossRefillCountOverride (The Serpent)", () => {
   });
 });
 
-describe("Phase 5 boss catalog — The Ox (#812)", () => {
+describe("Phase 5 boss catalog — The Ox", () => {
   test("the-ox has the zero-wallet-on-most-played-hand effect", () => {
     const ox = createBossCatalog().find((b) => b.id === "the-ox");
     expect(ox?.effect).toEqual({ kind: "zero-wallet-on-most-played-hand" });
@@ -727,7 +727,7 @@ describe("bossShouldZeroWallet (The Ox)", () => {
   });
 });
 
-describe("pickBossForAnte — Phase 5 ante gating (#811, #812)", () => {
+describe("pickBossForAnte — Phase 5 ante gating", () => {
   test("returns The Serpent for ante 5 when picker selects it", () => {
     const catalog = createBossCatalog();
     const serpent = catalog.find((b) => b.id === "the-serpent")!;

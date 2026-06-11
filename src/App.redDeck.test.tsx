@@ -11,7 +11,7 @@ import { useGame } from "./store/game";
 
 setupAppTestEnvironment();
 
-describe("Red Deck — +1 discard per round (#562)", () => {
+describe("Red Deck — +1 discard per round", () => {
   withDeck("red-deck");
 
   test("starting Small Blind with Red Deck shows 4 discards (base 3 + deck 1)", async () => {

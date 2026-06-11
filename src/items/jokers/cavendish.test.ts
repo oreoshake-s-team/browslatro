@@ -10,7 +10,7 @@ import {
 import type { Joker } from "../jokers";
 import { useGame } from "../../store/game";
 
-describe("Cavendish (#988)", () => {
+describe("Cavendish", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("cavendish");
@@ -48,7 +48,7 @@ describe("Cavendish (#988)", () => {
   });
 });
 
-describe("Cavendish spawn gating (#988)", () => {
+describe("Cavendish spawn gating", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });

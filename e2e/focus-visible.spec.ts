@@ -42,14 +42,14 @@ async function openShop(page: Page): Promise<void> {
 }
 
 // The boss-blind override only renders in production builds when the
-// browslatro:devTools seam is set (issue #915).
+// browslatro:devTools seam is set.
 async function enableDevTools(page: Page): Promise<void> {
   await page.addInitScript(() => {
     window.localStorage.setItem("browslatro:devTools", "1");
   });
 }
 
-test("boss-blind override keeps a visible focus ring on keyboard focus (issue #913)", async ({
+test("boss-blind override keeps a visible focus ring on keyboard focus", async ({
   page,
 }) => {
   await enableDevTools(page);
@@ -61,7 +61,7 @@ test("boss-blind override keeps a visible focus ring on keyboard focus (issue #9
   expect(outline.color).toBe(FOCUS_RING);
 });
 
-test("shop voucher override keeps a visible focus ring on keyboard focus (issue #913)", async ({
+test("shop voucher override keeps a visible focus ring on keyboard focus", async ({
   page,
 }) => {
   await openShop(page);
@@ -72,7 +72,7 @@ test("shop voucher override keeps a visible focus ring on keyboard focus (issue 
   expect(outline.color).toBe("rgb(95, 61, 196)");
 });
 
-test("hand-sort buttons show the focus ring on keyboard focus (issue #913)", async ({
+test("hand-sort buttons show the focus ring on keyboard focus", async ({
   page,
 }) => {
   await openBlindSelect(page);
@@ -85,7 +85,7 @@ test("hand-sort buttons show the focus ring on keyboard focus (issue #913)", asy
   expect(outline.color).toBe(FOCUS_RING);
 });
 
-test("pack preview sort buttons show the focus ring on keyboard focus (issue #913)", async ({
+test("pack preview sort buttons show the focus ring on keyboard focus", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -112,7 +112,7 @@ async function startRound(page: Page): Promise<void> {
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 }
 
-test("scoring trace scroll region shows the focus ring on keyboard focus (issue #974)", async ({
+test("scoring trace scroll region shows the focus ring on keyboard focus", async ({
   page,
 }) => {
   await startRound(page);
@@ -123,7 +123,7 @@ test("scoring trace scroll region shows the focus ring on keyboard focus (issue 
   expect(outline.color).toBe(FOCUS_RING);
 });
 
-test("scoring trace modal body shows the focus ring on keyboard focus (issue #974)", async ({
+test("scoring trace modal body shows the focus ring on keyboard focus", async ({
   page,
 }) => {
   await startRound(page);
@@ -136,7 +136,7 @@ test("scoring trace modal body shows the focus ring on keyboard focus (issue #97
   expect(outline.color).toBe(FOCUS_RING);
 });
 
-test("negative: clicking the scoring trace scroll region does not draw the focus outline (issue #974)", async ({
+test("negative: clicking the scoring trace scroll region does not draw the focus outline", async ({
   page,
 }) => {
   await startRound(page);
@@ -146,7 +146,7 @@ test("negative: clicking the scoring trace scroll region does not draw the focus
   expect(outline.style).toBe("none");
 });
 
-test("negative: hovering the boss-blind override does not draw the focus outline (issue #913)", async ({
+test("negative: hovering the boss-blind override does not draw the focus outline", async ({
   page,
 }) => {
   await enableDevTools(page);

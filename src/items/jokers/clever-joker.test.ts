@@ -13,7 +13,7 @@ describe("applyHandLevelJokers — Clever Joker", () => {
     expect(result.additiveChips).toBe(CLEVER_JOKER_CHIPS);
   });
 
-  test("adds CLEVER_JOKER_CHIPS when a Full House is played (issue #895)", () => {
+  test("adds CLEVER_JOKER_CHIPS when a Full House is played", () => {
     const result = applyHandLevelJokers([createCleverJoker()], {
       playedHandLabel: "Full House",
     });

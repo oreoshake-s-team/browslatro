@@ -9,7 +9,7 @@ import type { Card } from "../../cards/types";
 
 const kingOfHearts: Card = { id: 1, rank: "K", suit: "hearts" };
 
-describe("Ancient Joker (#1007)", () => {
+describe("Ancient Joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("ancient-joker");

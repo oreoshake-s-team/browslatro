@@ -17,7 +17,7 @@ async function startRound(page: Page): Promise<void> {
   ).toBeVisible();
 }
 
-test("selecting a hand card lifts it out of the row (issue #875)", async ({
+test("selecting a hand card lifts it out of the row", async ({
   page,
 }) => {
   await startRound(page);
@@ -34,7 +34,7 @@ test("selecting a hand card lifts it out of the row (issue #875)", async ({
     .toBeGreaterThan(8);
 });
 
-test("deselecting a card returns it to the row (issue #875)", async ({
+test("deselecting a card returns it to the row", async ({
   page,
 }) => {
   await startRound(page);
@@ -53,7 +53,7 @@ test("deselecting a card returns it to the row (issue #875)", async ({
     .toBeLessThan(2);
 });
 
-test("empty joker and consumable trays render with the muted empty treatment (issue #875)", async ({
+test("empty joker and consumable trays render with the muted empty treatment", async ({
   page,
 }) => {
   await startRound(page);

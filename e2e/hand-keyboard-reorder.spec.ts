@@ -23,7 +23,7 @@ async function handLabels(page: Page): Promise<string[]> {
     .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
 }
 
-test("keyboard-only reorder of two adjacent cards announces the move (issue #908)", async ({
+test("keyboard-only reorder of two adjacent cards announces the move", async ({
   page,
 }) => {
   await startRound(page);
@@ -42,7 +42,7 @@ test("keyboard-only reorder of two adjacent cards announces the move (issue #908
   expect((await handLabels(page)).slice(2)).toEqual(before.slice(2));
 });
 
-test("mouse drag reordering still works after the keyboard controls (issue #908)", async ({
+test("mouse drag reordering still works after the keyboard controls", async ({
   page,
 }) => {
   await startRound(page);

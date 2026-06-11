@@ -6,7 +6,7 @@ import { useGame } from "./store/game";
 
 setupAppTestEnvironment();
 
-describe("bootShop seam boots the app into the shop (#940)", () => {
+describe("bootShop seam boots the app into the shop", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     _resetBootShopForTests();

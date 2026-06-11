@@ -76,7 +76,7 @@ describe("JokerStickerBadges", () => {
     expect(badge?.textContent).toBe("E");
   });
 
-  test("perishable badge renders the countdown text (e.g. 'P 3/5') (closes #579)", () => {
+  test("perishable badge renders the countdown text (e.g. 'P 3/5')", () => {
     const j = withStickers([{ kind: "perishable", roundsHeld: 2 }]);
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
@@ -85,7 +85,7 @@ describe("JokerStickerBadges", () => {
     expect(badge?.textContent).toBe(`P 3/${PERISHABLE_LIFE}`);
   });
 
-  test("perishable badge at expiry renders 'P 0/5' (closes #579)", () => {
+  test("perishable badge at expiry renders 'P 0/5'", () => {
     const j = withStickers([
       { kind: "perishable", roundsHeld: PERISHABLE_LIFE },
     ]);
@@ -96,7 +96,7 @@ describe("JokerStickerBadges", () => {
     expect(badge?.textContent).toBe(`P 0/${PERISHABLE_LIFE}`);
   });
 
-  test("perishable badge gets the debuffed class once it has expired (closes #579)", () => {
+  test("perishable badge gets the debuffed class once it has expired", () => {
     const j = withStickers([
       { kind: "perishable", roundsHeld: PERISHABLE_LIFE },
     ]);

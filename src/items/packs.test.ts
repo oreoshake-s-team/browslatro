@@ -119,7 +119,7 @@ describe("rollPackOptions for Celestial", () => {
     expect(opts).toHaveLength(small.length);
   });
 
-  test("guaranteedPlanetId always appears in a Celestial pack roll (#281)", () => {
+  test("guaranteedPlanetId always appears in a Celestial pack roll", () => {
     const opts = rollPackOptions({
       pool: "celestial",
       variant: "normal",
@@ -134,7 +134,7 @@ describe("rollPackOptions for Celestial", () => {
     expect(ids).toContain("jupiter");
   });
 
-  test("guaranteedPlanetId does not duplicate the guaranteed planet (#281)", () => {
+  test("guaranteedPlanetId does not duplicate the guaranteed planet", () => {
     const opts = rollPackOptions({
       pool: "celestial",
       variant: "jumbo",
@@ -624,7 +624,7 @@ describe("Standard pack", () => {
     expect(ids.size).toBe(50);
   });
 
-  test("force100 override always assigns both an enhancement and a seal (#354)", () => {
+  test("force100 override always assigns both an enhancement and a seal", () => {
     chanceOverrideConfig.force100 = true;
     try {
       const rng = seededRng(72);
@@ -690,7 +690,7 @@ describe("rollPackForPool", () => {
   });
 });
 
-describe("readForcedPackPools (dev flag, #856)", () => {
+describe("readForcedPackPools (dev flag)", () => {
   function stubForcedPools(value: string | null) {
     vi.stubGlobal("window", {
       localStorage: {
@@ -720,7 +720,7 @@ describe("readForcedPackPools (dev flag, #856)", () => {
   });
 });
 
-describe("forced pack pool maps to its pack definition (#939)", () => {
+describe("forced pack pool maps to its pack definition", () => {
   function stubForcedPool(value: string) {
     vi.stubGlobal("window", {
       localStorage: {
@@ -758,7 +758,7 @@ describe("forced pack pool maps to its pack definition (#939)", () => {
   });
 });
 
-describe("Spectral pool excludes hidden spectrals (closes #826)", () => {
+describe("Spectral pool excludes hidden spectrals", () => {
   function countSpectralIdsAcrossRolls(seed: number, rolls: number): Map<string, number> {
     const counts = new Map<string, number>();
     const rng = seededRng(seed);
@@ -836,7 +836,7 @@ describe("Spectral pool excludes hidden spectrals (closes #826)", () => {
   });
 });
 
-describe("Hidden-spectral replacement in packs (closes #826)", () => {
+describe("Hidden-spectral replacement in packs", () => {
   test("Arcana slot is replaced by Black Hole when the slot roll lands under 0.3%", () => {
     const rng = sequenceRng([0.001, 0.5, 0.5]);
     const opts = rollPackOptions({

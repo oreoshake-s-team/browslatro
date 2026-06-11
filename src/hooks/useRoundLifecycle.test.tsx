@@ -79,7 +79,7 @@ function seedStaleRestoredRun(): void {
   s.setPendingRunSelect(true);
 }
 
-describe("useRoundLifecycle.startNewGame board reset (closes #851)", () => {
+describe("useRoundLifecycle.startNewGame board reset", () => {
   beforeEach(() => {
     seedResidue();
   });
@@ -185,7 +185,7 @@ describe("useRoundLifecycle.startNewGame board reset (closes #851)", () => {
   });
 });
 
-describe("useRoundLifecycle.confirmRunSelection fully resets a restored stale run (closes #870)", () => {
+describe("useRoundLifecycle.confirmRunSelection fully resets a restored stale run", () => {
   beforeEach(() => {
     seedStaleRestoredRun();
   });
@@ -241,7 +241,7 @@ describe("useRoundLifecycle.confirmRunSelection fully resets a restored stale ru
   });
 });
 
-describe("useRoundLifecycle.startNewGame after an endless run (closes #870)", () => {
+describe("useRoundLifecycle.startNewGame after an endless run", () => {
   test("turns endless mode off", () => {
     useGame.getState().setEndlessMode(true);
     runStartNewGame();
@@ -249,7 +249,7 @@ describe("useRoundLifecycle.startNewGame after an endless run (closes #870)", ()
   });
 });
 
-describe("useRoundLifecycle.startNewGame preserves the run selection (#851)", () => {
+describe("useRoundLifecycle.startNewGame preserves the run selection", () => {
   test("does NOT reset the chosen deck back to the default", () => {
     useGame.getState().setSelectedDeck("blue-deck");
     runStartNewGame();
@@ -263,7 +263,7 @@ describe("useRoundLifecycle.startNewGame preserves the run selection (#851)", ()
   });
 });
 
-describe("startNewRound — Marble Joker stone card (#980)", () => {
+describe("startNewRound — Marble Joker stone card", () => {
   test("a new round adds a stone card to addedCards", () => {
     useGame.getState().resetGame();
     useGame.getState().setJokers([createMarbleJoker()]);
@@ -295,7 +295,7 @@ describe("startNewRound — Marble Joker stone card (#980)", () => {
   });
 });
 
-describe("startNewRound — Certificate sealed card (#988)", () => {
+describe("startNewRound — Certificate sealed card", () => {
   test("a new round puts a sealed card in the opening hand", () => {
     useGame.getState().resetGame();
     useGame.getState().setJokers([createCertificateJoker()]);
@@ -329,7 +329,7 @@ describe("startNewRound — Certificate sealed card (#988)", () => {
   });
 });
 
-describe("startNewRound — Chicot disables the boss (#1000)", () => {
+describe("startNewRound — Chicot disables the boss", () => {
   test("a boss round starts with the boss effect neutralized", () => {
     useGame.getState().resetGame();
     const boss = createBossCatalog().find((b) => b.effect.kind !== "none");
@@ -367,7 +367,7 @@ describe("startNewRound — Chicot disables the boss (#1000)", () => {
   });
 });
 
-describe("startNewRound — blind-select creations (#1025)", () => {
+describe("startNewRound — blind-select creations", () => {
   function startRound(): void {
     const { result } = renderHook(() =>
       useRoundLifecycle({

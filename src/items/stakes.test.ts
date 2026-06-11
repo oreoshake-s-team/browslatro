@@ -141,7 +141,7 @@ describe("StakeSpec.implemented", () => {
   });
 });
 
-describe("Black Stake — black-eternal-roll modifier (#555)", () => {
+describe("Black Stake — black-eternal-roll modifier", () => {
   test("Black Stake carries the black-eternal-roll modifier", () => {
     expect(hasStakeModifier("black", "black-eternal-roll")).toBe(true);
   });
@@ -162,7 +162,7 @@ describe("Black Stake — black-eternal-roll modifier (#555)", () => {
   });
 });
 
-describe("Blue Stake — blue-discard-delta modifier (#556)", () => {
+describe("Blue Stake — blue-discard-delta modifier", () => {
   test("Blue Stake carries the blue-discard-delta modifier", () => {
     expect(hasStakeModifier("blue", "blue-discard-delta")).toBe(true);
   });
@@ -183,7 +183,7 @@ describe("Blue Stake — blue-discard-delta modifier (#556)", () => {
   });
 });
 
-describe("Purple Stake — purple-ante-scaling modifier (#557)", () => {
+describe("Purple Stake — purple-ante-scaling modifier", () => {
   test("Purple Stake carries the purple-ante-scaling modifier", () => {
     expect(hasStakeModifier("purple", "purple-ante-scaling")).toBe(true);
   });
@@ -197,7 +197,7 @@ describe("Purple Stake — purple-ante-scaling modifier (#557)", () => {
   });
 });
 
-describe("Orange Stake — orange-perishable-roll modifier (#558)", () => {
+describe("Orange Stake — orange-perishable-roll modifier", () => {
   test("Orange Stake carries the orange-perishable-roll modifier", () => {
     expect(hasStakeModifier("orange", "orange-perishable-roll")).toBe(true);
   });
@@ -222,7 +222,7 @@ describe("Orange Stake — orange-perishable-roll modifier (#558)", () => {
   });
 });
 
-describe("Gold Stake — gold-rental-roll modifier (#559)", () => {
+describe("Gold Stake — gold-rental-roll modifier", () => {
   test("Gold Stake carries the gold-rental-roll modifier", () => {
     expect(hasStakeModifier("gold", "gold-rental-roll")).toBe(true);
   });

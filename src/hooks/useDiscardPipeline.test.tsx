@@ -29,7 +29,7 @@ beforeEach(() => {
   hookRngConfig.reset();
 });
 
-describe("useDiscardPipeline — negative regression (closes #803)", () => {
+describe("useDiscardPipeline — negative regression", () => {
   beforeEach(() => {
     useGame.getState().setJokers([]);
     useGame.getState().setRemainingDiscards(3);
@@ -68,7 +68,7 @@ describe("useDiscardPipeline — negative regression (closes #803)", () => {
   });
 });
 
-describe("runDiscard (#809) — non-counting discard helper", () => {
+describe("runDiscard — non-counting discard helper", () => {
   test("removes the requested ids from dealt.hand", () => {
     useGame.getState().setDealt(buildDeal([1, 2, 3, 4, 5]));
     const { result } = renderHook(() => useDiscardPipeline());
@@ -125,7 +125,7 @@ describe("runDiscard (#809) — non-counting discard helper", () => {
   });
 });
 
-describe("discardSelected — manual flow (regression for #809)", () => {
+describe("discardSelected — manual flow (regression for)", () => {
   test("decrements remainingDiscards by 1", () => {
     useGame.getState().setDealt(buildDeal([1, 2, 3]));
     useGame.getState().setSelectedIds(new Set([1]));
@@ -172,7 +172,7 @@ describe("discardSelected — manual flow (regression for #809)", () => {
   });
 });
 
-describe("The Hook — post-play random held discard (#810)", () => {
+describe("The Hook — post-play random held discard", () => {
   function setupHookRound(handIds: ReadonlyArray<number>, remainingIds: ReadonlyArray<number> = []) {
     const hook = createBossCatalog().find((b) => b.id === "the-hook")!;
     useGame.getState().setCurrentBoss(hook);
@@ -306,7 +306,7 @@ describe("The Hook — post-play random held discard (#810)", () => {
   });
 });
 
-describe("The Serpent — fixed refill count (#811)", () => {
+describe("The Serpent — fixed refill count", () => {
   function setupSerpentRound(handIds: ReadonlyArray<number>, remainingIds: ReadonlyArray<number>) {
     const serpent = createBossCatalog().find((b) => b.id === "the-serpent")!;
     useGame.getState().setCurrentBoss(serpent);
@@ -403,7 +403,7 @@ describe("The Serpent — fixed refill count (#811)", () => {
   });
 });
 
-describe("useDiscardPipeline — Green Joker counter shrinks on discard (#868)", () => {
+describe("useDiscardPipeline — Green Joker counter shrinks on discard", () => {
   beforeEach(() => {
     useGame.getState().setRemainingDiscards(3);
   });
@@ -437,7 +437,7 @@ describe("useDiscardPipeline — Green Joker counter shrinks on discard (#868)",
   });
 });
 
-describe("newly drawn ids (#929)", () => {
+describe("newly drawn ids", () => {
   beforeEach(() => {
     useGame.getState().setJokers([]);
     useGame.getState().setRemainingDiscards(3);

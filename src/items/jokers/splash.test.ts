@@ -51,7 +51,7 @@ describe("allCardsScoreFromJokers", () => {
   });
 });
 
-describe("getScoringCards — allCardsScore option (#721)", () => {
+describe("getScoringCards — allCardsScore option", () => {
   test("Pair scoring without allCardsScore returns only the pair (regression)", () => {
     const pair1 = card("5", "spades");
     const pair2 = card("5", "hearts");

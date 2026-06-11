@@ -87,7 +87,7 @@ describe("jokerSellValue", () => {
   });
 });
 
-describe("Initial jokers (issue #223)", () => {
+describe("Initial jokers", () => {
   test("initialJokersConfig.factory returns an empty array by default", () => {
     expect(initialJokersConfig.factory()).toEqual([]);
   });
@@ -137,12 +137,12 @@ describe("applyHandLevelJokers — fired ids", () => {
     expect(result.firedJokerIds).toEqual(["plus-four-mult"]);
   });
 
-  test("reports the Joker Stencil as fired at the hand-level pass (issue #225)", () => {
+  test("reports the Joker Stencil as fired at the hand-level pass", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
     expect(result.firedJokerIds).toContain("joker-stencil");
   });
 
-  test("multiplies xMult by empty-slot count at the hand-level pass when Stencil is equipped (issue #225)", () => {
+  test("multiplies xMult by empty-slot count at the hand-level pass when Stencil is equipped", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
     expect(result.xMult).toBe(MAX_JOKERS - 1);
   });
@@ -154,14 +154,14 @@ describe("applyHandLevelJokers — fired ids", () => {
 });
 
 describe("applyHandLevelJokers — per-joker steps", () => {
-  test("+4 Mult contributes a single additive-mult step (issue #192)", () => {
+  test("+4 Mult contributes a single additive-mult step", () => {
     const result = applyHandLevelJokers([createPlusFourMultJoker()]);
     expect(result.steps).toEqual([
       { jokerId: "plus-four-mult", jokerName: "+4 Mult", additiveMult: 4 },
     ]);
   });
 
-  test("Devious Joker emits an additive-chips step when a Straight is played (issue #192)", () => {
+  test("Devious Joker emits an additive-chips step when a Straight is played", () => {
     const result = applyHandLevelJokers([createDeviousJoker()], {
       playedHandLabel: "Straight",
     });
@@ -195,7 +195,7 @@ describe("applyHandLevelJokers — per-joker steps", () => {
     ]);
   });
 
-  test("Joker Stencil emits an xMultFactor step at the hand-level pass (issue #225)", () => {
+  test("Joker Stencil emits an xMultFactor step at the hand-level pass", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
     expect(result.steps).toEqual([
       {
@@ -253,7 +253,7 @@ describe("applyPerCardJokers", () => {
     expect(result.firedJokerIds).toEqual([]);
   });
 
-  test("force100 override fires Business Card on a face card even when the roll would miss (#354)", () => {
+  test("force100 override fires Business Card on a face card even when the roll would miss", () => {
     chanceOverrideConfig.force100 = true;
     try {
       const result = applyPerCardJokers(
@@ -267,7 +267,7 @@ describe("applyPerCardJokers", () => {
     }
   });
 
-  test("force100 override does NOT fire Business Card on a non-face card (#354)", () => {
+  test("force100 override does NOT fire Business Card on a non-face card", () => {
     chanceOverrideConfig.force100 = true;
     try {
       const result = applyPerCardJokers(
@@ -426,7 +426,7 @@ describe("applyJokersToScoring — hand-type Mult threading", () => {
   });
 });
 
-describe("Stencil composition with prior mult (issue #131)", () => {
+describe("Stencil composition with prior mult", () => {
   test("hand-level additive mult is added before Stencil multiplies", () => {
     const result = applyJokersToScoring(
       [createPlusFourMultJoker(), createJokerStencilJoker()],
@@ -732,7 +732,7 @@ describe("applyEndOfRoundJokers", () => {
     expect(result.steps[0]?.jokerId).toBe("golden-joker");
   });
 
-  test("subtracts RENTAL_END_OF_ROUND_DRAIN per rental joker (#580)", () => {
+  test("subtracts RENTAL_END_OF_ROUND_DRAIN per rental joker", () => {
     const rental = {
       ...createBusinessCardJoker(),
       stickers: [{ kind: "rental" as const }],
@@ -741,7 +741,7 @@ describe("applyEndOfRoundJokers", () => {
     expect(result.moneyEarned).toBe(-RENTAL_END_OF_ROUND_DRAIN);
   });
 
-  test("emits a negative step for each rental joker (#580)", () => {
+  test("emits a negative step for each rental joker", () => {
     const rental = {
       ...createBusinessCardJoker(),
       stickers: [{ kind: "rental" as const }],
@@ -758,7 +758,7 @@ describe("applyEndOfRoundJokers", () => {
     expect(result.steps.some((s) => s.jokerId.endsWith("-rental"))).toBe(false);
   });
 
-  test("net total combines earnings with rental drains (#580)", () => {
+  test("net total combines earnings with rental drains", () => {
     const rental = {
       ...createBusinessCardJoker(),
       stickers: [{ kind: "rental" as const }],
@@ -769,7 +769,7 @@ describe("applyEndOfRoundJokers", () => {
     );
   });
 
-  test("rental drain stacks across multiple rental jokers (#580)", () => {
+  test("rental drain stacks across multiple rental jokers", () => {
     const rentalA = {
       ...createBusinessCardJoker(),
       stickers: [{ kind: "rental" as const }],
@@ -815,7 +815,7 @@ describe("Discard-event joker catalog membership", () => {
   });
 });
 
-describe("Group A backfill catalog membership (#678)", () => {
+describe("Group A backfill catalog membership", () => {
   test.each<{ name: string; id: string }>([
     { name: "Erosion", id: "erosion" },
     { name: "Blue Joker", id: "blue-joker" },
@@ -826,7 +826,7 @@ describe("Group A backfill catalog membership (#678)", () => {
   });
 });
 
-describe("Suit-composition joker catalog membership (#682)", () => {
+describe("Suit-composition joker catalog membership", () => {
   test.each<{ name: string; id: string }>([
     { name: "Flower Pot", id: "flower-pot" },
     { name: "Seeing Double", id: "seeing-double" },
@@ -836,7 +836,7 @@ describe("Suit-composition joker catalog membership (#682)", () => {
   });
 });
 
-describe("Passive run-stat joker catalog membership (#687)", () => {
+describe("Passive run-stat joker catalog membership", () => {
   test.each<{ name: string; id: string }>([
     { name: "Juggler", id: "juggler" },
     { name: "Drunkard", id: "drunkard" },
@@ -846,7 +846,7 @@ describe("Passive run-stat joker catalog membership (#687)", () => {
   });
 });
 
-describe("Multi-stat passive joker catalog membership (#690)", () => {
+describe("Multi-stat passive joker catalog membership", () => {
   test.each<{ name: string; id: string }>([
     { name: "Merry Andy", id: "merry-andy" },
     { name: "Troubadour", id: "troubadour" },
@@ -856,35 +856,35 @@ describe("Multi-stat passive joker catalog membership (#690)", () => {
   });
 });
 
-describe("Stuntman catalog membership (#701)", () => {
+describe("Stuntman catalog membership", () => {
   test("Stuntman appears in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("stuntman");
   });
 });
 
-describe("Credit Card catalog membership (#705)", () => {
+describe("Credit Card catalog membership", () => {
   test("Credit Card appears in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("credit-card");
   });
 });
 
-describe("Burglar catalog membership (#709)", () => {
+describe("Burglar catalog membership", () => {
   test("Burglar appears in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("burglar");
   });
 });
 
-describe("Pareidolia catalog membership (#715)", () => {
+describe("Pareidolia catalog membership", () => {
   test("Pareidolia appears in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("pareidolia");
   });
 });
 
-describe("Splash catalog membership (#721)", () => {
+describe("Splash catalog membership", () => {
   test("Splash appears in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("splash");

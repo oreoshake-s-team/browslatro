@@ -64,19 +64,19 @@ describe("Jokers UI", () => {
     expect(screen.queryAllByTestId("joker-tile-empty")).toHaveLength(0);
   });
 
-  test("renders a spacer between consecutive empty slots (issue #221)", () => {
+  test("renders a spacer between consecutive empty slots", () => {
     render(<Jokers jokers={[]} />);
     expect(screen.getAllByTestId(/^joker-gap-empty-/)).toHaveLength(
       MAX_JOKERS - 1,
     );
   });
 
-  test("does not render a leading spacer before the first empty slot (issue #221)", () => {
+  test("does not render a leading spacer before the first empty slot", () => {
     render(<Jokers jokers={[]} />);
     expect(screen.queryByTestId("joker-gap-empty-0")).not.toBeInTheDocument();
   });
 
-  test("renders the right number of spacers when only some slots are empty (issue #221)", () => {
+  test("renders the right number of spacers when only some slots are empty", () => {
     render(<Jokers jokers={threeMixedJokers()} />);
     const emptyCount = MAX_JOKERS - threeMixedJokers().length;
     expect(screen.getAllByTestId(/^joker-gap-empty-/)).toHaveLength(
@@ -84,7 +84,7 @@ describe("Jokers UI", () => {
     );
   });
 
-  test("renders no empty-slot spacer when there is only one empty slot (issue #221)", () => {
+  test("renders no empty-slot spacer when there is only one empty slot", () => {
     const four = [
       createPlusFourMultJoker(),
       createBusinessCardJoker(),
@@ -512,7 +512,7 @@ describe("Jokers sell", () => {
   });
 });
 
-describe("Jokers sell — Eternal joker guard (#555)", () => {
+describe("Jokers sell — Eternal joker guard", () => {
   const eternalJoker: Joker = {
     ...createBusinessCardJoker(),
     stickers: [{ kind: "eternal" }],
@@ -543,7 +543,7 @@ describe("Jokers sell — Eternal joker guard (#555)", () => {
   });
 });
 
-describe("Jokers keyboard reorder and sell (#909)", () => {
+describe("Jokers keyboard reorder and sell", () => {
   const three: ReadonlyArray<Joker> = [
     createPlusFourMultJoker(),
     createBusinessCardJoker(),
@@ -751,7 +751,7 @@ describe("Jokers edition rendering", () => {
   });
 });
 
-describe("Jokers UI — capacity prop (closes #566)", () => {
+describe("Jokers UI — capacity prop", () => {
   test("a capacity larger than MAX_JOKERS renders the extra empty slot", () => {
     render(<Jokers jokers={[]} capacity={MAX_JOKERS + 1} />);
     expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(
@@ -765,7 +765,7 @@ describe("Jokers UI — capacity prop (closes #566)", () => {
   });
 });
 
-describe("Jokers UI — Perishable debuffed visual (closes #579)", () => {
+describe("Jokers UI — Perishable debuffed visual", () => {
   function withPerishable(roundsHeld: number): Joker {
     return {
       ...createPlusFourMultJoker(),
@@ -817,7 +817,7 @@ describe("Jokers UI — Perishable debuffed visual (closes #579)", () => {
   });
 });
 
-describe("Empty tray treatment (issue #875)", () => {
+describe("Empty tray treatment", () => {
   test("the tray carries the jokers-tray-empty class when no jokers are equipped", () => {
     render(<Jokers jokers={[]} />);
     expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers-tray-empty");

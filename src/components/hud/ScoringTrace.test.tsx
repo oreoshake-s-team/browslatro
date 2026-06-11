@@ -160,14 +160,14 @@ describe("ScoringTrace expand affordance", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  test("expand button glyph is aria-hidden so it does not split the accessible name (#606)", () => {
+  test("expand button glyph is aria-hidden so it does not split the accessible name", () => {
     render(<ScoringTrace events={[]} />);
     const btn = screen.getByRole("button", { name: "Expand" });
     const decoration = btn.querySelector("span[aria-hidden='true']");
     expect(decoration).toHaveTextContent("⤢");
   });
 
-  test("expand button keeps the long description on title for hover/voice (#640)", () => {
+  test("expand button keeps the long description on title for hover/voice", () => {
     render(<ScoringTrace events={[]} />);
     expect(screen.getByRole("button", { name: "Expand" })).toHaveAttribute(
       "title",

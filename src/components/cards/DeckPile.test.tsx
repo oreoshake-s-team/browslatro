@@ -347,7 +347,7 @@ describe("DeckPile joker drop zone", () => {
   });
 });
 
-describe("DeckPile dialog semantics (#912)", () => {
+describe("DeckPile dialog semantics", () => {
   test("open modal exposes dialog semantics labelled by its title", async () => {
     const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);

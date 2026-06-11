@@ -17,7 +17,7 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Midas Mask (#969)", () => {
+describe("Midas Mask", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("midas-mask");

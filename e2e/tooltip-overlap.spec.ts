@@ -36,7 +36,7 @@ async function interactiveOverlaps(page: Page, tooltipSelector: string) {
   }, tooltipSelector);
 }
 
-test("a hand-card tooltip does not cover any interactive element (issue #993)", async ({
+test("a hand-card tooltip does not cover any interactive element", async ({
   page,
 }) => {
   await startRound(page);
@@ -46,7 +46,7 @@ test("a hand-card tooltip does not cover any interactive element (issue #993)", 
   expect(await interactiveOverlaps(page, ".card-tooltip")).toEqual([]);
 });
 
-test("a selected (lifted) card's tooltip does not cover neighboring cards (issue #993)", async ({
+test("a selected (lifted) card's tooltip does not cover neighboring cards", async ({
   page,
 }) => {
   await startRound(page);
@@ -58,7 +58,7 @@ test("a selected (lifted) card's tooltip does not cover neighboring cards (issue
   expect(await interactiveOverlaps(page, ".card-tooltip")).toEqual([]);
 });
 
-test("clicking a card while a neighbor's tooltip is open always selects it (issue #993)", async ({
+test("clicking a card while a neighbor's tooltip is open always selects it", async ({
   page,
 }) => {
   await startRound(page);
@@ -69,7 +69,7 @@ test("clicking a card while a neighbor's tooltip is open always selects it (issu
   await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
 });
 
-test("a joker tooltip does not cover any interactive element (issue #993)", async ({
+test("a joker tooltip does not cover any interactive element", async ({
   page,
 }) => {
   await page.goto("/");

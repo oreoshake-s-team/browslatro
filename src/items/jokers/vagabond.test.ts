@@ -13,7 +13,7 @@ const baseCtx = {
   isFirstHandOfRound: false,
 } as const;
 
-describe("Vagabond (#1019)", () => {
+describe("Vagabond", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("vagabond");

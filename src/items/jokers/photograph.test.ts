@@ -36,21 +36,21 @@ describe("Photograph joker", () => {
     expect(result.xMult).toBe(PHOTOGRAPH_X_MULT);
   });
 
-  test("no longer fires at the hand-level pass (issue #204 — moved to per-card)", () => {
+  test("no longer fires at the hand-level pass (moved to per-card)", () => {
     const result = applyHandLevelJokers([createPhotographJoker()], {
       scoredCards: [card("J"), card("Q")],
     });
     expect(result.firedJokerIds).not.toContain("photograph");
   });
 
-  test("emits no hand-level step (issue #204)", () => {
+  test("emits no hand-level step", () => {
     const result = applyHandLevelJokers([createPhotographJoker()], {
       scoredCards: [card("J"), card("Q")],
     });
     expect(result.steps).toEqual([]);
   });
 
-  test("hand-level aggregate xMult no longer includes Photograph (issue #204)", () => {
+  test("hand-level aggregate xMult no longer includes Photograph", () => {
     const result = applyHandLevelJokers([createPhotographJoker()], {
       scoredCards: [card("J"), card("Q")],
     });
@@ -70,7 +70,7 @@ describe("Photograph joker", () => {
   });
 });
 
-describe("Photograph joker — per-card semantics (issue #204)", () => {
+describe("Photograph joker — per-card semantics", () => {
   test("fires per-card when a face card is scored and no face has scored yet", () => {
     const result = applyPerCardJokers([createPhotographJoker()], card("J"));
     expect(result.firedJokerIds).toEqual(["photograph"]);

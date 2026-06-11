@@ -72,7 +72,7 @@ function dragTileToGap(sourceId: string, gapIdx: number): void {
   fireEvent.dragEnd(tile, { dataTransfer: dt });
 }
 
-describe("Joker drag-reorder during shop and pack-pick (#399)", () => {
+describe("Joker drag-reorder during shop and pack-pick", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {

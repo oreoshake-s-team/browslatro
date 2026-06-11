@@ -33,7 +33,7 @@ async function expectDialogCycle(
   await expect(trigger).toBeFocused();
 }
 
-test.describe("Options, DeckPile, DiscardPile dialog semantics (#912)", () => {
+test.describe("Options, DeckPile, DiscardPile dialog semantics", () => {
   test("each modal opens as a labelled dialog with focus inside and restores focus to its trigger on Escape", async ({
     page,
   }) => {

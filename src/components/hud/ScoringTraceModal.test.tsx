@@ -87,7 +87,7 @@ describe("ScoringTraceModal", () => {
   });
 });
 
-describe("ScoringTraceModal focus trap (#949)", () => {
+describe("ScoringTraceModal focus trap", () => {
   test("traps Tab inside the dialog and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);

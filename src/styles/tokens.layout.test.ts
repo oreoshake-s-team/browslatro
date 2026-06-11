@@ -26,7 +26,7 @@ const REQUIRED_TOKENS = [
   "--focus-ring",
 ] as const;
 
-describe("design tokens (issue #873)", () => {
+describe("design tokens", () => {
   test.each(REQUIRED_TOKENS)("tokens.css defines %s", (token) => {
     expect(tokensCss).toMatch(new RegExp(`${token}\\s*:\\s*[^;]+;`));
   });
@@ -60,7 +60,7 @@ const CONTRAST_TOKENS = [
   "--suit-blue-on-light",
 ] as const;
 
-describe("contrast tokens (issue #911)", () => {
+describe("contrast tokens", () => {
   test.each(CONTRAST_TOKENS)("tokens.css defines %s", (token) => {
     expect(tokensCss).toMatch(new RegExp(`${token}\\s*:\\s*[^;]+;`));
   });
@@ -89,7 +89,7 @@ function collectCssFiles(dir: string): string[] {
   return files;
 }
 
-describe("no raw color literals in component CSS (issue #1129)", () => {
+describe("no raw color literals in component CSS", () => {
   const srcDir = join(__dirname, "..");
   const cssFiles = collectCssFiles(srcDir);
 

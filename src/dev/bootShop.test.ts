@@ -23,7 +23,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("shouldBootIntoShop (#940)", () => {
+describe("shouldBootIntoShop", () => {
   test("true when browslatro:bootShop is set to 1", () => {
     stubBootFlag("1");
     expect(shouldBootIntoShop()).toBe(true);
@@ -44,7 +44,7 @@ describe("shouldBootIntoShop (#940)", () => {
   });
 });
 
-describe("bootIntoShop (#940)", () => {
+describe("bootIntoShop", () => {
   test("opens the post-round shop", () => {
     bootIntoShop();
     expect(useGame.getState().shopOffers).not.toBeNull();

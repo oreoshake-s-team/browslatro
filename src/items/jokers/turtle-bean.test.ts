@@ -17,7 +17,7 @@ function afterRounds(joker: Joker, rounds: number): Joker[] {
   return jokers;
 }
 
-describe("Turtle Bean (#903)", () => {
+describe("Turtle Bean", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("turtle-bean");

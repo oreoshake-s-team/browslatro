@@ -32,7 +32,7 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Seltzer (#920)", () => {
+describe("Seltzer", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("seltzer");

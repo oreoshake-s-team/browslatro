@@ -84,7 +84,7 @@ describe("applySealOverrides", () => {
   });
 });
 
-describe("applyEditionOverrides (#1005)", () => {
+describe("applyEditionOverrides", () => {
   test("applies an override to a card without an edition", () => {
     const result = applyEditionOverrides(
       [card({ id: 7 })],
@@ -185,7 +185,7 @@ describe("buildShuffledDeck", () => {
     expect(deck.some((c) => c.id === baseAce.id)).toBe(true);
   });
 
-  test("omits a destroyed added card from the deck (#999)", () => {
+  test("omits a destroyed added card from the deck", () => {
     const base = createDeck();
     const addedAce = card({ id: 999, rank: "A", suit: "spades" });
     const deck = buildShuffledDeck(base, new Set([999]), [addedAce]);
@@ -237,7 +237,7 @@ describe("fullDeckPile", () => {
   });
 });
 
-describe("acceptance criteria (#639)", () => {
+describe("acceptance criteria", () => {
   test("enhancement applied by id survives a deck rebuild", () => {
     const base = createDeck();
     const target = base[0];
@@ -359,7 +359,7 @@ describe("fullDeckSize", () => {
     );
   });
 
-  test("a destroyed added card shrinks the full deck (#999)", () => {
+  test("a destroyed added card shrinks the full deck", () => {
     expect(
       fullDeckSize(createDeck(), new Set([999]), [card({ id: 999 })]),
     ).toBe(DECK_SIZE);
@@ -456,7 +456,7 @@ describe("enhancementsInFullDeck", () => {
   });
 });
 
-describe("applyEnhancementOverrides — null removal marker (#969)", () => {
+describe("applyEnhancementOverrides — null removal marker", () => {
   test("a null override strips an intrinsic enhancement", () => {
     const result = applyEnhancementOverrides(
       [card({ id: 7, enhancement: "steel" })],

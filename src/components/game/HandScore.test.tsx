@@ -49,7 +49,7 @@ describe("HandScore populated state", () => {
   });
 });
 
-describe("HandScore level chip (#241)", () => {
+describe("HandScore level chip", () => {
   test("renders the level chip when selectedHandLevel is provided", () => {
     render(
       <HandScore
@@ -121,7 +121,7 @@ describe("HandScore level chip (#241)", () => {
   });
 });
 
-describe("HandScore live announcement (#914)", () => {
+describe("HandScore live announcement", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -206,7 +206,7 @@ describe("HandScore live announcement (#914)", () => {
   });
 });
 
-describe("HandScore level-up animation (#601)", () => {
+describe("HandScore level-up animation", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     let raf = 0;

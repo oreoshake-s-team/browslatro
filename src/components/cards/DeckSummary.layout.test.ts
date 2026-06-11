@@ -22,7 +22,7 @@ function topLevelRuleBody(source: string, selector: string): string {
   throw new Error(`Unterminated rule for ${selector}`);
 }
 
-describe("DeckSummary dark theme — issue #887", () => {
+describe("DeckSummary dark theme", () => {
   test("zebra rows use the raised surface token", () => {
     const body = topLevelRuleBody(summaryCss, ".deck-summary-row:nth-child(odd)");
     expect(body).toMatch(/background-color\s*:\s*var\(--surface-raised\)/);

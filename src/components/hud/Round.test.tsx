@@ -37,7 +37,7 @@ describe("Round", () => {
   );
 });
 
-describe("Round — Boss Blind name (#245 phase 0)", () => {
+describe("Round — Boss Blind name (phase 0)", () => {
   const wall: BossBlind = {
     id: "the-wall",
     name: "The Wall",
@@ -158,7 +158,7 @@ describe("Round — Boss Blind name (#245 phase 0)", () => {
   });
 });
 
-describe("Round — The Mouth locked-hand indicator (#631)", () => {
+describe("Round — The Mouth locked-hand indicator", () => {
   const mouth: BossBlind = {
     id: "the-mouth",
     name: "The Mouth",

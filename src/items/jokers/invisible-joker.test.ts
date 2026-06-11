@@ -17,7 +17,7 @@ function invisibleHeldForRounds(rounds: number): Joker {
   return jokers[0];
 }
 
-describe("Invisible Joker (#1037)", () => {
+describe("Invisible Joker", () => {
   test("is registered in the legendary pool", () => {
     const ids = createLegendaryJokerCatalog().map((j) => j.id);
     expect(ids).toContain("invisible-joker");

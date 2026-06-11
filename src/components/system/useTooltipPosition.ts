@@ -10,7 +10,7 @@ const TOOLTIP_OFFSET_PX = 8;
 
 /**
  * Position a hover tooltip relative to its anchor without covering any
- * interactive element (issue #993). Returns the legacy "below the anchor"
+ * interactive element. Returns the legacy "below the anchor"
  * position until the tooltip has been measured; in environments without
  * layout (jsdom returns zero-size rects) the legacy position is kept.
  *

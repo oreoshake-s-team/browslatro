@@ -42,12 +42,12 @@ function blockBody(source: string, openerPattern: RegExp): string {
   throw new Error(`Unterminated block for ${openerPattern}`);
 }
 
-describe("Hand layout — no wrap, scroll instead (issue #105)", () => {
+describe("Hand layout — no wrap, scroll instead", () => {
   test(".hand-cards uses flex-wrap: nowrap so the row never wraps", () => {
     expect(handCardsRuleBody()).toMatch(/flex-wrap\s*:\s*nowrap/);
   });
 
-  test(".hand-cards uses overflow-x: clip so over-cap hands squish instead of producing a scrollbar (issue #210)", () => {
+  test(".hand-cards uses overflow-x: clip so over-cap hands squish instead of producing a scrollbar", () => {
     expect(handCardsRuleBody()).toMatch(/overflow-x\s*:\s*clip/);
   });
 
@@ -60,7 +60,7 @@ describe("Hand layout — no wrap, scroll instead (issue #105)", () => {
   });
 });
 
-describe("Sidebar layout — landscape mobile (issue #105)", () => {
+describe("Sidebar layout — landscape mobile", () => {
   const landscapeBlock = blockBody(
     sidebarCss,
     /@media\s*\(orientation:\s*landscape\)\s*and\s*\(max-width:\s*1024px\)\s*{/,
@@ -77,7 +77,7 @@ describe("Sidebar layout — landscape mobile (issue #105)", () => {
   });
 });
 
-describe("Sidebar layout — portrait mobile (issue #105)", () => {
+describe("Sidebar layout — portrait mobile", () => {
   const portraitBlock = blockBody(
     sidebarCss,
     /@media\s*\(orientation:\s*portrait\)\s*and\s*\(max-width:\s*768px\)\s*{/,
@@ -94,7 +94,7 @@ describe("Sidebar layout — portrait mobile (issue #105)", () => {
   });
 });
 
-describe("App layout — portrait mobile (issue #105)", () => {
+describe("App layout — portrait mobile", () => {
   test("portrait narrow viewports stack the App as a column so the sidebar sits above the game", () => {
     const block = blockBody(
       appCss,
@@ -105,7 +105,7 @@ describe("App layout — portrait mobile (issue #105)", () => {
   });
 });
 
-describe("Game layout — mobile spacing (issue #105)", () => {
+describe("Game layout — mobile spacing", () => {
   test(".game padding tracks --game-padding-x so the value can be shared with portal-rendered modals", () => {
     const block = blockBody(gameCss, /\.game\s*{/);
     expect(block).toMatch(/padding\s*:\s*var\(--game-padding-x[^)]*\)/);

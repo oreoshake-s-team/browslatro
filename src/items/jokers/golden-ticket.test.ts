@@ -10,7 +10,7 @@ import type { Card } from "../../cards/types";
 const goldCard: Card = { id: 1, rank: "K", suit: "spades", enhancement: "gold" };
 const plainCard: Card = { id: 2, rank: "K", suit: "spades" };
 
-describe("Golden Ticket (#1039)", () => {
+describe("Golden Ticket", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("golden-ticket");

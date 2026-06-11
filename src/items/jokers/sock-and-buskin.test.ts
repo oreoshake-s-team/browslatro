@@ -16,7 +16,7 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Sock and Buskin (#881)", () => {
+describe("Sock and Buskin", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("sock-and-buskin");

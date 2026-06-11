@@ -140,7 +140,7 @@
   cursor: grab;
 }
 
-/* Keyboard reorder controls for pack picks (issue #910). Hidden until the
+/* Keyboard reorder controls for pack picks. Hidden until the
  * card holds focus; opacity-only hiding keeps them in the tab order, and
  * tabbing onto a control reveals it via :focus-within. They sit in the
  * preview hand's top padding, mirroring the Hand controls. */

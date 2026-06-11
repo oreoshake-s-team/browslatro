@@ -166,7 +166,7 @@ describe("Card tooltip — content per card state", () => {
   });
 });
 
-describe("Card tooltip — effective odds with a probability multiplier (#774)", () => {
+describe("Card tooltip — effective odds with a probability multiplier", () => {
   afterEach(() => {
     act(() => {
       useGame.getState().resetGame();

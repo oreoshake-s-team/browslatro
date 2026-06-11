@@ -259,7 +259,7 @@ describe("availablePlanets", () => {
   });
 });
 
-describe("mostPlayedHand (#281)", () => {
+describe("mostPlayedHand", () => {
   test("returns High Card when no hands have been played", () => {
     expect(mostPlayedHand(countsWith({}))).toBe("High Card");
   });
@@ -279,7 +279,7 @@ describe("mostPlayedHand (#281)", () => {
   });
 });
 
-describe("planetForHand (#281)", () => {
+describe("planetForHand", () => {
   test("returns Pluto for High Card", () => {
     expect(planetForHand(createPlanetCatalog(), "High Card")?.id).toBe("pluto");
   });

@@ -293,7 +293,7 @@ describe("rollAnteSkipOffers", () => {
     expect(ids).toContain(rollAnteSkipOffers(() => 0).big.id);
   });
 
-  test("pre-rolls a target hand when the offer is Orbital (#596)", () => {
+  test("pre-rolls a target hand when the offer is Orbital", () => {
     const ids = createTagCatalog().map((t) => t.id);
     const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
     let call = 0;
@@ -310,7 +310,7 @@ describe("rollAnteSkipOffers", () => {
   });
 });
 
-describe("describeSkipOffer (#596)", () => {
+describe("describeSkipOffer", () => {
   test("Orbital description names the rolled hand", () => {
     const offer = { id: "orbital", orbitalHand: "Full House" } as const;
     expect(describeSkipOffer(offer).description).toContain("Full House");

@@ -7,7 +7,7 @@ import {
 } from "../jokers";
 import type { Joker } from "../jokers";
 
-describe("Mr. Bones (#1000)", () => {
+describe("Mr. Bones", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("mr-bones");

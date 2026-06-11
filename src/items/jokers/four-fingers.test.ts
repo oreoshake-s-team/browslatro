@@ -112,7 +112,7 @@ describe("detectHandLabel with Four Fingers", () => {
     expect(detectHandLabel(hand)).toBe("High Card");
   });
 
-  test("5 cards with 4 same-suit + 1 off-suit is labeled Flush (#832)", () => {
+  test("5 cards with 4 same-suit + 1 off-suit is labeled Flush", () => {
     const hand = cards([
       ["A", "hearts"],
       ["7", "diamonds"],
@@ -123,7 +123,7 @@ describe("detectHandLabel with Four Fingers", () => {
     expect(detectHandLabel(hand, OPT)).toBe("Flush");
   });
 
-  test("5 cards with 4 in a run + 1 outlier is labeled Straight (#832)", () => {
+  test("5 cards with 4 in a run + 1 outlier is labeled Straight", () => {
     const hand = cards([
       ["3", "hearts"],
       ["4", "spades"],
@@ -134,7 +134,7 @@ describe("detectHandLabel with Four Fingers", () => {
     expect(detectHandLabel(hand, OPT)).toBe("Straight");
   });
 
-  test("5 cards with 4 same-suit J-Q-K-A + 1 outlier is labeled Royal Flush (#832)", () => {
+  test("5 cards with 4 same-suit J-Q-K-A + 1 outlier is labeled Royal Flush", () => {
     const hand = cards([
       ["J", "spades"],
       ["Q", "spades"],
@@ -145,7 +145,7 @@ describe("detectHandLabel with Four Fingers", () => {
     expect(detectHandLabel(hand, OPT)).toBe("Royal Flush");
   });
 
-  test("5 cards with 3 same-suit + 2 off-suit stays High Card (negative, #832)", () => {
+  test("5 cards with 3 same-suit + 2 off-suit stays High Card (negative)", () => {
     const hand = cards([
       ["A", "hearts"],
       ["K", "hearts"],

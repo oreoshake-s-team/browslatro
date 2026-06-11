@@ -13,7 +13,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("Telemetry — gated on VITE_ON_VERCEL (#643)", () => {
+describe("Telemetry — gated on VITE_ON_VERCEL", () => {
   describe("on a Vercel build (VITE_ON_VERCEL=1)", () => {
     beforeEach(() => {
       vi.stubEnv("VITE_ON_VERCEL", "1");

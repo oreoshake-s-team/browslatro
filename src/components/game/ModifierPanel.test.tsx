@@ -89,7 +89,7 @@ describe("ModifierPanel", () => {
     expect(useGame.getState().handSizeModifier).toBe(before + 1);
   });
 
-  test("Ante +1 button increments ante by 1 (closes #844)", async () => {
+  test("Ante +1 button increments ante by 1", async () => {
     const user = userEvent.setup();
     render(<ModifierPanel />);
     await openModifiers(user);
@@ -98,7 +98,7 @@ describe("ModifierPanel", () => {
     expect(useGame.getState().ante).toBe(4);
   });
 
-  test("Ante −1 button decrements ante by 1 (closes #844)", async () => {
+  test("Ante −1 button decrements ante by 1", async () => {
     const user = userEvent.setup();
     render(<ModifierPanel />);
     await openModifiers(user);
@@ -107,7 +107,7 @@ describe("ModifierPanel", () => {
     expect(useGame.getState().ante).toBe(3);
   });
 
-  test("Ante +1 is disabled on the final ante (negative — closes #844)", async () => {
+  test("Ante +1 is disabled on the final ante (negative)", async () => {
     const user = userEvent.setup();
     render(<ModifierPanel />);
     await openModifiers(user);
@@ -115,7 +115,7 @@ describe("ModifierPanel", () => {
     expect(screen.getByText(/Ante \+1/)).toBeDisabled();
   });
 
-  test("Ante −1 is disabled on ante 1 (negative — closes #844)", async () => {
+  test("Ante −1 is disabled on ante 1 (negative)", async () => {
     const user = userEvent.setup();
     render(<ModifierPanel />);
     await openModifiers(user);
@@ -158,7 +158,7 @@ describe("ModifierPanel", () => {
     "Vouchers +1",
     "Vouchers −1",
   ])(
-    "%s is no longer rendered in the modifier panel (closes #634)",
+    "%s is no longer rendered in the modifier panel",
     async (label) => {
       const user = userEvent.setup();
       render(<ModifierPanel />);

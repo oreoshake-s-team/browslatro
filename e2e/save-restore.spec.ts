@@ -108,7 +108,7 @@ test("refreshing on Blind Select preserves the boss and skip-tag offers", async 
   expect(bossRowAfter).toBe(bossRowBefore);
 });
 
-test("Start Run over a restored stale run fully resets ante, round, and scoring trace (issue #870)", async ({
+test("Start Run over a restored stale run fully resets ante, round, and scoring trace", async ({
   page,
 }) => {
   await page.goto("/");

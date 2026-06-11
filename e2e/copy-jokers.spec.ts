@@ -45,7 +45,7 @@ async function playFiveCardHand(page: Page): Promise<void> {
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
 }
 
-test.describe("Copy jokers fire in scoring (#858)", () => {
+test.describe("Copy jokers fire in scoring", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
     await page.goto("/");

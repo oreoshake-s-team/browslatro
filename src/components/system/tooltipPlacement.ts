@@ -72,7 +72,7 @@ function scanUp(
 
 /**
  * Choose a tooltip position that does not cover any interactive element
- * (issue #993). Candidate spots are searched in three columns — the anchor's
+ *. Candidate spots are searched in three columns — the anchor's
  * horizontal center, then one tooltip-width right and left of it (all
  * clamped into the viewport) — by scanning downward from just below the
  * anchor (hopping past each obstacle the tooltip would cover) and upward

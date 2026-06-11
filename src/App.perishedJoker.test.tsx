@@ -113,7 +113,7 @@ async function playPairOfJacks(): Promise<void> {
   flushScoringSequence();
 }
 
-describe("Perished Business Card joker (regression for #849)", () => {
+describe("Perished Business Card joker (regression for)", () => {
   test("an active Business Card pays out on scored face cards", async () => {
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
     try {

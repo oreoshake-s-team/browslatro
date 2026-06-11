@@ -108,7 +108,7 @@ function consumableCount(): number {
     .length;
 }
 
-describe("Gold Seal — scoring effect (#208)", () => {
+describe("Gold Seal — scoring effect", () => {
   test("playing a single Gold-seal high card pays exactly +$3 when scored", async () => {
     handFactoryRef.build = () => [
       makeCard("2", "spades", "gold"),
@@ -152,7 +152,7 @@ describe("Gold Seal — scoring effect (#208)", () => {
   });
 });
 
-describe("Red Seal — retrigger (#208)", () => {
+describe("Red Seal — retrigger", () => {
   test("a Red-seal high card retriggers — round score reflects 2×rank chips", async () => {
     handFactoryRef.build = () => [
       makeCard("2", "spades", "red"),
@@ -194,7 +194,7 @@ describe("Red Seal — retrigger (#208)", () => {
   });
 });
 
-describe("Blue Seal — held at end of round creates a Planet (#208)", () => {
+describe("Blue Seal — held at end of round creates a Planet", () => {
   test("winning a round with a Blue-seal card held adds a planet consumable", async () => {
     handFactoryRef.build = () => [
       makeCard("A", "spades", "blue"),
@@ -240,7 +240,7 @@ describe("Blue Seal — held at end of round creates a Planet (#208)", () => {
 });
 
 
-describe("Purple Seal — discard creates a Tarot (#208)", () => {
+describe("Purple Seal — discard creates a Tarot", () => {
   test("discarding a Purple-seal card adds a tarot consumable", async () => {
     handFactoryRef.build = () => [
       makeCard("A", "spades", "purple"),

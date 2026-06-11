@@ -69,7 +69,7 @@ describe("isFaceCardWith", () => {
   });
 });
 
-describe("Pareidolia + face-keying jokers (#715)", () => {
+describe("Pareidolia + face-keying jokers", () => {
   test("Smiley Face fires on a non-face scored card when Pareidolia is equipped", () => {
     const result = applyJokersToScoring(
       [createPareidoliaJoker(), createSmileyFaceJoker()],

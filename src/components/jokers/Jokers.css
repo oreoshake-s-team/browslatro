@@ -131,7 +131,7 @@
   text-transform: uppercase;
 }
 
-/* Keyboard reorder + sell controls (issue #909). Hidden until the tile is
+/* Keyboard reorder + sell controls. Hidden until the tile is
  * hovered or holds focus; opacity-only hiding keeps them in the tab order,
  * and tabbing onto a control reveals it via :focus-within. The tile clips
  * its content (overflow: hidden), so the controls sit inside its bounds. */

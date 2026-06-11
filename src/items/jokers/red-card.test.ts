@@ -8,7 +8,7 @@ import {
 } from "../jokers";
 import { useGame } from "../../store/game";
 
-describe("Red Card (#885)", () => {
+describe("Red Card", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("red-card");

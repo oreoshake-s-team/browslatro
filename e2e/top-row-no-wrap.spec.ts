@@ -36,7 +36,7 @@ async function openShopAfterRound1Win(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
 }
 
-test("jokers and consumables stay on one row at a 600px viewport (issue #865)", async ({
+test("jokers and consumables stay on one row at a 600px viewport", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 600, height: 400 });
@@ -47,7 +47,7 @@ test("jokers and consumables stay on one row at a 600px viewport (issue #865)", 
   expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
 });
 
-test("jokers, consumables, and deck stay on one row in the shop at a 600px viewport (issue #865)", async ({
+test("jokers, consumables, and deck stay on one row in the shop at a 600px viewport", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -61,7 +61,7 @@ test("jokers, consumables, and deck stay on one row in the shop at a 600px viewp
   expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
 });
 
-test("joker and consumable tiles keep full card width when there is room (issue #865)", async ({
+test("joker and consumable tiles keep full card width when there is room", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });

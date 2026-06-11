@@ -13,7 +13,7 @@ const baseCtx = {
   scoredCards: [],
 } as const;
 
-describe("Obelisk (#894)", () => {
+describe("Obelisk", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("obelisk");

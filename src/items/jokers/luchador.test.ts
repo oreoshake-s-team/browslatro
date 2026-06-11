@@ -13,7 +13,7 @@ beforeEach(() => {
   useGame.getState().resetGame();
 });
 
-describe("Luchador (#1000)", () => {
+describe("Luchador", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("luchador");

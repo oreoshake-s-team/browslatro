@@ -108,7 +108,7 @@ function consumableTilesCount(): number {
   return screen.queryAllByTestId(/^consumable-tile-filled-/).length;
 }
 
-describe("inline spectral pack-picks (closes #367)", () => {
+describe("inline spectral pack-picks", () => {
   test("Black Hole pulled from pack upgrades every poker hand level", async () => {
     const user = await openSpectralPack("black-hole");
     await user.click(screen.getByTestId("pack-open-pick-0"));

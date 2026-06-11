@@ -92,7 +92,7 @@ function firstPreviewCard(): HTMLElement {
   return btn as HTMLElement;
 }
 
-describe("Applying owned apply-seal spectrals to the preview hand (#404)", () => {
+describe("Applying owned apply-seal spectrals to the preview hand", () => {
   test("picking the apply-seal spectral puts it in the tray", async () => {
     await ownTalismanWithPreview();
     expect(screen.getByTestId("consumable-tile-filled-0")).toBeInTheDocument();

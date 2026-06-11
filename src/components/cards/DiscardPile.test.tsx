@@ -121,7 +121,7 @@ describe("DiscardPile", () => {
   });
 });
 
-describe("DiscardPile dialog semantics (#912)", () => {
+describe("DiscardPile dialog semantics", () => {
   test("open modal exposes dialog semantics labelled by its title", async () => {
     const user = userEvent.setup();
     render(<DiscardPile discarded={sampleCards} />);

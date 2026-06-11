@@ -10,7 +10,7 @@ import type { Card } from "../../cards/types";
 
 const plainFive: Card = { id: 1, rank: "5", suit: "clubs" };
 
-describe("Hiker (#980)", () => {
+describe("Hiker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("hiker");

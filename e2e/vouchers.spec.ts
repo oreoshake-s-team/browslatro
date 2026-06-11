@@ -39,7 +39,7 @@ async function moneyOf(page: Page): Promise<number> {
   return Number((txt ?? "$0").replace(/[^0-9-]/g, ""));
 }
 
-test.describe("Shop vouchers (#699)", () => {
+test.describe("Shop vouchers", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });
@@ -88,7 +88,7 @@ test.describe("Shop vouchers (#699)", () => {
   });
 });
 
-test.describe("Telescope + Observatory vouchers (#281)", () => {
+test.describe("Telescope + Observatory vouchers", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });

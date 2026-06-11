@@ -17,7 +17,7 @@ async function addTarotToTray(page: Page, tarotId: string): Promise<void> {
 
 // Effect-by-effect in-hand tarot coverage (destroy, rank-up, convert,
 // copy, money, no-op guards) lives in src/hooks/useConsumableActions.test.tsx;
-// this journey only proves the select-card → click-tarot wiring (#932).
+// this journey only proves the select-card → click-tarot wiring.
 test("The Sun: selecting a hand card and clicking the tarot converts it to hearts and consumes the tile", async ({
   page,
 }) => {

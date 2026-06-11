@@ -372,7 +372,7 @@ describe("extraJokerSlots", () => {
   });
 });
 
-describe("Telescope / Observatory voucher catalog (#281)", () => {
+describe("Telescope / Observatory voucher catalog", () => {
   test("Telescope is in the catalog with no prerequisite", () => {
     const telescope = createVoucherCatalog().find((v) => v.id === "telescope");
     expect(telescope?.requires).toBeUndefined();
@@ -398,7 +398,7 @@ describe("Telescope / Observatory voucher catalog (#281)", () => {
   });
 });
 
-describe("observatoryMultFor (#281)", () => {
+describe("observatoryMultFor", () => {
   test("returns 1 when Observatory is not owned", () => {
     expect(observatoryMultFor(new Set<VoucherId>(), 3)).toBe(1);
   });
@@ -420,7 +420,7 @@ describe("observatoryMultFor (#281)", () => {
   });
 });
 
-describe("Magic Trick / Illusion voucher catalog (#282)", () => {
+describe("Magic Trick / Illusion voucher catalog", () => {
   test("Magic Trick is in the catalog with no prerequisite", () => {
     const magicTrick = createVoucherCatalog().find(
       (v) => v.id === "magic-trick",
@@ -448,7 +448,7 @@ describe("Magic Trick / Illusion voucher catalog (#282)", () => {
   });
 });
 
-describe("magicTrickEnabled (#282)", () => {
+describe("magicTrickEnabled", () => {
   test("returns false when Magic Trick is not owned", () => {
     expect(magicTrickEnabled(new Set<VoucherId>())).toBe(false);
   });
@@ -458,7 +458,7 @@ describe("magicTrickEnabled (#282)", () => {
   });
 });
 
-describe("illusionEnabled (#282)", () => {
+describe("illusionEnabled", () => {
   test("returns false when Illusion is not owned", () => {
     expect(illusionEnabled(new Set<VoucherId>())).toBe(false);
   });
@@ -468,7 +468,7 @@ describe("illusionEnabled (#282)", () => {
   });
 });
 
-describe("offerKindWeights — playing-card weight (#282)", () => {
+describe("offerKindWeights — playing-card weight", () => {
   test("playing-card weight is 0 when Magic Trick is not owned", () => {
     expect(offerKindWeights(new Set<VoucherId>())["playing-card"]).toBe(0);
   });
@@ -480,7 +480,7 @@ describe("offerKindWeights — playing-card weight (#282)", () => {
   });
 });
 
-describe("voucher catalog count (#282)", () => {
+describe("voucher catalog count", () => {
   test("catalog contains exactly the expected number of vouchers", () => {
     expect(createVoucherCatalog()).toHaveLength(32);
   });

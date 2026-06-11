@@ -22,7 +22,7 @@ function playN(n: number) {
   return jokers;
 }
 
-describe("Loyalty Card joker (#837)", () => {
+describe("Loyalty Card joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("loyalty-card");

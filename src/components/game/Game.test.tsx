@@ -128,7 +128,7 @@ describe("Game", () => {
     expect(screen.queryByText(/Play or discard/i)).not.toBeInTheDocument();
   });
 
-  test("Submit Hand renders before Apply modifiers in DOM order (closes #634)", () => {
+  test("Submit Hand renders before Apply modifiers in DOM order", () => {
     renderGame();
     const submit = screen.getByText(/Submit Hand/);
     const modifiers = screen.getByText(/Apply modifiers/);
@@ -136,7 +136,7 @@ describe("Game", () => {
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
   });
 
-  describe("shop overlay deck pile (closes #747)", () => {
+  describe("shop overlay deck pile", () => {
     test("reflects current baseDeckCards count, ignoring stale dealt.remaining", () => {
       const base = makeCards(1, 40);
       useGame.setState({
@@ -235,7 +235,7 @@ describe("Game", () => {
     });
   });
 
-  describe("in-hand deck pile filters destroyedCardIds (closes #803)", () => {
+  describe("in-hand deck pile filters destroyedCardIds", () => {
     test("baseline count reflects dealt.remaining when no ids are destroyed", () => {
       const base = makeCards(1, 40);
       useGame.setState({
@@ -329,7 +329,7 @@ describe("Game", () => {
   });
 });
 
-describe("Submit Hand button — inline current hand readout (#745)", () => {
+describe("Submit Hand button — inline current hand readout", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });

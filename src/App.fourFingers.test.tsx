@@ -69,7 +69,7 @@ async function dismissBlindSelect(
   if (btn) await user.click(btn);
 }
 
-describe("Four Fingers — 5-card hand with 4 same-suit (#832)", () => {
+describe("Four Fingers — 5-card hand with 4 same-suit", () => {
   test("5 cards (1 off-suit + 4 same-suit) is detected as Flush", async () => {
     deckConfig.hand = [
       makeCard("A", "hearts"),

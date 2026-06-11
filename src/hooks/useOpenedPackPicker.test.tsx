@@ -42,7 +42,7 @@ function fillConsumableTrayWithHangedMen(count: number): void {
   useGame.getState().setConsumables(filler);
 }
 
-describe("pickFromOpenedPack — unhandled tarot effect kinds (fix #822)", () => {
+describe("pickFromOpenedPack — unhandled tarot effect kinds (fix)", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -132,7 +132,7 @@ describe("pickFromOpenedPack — unhandled tarot effect kinds (fix #822)", () =>
     });
   });
 
-  describe("The High Priestess (create-consumables) fires on pick (#850)", () => {
+  describe("The High Priestess (create-consumables) fires on pick", () => {
     test("picking The High Priestess adds 2 planet consumables to the tray", () => {
       openPack([tarotOption("the-high-priestess")]);
       const { result } = renderHook(() => useOpenedPackPicker());
@@ -243,7 +243,7 @@ describe("pickFromOpenedPack — existing handled effect-kind regressions", () =
   });
 });
 
-describe("pickFromOpenedPack — Judgement (create-joker) fires immediately (fix #841)", () => {
+describe("pickFromOpenedPack — Judgement (create-joker) fires immediately (fix)", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -288,7 +288,7 @@ describe("pickFromOpenedPack — Judgement (create-joker) fires immediately (fix
   });
 });
 
-describe("pickFromOpenedPack — The Emperor (create-consumables) fires on pick (#850)", () => {
+describe("pickFromOpenedPack — The Emperor (create-consumables) fires on pick", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -324,7 +324,7 @@ describe("pickFromOpenedPack — The Emperor (create-consumables) fires on pick 
   });
 });
 
-describe("pickFromOpenedPack — Death (death-copy) fires on preview pack (#850)", () => {
+describe("pickFromOpenedPack — Death (death-copy) fires on preview pack", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -364,7 +364,7 @@ describe("pickFromOpenedPack — Death (death-copy) fires on preview pack (#850)
   });
 });
 
-describe("pickFromOpenedPack — convert-suit fires on preview pack (#850)", () => {
+describe("pickFromOpenedPack — convert-suit fires on preview pack", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -397,7 +397,7 @@ describe("pickFromOpenedPack — convert-suit fires on preview pack (#850)", () 
   });
 });
 
-describe("pickFromOpenedPack — The Fool (copy-last-consumable) fires on pick (#850)", () => {
+describe("pickFromOpenedPack — The Fool (copy-last-consumable) fires on pick", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });

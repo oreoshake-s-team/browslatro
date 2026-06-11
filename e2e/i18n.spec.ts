@@ -22,7 +22,7 @@ async function switchLanguage(page: Page, locale: string): Promise<void> {
     .click();
 }
 
-test("switching to Hawaiian translates the sidebar (issue #896)", async ({
+test("switching to Hawaiian translates the sidebar", async ({
   page,
 }) => {
   await startRound(page);
@@ -34,7 +34,7 @@ test("switching to Hawaiian translates the sidebar (issue #896)", async ({
   await expect(page.locator("html")).toHaveAttribute("lang", "haw");
 });
 
-test("the Hawaiian locale persists across a reload (issue #896)", async ({
+test("the Hawaiian locale persists across a reload", async ({
   page,
 }) => {
   await startRound(page);
@@ -45,7 +45,7 @@ test("the Hawaiian locale persists across a reload (issue #896)", async ({
   await expect(page.locator("html")).toHaveAttribute("lang", "haw");
 });
 
-test("switching back to English restores the English sidebar (issue #896)", async ({
+test("switching back to English restores the English sidebar", async ({
   page,
 }) => {
   await startRound(page);
@@ -56,7 +56,7 @@ test("switching back to English restores the English sidebar (issue #896)", asyn
   await expect(page.getByText("Kālā", { exact: true })).toHaveCount(0);
 });
 
-test("the shop renders Hawaiian strings under the haw locale (issue #921)", async ({
+test("the shop renders Hawaiian strings under the haw locale", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -74,7 +74,7 @@ test("the shop renders Hawaiian strings under the haw locale (issue #921)", asyn
   await expect(page.getByRole("heading", { name: /^Shop$/ })).toHaveCount(0);
 });
 
-test("a Celestial pack under the haw locale shows Hawaiian planet names (issue #978)", async ({
+test("a Celestial pack under the haw locale shows Hawaiian planet names", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -97,7 +97,7 @@ test("a Celestial pack under the haw locale shows Hawaiian planet names (issue #
   ).toBeVisible();
 });
 
-test("winning round 1 under the haw locale shows Hawaiian Round Won strings (issue #922)", async ({
+test("winning round 1 under the haw locale shows Hawaiian Round Won strings", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -119,7 +119,7 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings (iss
   await expect(page.getByRole("heading", { name: /Hale kūʻai/ })).toBeVisible();
 });
 
-test("aria-labels are translated under the haw locale (issue #924)", async ({
+test("aria-labels are translated under the haw locale", async ({
   page,
 }) => {
   await page.addInitScript(() => {

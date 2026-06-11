@@ -9,27 +9,27 @@ describe("NewRunScreen", () => {
     expect(screen.getAllByRole("radio", { name: /Stake/i })).toHaveLength(8);
   });
 
-  test("renders the Black stake tile (implemented in #555)", () => {
+  test("renders the Black stake tile", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-black")).toBeInTheDocument();
   });
 
-  test("renders the Blue stake tile (implemented in #556)", () => {
+  test("renders the Blue stake tile", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-blue")).toBeInTheDocument();
   });
 
-  test("renders the Purple stake tile (implemented in #557)", () => {
+  test("renders the Purple stake tile", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-purple")).toBeInTheDocument();
   });
 
-  test("renders the Orange stake tile (implemented in #558)", () => {
+  test("renders the Orange stake tile", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-orange")).toBeInTheDocument();
   });
 
-  test("renders the Gold stake tile (implemented in #559)", () => {
+  test("renders the Gold stake tile", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-stake-gold")).toBeInTheDocument();
   });
@@ -79,14 +79,14 @@ describe("NewRunScreen", () => {
     );
   });
 
-  test("White selected shows only the White effect entry (closes #833)", () => {
+  test("White selected shows only the White effect entry", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(
       screen.getByTestId("new-run-stake-description").querySelectorAll("li"),
     ).toHaveLength(1);
   });
 
-  test("Red selected shows Red on top then White below (selected-first order, closes #833)", async () => {
+  test("Red selected shows Red on top then White below (selected-first order)", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-red"));
@@ -99,7 +99,7 @@ describe("NewRunScreen", () => {
     ]);
   });
 
-  test("Gold selected shows all 8 cumulative effects, gold-first then descending (closes #833)", async () => {
+  test("Gold selected shows all 8 cumulative effects, gold-first then descending", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-gold"));
@@ -118,7 +118,7 @@ describe("NewRunScreen", () => {
     ]);
   });
 
-  test("the currently-selected stake entry is marked data-selected (closes #833)", async () => {
+  test("the currently-selected stake entry is marked data-selected", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-orange"));
@@ -128,7 +128,7 @@ describe("NewRunScreen", () => {
     );
   });
 
-  test("non-selected cumulative entries are not marked data-selected (closes #833)", async () => {
+  test("non-selected cumulative entries are not marked data-selected", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-orange"));
@@ -137,7 +137,7 @@ describe("NewRunScreen", () => {
     );
   });
 
-  test("Black Stake effect text is shown when Gold is selected (closes #833)", async () => {
+  test("Black Stake effect text is shown when Gold is selected", async () => {
     const user = userEvent.setup();
     render(<NewRunScreen onConfirm={vi.fn()} />);
     await user.click(screen.getByTestId("new-run-stake-gold"));
@@ -219,19 +219,19 @@ describe("NewRunScreen", () => {
     expect(screen.getByTestId("new-run-confirm")).toHaveFocus();
   });
 
-  test("the deck radiogroup is not a list (#640)", () => {
+  test("the deck radiogroup is not a list", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     const group = screen.getByRole("radiogroup", { name: "Deck variant" });
     expect(group.tagName).toBe("DIV");
   });
 
-  test("the stake radiogroup is not a list (#640)", () => {
+  test("the stake radiogroup is not a list", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     const group = screen.getByRole("radiogroup", { name: "Stake difficulty" });
     expect(group.tagName).toBe("DIV");
   });
 
-  test("initial preview shows 4 Hands / 4 Discards on White Stake + Red Deck (#737)", () => {
+  test("initial preview shows 4 Hands / 4 Discards on White Stake + Red Deck", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getByTestId("new-run-preview-hands")).toHaveTextContent("4");
     expect(screen.getByTestId("new-run-preview-discards")).toHaveTextContent("4");
@@ -275,7 +275,7 @@ describe("NewRunScreen", () => {
     expect(screen.getByTestId("new-run-preview-hands")).toHaveTextContent("4");
   });
 
-  describe("deck tooltip on hover/focus (#835)", () => {
+  describe("deck tooltip on hover/focus", () => {
     test("no static deck description paragraph is rendered (replaced by hover tooltip)", () => {
       render(<NewRunScreen onConfirm={vi.fn()} />);
       expect(
@@ -345,7 +345,7 @@ describe("NewRunScreen", () => {
   });
 });
 
-describe("NewRunScreen focus trap (#907)", () => {
+describe("NewRunScreen focus trap", () => {
   test("wraps Tab from the confirm button back into the dialog and restores focus on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);

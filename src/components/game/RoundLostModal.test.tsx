@@ -57,7 +57,7 @@ describe("RoundLostModal", () => {
   });
 });
 
-describe("RoundLostModal i18n (#922)", () => {
+describe("RoundLostModal i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();
@@ -78,7 +78,7 @@ describe("RoundLostModal i18n (#922)", () => {
   });
 });
 
-describe("RoundLostModal focus trap (#949)", () => {
+describe("RoundLostModal focus trap", () => {
   test("traps Tab on the Try again button and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);

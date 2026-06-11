@@ -25,9 +25,8 @@ export interface RoundWonInfo {
   readonly walletAtPayout: number;
   // Wallet used to derive `interest`. Excludes the remaining-hands bonus —
   // the player shouldn't earn interest on a tip they just received this
-  // round (see #353). Also excludes end-of-round joker money (e.g. Cloud 9,
-  // Delayed Gratification) — joker EOR income is not subject to interest
-  // (see #620).
+  // round. Also excludes end-of-round joker money (e.g. Cloud 9,
+  // Delayed Gratification) — joker EOR income is not subject to interest.
   readonly interestWallet: number;
   readonly interest: number;
   readonly goldHeldCount: number;

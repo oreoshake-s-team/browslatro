@@ -30,16 +30,16 @@ describe("jokers store", () => {
     expect(useGame.getState().soldJokerIdsThisShopVisit).toHaveLength(0);
   });
 
-  test("starts with no pending joker grant ids (#654)", () => {
+  test("starts with no pending joker grant ids", () => {
     expect(useGame.getState().pendingJokerGrantIds).toHaveLength(0);
   });
 
-  test("setPendingJokerGrantIds accepts an updater function (#654)", () => {
+  test("setPendingJokerGrantIds accepts an updater function", () => {
     useGame.getState().setPendingJokerGrantIds((prev) => [...prev, "j1"]);
     expect(useGame.getState().pendingJokerGrantIds).toContain("j1");
   });
 
-  test("resetJokers clears pending joker grant ids (#654)", () => {
+  test("resetJokers clears pending joker grant ids", () => {
     useGame.getState().setPendingJokerGrantIds(["j1", "j2"]);
     useGame.getState().resetJokers();
     expect(useGame.getState().pendingJokerGrantIds).toHaveLength(0);

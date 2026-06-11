@@ -6,7 +6,7 @@ import {
 } from "../jokers";
 import { emptyHandCounts } from "../../components/hud/handPlayCounts";
 
-describe("Supernova joker (#804)", () => {
+describe("Supernova joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("supernova");

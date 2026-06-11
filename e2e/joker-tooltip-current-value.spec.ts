@@ -57,8 +57,8 @@ async function hoveredCurrentValue(page: Page, jokerId: string) {
   return row;
 }
 
-test.describe("Joker tooltip current scaling value (#884)", () => {
-  test("Egg tooltip shows $2 sell value on pickup and $5 after winning a round (#926)", async ({
+test.describe("Joker tooltip current scaling value", () => {
+  test("Egg tooltip shows $2 sell value on pickup and $5 after winning a round", async ({
     page,
   }) => {
     await setDeterministic(page);
@@ -110,7 +110,7 @@ test.describe("Joker tooltip current scaling value (#884)", () => {
   });
 });
 
-test.describe("Joker tooltip live-derived current value (#898)", () => {
+test.describe("Joker tooltip live-derived current value", () => {
   test("Abstract Joker tooltip shows the Mult derived from the joker count", async ({
     page,
   }) => {

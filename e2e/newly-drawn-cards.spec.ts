@@ -24,7 +24,7 @@ test("the initial deal has no newly-drawn markers", async ({ page }) => {
   await expect(page.locator(NEW_CARDS)).toHaveCount(0);
 });
 
-test("discarding two cards marks exactly the two replacements as newly drawn (#929)", async ({
+test("discarding two cards marks exactly the two replacements as newly drawn", async ({
   page,
 }) => {
   await startRound(page);
@@ -47,7 +47,7 @@ test("discarding two cards marks exactly the two replacements as newly drawn (#9
   }
 });
 
-test("playing a hand marks its replacement as newly drawn (#929)", async ({
+test("playing a hand marks its replacement as newly drawn", async ({
   page,
 }) => {
   await startRound(page);
@@ -57,7 +57,7 @@ test("playing a hand marks its replacement as newly drawn (#929)", async ({
   await expect(page.locator(NEW_CARDS)).toHaveCount(1);
 });
 
-test("reloading mid-round does not re-mark the last draw as newly drawn (#929)", async ({
+test("reloading mid-round does not re-mark the last draw as newly drawn", async ({
   page,
 }) => {
   await startRound(page);

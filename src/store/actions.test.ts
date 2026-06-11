@@ -48,7 +48,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(before);
   });
 
-  test("sellJoker is a no-op for an eternal joker (#577)", () => {
+  test("sellJoker is a no-op for an eternal joker", () => {
     const joker = {
       ...createJokerCatalog()[0],
       stickers: [{ kind: "eternal" as const }],
@@ -58,7 +58,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(1);
   });
 
-  test("sellJoker does not pay out for an eternal joker (#577)", () => {
+  test("sellJoker does not pay out for an eternal joker", () => {
     const joker = {
       ...createJokerCatalog()[0],
       stickers: [{ kind: "eternal" as const }],
@@ -109,7 +109,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(false);
   });
 
-  test("buyAnteVoucher applies Clearance Sale 25% off (#434)", () => {
+  test("buyAnteVoucher applies Clearance Sale 25% off", () => {
     const voucher = VOUCHER_CATALOG.find(
       (v) => !v.requires && v.id !== "clearance-sale",
     );
@@ -123,7 +123,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(expected);
   });
 
-  test("buyAnteVoucher applies Liquidation 50% off (#434)", () => {
+  test("buyAnteVoucher applies Liquidation 50% off", () => {
     const voucher = VOUCHER_CATALOG.find(
       (v) => !v.requires && v.id !== "clearance-sale" && v.id !== "liquidation",
     );
@@ -137,7 +137,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(expected);
   });
 
-  test("buyAnteVoucher succeeds at the discounted price when full price is unaffordable (#434, negative)", () => {
+  test("buyAnteVoucher succeeds at the discounted price when full price is unaffordable (negative)", () => {
     const voucher = VOUCHER_CATALOG.find(
       (v) => !v.requires && v.id !== "clearance-sale",
     );
@@ -151,7 +151,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ownedVoucherIds.has(voucher.id)).toBe(true);
   });
 
-  test("buyAnteVoucher Hieroglyph decrements ante by 1 (#279)", () => {
+  test("buyAnteVoucher Hieroglyph decrements ante by 1", () => {
     const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
     if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
     const game = useGame.getState();
@@ -162,7 +162,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(2);
   });
 
-  test("buyAnteVoucher Hieroglyph clamps ante to a minimum of 1 (#279)", () => {
+  test("buyAnteVoucher Hieroglyph clamps ante to a minimum of 1", () => {
     const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
     if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
     const game = useGame.getState();
@@ -173,7 +173,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(1);
   });
 
-  test("buyAnteVoucher Petroglyph requires Hieroglyph (#279, negative)", () => {
+  test("buyAnteVoucher Petroglyph requires Hieroglyph (negative)", () => {
     const petroglyph = VOUCHER_CATALOG.find((v) => v.id === "petroglyph");
     if (!petroglyph) throw new Error("expected Petroglyph voucher");
     const game = useGame.getState();
@@ -183,7 +183,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ownedVoucherIds.has("petroglyph")).toBe(false);
   });
 
-  test("buyAnteVoucher Petroglyph decrements ante by 1 when Hieroglyph is owned (#279)", () => {
+  test("buyAnteVoucher Petroglyph decrements ante by 1 when Hieroglyph is owned", () => {
     const petroglyph = VOUCHER_CATALOG.find((v) => v.id === "petroglyph");
     if (!petroglyph) throw new Error("expected Petroglyph voucher");
     const game = useGame.getState();
@@ -195,7 +195,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(3);
   });
 
-  test("buyAnteVoucher Hieroglyph immediately decrements remainingHands (#279)", () => {
+  test("buyAnteVoucher Hieroglyph immediately decrements remainingHands", () => {
     const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
     if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
     const game = useGame.getState();
@@ -206,7 +206,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().remainingHands).toBe(3);
   });
 
-  test("buyAnteVoucher Petroglyph immediately decrements remainingDiscards (#279)", () => {
+  test("buyAnteVoucher Petroglyph immediately decrements remainingDiscards", () => {
     const petroglyph = VOUCHER_CATALOG.find((v) => v.id === "petroglyph");
     if (!petroglyph) throw new Error("expected Petroglyph voucher");
     const game = useGame.getState();
@@ -218,7 +218,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().remainingDiscards).toBe(2);
   });
 
-  test("buyAnteVoucher Hieroglyph never drives remainingHands below 0 (#279)", () => {
+  test("buyAnteVoucher Hieroglyph never drives remainingHands below 0", () => {
     const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
     if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
     const game = useGame.getState();
@@ -325,14 +325,14 @@ describe("game actions slice", () => {
     expect(useGame.getState().openedPack).toBeNull();
   });
 
-  test("openPackOffer resets pickedPackOptionIndices even if previously populated (#647)", () => {
+  test("openPackOffer resets pickedPackOptionIndices even if previously populated", () => {
     const game = useGame.getState();
     game.setPickedPackOptionIndices(new Set([0, 1]));
     game.openPackOffer({ pool: "arcana", variant: "mega", options: [] });
     expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
   });
 
-  test("decrementPackPicks clears pickedPackOptionIndices once picks reach zero (#647)", () => {
+  test("decrementPackPicks clears pickedPackOptionIndices once picks reach zero", () => {
     const game = useGame.getState();
     game.setOpenedPack({ pool: "arcana", variant: "mega", options: [] });
     game.setPackPicksRemaining(1);
@@ -341,7 +341,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().pickedPackOptionIndices.size).toBe(0);
   });
 
-  test("decrementPackPicks keeps pickedPackOptionIndices while picks remain (#647)", () => {
+  test("decrementPackPicks keeps pickedPackOptionIndices while picks remain", () => {
     const game = useGame.getState();
     game.setOpenedPack({ pool: "arcana", variant: "mega", options: [] });
     game.setPackPicksRemaining(2);
@@ -350,7 +350,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().pickedPackOptionIndices.has(0)).toBe(true);
   });
 
-  test("closeOpenedPack clears pickedPackOptionIndices (#647)", () => {
+  test("closeOpenedPack clears pickedPackOptionIndices", () => {
     const game = useGame.getState();
     game.setOpenedPack({ pool: "arcana", variant: "mega", options: [] });
     game.setPickedPackOptionIndices(new Set([1]));
@@ -405,7 +405,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
   });
 
-  test("buyShopOffer allows MAX_JOKERS + 1 jokers when Black Deck is selected (closes #566)", () => {
+  test("buyShopOffer allows MAX_JOKERS + 1 jokers when Black Deck is selected", () => {
     const catalog = createJokerCatalog();
     const game = useGame.getState();
     game.setSelectedDeck("black-deck");
@@ -431,7 +431,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS);
   });
 
-  test("buyShopOffer appends a plain Magic Trick playing-card to addedCards (#282)", () => {
+  test("buyShopOffer appends a plain Magic Trick playing-card to addedCards", () => {
     const game = useGame.getState();
     const card = { id: 999, rank: "K" as const, suit: "spades" as const };
     game.setShopOffers([
@@ -444,7 +444,7 @@ describe("game actions slice", () => {
     ).toBe(true);
   });
 
-  test("buyShopOffer preserves enhancement/edition/seal from an Illusion playing-card offer (#282)", () => {
+  test("buyShopOffer preserves enhancement/edition/seal from an Illusion playing-card offer", () => {
     const game = useGame.getState();
     const card = {
       id: 1000,
@@ -467,7 +467,7 @@ describe("game actions slice", () => {
     ).toBe(true);
   });
 
-  test("buyShopOffer marks a playing-card offer sold after purchase (#282)", () => {
+  test("buyShopOffer marks a playing-card offer sold after purchase", () => {
     const game = useGame.getState();
     const card = { id: 1001, rank: "3" as const, suit: "diamonds" as const };
     game.setShopOffers([
@@ -479,7 +479,7 @@ describe("game actions slice", () => {
     expect(offers?.[0]?.sold).toBe(true);
   });
 
-  test("buyShopOffer for a playing-card returns false when unaffordable (#282, negative)", () => {
+  test("buyShopOffer for a playing-card returns false when unaffordable (negative)", () => {
     const game = useGame.getState();
     const card = { id: 1002, rank: "A" as const, suit: "clubs" as const };
     game.setShopOffers([
@@ -532,14 +532,14 @@ describe("game actions slice", () => {
     expect(useGame.getState().blind).toBe(1);
   });
 
-  test("handleWin resets remainingHands to the upcoming round's starting hands (#279)", () => {
+  test("handleWin resets remainingHands to the upcoming round's starting hands", () => {
     const game = useGame.getState();
     game.setRemainingHands(0);
     game.handleWin({ interest: 0, interestWallet: 0 });
     expect(useGame.getState().remainingHands).toBe(4);
   });
 
-  test("handleWin resets remainingDiscards to the upcoming round's starting discards (#279)", () => {
+  test("handleWin resets remainingDiscards to the upcoming round's starting discards", () => {
     const game = useGame.getState();
     game.setSelectedDeck("yellow-deck");
     game.setRemainingDiscards(0);
@@ -547,7 +547,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().remainingDiscards).toBe(3);
   });
 
-  test("handleWin reflects Hieroglyph penalty in the reset remainingHands (#279)", () => {
+  test("handleWin reflects Hieroglyph penalty in the reset remainingHands", () => {
     const game = useGame.getState();
     game.setOwnedVoucherIds(new Set(["hieroglyph"]));
     game.setRemainingHands(0);
@@ -555,7 +555,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().remainingHands).toBe(3);
   });
 
-  test("handleWin ticks the Perishable roundsHeld counter (closes #579)", () => {
+  test("handleWin ticks the Perishable roundsHeld counter", () => {
     const base = createJokerCatalog()[0];
     const game = useGame.getState();
     game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 2 }] }]);
@@ -564,7 +564,7 @@ describe("game actions slice", () => {
     expect(next).toEqual({ kind: "perishable", roundsHeld: 3 });
   });
 
-  test("after PERISHABLE_LIFE handleWin calls, the joker is no longer active (closes #579)", () => {
+  test("after PERISHABLE_LIFE handleWin calls, the joker is no longer active", () => {
     const base = createJokerCatalog()[0];
     const game = useGame.getState();
     game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 0 }] }]);
@@ -574,7 +574,7 @@ describe("game actions slice", () => {
     expect(isJokerActive(useGame.getState().jokers[0])).toBe(false);
   });
 
-  test("at PERISHABLE_LIFE - 1 ticks, the joker is still active (negative — closes #579)", () => {
+  test("at PERISHABLE_LIFE - 1 ticks, the joker is still active (negative)", () => {
     const base = createJokerCatalog()[0];
     const game = useGame.getState();
     game.setJokers([{ ...base, stickers: [{ kind: "perishable", roundsHeld: 0 }] }]);
@@ -584,7 +584,7 @@ describe("game actions slice", () => {
     expect(isJokerActive(useGame.getState().jokers[0])).toBe(true);
   });
 
-  test("handleWin applies the round-end joker pass (Popcorn decays — #871)", () => {
+  test("handleWin applies the round-end joker pass (Popcorn decays)", () => {
     const game = useGame.getState();
     game.setJokers([createPopcornJoker()]);
     game.setBlind(1);
@@ -595,7 +595,7 @@ describe("game actions slice", () => {
     });
   });
 
-  test("handleWin does not add a Perishable sticker to a non-stickered joker (negative — closes #579)", () => {
+  test("handleWin does not add a Perishable sticker to a non-stickered joker (negative)", () => {
     const base = createJokerCatalog()[0];
     const game = useGame.getState();
     game.setJokers([base]);
@@ -603,7 +603,7 @@ describe("game actions slice", () => {
     expect(hasSticker(useGame.getState().jokers[0], "perishable")).toBe(false);
   });
 
-  test("handleWin on the final-ante Boss Blind sets pendingGameWon (closes #384)", () => {
+  test("handleWin on the final-ante Boss Blind sets pendingGameWon", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -611,7 +611,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().pendingGameWon).not.toBeNull();
   });
 
-  test("handleWin on the final-ante Boss Blind does NOT advance ante past the final ante (closes #384)", () => {
+  test("handleWin on the final-ante Boss Blind does NOT advance ante past the final ante", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -619,7 +619,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(FINAL_ANTE);
   });
 
-  test("handleWin on the final-ante Boss Blind does NOT populate shopOffers (closes #384)", () => {
+  test("handleWin on the final-ante Boss Blind does NOT populate shopOffers", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -628,7 +628,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().shopOffers).toBeNull();
   });
 
-  test("handleWin on a pre-final Boss Blind advances ante and leaves pendingGameWon null (negative — closes #384)", () => {
+  test("handleWin on a pre-final Boss Blind advances ante and leaves pendingGameWon null (negative)", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE - 1);
     game.setBlind(3);
@@ -637,7 +637,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().pendingGameWon).toBeNull();
   });
 
-  test("pendingGameWon snapshot carries finalAnte, money, hands played, and skips (closes #384)", () => {
+  test("pendingGameWon snapshot carries finalAnte, money, hands played, and skips", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -653,7 +653,7 @@ describe("game actions slice", () => {
     });
   });
 
-  test("continueEndless clears pendingGameWon and enables endless mode (#855)", () => {
+  test("continueEndless clears pendingGameWon and enables endless mode", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -663,7 +663,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().endlessMode).toBe(true);
   });
 
-  test("continueEndless advances to the ante past the final ante (#855)", () => {
+  test("continueEndless advances to the ante past the final ante", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -673,7 +673,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().blind).toBe(1);
   });
 
-  test("continueEndless opens the post-boss shop (#855)", () => {
+  test("continueEndless opens the post-boss shop", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -683,7 +683,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().shopOffers).not.toBeNull();
   });
 
-  test("continueEndless is a no-op without a pending win (negative — #855)", () => {
+  test("continueEndless is a no-op without a pending win (negative)", () => {
     const game = useGame.getState();
     game.setAnte(3);
     game.continueEndless();
@@ -691,7 +691,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().endlessMode).toBe(false);
   });
 
-  test("handleWin in endless mode advances past the final ante instead of re-winning (#855)", () => {
+  test("handleWin in endless mode advances past the final ante instead of re-winning", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE);
     game.setBlind(3);
@@ -701,7 +701,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(FINAL_ANTE + 1);
   });
 
-  test("endless boss win past the final ante keeps advancing antes (#855)", () => {
+  test("endless boss win past the final ante keeps advancing antes", () => {
     const game = useGame.getState();
     game.setAnte(FINAL_ANTE + 2);
     game.setBlind(3);
@@ -711,7 +711,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().pendingGameWon).toBeNull();
   });
 
-  test("handleWin awards $0 for Small Blind on Red Stake (#553)", () => {
+  test("handleWin awards $0 for Small Blind on Red Stake", () => {
     const game = useGame.getState();
     game.setMoney(0);
     game.setSelectedStake("red");
@@ -835,21 +835,21 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(4);
   });
 
-  test("applySpectralEffect immolate persists destroyed ids in destroyedCardIds (#999)", () => {
+  test("applySpectralEffect immolate persists destroyed ids in destroyedCardIds", () => {
     const game = useGame.getState();
     game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
     game.applySpectralEffect({ kind: "immolate", destroyCount: 2, moneyGain: 0 });
     expect(useGame.getState().destroyedCardIds.size).toBe(2);
   });
 
-  test("applySpectralEffect transmute persists the destroyed id in destroyedCardIds (#999)", () => {
+  test("applySpectralEffect transmute persists the destroyed id in destroyedCardIds", () => {
     const game = useGame.getState();
     game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
     game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
     expect(useGame.getState().destroyedCardIds.size).toBe(1);
   });
 
-  test("applySpectralEffect transmute pushes the created cards to addedCards (#999)", () => {
+  test("applySpectralEffect transmute pushes the created cards to addedCards", () => {
     const game = useGame.getState();
     game.setDealt({ hand: createDeck().slice(0, 5), remaining: [] });
     game.applySpectralEffect({ kind: "transmute", rankFilter: "face", addCount: 3 });
@@ -877,7 +877,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().handSizeModifier).toBe(-1);
   });
 
-  describe("sigil/ouija conversions persist across deals (#1005)", () => {
+  describe("sigil/ouija conversions persist across deals", () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
@@ -1069,7 +1069,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toEqual([]);
   });
 
-  test("applySpectralEffect hex preserves an Eternal joker (#733)", () => {
+  test("applySpectralEffect hex preserves an Eternal joker", () => {
     const [a, b] = createJokerCatalog();
     const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
     useGame.getState().setJokers([eternalA, b]);
@@ -1078,7 +1078,7 @@ describe("game actions slice", () => {
     expect(ids).toEqual([a.id, b.id].sort());
   });
 
-  test("applySpectralEffect hex does not grant Polychrome to an Eternal joker (#733)", () => {
+  test("applySpectralEffect hex does not grant Polychrome to an Eternal joker", () => {
     const [a, b] = createJokerCatalog();
     const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
     useGame.getState().setJokers([eternalA, b]);
@@ -1087,7 +1087,7 @@ describe("game actions slice", () => {
     expect(eternal?.edition).toBeUndefined();
   });
 
-  test("applySpectralEffect hex on an all-Eternal slate is a no-op (#733, negative)", () => {
+  test("applySpectralEffect hex on an all-Eternal slate is a no-op (negative)", () => {
     const [a, b] = createJokerCatalog();
     const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
     const eternalB = { ...b, stickers: [{ kind: "eternal" as const }] };
@@ -1096,7 +1096,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers.map((j) => j.id)).toEqual([a.id, b.id]);
   });
 
-  test("applySpectralEffect ankh preserves an Eternal joker alongside the copied pair (#733)", () => {
+  test("applySpectralEffect ankh preserves an Eternal joker alongside the copied pair", () => {
     const [a, b] = createJokerCatalog();
     const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
     useGame.getState().setJokers([eternalA, b]);
@@ -1104,7 +1104,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().jokers).toHaveLength(3);
   });
 
-  test("applySpectralEffect ankh does not copy an Eternal joker (#733)", () => {
+  test("applySpectralEffect ankh does not copy an Eternal joker", () => {
     const [a, b] = createJokerCatalog();
     const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
     useGame.getState().setJokers([eternalA, b]);
@@ -1113,7 +1113,7 @@ describe("game actions slice", () => {
     expect(matches).toHaveLength(1);
   });
 
-  test("applySpectralEffect ankh on an all-Eternal slate is a no-op (#733, negative)", () => {
+  test("applySpectralEffect ankh on an all-Eternal slate is a no-op (negative)", () => {
     const [a, b] = createJokerCatalog();
     const eternalA = { ...a, stickers: [{ kind: "eternal" as const }] };
     const eternalB = { ...b, stickers: [{ kind: "eternal" as const }] };
@@ -1187,7 +1187,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().cardSealsById.get(preview[0].id)).toBe("red");
   });
 
-  test("duplicateSelectedPreviewCards adds the requested number of duplicates to addedCards (closes #630)", () => {
+  test("duplicateSelectedPreviewCards adds the requested number of duplicates to addedCards", () => {
     const preview = createDeck().slice(0, 3);
     const game = useGame.getState();
     game.setAddedCards([]);
@@ -1336,7 +1336,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().selectedHand?.label).toBe("Pair");
   });
 
-  test("toggleCard does not leak label when only face-down cards are selected (#764)", () => {
+  test("toggleCard does not leak label when only face-down cards are selected", () => {
     const base = createDeck()
       .filter((c) => c.rank === "5")
       .slice(0, 2);
@@ -1348,7 +1348,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().selectedHand).toBeNull();
   });
 
-  test("toggleCard zeroes chips and mult when only face-down cards are selected (#764)", () => {
+  test("toggleCard zeroes chips and mult when only face-down cards are selected", () => {
     const base = createDeck()
       .filter((c) => c.rank === "5")
       .slice(0, 2);
@@ -1361,7 +1361,7 @@ describe("game actions slice", () => {
     expect([state.chips, state.multiplier]).toEqual([0, 0]);
   });
 
-  test("toggleCard does not preview Pair when a face-down card would complete it (#764)", () => {
+  test("toggleCard does not preview Pair when a face-down card would complete it", () => {
     const fives = createDeck()
       .filter((c) => c.rank === "5")
       .slice(0, 1);
@@ -1375,7 +1375,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().selectedHand?.label).toBe("High Card");
   });
 
-  test("toggleCard still previews Pair when two face-up cards match (#764 regression)", () => {
+  test("toggleCard still previews Pair when two face-up cards match (regression)", () => {
     const hand = createDeck()
       .filter((c) => c.rank === "5")
       .slice(0, 2);
@@ -1386,7 +1386,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().selectedHand?.label).toBe("Pair");
   });
 
-  test("toggleCard previews label using only face-up cards when mixed with face-down (#764)", () => {
+  test("toggleCard previews label using only face-up cards when mixed with face-down", () => {
     const fives = createDeck()
       .filter((c) => c.rank === "5")
       .slice(0, 2);
@@ -1401,7 +1401,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().selectedHand?.label).toBe("Pair");
   });
 
-  test("toggleCard hides preview after The House flips initial hand face-down (#764)", () => {
+  test("toggleCard hides preview after The House flips initial hand face-down", () => {
     const house = createBossCatalog().find((b) => b.id === "the-house");
     if (!house) throw new Error("expected The House in the boss catalog");
     const fives = createDeck()
@@ -1578,7 +1578,7 @@ describe("pending shop modifiers", () => {
   });
 });
 
-describe("enhancement-gated jokers (#985)", () => {
+describe("enhancement-gated jokers", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     shopPickerRngConfig.rng = forceShopLayout(["joker", "joker"]);
@@ -1658,7 +1658,7 @@ describe("enhancement-gated jokers (#985)", () => {
   });
 });
 
-describe("applyDeathCopyToSelectedPreviewCards (#763)", () => {
+describe("applyDeathCopyToSelectedPreviewCards", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -1734,7 +1734,7 @@ describe("applyDeathCopyToSelectedPreviewCards (#763)", () => {
   });
 });
 
-describe("destroySelectedPreviewCards (#843)", () => {
+describe("destroySelectedPreviewCards", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -1778,7 +1778,7 @@ describe("destroySelectedPreviewCards (#843)", () => {
   });
 });
 
-describe("rankUpSelectedPreviewCards (#843)", () => {
+describe("rankUpSelectedPreviewCards", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -1834,7 +1834,7 @@ describe("rankUpSelectedPreviewCards (#843)", () => {
   });
 });
 
-describe("applyAuraSelectedPreviewCards (#843)", () => {
+describe("applyAuraSelectedPreviewCards", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });

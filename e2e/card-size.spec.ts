@@ -20,7 +20,7 @@ async function boxOf(page: Page, selector: string) {
   return box;
 }
 
-test("hand card, joker tile, consumable tile, and deck pile all render at the same dimensions (issue #214)", async ({
+test("hand card, joker tile, consumable tile, and deck pile all render at the same dimensions", async ({
   page,
 }) => {
   await page.goto("/");
@@ -38,7 +38,7 @@ test("hand card, joker tile, consumable tile, and deck pile all render at the sa
   expect(card.height).toBeCloseTo(deck.height, 0);
 });
 
-test("8 hand cards fit on one row at desktop width without wrapping (issue #214)", async ({
+test("8 hand cards fit on one row at desktop width without wrapping", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -53,7 +53,7 @@ test("8 hand cards fit on one row at desktop width without wrapping (issue #214)
   expect(Math.abs((firstTop ?? 0) - (lastTop ?? 0))).toBeLessThan(2);
 });
 
-test("13 hand cards squish instead of producing a horizontal scrollbar (issue #210)", async ({
+test("13 hand cards squish instead of producing a horizontal scrollbar", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });

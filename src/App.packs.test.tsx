@@ -142,7 +142,7 @@ describe("Celestial pack open + pick integration", () => {
   });
 });
 
-describe("Mega pack — picked option is removed from list (#647)", () => {
+describe("Mega pack — picked option is removed from list", () => {
   function megaCelestialPack(): PackOffer {
     const planets = createPlanetCatalog().slice(0, 5);
     return {

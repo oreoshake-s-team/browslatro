@@ -18,7 +18,7 @@ const shopCss = componentCss("shop", "Shop.css");
 const handCss = componentCss("cards", "Hand.css");
 const packOpenCss = componentCss("shop", "PackOpenModal.css");
 
-describe("focus-visible outlines (issue #913)", () => {
+describe("focus-visible outlines", () => {
   test("boss-blind override focus-visible uses the focus-ring token", () => {
     expect(
       ruleBody(blindSelectCss, ".blind-select-boss-override:focus-visible"),
@@ -79,7 +79,7 @@ describe("focus-visible outlines (issue #913)", () => {
 const scoringTraceCss = componentCss("hud", "ScoringTrace.css");
 const scoringTraceModalCss = componentCss("hud", "ScoringTraceModal.css");
 
-describe("scoring trace focus-visible outlines (issue #974)", () => {
+describe("scoring trace focus-visible outlines", () => {
   test("inline trace scroll focus-visible uses the focus-ring token", () => {
     expect(
       ruleBody(scoringTraceCss, ".scoring-trace__scroll:focus-visible"),

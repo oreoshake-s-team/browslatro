@@ -81,7 +81,7 @@ async function openPackOffer(
   await screen.findByTestId("pack-open-close");
 }
 
-describe("Selling and using during a pack-pick (#388)", () => {
+describe("Selling and using during a pack-pick", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
@@ -246,7 +246,7 @@ describe("Selling and using during a pack-pick (#388)", () => {
   });
 });
 
-describe("Drag-to-deck sell while the shop is open (#388)", () => {
+describe("Drag-to-deck sell while the shop is open", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
@@ -285,7 +285,7 @@ describe("Drag-to-deck sell while the shop is open (#388)", () => {
   });
 });
 
-describe("No overlay deck target during normal play (#388)", () => {
+describe("No overlay deck target during normal play", () => {
   test("the overlay deck-drop target is absent while the hand is visible", async () => {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -295,7 +295,7 @@ describe("No overlay deck target during normal play (#388)", () => {
   });
 });
 
-describe("Tarot/Spectral usage while a Standard pack is open (#821)", () => {
+describe("Tarot/Spectral usage while a Standard pack is open", () => {
   function strengthConsumable(): Consumable {
     const tarot = createTarotCatalog().find((t) => t.id === "strength");
     if (!tarot) throw new Error("Strength tarot missing from catalog");

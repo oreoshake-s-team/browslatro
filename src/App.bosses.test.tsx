@@ -50,7 +50,7 @@ async function dismissBlindSelect(
   if (btn) await user.click(btn);
 }
 
-describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
+describe("Boss Blinds — ante 1 (phase 0)", () => {
   test("with rng=0 the ante 1 picker lands on The Manacle (300 → 600 required score = 2x multiplier)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -62,7 +62,7 @@ describe("Boss Blinds — ante 1 (#245 phase 0)", () => {
   });
 });
 
-describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
+describe("Boss Blinds — ante 2 fresh-pool pick (phase 0)", () => {
   async function advanceToAnte2BossBlind(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
@@ -86,7 +86,7 @@ describe("Boss Blinds — ante 2 fresh-pool pick (#245 phase 0)", () => {
   });
 });
 
-describe("Boss Blinds — Phase 1 effects (#245)", () => {
+describe("Boss Blinds — Phase 1 effects", () => {
   function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
     let callIdx = 0;
     const recent = new Set<string>();
@@ -129,7 +129,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     ).toHaveLength(7);
   });
 
-  test("The Psychic does not gate Submit by selection count (#329)", async () => {
+  test("The Psychic does not gate Submit by selection count", async () => {
     bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -163,7 +163,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
       .forEach((btn) => fireEvent.animationEnd(btn));
   }
 
-  test("submitting 4 cards on The Psychic consumes a hand AND leaves round score at 0 (#329)", async () => {
+  test("submitting 4 cards on The Psychic consumes a hand AND leaves round score at 0", async () => {
     bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -187,7 +187,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
     expect(value?.textContent ?? "").toBe("0");
   });
 
-  test("submitting 5 cards on The Psychic still scores normally (#329)", async () => {
+  test("submitting 5 cards on The Psychic still scores normally", async () => {
     bossPickerRngConfig.rng = mkBossRng(["the-psychic"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -257,7 +257,7 @@ describe("Boss Blinds — Phase 1 effects (#245)", () => {
   });
 });
 
-describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
+describe("Boss Blinds — Phase 2 debuffs", () => {
   function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
     let callIdx = 0;
     const recent = new Set<string>();
@@ -321,7 +321,7 @@ describe("Boss Blinds — Phase 2 debuffs (#245)", () => {
 
 });
 
-describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
+describe("Boss Blinds — Phase 3 round-state effects", () => {
   function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
     let callIdx = 0;
     const recent = new Set<string>();
@@ -384,7 +384,7 @@ describe("Boss Blinds — Phase 3 round-state effects (#245)", () => {
   });
 });
 
-describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
+describe("Boss Blinds — Phase 4 face-down effects", () => {
   function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
     let callIdx = 0;
     const recent = new Set<string>();
@@ -466,7 +466,7 @@ describe("Boss Blinds — Phase 4 face-down effects (#245)", () => {
   });
 });
 
-describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
+describe("Boss Blinds — Phase 5 The Hook", () => {
   function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
     let callIdx = 0;
     const recent = new Set<string>();
@@ -613,7 +613,7 @@ describe("Boss Blinds — Phase 5 The Hook (#810)", () => {
   });
 });
 
-describe("Boss Blinds — Phase 5 The Serpent (#811)", () => {
+describe("Boss Blinds — Phase 5 The Serpent", () => {
   function flushDiscardAnimation(): void {
     for (let i = 0; i < 60; i += 1) {
       if (vi.getTimerCount() === 0) break;
@@ -675,7 +675,7 @@ describe("Boss Blinds — Phase 5 The Serpent (#811)", () => {
   });
 });
 
-describe("Boss Blinds — Phase 5 The Ox (#812)", () => {
+describe("Boss Blinds — Phase 5 The Ox", () => {
   function flushDiscardAnimation(): void {
     for (let i = 0; i < 60; i += 1) {
       if (vi.getTimerCount() === 0) break;

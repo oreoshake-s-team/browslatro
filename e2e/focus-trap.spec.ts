@@ -13,7 +13,7 @@ async function startRun(page: Page): Promise<void> {
   await page.getByTestId("new-run-confirm").click();
 }
 
-test.describe("Dialog focus trap + inert background (#907)", () => {
+test.describe("Dialog focus trap + inert background", () => {
   test("the app shell is inert while the boot and blind-select dialogs are open, and live again in gameplay", async ({
     page,
   }) => {

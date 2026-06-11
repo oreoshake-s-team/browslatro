@@ -29,7 +29,7 @@ async function openDetails(page: Page, text: RegExp): Promise<void> {
   await expect(details).toHaveAttribute("open", "");
 }
 
-test("Cryptid copies persist into the shop deck and the next round (#999)", async ({
+test("Cryptid copies persist into the shop deck and the next round", async ({
   page,
 }) => {
   await page.goto("/");

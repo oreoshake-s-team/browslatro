@@ -13,7 +13,7 @@ async function startRound(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
 }
 
-test("Submit Hand renders as the primary (green) variant (issue #874)", async ({
+test("Submit Hand renders as the primary (green) variant", async ({
   page,
 }) => {
   await startRound(page);
@@ -24,7 +24,7 @@ test("Submit Hand renders as the primary (green) variant (issue #874)", async ({
   expect(bg).toBe("rgb(81, 207, 102)");
 });
 
-test("Discard renders as the danger (red) variant (issue #874)", async ({
+test("Discard renders as the danger (red) variant", async ({
   page,
 }) => {
   await startRound(page);
@@ -37,7 +37,7 @@ test("Discard renders as the danger (red) variant (issue #874)", async ({
   expect(bg).toBe("rgb(224, 49, 49)");
 });
 
-test("the blind-select Play button uses the shared focus ring token (issue #874)", async ({
+test("the blind-select Play button uses the shared focus ring token", async ({
   page,
 }) => {
   await page.goto("/");

@@ -40,7 +40,7 @@ describe("applyJokersToScoring — Joker Stencil", () => {
   });
 });
 
-describe("applyHandLevelJokers — Joker Stencil (issue #131, #225)", () => {
+describe("applyHandLevelJokers — Joker Stencil", () => {
   test("multiplies xMult by empty-slot count when only Stencil is equipped", () => {
     const result = applyHandLevelJokers([createJokerStencilJoker()]);
     expect(result.xMult).toBe(MAX_JOKERS - 1);

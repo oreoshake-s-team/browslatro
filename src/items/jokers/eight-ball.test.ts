@@ -16,7 +16,7 @@ const baseCtx = {
   money: 10,
 } as const;
 
-describe("8 Ball (#1019)", () => {
+describe("8 Ball", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("8-ball");

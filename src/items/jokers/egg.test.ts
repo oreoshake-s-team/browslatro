@@ -18,7 +18,7 @@ function afterRounds(joker: Joker, rounds: number): Joker[] {
   return jokers;
 }
 
-describe("Egg (#885)", () => {
+describe("Egg", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("egg");

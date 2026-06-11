@@ -48,7 +48,7 @@ async function openPoolPack(
   await screen.findByTestId("pack-open-close");
 }
 
-describe("Spectral packs show a preview hand (#401)", () => {
+describe("Spectral packs show a preview hand", () => {
   test("opening a forced Spectral pack renders a preview hand", async () => {
     mockShuffleConfig.useIdentity = true;
     shopPickerRngConfig.rng = () => 0.5;
@@ -66,7 +66,7 @@ describe("Spectral packs show a preview hand (#401)", () => {
   });
 });
 
-describe("Applying owned enhancement tarots to the preview hand (#401)", () => {
+describe("Applying owned enhancement tarots to the preview hand", () => {
   async function reachArcanaPreviewWithTarot(): Promise<{
     user: ReturnType<typeof userEvent.setup>;
     tarotName: string | null;

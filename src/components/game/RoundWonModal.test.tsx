@@ -162,7 +162,7 @@ describe("RoundWonModal payout breakdown", () => {
     expect(onContinue).not.toHaveBeenCalled();
   });
 
-  test("interest row uses interestWallet, not walletAtPayout (#353)", () => {
+  test("interest row uses interestWallet, not walletAtPayout", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -177,7 +177,7 @@ describe("RoundWonModal payout breakdown", () => {
     expect(screen.getByTestId("round-won-interest")).toHaveTextContent("+$1");
   });
 
-  test("renders a row for each end-of-round joker step (#620)", () => {
+  test("renders a row for each end-of-round joker step", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -193,7 +193,7 @@ describe("RoundWonModal payout breakdown", () => {
     );
   });
 
-  test("labels each end-of-round joker row with the joker name (#620)", () => {
+  test("labels each end-of-round joker row with the joker name", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -209,7 +209,7 @@ describe("RoundWonModal payout breakdown", () => {
     );
   });
 
-  test("renders multiple end-of-round joker rows when several jokers paid out (#620)", () => {
+  test("renders multiple end-of-round joker rows when several jokers paid out", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -230,7 +230,7 @@ describe("RoundWonModal payout breakdown", () => {
     ).toHaveTextContent("+$6");
   });
 
-  test("includes end-of-round joker payouts in the total (#620)", () => {
+  test("includes end-of-round joker payouts in the total", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -246,12 +246,12 @@ describe("RoundWonModal payout breakdown", () => {
     expect(screen.getByTestId("round-won-total")).toHaveTextContent("$8");
   });
 
-  test("does not render any joker rows when no end-of-round jokers paid out (negative, #620)", () => {
+  test("does not render any joker rows when no end-of-round jokers paid out (negative)", () => {
     render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
     expect(screen.queryByTestId("round-won-joker-row-cloud-9")).not.toBeInTheDocument();
   });
 
-  test("does not render any joker rows when endOfRoundJokerSteps is an empty array (negative, #620)", () => {
+  test("does not render any joker rows when endOfRoundJokerSteps is an empty array (negative)", () => {
     const { container } = render(
       <RoundWonModal
         info={buildInfo({ endOfRoundJokerSteps: [] })}
@@ -263,7 +263,7 @@ describe("RoundWonModal payout breakdown", () => {
     ).toBeNull();
   });
 
-  test("renders a negative-amount joker step with a -$N prefix (#580 Rental)", () => {
+  test("renders a negative-amount joker step with a -$N prefix (Rental)", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -283,7 +283,7 @@ describe("RoundWonModal payout breakdown", () => {
     ).toHaveTextContent("-$3");
   });
 
-  test("subtracts a Rental drain from the total (#580)", () => {
+  test("subtracts a Rental drain from the total", () => {
     render(
       <RoundWonModal
         info={buildInfo({
@@ -304,7 +304,7 @@ describe("RoundWonModal payout breakdown", () => {
   });
 });
 
-describe("RoundWonModal — Green Deck payout (closes #818)", () => {
+describe("RoundWonModal — Green Deck payout", () => {
   test("renders the combined hands+discards bonus row when usesHandsAndDiscardsBonus is true", () => {
     render(
       <RoundWonModal
@@ -384,7 +384,7 @@ describe("RoundWonModal — Green Deck payout (closes #818)", () => {
   });
 });
 
-describe("RoundWonModal focus trap (#907)", () => {
+describe("RoundWonModal focus trap", () => {
   test("traps Tab on the Continue button and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);
@@ -403,7 +403,7 @@ describe("RoundWonModal focus trap (#907)", () => {
   });
 });
 
-describe("RoundWonModal i18n (#922)", () => {
+describe("RoundWonModal i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();
