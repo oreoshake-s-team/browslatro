@@ -13,6 +13,8 @@ export interface RateLimiterOptions {
   readonly now?: () => number;
 }
 
+export const MAX_TRACKED_KEYS = 10_000;
+
 export function createRateLimiter({
   limit,
   windowMs,
@@ -23,13 +25,16 @@ export function createRateLimiter({
     check(key) {
       const current = now();
       const cutoff = current - windowMs;
-      for (const [existingKey, hits] of hitsByKey) {
-        const fresh = hits.filter((hit) => hit > cutoff);
-        if (fresh.length === 0) hitsByKey.delete(existingKey);
-        else hitsByKey.set(existingKey, fresh);
+      if (hitsByKey.size >= MAX_TRACKED_KEYS) {
+        for (const [existingKey, hits] of hitsByKey) {
+          if (hits.length === 0 || hits[hits.length - 1] <= cutoff) {
+            hitsByKey.delete(existingKey);
+          }
+        }
       }
-      const fresh = hitsByKey.get(key) ?? [];
+      const fresh = (hitsByKey.get(key) ?? []).filter((hit) => hit > cutoff);
       if (fresh.length >= limit) {
+        hitsByKey.set(key, fresh);
         const retryAfterMs = fresh[0] + windowMs - current;
         return {
           allowed: false,

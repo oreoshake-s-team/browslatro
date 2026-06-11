@@ -8,8 +8,10 @@ export type AdviceClientErrorCode =
   | "rate_limited"
   | "invalid_json"
   | "invalid_request"
+  | "payload_too_large"
   | "advisor_busy"
   | "model_timeout"
+  | "model_refusal"
   | "model_error"
   | "network_error"
   | "timeout"
@@ -28,8 +30,10 @@ const SERVER_CODES: ReadonlySet<AdviceClientErrorCode> = new Set([
   "rate_limited",
   "invalid_json",
   "invalid_request",
+  "payload_too_large",
   "advisor_busy",
   "model_timeout",
+  "model_refusal",
   "model_error",
 ]);
 

@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from "vitest";
-import { handleAdviceRequest, type AdviceHandlerDeps } from "./handler";
+import {
+  handleAdviceRequest,
+  MAX_BODY_CHARS,
+  type AdviceHandlerDeps,
+} from "./handler";
 import type { Advice, AdviceModelResult } from "./model";
 import { createRateLimiter } from "./rateLimit";
 import { adviceRequestFixture, postAdvice } from "./test-helpers";
@@ -45,6 +49,24 @@ describe("handleAdviceRequest", () => {
   test("rejects malformed json", async () => {
     const response = await handleAdviceRequest(postAdvice("{nope"), makeDeps());
     expect(response.status).toBe(400);
+  });
+
+  test("rejects oversized bodies before parsing", async () => {
+    const oversized = JSON.stringify(adviceRequestFixture()).padEnd(
+      MAX_BODY_CHARS + 1,
+      " ",
+    );
+    const response = await handleAdviceRequest(postAdvice(oversized), makeDeps());
+    expect(response.status).toBe(413);
+  });
+
+  test("labels oversized bodies with a machine-readable code", async () => {
+    const oversized = JSON.stringify(adviceRequestFixture()).padEnd(
+      MAX_BODY_CHARS + 1,
+      " ",
+    );
+    const response = await handleAdviceRequest(postAdvice(oversized), makeDeps());
+    expect(await response.json()).toEqual({ error: "payload_too_large" });
   });
 
   test("rejects bodies that fail validation", async () => {

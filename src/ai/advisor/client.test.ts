@@ -66,6 +66,20 @@ describe("fetchAdvice", () => {
     expect(result).toEqual({ ok: false, code: "model_timeout" });
   });
 
+  test("maps a payload-too-large rejection to its machine-readable code", async () => {
+    const result = await callFetchAdvice(
+      fetchReturning(jsonResponse(413, { error: "payload_too_large" })),
+    );
+    expect(result).toEqual({ ok: false, code: "payload_too_large" });
+  });
+
+  test("maps a model refusal to its machine-readable code", async () => {
+    const result = await callFetchAdvice(
+      fetchReturning(jsonResponse(502, { error: "model_refusal" })),
+    );
+    expect(result).toEqual({ ok: false, code: "model_refusal" });
+  });
+
   test("maps an unknown server error code to invalid_response", async () => {
     const result = await callFetchAdvice(
       fetchReturning(jsonResponse(500, { error: "mystery" })),

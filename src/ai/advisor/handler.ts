@@ -14,6 +14,7 @@ export interface AdviceHandlerDeps {
 
 export const IP_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 export const GLOBAL_RATE_LIMIT = { limit: 100, windowMs: 60_000 };
+export const MAX_BODY_CHARS = 60_000;
 
 const defaultDeps: AdviceHandlerDeps = {
   ipLimiter: createRateLimiter(IP_RATE_LIMIT),
@@ -59,9 +60,13 @@ export async function handleAdviceRequest(
   if (!perIp.allowed) return rateLimited(perIp.retryAfterSeconds);
   const global = deps.globalLimiter.check("global");
   if (!global.allowed) return rateLimited(global.retryAfterSeconds);
+  const raw = await request.text();
+  if (raw.length > MAX_BODY_CHARS) {
+    return json(413, { error: "payload_too_large" });
+  }
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
     return json(400, { error: "invalid_json" });
   }

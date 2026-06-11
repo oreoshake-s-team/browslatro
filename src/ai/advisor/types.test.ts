@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { adviceRequestFixture, candidatesFixture } from "./test-helpers";
+import {
+  adviceRequestFixture,
+  candidatesFixture,
+  modelStateFixture,
+} from "./test-helpers";
 import { MAX_CANDIDATES, parseAdviceRequest } from "./types";
 
 describe("parseAdviceRequest", () => {
@@ -54,3 +58,63 @@ describe("parseAdviceRequest", () => {
 function modelStateOnly(): unknown {
   return adviceRequestFixture().state;
 }
+
+describe("parseAdviceRequest hardening", () => {
+  test("rejects a hand larger than the cap", () => {
+    const state = {
+      ...modelStateFixture(),
+      hand: Array.from({ length: 17 }, (_, index) => ({
+        ...modelStateFixture().hand[0],
+        id: index + 1,
+      })),
+    };
+    expect(
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
+    ).toBeNull();
+  });
+
+  test("rejects more jokers than the cap", () => {
+    const state = {
+      ...modelStateFixture(),
+      jokers: Array.from({ length: 17 }, () => ({})),
+    };
+    expect(
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
+    ).toBeNull();
+  });
+
+  test("rejects a blind without a numeric score target", () => {
+    const state = {
+      ...modelStateFixture(),
+      blind: { ...modelStateFixture().blind, scoreTarget: "300" },
+    };
+    expect(
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
+    ).toBeNull();
+  });
+
+  test("rejects non-finite money", () => {
+    const state = { ...modelStateFixture(), money: Number.POSITIVE_INFINITY };
+    expect(
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
+    ).toBeNull();
+  });
+
+  test("rejects a candidate with more cards than a legal play", () => {
+    const candidates = [
+      { ...candidatesFixture()[0], cardIds: [1, 2, 3, 4, 5, 6] },
+    ];
+    expect(
+      parseAdviceRequest({ ...adviceRequestFixture(), candidates }),
+    ).toBeNull();
+  });
+
+  test("rejects a play candidate without scoring fields", () => {
+    const candidates = [
+      { action: "play", cardIds: [1, 2], handLabel: "Pair" },
+    ];
+    expect(
+      parseAdviceRequest({ ...adviceRequestFixture(), candidates }),
+    ).toBeNull();
+  });
+});
