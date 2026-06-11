@@ -31,7 +31,7 @@ const config = {
 };
 
 const started = Date.now();
-const { records, runs } = generateDataset(config);
+const { records, runs } = await generateDataset(config);
 writeFileSync(outPath, `${serializeDatasetRecords(records)}\n`);
 
 const wins = runs.filter((r) => r.won).length;

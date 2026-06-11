@@ -45,9 +45,9 @@ function sameAction(option: HandOption, action: AgentAction): boolean {
   return option.cardIds.every((id, i) => id === action.cardIds[i]);
 }
 
-export function generateDataset(
+export async function generateDataset(
   config: GenerateDatasetConfig,
-): GenerateDatasetResult {
+): Promise<GenerateDatasetResult> {
   if (config.games <= 0) {
     throw new Error(`games must be positive, got ${config.games}`);
   }
@@ -64,9 +64,9 @@ export function generateDataset(
     });
     const recorder: HeadlessAgent = {
       name: "recorder",
-      chooseAction(view) {
+      async chooseAction(view) {
         const candidates = getHandOptions(view, topN);
-        const action = expert.chooseAction(view);
+        const action = await expert.chooseAction(view);
         records.push({
           schemaVersion: DATASET_SCHEMA_VERSION,
           runSeed: seed,
@@ -81,7 +81,7 @@ export function generateDataset(
       },
     };
     runs.push(
-      playHeadlessRun(recorder, {
+      await playHeadlessRun(recorder, {
         seed,
         maxAnte: config.maxAnte,
         jokers: config.jokers,
