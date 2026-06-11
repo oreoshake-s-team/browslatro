@@ -87,3 +87,15 @@
     padding: 1.2rem 1.2rem;
   }
 }
+
+.advisor-verbosity {
+  display: flex;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.advisor-verbosity-button[aria-pressed="true"] {
+  background-color: #339af0;
+  color: #fff;
+  border-color: #1c7ed6;
+}

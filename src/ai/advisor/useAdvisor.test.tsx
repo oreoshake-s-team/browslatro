@@ -92,6 +92,24 @@ describe("useAdvisor", () => {
     ).toEqual(sent);
   });
 
+  test("skips the API entirely when explanation is not requested", async () => {
+    dealPairHand();
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() => useAdvisor(makeDeps({ fetchAdviceFn })));
+    await act(() => result.current.requestAdvice({ explain: false }));
+    expect(fetchAdviceFn).not.toHaveBeenCalled();
+  });
+
+  test("reaches move-only with the top-ranked candidate when explanation is not requested", async () => {
+    dealPairHand();
+    const { result } = renderHook(() => useAdvisor(makeDeps()));
+    await act(() => result.current.requestAdvice({ explain: false }));
+    const state = result.current.state;
+    expect(state.phase === "move-only" && state.topCandidate).not.toBeNull();
+  });
+
   test("degrades to the top-ranked candidate when the fetch fails", async () => {
     dealPairHand();
     const fetchAdviceFn = vi
