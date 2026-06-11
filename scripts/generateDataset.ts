@@ -1,4 +1,8 @@
-import { writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   generateDataset,
   serializeDatasetRecords,
@@ -24,31 +28,115 @@ function intFlag(name: string, fallback: number): number {
   return value;
 }
 
-const outPath = process.argv[2];
-if (outPath === undefined || outPath.startsWith("--")) {
-  console.error(
-    "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F]",
-  );
-  process.exit(1);
+export type JobSlice = { readonly games: number; readonly seedOffset: number };
+
+export function sliceJobs(
+  totalGames: number,
+  baseSeedOffset: number,
+  jobCount: number,
+): JobSlice[] {
+  const actual = Math.min(jobCount, totalGames);
+  const base = Math.floor(totalGames / actual);
+  const remainder = totalGames % actual;
+  let offset = baseSeedOffset;
+  return Array.from({ length: actual }, (_, i) => {
+    const games = base + (i < remainder ? 1 : 0);
+    const slice: JobSlice = { games, seedOffset: offset };
+    offset += games;
+    return slice;
+  });
 }
 
-const config = {
-  games: intFlag("--games", 100),
-  seedOffset: intFlag("--seed-offset", 0),
-  rollouts: intFlag("--rollouts", 4),
-  topN: intFlag("--top-n", 3),
-  maxAnte: intFlag("--max-ante", 8),
-  jokerLoadoutFraction: floatFlag("--joker-loadout-fraction", 0),
-};
+const __filename = fileURLToPath(import.meta.url);
+const isMain = !!process.argv[1] && resolve(process.argv[1]) === __filename;
 
-const started = Date.now();
-const { records, runs } = await generateDataset(config);
-writeFileSync(outPath, `${serializeDatasetRecords(records)}\n`);
+if (isMain) {
+  const outPath = process.argv[2];
+  if (outPath === undefined || outPath.startsWith("--")) {
+    console.error(
+      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--parallel-jobs N]",
+    );
+    process.exit(1);
+  }
 
-const wins = runs.filter((r) => r.won).length;
-const blinds = runs.reduce((sum, r) => sum + r.blindsCleared, 0) / runs.length;
-console.log(
-  `${records.length} records from ${config.games} games in ${((Date.now() - started) / 1000).toFixed(1)}s`,
-);
-console.log(`expert: winRate=${wins / runs.length} avgBlindsCleared=${blinds.toFixed(2)}`);
-console.log(`wrote ${outPath}`);
+  const config = {
+    games: intFlag("--games", 100),
+    seedOffset: intFlag("--seed-offset", 0),
+    rollouts: intFlag("--rollouts", 4),
+    topN: intFlag("--top-n", 3),
+    maxAnte: intFlag("--max-ante", 8),
+    jokerLoadoutFraction: floatFlag("--joker-loadout-fraction", 0),
+  };
+
+  const parallelJobs = intFlag("--parallel-jobs", 1);
+
+  if (parallelJobs > 1) {
+    const evalIdx = process.execArgv.indexOf("--eval");
+    const loaderArgs = evalIdx >= 0 ? process.execArgv.slice(0, evalIdx) : [...process.execArgv];
+    const tmpDir = mkdtempSync(join(tmpdir(), "browslatro-ds-"));
+    const slices = sliceJobs(config.games, config.seedOffset, parallelJobs);
+
+    const started = Date.now();
+    console.log(`spawning ${slices.length} parallel jobs ...`);
+
+    let done = 0;
+    await Promise.all(
+      slices.map((slice, i) => {
+        const tmpOut = join(tmpDir, `chunk-${i}.jsonl`);
+        return new Promise<void>((resolve, reject) => {
+          const args = [
+            __filename,
+            tmpOut,
+            "--games", String(slice.games),
+            "--seed-offset", String(slice.seedOffset),
+            "--rollouts", String(config.rollouts),
+            "--top-n", String(config.topN),
+            "--max-ante", String(config.maxAnte),
+            ...(config.jokerLoadoutFraction > 0
+              ? ["--joker-loadout-fraction", String(config.jokerLoadoutFraction)]
+              : []),
+          ];
+          const proc = spawn(process.execPath, [...loaderArgs, ...args], { stdio: ["ignore", "ignore", "inherit"] });
+          proc.on("close", (code) => {
+            if (code === 0) {
+              done += 1;
+              process.stderr.write(`  ${done}/${slices.length} jobs done\n`);
+              resolve();
+            } else {
+              reject(new Error(`job ${i} (seed-offset ${slice.seedOffset}) exited ${String(code)}`));
+            }
+          });
+        });
+      }),
+    );
+
+    let totalRecords = 0;
+    const parts: string[] = [];
+    for (let i = 0; i < slices.length; i += 1) {
+      const content = readFileSync(join(tmpDir, `chunk-${i}.jsonl`), "utf8").trimEnd();
+      if (content.length > 0) {
+        totalRecords += content.split("\n").length;
+        parts.push(content);
+      }
+    }
+    writeFileSync(outPath, `${parts.join("\n")}\n`);
+    rmSync(tmpDir, { recursive: true });
+
+    console.log(
+      `${totalRecords} records from ${config.games} games in ${((Date.now() - started) / 1000).toFixed(1)}s`,
+    );
+    console.log(`wrote ${outPath}`);
+  } else {
+    const started = Date.now();
+    const { records, runs } = await generateDataset(config);
+    writeFileSync(outPath, `${serializeDatasetRecords(records)}\n`);
+
+    const wins = runs.filter((r) => r.won).length;
+    const blinds = runs.reduce((sum, r) => sum + r.blindsCleared, 0) / runs.length;
+    console.log(
+      `${records.length} records from ${config.games} games in ${((Date.now() - started) / 1000).toFixed(1)}s`,
+    );
+    console.log(`expert: winRate=${wins / runs.length} avgBlindsCleared=${blinds.toFixed(2)}`);
+    console.log(`wrote ${outPath}`);
+  }
+}
