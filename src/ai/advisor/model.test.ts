@@ -1,8 +1,32 @@
 // @vitest-environment node
 import Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, test } from "vitest";
+import type { AdviceRequest } from "./types";
 import { buildUserMessage, mapModelError, parseAdvice, type Advice } from "./model";
 import { adviceRequestFixture } from "./test-helpers";
+import { JOKER_WIKI } from "./wiki";
+
+function withBlueprintJoker(): AdviceRequest {
+  const base = adviceRequestFixture();
+  return {
+    ...base,
+    state: {
+      ...base.state,
+      jokers: [
+        {
+          id: "blueprint",
+          name: "Blueprint",
+          description: "Copies the ability of the Joker to the right",
+          effectKind: "copy-right",
+          rarity: "rare",
+          edition: null,
+          stickers: [],
+          counter: null,
+        },
+      ],
+    },
+  };
+}
 
 function validAdvice(): Advice {
   return {
@@ -23,6 +47,26 @@ describe("buildUserMessage", () => {
   test("includes the serialized game state", () => {
     const message = buildUserMessage(adviceRequestFixture());
     expect(message).toContain('"scoreTarget":300');
+  });
+
+  test("notes the left-to-right joker order when jokers are in play", () => {
+    const message = buildUserMessage(withBlueprintJoker());
+    expect(message).toContain("jokers trigger left to right");
+  });
+
+  test("omits the joker-order note when no jokers are in play", () => {
+    const message = buildUserMessage(adviceRequestFixture());
+    expect(message).not.toContain("jokers trigger left to right");
+  });
+
+  test("injects the wiki entry for an in-play joker", () => {
+    const message = buildUserMessage(withBlueprintJoker());
+    expect(message).toContain(`- Blueprint: ${JOKER_WIKI.blueprint}`);
+  });
+
+  test("omits the reference section when nothing is retrieved", () => {
+    const message = buildUserMessage(adviceRequestFixture());
+    expect(message).not.toContain("Reference notes:");
   });
 });
 
