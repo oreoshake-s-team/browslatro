@@ -9,6 +9,7 @@ import { tSuitName } from "../../i18n/strings";
 import {
   enhancementDisplayValue,
   type EnhancementValueColor,
+  type EnhancementValueTiming,
 } from "../../cards/enhancementDisplay";
 import {
   LUCKY_ENHANCEMENT_MONEY_AMOUNT,
@@ -61,6 +62,16 @@ const ENHANCEMENT_VALUE_LABEL_KEY = {
   mult: "a11y.enhancementValueMult",
   money: "a11y.enhancementValueMoney",
 } as const satisfies Record<EnhancementValueColor, string>;
+
+const ENHANCEMENT_VALUE_TIMING_LABEL_KEY = {
+  heldInHand: "a11y.enhancementValueHeldInHand",
+  heldAtEndOfRound: "a11y.enhancementValueHeldAtEndOfRound",
+} as const satisfies Record<Exclude<EnhancementValueTiming, "scored">, string>;
+
+const ENHANCEMENT_VALUE_TIMING_CAPTION_KEY = {
+  heldInHand: "cardLabels.valueInHand",
+  heldAtEndOfRound: "cardLabels.valueIfHeld",
+} as const satisfies Record<Exclude<EnhancementValueTiming, "scored">, string>;
 
 const SEAL_LABEL_KEY = {
   gold: "cardLabels.sealGold",
@@ -167,9 +178,15 @@ export default function Card({
   const luckyMultDenom = Math.round(1 / LUCKY_ENHANCEMENT_MULT_CHANCE);
   const luckyMoneyDenom = Math.round(1 / LUCKY_ENHANCEMENT_MONEY_CHANCE);
   const valueText = displayValue
-    ? t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
-        value: displayValue.text,
-      })
+    ? displayValue.timing === "scored"
+      ? t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
+          value: displayValue.text,
+        })
+      : t(ENHANCEMENT_VALUE_TIMING_LABEL_KEY[displayValue.timing], {
+          value: t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
+            value: displayValue.text,
+          }),
+        })
     : isLucky
       ? t("a11y.enhancementValueLucky", {
           multOdds: t("cardLabels.luckyOdds", { n: luckyMultDenom }),
@@ -260,6 +277,11 @@ export default function Card({
               data-testid={`card-center-value-${card.id}`}
             >
               {displayValue.text}
+              {displayValue.timing !== "scored" && (
+                <span className="card-center-value-timing">
+                  {t(ENHANCEMENT_VALUE_TIMING_CAPTION_KEY[displayValue.timing])}
+                </span>
+              )}
             </span>
           ) : isFaceRank(card.rank) ? (
             <span className="card-face-decoration" aria-hidden="true">

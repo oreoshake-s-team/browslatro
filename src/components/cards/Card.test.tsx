@@ -187,7 +187,7 @@ describe("Card", () => {
   test("appends the enhancement to the accessible label when gold", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold, +$3)");
+    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold, +$3 if held at end of round)");
   });
 
   test("does not append an enhancement suffix to a vanilla card's accessible label", () => {
@@ -244,7 +244,7 @@ describe("Card", () => {
   });
 
   test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
-    { enhancement: "steel", accessibleName: "A of Hearts (Steel, ×1.5 Mult)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
+    { enhancement: "steel", accessibleName: "A of Hearts (Steel, ×1.5 Mult while held in hand)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
     { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus, +30 chips)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
     { enhancement: "mult", accessibleName: "9 of Diamonds (Mult, +4 Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
     { enhancement: "wild", accessibleName: "K of Hearts (Wild)", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
@@ -292,6 +292,24 @@ describe("Card", () => {
     const gold: CardType = { id: 64, rank: "K", suit: "hearts", enhancement: "gold" };
     render(<Card card={gold} />);
     expect(screen.getByTestId("card-center-value-64")).toHaveTextContent("+$3");
+  });
+
+  test("a steel card captions its value as held in hand", () => {
+    const steel: CardType = { id: 67, rank: "10", suit: "clubs", enhancement: "steel" };
+    render(<Card card={steel} />);
+    expect(screen.getByTestId("card-center-value-67")).toHaveTextContent("in hand");
+  });
+
+  test("a gold card captions its value as if held", () => {
+    const gold: CardType = { id: 68, rank: "7", suit: "diamonds", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.getByTestId("card-center-value-68")).toHaveTextContent("if held");
+  });
+
+  test("a scoring enhancement shows no held caption (negative)", () => {
+    const bonus: CardType = { id: 69, rank: "5", suit: "spades", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.getByTestId("card-center-value-69")).not.toHaveTextContent("held");
   });
 
   test("keeps the face decoration on a wild face card with no display value", () => {
@@ -404,7 +422,7 @@ describe("Card", () => {
     };
     render(<Card card={sealed} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(
-      "K of Diamonds (Gold, +$3), Red Seal",
+      "K of Diamonds (Gold, +$3 if held at end of round), Red Seal",
     );
   });
 });

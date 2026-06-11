@@ -45,6 +45,8 @@ export const en = {
     editionPolychrome: "Polychrome",
     editionNegative: "Negative",
     luckyOdds: "1 in {{n}}",
+    valueInHand: "in hand",
+    valueIfHeld: "if held",
     luckyOddsMult: "1 in {{n}} ★",
     luckyOddsMoney: "1 in {{n}} $",
     sealGold: "Gold Seal",
@@ -258,6 +260,8 @@ export const en = {
     enhancementValueChips: "{{value}} chips",
     enhancementValueMult: "{{value}} Mult",
     enhancementValueMoney: "{{value}}",
+    enhancementValueHeldInHand: "{{value}} while held in hand",
+    enhancementValueHeldAtEndOfRound: "{{value}} if held at end of round",
     enhancementValueLucky:
       "{{multOdds}} for +{{mult}} Mult, {{moneyOdds}} for +${{money}}",
     cardWithDetail: "{{name}}, {{detail}}",

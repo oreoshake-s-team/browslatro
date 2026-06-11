@@ -6,6 +6,7 @@ describe("enhancementDisplayValue", () => {
     expect(enhancementDisplayValue("bonus")).toEqual({
       text: "+30",
       color: "chips",
+      timing: "scored",
     });
   });
 
@@ -13,6 +14,7 @@ describe("enhancementDisplayValue", () => {
     expect(enhancementDisplayValue("mult")).toEqual({
       text: "+4",
       color: "mult",
+      timing: "scored",
     });
   });
 
@@ -20,6 +22,7 @@ describe("enhancementDisplayValue", () => {
     expect(enhancementDisplayValue("glass")).toEqual({
       text: "×2",
       color: "mult",
+      timing: "scored",
     });
   });
 
@@ -27,6 +30,7 @@ describe("enhancementDisplayValue", () => {
     expect(enhancementDisplayValue("steel")).toEqual({
       text: "×1.5",
       color: "mult",
+      timing: "heldInHand",
     });
   });
 
@@ -34,6 +38,7 @@ describe("enhancementDisplayValue", () => {
     expect(enhancementDisplayValue("gold")).toEqual({
       text: "+$3",
       color: "money",
+      timing: "heldAtEndOfRound",
     });
   });
 
