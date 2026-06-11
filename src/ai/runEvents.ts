@@ -1,3 +1,4 @@
+import type { ShopItem } from "../items/shop";
 import type { GameState } from "../store/game";
 import type { ModelState } from "./modelState";
 
@@ -5,6 +6,7 @@ export const RUN_EVENT_SCHEMA_VERSION = 2;
 
 export type RunEventKind =
   | "purchase"
+  | "reroll"
   | "consumable-use"
   | "joker-sell"
   | "blind-skip";
@@ -29,6 +31,12 @@ export interface ShopItemSnapshot {
 export interface PurchaseEvent {
   readonly kind: "purchase";
   readonly item: ShopItemSnapshot;
+  readonly offers: ReadonlyArray<ShopItemSnapshot>;
+}
+
+export interface RerollEvent {
+  readonly kind: "reroll";
+  readonly cost: number;
   readonly offers: ReadonlyArray<ShopItemSnapshot>;
 }
 
@@ -60,6 +68,7 @@ export interface BlindSkipEvent {
 
 export type RunEvent =
   | PurchaseEvent
+  | RerollEvent
   | ConsumableUseEvent
   | JokerSellEvent
   | BlindSkipEvent;
@@ -81,3 +90,44 @@ export function buildRunEventRecord(
     ...event,
   };
 }
+
+export function shopItemSnapshot(
+  item: ShopItem,
+  cost: number,
+): ShopItemSnapshot {
+  switch (item.kind) {
+    case "joker":
+      return { itemType: "joker", id: item.joker.id, name: item.joker.name, cost };
+    case "planet":
+      return {
+        itemType: "planet",
+        id: item.planet.id,
+        name: item.planet.name,
+        cost,
+      };
+    case "tarot":
+      return { itemType: "tarot", id: item.tarot.id, name: item.tarot.name, cost };
+    case "spectral":
+      return {
+        itemType: "spectral",
+        id: item.spectral.id,
+        name: item.spectral.name,
+        cost,
+      };
+    case "playing-card":
+      return {
+        itemType: "playing-card",
+        id: String(item.card.id),
+        name: `${item.card.rank} of ${item.card.suit}`,
+        cost,
+      };
+    case "pack":
+      return {
+        itemType: "pack",
+        id: `${item.pack.pool}-${item.pack.variant}`,
+        name: `${item.pack.variant} ${item.pack.pool} pack`,
+        cost,
+      };
+  }
+}
+

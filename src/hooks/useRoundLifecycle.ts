@@ -1,4 +1,5 @@
 import { useGame } from "../store/game";
+import { captureRunEvent } from "../ai/humanPlayWiring";
 import { play } from "../components/system/sounds";
 import type { Blind } from "../cards/types";
 import {
@@ -57,6 +58,7 @@ import {
   tagOfferRngConfig,
   type AnteSkipOffer,
   type TagId,
+  getTagSpec,
 } from "../items/tags";
 import {
   deckCompositionTransforms,
@@ -455,6 +457,10 @@ export function useRoundLifecycle({
     if (blind === 3) return;
     const offered = blind === 1 ? skipTagOffers.small : skipTagOffers.big;
     const effect = resolveTagEffect(offered.id);
+    captureRunEvent(useGame.getState(), {
+      kind: "blind-skip",
+      tag: { id: offered.id, name: getTagSpec(offered.id).name },
+    });
     const nextStats = recordBlindSkipped(runStats);
     setBlind((prev) => (prev + 1) as Blind);
     setRound((prev) => prev + 1);

@@ -2,6 +2,7 @@ import type { GameState } from "../store/game";
 import { toModelStateInput, toSimulatePlayInput } from "./advisor/snapshot";
 import type { AgentAction } from "./headlessRun";
 import { recordHumanDecision } from "./humanPlay";
+import { buildRunEventRecord, type RunEvent } from "./runEvents";
 import { createHumanPlayLog, type HumanPlayLog } from "./humanPlayLog";
 
 let sharedLog: HumanPlayLog | null = null;
@@ -42,6 +43,23 @@ export function captureHumanDecision(
       deps?.seed ?? currentSessionSeed(),
     );
     if (record === null) return false;
+    return (deps?.log ?? humanPlayLog()).append(record);
+  } catch {
+    return false;
+  }
+}
+
+export function captureRunEvent(
+  state: GameState,
+  event: RunEvent,
+  deps?: CaptureDeps,
+): boolean {
+  try {
+    const record = buildRunEventRecord(
+      state,
+      deps?.seed ?? currentSessionSeed(),
+      event,
+    );
     return (deps?.log ?? humanPlayLog()).append(record);
   } catch {
     return false;

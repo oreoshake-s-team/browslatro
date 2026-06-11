@@ -11,6 +11,21 @@ import ModifierPlanetPicker from "./ModifierPlanetPicker";
 import ModifierPackPicker from "./ModifierPackPicker";
 import ModifierJokerPicker from "./ModifierJokerPicker";
 
+const HUMAN_PLAY_KIND_LABELS = {
+  hand: "devMenu.kind_hand",
+  purchase: "devMenu.kind_purchase",
+  reroll: "devMenu.kind_reroll",
+  "consumable-use": "devMenu.kind_consumable-use",
+  "joker-sell": "devMenu.kind_joker-sell",
+  "blind-skip": "devMenu.kind_blind-skip",
+} as const;
+
+function isKnownKind(
+  kind: string,
+): kind is keyof typeof HUMAN_PLAY_KIND_LABELS {
+  return kind in HUMAN_PLAY_KIND_LABELS;
+}
+
 export default function ModifierPanel() {
   const { t } = useTranslation();
   const [, setLogVersion] = useState(0);
@@ -142,6 +157,19 @@ export default function ModifierPanel() {
         >
           {t("devMenu.recordedDecisions", { count: humanPlayCount })}
         </span>
+        {humanPlayCount > 0 && (
+          <span
+            className="human-play-log-breakdown"
+            data-testid="human-play-log-breakdown"
+          >
+            {Object.entries(humanPlayLog().counts())
+              .map(
+                ([kind, kindCount]) =>
+                  `${isKnownKind(kind) ? t(HUMAN_PLAY_KIND_LABELS[kind]) : kind} ${kindCount}`,
+              )
+              .join(" \u00b7 ")}
+          </span>
+        )}
         <button
           type="button"
           className="human-play-log-export-button"

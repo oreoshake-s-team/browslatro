@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test } from "vitest";
 import { useConsumableActions } from "./useConsumableActions";
 import { useGame } from "../store/game";
+import { humanPlayLog } from "../ai/humanPlayWiring";
 import { createTarotCatalog } from "../items/tarots";
 import { CRYPTID_COPY_COUNT, createSpectralCatalog } from "../items/spectrals";
 import { MAX_JOKERS, createJokerCatalog } from "../items/jokers";
@@ -1326,5 +1327,31 @@ describe("useConsumableActions — The Magician enhancement persists for the run
     const { result } = renderHook(() => useConsumableActions());
     act(() => result.current.useConsumable(0));
     expect(useGame.getState().cardEnhancementsById.size).toBe(0);
+  });
+});
+
+describe("useConsumableActions — decision recording", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    useGame.getState().resetGame();
+    useGame.getState().setConsumables([hangedManConsumable()]);
+  });
+
+  test("using a consumable records a consumable-use event", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(humanPlayLog().counts()).toEqual({ "consumable-use": 1 });
+  });
+
+  test("the record carries the target card ids", () => {
+    const card: Card = { id: 1, rank: "A", suit: "spades" };
+    seedHand([card]);
+    useGame.getState().setSelectedIds(new Set([card.id]));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(humanPlayLog().toJsonl()).toContain('"targetCardIds":[1]');
   });
 });
