@@ -1,16 +1,16 @@
 .modifier-planet-picker {
   width: 100%;
   padding: 0.4rem 0.7rem 0.7rem;
-  border: 1px dashed #adb5bd;
+  border: 1px dashed var(--text-muted);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.55);
+  background-color: color-mix(in srgb, var(--white) 55%, transparent);
   box-sizing: border-box;
 }
 
 .modifier-planet-picker-summary {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #495057;
+  color: var(--shop-muted-on-light);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -19,7 +19,7 @@
 }
 
 .modifier-planet-picker-summary:hover {
-  color: #1864ab;
+  color: var(--edition-foil-deep);
 }
 
 .modifier-planet-picker[open] .modifier-planet-picker-grid {
@@ -42,9 +42,9 @@
   font-weight: 600;
   text-align: left;
   line-height: 1.2;
-  background-color: #e7f5ff;
-  color: #1864ab;
-  border: 1px solid #a5d8ff;
+  background-color: var(--edition-foil-tint);
+  color: var(--edition-foil-deep);
+  border: 1px solid var(--type-planet-light);
   border-radius: 6px;
   cursor: pointer;
   transition:
@@ -55,12 +55,12 @@
 }
 
 .add-planet-button:hover:not(:disabled) {
-  background-color: #d0ebff;
-  border-color: #74c0fc;
+  background-color: var(--edition-poly-tint-blue);
+  border-color: var(--accent-chips-text);
 }
 
 .add-planet-button:focus-visible {
-  outline: 2px solid #1864ab;
+  outline: 2px solid var(--edition-foil-deep);
   outline-offset: 2px;
 }
 

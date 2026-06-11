@@ -7,9 +7,9 @@
   align-items: stretch;
   gap: 0.6rem;
   padding: 1rem 1.4rem;
-  border: 2px solid rgba(245, 159, 0, 0.55);
+  border: 2px solid color-mix(in srgb, var(--accent-money-strong) 55%, transparent);
   border-radius: 8px;
-  background-color: #221d12;
+  background-color: var(--surface-dark-amber);
   box-sizing: border-box;
 }
 
@@ -22,8 +22,8 @@
 }
 
 .jokers-tray-empty {
-  border-color: rgba(245, 159, 0, 0.25);
-  background-color: rgba(255, 255, 255, 0.02);
+  border-color: color-mix(in srgb, var(--accent-money-strong) 25%, transparent);
+  background-color: color-mix(in srgb, var(--white) 2%, transparent);
 }
 
 .jokers-tray-empty .jokers-label {
@@ -54,9 +54,9 @@
   text-align: center;
   padding: 0.4rem 0.3rem;
   border-radius: 6px;
-  border: 2px solid #f59f00;
-  background-color: #ffe066;
-  color: #5c3c00;
+  border: 2px solid var(--accent-money-strong);
+  background-color: var(--accent-money-light);
+  color: var(--accent-money-text);
   overflow: hidden;
   box-sizing: border-box;
 }
@@ -123,8 +123,8 @@
   margin-top: 0.35rem;
   padding: 0.15rem 0.4rem;
   border-radius: 999px;
-  background-color: #fff3bf;
-  color: #5c3a00;
+  background-color: var(--accent-money-muted);
+  color: var(--shop-pack-heading);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -169,7 +169,7 @@
 }
 
 .joker-move-button:focus-visible {
-  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
   outline-offset: 1px;
 }
 
@@ -178,10 +178,10 @@
   bottom: 0.2rem;
   left: 50%;
   transform: translateX(-50%);
-  border: 1px solid #5c3c00;
+  border: 1px solid var(--accent-money-text);
   border-radius: 999px;
-  background-color: #fff3bf;
-  color: #5c3a00;
+  background-color: var(--accent-money-muted);
+  color: var(--shop-pack-heading);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -201,18 +201,18 @@
 }
 
 .joker-sell-button:hover {
-  background-color: #ffe066;
+  background-color: var(--accent-money-light);
 }
 
 .joker-sell-button:focus-visible {
-  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
   outline-offset: 1px;
 }
 
 .joker-tile-empty {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: color-mix(in srgb, var(--white) 4%, transparent);
   border-style: dashed;
-  border-color: rgba(245, 159, 0, 0.35);
+  border-color: color-mix(in srgb, var(--accent-money-strong) 35%, transparent);
   color: var(--text-muted);
   font-style: italic;
   font-size: 0.85rem;
@@ -247,8 +247,8 @@
 
 .joker-gap-active {
   flex-basis: var(--card-width);
-  background-color: rgba(245, 159, 0, 0.25);
-  outline: 2px dashed #f59f00;
+  background-color: color-mix(in srgb, var(--accent-money-strong) 25%, transparent);
+  outline: 2px dashed var(--accent-money-strong);
   outline-offset: -2px;
 }
 
@@ -261,7 +261,7 @@
 
 .jokers-consumable-target.jokers-consumable-hover {
   outline-color: var(--accent-success);
-  background-color: rgba(47, 158, 68, 0.15);
+  background-color: color-mix(in srgb, var(--enhance-lucky-border) 15%, transparent);
 }
 
 .consumable-drop-overlay {
@@ -271,7 +271,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  background-color: rgba(47, 158, 68, 0.18);
+  background-color: color-mix(in srgb, var(--enhance-lucky-border) 18%, transparent);
   pointer-events: none;
   z-index: 2;
 }
@@ -279,17 +279,17 @@
 .consumable-drop-overlay-label {
   padding: 0.5rem 1.4rem;
   border-radius: 999px;
-  background-color: #2f9e44;
-  color: #fff;
+  background-color: var(--enhance-lucky-border);
+  color: var(--white);
   font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 6px var(--shadow-subtle);
 }
 
 .jokers-consumable-hover .consumable-drop-overlay-use {
-  background-color: rgba(47, 158, 68, 0.32);
+  background-color: color-mix(in srgb, var(--enhance-lucky-border) 32%, transparent);
 }
 
 .joker-tile-edition {
@@ -297,39 +297,39 @@
 }
 
 .joker-tile-edition-foil {
-  border-color: #4dabf7;
-  box-shadow: 0 0 12px rgba(77, 171, 247, 0.6);
-  background: linear-gradient(135deg, #d0ebff 0%, #ffe066 60%, #d0ebff 100%);
+  border-color: var(--edition-foil);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--edition-foil) 60%, transparent);
+  background: linear-gradient(135deg, var(--edition-poly-tint-blue) 0%, var(--accent-money-light) 60%, var(--edition-poly-tint-blue) 100%);
 }
 
 .joker-tile-edition-holographic {
-  border-color: #cc5de8;
-  box-shadow: 0 0 12px rgba(204, 93, 232, 0.6);
-  background: linear-gradient(135deg, #f3d9fa 0%, #ffe066 50%, #c5f6fa 100%);
+  border-color: var(--edition-holo);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--edition-holo) 60%, transparent);
+  background: linear-gradient(135deg, var(--edition-poly-tint-purple) 0%, var(--accent-money-light) 50%, var(--enhance-glass-tint-3) 100%);
 }
 
 .joker-tile-edition-polychrome {
-  border-color: #ff8787;
-  box-shadow: 0 0 14px rgba(255, 135, 135, 0.65);
+  border-color: var(--edition-poly);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--edition-poly) 65%, transparent);
   background: linear-gradient(
     135deg,
-    #ffd6a5 0%,
-    #fdffb6 25%,
-    #caffbf 50%,
-    #9bf6ff 75%,
-    #ffc6ff 100%
+    var(--edition-poly-tile-1) 0%,
+    var(--edition-poly-tile-2) 25%,
+    var(--edition-poly-tile-3) 50%,
+    var(--edition-poly-tile-4) 75%,
+    var(--edition-poly-tile-5) 100%
   );
 }
 
 .joker-tile-edition-negative {
-  border-color: #495057;
-  box-shadow: 0 0 14px rgba(73, 80, 87, 0.7), inset 0 0 18px rgba(0, 0, 0, 0.45);
-  background-color: #212529;
-  color: #ffe066;
+  border-color: var(--shop-muted-on-light);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--shop-muted-on-light) 70%, transparent), inset 0 0 18px color-mix(in srgb, var(--black) 45%, transparent);
+  background-color: var(--text-on-light);
+  color: var(--accent-money-light);
 }
 
 .joker-tile-edition-negative .joker-tile-description {
-  color: #f1f3f5;
+  color: var(--surface-on-light-2);
 }
 
 @media (prefers-reduced-motion: reduce) {

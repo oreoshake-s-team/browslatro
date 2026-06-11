@@ -70,6 +70,36 @@ export function partitionByCategory(
   return { scoring, money };
 }
 
+export interface ResolvedHandTotals {
+  readonly chips: number;
+  readonly mult: number;
+  readonly total: number;
+}
+
+export function resolveHandTotals(
+  group: ScoringHandGroup,
+): ResolvedHandTotals | null {
+  if (!group.base) return null;
+  let chips = group.base.chips;
+  let mult = group.base.mult;
+  for (const event of group.events) {
+    switch (event.kind) {
+      case "chips-delta":
+        chips += event.amount;
+        break;
+      case "mult-delta":
+        mult += event.amount;
+        break;
+      case "mult-times":
+        mult *= event.factor;
+        break;
+      default:
+        break;
+    }
+  }
+  return { chips, mult, total: Math.floor(chips * mult) };
+}
+
 export function groupEventsByHand(
   events: ReadonlyArray<ScoringEvent>,
 ): ReadonlyArray<ScoringHandGroup> {

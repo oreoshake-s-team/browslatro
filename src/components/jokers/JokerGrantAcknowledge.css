@@ -1,7 +1,7 @@
 .joker-grant-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.65);
+  background-color: color-mix(in srgb, var(--black) 65%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,15 +9,15 @@
 }
 
 .joker-grant-modal {
-  background-color: #1a1f2e;
-  color: #f8f9fa;
-  border: 2px solid #51cf66;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 2px solid var(--accent-success);
   border-radius: 12px;
   padding: 2rem 2.4rem;
   width: min(28rem, 80vw);
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px var(--shadow-xl);
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -29,7 +29,7 @@
   font-size: 1.6rem;
   letter-spacing: 0.05em;
   text-align: center;
-  color: #b2f2bb;
+  color: var(--accent-success-light);
 }
 
 .joker-grant-list {
@@ -47,18 +47,18 @@
   gap: 0.2rem;
   padding: 0.6rem 0.8rem;
   border-radius: 8px;
-  border: 1px solid #51cf66;
-  background-color: rgba(81, 207, 102, 0.08);
+  border: 1px solid var(--accent-success);
+  background-color: color-mix(in srgb, var(--accent-success) 8%, transparent);
 }
 
 .joker-grant-name {
   font-weight: 700;
-  color: #c3fae8;
+  color: var(--type-spectral-badge-bg);
 }
 
 .joker-grant-description {
   font-size: 0.9rem;
-  color: #b2f2bb;
+  color: var(--accent-success-light);
 }
 
 .joker-grant-ok {

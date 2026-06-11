@@ -62,11 +62,11 @@
 
 .hand-sort-button-active {
   background-color: var(--accent-chips-strong);
-  color: white;
+  color: var(--white);
 }
 
 .hand-sort-button-active:hover {
-  background-color: #1864ab;
+  background-color: var(--edition-foil-deep);
 }
 
 .hand-row {
@@ -133,8 +133,8 @@
 
 .hand-card-gap-active {
   flex-basis: var(--card-width);
-  background-color: rgba(51, 154, 240, 0.18);
-  outline: 2px dashed #339af0;
+  background-color: color-mix(in srgb, var(--accent-chips) 18%, transparent);
+  outline: 2px dashed var(--accent-chips);
   outline-offset: -2px;
 }
 
@@ -207,6 +207,6 @@
 }
 
 .hand-move-button:focus-visible {
-  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
   outline-offset: 1px;
 }

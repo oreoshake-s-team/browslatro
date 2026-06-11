@@ -1,7 +1,7 @@
 .game-won-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--shadow-xl);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,13 +9,13 @@
 }
 
 .game-won-modal {
-  background-color: #fff9db;
-  border: 2px solid #fab005;
+  background-color: var(--accent-money-pale);
+  border: 2px solid var(--accent-stone);
   border-radius: 12px;
   padding: 2rem 2.4rem;
   min-width: 24rem;
   max-width: 36rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--black) 40%, transparent);
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
@@ -24,15 +24,15 @@
 .game-won-title {
   margin: 0;
   font-size: 2rem;
-  color: #f08c00;
+  color: var(--accent-money-deeper);
   text-align: center;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--black) 8%, transparent);
 }
 
 .game-won-subtitle {
   margin: 0;
   font-size: 0.95rem;
-  color: #5c3c00;
+  color: var(--accent-money-text);
   text-align: center;
 }
 
@@ -48,14 +48,14 @@
   justify-content: space-between;
   align-items: baseline;
   padding: 0.4rem 0.6rem;
-  background-color: white;
-  border: 1px solid #ffe066;
+  background-color: var(--white);
+  border: 1px solid var(--accent-money-light);
   border-radius: 6px;
 }
 
 .game-won-stat dt {
   font-size: 0.9rem;
-  color: #5c3c00;
+  color: var(--accent-money-text);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -64,7 +64,7 @@
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: #212529;
+  color: var(--text-on-light);
 }
 
 .game-won-actions {
@@ -77,9 +77,9 @@
 
 .game-won-endless {
   padding: 0.7rem 1.2rem;
-  border: 1px solid #f08c00;
-  background-color: #fab005;
-  color: #212529;
+  border: 1px solid var(--accent-money-deeper);
+  background-color: var(--accent-stone);
+  color: var(--text-on-light);
   font-size: 1rem;
   font-weight: 600;
   border-radius: 6px;
@@ -87,19 +87,19 @@
 }
 
 .game-won-endless:hover {
-  background-color: #f08c00;
+  background-color: var(--accent-money-deeper);
 }
 
 .game-won-endless:focus-visible {
-  outline: 2px solid #f08c00;
+  outline: 2px solid var(--accent-money-deeper);
   outline-offset: 2px;
 }
 
 .game-won-new-run {
   padding: 0.7rem 1.2rem;
-  border: 1px solid #f08c00;
+  border: 1px solid var(--accent-money-deeper);
   background-color: transparent;
-  color: #5c3c00;
+  color: var(--accent-money-text);
   font-size: 1rem;
   font-weight: 600;
   border-radius: 6px;
@@ -107,11 +107,11 @@
 }
 
 .game-won-new-run:hover {
-  background-color: rgba(250, 176, 5, 0.15);
-  color: #212529;
+  background-color: color-mix(in srgb, var(--accent-stone) 15%, transparent);
+  color: var(--text-on-light);
 }
 
 .game-won-new-run:focus-visible {
-  outline: 2px solid #f08c00;
+  outline: 2px solid var(--accent-money-deeper);
   outline-offset: 2px;
 }

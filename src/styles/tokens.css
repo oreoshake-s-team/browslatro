@@ -24,4 +24,178 @@
   --shop-muted-on-light: #495057;
   --suit-green-on-light: #1a7431;
   --suit-blue-on-light: #1971c2;
+
+  --white: #fff;
+  --black: #000;
+
+  --surface-on-light: #fff;
+  --surface-on-light-1: #f8f9fa;
+  --surface-on-light-2: #f1f3f5;
+  --surface-on-light-3: #e9ecef;
+  --border-on-light: #dee2e6;
+
+  --text-on-light: #212529;
+  --text-on-light-subtle: #343a40;
+  --text-on-light-dimmed: #868e96;
+  --text-on-light-mid: #6c757d;
+  --text-on-light-muted: #5c5c5c;
+
+  --surface-dark-modal: #1c2128;
+  --surface-dark-tile: #2f3640;
+  --surface-dark-preview: #161a1f;
+  --text-on-dark-modal: #e9ecef;
+  --text-near-black: #1a1a1a;
+  --surface-near-black: #0b0c0d;
+
+  --shadow-sm: rgba(0, 0, 0, 0.15);
+  --shadow-subtle: rgba(0, 0, 0, 0.18);
+  --shadow-md: rgba(0, 0, 0, 0.35);
+  --shadow-lg: rgba(0, 0, 0, 0.5);
+  --shadow-xl: rgba(0, 0, 0, 0.6);
+
+  --accent-money-light: #ffe066;
+  --accent-money-pale: #fff9db;
+  --accent-money-muted: #fff3bf;
+  --accent-money-strong: #f59f00;
+  --accent-money-deeper: #f08c00;
+  --accent-money-on-dark: #ffa94d;
+  --accent-money-on-dark-hover: #ffc078;
+  --accent-money-text: #5c3c00;
+  --accent-money-text-dark: #4d2a00;
+  --accent-stone: #fab005;
+  --shop-pack-heading: #5c3a00;
+
+  --accent-red-deep: #c92a2a;
+  --accent-mult-lighter: #ff6b6b;
+  --accent-nope: #ff4d5e;
+
+  --accent-orange: #ff922b;
+  --accent-reroll: #e8590c;
+  --accent-orange-deep: #d9480f;
+
+  --accent-chips-deep: #1864ab;
+  --accent-chips-mid: #1c7ed6;
+
+  --accent-pack: #5c7cfa;
+  --accent-boss-blind: #748ffc;
+
+  --scoring-money-color: #ffd866;
+  --scoring-success-light: #8be78b;
+  --scoring-success-lighter: #c4f0c4;
+  --text-near-white: #f5f5f5;
+
+  --type-joker-badge-bg: #ffe3e3;
+  --type-joker-badge-text: #862e2e;
+
+  --type-planet-border: #91a7ff;
+  --type-planet-accent: #364fc7;
+  --type-planet-bg: #edf2ff;
+  --type-planet-badge-bg: #dbe4ff;
+  --type-planet-badge-text: #1c3faa;
+
+  --type-tarot-border: #b197fc;
+  --type-tarot-accent: #5f3dc4;
+  --type-tarot-bg: #f3f0ff;
+  --type-tarot-hover: #7048e8;
+  --type-tarot-badge-bg: #e5dbff;
+  --type-tarot-badge-text: #3b1f7a;
+
+  --type-spectral-border: #63e6be;
+  --type-spectral-accent: #099268;
+  --type-spectral-bg: #e6fcf5;
+  --type-spectral-badge-bg: #c3fae8;
+  --type-spectral-badge-text: #0b5d3b;
+
+  --rarity-common-bg: #edf2ff;
+  --rarity-common-text: #364fc7;
+  --rarity-common-border: #bac8ff;
+  --rarity-uncommon-bg: #e6fcf5;
+  --rarity-uncommon-text: #087f5b;
+  --rarity-uncommon-border: #96f2d7;
+  --rarity-rare-bg: #fff0f6;
+  --rarity-rare-text: #a61e4d;
+  --rarity-rare-border: #fcc2d7;
+  --rarity-legendary-text: #964e00;
+
+  --edition-foil: #4dabf7;
+  --edition-foil-deep: #1864ab;
+  --edition-foil-tint: #e7f5ff;
+  --edition-holo: #cc5de8;
+  --edition-holo-deep: #862e9c;
+  --edition-holo-tint: #f8f0fc;
+  --edition-holo-tint-2: #e3fafc;
+  --edition-poly: #ff8787;
+  --edition-poly-tint-orange: #ffe8cc;
+  --edition-poly-tint-green: #d3f9d8;
+  --edition-poly-tint-blue: #d0ebff;
+  --edition-poly-tint-purple: #f3d9fa;
+  --edition-poly-tile-1: #ffd6a5;
+  --edition-poly-tile-2: #fdffb6;
+  --edition-poly-tile-3: #caffbf;
+  --edition-poly-tile-4: #9bf6ff;
+  --edition-poly-tile-5: #ffc6ff;
+
+  --enhance-wild-border: #845ef7;
+  --enhance-lucky-border: #2f9e44;
+  --enhance-lucky-inner: #8ff0a4;
+  --enhance-steel-mid: #868e96;
+  --enhance-steel-deep: #6c757d;
+  --enhance-glass-tint: #d6f0ff;
+  --enhance-glass-deep: #0c8599;
+  --enhance-mult-inner: #ff8a80;
+  --surface-dark-tile-selected: #343a40;
+
+  --seal-gold-deep: #b46d00;
+  --seal-red-light: #ffc9c9;
+  --seal-red-deep: #8b1818;
+  --seal-blue-light: #c5e6ff;
+  --seal-blue-deep: #1864ab;
+  --seal-purple-light: #e5d6ff;
+  --seal-purple-main: #845ef7;
+
+  --card-facedown-bg: #1864ab;
+  --card-facedown-border: #0b3d7a;
+  --card-suit-red: #c92a2a;
+  --card-suit-black: #212529;
+
+  --lucky-mult-bg: #d6336c;
+  --lucky-mult-border: #a61e4d;
+
+  --joker-sticker-eternal: #b58900;
+  --joker-sticker-perishable: #6a4f8a;
+  --joker-sticker-debuffed: #4a4a4a;
+  --joker-sticker-rental: #2aa198;
+
+  --shop-pack-border: #fab005;
+  --shop-offer-kind-spectral-text: #0b5d3b;
+  --shop-spectral-deep: #087f5b;
+
+  --type-joker-bg: #fff5f5;
+
+  --enhance-glass-badge: #66d9e8;
+  --enhance-glass-badge-text: #1a2540;
+  --enhance-stone-text: #3b2300;
+  --enhance-lucky-text: #1a3d20;
+
+  --modifier-clear-text: #d9480f;
+  --modifier-prob-text-active: #4d2a00;
+
+  --accent-success-light: #b2f2bb;
+  --accent-success-mid: #69db7c;
+  --accent-money-pale-2: #ffec99;
+  --accent-orange-light: #ffd8a8;
+  --edition-holo-light: #e599f7;
+  --enhance-glass-tint-2: #99e9f2;
+  --enhance-glass-tint-3: #c5f6fa;
+  --type-planet-light: #a5d8ff;
+  --type-planet-tint: #e6f0ff;
+  --type-tarot-pick-bg-light: #d0bfff;
+  --surface-dark-spectral: #1d1930;
+  --surface-dark-success: #102b1c;
+  --surface-dark-variant: #1f2228;
+  --surface-near-black-2: #12121a;
+  --surface-dark-amber: #221d12;
+
+  --accent-orange-pale: #fff4e6;
+  --accent-orange-strong: #e67700;
 }

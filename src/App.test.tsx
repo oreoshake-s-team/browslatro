@@ -492,7 +492,9 @@ describe("Submit Hand button integration", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
+    await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
     expect(document.querySelector(".chips")).toHaveTextContent("0");
   });
 
@@ -500,15 +502,15 @@ describe("Submit Hand button integration", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
+    await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
     expect(document.querySelector(".multiplier")).toHaveTextContent("0");
   });
 
-  test("submitting with no cards selected adds 0 to the round score", async () => {
-    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  test("the Submit Hand button is disabled when no cards are selected", async () => {
     render(<App />);
-    await user.click(screen.getByText(/Submit Hand/));
-    expect(document.querySelector(".round-score-value")).toHaveTextContent("0");
+    expect(screen.getByText(/Submit Hand/)).toBeDisabled();
   });
 
   test("adds the scoreHand result to the round score for a sub-threshold play", async () => {
@@ -607,13 +609,29 @@ describe("Losing integration", () => {
     );
   }
 
+  async function submitOneHighCard(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushDiscardAnimation();
+  }
+
+
+  async function exhaustAllHands(
+    user: ReturnType<typeof userEvent.setup>,
+  ): Promise<void> {
+    await dismissBlindSelect(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+    await submitOneHighCard(user);
+  }
+
   test("exhausting all hands without reaching the required score shows the round-lost modal", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
+    await exhaustAllHands(user);
     expect(
       await screen.findByRole("dialog", { name: "Game Over" }),
     ).toBeInTheDocument();
@@ -622,10 +640,7 @@ describe("Losing integration", () => {
   test("the round-lost modal renders the same Round Score the store committed for the final hand (no synchronous-alert staleness)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
+    await exhaustAllHands(user);
     const modalScore = Number(
       (await screen.findByTestId("round-lost-score")).textContent?.replace(
         /,/g,
@@ -638,11 +653,7 @@ describe("Losing integration", () => {
   test("dismissing the round-lost modal returns the player to the Blind Select screen", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    await dismissBlindSelect(user);
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
+    await exhaustAllHands(user);
     await dismissRoundLostModal(user);
     await dismissBlindSelect(user);
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
@@ -651,10 +662,7 @@ describe("Losing integration", () => {
   test("dismissing the round-lost modal leaves exactly one chips span in the sidebar HandScore", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
+    await exhaustAllHands(user);
     await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
@@ -662,21 +670,10 @@ describe("Losing integration", () => {
   test("dismissing the round-lost modal leaves exactly one multiplier span in the sidebar HandScore", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
-    await user.click(screen.getByText(/Submit Hand/));
+    await exhaustAllHands(user);
     await dismissRoundLostModal(user);
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
-
-  async function submitOneHighCard(
-    user: ReturnType<typeof userEvent.setup>,
-  ): Promise<void> {
-    await user.click(getHandCardButtons()[0]);
-    await user.click(screen.getByText(/Submit Hand/));
-    flushDiscardAnimation();
-  }
 
   test("losing after a real scoring sequence leaves exactly one chips span", async () => {
     mockShuffleConfig.useIdentity = true;
@@ -707,10 +704,7 @@ describe("Losing integration", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     for (let cycle = 0; cycle < 2; cycle += 1) {
-      await submitOneHighCard(user);
-      await submitOneHighCard(user);
-      await submitOneHighCard(user);
-      await submitOneHighCard(user);
+      await exhaustAllHands(user);
       await dismissRoundLostModal(user);
     }
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
@@ -911,8 +905,14 @@ describe("Sequential card scoring", () => {
   });
 
   test("the Submit Hand button is re-enabled after the scoring sequence completes", async () => {
-    await submitFirstFiveSpades();
+    mockShuffleConfig.useIdentity = true;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    await user.click(getHandCardButtons()[0]);
+    await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
+    await user.click(getHandCardButtons()[0]);
     expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
   });
 
@@ -1555,6 +1555,7 @@ describe("Post-round shop integration", () => {
     const user = await openShop();
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Add \$10/));
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
@@ -1862,6 +1863,7 @@ describe("Voucher integration", () => {
     const user = await openShop();
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Add \$10/));
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
@@ -1949,6 +1951,7 @@ describe("Voucher effects integration", () => {
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await dismissBlindSelect(user);
     await user.click(screen.getByText(/Add \$10/));
     const cards = getHandCardButtons();
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);

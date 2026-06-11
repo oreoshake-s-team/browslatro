@@ -2,9 +2,9 @@
   position: relative;
   width: var(--card-width);
   height: var(--card-height);
-  border: 2px dashed #adb5bd;
+  border: 2px dashed var(--text-muted);
   border-radius: 8px;
-  background-color: #f1f3f5;
+  background-color: var(--surface-on-light-2);
   cursor: pointer;
   padding: 0;
   display: flex;
@@ -26,7 +26,7 @@
 }
 
 .discard-pile-empty {
-  color: #495057;
+  color: var(--shop-muted-on-light);
   font-size: 0.9rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -37,8 +37,8 @@
   position: absolute;
   bottom: -0.4rem;
   right: -0.4rem;
-  background-color: #495057;
-  color: white;
+  background-color: var(--shop-muted-on-light);
+  color: var(--white);
   border-radius: 4px;
   padding: 0.1rem 0.4rem;
   font-size: 0.9rem;
@@ -61,7 +61,7 @@
 
 .discard-modal-group h4 {
   margin: 0 0 0.6rem;
-  color: #495057;
+  color: var(--shop-muted-on-light);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.9rem;
@@ -80,9 +80,9 @@
 }
 
 .modal {
-  background-color: #f8f9fa;
-  color: #495057;
-  border: 1px solid #dee2e6;
+  background-color: var(--text-primary);
+  color: var(--shop-muted-on-light);
+  border: 1px solid var(--border-on-light);
   border-radius: 0.5rem;
   padding: 1rem;
 }

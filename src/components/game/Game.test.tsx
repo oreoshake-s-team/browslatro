@@ -56,12 +56,27 @@ describe("Game", () => {
     useGame.getState().resetGame();
   });
 
-  test("Submit Hand button calls onSubmitHand", async () => {
+  test("Submit Hand button calls onSubmitHand when a card is selected", async () => {
     const user = userEvent.setup();
     const onSubmitHand = vi.fn();
+    useGame.getState().setSelectedIds(new Set([1]));
     renderGame({ onSubmitHand });
     await user.click(screen.getByText(/Submit Hand/));
     expect(onSubmitHand).toHaveBeenCalledTimes(1);
+  });
+
+  test("Submit Hand button is disabled when no cards are selected", () => {
+    useGame.getState().setSelectedIds(new Set());
+    renderGame();
+    expect(screen.getByRole("button", { name: /Submit Hand/ })).toBeDisabled();
+  });
+
+  test("Submit Hand button is enabled when at least one card is selected", () => {
+    useGame.getState().setSelectedIds(new Set([1]));
+    renderGame();
+    expect(
+      screen.getByRole("button", { name: /Submit Hand/ }),
+    ).not.toBeDisabled();
   });
 
   test("renders the player's hand of cards", () => {

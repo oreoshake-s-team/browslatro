@@ -358,6 +358,10 @@ describe("Boss Blinds — Phase 3 round-state effects", () => {
     expect(
       screen.getByRole("heading", { name: "The Mouth" }),
     ).toBeInTheDocument();
+    const cards = Array.from(
+      screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
+    );
+    await user.click(cards[0] as HTMLElement);
     expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
   });
 

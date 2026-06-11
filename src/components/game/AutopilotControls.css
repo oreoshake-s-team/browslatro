@@ -5,9 +5,9 @@
   flex-direction: column;
   gap: 0.8rem;
   padding: 1.2rem;
-  border: 1px solid #1c7ed6;
+  border: 1px solid var(--accent-chips-mid);
   border-radius: 12px;
-  background-color: rgba(51, 154, 240, 0.12);
+  background-color: color-mix(in srgb, var(--accent-chips) 12%, transparent);
 }
 
 .autopilot-title {
@@ -16,14 +16,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #4dabf7;
+  color: var(--edition-foil);
 }
 
 .autopilot-proposal {
   margin: 0;
   font-size: 1.05rem;
   font-weight: 700;
-  color: #e7f5ff;
+  color: var(--edition-foil-tint);
 }
 
 .autopilot-loading {
@@ -40,21 +40,21 @@
   border: none;
   border-radius: 999px;
   overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
 }
 
 .autopilot-progress::-webkit-progress-bar {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
   border-radius: 999px;
 }
 
 .autopilot-progress::-webkit-progress-value {
-  background-color: #4dabf7;
+  background-color: var(--edition-foil);
   border-radius: 999px;
 }
 
 .autopilot-progress::-moz-progress-bar {
-  background-color: #4dabf7;
+  background-color: var(--edition-foil);
   border-radius: 999px;
 }
 
@@ -65,33 +65,33 @@
 }
 
 .autopilot-approve-button {
-  background-color: #51cf66;
-  border-color: #2f9e44;
-  color: #1a1a1a;
+  background-color: var(--accent-success);
+  border-color: var(--enhance-lucky-border);
+  color: var(--text-near-black);
 }
 
 .autopilot-approve-button:hover:not(:disabled) {
-  background-color: #69db7c;
+  background-color: var(--accent-success-mid);
 }
 
 .autopilot-stop-button {
-  background-color: #ff6b6b;
-  border-color: #e03131;
-  color: #1a1a1a;
+  background-color: var(--accent-mult-lighter);
+  border-color: var(--accent-mult-strong);
+  color: var(--text-near-black);
 }
 
 .autopilot-stop-button:hover:not(:disabled) {
-  background-color: #ff8787;
+  background-color: var(--edition-poly);
 }
 
 .autopilot-askai-button {
-  background-color: rgba(132, 94, 247, 0.22);
-  border-color: #845ef7;
+  background-color: color-mix(in srgb, var(--enhance-wild-border) 22%, transparent);
+  border-color: var(--enhance-wild-border);
   color: var(--text-primary);
 }
 
 .autopilot-askai-button:hover:not(:disabled) {
-  background-color: rgba(132, 94, 247, 0.34);
+  background-color: color-mix(in srgb, var(--enhance-wild-border) 34%, transparent);
 }
 
 .autopilot-explanation {
@@ -99,7 +99,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
-  color: #dee2e6;
+  color: var(--border-on-light);
   line-height: 1.45;
 }
 
@@ -113,11 +113,11 @@
 }
 
 .autopilot-advice--recommendation {
-  border-left-color: #51cf66;
+  border-left-color: var(--accent-success);
 }
 
 .autopilot-advice--concept {
-  border-left-color: #4dabf7;
+  border-left-color: var(--edition-foil);
 }
 
 .autopilot-advice p {
@@ -138,16 +138,16 @@
 
 .autopilot-advice-move {
   font-weight: 700;
-  color: #e7f5ff;
+  color: var(--edition-foil-tint);
 }
 
 .autopilot-concept {
   font-style: italic;
-  color: #74c0fc;
+  color: var(--accent-chips-text);
 }
 
 .autopilot-controls .player-key-form {
-  border-top-color: rgba(255, 255, 255, 0.18);
+  border-top-color: color-mix(in srgb, var(--white) 18%, transparent);
 }
 
 .autopilot-controls .player-key-label {
@@ -165,5 +165,5 @@
 }
 
 .autopilot-controls .player-key-link {
-  color: #74c0fc;
+  color: var(--accent-chips-text);
 }

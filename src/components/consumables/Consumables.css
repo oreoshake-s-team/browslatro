@@ -7,23 +7,23 @@
   gap: 0.6rem;
   max-width: 23rem;
   padding: 1rem 1.4rem;
-  border: 2px solid rgba(132, 94, 247, 0.55);
+  border: 2px solid color-mix(in srgb, var(--enhance-wild-border) 55%, transparent);
   border-radius: 8px;
-  background-color: #1d1930;
+  background-color: var(--surface-dark-spectral);
   box-sizing: border-box;
 }
 
 .consumables-label {
   font-size: 1.2rem;
   font-weight: 600;
-  color: #b197fc;
+  color: var(--type-tarot-border);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .consumables-tray-empty {
-  border-color: rgba(132, 94, 247, 0.25);
-  background-color: rgba(255, 255, 255, 0.02);
+  border-color: color-mix(in srgb, var(--enhance-wild-border) 25%, transparent);
+  background-color: color-mix(in srgb, var(--white) 2%, transparent);
 }
 
 .consumables-tray-empty .consumables-label {
@@ -58,9 +58,9 @@
   text-align: center;
   padding: 0.4rem 0.3rem;
   border-radius: 6px;
-  border: 2px solid #845ef7;
-  background-color: #d0bfff;
-  color: #3b1f7a;
+  border: 2px solid var(--enhance-wild-border);
+  background-color: var(--type-tarot-pick-bg-light);
+  color: var(--type-tarot-badge-text);
   font-family: inherit;
   cursor: pointer;
   overflow: hidden;
@@ -68,27 +68,27 @@
 }
 
 .consumable-tile-planet {
-  background-color: #bac8ff;
-  border-color: #5c7cfa;
-  color: #1c3faa;
+  background-color: var(--rarity-common-border);
+  border-color: var(--accent-pack);
+  color: var(--type-planet-badge-text);
 }
 
 .consumable-tile-tarot {
-  background-color: #d0bfff;
-  border-color: #845ef7;
-  color: #3b1f7a;
+  background-color: var(--type-tarot-pick-bg-light);
+  border-color: var(--enhance-wild-border);
+  color: var(--type-tarot-badge-text);
 }
 
 .consumable-tile-spectral {
-  background-color: #c3fae8;
-  border-color: #099268;
-  color: #0b5d3b;
+  background-color: var(--type-spectral-badge-bg);
+  border-color: var(--type-spectral-accent);
+  color: var(--type-spectral-badge-text);
 }
 
 .consumable-tile-empty {
-  background-color: rgba(255, 255, 255, 0.04);
+  background-color: color-mix(in srgb, var(--white) 4%, transparent);
   border-style: dashed;
-  border-color: rgba(132, 94, 247, 0.4);
+  border-color: color-mix(in srgb, var(--enhance-wild-border) 40%, transparent);
   color: var(--text-muted);
   font-style: italic;
   font-size: 0.85rem;
@@ -122,8 +122,8 @@
   margin-top: 0.35rem;
   padding: 0.15rem 0.4rem;
   border-radius: 999px;
-  background-color: #fff3bf;
-  color: #5c3a00;
+  background-color: var(--accent-money-muted);
+  color: var(--shop-pack-heading);
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;

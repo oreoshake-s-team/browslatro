@@ -5,10 +5,10 @@
   min-width: 11rem;
   max-width: 17rem;
   padding: 0.5rem 0.75rem;
-  background-color: #212529;
-  color: #f8f9fa;
+  background-color: var(--text-on-light);
+  color: var(--text-primary);
   border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px var(--shadow-md);
   font-size: 0.85rem;
   line-height: 1.3;
   pointer-events: none;
@@ -28,24 +28,24 @@
 
 .card-tooltip-suit-hearts,
 .card-tooltip-suit-diamonds {
-  color: #ff8787;
+  color: var(--edition-poly);
 }
 
 .card-tooltip-suit-spades,
 .card-tooltip-suit-clubs {
-  color: #f8f9fa;
+  color: var(--text-primary);
 }
 
 .card-tooltip-chips {
-  color: #adb5bd;
+  color: var(--text-muted);
 }
 
 .card-tooltip-enhancement {
-  color: #ffe066;
+  color: var(--accent-money-light);
 }
 
 .card-tooltip-seal {
-  color: #d0bfff;
+  color: var(--type-tarot-pick-bg-light);
 }
 
 .visually-hidden {

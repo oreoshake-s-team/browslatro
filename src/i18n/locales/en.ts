@@ -51,6 +51,7 @@ export const en = {
   },
   scoringTrace: {
     handHeading: "Hand {{number}}: {{hand}} (Lv {{level}})",
+    handTotal: "{{chips}} Chips × {{mult}} Mult = {{total}}",
   },
   handScore: {
     preview: "{{chips}} chips × {{mult}} mult",

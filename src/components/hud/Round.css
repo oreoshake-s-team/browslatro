@@ -27,7 +27,7 @@
 
 .boss-locked-hand {
   font-size: 1.1rem;
-  color: #b197fc;
+  color: var(--type-tarot-border);
   max-width: 18rem;
   margin: 0.5rem auto;
   padding: 0.3rem 0;

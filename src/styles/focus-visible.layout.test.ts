@@ -40,7 +40,7 @@ describe("focus-visible outlines", () => {
   test("shop voucher override focus-visible draws a high-contrast outline", () => {
     expect(
       ruleBody(shopCss, ".shop-voucher-override:focus-visible"),
-    ).toMatch(/outline\s*:\s*2px solid #5f3dc4/);
+    ).toMatch(/outline\s*:\s*2px solid var\(--type-tarot-accent\)/);
   });
 
   test("negative: shop voucher override focus-visible no longer removes the outline", () => {

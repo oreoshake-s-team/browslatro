@@ -4,6 +4,7 @@ import {
   formatScoringEvent,
   groupEventsByHand,
   partitionByCategory,
+  resolveHandTotals,
   type ScoringEvent,
 } from "./scoringTrace";
 import type { Card } from "../cards/types";
@@ -196,6 +197,55 @@ describe("groupEventsByHand", () => {
     ];
     const groups = groupEventsByHand(events);
     expect(groups[0].base).toBeNull();
+  });
+});
+
+describe("resolveHandTotals", () => {
+  test("returns null for a base-less group (negative)", () => {
+    const [group] = groupEventsByHand([
+      { kind: "chips-delta", amount: 5, source: "orphan" },
+    ]);
+    expect(resolveHandTotals(group)).toBeNull();
+  });
+
+  test("adds chips-delta events to the base chips", () => {
+    const [group] = groupEventsByHand([
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+    ]);
+    expect(resolveHandTotals(group)?.chips).toBe(21);
+  });
+
+  test("adds mult-delta events to the base mult", () => {
+    const [group] = groupEventsByHand([
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "mult-delta", amount: 4, source: "Mult enhancement" },
+    ]);
+    expect(resolveHandTotals(group)?.mult).toBe(6);
+  });
+
+  test("multiplies mult by mult-times factors", () => {
+    const [group] = groupEventsByHand([
+      { kind: "hand-base", chips: 10, mult: 3, handLabel: "Pair", level: 1 },
+      { kind: "mult-times", factor: 2, source: "Glass" },
+    ]);
+    expect(resolveHandTotals(group)?.mult).toBe(6);
+  });
+
+  test("floors the chips × mult product into the total", () => {
+    const [group] = groupEventsByHand([
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "mult-times", factor: 1.5, source: "Glass" },
+    ]);
+    expect(resolveHandTotals(group)?.total).toBe(30);
+  });
+
+  test("ignores money-delta events when resolving totals (negative)", () => {
+    const [group] = groupEventsByHand([
+      { kind: "hand-base", chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "money-delta", amount: 99, source: "Gold card" },
+    ]);
+    expect(resolveHandTotals(group)?.total).toBe(20);
   });
 });
 

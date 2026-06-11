@@ -1,7 +1,7 @@
 // @vitest-environment node
 /// <reference types="node" />
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, readdirSync, statSync } from "fs";
+import { join, extname } from "path";
 
 const tokensCss = readFileSync(join(__dirname, "tokens.css"), "utf8");
 const indexCss = readFileSync(join(__dirname, "..", "index.css"), "utf8");
@@ -72,5 +72,70 @@ describe("contrast tokens", () => {
     );
     expect(shopCss).not.toMatch(/\n\s*color:\s*#099268/);
     expect(shopCss).not.toMatch(/\n\s*color:\s*#2b8a3e/);
+  });
+});
+
+function collectCssFiles(dir: string): string[] {
+  const entries = readdirSync(dir);
+  const files: string[] = [];
+  for (const entry of entries) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) {
+      files.push(...collectCssFiles(full));
+    } else if (extname(entry) === ".css" && entry !== "tokens.css") {
+      files.push(full);
+    }
+  }
+  return files;
+}
+
+describe("no raw color literals in component CSS", () => {
+  const srcDir = join(__dirname, "..");
+  const cssFiles = collectCssFiles(srcDir);
+
+  const LITERAL_COLOR_RE =
+    /(?<![a-z])#[0-9a-fA-F]{3,8}(?![0-9a-fA-F])|(?<!\w)rgba?\s*\(|(?<!\w)hsla?\s*\(/;
+  const NAMED_COLOR_RE = /\bwhite\b|\bblack\b/;
+
+  function stripTokenRefs(line: string): string {
+    return line
+      .replace(/var\(--[^)]+\)/g, "TOKEN")
+      .replace(/color-mix\(in\s+\w+,\s*[^)]+\)/g, "COLORMIX");
+  }
+
+  function lineHasRawColor(raw: string): boolean {
+    const line = stripTokenRefs(raw);
+    if (LITERAL_COLOR_RE.test(line)) return true;
+    const colonIdx = line.lastIndexOf(":");
+    if (colonIdx === -1) return false;
+    return NAMED_COLOR_RE.test(line.slice(colonIdx + 1));
+  }
+
+  function getNonCommentLines(content: string): string[] {
+    return content
+      .split("\n")
+      .filter(
+        (l) =>
+          !l.trim().startsWith("/*") &&
+          !l.trim().startsWith("*") &&
+          !l.trim().startsWith("//"),
+      );
+  }
+
+  test.each(cssFiles.map((f) => [f.replace(srcDir + "/", ""), f]))(
+    "no raw literals in %s",
+    (_, fullPath) => {
+      const content = readFileSync(fullPath, "utf8");
+      const violatingLines = getNonCommentLines(content).filter(lineHasRawColor);
+      expect(violatingLines).toHaveLength(0);
+    },
+  );
+
+  test("tokens.css is the only file allowed to contain raw color literals", () => {
+    const violatingFiles = cssFiles.filter((f) => {
+      const content = readFileSync(f, "utf8");
+      return getNonCommentLines(content).some(lineHasRawColor);
+    });
+    expect(violatingFiles).toHaveLength(0);
   });
 });
