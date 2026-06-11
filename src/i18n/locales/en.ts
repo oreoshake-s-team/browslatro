@@ -6,6 +6,7 @@ export const en = {
   sidebar: {
     runInfo: "Run info",
     options: "Options",
+    help: "Help",
     hands: "Hands",
     discards: "Discards",
     money: "Money",
@@ -49,6 +50,10 @@ export const en = {
     valueIfHeld: "if held",
     luckyOddsMult: "1 in {{n}} ★",
     luckyOddsMoney: "1 in {{n}} $",
+    editionBadgeFoil: "Foil",
+    editionBadgeHolographic: "Holo",
+    editionBadgePolychrome: "Poly",
+    editionBadgeNegative: "Neg",
     sealGold: "Gold Seal",
     sealRed: "Red Seal",
     sealBlue: "Blue Seal",
@@ -134,6 +139,19 @@ export const en = {
     playedHeader: "Played",
     noVouchers: "No vouchers purchased yet.",
     close: "Close",
+  },
+  help: {
+    title: "How to play",
+    textGuides: "Text guides",
+    videoTutorials: "Video tutorials",
+    close: "Close",
+    wikiTutorial: "Balatro Wiki — Tutorial",
+    steamBeginnerGuide: "Steam — A Beginner's Guide to Balatro",
+    gameranxTips: "Gameranx — Beginner Tips & Tricks",
+    videoCompleteBeginner: "Complete Beginner's Guide to Balatro",
+    videoHowToPlay: "How to Play Balatro: Guide, Tutorial, Tips & Tricks",
+    videoTutorialBeginners:
+      "Tutorial: How to Play Balatro for Complete Beginners",
   },
   shop: {
     title: "Shop",
@@ -252,6 +270,7 @@ export const en = {
     clubs: "Clubs",
   },
   a11y: {
+    opensInNewTab: "opens in new tab",
     faceDownCard: "Face-down card",
     stoneCard: "Stone card",
     cardName: "{{rank}} of {{suit}}",

@@ -5,6 +5,7 @@ import { BlindValues } from "../../constants";
 import Round from "./Round";
 import RunInfo, { type HandPlayCounts } from "./RunInfo";
 import Options from "../options/Options";
+import Help from "./Help";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import ScoringTrace from "./ScoringTrace";
@@ -95,6 +96,7 @@ export default function Sidebar({
             onHighVisibilityChange={onHighVisibilityChange}
             onAnimationSpeedChange={onAnimationSpeedChange}
           />
+          <Help />
         </div>
         <div className="progress">
           <RoundProgress remainingHands={remainingHands} remainingDiscards={remainingDiscards} />

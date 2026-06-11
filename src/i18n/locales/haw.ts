@@ -14,6 +14,7 @@ export const haw: LocaleMessages = {
   sidebar: {
     runInfo: "Run info",
     options: "Nā koho",
+    help: "Kōkua",
     hands: "Nā lima",
     discards: "Nā kiola",
     money: "Kālā",
@@ -57,6 +58,10 @@ export const haw: LocaleMessages = {
     valueIfHeld: "if held",
     luckyOddsMult: "1 in {{n}} ★",
     luckyOddsMoney: "1 in {{n}} $",
+    editionBadgeFoil: "Foil",
+    editionBadgeHolographic: "Holo",
+    editionBadgePolychrome: "Poly",
+    editionBadgeNegative: "Neg",
     sealGold: "Gold Seal",
     sealRed: "Red Seal",
     sealBlue: "Blue Seal",
@@ -142,6 +147,19 @@ export const haw: LocaleMessages = {
     playedHeader: "Played",
     noVouchers: "No vouchers purchased yet.",
     close: "Pani",
+  },
+  help: {
+    title: "Pehea e pāʻani ai",
+    textGuides: "Text guides",
+    videoTutorials: "Video tutorials",
+    close: "Pani",
+    wikiTutorial: "Balatro Wiki — Tutorial",
+    steamBeginnerGuide: "Steam — A Beginner's Guide to Balatro",
+    gameranxTips: "Gameranx — Beginner Tips & Tricks",
+    videoCompleteBeginner: "Complete Beginner's Guide to Balatro",
+    videoHowToPlay: "How to Play Balatro: Guide, Tutorial, Tips & Tricks",
+    videoTutorialBeginners:
+      "Tutorial: How to Play Balatro for Complete Beginners",
   },
   shop: {
     title: "Hale kūʻai",
@@ -260,6 +278,7 @@ export const haw: LocaleMessages = {
     clubs: "Clubs",
   },
   a11y: {
+    opensInNewTab: "wehe ma ka māka hou",
     faceDownCard: "Face-down card",
     stoneCard: "Stone card",
     cardName: "{{rank}} of {{suit}}",
