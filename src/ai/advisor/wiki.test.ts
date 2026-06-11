@@ -6,8 +6,16 @@ import {
   createJokerCatalog,
   createLegendaryJokerCatalog,
 } from "../../items/jokers/catalog";
+import { createStakeCatalog } from "../../items/stakes";
 import { modelStateFixture } from "./test-helpers";
-import { BOSS_WIKI, JOKER_WIKI, retrieveWikiEntries } from "./wiki";
+import {
+  BOSS_WIKI,
+  COMBO_WIKI,
+  ECONOMY_WIKI,
+  JOKER_WIKI,
+  STAKE_WIKI,
+  retrieveWikiEntries,
+} from "./wiki";
 
 function jokerFixture(id: string, name: string): ModelJoker {
   return {
@@ -43,7 +51,7 @@ describe("retrieveWikiEntries", () => {
     const entries = retrieveWikiEntries(
       withJokers([jokerFixture("blueprint", "Blueprint")]),
     );
-    expect(entries).toEqual([
+    expect(entries.filter((entry) => entry.kind === "joker")).toEqual([
       {
         key: "blueprint",
         kind: "joker",
@@ -67,7 +75,7 @@ describe("retrieveWikiEntries", () => {
         jokerFixture("baron", "Baron"),
       ]),
     );
-    expect(entries).toHaveLength(1);
+    expect(entries.filter((entry) => entry.kind === "joker")).toHaveLength(1);
   });
 
   test("returns the entry for the active boss blind", () => {
@@ -91,6 +99,63 @@ describe("retrieveWikiEntries", () => {
       [],
     );
   });
+
+  test("returns a combo entry when a participating joker is in play", () => {
+    const entries = retrieveWikiEntries(
+      withJokers([jokerFixture("hologram", "Hologram")]),
+    );
+    expect(entries.filter((entry) => entry.kind === "combo")).toEqual([
+      {
+        key: "deck-duplication",
+        kind: "combo",
+        title: "Deck duplication",
+        text: COMBO_WIKI.find((combo) => combo.key === "deck-duplication")?.text,
+      },
+    ]);
+  });
+
+  test("returns a combo entry once when several participants are in play", () => {
+    const entries = retrieveWikiEntries(
+      withJokers([
+        jokerFixture("photograph", "Photograph"),
+        jokerFixture("hanging-chad", "Hanging Chad"),
+      ]),
+    );
+    expect(
+      entries.filter((entry) => entry.key === "photochad"),
+    ).toHaveLength(1);
+  });
+
+  test("returns no combo entry for a joker outside every combo", () => {
+    const entries = retrieveWikiEntries(
+      withJokers([jokerFixture("plus-four-mult", "+4 Mult")]),
+    );
+    expect(entries.filter((entry) => entry.kind === "combo")).toEqual([]);
+  });
+
+  test("returns the economy note at the first interest step", () => {
+    const entries = retrieveWikiEntries({ ...modelStateFixture(), money: 5 });
+    expect(entries).toEqual([
+      { key: "economy", kind: "strategy", title: "Economy", text: ECONOMY_WIKI },
+    ]);
+  });
+
+  test("returns no economy note below the first interest step", () => {
+    const entries = retrieveWikiEntries({ ...modelStateFixture(), money: 4 });
+    expect(entries.filter((entry) => entry.kind === "strategy")).toEqual([]);
+  });
+
+  test("returns the stake entry for a non-white stake", () => {
+    const entries = retrieveWikiEntries({ ...modelStateFixture(), stake: "gold" });
+    expect(entries.filter((entry) => entry.kind === "stake")).toEqual([
+      { key: "gold", kind: "stake", title: "Gold Stake", text: STAKE_WIKI.gold },
+    ]);
+  });
+
+  test("returns no stake entry on white stake", () => {
+    const entries = retrieveWikiEntries(modelStateFixture());
+    expect(entries.filter((entry) => entry.kind === "stake")).toEqual([]);
+  });
 });
 
 describe("wiki content keys", () => {
@@ -113,5 +178,27 @@ describe("wiki content keys", () => {
       .map((boss) => boss.id)
       .filter((id) => BOSS_WIKI[id] === undefined);
     expect(missing).toEqual([]);
+  });
+
+  test("every combo wiki joker id exists in the joker catalog", () => {
+    const known = new Set(
+      [...createJokerCatalog(), ...createLegendaryJokerCatalog()].map(
+        (joker) => joker.id,
+      ),
+    );
+    const unknown = COMBO_WIKI.flatMap((combo) =>
+      combo.jokers.filter((id) => !known.has(id)),
+    );
+    expect(unknown).toEqual([]);
+  });
+
+  test("combo wiki keys are unique", () => {
+    const keys = COMBO_WIKI.map((combo) => combo.key);
+    expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  test("every stake wiki key exists in the stake catalog", () => {
+    const known = new Set<string>(createStakeCatalog().map((stake) => stake.id));
+    expect(Object.keys(STAKE_WIKI).filter((key) => !known.has(key))).toEqual([]);
   });
 });
