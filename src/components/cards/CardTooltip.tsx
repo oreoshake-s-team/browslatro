@@ -35,6 +35,14 @@ export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) 
           Base chips: <strong>{info.chips}</strong>
         </p>
       )}
+      {info.bonusChips > 0 && (
+        <p
+          className="card-tooltip-bonus-chips"
+          data-testid="card-tooltip-bonus-chips"
+        >
+          {t("cardLabels.extraChips", { value: info.bonusChips })}
+        </p>
+      )}
       {info.enhancement && (
         <p className="card-tooltip-enhancement">
           <strong>{info.enhancement.name}</strong> — {info.enhancement.description}

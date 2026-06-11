@@ -40,6 +40,11 @@
   color: var(--text-muted);
 }
 
+.card-tooltip-bonus-chips {
+  color: var(--accent-chips-text);
+  font-weight: 700;
+}
+
 .card-tooltip-enhancement {
   color: var(--accent-money-light);
 }
