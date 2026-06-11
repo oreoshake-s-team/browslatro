@@ -2,7 +2,11 @@ import { useCallback, useRef, useState } from "react";
 import { useGame, type GameState } from "../../store/game";
 import { getHandOptions, type HandOption } from "../getHandOptions";
 import { toModelState } from "../modelState";
-import { createAdvisorRanker, type CandidateRanker } from "../policy";
+import {
+  createAdvisorRanker,
+  type CandidateRanker,
+  type DownloadProgress,
+} from "../policy";
 import type { Advice } from "./advice";
 import { fetchAdvice, type AdviceClientErrorCode } from "./client";
 import { toModelStateInput, toSimulatePlayInput } from "./snapshot";
@@ -19,7 +23,8 @@ export interface AdvisorReport {
 
 export type AdvisorState =
   | { readonly phase: "idle" }
-  | { readonly phase: "loading" }
+  | { readonly phase: "loading-model"; readonly progress: DownloadProgress }
+  | { readonly phase: "querying" }
   | { readonly phase: "ready"; readonly report: AdvisorReport }
   | { readonly phase: "move-only"; readonly topCandidate: HandOption }
   | {
@@ -71,13 +76,16 @@ export function useAdvisor(deps?: AdvisorDeps): UseAdvisorResult {
       const apply = (next: AdvisorState): void => {
         if (requestIdRef.current === requestId) setState(next);
       };
-      apply({ phase: "loading" });
       const game = getState();
       const candidates = getHandOptions(toSimulatePlayInput(game));
       if (candidates.length === 0) {
         apply({ phase: "degraded", topCandidate: null, code: "no_candidates" });
         return;
       }
+      apply({ phase: "loading-model", progress: { loaded: 0, total: null } });
+      await ranker.load((progress) =>
+        apply({ phase: "loading-model", progress }),
+      );
       const modelState = toModelState(toModelStateInput(game));
       const ranking = await ranker.rank(modelState, candidates);
       const ordered = ranking
@@ -87,6 +95,7 @@ export function useAdvisor(deps?: AdvisorDeps): UseAdvisorResult {
         apply({ phase: "move-only", topCandidate: ordered[0] });
         return;
       }
+      apply({ phase: "querying" });
       const result = await fetchAdviceFn(modelState, ordered);
       if (!result.ok) {
         apply({ phase: "degraded", topCandidate: ordered[0], code: result.code });

@@ -28,6 +28,7 @@ function adviceFixture(): Advice {
 }
 
 const passthroughRanker: CandidateRanker = {
+  load: async () => {},
   rank: async (_state, candidates) => candidates.map((_, index) => index),
 };
 
@@ -75,6 +76,7 @@ describe("useAdvisor", () => {
   test("sends candidates to the API in the ranker's order", async () => {
     dealPairHand();
     const reversingRanker: CandidateRanker = {
+      load: async () => {},
       rank: async (_state, candidates) =>
         candidates.map((_, index) => index).reverse(),
     };
@@ -132,7 +134,42 @@ describe("useAdvisor", () => {
     expect(state.phase === "degraded" && state.topCandidate).not.toBeNull();
   });
 
-  test("shows loading while the request is in flight", async () => {
+  test("enters the model-loading step with zero progress before the model resolves", async () => {
+    dealPairHand();
+    const ranker: CandidateRanker = {
+      load: () => new Promise<void>(() => {}),
+      rank: passthroughRanker.rank,
+    };
+    const { result } = renderHook(() => useAdvisor(makeDeps({ ranker })));
+    act(() => {
+      void result.current.requestAdvice();
+    });
+    expect(result.current.state).toEqual({
+      phase: "loading-model",
+      progress: { loaded: 0, total: null },
+    });
+  });
+
+  test("forwards download progress into the loading-model phase", async () => {
+    dealPairHand();
+    const ranker: CandidateRanker = {
+      load: async (onProgress) => {
+        onProgress?.({ loaded: 120, total: 200 });
+        return new Promise<void>(() => {});
+      },
+      rank: passthroughRanker.rank,
+    };
+    const { result } = renderHook(() => useAdvisor(makeDeps({ ranker })));
+    await act(async () => {
+      void result.current.requestAdvice();
+    });
+    expect(result.current.state).toEqual({
+      phase: "loading-model",
+      progress: { loaded: 120, total: 200 },
+    });
+  });
+
+  test("enters the querying step while the API call is in flight", async () => {
     dealPairHand();
     let release: (value: { ok: true; advice: Advice }) => void = () => {};
     const fetchAdviceFn = vi.fn().mockReturnValue(
@@ -142,10 +179,10 @@ describe("useAdvisor", () => {
     );
     const { result } = renderHook(() => useAdvisor(makeDeps({ fetchAdviceFn })));
     let pending: Promise<void> = Promise.resolve();
-    act(() => {
+    await act(async () => {
       pending = result.current.requestAdvice();
     });
-    expect(result.current.state).toEqual({ phase: "loading" });
+    expect(result.current.state).toEqual({ phase: "querying" });
     await act(async () => {
       release({ ok: true, advice: adviceFixture() });
       await pending;

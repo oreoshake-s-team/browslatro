@@ -102,7 +102,26 @@ export default function AdvisorPanel({
             {t("advisor.walkMeThrough")}
           </button>
         </div>
-        {state.phase === "loading" && (
+        {state.phase === "loading-model" && (
+          <div className="advisor-loading" role="status">
+            <p className="advisor-thinking">{t("advisor.downloadingModel")}</p>
+            <progress
+              className="advisor-progress"
+              aria-label={t("advisor.downloadingModel")}
+              value={
+                state.progress.total !== null
+                  ? state.progress.loaded
+                  : undefined
+              }
+              max={
+                state.progress.total !== null
+                  ? state.progress.total
+                  : undefined
+              }
+            />
+          </div>
+        )}
+        {state.phase === "querying" && (
           <p className="advisor-thinking" role="status">
             {t("advisor.thinking")}
           </p>

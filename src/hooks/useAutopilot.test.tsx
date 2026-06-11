@@ -16,6 +16,7 @@ function pairHand(): Card[] {
 }
 
 const playFirstRanker: CandidateRanker = {
+  load: async () => {},
   rank: async (_state, candidates) => {
     const indices = candidates.map((_, index) => index);
     return indices.sort((a, b) => {
@@ -27,6 +28,7 @@ const playFirstRanker: CandidateRanker = {
 };
 
 const discardFirstRanker: CandidateRanker = {
+  load: async () => {},
   rank: async (_state, candidates) => {
     const indices = candidates.map((_, index) => index);
     return indices.sort((a, b) => {
