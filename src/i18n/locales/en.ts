@@ -196,6 +196,7 @@ export const en = {
     open: "Advisor",
     autopilot: "Autopilot",
     title: "Coach",
+    downloadingModel: "Downloading the coach\u2026",
     thinking: "The coach is thinking\u2026",
     recommendation: "Recommended move",
     alternative: "Tempting alternative",

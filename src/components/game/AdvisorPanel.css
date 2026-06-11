@@ -37,6 +37,38 @@
   font-style: italic;
 }
 
+.advisor-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.advisor-progress {
+  width: 100%;
+  height: 0.6rem;
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: #e9ecef;
+}
+
+.advisor-progress::-webkit-progress-bar {
+  background-color: #e9ecef;
+  border-radius: 999px;
+}
+
+.advisor-progress::-webkit-progress-value {
+  background-color: #339af0;
+  border-radius: 999px;
+}
+
+.advisor-progress::-moz-progress-bar {
+  background-color: #339af0;
+  border-radius: 999px;
+}
+
 .advisor-report {
   display: flex;
   flex-direction: column;

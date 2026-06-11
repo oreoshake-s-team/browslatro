@@ -89,6 +89,26 @@ describe("createAdvisorRanker", () => {
     await ranker.rank(record.state, record.candidates);
     expect(failures).toHaveLength(1);
   });
+
+  test("load reports the fallback when the model cannot load", async () => {
+    const failures: unknown[] = [];
+    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]), (e) =>
+      failures.push(e),
+    );
+    await ranker.load();
+    expect(failures).toHaveLength(1);
+  });
+
+  test("load reports the fallback at most once across load and rank", async () => {
+    const failures: unknown[] = [];
+    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]), (e) =>
+      failures.push(e),
+    );
+    const record = fixtureRecord(0);
+    await ranker.load();
+    await ranker.rank(record.state, record.candidates);
+    expect(failures).toHaveLength(1);
+  });
 });
 
 describe("loadPolicyRanker", () => {

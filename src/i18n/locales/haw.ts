@@ -204,6 +204,7 @@ export const haw: LocaleMessages = {
     open: "Advisor",
     autopilot: "Autopilot",
     title: "Coach",
+    downloadingModel: "Ke ho\u02bboiho nei i ke kumu a\u02bbo\u2026",
     thinking: "The coach is thinking\u2026",
     recommendation: "Recommended move",
     alternative: "Tempting alternative",

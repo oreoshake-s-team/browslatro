@@ -1,8 +1,15 @@
+import {
+  fetchModelBytes,
+  type DownloadProgressListener,
+} from "./advisor/download";
 import { encodeDecision, INPUT_FEATURES } from "./encode";
 import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
 
+export type { DownloadProgress, DownloadProgressListener } from "./advisor/download";
+
 export interface CandidateRanker {
+  load(onProgress?: DownloadProgressListener): Promise<void>;
   rank(
     state: ModelState,
     candidates: ReadonlyArray<HandOption>,
@@ -28,12 +35,14 @@ export function greedyRanking(
 
 export async function loadPolicyRanker(
   model: string | Uint8Array,
+  onProgress?: DownloadProgressListener,
 ): Promise<CandidateRanker> {
   const ort = await import("onnxruntime-web");
-  const session = await (typeof model === "string"
-    ? ort.InferenceSession.create(model)
-    : ort.InferenceSession.create(model));
+  const bytes =
+    typeof model === "string" ? await fetchModelBytes(model, onProgress) : model;
+  const session = await ort.InferenceSession.create(bytes);
   return {
+    async load() {},
     async rank(state, candidates) {
       if (candidates.length === 0) return [];
       const input = new ort.Tensor(
@@ -56,12 +65,26 @@ export function createAdvisorRanker(
 ): CandidateRanker {
   let policy: Promise<CandidateRanker> | null = null;
   let degraded = false;
+  const ensure = (
+    onProgress?: DownloadProgressListener,
+  ): Promise<CandidateRanker> => {
+    policy = policy ?? loadPolicyRanker(model, onProgress);
+    return policy;
+  };
   return {
+    async load(onProgress) {
+      if (degraded) return;
+      try {
+        await ensure(onProgress);
+      } catch (error) {
+        degraded = true;
+        onFallback?.(error);
+      }
+    },
     async rank(state, candidates) {
       if (!degraded) {
         try {
-          policy = policy ?? loadPolicyRanker(model);
-          return await (await policy).rank(state, candidates);
+          return await (await ensure()).rank(state, candidates);
         } catch (error) {
           degraded = true;
           onFallback?.(error);

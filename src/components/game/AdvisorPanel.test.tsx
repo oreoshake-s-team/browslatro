@@ -29,6 +29,7 @@ function adviceFixture(): Advice {
 }
 
 const passthroughRanker: CandidateRanker = {
+  load: async () => {},
   rank: async (_state, candidates) => candidates.map((_, index) => index),
 };
 
@@ -73,14 +74,25 @@ describe("AdvisorPanel", () => {
     expect(fetchAdviceFn).not.toHaveBeenCalled();
   });
 
-  test("shows the thinking status while the request is in flight", () => {
+  test("shows a download progress bar while the model loads", async () => {
+    const ranker: CandidateRanker = {
+      load: async (onProgress) => {
+        onProgress?.({ loaded: 50, total: 200 });
+        return new Promise<void>(() => {});
+      },
+      rank: passthroughRanker.rank,
+    };
+    render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps({ ranker })} />);
+    const bar = await screen.findByRole("progressbar");
+    expect(bar).toHaveAttribute("value", "50");
+  });
+
+  test("shows the thinking status while the API call is in flight", async () => {
     const fetchAdviceFn = vi.fn().mockReturnValue(new Promise(() => {}));
     render(
       <AdvisorPanel onClose={vi.fn()} deps={makeDeps({ fetchAdviceFn })} />,
     );
-    expect(screen.getByRole("status")).toHaveTextContent(
-      "The coach is thinking",
-    );
+    expect(await screen.findByText(/The coach is thinking/)).toBeInTheDocument();
   });
 
   test("shows the coach's explanation when advice arrives", async () => {

@@ -16,6 +16,7 @@ function pairHand(): Card[] {
 }
 
 const passthroughRanker: CandidateRanker = {
+  load: async () => {},
   rank: async (_state, candidates) => candidates.map((_, index) => index),
 };
 
@@ -73,6 +74,7 @@ describe("chooseAutopilotAction", () => {
 
   test("respects a ranker that prefers another candidate", async () => {
     const lastRanker: CandidateRanker = {
+      load: async () => {},
       rank: async (_state, candidates) =>
         candidates.map((_, index) => index).reverse(),
     };
