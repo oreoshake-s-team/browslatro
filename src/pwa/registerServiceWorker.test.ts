@@ -19,11 +19,26 @@ function fakeTarget() {
   };
 }
 
-function fakeHost() {
+function fakeHost(options: { controlled?: boolean } = {}) {
   const register = vi.fn(() => Promise.resolve(undefined as unknown as ServiceWorkerRegistration));
-  return {
-    host: { serviceWorker: { register } },
+  const controllerListeners: Array<() => void> = [];
+  const serviceWorker = {
     register,
+    controller: options.controlled ? ({} as ServiceWorker) : null,
+    addEventListener: (
+      _type: string,
+      listener: EventListenerOrEventListenerObject,
+    ) => {
+      if (typeof listener === "function") {
+        controllerListeners.push(() => listener(new Event("controllerchange")));
+      }
+    },
+  };
+  return {
+    host: { serviceWorker },
+    register,
+    fireControllerChange: () =>
+      controllerListeners.forEach((listener) => listener()),
   };
 }
 
@@ -86,5 +101,33 @@ describe("registerServiceWorker", () => {
     registerServiceWorker({ isProduction: true, host, target });
     fireLoad();
     expect(register).toHaveBeenCalledWith(SERVICE_WORKER_URL);
+  });
+
+  test("reloads when a new service worker takes control of a controlled page", () => {
+    const { host, fireControllerChange } = fakeHost({ controlled: true });
+    const { target } = fakeTarget();
+    const reload = vi.fn();
+    registerServiceWorker({ isProduction: true, host, target, reload });
+    fireControllerChange();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  test("reloads only once across repeated controller changes", () => {
+    const { host, fireControllerChange } = fakeHost({ controlled: true });
+    const { target } = fakeTarget();
+    const reload = vi.fn();
+    registerServiceWorker({ isProduction: true, host, target, reload });
+    fireControllerChange();
+    fireControllerChange();
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not reload when the first service worker takes control (negative)", () => {
+    const { host, fireControllerChange } = fakeHost();
+    const { target } = fakeTarget();
+    const reload = vi.fn();
+    registerServiceWorker({ isProduction: true, host, target, reload });
+    fireControllerChange();
+    expect(reload).not.toHaveBeenCalled();
   });
 });
