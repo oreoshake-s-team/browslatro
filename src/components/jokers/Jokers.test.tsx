@@ -10,11 +10,13 @@ import {
   createJokerStencilJoker,
   createLustyJoker,
   createPlusFourMultJoker,
+  createToDoListJoker,
   createWrathfulJoker,
   jokerSellValue,
   withEdition,
   type Joker,
 } from "../../items/jokers";
+import { useGame } from "../../store/game";
 
 function threeMixedJokers(): Joker[] {
   return [
@@ -851,5 +853,30 @@ describe("Empty tray treatment", () => {
   test("negative: the tray drops the empty class once a joker is equipped", () => {
     render(<Jokers jokers={[createGreedyJoker()]} />);
     expect(screen.getByTestId("jokers-tray")).not.toHaveClass("jokers-tray-empty");
+  });
+});
+
+describe("To Do List tile description", () => {
+  test("tile description shows the current hand bolded when todoHand is set", () => {
+    useGame.getState().setTodoHand("Flush");
+    render(<Jokers jokers={[createToDoListJoker()]} />);
+    const desc = screen.getByTestId("joker-tile-description-to-do-list");
+    expect(desc).toHaveTextContent(/Currently: Flush/);
+    expect(desc.querySelector("strong")).toHaveTextContent("Flush");
+  });
+
+  test("tile description shows ??? placeholder when todoHand is null", () => {
+    useGame.getState().setTodoHand(null);
+    render(<Jokers jokers={[createToDoListJoker()]} />);
+    const desc = screen.getByTestId("joker-tile-description-to-do-list");
+    expect(desc).toHaveTextContent(/Currently: \?\?\?/);
+    expect(desc.querySelector("strong")).toHaveTextContent("???");
+  });
+
+  test("negative: other joker tile descriptions are unaffected by todoHand state", () => {
+    useGame.getState().setTodoHand("Two Pair");
+    render(<Jokers jokers={[createGreedyJoker()]} />);
+    const desc = screen.getByTestId("joker-tile-description-greedy-joker");
+    expect(desc).not.toHaveTextContent(/Currently:/);
   });
 });

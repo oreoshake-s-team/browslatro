@@ -24,6 +24,7 @@ import {
   createReservedParkingJoker,
   createStoneJoker,
   createThrowbackJoker,
+  createToDoListJoker,
   createTribouletJoker,
   jokerSellValue,
   withEdition,
@@ -550,5 +551,27 @@ describe("Joker tooltip — live-derived current value", () => {
     expect(
       screen.getByTestId("joker-tooltip-current-value"),
     ).toHaveTextContent("Currently: +50 Chips");
+  });
+});
+
+describe("Joker tooltip — To Do List description", () => {
+  test("tooltip description shows current hand bolded when todoHand is set", async () => {
+    useGame.getState().setTodoHand("Two Pair");
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createToDoListJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-to-do-list"));
+    const desc = screen.getByTestId("joker-tooltip-description");
+    expect(desc).toHaveTextContent(/Currently: Two Pair/);
+    expect(desc.querySelector("strong")).toHaveTextContent("Two Pair");
+  });
+
+  test("tooltip description shows ??? placeholder when todoHand is null", async () => {
+    useGame.getState().setTodoHand(null);
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createToDoListJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-to-do-list"));
+    const desc = screen.getByTestId("joker-tooltip-description");
+    expect(desc).toHaveTextContent(/Currently: \?\?\?/);
+    expect(desc.querySelector("strong")).toHaveTextContent("???");
   });
 });
