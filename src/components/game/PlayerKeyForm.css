@@ -2,14 +2,14 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  border-top: 1px solid #dee2e6;
+  border-top: 1px solid var(--border-on-light);
   padding-top: 0.8rem;
 }
 
 .player-key-label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #495057;
+  color: var(--shop-muted-on-light);
 }
 
 .player-key-row {
@@ -20,7 +20,7 @@
 .player-key-input {
   flex: 1;
   padding: 0.4rem 0.6rem;
-  border: 1px solid #ced4da;
+  border: 1px solid var(--text-secondary);
   border-radius: 6px;
   font-family: monospace;
 }
@@ -29,10 +29,10 @@
   margin: 0;
   padding-left: 1.2rem;
   font-size: 0.8rem;
-  color: #868e96;
+  color: var(--text-on-light-dimmed);
 }
 
 .player-key-link {
   font-size: 0.85rem;
-  color: #1c7ed6;
+  color: var(--accent-chips-mid);
 }

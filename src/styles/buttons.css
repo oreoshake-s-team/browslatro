@@ -19,12 +19,12 @@
 
 .btn--primary {
   background-color: var(--accent-success);
-  color: #102b1c;
+  color: var(--surface-dark-success);
   font-weight: 700;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background-color: #69db7c;
+  background-color: var(--accent-success-mid);
 }
 
 .btn--secondary {
@@ -40,12 +40,12 @@
 
 .btn--danger {
   background-color: var(--accent-danger);
-  color: #fff;
-  border-color: rgba(0, 0, 0, 0.35);
+  color: var(--white);
+  border-color: var(--shadow-md);
 }
 
 .btn--danger:hover:not(:disabled) {
-  background-color: #c92a2a;
+  background-color: var(--accent-red-deep);
 }
 
 .btn--ghost {
@@ -55,6 +55,6 @@
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: color-mix(in srgb, var(--white) 6%, transparent);
   color: var(--text-primary);
 }

@@ -5,10 +5,10 @@
   min-width: 12rem;
   max-width: 18rem;
   padding: 0.55rem 0.8rem;
-  background-color: #212529;
-  color: #f8f9fa;
+  background-color: var(--text-on-light);
+  color: var(--text-primary);
   border-radius: 6px;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px var(--shadow-md);
   font-size: 0.85rem;
   line-height: 1.3;
   pointer-events: none;
@@ -25,7 +25,7 @@
 }
 
 .joker-tooltip-description {
-  color: #dee2e6;
+  color: var(--border-on-light);
 }
 
 .joker-tooltip-rarity {
@@ -36,61 +36,61 @@
 }
 
 .joker-tooltip-rarity-common {
-  color: #74c0fc;
+  color: var(--accent-chips-text);
 }
 
 .joker-tooltip-rarity-uncommon {
-  color: #8ce99a;
+  color: var(--enhance-lucky-inner);
 }
 
 .joker-tooltip-rarity-rare {
-  color: #ff8787;
+  color: var(--edition-poly);
 }
 
 .joker-tooltip-rarity-legendary {
-  color: #d0bfff;
+  color: var(--type-tarot-pick-bg-light);
 }
 
 .joker-tooltip-edition {
-  color: #ffe066;
+  color: var(--accent-money-light);
 }
 
 .joker-tooltip-edition-foil {
-  color: #74c0fc;
+  color: var(--accent-chips-text);
 }
 
 .joker-tooltip-edition-holographic {
-  color: #e599f7;
+  color: var(--edition-holo-light);
 }
 
 .joker-tooltip-edition-polychrome {
-  color: #ffa8a8;
+  color: var(--accent-mult-text);
 }
 
 .joker-tooltip-edition-negative {
-  color: #ced4da;
+  color: var(--text-secondary);
 }
 
 .joker-tooltip-progress {
-  color: #b2f2bb;
+  color: var(--accent-success-light);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .joker-tooltip-current-value {
-  color: #99e9f2;
+  color: var(--enhance-glass-tint-2);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .joker-tooltip-effective-odds {
-  color: #ffd8a8;
+  color: var(--accent-orange-light);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
 
 .joker-tooltip-sell {
-  color: #ffd43b;
+  color: var(--accent-money);
   font-weight: 600;
 }
 
@@ -99,13 +99,13 @@
 }
 
 .joker-tooltip-sticker-eternal {
-  color: #ffe066;
+  color: var(--accent-money-light);
 }
 
 .joker-tooltip-sticker-perishable {
-  color: #d0bfff;
+  color: var(--type-tarot-pick-bg-light);
 }
 
 .joker-tooltip-sticker-rental {
-  color: #99e9f2;
+  color: var(--enhance-glass-tint-2);
 }

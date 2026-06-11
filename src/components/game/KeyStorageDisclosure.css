@@ -1,6 +1,6 @@
 .key-storage-disclosure {
-  border: 1px solid #ffd8a8;
-  background: #fff4e6;
+  border: 1px solid var(--accent-orange-light);
+  background: var(--accent-orange-pale);
   border-radius: 6px;
   padding: 0.5rem 0.7rem;
 }
@@ -9,7 +9,7 @@
   margin: 0 0 0.3rem;
   font-size: 0.8rem;
   font-weight: 700;
-  color: #495057;
+  color: var(--shop-muted-on-light);
 }
 
 .key-storage-disclosure-list {
@@ -17,7 +17,7 @@
   padding-left: 1.1rem;
   font-size: 0.78rem;
   line-height: 1.4;
-  color: #5c5c5c;
+  color: var(--text-on-light-muted);
 }
 
 .key-storage-disclosure-list li + li {
@@ -25,5 +25,5 @@
 }
 
 .key-storage-disclosure-caution {
-  color: #c92a2a;
+  color: var(--accent-red-deep);
 }

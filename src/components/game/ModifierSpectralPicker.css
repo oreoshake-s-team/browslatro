@@ -1,16 +1,16 @@
 .modifier-spectral-picker {
   width: 100%;
   padding: 0.4rem 0.7rem 0.7rem;
-  border: 1px dashed #adb5bd;
+  border: 1px dashed var(--text-muted);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.55);
+  background-color: color-mix(in srgb, var(--white) 55%, transparent);
   box-sizing: border-box;
 }
 
 .modifier-spectral-picker-summary {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #495057;
+  color: var(--shop-muted-on-light);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -19,7 +19,7 @@
 }
 
 .modifier-spectral-picker-summary:hover {
-  color: #5f3dc4;
+  color: var(--type-tarot-accent);
 }
 
 .modifier-spectral-picker[open] .modifier-spectral-picker-grid {
@@ -42,9 +42,9 @@
   font-weight: 600;
   text-align: left;
   line-height: 1.2;
-  background-color: #f3f0ff;
-  color: #5f3dc4;
-  border: 1px solid #d0bfff;
+  background-color: var(--type-tarot-bg);
+  color: var(--type-tarot-accent);
+  border: 1px solid var(--type-tarot-pick-bg-light);
   border-radius: 6px;
   cursor: pointer;
   transition:
@@ -55,12 +55,12 @@
 }
 
 .add-spectral-button:hover:not(:disabled) {
-  background-color: #e5dbff;
-  border-color: #b197fc;
+  background-color: var(--type-tarot-badge-bg);
+  border-color: var(--type-tarot-border);
 }
 
 .add-spectral-button:focus-visible {
-  outline: 2px solid #5f3dc4;
+  outline: 2px solid var(--type-tarot-accent);
   outline-offset: 2px;
 }
 

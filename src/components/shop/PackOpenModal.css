@@ -6,13 +6,13 @@
 }
 
 .pack-open-inner {
-  background-color: #1a1f2e;
-  color: #f8f9fa;
-  border: 2px solid #5c7cfa;
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 2px solid var(--accent-pack);
   border-radius: 10px;
   padding: 1.4rem 1.8rem;
   width: 100%;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 4px 14px var(--shadow-md);
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -25,7 +25,7 @@
 
 .pack-open-subtitle {
   margin: 0;
-  color: #adb5bd;
+  color: var(--text-muted);
   font-size: 1rem;
 }
 
@@ -45,9 +45,9 @@
   grid-template-rows: auto auto 1fr auto;
   gap: 0.4rem;
   padding: 0.8rem;
-  border: 1px solid #5c7cfa;
+  border: 1px solid var(--accent-pack);
   border-radius: 8px;
-  background-color: rgba(92, 124, 250, 0.12);
+  background-color: color-mix(in srgb, var(--accent-pack) 12%, transparent);
 }
 
 .pack-open-option-icon {
@@ -62,7 +62,7 @@
 
 .pack-open-option-description {
   font-size: 0.85rem;
-  color: #ced4da;
+  color: var(--text-secondary);
   line-height: 1.3;
 }
 
@@ -84,7 +84,7 @@
 
 .pack-open-preview-sort-label {
   font-size: 0.85rem;
-  color: #adb5bd;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -92,15 +92,15 @@
 .pack-open-preview-sort-button {
   padding: 0.3rem 0.8rem;
   border-radius: 6px;
-  border: 1px solid #5c7cfa;
-  background-color: rgba(92, 124, 250, 0.12);
-  color: #f8f9fa;
+  border: 1px solid var(--accent-pack);
+  background-color: color-mix(in srgb, var(--accent-pack) 12%, transparent);
+  color: var(--text-primary);
   font-weight: 600;
   cursor: pointer;
 }
 
 .pack-open-preview-sort-button:hover {
-  background-color: rgba(92, 124, 250, 0.25);
+  background-color: color-mix(in srgb, var(--accent-pack) 25%, transparent);
 }
 
 .pack-open-preview-sort-button:focus-visible {
@@ -109,8 +109,8 @@
 }
 
 .pack-open-preview-sort-button-active {
-  background-color: #5c7cfa;
-  color: #fff;
+  background-color: var(--accent-pack);
+  color: var(--white);
 }
 
 .pack-open-preview-hand {
@@ -120,9 +120,9 @@
   align-items: end;
   gap: 0.4rem;
   padding: 1.6rem 0.6rem 0.6rem;
-  border: 2px dashed #adb5bd;
+  border: 2px dashed var(--text-muted);
   border-radius: 8px;
-  background-color: #f8f9fa;
+  background-color: var(--text-primary);
   overflow-x: clip;
   min-height: calc(var(--card-height) + 1.6rem);
 }
@@ -177,7 +177,7 @@
 }
 
 .pack-open-preview-move-button:focus-visible {
-  outline: 2px solid var(--accent-chips-strong, #339af0);
+  outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
   outline-offset: 1px;
 }
 

@@ -19,24 +19,24 @@
   font-size: 0.7rem;
   font-weight: 700;
   line-height: 1;
-  color: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  color: var(--white);
+  border: 1px solid color-mix(in srgb, var(--black) 25%, transparent);
 }
 
 .joker-sticker-badge-eternal {
-  background-color: #b58900;
+  background-color: var(--joker-sticker-eternal);
 }
 
 .joker-sticker-badge-perishable {
-  background-color: #6a4f8a;
+  background-color: var(--joker-sticker-perishable);
 }
 
 .joker-sticker-badge-debuffed {
-  background-color: #4a4a4a;
+  background-color: var(--joker-sticker-debuffed);
   text-decoration: line-through;
   opacity: 0.85;
 }
 
 .joker-sticker-badge-rental {
-  background-color: #2aa198;
+  background-color: var(--joker-sticker-rental);
 }

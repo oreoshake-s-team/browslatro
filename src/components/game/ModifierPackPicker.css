@@ -1,16 +1,16 @@
 .modifier-pack-picker {
   width: 100%;
   padding: 0.4rem 0.7rem 0.7rem;
-  border: 1px dashed #adb5bd;
+  border: 1px dashed var(--text-muted);
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.55);
+  background-color: color-mix(in srgb, var(--white) 55%, transparent);
   box-sizing: border-box;
 }
 
 .modifier-pack-picker-summary {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #495057;
+  color: var(--shop-muted-on-light);
   text-transform: uppercase;
   letter-spacing: 0.08em;
   cursor: pointer;
@@ -19,7 +19,7 @@
 }
 
 .modifier-pack-picker-summary:hover {
-  color: #0c8599;
+  color: var(--enhance-glass-deep);
 }
 
 .modifier-pack-picker[open] .modifier-pack-picker-grid {
@@ -42,9 +42,9 @@
   font-weight: 600;
   text-align: left;
   line-height: 1.2;
-  background-color: #e3fafc;
-  color: #0c8599;
-  border: 1px solid #99e9f2;
+  background-color: var(--edition-holo-tint-2);
+  color: var(--enhance-glass-deep);
+  border: 1px solid var(--enhance-glass-tint-2);
   border-radius: 6px;
   cursor: pointer;
   transition:
@@ -55,12 +55,12 @@
 }
 
 .add-pack-button:hover:not(:disabled) {
-  background-color: #c5f6fa;
-  border-color: #66d9e8;
+  background-color: var(--enhance-glass-tint-3);
+  border-color: var(--enhance-glass-badge);
 }
 
 .add-pack-button:focus-visible {
-  outline: 2px solid #0c8599;
+  outline: 2px solid var(--enhance-glass-deep);
   outline-offset: 2px;
 }
 
