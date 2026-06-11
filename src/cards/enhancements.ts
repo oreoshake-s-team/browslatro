@@ -45,6 +45,24 @@ function assertNeverEnhancement(e: never): never {
   throw new Error(`Unhandled enhancement: ${JSON.stringify(e)}`);
 }
 
+const BONUS_EFFECT: EnhancementEffect = {
+  ...NO_ENHANCEMENT_EFFECT,
+  chipsDelta: BONUS_ENHANCEMENT_CHIPS,
+};
+const MULT_EFFECT: EnhancementEffect = {
+  ...NO_ENHANCEMENT_EFFECT,
+  multDelta: MULT_ENHANCEMENT_MULT_DELTA,
+};
+const GLASS_EFFECT: EnhancementEffect = {
+  ...NO_ENHANCEMENT_EFFECT,
+  multTimes: GLASS_ENHANCEMENT_MULT_TIMES,
+  destroyChance: GLASS_ENHANCEMENT_DESTROY_CHANCE,
+};
+const STONE_EFFECT: EnhancementEffect = {
+  ...NO_ENHANCEMENT_EFFECT,
+  chipsDelta: STONE_ENHANCEMENT_CHIPS,
+};
+
 export function applyCardEnhancement(
   card: Card,
   _context: EnhancementContext = {},
@@ -53,17 +71,13 @@ export function applyCardEnhancement(
   if (!enhancement) return NO_ENHANCEMENT_EFFECT;
   switch (enhancement) {
     case "bonus":
-      return { ...NO_ENHANCEMENT_EFFECT, chipsDelta: BONUS_ENHANCEMENT_CHIPS };
+      return BONUS_EFFECT;
     case "mult":
-      return { ...NO_ENHANCEMENT_EFFECT, multDelta: MULT_ENHANCEMENT_MULT_DELTA };
+      return MULT_EFFECT;
     case "glass":
-      return {
-        ...NO_ENHANCEMENT_EFFECT,
-        multTimes: GLASS_ENHANCEMENT_MULT_TIMES,
-        destroyChance: GLASS_ENHANCEMENT_DESTROY_CHANCE,
-      };
+      return GLASS_EFFECT;
     case "stone":
-      return { ...NO_ENHANCEMENT_EFFECT, chipsDelta: STONE_ENHANCEMENT_CHIPS };
+      return STONE_EFFECT;
     case "wild":
     case "steel":
     case "gold":

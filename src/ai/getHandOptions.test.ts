@@ -1,6 +1,10 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import type { Card, Enhancement, Rank, Seal, Suit } from "../cards/types";
+import type { HandLabel } from "../scoring/handEvaluator";
 import { getHandOptions, type PlayOption } from "./getHandOptions";
+import { seededRng } from "./headlessRun";
+import { simulatePlay, type SimulatePlayInput } from "./simulatePlay";
 import { boss, card, simulateInput } from "./test-helpers";
 
 function plays(options: ReturnType<typeof getHandOptions>): PlayOption[] {
@@ -156,5 +160,83 @@ describe("getHandOptions — discard candidates", () => {
       (o) => o.action === "discard",
     );
     expect(discards.every((o) => o.cardIds.length <= 5)).toBe(true);
+  });
+});
+
+function* subsets(ids: ReadonlyArray<number>): Generator<number[]> {
+  for (let mask = 1; mask < 1 << ids.length; mask += 1) {
+    const picked = ids.filter((_, i) => (mask & (1 << i)) !== 0);
+    if (picked.length <= 5) yield picked;
+  }
+}
+
+function bruteForceBestPerLabel(input: SimulatePlayInput) {
+  const best = new Map<HandLabel, { cardIds: number[]; score: number }>();
+  for (let size = 1; size <= 5; size += 1) {
+    for (const cardIds of subsets(input.dealt.hand.map((c) => c.id))) {
+      if (cardIds.length !== size) continue;
+      const result = simulatePlay(input, cardIds);
+      if (!result.legal) continue;
+      const current = best.get(result.handLabel);
+      if (current !== undefined && current.score >= result.score) continue;
+      best.set(result.handLabel, { cardIds, score: result.score });
+    }
+  }
+  return best;
+}
+
+function randomHand(seed: number): Card[] {
+  const rng = seededRng(seed);
+  const ranks: Rank[] = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+  const suits: Suit[] = ["spades", "hearts", "diamonds", "clubs"];
+  const enhancements: (Enhancement | undefined)[] = [
+    undefined, undefined, undefined, "bonus", "mult", "glass", "steel", "stone", "gold", "lucky",
+  ];
+  const seals: (Seal | undefined)[] = [undefined, undefined, undefined, "red", "gold"];
+  return Array.from({ length: 8 }, () =>
+    card(
+      ranks[Math.floor(rng() * ranks.length)],
+      suits[Math.floor(rng() * suits.length)],
+      {
+        enhancement: enhancements[Math.floor(rng() * enhancements.length)],
+        seal: seals[Math.floor(rng() * seals.length)],
+        bonusChips: rng() < 0.2 ? 30 : 0,
+      },
+    ),
+  );
+}
+
+describe("getHandOptions — fast path equivalence with full simulation", () => {
+  test("matches brute-force per-label winners on seeded no-joker hands", () => {
+    for (let seed = 0; seed < 25; seed += 1) {
+      const input = simulateInput(randomHand(seed));
+      const plays = getHandOptions(input, 13).filter(
+        (o): o is PlayOption => o.action === "play",
+      );
+      const reference = bruteForceBestPerLabel(input);
+      expect(plays.length).toBe(reference.size);
+      for (const option of plays) {
+        expect(reference.get(option.handLabel)).toEqual({
+          cardIds: [...option.cardIds],
+          score: option.score,
+        });
+      }
+    }
+  });
+
+  test("matches brute force when hand levels are upgraded", () => {
+    const input = simulateInput(randomHand(99));
+    const upgraded = {
+      ...input.handStats,
+      Pair: { chips: 30, multiplier: 4, level: 3 },
+    };
+    const leveled = { ...input, handStats: upgraded };
+    const plays = getHandOptions(leveled, 13).filter(
+      (o): o is PlayOption => o.action === "play",
+    );
+    const reference = bruteForceBestPerLabel(leveled);
+    for (const option of plays) {
+      expect(reference.get(option.handLabel)?.score).toBe(option.score);
+    }
   });
 });

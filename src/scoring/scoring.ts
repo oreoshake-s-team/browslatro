@@ -111,12 +111,44 @@ export function getScoringCards(
 ): Card[] {
   if (cards.length === 0) return [];
 
-  const stones = cards.filter(isStoneCard);
-  const nonStones = cards.filter((c) => !isStoneCard(c));
-
   if (options.allCardsScore === true) {
     return cards.slice();
   }
+
+  let hasStone = false;
+  for (const card of cards) {
+    if (isStoneCard(card)) {
+      hasStone = true;
+      break;
+    }
+  }
+  if (!hasStone) {
+    const evalOpts = options.evalOptions ?? {};
+    switch (label) {
+      case "Full House":
+      case "Five of a Kind":
+      case "Flush House":
+      case "Flush Five":
+        return cards.slice();
+      case "Flush":
+        return pickFlushCards(cards, evalOpts);
+      case "Straight":
+        return pickStraightCards(cards, evalOpts);
+      case "Four of a Kind":
+        return pickByGroupSize(cards, 4);
+      case "Three of a Kind":
+        return pickByGroupSize(cards, 3);
+      case "Pair":
+        return pickByGroupSize(cards, 2);
+      case "High Card":
+        return [pickHighestCard(cards)];
+      default:
+        break;
+    }
+  }
+
+  const stones = cards.filter(isStoneCard);
+  const nonStones = cards.filter((c) => !isStoneCard(c));
 
   const evalOpts = options.evalOptions ?? {};
   let matched: Card[];
@@ -201,11 +233,18 @@ function pickStraightCards(
   return result;
 }
 
+const GROUP_COUNT_SCRATCH = new Int8Array(15);
+
 function pickByGroupSize(cards: ReadonlyArray<Card>, size: number): Card[] {
-  const grouped = groupByRank(cards);
-  const buckets = Array.from(grouped.values());
-  for (const bucket of buckets) {
-    if (bucket.length === size) return bucket.slice();
+  GROUP_COUNT_SCRATCH.fill(0);
+  for (const card of cards) {
+    GROUP_COUNT_SCRATCH[RANK_ORDER[card.rank]] += 1;
+  }
+  for (const card of cards) {
+    if (GROUP_COUNT_SCRATCH[RANK_ORDER[card.rank]] === size) {
+      const rank = card.rank;
+      return cards.filter((c) => c.rank === rank);
+    }
   }
   // Fallback: if no exact match (shouldn't happen for a correctly-labelled
   // hand), return everything so we don't silently drop chips.

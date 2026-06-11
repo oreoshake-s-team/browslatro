@@ -70,14 +70,6 @@ function getHand(label: HandLabel): Hand {
   return hand;
 }
 
-function countByRank(cards: ReadonlyArray<Card>): number[] {
-  const counts = new Map<Rank, number>();
-  for (const card of cards) {
-    counts.set(card.rank, (counts.get(card.rank) ?? 0) + 1);
-  }
-  return Array.from(counts.values()).sort((a, b) => b - a);
-}
-
 export interface HandEvalOptions {
   readonly fourFingers?: boolean;
   readonly shortcut?: boolean;
@@ -108,30 +100,6 @@ function suitTally(
     else counts.set(s, (counts.get(s) ?? 0) + 1);
   }
   return { wild, counts };
-}
-
-function isFlush(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
-  const minLen = options.fourFingers ? 4 : 5;
-  if (cards.length < minLen || cards.length > 5) return false;
-  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
-  if (counts.size === 0) return wild >= minLen;
-  for (const c of counts.values()) {
-    if (c + wild >= minLen) return true;
-  }
-  return false;
-}
-
-function isStrictFlush(
-  cards: ReadonlyArray<Card>,
-  options: HandEvalOptions = {},
-): boolean {
-  if (cards.length < 5 || cards.length > 5) return false;
-  const { wild, counts } = suitTally(cards, options.smearedSuits === true);
-  if (counts.size === 0) return wild === cards.length;
-  for (const c of counts.values()) {
-    if (c + wild === cards.length) return true;
-  }
-  return false;
 }
 
 export function flushAnchorSuit(
@@ -192,15 +160,14 @@ export function straightRunValues(
   return null;
 }
 
-function isStraight(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
-  return straightRunValues(cards, options) !== null;
-}
-
-function isRoyal(cards: ReadonlyArray<Card>, options: HandEvalOptions = {}): boolean {
-  const run = straightRunValues(cards, options);
-  if (run === null) return false;
-  return run[run.length - 1] === 14 && run[0] === 14 - run.length + 1;
-}
+const RANK_COUNT_SCRATCH = new Int8Array(15);
+const SUIT_INDEX: Record<Suit, number> = {
+  spades: 0,
+  hearts: 1,
+  diamonds: 2,
+  clubs: 3,
+};
+const SUIT_COUNT_SCRATCH = new Int8Array(4);
 
 export function detectHandLabel(
   cards: ReadonlyArray<Card>,
@@ -208,27 +175,94 @@ export function detectHandLabel(
 ): HandLabel {
   if (cards.length === 0) return "High Card";
 
-  const meaningful = cards.filter((c) => !isStoneCard(c));
+  const smeared = options.smearedSuits === true;
+  RANK_COUNT_SCRATCH.fill(0);
+  SUIT_COUNT_SCRATCH.fill(0);
+  let meaningfulCount = 0;
+  let wild = 0;
+  for (const card of cards) {
+    if (isStoneCard(card)) continue;
+    meaningfulCount += 1;
+    RANK_COUNT_SCRATCH[RANK_VALUES[card.rank]] += 1;
+    const suit = evalSuit(card, smeared);
+    if (suit === null) wild += 1;
+    else SUIT_COUNT_SCRATCH[SUIT_INDEX[suit]] += 1;
+  }
 
-  const counts = countByRank(meaningful);
-  const flush = isFlush(meaningful, options);
-  const strictFlush = isStrictFlush(meaningful, options);
-  const straight = isStraight(meaningful, options);
-  const fiveOfKind = counts[0] === 5;
-  const fullHouse = counts[0] === 3 && counts[1] === 2;
+  let top1 = 0;
+  let top2 = 0;
+  let distinct = 0;
+  for (let value = 2; value <= 14; value += 1) {
+    const count = RANK_COUNT_SCRATCH[value];
+    if (count === 0) continue;
+    distinct += 1;
+    if (count > top1) {
+      top2 = top1;
+      top1 = count;
+    } else if (count > top2) {
+      top2 = count;
+    }
+  }
+
+  const minLen = options.fourFingers ? 4 : 5;
+  const lengthOk = meaningfulCount >= minLen && meaningfulCount <= 5;
+  const maxSuit = Math.max(
+    SUIT_COUNT_SCRATCH[0],
+    SUIT_COUNT_SCRATCH[1],
+    SUIT_COUNT_SCRATCH[2],
+    SUIT_COUNT_SCRATCH[3],
+  );
+  const flush = lengthOk && maxSuit + wild >= minLen;
+  const strictFlush = meaningfulCount === 5 && maxSuit + wild === 5;
+
+  let straight = false;
+  let royal = false;
+  if (lengthOk && distinct >= minLen) {
+    const maxGap = options.shortcut ? 2 : 1;
+    let runLength = 0;
+    let runStart = 0;
+    let bestLength = 0;
+    let bestStart = 0;
+    let bestEnd = 0;
+    let previous = -100;
+    const visit = (value: number): void => {
+      if (runLength > 0 && value - previous <= maxGap) {
+        runLength += 1;
+      } else {
+        runLength = 1;
+        runStart = value;
+      }
+      previous = value;
+      if (runLength > bestLength) {
+        bestLength = runLength;
+        bestStart = runStart;
+        bestEnd = value;
+      }
+    };
+    if (RANK_COUNT_SCRATCH[14] > 0) visit(1);
+    for (let value = 2; value <= 14; value += 1) {
+      if (RANK_COUNT_SCRATCH[value] > 0) visit(value);
+    }
+    straight = bestLength >= minLen;
+    royal =
+      straight && bestEnd === 14 && bestStart === 14 - bestLength + 1;
+  }
+
+  const fiveOfKind = top1 === 5;
+  const fullHouse = top1 === 3 && top2 === 2;
 
   if (strictFlush && fiveOfKind) return "Flush Five";
   if (strictFlush && fullHouse) return "Flush House";
   if (fiveOfKind) return "Five of a Kind";
-  if (flush && straight && isRoyal(meaningful, options)) return "Royal Flush";
+  if (flush && straight && royal) return "Royal Flush";
   if (flush && straight) return "Straight Flush";
-  if (counts[0] === 4) return "Four of a Kind";
+  if (top1 === 4) return "Four of a Kind";
   if (fullHouse) return "Full House";
   if (flush) return "Flush";
   if (straight) return "Straight";
-  if (counts[0] === 3) return "Three of a Kind";
-  if (counts[0] === 2 && counts[1] === 2) return "Two Pair";
-  if (counts[0] === 2) return "Pair";
+  if (top1 === 3) return "Three of a Kind";
+  if (top1 === 2 && top2 === 2) return "Two Pair";
+  if (top1 === 2) return "Pair";
   return "High Card";
 }
 
