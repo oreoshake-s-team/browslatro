@@ -1,4 +1,6 @@
 import type { Blind } from "../cards/types";
+import { createJokerCatalog } from "../items/jokers/catalog";
+import { MAX_JOKERS } from "../items/jokers/constants";
 import type { Joker } from "../items/jokers/types";
 import { getHandOptions, type HandOption } from "./getHandOptions";
 import {
@@ -31,6 +33,7 @@ export interface GenerateDatasetConfig {
   readonly topN?: number;
   readonly maxAnte?: number;
   readonly jokers?: ReadonlyArray<Joker>;
+  readonly jokerLoadoutFraction?: number;
 }
 
 export interface GenerateDatasetResult {
@@ -53,10 +56,26 @@ export async function generateDataset(
   }
   const seedOffset = config.seedOffset ?? 0;
   const topN = config.topN ?? 3;
+  const jokerLoadoutFraction = config.jokerLoadoutFraction ?? 0;
+  const jokerCatalog = jokerLoadoutFraction > 0 ? createJokerCatalog() : null;
   const records: DatasetRecord[] = [];
   const runs: HeadlessRunResult[] = [];
   for (let game = 0; game < config.games; game += 1) {
     const seed = seedOffset + game;
+    let gameJokers = config.jokers;
+    if (jokerCatalog !== null) {
+      const loadoutRng = seededRng(seed + 1_000_000);
+      if (loadoutRng() < jokerLoadoutFraction) {
+        const count = 1 + Math.floor(loadoutRng() * MAX_JOKERS);
+        const equipped: Joker[] = [];
+        const remaining = jokerCatalog.filter((j) => j.rarity !== "legendary");
+        for (let j = 0; j < count && remaining.length > 0; j += 1) {
+          const idx = Math.floor(loadoutRng() * remaining.length);
+          equipped.push(remaining.splice(idx, 1)[0]);
+        }
+        gameJokers = equipped;
+      }
+    }
     const expert = createSearchAgent({
       rng: seededRng(seed),
       rollouts: config.rollouts,
@@ -84,7 +103,7 @@ export async function generateDataset(
       await playHeadlessRun(recorder, {
         seed,
         maxAnte: config.maxAnte,
-        jokers: config.jokers,
+        jokers: gameJokers,
       }),
     );
   }

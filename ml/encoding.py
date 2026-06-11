@@ -6,9 +6,10 @@ Mirrors the TypeScript `ModelState` / `HandOption` JSON shapes produced by
 on any change.
 """
 
-ENCODING_VERSION = 2
+ENCODING_VERSION = 3
 
 HAND_SLOTS = 16
+JOKER_SLOTS = 5
 RANKS = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 SUITS = ["spades", "hearts", "diamonds", "clubs"]
 ENHANCEMENTS = ["bonus", "mult", "wild", "glass", "steel", "stone", "gold", "lucky"]
@@ -24,12 +25,29 @@ NOTE_KINDS = [
     "best-immediate-score", "best-of-hand-type",
     "commits-to-flush-build", "keeps-paired-ranks",
 ]
+JOKER_EFFECT_CATEGORIES = ["mult", "x-mult", "retrigger", "money", "passive"]
+JOKER_RARITIES = ["common", "uncommon", "rare", "legendary"]
+JOKER_EDITIONS = ["foil", "holographic", "polychrome", "negative"]
 
 CARD_FEATURES = 2 + len(RANKS) + len(SUITS) + len(ENHANCEMENTS) + len(SEALS) + len(EDITIONS) + 1
 CONTEXT_FEATURES = 6 + len(BLIND_KINDS) + 1 + len(SUITS) + len(RANKS)
-STATE_FEATURES = HAND_SLOTS * CARD_FEATURES + CONTEXT_FEATURES
+JOKER_SLOT_FEATURES = 1 + len(JOKER_EFFECT_CATEGORIES) + len(JOKER_RARITIES) + len(JOKER_EDITIONS) + 1
+JOKER_FEATURES = JOKER_SLOTS * JOKER_SLOT_FEATURES
+STATE_FEATURES = HAND_SLOTS * CARD_FEATURES + CONTEXT_FEATURES + JOKER_FEATURES
 CANDIDATE_FEATURES = 2 + HAND_SLOTS + len(HAND_LABELS) + 3 + len(NOTE_KINDS)
 INPUT_FEATURES = STATE_FEATURES + CANDIDATE_FEATURES
+
+
+def _joker_effect_category(effect_kind):
+    if "x-mult" in effect_kind or "xmult" in effect_kind or effect_kind == "stencil":
+        return "x-mult"
+    if "retrigger" in effect_kind:
+        return "retrigger"
+    if "money" in effect_kind or effect_kind in ("business-card", "extra-interest-per-five"):
+        return "money"
+    if effect_kind == "passive-run-stats":
+        return "passive"
+    return "mult"
 
 
 def _one_hot(value, vocabulary):
@@ -37,6 +55,18 @@ def _one_hot(value, vocabulary):
     if value is not None:
         vector[vocabulary.index(value)] = 1.0
     return vector
+
+
+def _encode_joker_slot(joker):
+    if joker is None:
+        return [0.0] * JOKER_SLOT_FEATURES
+    return (
+        [1.0]
+        + _one_hot(_joker_effect_category(joker["effectKind"]), JOKER_EFFECT_CATEGORIES)
+        + _one_hot(joker["rarity"], JOKER_RARITIES)
+        + _one_hot(joker.get("edition"), JOKER_EDITIONS)
+        + [min((joker.get("counter") or 0) / 50.0, 1.0)]
+    )
 
 
 def _encode_card_slot(card):
@@ -79,7 +109,11 @@ def encode_state(state):
         + [deck["bySuit"][suit] / deck_total for suit in SUITS]
         + [deck["byRank"][rank] / deck_total for rank in RANKS]
     )
-    return slots + context
+    jokers = state.get("jokers", [])
+    joker_slots = []
+    for i in range(JOKER_SLOTS):
+        joker_slots.extend(_encode_joker_slot(jokers[i] if i < len(jokers) else None))
+    return slots + context + joker_slots
 
 
 def encode_candidate(candidate, state):

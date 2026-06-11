@@ -6,6 +6,8 @@ import {
   CANDIDATE_FEATURES,
   CARD_FEATURES,
   INPUT_FEATURES,
+  JOKER_SLOT_FEATURES,
+  JOKER_SLOTS,
   STATE_FEATURES,
   encodeCandidate,
   encodeDecision,
@@ -111,6 +113,40 @@ describe("encode — shape contracts", () => {
     } as HandOption;
     expect(() => encodeCandidate(candidate, sample.state)).toThrow(
       "not in hand",
+    );
+  });
+
+  test("an equipped joker sets its presence flag and effect-category bit", () => {
+    const state: ModelState = {
+      ...sample.state,
+      jokers: [
+        {
+          id: "jolly",
+          name: "Jolly Joker",
+          description: "+8 Mult if played hand contains a Pair",
+          effectKind: "on-hand-type-mult",
+          rarity: "common",
+          edition: null,
+          stickers: [],
+          counter: null,
+        },
+      ],
+    };
+    const handSlotBytes = 16 * CARD_FEATURES;
+    const contextBytes = STATE_FEATURES - 16 * CARD_FEATURES - JOKER_SLOTS * JOKER_SLOT_FEATURES;
+    const jokerStart = handSlotBytes + contextBytes;
+    const vec = encodeState(state);
+    expect(vec[jokerStart]).toBe(1);
+  });
+
+  test("an empty joker slot encodes to all zeros", () => {
+    const state: ModelState = { ...sample.state, jokers: [] };
+    const handSlotBytes = 16 * CARD_FEATURES;
+    const contextBytes = STATE_FEATURES - 16 * CARD_FEATURES - JOKER_SLOTS * JOKER_SLOT_FEATURES;
+    const jokerStart = handSlotBytes + contextBytes;
+    const vec = encodeState(state);
+    expect(vec.slice(jokerStart, jokerStart + JOKER_SLOT_FEATURES)).toEqual(
+      new Array<number>(JOKER_SLOT_FEATURES).fill(0),
     );
   });
 });
