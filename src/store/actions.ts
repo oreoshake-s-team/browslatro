@@ -1,4 +1,6 @@
 import type { StateCreator } from "zustand";
+import { captureRunEvent } from "../ai/humanPlayWiring";
+import { shopItemSnapshot } from "../ai/runEvents";
 import type { GameState } from "./game";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -315,6 +317,15 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const entry = s.jokers[jokerIdx];
     if (!entry) return;
     if (!canSellJoker(entry)) return;
+    captureRunEvent(s, {
+      kind: "joker-sell",
+      joker: {
+        id: entry.id,
+        name: entry.name,
+        sellValue: jokerSellValue(entry),
+      },
+      heldJokerIds: s.jokers.map((joker) => joker.id),
+    });
     s.earn(jokerSellValue(entry));
     if (entry.effect.kind === "sell-creates-double-tag") {
       s.setPendingTags((prev) => [...prev, "double"]);
@@ -392,6 +403,23 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const price = applyShopDiscount(voucher.cost, s.ownedVoucherIds);
     if (s.money < price) return;
     if (voucher.requires && !s.ownedVoucherIds.has(voucher.requires)) return;
+    captureRunEvent(s, {
+      kind: "purchase",
+      item: {
+        itemType: "voucher",
+        id: voucher.id,
+        name: voucher.name,
+        cost: price,
+      },
+      offers: s.currentAnteVouchers
+        .filter((offer) => !s.soldVoucherIds.has(offer.id))
+        .map((offer) => ({
+          itemType: "voucher",
+          id: offer.id,
+          name: offer.name,
+          cost: applyShopDiscount(offer.cost, s.ownedVoucherIds),
+        })),
+    });
     s.spend(price);
     const nextOwnedVoucherIds = new Set(s.ownedVoucherIds);
     nextOwnedVoucherIds.add(voucher.id);
@@ -559,8 +587,26 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const s = get();
     const offer = s.shopOffers?.[idx];
     if (!offer || offer.sold) return false;
+    const capturePurchase = (cost: number): void => {
+      captureRunEvent(s, {
+        kind: "purchase",
+        item: shopItemSnapshot(offer, cost),
+        offers: (s.shopOffers ?? [])
+          .filter((candidate) => !candidate.sold)
+          .map((candidate) =>
+            shopItemSnapshot(
+              candidate,
+              applyShopDiscount(candidate.price, s.ownedVoucherIds),
+            ),
+          ),
+      });
+    };
     if (offer.kind === "pack") {
-      return s.openPack(idx);
+      const opened = s.openPack(idx);
+      if (opened) {
+        capturePurchase(applyShopDiscount(offer.price, s.ownedVoucherIds));
+      }
+      return opened;
     }
     const price = applyShopDiscount(offer.price, s.ownedVoucherIds);
     if (s.money < price) return false;
@@ -576,6 +622,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       ) {
         return false;
       }
+      capturePurchase(price);
       s.spend(price);
       s.setJokers((prev) => [...prev, offer.joker]);
       s.setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
@@ -583,6 +630,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       return true;
     }
     if (offer.kind === "playing-card") {
+      capturePurchase(price);
       s.spend(price);
       s.setAddedCards((prev) => [...prev, offer.card]);
       s.markOfferSold(idx);
@@ -597,6 +645,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         : offer.kind === "tarot"
           ? { kind: "tarot", card: offer.tarot }
           : { kind: "spectral", card: offer.spectral };
+    capturePurchase(price);
     s.spend(price);
     s.setConsumables((prev) => addConsumable(prev, next, consumableCapacity));
     s.markOfferSold(idx);

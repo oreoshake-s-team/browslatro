@@ -36,3 +36,27 @@ test("the dev menu exports recorded decisions as JSONL", async ({ page }) => {
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("browslatro-human-play.jsonl");
 });
+
+test("a shop purchase shows up in the per-kind breakdown", async ({ page }) => {
+  await startRound(page);
+  await page.getByText("Apply modifiers").click();
+  await page.getByText(/Win/).click();
+  await page.getByTestId("shop-offer-0").locator(".shop-offer-buy").click();
+  const breakdown = page.getByTestId("human-play-log-breakdown");
+  if (!(await breakdown.isVisible().catch(() => false))) {
+    await page.getByText("Apply modifiers").click();
+  }
+  await expect(breakdown).toContainText("purchases 1");
+});
+
+test("skipping a blind is recorded", async ({ page }) => {
+  await page.goto("/");
+  const newRun = page.getByTestId("new-run-confirm");
+  if (await newRun.isVisible().catch(() => false)) await newRun.click();
+  await page.getByTestId("blind-select-skip").click();
+  await page.getByTestId("blind-select-play").click();
+  await page.getByText("Apply modifiers").click();
+  await expect(page.getByTestId("human-play-log-breakdown")).toContainText(
+    "skips 1",
+  );
+});

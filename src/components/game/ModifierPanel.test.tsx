@@ -220,6 +220,29 @@ describe("ModifierPanel human play log", () => {
     );
   });
 
+
+  test("shows a per-kind breakdown when records exist", async () => {
+    window.localStorage.setItem(
+      "browslatro.human-play-log.v1",
+      '{"schema":1}\n{"schemaVersion":2,"kind":"purchase"}',
+    );
+    const user = userEvent.setup();
+    render(<ModifierPanel />);
+    await openModifiers(user);
+    expect(
+      screen.getByTestId("human-play-log-breakdown"),
+    ).toHaveTextContent("hands 1 · purchases 1");
+  });
+
+  test("hides the breakdown when the log is empty", async () => {
+    const user = userEvent.setup();
+    render(<ModifierPanel />);
+    await openModifiers(user);
+    expect(
+      screen.queryByTestId("human-play-log-breakdown"),
+    ).not.toBeInTheDocument();
+  });
+
   test("export downloads the JSONL via an object URL", async () => {
     seedOneRecord();
     const createObjectURL = vi.fn(() => "blob:test");
