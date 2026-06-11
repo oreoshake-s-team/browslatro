@@ -5,7 +5,11 @@ import { retrieveWikiEntries } from "./wiki.js";
 
 export type { Advice } from "./advice";
 
-export type AdviceModelErrorCode = "advisor_busy" | "model_timeout" | "model_error";
+export type AdviceModelErrorCode =
+  | "advisor_busy"
+  | "model_timeout"
+  | "model_refusal"
+  | "model_error";
 
 export type AdviceModelResult =
   | { readonly ok: true; readonly advice: Advice }
@@ -102,7 +106,7 @@ export async function requestAdvice(
   let response: Anthropic.Message;
   try {
     response = await client.messages.create({
-      model: MODEL_ID,
+      model: process.env.ADVISOR_MODEL ?? MODEL_ID,
       max_tokens: MAX_OUTPUT_TOKENS,
       thinking: { type: "adaptive" },
       output_config: {
@@ -114,6 +118,9 @@ export async function requestAdvice(
     });
   } catch (error) {
     return mapModelError(error);
+  }
+  if (response.stop_reason === "refusal") {
+    return { ok: false, status: 502, code: "model_refusal" };
   }
   const text = response.content
     .filter((block) => block.type === "text")
