@@ -187,7 +187,7 @@ describe("Card", () => {
   test("appends the enhancement to the accessible label when gold", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold)");
+    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold, +$3)");
   });
 
   test("does not append an enhancement suffix to a vanilla card's accessible label", () => {
@@ -244,11 +244,11 @@ describe("Card", () => {
   });
 
   test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
-    { enhancement: "steel", accessibleName: "A of Hearts (Steel)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
-    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
-    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
+    { enhancement: "steel", accessibleName: "A of Hearts (Steel, ×1.5 Mult)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
+    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus, +30 chips)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
+    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult, +4 Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
     { enhancement: "wild", accessibleName: "K of Hearts (Wild)", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
-    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
+    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky, 1 in 5 for +20 Mult, 1 in 15 for +$20)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
   ])("appends the $enhancement suffix to the accessible label", ({ accessibleName, card }) => {
     render(<Card card={card} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(accessibleName);
@@ -319,7 +319,7 @@ describe("Card", () => {
     };
     render(<Card card={sealed} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(
-      "K of Diamonds (Gold), Red Seal",
+      "K of Diamonds (Gold, +$3), Red Seal",
     );
   });
 });
