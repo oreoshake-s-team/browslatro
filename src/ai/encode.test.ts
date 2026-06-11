@@ -85,12 +85,23 @@ describe("encode — shape contracts", () => {
     ]);
   });
 
+  test("a ten-card hand fills the ninth and tenth slots", () => {
+    const state: ModelState = {
+      ...sample.state,
+      hand: new Array(10).fill(sample.state.hand[0]),
+    };
+    const vector = encodeState(state);
+    expect([vector[9 * CARD_FEATURES], vector[10 * CARD_FEATURES]]).toEqual([
+      1, 0,
+    ]);
+  });
+
   test("an oversized hand is rejected", () => {
     const state: ModelState = {
       ...sample.state,
-      hand: new Array(9).fill(sample.state.hand[0]),
+      hand: new Array(17).fill(sample.state.hand[0]),
     };
-    expect(() => encodeState(state)).toThrow("max 8");
+    expect(() => encodeState(state)).toThrow("max 16");
   });
 
   test("a candidate referencing a foreign card is rejected", () => {

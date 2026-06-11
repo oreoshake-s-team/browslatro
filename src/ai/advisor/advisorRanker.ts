@@ -1,6 +1,6 @@
 import { createAdvisorRanker, type CandidateRanker } from "../policy";
 
-export const ADVISOR_MODEL_URL = "/models/advisor-policy-v1.onnx";
+export const ADVISOR_MODEL_URL = "/models/advisor-policy-v2.onnx";
 
 let sharedRanker: CandidateRanker | null = null;
 
