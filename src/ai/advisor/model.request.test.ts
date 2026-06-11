@@ -8,6 +8,7 @@ vi.mock("@anthropic-ai/sdk", () => {
   class MockAnthropic {
     static RateLimitError = class extends Error {};
     static APIConnectionTimeoutError = class extends Error {};
+    static AuthenticationError = class extends Error {};
     messages = { create: createMock };
   }
   return { default: MockAnthropic };
@@ -45,6 +46,22 @@ describe("requestAdvice", () => {
     createMock.mockResolvedValue({ stop_reason: "refusal", content: [] });
     const result = await requestAdvice(adviceRequestFixture(), "sk-test");
     expect(result).toEqual({ ok: false, status: 502, code: "model_refusal" });
+  });
+
+
+  test("maps an authentication failure to invalid_player_key", async () => {
+    const AuthError = (
+      (await import("@anthropic-ai/sdk")).default as unknown as {
+        AuthenticationError: new () => Error;
+      }
+    ).AuthenticationError;
+    createMock.mockRejectedValue(new AuthError());
+    const result = await requestAdvice(adviceRequestFixture(), "sk-bad");
+    expect(result).toEqual({
+      ok: false,
+      status: 401,
+      code: "invalid_player_key",
+    });
   });
 
   test("defaults to the fixed advisor model", async () => {

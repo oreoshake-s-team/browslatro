@@ -2,7 +2,9 @@
 import { describe, expect, test, vi } from "vitest";
 import {
   handleAdviceRequest,
+  IP_RATE_LIMIT,
   MAX_BODY_CHARS,
+  PLAYER_KEY_HEADER,
   type AdviceHandlerDeps,
 } from "./handler";
 import type { Advice, AdviceModelResult } from "./model";
@@ -185,5 +187,96 @@ describe("handleAdviceRequest", () => {
       makeDeps({ requestAdvice: async () => failure }),
     );
     expect(await response.json()).toEqual({ error: "advisor_busy" });
+  });
+});
+
+describe("handleAdviceRequest with a player key", () => {
+  function postWithPlayerKey(body: unknown, key = "sk-ant-player"): Request {
+    return new Request("https://example.com/api/advice", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "203.0.113.7",
+        [PLAYER_KEY_HEADER]: key,
+      },
+      body: JSON.stringify(body),
+    });
+  }
+
+  test("keyless requests get three explanations per hour", () => {
+    expect(IP_RATE_LIMIT).toEqual({ limit: 3, windowMs: 3_600_000 });
+  });
+
+  test("bypasses the per-ip and global limits", async () => {
+    const deps = makeDeps({
+      ipLimiter: createRateLimiter({ limit: 1, windowMs: 60_000 }),
+      globalLimiter: createRateLimiter({ limit: 1, windowMs: 60_000 }),
+    });
+    await handleAdviceRequest(postWithPlayerKey(adviceRequestFixture()), deps);
+    const second = await handleAdviceRequest(
+      postWithPlayerKey(adviceRequestFixture()),
+      deps,
+    );
+    expect(second.status).toBe(200);
+  });
+
+  test("uses the player key for the model call", async () => {
+    const requestAdvice = vi
+      .fn<AdviceHandlerDeps["requestAdvice"]>()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    await handleAdviceRequest(
+      postWithPlayerKey(adviceRequestFixture()),
+      makeDeps({ requestAdvice }),
+    );
+    expect(requestAdvice).toHaveBeenCalledWith(
+      adviceRequestFixture(),
+      "sk-ant-player",
+    );
+  });
+
+  test("serves player-key requests even without a server key", async () => {
+    const response = await handleAdviceRequest(
+      postWithPlayerKey(adviceRequestFixture()),
+      makeDeps({ getApiKey: () => undefined }),
+    );
+    expect(response.status).toBe(200);
+  });
+
+  test("a blank player key falls back to keyless limits", async () => {
+    const deps = makeDeps({
+      ipLimiter: createRateLimiter({ limit: 1, windowMs: 60_000 }),
+    });
+    await handleAdviceRequest(postWithPlayerKey(adviceRequestFixture(), " "), deps);
+    const second = await handleAdviceRequest(
+      postWithPlayerKey(adviceRequestFixture(), " "),
+      deps,
+    );
+    expect(second.status).toBe(429);
+  });
+
+  test("surfaces an invalid player key to the client", async () => {
+    const failure: AdviceModelResult = {
+      ok: false,
+      status: 401,
+      code: "invalid_player_key",
+    };
+    const response = await handleAdviceRequest(
+      postWithPlayerKey(adviceRequestFixture()),
+      makeDeps({ requestAdvice: async () => failure }),
+    );
+    expect(await response.json()).toEqual({ error: "invalid_player_key" });
+  });
+
+  test("masks a server-key auth failure as a generic model error", async () => {
+    const failure: AdviceModelResult = {
+      ok: false,
+      status: 401,
+      code: "invalid_player_key",
+    };
+    const response = await handleAdviceRequest(
+      postAdvice(adviceRequestFixture()),
+      makeDeps({ requestAdvice: async () => failure }),
+    );
+    expect(await response.json()).toEqual({ error: "model_error" });
   });
 });

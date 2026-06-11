@@ -9,6 +9,7 @@ export type AdviceModelErrorCode =
   | "advisor_busy"
   | "model_timeout"
   | "model_refusal"
+  | "invalid_player_key"
   | "model_error";
 
 export type AdviceModelResult =
@@ -90,6 +91,9 @@ export function mapModelError(error: unknown): AdviceModelResult {
   }
   if (error instanceof Anthropic.APIConnectionTimeoutError) {
     return { ok: false, status: 504, code: "model_timeout" };
+  }
+  if (error instanceof Anthropic.AuthenticationError) {
+    return { ok: false, status: 401, code: "invalid_player_key" };
   }
   return { ok: false, status: 502, code: "model_error" };
 }
