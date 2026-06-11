@@ -262,8 +262,10 @@ describe("Options — animation speed", () => {
 });
 
 describe("Options — language picker", () => {
-  afterEach(() => {
+  afterEach(async () => {
     window.localStorage.removeItem(LOCALE_KEY);
+    const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
+    await restoreEnglishLocale();
   });
 
   test("renders the language control inside the modal", async () => {
@@ -295,7 +297,7 @@ describe("Options — language picker", () => {
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Language"), "haw");
     expect(
-      screen.getByRole("heading", { name: "Nā koho" }),
+      await screen.findByRole("heading", { name: "Nā koho" }),
     ).toBeInTheDocument();
   });
 
@@ -304,6 +306,7 @@ describe("Options — language picker", () => {
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Language"), "haw");
+    await screen.findByLabelText("ʻŌlelo");
     expect(window.localStorage.getItem(LOCALE_KEY)).toBe("haw");
   });
 
@@ -312,9 +315,9 @@ describe("Options — language picker", () => {
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Language"), "haw");
-    await user.selectOptions(screen.getByLabelText("ʻŌlelo"), "en");
+    await user.selectOptions(await screen.findByLabelText("ʻŌlelo"), "en");
     expect(
-      screen.getByRole("heading", { name: "Options" }),
+      await screen.findByRole("heading", { name: "Options" }),
     ).toBeInTheDocument();
   });
 });
