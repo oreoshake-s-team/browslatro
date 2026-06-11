@@ -44,3 +44,28 @@ export function resolveJokerEffect(
 ): ResolvedJokerEffect {
   return resolveAt(jokers, index, new Set());
 }
+
+function resolveTargetIndex(
+  jokers: ReadonlyArray<Joker>,
+  index: number,
+  visited: ReadonlySet<number>,
+): number {
+  if (index < 0 || index >= jokers.length) return -1;
+  if (visited.has(index)) return -1;
+  const effect = jokers[index].effect;
+  if (effect.kind === "copy-right-joker") {
+    return resolveTargetIndex(jokers, index + 1, new Set(visited).add(index));
+  }
+  if (effect.kind === "copy-leftmost-joker") {
+    return resolveTargetIndex(jokers, 0, new Set(visited).add(index));
+  }
+  return index;
+}
+
+export function resolveJokerTargetIndex(
+  jokers: ReadonlyArray<Joker>,
+  index: number,
+): number {
+  const target = resolveTargetIndex(jokers, index, new Set());
+  return target === -1 ? index : target;
+}
