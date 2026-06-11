@@ -4,6 +4,7 @@ import { isAdvice, type Advice } from "./advice";
 import { readStoredPlayerKey } from "./playerKey";
 import type {
   AdviceRequest,
+  BlindAdviceRequest,
   PackAdviceRequest,
   ShopAdviceRequest,
 } from "./types";
@@ -135,7 +136,7 @@ export async function fetchAdvice(
 }
 
 export async function fetchContextAdvice(
-  request: ShopAdviceRequest | PackAdviceRequest,
+  request: ShopAdviceRequest | PackAdviceRequest | BlindAdviceRequest,
   options: FetchAdviceOptions = {},
 ): Promise<AdviceClientResult> {
   return postAdviceRequest(request, options);
