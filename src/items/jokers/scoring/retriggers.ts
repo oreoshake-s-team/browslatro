@@ -1,6 +1,6 @@
 import type { Card } from "../../../cards/types";
 import type { Joker } from "../types";
-import { resolveJokerEffect } from "./copy";
+import { resolveJokerEffect, resolveJokerTargetIndex } from "./copy";
 import { isFaceCardWith } from "./utils";
 import { isJokerActive } from "../stickers";
 
@@ -37,8 +37,8 @@ export function expandScoringRetriggers(
           break;
         }
         case "retrigger-all-depleting": {
-          const state = jokers[i].state;
-          const remaining = state?.kind === "counter" ? state.value : 0;
+          const target = jokers[resolveJokerTargetIndex(jokers, i)];
+          const remaining = target.state?.kind === "counter" ? target.state.value : 0;
           if (remaining > 0) extra += effect.times;
           break;
         }

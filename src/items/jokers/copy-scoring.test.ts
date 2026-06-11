@@ -6,6 +6,8 @@ import {
   createBrainstormJoker,
   createGreedyJoker,
   createPlusFourMultJoker,
+  createRideTheBusJoker,
+  RIDE_THE_BUS_MULT_PER_FACELESS_HAND,
 } from "../jokers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
@@ -85,6 +87,30 @@ describe("Brainstorm (copy-leftmost) in scoring", () => {
   });
 
   test("contributes nothing when it is the only joker", () => {
+    const result = applyHandLevelJokers([createBrainstormJoker()]);
+    expect(result.additiveMult).toBe(0);
+  });
+});
+
+describe("copy jokers reading target joker state", () => {
+  test("Brainstorm copying Ride the Bus contributes the target's accumulated mult", () => {
+    const stacked = { ...createRideTheBusJoker(), state: { kind: "counter" as const, value: 3 } };
+    const result = applyHandLevelJokers([stacked, createBrainstormJoker()]);
+    expect(result.additiveMult).toBe(RIDE_THE_BUS_MULT_PER_FACELESS_HAND * 3 * 2);
+  });
+
+  test("Blueprint copying Ride the Bus contributes the target's accumulated mult", () => {
+    const stacked = { ...createRideTheBusJoker(), state: { kind: "counter" as const, value: 4 } };
+    const result = applyHandLevelJokers([createBlueprintJoker(), stacked]);
+    expect(result.additiveMult).toBe(RIDE_THE_BUS_MULT_PER_FACELESS_HAND * 4 * 2);
+  });
+
+  test("Brainstorm copying a zero-state Ride the Bus contributes 0 mult (negative)", () => {
+    const result = applyHandLevelJokers([createRideTheBusJoker(), createBrainstormJoker()]);
+    expect(result.additiveMult).toBe(0);
+  });
+
+  test("Brainstorm alone with no other jokers contributes 0 stateful mult (negative)", () => {
     const result = applyHandLevelJokers([createBrainstormJoker()]);
     expect(result.additiveMult).toBe(0);
   });

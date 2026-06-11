@@ -12,7 +12,7 @@ import {
   POLYCHROME_X_MULT,
 } from "../constants";
 import type { Joker } from "../types";
-import { resolveJokerEffect } from "./copy";
+import { resolveJokerEffect, resolveJokerTargetIndex } from "./copy";
 import type {
   HandLevelContext,
   JokerHandLevelStep,
@@ -388,7 +388,8 @@ export function applyHandLevelJokers(
       case "stack-mult-per-tarot-used":
       case "blind-select-eats-right-joker-mult":
       case "mult-decay-per-round": {
-        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        const src = jokers[resolveJokerTargetIndex(jokers, i)];
+        const bonus = src.state?.kind === "counter" ? src.state.value : 0;
         if (bonus > 0) {
           additiveMult += bonus;
           fired.push(joker.id);
@@ -405,7 +406,8 @@ export function applyHandLevelJokers(
       case "on-played-rank-stack-chips":
       case "stack-chips-per-rotating-suit-discard":
       case "chips-melt-per-hand": {
-        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        const src = jokers[resolveJokerTargetIndex(jokers, i)];
+        const bonus = src.state?.kind === "counter" ? src.state.value : 0;
         if (bonus > 0) {
           additiveChips += bonus;
           fired.push(joker.id);
@@ -418,7 +420,8 @@ export function applyHandLevelJokers(
         break;
       }
       case "on-no-face-stack-mult": {
-        const bonus = joker.state?.kind === "counter" ? joker.state.value : 0;
+        const src = jokers[resolveJokerTargetIndex(jokers, i)];
+        const bonus = src.state?.kind === "counter" ? src.state.value : 0;
         if (bonus > 0) {
           additiveMult += bonus;
           fired.push(joker.id);
@@ -484,7 +487,8 @@ export function applyHandLevelJokers(
       case "blind-select-x-mult-destroys-joker":
       case "x-mult-per-face-destroyed":
       case "x-mult-per-hand-without-most-played": {
-        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        const src = jokers[resolveJokerTargetIndex(jokers, i)];
+        const counter = src.state?.kind === "counter" ? src.state.value : 0;
         if (counter > 0) {
           const factor = 1 + effect.amount * counter;
           xMult *= factor;
@@ -535,7 +539,7 @@ export function applyHandLevelJokers(
         break;
       }
       case "x-mult-shrink-per-discarded-card": {
-        const factor = ramenXMultFactor(joker);
+        const factor = ramenXMultFactor(jokers[resolveJokerTargetIndex(jokers, i)]);
         if (factor > 1) {
           xMult *= factor;
           fired.push(joker.id);
@@ -548,7 +552,8 @@ export function applyHandLevelJokers(
         break;
       }
       case "every-n-hands-xmult": {
-        const counter = joker.state?.kind === "counter" ? joker.state.value : 0;
+        const src = jokers[resolveJokerTargetIndex(jokers, i)];
+        const counter = src.state?.kind === "counter" ? src.state.value : 0;
         if (counter > 0 && counter % effect.n === 0) {
           xMult *= effect.xmult;
           fired.push(joker.id);
