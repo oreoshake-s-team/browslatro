@@ -48,8 +48,8 @@ describe("Open Graph metadata", () => {
 });
 
 describe("Twitter Card metadata", () => {
-  test("declares a summary card", () => {
-    expect(metaContent("name", "twitter:card")).toBe("summary");
+  test("declares a large summary card", () => {
+    expect(metaContent("name", "twitter:card")).toBe("summary_large_image");
   });
 
   test("uses an absolute site URL placeholder for twitter:image", () => {

@@ -1,8 +1,11 @@
 /// <reference types="vitest/config" />
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { VitePWA } from "vite-plugin-pwa";
+import { applySiteUrl } from "./src/seo/siteUrl";
 
 const analyzePlugin: PluginOption | false =
   process.env.ANALYZE === "true" &&
@@ -31,10 +34,19 @@ const siteUrl =
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : "http://localhost:3000");
 
+const SITE_URL_PUBLIC_FILES = ["robots.txt", "sitemap.xml"];
+
 const siteUrlPlugin: PluginOption = {
   name: "browslatro:site-url",
   transformIndexHtml(html) {
-    return html.replaceAll("%SITE_URL%", siteUrl);
+    return applySiteUrl(html, siteUrl);
+  },
+  closeBundle() {
+    for (const file of SITE_URL_PUBLIC_FILES) {
+      const target = join("build", file);
+      if (!existsSync(target)) continue;
+      writeFileSync(target, applySiteUrl(readFileSync(target, "utf8"), siteUrl));
+    }
   },
 };
 
