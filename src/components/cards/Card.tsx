@@ -1,5 +1,6 @@
 import "./Card.css";
 import "./CardCenterValue.css";
+import "./CardLuckyCenter.css";
 import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +10,12 @@ import {
   enhancementDisplayValue,
   type EnhancementValueColor,
 } from "../../cards/enhancementDisplay";
+import {
+  LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+  LUCKY_ENHANCEMENT_MONEY_CHANCE,
+  LUCKY_ENHANCEMENT_MULT_AMOUNT,
+  LUCKY_ENHANCEMENT_MULT_CHANCE,
+} from "../../cards/enhancements";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 import { useGame } from "../../store/game";
@@ -156,17 +163,30 @@ export default function Card({
   const displayValue = card.enhancement
     ? enhancementDisplayValue(card.enhancement)
     : null;
+  const isLucky = card.enhancement === "lucky";
+  const luckyMultDenom = Math.round(1 / LUCKY_ENHANCEMENT_MULT_CHANCE);
+  const luckyMoneyDenom = Math.round(1 / LUCKY_ENHANCEMENT_MONEY_CHANCE);
+  const valueText = displayValue
+    ? t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
+        value: displayValue.text,
+      })
+    : isLucky
+      ? t("a11y.enhancementValueLucky", {
+          multOdds: t("cardLabels.luckyOdds", { n: luckyMultDenom }),
+          mult: LUCKY_ENHANCEMENT_MULT_AMOUNT,
+          moneyOdds: t("cardLabels.luckyOdds", { n: luckyMoneyDenom }),
+          money: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+        })
+      : null;
   const baseName = isStone
     ? t("a11y.stoneCard")
     : card.enhancement
-      ? displayValue
+      ? valueText
         ? t("a11y.cardNameEnhancedValue", {
             rank: card.rank,
             suit: tSuitName(t, card.suit),
             enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
-            value: t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
-              value: displayValue.text,
-            }),
+            value: valueText,
           })
         : t("a11y.cardNameEnhanced", {
             rank: card.rank,
@@ -224,6 +244,20 @@ export default function Card({
               <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
               <span className="card-face-monogram">{card.rank}</span>
               <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
+            </span>
+          ) : isLucky ? (
+            <span
+              className="card-center-lucky"
+              aria-hidden="true"
+              data-testid={`card-center-lucky-${card.id}`}
+            >
+              <span className="card-center-lucky-icon">☘</span>
+              <span className="card-center-lucky-odds">
+                {t("cardLabels.luckyOddsMult", { n: luckyMultDenom })}
+              </span>
+              <span className="card-center-lucky-odds">
+                {t("cardLabels.luckyOddsMoney", { n: luckyMoneyDenom })}
+              </span>
             </span>
           ) : displayValue ? (
             <span
