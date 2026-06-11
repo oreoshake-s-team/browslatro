@@ -1,0 +1,67 @@
+.autopilot-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border: 2px solid #1c7ed6;
+  border-radius: 10px;
+  background-color: rgba(51, 154, 240, 0.12);
+}
+
+.autopilot-proposal {
+  margin: 0;
+  font-weight: 700;
+  color: #1c7ed6;
+  text-align: center;
+}
+
+.autopilot-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.autopilot-progress {
+  width: 100%;
+  height: 0.5rem;
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: #d0ebff;
+}
+
+.autopilot-progress::-webkit-progress-bar {
+  background-color: #d0ebff;
+  border-radius: 999px;
+}
+
+.autopilot-progress::-webkit-progress-value {
+  background-color: #1c7ed6;
+  border-radius: 999px;
+}
+
+.autopilot-progress::-moz-progress-bar {
+  background-color: #1c7ed6;
+  border-radius: 999px;
+}
+
+.autopilot-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.autopilot-approve-button {
+  background-color: #51cf66;
+  border-color: #2f9e44;
+  color: #1a1a1a;
+}
+
+.autopilot-stop-button {
+  background-color: #ff6b6b;
+  border-color: #e03131;
+  color: #1a1a1a;
+}

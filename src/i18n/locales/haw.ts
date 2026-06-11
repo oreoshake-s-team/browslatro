@@ -203,6 +203,10 @@ export const haw: LocaleMessages = {
   advisor: {
     open: "Advisor",
     autopilot: "Autopilot",
+    autopilotApprove: "ʻApono i ka neʻe",
+    autopilotStop: "Hoʻōki i ka autopilot",
+    autopilotPlayProposal: "Ke koho nei ka autopilot e pāʻani {{hand}}",
+    autopilotDiscardProposal: "Ke koho nei ka autopilot e kiola i nā kāleka i koho ʻia",
     title: "Coach",
     downloadingModel: "Ke ho\u02bboiho nei i ke kumu a\u02bbo\u2026",
     thinking: "The coach is thinking\u2026",
