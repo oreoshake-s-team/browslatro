@@ -1,9 +1,22 @@
 import "./Card.css";
+import "./CardCenterValue.css";
+import "./CardLuckyCenter.css";
 import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";
 import { tSuitName } from "../../i18n/strings";
+import {
+  enhancementDisplayValue,
+  type EnhancementValueColor,
+  type EnhancementValueTiming,
+} from "../../cards/enhancementDisplay";
+import {
+  LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+  LUCKY_ENHANCEMENT_MONEY_CHANCE,
+  LUCKY_ENHANCEMENT_MULT_AMOUNT,
+  LUCKY_ENHANCEMENT_MULT_CHANCE,
+} from "../../cards/enhancements";
 import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 import { useGame } from "../../store/game";
@@ -43,6 +56,22 @@ const ENHANCEMENT_LABEL_KEY = {
   gold: "cardLabels.enhancementGold",
   lucky: "cardLabels.enhancementLucky",
 } as const satisfies Record<Enhancement, string>;
+
+const ENHANCEMENT_VALUE_LABEL_KEY = {
+  chips: "a11y.enhancementValueChips",
+  mult: "a11y.enhancementValueMult",
+  money: "a11y.enhancementValueMoney",
+} as const satisfies Record<EnhancementValueColor, string>;
+
+const ENHANCEMENT_VALUE_TIMING_LABEL_KEY = {
+  heldInHand: "a11y.enhancementValueHeldInHand",
+  heldAtEndOfRound: "a11y.enhancementValueHeldAtEndOfRound",
+} as const satisfies Record<Exclude<EnhancementValueTiming, "scored">, string>;
+
+const ENHANCEMENT_VALUE_TIMING_CAPTION_KEY = {
+  heldInHand: "cardLabels.valueInHand",
+  heldAtEndOfRound: "cardLabels.valueIfHeld",
+} as const satisfies Record<Exclude<EnhancementValueTiming, "scored">, string>;
 
 const SEAL_LABEL_KEY = {
   gold: "cardLabels.sealGold",
@@ -142,14 +171,45 @@ export default function Card({
     ? `card-edition-${card.edition}`
     : "";
   const debuffedClass = debuffed ? "card-debuffed" : "";
+  const displayValue = card.enhancement
+    ? enhancementDisplayValue(card.enhancement)
+    : null;
+  const isLucky = card.enhancement === "lucky";
+  const luckyMultDenom = Math.round(1 / LUCKY_ENHANCEMENT_MULT_CHANCE);
+  const luckyMoneyDenom = Math.round(1 / LUCKY_ENHANCEMENT_MONEY_CHANCE);
+  const valueText = displayValue
+    ? displayValue.timing === "scored"
+      ? t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
+          value: displayValue.text,
+        })
+      : t(ENHANCEMENT_VALUE_TIMING_LABEL_KEY[displayValue.timing], {
+          value: t(ENHANCEMENT_VALUE_LABEL_KEY[displayValue.color], {
+            value: displayValue.text,
+          }),
+        })
+    : isLucky
+      ? t("a11y.enhancementValueLucky", {
+          multOdds: t("cardLabels.luckyOdds", { n: luckyMultDenom }),
+          mult: LUCKY_ENHANCEMENT_MULT_AMOUNT,
+          moneyOdds: t("cardLabels.luckyOdds", { n: luckyMoneyDenom }),
+          money: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+        })
+      : null;
   const baseName = isStone
     ? t("a11y.stoneCard")
     : card.enhancement
-      ? t("a11y.cardNameEnhanced", {
-          rank: card.rank,
-          suit: tSuitName(t, card.suit),
-          enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
-        })
+      ? valueText
+        ? t("a11y.cardNameEnhancedValue", {
+            rank: card.rank,
+            suit: tSuitName(t, card.suit),
+            enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
+            value: valueText,
+          })
+        : t("a11y.cardNameEnhanced", {
+            rank: card.rank,
+            suit: tSuitName(t, card.suit),
+            enhancement: t(ENHANCEMENT_LABEL_KEY[card.enhancement]),
+          })
       : t("a11y.cardName", { rank: card.rank, suit: tSuitName(t, card.suit) });
   const withSeal = card.seal
     ? t("a11y.cardWithDetail", {
@@ -196,7 +256,39 @@ export default function Card({
             <span className="card-rank">{card.rank}</span>
             <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
           </span>
-          {isFaceRank(card.rank) ? (
+          {isLucky ? (
+            <span
+              className="card-center-lucky"
+              aria-hidden="true"
+              data-testid={`card-center-lucky-${card.id}`}
+            >
+              <span className="card-center-lucky-odds card-center-lucky-odds-mult">
+                {t("cardLabels.luckyOddsMult", {
+                  n: luckyMultDenom,
+                  amount: LUCKY_ENHANCEMENT_MULT_AMOUNT,
+                })}
+              </span>
+              <span className="card-center-lucky-odds card-center-lucky-odds-money">
+                {t("cardLabels.luckyOddsMoney", {
+                  n: luckyMoneyDenom,
+                  amount: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+                })}
+              </span>
+            </span>
+          ) : displayValue ? (
+            <span
+              className={`card-center-value card-center-value-${displayValue.color}`}
+              aria-hidden="true"
+              data-testid={`card-center-value-${card.id}`}
+            >
+              {displayValue.text}
+              {displayValue.timing !== "scored" && (
+                <span className="card-center-value-timing">
+                  {t(ENHANCEMENT_VALUE_TIMING_CAPTION_KEY[displayValue.timing])}
+                </span>
+              )}
+            </span>
+          ) : isFaceRank(card.rank) ? (
             <span className="card-face-decoration" aria-hidden="true">
               <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
               <span className="card-face-monogram">{card.rank}</span>

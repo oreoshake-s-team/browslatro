@@ -1,0 +1,25 @@
+.card-center-lucky {
+  align-self: center;
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  line-height: 1;
+}
+
+.card-center-lucky-odds {
+  font-size: 0.82rem;
+  font-weight: 800;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--white) 70%, transparent);
+}
+
+.card-center-lucky-odds-mult {
+  color: var(--accent-red-deep);
+}
+
+.card-center-lucky-odds-money {
+  color: var(--accent-money-text);
+}

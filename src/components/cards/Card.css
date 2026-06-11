@@ -755,16 +755,6 @@
   );
 }
 
-.card-enhancement-lucky::after {
-  content: "☘";
-  position: absolute;
-  top: 0.2rem;
-  right: 0.2rem;
-  font-size: 1.1rem;
-  color: var(--positive-money-on-light);
-  text-shadow: 0 1px 1px color-mix(in srgb, var(--white) 85%, transparent);
-  pointer-events: none;
-}
 
 .card-seal {
   position: absolute;

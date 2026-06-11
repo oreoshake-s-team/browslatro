@@ -187,7 +187,7 @@ describe("Card", () => {
   test("appends the enhancement to the accessible label when gold", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold)");
+    expect(screen.getByRole("button")).toHaveAccessibleName("5 of Spades (Gold, +$3 if held at end of round)");
   });
 
   test("does not append an enhancement suffix to a vanilla card's accessible label", () => {
@@ -244,14 +244,117 @@ describe("Card", () => {
   });
 
   test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
-    { enhancement: "steel", accessibleName: "A of Hearts (Steel)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
-    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
-    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
+    { enhancement: "steel", accessibleName: "A of Hearts (Steel, ×1.5 Mult while held in hand)", card: { id: 10, rank: "A", suit: "hearts", enhancement: "steel" } },
+    { enhancement: "bonus", accessibleName: "7 of Clubs (Bonus, +30 chips)", card: { id: 11, rank: "7", suit: "clubs", enhancement: "bonus" } },
+    { enhancement: "mult", accessibleName: "9 of Diamonds (Mult, +4 Mult)", card: { id: 12, rank: "9", suit: "diamonds", enhancement: "mult" } },
     { enhancement: "wild", accessibleName: "K of Hearts (Wild)", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
-    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
+    { enhancement: "lucky", accessibleName: "Q of Hearts (Lucky, 1 in 5 for +20 Mult, 1 in 15 for +$20)", card: { id: 16, rank: "Q", suit: "hearts", enhancement: "lucky" } },
   ])("appends the $enhancement suffix to the accessible label", ({ accessibleName, card }) => {
     render(<Card card={card} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(accessibleName);
+  });
+
+  test("renders the enhancement value in the center slot of an enhanced number card", () => {
+    const bonus: CardType = { id: 61, rank: "5", suit: "spades", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.getByTestId("card-center-value-61")).toHaveTextContent("+30");
+  });
+
+  test("keeps the corner suit pip on a card with a center value", () => {
+    const bonus: CardType = { id: 62, rank: "5", suit: "spades", enhancement: "bonus" };
+    const { container } = render(<Card card={bonus} />);
+    expect(container.querySelector(".card-corner-top .card-suit")).toHaveTextContent("\u2660");
+  });
+
+  test("does not render a center value on a non-enhanced card", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.queryByTestId("card-center-value-1")).not.toBeInTheDocument();
+  });
+
+  test("keeps the center suit pip on a non-enhanced card", () => {
+    const { container } = render(<Card card={aceOfSpades} />);
+    expect(container.querySelector(".card-center")).toHaveTextContent("\u2660");
+  });
+
+  test("hides the center value on a face-down enhanced card", () => {
+    const bonus: CardType = {
+      id: 63,
+      rank: "5",
+      suit: "spades",
+      enhancement: "bonus",
+      faceDown: true,
+    };
+    render(<Card card={bonus} />);
+    expect(screen.queryByTestId("card-center-value-63")).not.toBeInTheDocument();
+  });
+
+  test("renders the enhancement value on an enhanced face card", () => {
+    const gold: CardType = { id: 64, rank: "K", suit: "hearts", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.getByTestId("card-center-value-64")).toHaveTextContent("+$3");
+  });
+
+  test("a steel card captions its value as held in hand", () => {
+    const steel: CardType = { id: 67, rank: "10", suit: "clubs", enhancement: "steel" };
+    render(<Card card={steel} />);
+    expect(screen.getByTestId("card-center-value-67")).toHaveTextContent("in hand");
+  });
+
+  test("a gold card captions its value as if held", () => {
+    const gold: CardType = { id: 68, rank: "7", suit: "diamonds", enhancement: "gold" };
+    render(<Card card={gold} />);
+    expect(screen.getByTestId("card-center-value-68")).toHaveTextContent("if held");
+  });
+
+  test("a scoring enhancement shows no held caption (negative)", () => {
+    const bonus: CardType = { id: 69, rank: "5", suit: "spades", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.getByTestId("card-center-value-69")).not.toHaveTextContent("held");
+  });
+
+  test("keeps the face decoration on a wild face card with no display value", () => {
+    const wild: CardType = { id: 66, rank: "K", suit: "hearts", enhancement: "wild" };
+    const { container } = render(<Card card={wild} />);
+    expect(container.querySelector(".card-face-monogram")).toHaveTextContent("K");
+  });
+
+  test("keeps the center suit pip on a wild card with no display value", () => {
+    const wild: CardType = { id: 65, rank: "3", suit: "hearts", enhancement: "wild" };
+    const { container } = render(<Card card={wild} />);
+    expect(container.querySelector(".card-center")).toHaveTextContent("\u2665");
+  });
+
+  test("renders both odds as text in the center of a lucky number card", () => {
+    const lucky: CardType = { id: 71, rank: "9", suit: "hearts", enhancement: "lucky" };
+    render(<Card card={lucky} />);
+    const center = screen.getByTestId("card-center-lucky-71");
+    expect(center).not.toHaveTextContent("\u2618");
+    expect(center).toHaveTextContent("1/5 +20");
+    expect(center).toHaveTextContent("1/15 +$20");
+  });
+
+  test("does not render the lucky center treatment on a non-lucky card", () => {
+    const bonus: CardType = { id: 72, rank: "9", suit: "clubs", enhancement: "bonus" };
+    render(<Card card={bonus} />);
+    expect(screen.queryByTestId("card-center-lucky-72")).not.toBeInTheDocument();
+  });
+
+  test("hides the lucky center treatment on a face-down lucky card", () => {
+    const lucky: CardType = {
+      id: 73,
+      rank: "9",
+      suit: "hearts",
+      enhancement: "lucky",
+      faceDown: true,
+    };
+    render(<Card card={lucky} />);
+    expect(screen.queryByTestId("card-center-lucky-73")).not.toBeInTheDocument();
+  });
+
+  test("renders the lucky treatment on a lucky face card", () => {
+    const lucky: CardType = { id: 74, rank: "Q", suit: "diamonds", enhancement: "lucky" };
+    render(<Card card={lucky} />);
+    expect(screen.getByTestId("card-center-lucky-74")).toHaveTextContent("1/5 +20");
   });
 
   test("applies the stone enhancement class when the card is stone", () => {
@@ -319,7 +422,7 @@ describe("Card", () => {
     };
     render(<Card card={sealed} />);
     expect(screen.getByRole("button")).toHaveAccessibleName(
-      "K of Diamonds (Gold), Red Seal",
+      "K of Diamonds (Gold, +$3 if held at end of round), Red Seal",
     );
   });
 });
