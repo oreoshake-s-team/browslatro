@@ -8,8 +8,8 @@ type LocaleMessages = {
 
 export const haw: LocaleMessages = {
   app: {
-    titleMenu: "Browlatro — Papa koho nui",
-    titleRun: "Browlatro — Ke holo nei ka pāʻani",
+    titleMenu: "Browslatro — Papa koho nui",
+    titleRun: "Browslatro — Ke holo nei ka pāʻani",
   },
   sidebar: {
     runInfo: "Run info",
