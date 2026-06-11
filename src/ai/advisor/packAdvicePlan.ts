@@ -29,6 +29,8 @@ export interface PackAdviceInput {
   readonly pickedIndices: ReadonlySet<number>;
   readonly jokerSlotsFull: boolean;
   readonly consumableSlotsFull: boolean;
+  readonly previewHandSize: number;
+  readonly previewSelectedCount: number;
   readonly money: number;
   readonly ante: number;
   readonly jokers: ReadonlyArray<Joker>;
@@ -37,7 +39,36 @@ export interface PackAdviceInput {
   readonly consumableCapacity: number;
 }
 
+function previewSelectionLimit(option: PackOption): number | null {
+  if (option.kind === "tarot") {
+    const effect = option.tarot.effect;
+    return effect.kind === "apply-enhancement" ? effect.maxTargets : null;
+  }
+  if (option.kind === "spectral") {
+    const effect = option.spectral.effect;
+    return effect.kind === "duplicate-selected" ? effect.maxTargets : null;
+  }
+  return null;
+}
+
 function isPickable(option: PackOption, input: PackAdviceInput): boolean {
+  const maxTargets = previewSelectionLimit(option);
+  if (
+    maxTargets !== null &&
+    input.previewHandSize > 0 &&
+    (input.previewSelectedCount === 0 ||
+      input.previewSelectedCount > maxTargets)
+  ) {
+    return false;
+  }
+  if (
+    option.kind === "tarot" &&
+    option.tarot.effect.kind === "apply-enhancement" &&
+    input.previewHandSize === 0 &&
+    input.consumableSlotsFull
+  ) {
+    return false;
+  }
   if (option.kind === "joker") return !input.jokerSlotsFull;
   if (option.kind === "spectral") {
     const effect = option.spectral.effect;
