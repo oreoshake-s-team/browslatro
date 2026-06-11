@@ -18,6 +18,13 @@ import {
   toggleMute,
   type AnimationSpeed,
 } from "../system/preferences";
+import {
+  clearPlayerKey,
+  maskPlayerKey,
+  readStoredPlayerKey,
+  storePlayerKey,
+} from "../../ai/advisor/playerKey";
+import { GET_KEY_URL } from "../game/AdvisorPanel";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
 
@@ -41,6 +48,9 @@ function Options({
 }: OptionsProps) {
   const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [storedKey, setStoredKey] = useState<string | null>(readStoredPlayerKey);
+  const [replacingKey, setReplacingKey] = useState(false);
+  const [keyDraft, setKeyDraft] = useState("");
   const [muted, setMuted] = useState(isMuted);
   const [highVisibility, setHighVisibility] = useState(isHighVisibility);
   const [animationSpeed, setAnimationSpeedState] = useState<AnimationSpeed>(
@@ -155,6 +165,71 @@ function Options({
                   ))}
                 </select>
               </label>
+              <div className="options-field options-advisor-key">
+                <span className="options-field-label">
+                  {t("options.advisorKey")}
+                </span>
+                {storedKey !== null && !replacingKey ? (
+                  <div className="options-key-row">
+                    <code data-testid="options-advisor-key-masked">
+                      {maskPlayerKey(storedKey)}
+                    </code>
+                    <button
+                      className="options-button"
+                      onClick={() => setReplacingKey(true)}
+                    >
+                      {t("options.advisorKeyReplace")}
+                    </button>
+                    <button
+                      className="options-button options-button--destructive"
+                      onClick={() => {
+                        clearPlayerKey();
+                        setStoredKey(null);
+                      }}
+                    >
+                      {t("options.advisorKeyRemove")}
+                    </button>
+                  </div>
+                ) : (
+                  <form
+                    className="options-key-row"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      const key = keyDraft.trim();
+                      if (key === "") return;
+                      storePlayerKey(key);
+                      setStoredKey(key);
+                      setKeyDraft("");
+                      setReplacingKey(false);
+                    }}
+                  >
+                    <input
+                      className="options-key-input"
+                      type="password"
+                      value={keyDraft}
+                      onChange={(event) => setKeyDraft(event.target.value)}
+                      placeholder="sk-ant-…"
+                      aria-label={t("advisor.keyLabel")}
+                      data-testid="options-advisor-key-input"
+                    />
+                    <button
+                      className="options-button"
+                      type="submit"
+                      disabled={keyDraft.trim() === ""}
+                    >
+                      {t("advisor.keySave")}
+                    </button>
+                  </form>
+                )}
+                <a
+                  className="options-key-link"
+                  href={GET_KEY_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t("advisor.keyLink")}
+                </a>
+              </div>
               <button
                 className="options-button options-button--destructive"
                 onClick={() => {

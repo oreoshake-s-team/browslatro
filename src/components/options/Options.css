@@ -91,3 +91,23 @@
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+
+.options-key-row {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.options-key-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-family: monospace;
+}
+
+.options-key-link {
+  font-size: 0.85rem;
+  color: #1c7ed6;
+}

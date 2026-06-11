@@ -197,3 +197,99 @@ describe("AdvisorPanel", () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("AdvisorPanel player key", () => {
+  function rateLimited() {
+    return vi.fn().mockResolvedValue({
+      ok: false,
+      code: "rate_limited",
+      retryAfterSeconds: 3600,
+    });
+  }
+
+  test("shows the wait time when the free budget is used up", async () => {
+    render(
+      <AdvisorPanel
+        onClose={vi.fn()}
+        deps={makeDeps({ fetchAdviceFn: rateLimited() })}
+      />,
+    );
+    expect(
+      await screen.findByText(/next one unlocks in about 60 min/),
+    ).toBeInTheDocument();
+  });
+
+  test("offers the key form when rate limited without a key", async () => {
+    render(
+      <AdvisorPanel
+        onClose={vi.fn()}
+        deps={makeDeps({ fetchAdviceFn: rateLimited() })}
+      />,
+    );
+    expect(await screen.findByTestId("advisor-key-input")).toBeInTheDocument();
+  });
+
+  test("hides the key form when a key is already stored", async () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-player",
+    );
+    render(
+      <AdvisorPanel
+        onClose={vi.fn()}
+        deps={makeDeps({ fetchAdviceFn: rateLimited() })}
+      />,
+    );
+    await screen.findByTestId("advisor-degraded");
+    expect(screen.queryByTestId("advisor-key-input")).not.toBeInTheDocument();
+  });
+
+  test("saving a key stores it and retries the walkthrough", async () => {
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: false,
+        code: "rate_limited",
+        retryAfterSeconds: 3600,
+      })
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const user = userEvent.setup();
+    render(
+      <AdvisorPanel onClose={vi.fn()} deps={makeDeps({ fetchAdviceFn })} />,
+    );
+    await user.type(
+      await screen.findByTestId("advisor-key-input"),
+      "sk-ant-new-key",
+    );
+    await user.click(screen.getByRole("button", { name: "Save key" }));
+    expect(
+      await screen.findByText("Play the pair of nines for guaranteed value."),
+    ).toBeInTheDocument();
+    expect(
+      window.localStorage.getItem("browslatro:advisor-player-key"),
+    ).toBe("sk-ant-new-key");
+  });
+
+  test("a rejected key keeps the stored key and asks for a fix", async () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-stale",
+    );
+    render(
+      <AdvisorPanel
+        onClose={vi.fn()}
+        deps={makeDeps({
+          fetchAdviceFn: vi
+            .fn()
+            .mockResolvedValue({ ok: false, code: "invalid_player_key" }),
+        })}
+      />,
+    );
+    expect(
+      await screen.findByText(/Your API key was rejected/),
+    ).toBeInTheDocument();
+    expect(
+      window.localStorage.getItem("browslatro:advisor-player-key"),
+    ).toBe("sk-ant-stale");
+  });
+});

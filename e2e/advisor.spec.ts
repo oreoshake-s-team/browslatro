@@ -140,3 +140,33 @@ test("flipping modes reuses the cached explanation without a second API call", a
   ).toBeVisible();
   expect(adviceCalls).toBe(1);
 });
+
+test("the keyless limit offers a key form that rescues the walkthrough", async ({
+  page,
+}) => {
+  await preferWalkthrough(page);
+  await page.route("**/api/advice", (route) => {
+    const key = route.request().headers()["x-advisor-key"];
+    if (key === undefined) {
+      return route.fulfill({
+        status: 429,
+        contentType: "application/json",
+        headers: { "retry-after": "3600" },
+        body: JSON.stringify({ error: "rate_limited" }),
+      });
+    }
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(ADVICE_BODY),
+    });
+  });
+  await startRound(page);
+  await page.getByRole("button", { name: /Advisor/ }).click();
+  await expect(page.getByText(/unlocks in about 60 min/)).toBeVisible();
+  await page.getByTestId("advisor-key-input").fill("sk-ant-e2e-test");
+  await page.getByRole("button", { name: "Save key" }).click();
+  await expect(
+    page.getByText("Coach says: take the strongest engine-vetted line."),
+  ).toBeVisible();
+});

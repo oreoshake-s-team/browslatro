@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from "vitest";
 import type { Advice } from "./advice";
-import { ADVICE_ENDPOINT, fetchAdvice } from "./client";
+import { ADVICE_ENDPOINT, fetchAdvice, PLAYER_KEY_HEADER } from "./client";
 import { candidatesFixture, modelStateFixture } from "./test-helpers";
 
 function adviceFixture(): Advice {
@@ -50,6 +50,48 @@ describe("fetchAdvice", () => {
         }),
       }),
     );
+  });
+
+
+  test("attaches the player key header when one is provided", async () => {
+    const fetchFn = fetchReturning(jsonResponse(200, { advice: adviceFixture() }));
+    await fetchAdvice(modelStateFixture(), candidatesFixture(), {
+      fetchFn,
+      playerKey: "sk-ant-player",
+    });
+    expect(fetchFn).toHaveBeenCalledWith(
+      ADVICE_ENDPOINT,
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          [PLAYER_KEY_HEADER]: "sk-ant-player",
+        }),
+      }),
+    );
+  });
+
+  test("omits the player key header when the key is null", async () => {
+    const fetchFn = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse(200, { advice: adviceFixture() }));
+    await fetchAdvice(modelStateFixture(), candidatesFixture(), {
+      fetchFn,
+      playerKey: null,
+    });
+    const headers = fetchFn.mock.calls[0][1]?.headers as Record<string, string>;
+    expect(headers[PLAYER_KEY_HEADER]).toBeUndefined();
+  });
+
+  test("surfaces the retry-after wait on a rate-limited response", async () => {
+    const response = new Response(JSON.stringify({ error: "rate_limited" }), {
+      status: 429,
+      headers: { "content-type": "application/json", "retry-after": "3600" },
+    });
+    const result = await callFetchAdvice(fetchReturning(response));
+    expect(result).toEqual({
+      ok: false,
+      code: "rate_limited",
+      retryAfterSeconds: 3600,
+    });
   });
 
   test("maps a server rate limit to its machine-readable code", async () => {

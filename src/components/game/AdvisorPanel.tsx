@@ -3,6 +3,10 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import "./AdvisorPanel.css";
+import {
+  readStoredPlayerKey,
+  storePlayerKey,
+} from "../../ai/advisor/playerKey";
 import { useAdvisor, type AdvisorDeps } from "../../ai/advisor/useAdvisor";
 import type { HandOption } from "../../ai/getHandOptions";
 import type { Card } from "../../cards/types";
@@ -45,6 +49,75 @@ function readStoredVerbosity(): AdvisorVerbosity {
   return window.localStorage.getItem(ADVISOR_VERBOSITY_KEY) === "full"
     ? "full"
     : "move";
+}
+
+
+export const GET_KEY_URL = "https://console.anthropic.com/settings/keys";
+
+function PlayerKeyForm({
+  onSaved,
+  focusOnMount,
+}: {
+  readonly onSaved: () => void;
+  readonly focusOnMount: boolean;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (focusOnMount) inputRef.current?.focus();
+  }, [focusOnMount]);
+
+  return (
+    <form
+      className="advisor-key-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const key = draft.trim();
+        if (key === "") return;
+        storePlayerKey(key);
+        setDraft("");
+        onSaved();
+      }}
+    >
+      <label className="advisor-key-label" htmlFor="advisor-key-input">
+        {t("advisor.keyLabel")}
+      </label>
+      <div className="advisor-key-row">
+        <input
+          id="advisor-key-input"
+          ref={inputRef}
+          className="advisor-key-input"
+          type="password"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          placeholder="sk-ant-…"
+          data-testid="advisor-key-input"
+        />
+        <button
+          type="submit"
+          className="btn advisor-key-save"
+          disabled={draft.trim() === ""}
+        >
+          {t("advisor.keySave")}
+        </button>
+      </div>
+      <ol className="advisor-key-steps">
+        <li>{t("advisor.keyStep1")}</li>
+        <li>{t("advisor.keyStep2")}</li>
+        <li>{t("advisor.keyStep3")}</li>
+      </ol>
+      <a
+        className="advisor-key-link"
+        href={GET_KEY_URL}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {t("advisor.keyLink")}
+      </a>
+    </form>
+  );
 }
 
 export default function AdvisorPanel({
@@ -182,10 +255,33 @@ export default function AdvisorPanel({
                 <p className="advisor-candidate">
                   {describeCandidate(t, state.topCandidate, hand)}
                 </p>
-                <p className="advisor-explanation">{t("advisor.unavailable")}</p>
+                <p className="advisor-explanation">
+                  {state.code === "rate_limited"
+                    ? state.retryAfterSeconds !== undefined
+                      ? t("advisor.limitReached", {
+                          minutes: Math.max(
+                            1,
+                            Math.ceil(state.retryAfterSeconds / 60),
+                          ),
+                        })
+                      : t("advisor.limitReachedNoEta")
+                    : state.code === "invalid_player_key"
+                      ? t("advisor.keyRejected")
+                      : t("advisor.unavailable")}
+                </p>
               </section>
             ) : (
               <p className="advisor-explanation">{t("advisor.noCandidates")}</p>
+            )}
+            {(state.code === "invalid_player_key" ||
+              (state.code === "rate_limited" &&
+                readStoredPlayerKey() === null)) && (
+              <PlayerKeyForm
+                focusOnMount={state.code === "invalid_player_key"}
+                onSaved={() =>
+                  void requestAdvice({ explain: verbosity === "full" })
+                }
+              />
             )}
           </div>
         )}
