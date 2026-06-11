@@ -11,7 +11,7 @@ function fixedRng(values: ReadonlyArray<number>): () => number {
   return () => values[Math.min(i++, values.length - 1)];
 }
 
-describe("Space Joker (#1039)", () => {
+describe("Space Joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("space-joker");

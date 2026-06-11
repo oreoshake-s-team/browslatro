@@ -10,7 +10,7 @@ test.beforeEach(async ({ context }) => {
 
 const HAND_CARDS = '[aria-label="Your hand"] .card';
 
-test("HUD counters and score preview are polite live regions that update after a discard (#914)", async ({
+test("HUD counters and score preview are polite live regions that update after a discard", async ({
   page,
 }) => {
   await page.goto("/");

@@ -46,7 +46,7 @@ async function buyForcedKindThenLeaveShop(
   await page.getByTestId("blind-select-play").click();
 }
 
-test.describe("Consumables in-game flow (issue #240)", () => {
+test.describe("Consumables in-game flow", () => {
   test("clicking a planet consumable empties the slot", async ({ page }) => {
     await setForcedShopKinds(page, ["planet", "joker"]);
     await buyForcedKindThenLeaveShop(page, "planet");

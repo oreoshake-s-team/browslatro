@@ -6,7 +6,7 @@ import {
   disablesBossBlindsFromJokers,
 } from "../jokers";
 
-describe("Chicot (#1000)", () => {
+describe("Chicot", () => {
   test("is in the legendary pool", () => {
     const ids = createLegendaryJokerCatalog().map((j) => j.id);
     expect(ids).toContain("chicot");

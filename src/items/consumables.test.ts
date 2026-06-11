@@ -197,7 +197,7 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 1)).toBeNull();
   });
 
-  test("previewMode allows a duplicate-selected spectral with a valid preview selection (closes #843)", () => {
+  test("previewMode allows a duplicate-selected spectral with a valid preview selection", () => {
     const cryptid = createSpectralCatalog().find(
       (s) => s.effect.kind === "duplicate-selected",
     );
@@ -286,7 +286,7 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 2)).toBeNull();
   });
 
-  test("previewMode allows The Hanged Man with a valid preview selection (closes #843)", () => {
+  test("previewMode allows The Hanged Man with a valid preview selection", () => {
     const hangedMan = createTarotCatalog().find(
       (t) => t.id === "the-hanged-man",
     );
@@ -325,7 +325,7 @@ describe("consumables", () => {
     expect(consumableUseBlock(c, 2)).toBeNull();
   });
 
-  test("previewMode allows Strength with a valid preview selection (closes #843)", () => {
+  test("previewMode allows Strength with a valid preview selection", () => {
     const strength = createTarotCatalog().find((t) => t.id === "strength");
     if (!strength) throw new Error("no strength in catalog");
     const c: Consumable = { kind: "tarot", card: strength };

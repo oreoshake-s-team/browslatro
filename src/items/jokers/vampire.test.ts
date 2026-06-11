@@ -22,7 +22,7 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Vampire (#969)", () => {
+describe("Vampire", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("vampire");

@@ -51,7 +51,7 @@ async function buyFirstPackOffer(page: Page): Promise<void> {
   await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
-test.describe("Pack opening flow (#694)", () => {
+test.describe("Pack opening flow", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });
@@ -83,7 +83,7 @@ test.describe("Pack opening flow (#694)", () => {
     expect(consumableCountAfter).toBe(consumableCountBefore);
   });
 
-  test("pack pick options are evenly spaced across the row without stretching (closes #893)", async ({
+  test("pack pick options are evenly spaced across the row without stretching", async ({
     page,
   }) => {
     await forcePackPool(page, "arcana");
@@ -115,7 +115,7 @@ test.describe("Pack opening flow (#694)", () => {
     expect(first.width).toBeLessThanOrEqual(13 * 16 + 2);
   });
 
-  test("Standard pack: picking a card increments the shop overlay deck pile count (closes #747)", async ({
+  test("Standard pack: picking a card increments the shop overlay deck pile count", async ({
     page,
   }) => {
     await forcePackPool(page, "standard");
@@ -139,7 +139,7 @@ test.describe("Pack opening flow (#694)", () => {
   });
 });
 
-test.describe("Consumables usable while a Standard pack is open (#821)", () => {
+test.describe("Consumables usable while a Standard pack is open", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });

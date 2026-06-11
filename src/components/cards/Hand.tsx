@@ -136,7 +136,7 @@ export default function Hand({
   const lastHandPlaySignalRef = useRef<number>(handPlaySignal);
   // The newly-drawn set is part of the persisted run state, so a restored run
   // can mount with a non-empty set; only mark cards when it changes after
-  // mount (same principle as the Nope! replay fix, issue #860).
+  // mount (same principle as the Nope! replay fix).
   const mountNewlyDrawnRef = useRef(newlyDrawnIds);
   const showNewlyDrawn =
     newlyDrawnIds !== undefined && newlyDrawnIds !== mountNewlyDrawnRef.current;

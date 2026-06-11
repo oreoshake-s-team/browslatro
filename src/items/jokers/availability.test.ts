@@ -12,7 +12,7 @@ function noEnhancements(): ReadonlySet<Enhancement> {
   return new Set<Enhancement>();
 }
 
-describe("availableJokers (#985)", () => {
+describe("availableJokers", () => {
   test("excludes Stone Joker while the deck holds no Stone card", () => {
     const pool = availableJokers(createJokerCatalog(), noEnhancements());
     expect(pool.some((j) => j.id === "stone-joker")).toBe(false);

@@ -10,7 +10,7 @@ import { useGame } from "./store/game";
 
 setupAppTestEnvironment();
 
-describe("Blue Stake — -1 discard per round (#556)", () => {
+describe("Blue Stake — -1 discard per round", () => {
   beforeEach(() => {
     useGame.getState().setSelectedDeck("yellow-deck");
   });

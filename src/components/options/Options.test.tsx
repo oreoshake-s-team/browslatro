@@ -77,7 +77,7 @@ describe("Options", () => {
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
 
-  test("New game button prompts window.confirm before invoking onNewGame (issue #269)", async () => {
+  test("New game button prompts window.confirm before invoking onNewGame", async () => {
     const user = userEvent.setup();
     const confirmSpy = vi
       .spyOn(window, "confirm")
@@ -89,7 +89,7 @@ describe("Options", () => {
     expect(confirmSpy).toHaveBeenCalledTimes(1);
   });
 
-  test("cancelling the confirm prompt skips onNewGame (issue #269)", async () => {
+  test("cancelling the confirm prompt skips onNewGame", async () => {
     const user = userEvent.setup();
     vi.spyOn(window, "confirm").mockReturnValue(false);
     const onNewGame = vi.fn();
@@ -99,7 +99,7 @@ describe("Options", () => {
     expect(onNewGame).not.toHaveBeenCalled();
   });
 
-  test("cancelling the confirm prompt leaves the Options modal open (issue #269)", async () => {
+  test("cancelling the confirm prompt leaves the Options modal open", async () => {
     const user = userEvent.setup();
     vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<Options onNewGame={() => {}} />);
@@ -322,7 +322,7 @@ describe("Options — language picker", () => {
   });
 });
 
-describe("Options i18n (#922)", () => {
+describe("Options i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();
@@ -367,7 +367,7 @@ describe("Options i18n (#922)", () => {
   });
 });
 
-describe("Options dialog semantics (#912)", () => {
+describe("Options dialog semantics", () => {
   beforeEach(resetPreferences);
   afterEach(resetPreferences);
 

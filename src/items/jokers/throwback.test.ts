@@ -6,7 +6,7 @@ import {
   createThrowbackJoker,
 } from "../jokers";
 
-describe("Throwback (#868)", () => {
+describe("Throwback", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("throwback");

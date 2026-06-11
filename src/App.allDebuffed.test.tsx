@@ -112,7 +112,7 @@ async function advanceToTheClubBossBlind(
   await dismissBlindSelect(user);
 }
 
-describe("Submitting an all-debuffed selection on a Boss Blind (#264)", () => {
+describe("Submitting an all-debuffed selection on a Boss Blind", () => {
   test("submitting 5 debuffed clubs against The Club decrements the hands counter", async () => {
     deckConfig.hand = [
       makeCard("A", "clubs"),

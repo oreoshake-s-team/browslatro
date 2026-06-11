@@ -136,7 +136,7 @@ describe("getScoringCards — scoping by hand type", () => {
     expect(getScoringCards(cards, "Full House")).toEqual(cards);
   });
 
-  test("Four-Fingers Flush on 5 cards scores only the 4 matching-suit cards (#832)", () => {
+  test("Four-Fingers Flush on 5 cards scores only the 4 matching-suit cards", () => {
     const off = card("A", "hearts");
     const matching = [
       card("2", "diamonds"),
@@ -150,7 +150,7 @@ describe("getScoringCards — scoping by hand type", () => {
     expect(result).toEqual(matching);
   });
 
-  test("Four-Fingers Straight on 5 cards scores only the 4 run cards (#832)", () => {
+  test("Four-Fingers Straight on 5 cards scores only the 4 run cards", () => {
     const off = card("K", "hearts");
     const run = [
       card("3", "hearts"),

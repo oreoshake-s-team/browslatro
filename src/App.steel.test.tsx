@@ -86,7 +86,7 @@ async function submitNonSteelCards(): Promise<void> {
   await user.click(screen.getByText(/Submit Hand/));
 }
 
-describe("Steel held-card animation (#177)", () => {
+describe("Steel held-card animation", () => {
   test("with held steel cards present, the steel sequence runs (\"pop\" sounds fire)", async () => {
     await submitNonSteelCards();
     flushAllTimers();
@@ -105,7 +105,7 @@ describe("Steel held-card animation (#177)", () => {
   });
 });
 
-describe("Steel highlight prop (#177)", () => {
+describe("Steel highlight prop", () => {
   test("a card with steel-scoring is exposed via the steel-scoring-<id> testid mid-sequence", async () => {
     await submitNonSteelCards();
     let sawSteelTestId = false;
@@ -141,7 +141,7 @@ describe("Steel highlight prop (#177)", () => {
   });
 });
 
-describe("Steel multiplier ticks (#177)", () => {
+describe("Steel multiplier ticks", () => {
   function multiplierValue(): number {
     const el = document.querySelector(".multiplier");
     return Number(el?.textContent ?? "0");

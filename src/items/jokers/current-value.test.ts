@@ -74,7 +74,7 @@ function withCounter(joker: Joker, value: number): Joker {
   return { ...joker, state: { kind: "counter", value } };
 }
 
-describe("jokerCurrentValue (#884)", () => {
+describe("jokerCurrentValue", () => {
   test("every catalog joker with counter state reports a current value", () => {
     const missing = createJokerCatalog()
       .filter((j) => j.state?.kind === "counter")
@@ -260,7 +260,7 @@ describe("jokerCurrentValue (#884)", () => {
   });
 });
 
-describe("jokerCurrentValue — live-derived jokers (#898)", () => {
+describe("jokerCurrentValue — live-derived jokers", () => {
   test("every catalog joker with a live-derived effect reports a current value", () => {
     const missing = createJokerCatalog()
       .filter((j) => LIVE_DERIVED_KINDS.includes(j.effect.kind))
@@ -321,7 +321,7 @@ describe("jokerCurrentValue — live-derived jokers (#898)", () => {
   });
 });
 
-describe("jokerEnhancementFilter (#898)", () => {
+describe("jokerEnhancementFilter", () => {
   test("Stone Joker filters on the stone enhancement", () => {
     expect(jokerEnhancementFilter(createStoneJoker())).toBe("stone");
   });
@@ -335,7 +335,7 @@ describe("jokerEnhancementFilter (#898)", () => {
   });
 });
 
-describe("jokerCurrentValueLabel (#884)", () => {
+describe("jokerCurrentValueLabel", () => {
   test("formats accumulated Mult", () => {
     expect(jokerCurrentValueLabel({ kind: "mult", value: 14 })).toBe(
       "Currently: +14 Mult",

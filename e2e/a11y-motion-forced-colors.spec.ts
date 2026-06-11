@@ -30,7 +30,7 @@ async function transitionSeconds(
   return Math.max(...durations.split(",").map((value) => parseFloat(value)));
 }
 
-test.describe("reduced motion (issue #916)", () => {
+test.describe("reduced motion", () => {
   test.beforeEach(async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" });
   });
@@ -57,7 +57,7 @@ test.describe("reduced motion (issue #916)", () => {
   });
 });
 
-test.describe("default motion (issue #916)", () => {
+test.describe("default motion", () => {
   test("negative: deck tile keeps its 120ms transition without reduced motion", async ({
     page,
   }) => {
@@ -68,7 +68,7 @@ test.describe("default motion (issue #916)", () => {
   });
 });
 
-test.describe("forced colors (issue #916)", () => {
+test.describe("forced colors", () => {
   test.beforeEach(async ({ page }) => {
     await page.emulateMedia({ forcedColors: "active" });
   });

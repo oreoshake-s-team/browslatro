@@ -18,7 +18,7 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Hit the Road (#885)", () => {
+describe("Hit the Road", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("hit-the-road");

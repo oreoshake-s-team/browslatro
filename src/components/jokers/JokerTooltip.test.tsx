@@ -175,7 +175,7 @@ describe("Joker tooltip — content", () => {
   });
 });
 
-describe("Joker tooltip — stickers (#724)", () => {
+describe("Joker tooltip — stickers", () => {
   function withStickers(stickers: Joker["stickers"]): Joker {
     return { ...createPlusFourMultJoker(), stickers };
   }
@@ -221,7 +221,7 @@ describe("Joker tooltip — stickers (#724)", () => {
     ).toHaveTextContent(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`);
   });
 
-  test("Perishable sticker row says 'debuffed' once roundsHeld reaches the life threshold (closes #579)", async () => {
+  test("Perishable sticker row says 'debuffed' once roundsHeld reaches the life threshold", async () => {
     const user = userEvent.setup();
     const joker = withStickers([
       { kind: "perishable", roundsHeld: PERISHABLE_LIFE },
@@ -234,7 +234,7 @@ describe("Joker tooltip — stickers (#724)", () => {
   });
 });
 
-describe("Joker tooltip — rarity (#761)", () => {
+describe("Joker tooltip — rarity", () => {
   test("renders the rarity row for a common joker", async () => {
     const user = userEvent.setup();
     render(<Jokers jokers={[createPlusFourMultJoker()]} />);
@@ -285,7 +285,7 @@ describe("Joker tooltip — rarity (#761)", () => {
   });
 });
 
-describe("Joker tooltip — Driver's License enhanced-count progress (#632)", () => {
+describe("Joker tooltip — Driver's License enhanced-count progress", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -365,7 +365,7 @@ describe("Joker tooltip — Driver's License enhanced-count progress (#632)", ()
   });
 });
 
-describe("Joker tooltip — effective odds with a probability multiplier (#774)", () => {
+describe("Joker tooltip — effective odds with a probability multiplier", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -439,7 +439,7 @@ describe("Joker tooltip — effective odds with a probability multiplier (#774)"
   });
 });
 
-describe("Joker tooltip — current scaling value (#884)", () => {
+describe("Joker tooltip — current scaling value", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -495,7 +495,7 @@ describe("Joker tooltip — current scaling value (#884)", () => {
   });
 });
 
-describe("Joker tooltip — live-derived current value (#898)", () => {
+describe("Joker tooltip — live-derived current value", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });

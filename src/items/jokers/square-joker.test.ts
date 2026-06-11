@@ -16,7 +16,7 @@ function ctx(playedCardCount: number) {
   };
 }
 
-describe("Square Joker (#825)", () => {
+describe("Square Joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("square-joker");

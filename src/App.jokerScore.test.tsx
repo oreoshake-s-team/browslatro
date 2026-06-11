@@ -103,7 +103,7 @@ function submitFirstFive(): void {
   flushDiscardAnimation();
 }
 
-describe("Fix #788 — hand-level joker bonuses apply when scoring.length === 0", () => {
+describe("hand-level joker bonuses apply when scoring.length === 0", () => {
   test("+4 Mult joker contributes to round score when all played cards are debuffed by The Club", () => {
     deckConfig.hand = CLUBS_FLUSH_HAND;
     render(<App />);
@@ -112,7 +112,7 @@ describe("Fix #788 — hand-level joker bonuses apply when scoring.length === 0"
     expect(useGame.getState().roundScore).toBe(280);
   });
 
-  test("round is won (not lost) when +4 Mult joker tips all-debuffed hand over required score on last hand (#788)", () => {
+  test("round is won (not lost) when +4 Mult joker tips all-debuffed hand over required score on last hand", () => {
     deckConfig.hand = CLUBS_FLUSH_HAND;
     render(<App />);
     seedBossBlindAt([createPlusFourMultJoker()]);

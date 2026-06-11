@@ -385,7 +385,7 @@ describe("copyRandomJokerDestroyOthers", () => {
   });
 });
 
-describe("Eternal-joker preservation in destroy paths (#733)", () => {
+describe("Eternal-joker preservation in destroy paths", () => {
   function withEternal<J extends ReturnType<typeof createPlusFourMultJoker>>(j: J): J {
     return { ...j, stickers: [{ kind: "eternal" as const }] };
   }

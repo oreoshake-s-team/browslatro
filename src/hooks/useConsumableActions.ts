@@ -223,7 +223,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
           remaining: prev.remaining,
         }));
         // Record the edition in the run-level overlay so it survives
-        // future deals (issue #1005).
+        // future deals.
         if (aura.targetId !== null && aura.edition !== null) {
           const { targetId, edition } = aura;
           setCardEditionsById((prev) => new Map(prev).set(targetId, edition));

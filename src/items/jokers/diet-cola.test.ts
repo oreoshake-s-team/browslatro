@@ -6,7 +6,7 @@ beforeEach(() => {
   useGame.getState().resetGame();
 });
 
-describe("Diet Cola (#903)", () => {
+describe("Diet Cola", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("diet-cola");

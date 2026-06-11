@@ -93,8 +93,8 @@ function pickButton(page: Page, idx: number) {
 
 // Effect-by-effect pack-pick coverage lives in
 // src/hooks/useOpenedPackPicker.test.tsx; these journeys prove the browser
-// wiring for the three pick target modes (#931).
-test.describe("Pack-pick wiring (#850, #931)", () => {
+// wiring for the three pick target modes.
+test.describe("Pack-pick wiring", () => {
   test("preview-target: The Sun converts a selected preview card to hearts", async ({
     page,
   }) => {

@@ -44,6 +44,7 @@ The author is still learning frontend and relies on Claude to surface design dec
 # Style
 
 - Do not add comments to code, especially CSS.
+- Never reference issue numbers anywhere in source code — comments, test/describe names, file names, etc. Tying source to an issue number is an anti-pattern: describe the behavior instead (e.g. `test("Skip-tag flow", ...)`, not `test("Skip-tag flow (#697)", ...)`).
 
 # Semantic commits
 

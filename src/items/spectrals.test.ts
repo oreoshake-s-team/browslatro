@@ -521,7 +521,7 @@ describe("applyAuraToSelectedInHand", () => {
     expect(result.hand.find((c) => c.id === a.id)?.edition).toBe("foil");
   });
 
-  test("reports the target id and rolled edition for the run-level overlay (#1005)", () => {
+  test("reports the target id and rolled edition for the run-level overlay", () => {
     const a = mkCard();
     const b = mkCard("7", "hearts");
     const result = applyAuraToSelectedInHand([a, b], new Set([a.id]), sequenceRng([0]));
@@ -595,7 +595,7 @@ describe("applyAuraToSelectedInHand", () => {
   });
 });
 
-describe("convertHandToSuit / convertHandToRank (#1005)", () => {
+describe("convertHandToSuit / convertHandToRank", () => {
   beforeEach(() => resetCardIds());
 
   function mkCard(

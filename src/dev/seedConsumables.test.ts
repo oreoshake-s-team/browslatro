@@ -13,7 +13,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("readSeededConsumables (dev flags, #856)", () => {
+describe("readSeededConsumables (dev flags)", () => {
   test("seeds tarots from browslatro:seedTarotIds", () => {
     stubSeeds({ "browslatro:seedTarotIds": "the-sun" });
     const seeded = readSeededConsumables();

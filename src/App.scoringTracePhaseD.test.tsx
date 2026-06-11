@@ -136,7 +136,7 @@ describe("Scoring trace — Steel held in hand", () => {
   });
 });
 
-describe("Scoring trace — Red Seal retriggers held-in-hand (#762)", () => {
+describe("Scoring trace — Red Seal retriggers held-in-hand", () => {
   test("emits a second ×1.5 Mult trace event for a Red-sealed held Steel card", async () => {
     deckConfig.hand = [
       makeCard("A", "spades"),

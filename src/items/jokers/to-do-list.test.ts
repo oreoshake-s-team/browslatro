@@ -6,7 +6,7 @@ import {
   createToDoListJoker,
 } from "../jokers";
 
-describe("To Do List (#1031)", () => {
+describe("To Do List", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("to-do-list");

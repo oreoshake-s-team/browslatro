@@ -60,7 +60,7 @@ async function seedFullHouseHand(page: Page): Promise<void> {
   await page.reload();
 }
 
-test("Clever Joker fires when a Full House is played (issue #895)", async ({
+test("Clever Joker fires when a Full House is played", async ({
   page,
 }) => {
   await page.goto("/");

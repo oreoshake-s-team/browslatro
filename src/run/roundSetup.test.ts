@@ -9,7 +9,7 @@ import type { VoucherId } from "../items/vouchers";
 
 const NO_VOUCHERS: ReadonlySet<VoucherId> = new Set();
 
-describe("computeStartingDiscards — Burglar override (#709)", () => {
+describe("computeStartingDiscards — Burglar override", () => {
   test("returns the default when no jokers are equipped (regression)", () => {
     expect(
       computeStartingDiscards({
@@ -65,7 +65,7 @@ describe("computeStartingDiscards — Burglar override (#709)", () => {
   });
 });
 
-describe("computeStartingDiscards — Blue Stake -1 discard (#556)", () => {
+describe("computeStartingDiscards — Blue Stake -1 discard", () => {
   test("White Stake leaves base starting discards unchanged (regression)", () => {
     expect(
       computeStartingDiscards({
@@ -119,7 +119,7 @@ describe("computeStartingDiscards — Blue Stake -1 discard (#556)", () => {
   });
 });
 
-describe("computeStartingHands — Burglar +3 hands (#709)", () => {
+describe("computeStartingHands — Burglar +3 hands", () => {
   test("Burglar adds 3 hands on top of the default", () => {
     const baseline = computeStartingHands({
       blind: 1,
@@ -139,7 +139,7 @@ describe("computeStartingHands — Burglar +3 hands (#709)", () => {
   });
 });
 
-describe("computeStartingHands — Black Deck -1 hand (#566)", () => {
+describe("computeStartingHands — Black Deck -1 hand", () => {
   test("Black Deck subtracts 1 from base starting hands", () => {
     const baseline = computeStartingHands({
       blind: 1,

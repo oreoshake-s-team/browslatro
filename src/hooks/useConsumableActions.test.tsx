@@ -270,7 +270,7 @@ function foolConsumable(): Consumable {
   return { kind: "tarot", card: tarot };
 }
 
-describe("useConsumableActions — lastUsedConsumable tracking (#615)", () => {
+describe("useConsumableActions — lastUsedConsumable tracking", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -631,7 +631,7 @@ function judgementConsumable(): Consumable {
   return { kind: "tarot", card: tarot };
 }
 
-describe("useConsumableActions — Judgement (#618)", () => {
+describe("useConsumableActions — Judgement", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([judgementConsumable()]);
@@ -684,7 +684,7 @@ function emperorConsumable(): Consumable {
   return { kind: "tarot", card: tarot };
 }
 
-describe("useConsumableActions — The Emperor (#618)", () => {
+describe("useConsumableActions — The Emperor", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -802,7 +802,7 @@ function highPriestessConsumable(): Consumable {
   return { kind: "tarot", card: tarot };
 }
 
-describe("useConsumableActions — The High Priestess (#618)", () => {
+describe("useConsumableActions — The High Priestess", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -948,7 +948,7 @@ describe("useConsumableActions — The High Priestess (#618)", () => {
   });
 });
 
-describe("useConsumableActions — The Fool (#618)", () => {
+describe("useConsumableActions — The Fool", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -1025,7 +1025,7 @@ function setPackPreview(cards: ReadonlyArray<Card>, selectedIds: ReadonlyArray<n
   useGame.getState().setPackPreviewSelectedIds(new Set(selectedIds));
 }
 
-describe("useConsumableActions — The Hanged Man on pack preview (closes #843)", () => {
+describe("useConsumableActions — The Hanged Man on pack preview", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([hangedManConsumable()]);
@@ -1076,7 +1076,7 @@ describe("useConsumableActions — The Hanged Man on pack preview (closes #843)"
   });
 });
 
-describe("useConsumableActions — Strength on pack preview (closes #843)", () => {
+describe("useConsumableActions — Strength on pack preview", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([strengthConsumable()]);
@@ -1106,7 +1106,7 @@ function cryptidConsumable(): Consumable {
   return { kind: "spectral", card: spec };
 }
 
-describe("useConsumableActions — Cryptid on pack preview (closes #843)", () => {
+describe("useConsumableActions — Cryptid on pack preview", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([cryptidConsumable()]);
@@ -1136,7 +1136,7 @@ function auraConsumable(): Consumable {
   return { kind: "spectral", card: spec };
 }
 
-describe("useConsumableActions — Aura on pack preview (closes #843)", () => {
+describe("useConsumableActions — Aura on pack preview", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([auraConsumable()]);
@@ -1159,7 +1159,7 @@ describe("useConsumableActions — Aura on pack preview (closes #843)", () => {
   });
 });
 
-describe("useConsumableActions — Aura edition persists for the run (#1005)", () => {
+describe("useConsumableActions — Aura edition persists for the run", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([auraConsumable()]);
@@ -1217,7 +1217,7 @@ function magicianConsumable(): Consumable {
   return { kind: "tarot", card: tarot };
 }
 
-describe("useConsumableActions — Talisman seal persists for the run (#999)", () => {
+describe("useConsumableActions — Talisman seal persists for the run", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([catalogSpectralConsumable("talisman")]);
@@ -1251,7 +1251,7 @@ describe("useConsumableActions — Talisman seal persists for the run (#999)", (
   });
 });
 
-describe("useConsumableActions — Cryptid copies persist for the run (#999)", () => {
+describe("useConsumableActions — Cryptid copies persist for the run", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([catalogSpectralConsumable("cryptid")]);
@@ -1296,7 +1296,7 @@ describe("useConsumableActions — Cryptid copies persist for the run (#999)", (
   });
 });
 
-describe("useConsumableActions — The Magician enhancement persists for the run (#999)", () => {
+describe("useConsumableActions — The Magician enhancement persists for the run", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
     useGame.getState().setConsumables([magicianConsumable()]);

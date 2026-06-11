@@ -18,7 +18,7 @@ function cards(count: number): Card[] {
   }));
 }
 
-describe("Ramen (#871)", () => {
+describe("Ramen", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("ramen");

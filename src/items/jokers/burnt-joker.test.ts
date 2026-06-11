@@ -22,7 +22,7 @@ beforeEach(() => {
   useGame.getState().setRemainingDiscards(3);
 });
 
-describe("Burnt Joker (#1029)", () => {
+describe("Burnt Joker", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("burnt-joker");

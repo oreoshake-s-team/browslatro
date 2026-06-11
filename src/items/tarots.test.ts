@@ -309,7 +309,7 @@ describe("rollWheelOfFortune", () => {
     expect(result.edition).toBe(JOKER_EDITION_KINDS[JOKER_EDITION_KINDS.length - 1]);
   });
 
-  test("force100 override turns a missed roll into a hit (#354)", () => {
+  test("force100 override turns a missed roll into a hit", () => {
     chanceOverrideConfig.force100 = true;
     try {
       const result = rollWheelOfFortune(jokers, 0.25, fixedRng([0.99, 0, 0]));

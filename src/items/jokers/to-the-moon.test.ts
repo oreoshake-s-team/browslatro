@@ -5,7 +5,7 @@ import {
   interestMultiplierFromJokers,
 } from "../jokers";
 
-describe("To the Moon (#903)", () => {
+describe("To the Moon", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("to-the-moon");

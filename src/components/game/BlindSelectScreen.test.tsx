@@ -243,21 +243,21 @@ describe("BlindSelectScreen", () => {
     expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
   });
 
-  test("skip-reward preview is not in the tab order (#915)", () => {
+  test("skip-reward preview is not in the tab order", () => {
     renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "investment" } } });
     expect(
       screen.getByTestId("blind-select-row-skip-reward-1"),
     ).not.toHaveAttribute("tabindex");
   });
 
-  test("held tag chips are not in the tab order (#915)", () => {
+  test("held tag chips are not in the tab order", () => {
     renderScreen({ tags: ["investment"] });
     expect(screen.getByTestId("blind-select-tag-0")).not.toHaveAttribute(
       "tabindex",
     );
   });
 
-  test("Play precedes Skip in document order so Tab reaches the default action first (#915)", () => {
+  test("Play precedes Skip in document order so Tab reaches the default action first", () => {
     renderScreen({ currentBlind: 1, onSkip: vi.fn() });
     const play = screen.getByTestId("blind-select-play");
     const skip = screen.getByTestId("blind-select-skip");
@@ -330,7 +330,7 @@ describe("BlindSelectScreen", () => {
     expect(onSetBoss).toHaveBeenCalledWith("the-needle");
   });
 
-  test("Small Blind payout is $0 on Red Stake (#553)", () => {
+  test("Small Blind payout is $0 on Red Stake", () => {
     renderScreen({ stake: "red" });
     expect(screen.getByTestId("blind-select-payout-1")).toHaveTextContent("$0");
   });
@@ -350,7 +350,7 @@ describe("BlindSelectScreen", () => {
     expect(screen.getByTestId("blind-select-payout-1")).toHaveTextContent("$3");
   });
 
-  test("moving hover from one skip-reward to another updates the tooltip to the second (#581)", async () => {
+  test("moving hover from one skip-reward to another updates the tooltip to the second", async () => {
     const user = userEvent.setup();
     renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "d6" } } });
     await user.hover(screen.getByTestId("blind-select-row-skip-reward-1"));
@@ -358,7 +358,7 @@ describe("BlindSelectScreen", () => {
     expect(screen.getByRole("tooltip")).toHaveTextContent("D6");
   });
 
-  test("the tooltip role is mounted exactly once at a time when moving hover (#581)", async () => {
+  test("the tooltip role is mounted exactly once at a time when moving hover", async () => {
     const user = userEvent.setup();
     renderScreen({ skipRewards: { small: { id: "investment" }, big: { id: "d6" } } });
     await user.hover(screen.getByTestId("blind-select-row-skip-reward-1"));
@@ -366,7 +366,7 @@ describe("BlindSelectScreen", () => {
     expect(screen.getAllByRole("tooltip")).toHaveLength(1);
   });
 
-  describe("Reroll Boss button (#280)", () => {
+  describe("Reroll Boss button", () => {
     test("is not rendered when onRerollBoss is omitted", () => {
       renderScreen();
       expect(
@@ -429,7 +429,7 @@ describe("BlindSelectScreen", () => {
   });
 });
 
-describe("BlindSelectScreen focus trap (#907)", () => {
+describe("BlindSelectScreen focus trap", () => {
   test("cycles Tab between Play and Skip and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);
@@ -446,7 +446,7 @@ describe("BlindSelectScreen focus trap (#907)", () => {
     expect(screen.getByTestId("opener")).toHaveFocus();
   });
 
-  test("tag chips and skip-reward previews add no extra tab stops between Play and Skip (#915)", async () => {
+  test("tag chips and skip-reward previews add no extra tab stops between Play and Skip", async () => {
     const user = userEvent.setup();
     renderScreen({
       onSkip: vi.fn(),

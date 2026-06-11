@@ -174,7 +174,7 @@ export interface ConvertHandResult {
  * Sigil/Ouija permanently modify the deck in Balatro, so converted cards are
  * replaced by new-id copies: originals go into destroyedCardIds and the
  * copies (carrying the converted suit/rank plus the card's inline seal,
- * enhancement, and edition) into addedCards (issue #1005). Cards already
+ * enhancement, and edition) into addedCards. Cards already
  * matching the target keep their id and are not re-registered. The in-hand
  * copy keeps any transient faceDown flag, but the registered addition does
  * not — face-down state belongs to the current boss round only.

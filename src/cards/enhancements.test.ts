@@ -150,7 +150,7 @@ describe("rollEnhancementChance", () => {
     expect(rollEnhancementChance(0.25)).toBe(false);
   });
 
-  test("force100 override turns a missed in-range roll into a hit (#354)", () => {
+  test("force100 override turns a missed in-range roll into a hit", () => {
     enhancementRngConfig.rng = () => 0.99;
     chanceOverrideConfig.force100 = true;
     try {
@@ -160,7 +160,7 @@ describe("rollEnhancementChance", () => {
     }
   });
 
-  test("force100 override still resolves chance=0 to false (#354)", () => {
+  test("force100 override still resolves chance=0 to false", () => {
     enhancementRngConfig.rng = () => 0;
     chanceOverrideConfig.force100 = true;
     try {
@@ -170,7 +170,7 @@ describe("rollEnhancementChance", () => {
     }
   });
 
-  test("force100 override makes applyLuckyRolls always award both bonuses on a Lucky card (#354)", () => {
+  test("force100 override makes applyLuckyRolls always award both bonuses on a Lucky card", () => {
     enhancementRngConfig.rng = () => 0.999;
     chanceOverrideConfig.force100 = true;
     try {
@@ -183,7 +183,7 @@ describe("rollEnhancementChance", () => {
     }
   });
 
-  test("force100 override does NOT fire applyLuckyRolls on a non-Lucky card (#354)", () => {
+  test("force100 override does NOT fire applyLuckyRolls on a non-Lucky card", () => {
     enhancementRngConfig.rng = () => 0;
     chanceOverrideConfig.force100 = true;
     try {

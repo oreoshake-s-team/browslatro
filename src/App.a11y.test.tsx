@@ -3,7 +3,7 @@ import { afterEach, describe, expect, test } from "vitest";
 import App from "./App";
 import { useGame } from "./store/game";
 
-describe("App landmarks (#640)", () => {
+describe("App landmarks", () => {
   test("the game shell exposes a main landmark", () => {
     render(<App />);
     expect(screen.getByRole("main")).toBeInTheDocument();
@@ -17,7 +17,7 @@ describe("App landmarks (#640)", () => {
   });
 });
 
-describe("App heading hierarchy (#917)", () => {
+describe("App heading hierarchy", () => {
   afterEach(() => {
     act(() => {
       useGame.getState().setPendingRunSelect(true);
@@ -54,7 +54,7 @@ describe("App heading hierarchy (#917)", () => {
   });
 });
 
-describe("Game action buttons — emojis are decorative (#640)", () => {
+describe("Game action buttons — emojis are decorative", () => {
   test("Submit Hand accessible name excludes the leading playing-card emoji", () => {
     render(<App />);
     expect(
@@ -70,7 +70,7 @@ describe("Game action buttons — emojis are decorative (#640)", () => {
   });
 });
 
-describe("Modal dialogs inert the app shell (#907)", () => {
+describe("Modal dialogs inert the app shell", () => {
   test("the app shell is inert while the boot dialog is open", () => {
     const { container } = render(<App />);
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -80,7 +80,7 @@ describe("Modal dialogs inert the app shell (#907)", () => {
   });
 });
 
-describe("Live announcer (#908)", () => {
+describe("Live announcer", () => {
   test("the app mounts a polite live region for announcements", () => {
     render(<App />);
     expect(screen.getByTestId("live-announcer")).toHaveAttribute(

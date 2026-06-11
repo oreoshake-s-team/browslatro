@@ -127,7 +127,7 @@ async function getImmolateInConsumables(
   await user.click(playBtn);
 }
 
-describe("Immolate → discard refills hand to HAND_SIZE (#231)", () => {
+describe("Immolate → discard refills hand to HAND_SIZE", () => {
   test("hand returns to 8 cards after discarding following Immolate", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);

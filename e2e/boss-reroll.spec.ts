@@ -68,7 +68,7 @@ async function buyDirectorsCutAndAdvanceToBossBlindSelect(
   );
 }
 
-test.describe("Director's Cut boss reroll (#280)", () => {
+test.describe("Director's Cut boss reroll", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });

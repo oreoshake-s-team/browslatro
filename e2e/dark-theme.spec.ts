@@ -6,7 +6,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-test("the app shell renders with the dark background token (issue #873)", async ({
+test("the app shell renders with the dark background token", async ({
   page,
 }) => {
   await page.goto("/");
@@ -16,7 +16,7 @@ test("the app shell renders with the dark background token (issue #873)", async 
   expect(bodyBg).toBe("rgb(18, 22, 31)");
 });
 
-test("the sidebar renders on the dark surface token (issue #873)", async ({
+test("the sidebar renders on the dark surface token", async ({
   page,
 }) => {
   await page.goto("/");

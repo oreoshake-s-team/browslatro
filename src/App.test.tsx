@@ -488,7 +488,7 @@ describe("Discard animation", () => {
 });
 
 describe("Submit Hand button integration", () => {
-  test("dev Add Chips bump resets after Submit Hand (per-hand reset, #265)", async () => {
+  test("dev Add Chips bump resets after Submit Hand (per-hand reset)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
@@ -496,7 +496,7 @@ describe("Submit Hand button integration", () => {
     expect(document.querySelector(".chips")).toHaveTextContent("0");
   });
 
-  test("dev Add Multiplier bump resets after Submit Hand (per-hand reset, #265)", async () => {
+  test("dev Add Multiplier bump resets after Submit Hand (per-hand reset)", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
@@ -526,7 +526,7 @@ describe("Submit Hand button integration", () => {
   });
 });
 
-describe("Fresh deck has no default enhancements (issue #176)", () => {
+describe("Fresh deck has no default enhancements", () => {
   test("no card in the freshly-dealt hand carries an enhancement suffix", () => {
     render(<App />);
     const labels = getHandCardButtons().map((btn) => btn.getAttribute("aria-label"));
@@ -648,7 +648,7 @@ describe("Losing integration", () => {
     expect(screen.getByText("Small Blind")).toBeInTheDocument();
   });
 
-  test("dismissing the round-lost modal leaves exactly one chips span in the sidebar HandScore (issue #118)", async () => {
+  test("dismissing the round-lost modal leaves exactly one chips span in the sidebar HandScore", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
@@ -659,7 +659,7 @@ describe("Losing integration", () => {
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
 
-  test("dismissing the round-lost modal leaves exactly one multiplier span in the sidebar HandScore (issue #118)", async () => {
+  test("dismissing the round-lost modal leaves exactly one multiplier span in the sidebar HandScore", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(screen.getByText(/Submit Hand/));
@@ -678,7 +678,7 @@ describe("Losing integration", () => {
     flushDiscardAnimation();
   }
 
-  test("losing after a real scoring sequence leaves exactly one chips span (issue #118)", async () => {
+  test("losing after a real scoring sequence leaves exactly one chips span", async () => {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -690,7 +690,7 @@ describe("Losing integration", () => {
     expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
   });
 
-  test("losing after a real scoring sequence leaves exactly one multiplier span (issue #118)", async () => {
+  test("losing after a real scoring sequence leaves exactly one multiplier span", async () => {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -702,7 +702,7 @@ describe("Losing integration", () => {
     expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
   });
 
-  test("two consecutive loss → restart cycles do not duplicate the HandScore (issue #118)", async () => {
+  test("two consecutive loss → restart cycles do not duplicate the HandScore", async () => {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -717,7 +717,7 @@ describe("Losing integration", () => {
   });
 });
 
-describe("Game Won integration (#384)", () => {
+describe("Game Won integration", () => {
   async function winFinalAnteBoss(
     user: ReturnType<typeof userEvent.setup>,
   ): Promise<void> {
@@ -876,7 +876,7 @@ describe("Options modal new game integration", () => {
     expect(screen.getByTestId("new-run-confirm")).toBeInTheDocument();
   });
 
-  test("cancelling the New game confirm leaves the current run intact (issue #269)", async () => {
+  test("cancelling the New game confirm leaves the current run intact", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
@@ -959,7 +959,7 @@ describe("Sequential card scoring", () => {
   });
 });
 
-describe("Hand-level joker ordering (issue #192)", () => {
+describe("Hand-level joker ordering", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
@@ -1027,7 +1027,7 @@ describe("Hand-level joker ordering (issue #192)", () => {
   });
 });
 
-describe("Photograph joker per-card timing (issue #204)", () => {
+describe("Photograph joker per-card timing", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
@@ -1109,7 +1109,7 @@ describe("Photograph joker per-card timing (issue #204)", () => {
   });
 });
 
-describe("Space Joker scoring log (#1112)", () => {
+describe("Space Joker scoring log", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
@@ -1165,7 +1165,7 @@ describe("Round won modal", () => {
     flushDiscardAnimation();
   }
 
-  test("Small Blind win with gold + remaining-hands: reward breakdown + Continue credits interest wallet (#353)", async () => {
+  test("Small Blind win with gold + remaining-hands: reward breakdown + Continue credits interest wallet", async () => {
     // Pre-win wallet = $4. Gold bonus = $3 (one held 2♠ gold default).
     // Remaining hands bonus = 3 hands × $1 = $3 (won on hand 1 of 4).
     // Wallet at modal = $4 + $3 gold + $3 hands = $10.
@@ -1213,7 +1213,7 @@ describe("Round won modal", () => {
   });
 });
 
-describe("Jokers integration (issue #223 — runs start with no jokers)", () => {
+describe("Jokers integration (runs start with no jokers)", () => {
   test("renders MAX_JOKERS empty joker slots on new game", () => {
     render(<App />);
     expect(screen.getAllByTestId("joker-tile-empty")).toHaveLength(MAX_JOKERS);
@@ -1438,7 +1438,7 @@ describe("Post-round shop integration", () => {
     );
   });
 
-  test("after buying a joker that joker is no longer in the post-buy equipped exclusion target (issue #223)", async () => {
+  test("after buying a joker that joker is no longer in the post-buy equipped exclusion target", async () => {
     shopPickerRngConfig.rng = forceShopLayout(["joker", "planet"]);
     const user = await openShop();
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
@@ -1491,7 +1491,7 @@ describe("Post-round shop integration", () => {
     expect(after).not.toEqual(before);
   });
 
-  test("Reroll replaces already-sold offers with fresh Buy buttons (#267)", async () => {
+  test("Reroll replaces already-sold offers with fresh Buy buttons", async () => {
     const user = await openShop();
     const buy = screen
       .getByTestId("shop-offer-0")
@@ -1511,7 +1511,7 @@ describe("Post-round shop integration", () => {
     ).map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
   }
 
-  test("Reroll preserves both the names and count of pack offers (#374)", async () => {
+  test("Reroll preserves both the names and count of pack offers", async () => {
     const user = await openShop();
     const before = packNames();
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
@@ -1519,7 +1519,7 @@ describe("Post-round shop integration", () => {
     expect(packNames().length).toBe(before.length);
   });
 
-  test("Reroll preserves the Sold state of a previously bought pack (#374)", async () => {
+  test("Reroll preserves the Sold state of a previously bought pack", async () => {
     const user = await openShop();
     const packOffer = document.querySelector<HTMLElement>(
       "[data-offer-kind='pack']",
@@ -1980,7 +1980,7 @@ describe("Voucher effects integration", () => {
       .filter((el) => el.getAttribute("data-offer-kind") !== "pack");
   }
 
-  test("buying Overstock expands the current shop from 2 to 3 items and the new offer is not a duplicate (#301)", async () => {
+  test("buying Overstock expands the current shop from 2 to 3 items and the new offer is not a duplicate", async () => {
     const user = await openShopWithVoucher(0);
     const beforeNames = itemOfferTiles().map(
       (tile) => tile.querySelector(".shop-offer-name")?.textContent ?? "",
@@ -1994,7 +1994,7 @@ describe("Voucher effects integration", () => {
     expect(beforeNames).not.toContain(newOffer);
   });
 
-  test("Sold items survive an Overstock-driven expansion (#301)", async () => {
+  test("Sold items survive an Overstock-driven expansion", async () => {
     const user = await openShopWithVoucher(0);
     const firstTile = itemOfferTiles()[0];
     const buyButton = firstTile.querySelector("button.shop-offer-buy");
@@ -2050,7 +2050,7 @@ describe("Voucher effects integration", () => {
     await user.selectOptions(screen.getByTestId("shop-voucher-override"), id);
   }
 
-  test("buying Grabber immediately adds 1 to the remaining hands (#426)", async () => {
+  test("buying Grabber immediately adds 1 to the remaining hands", async () => {
     const user = await openShopWithVoucher(0);
     await overrideVoucher(user, "grabber");
     const before = handsValue();
@@ -2058,7 +2058,7 @@ describe("Voucher effects integration", () => {
     expect(handsValue()).toBe(before + 1);
   });
 
-  test("buying Nacho Tong after Grabber raises remaining hands by 2 total (#426)", async () => {
+  test("buying Nacho Tong after Grabber raises remaining hands by 2 total", async () => {
     const user = await openShopWithVoucher(0);
     const before = handsValue();
     await overrideVoucher(user, "grabber");
@@ -2068,7 +2068,7 @@ describe("Voucher effects integration", () => {
     expect(handsValue()).toBe(before + 2);
   });
 
-  test("buying Wasteful immediately adds 1 to the remaining discards (#426)", async () => {
+  test("buying Wasteful immediately adds 1 to the remaining discards", async () => {
     const user = await openShopWithVoucher(0);
     await overrideVoucher(user, "wasteful");
     const before = discardsValue();
@@ -2076,7 +2076,7 @@ describe("Voucher effects integration", () => {
     expect(discardsValue()).toBe(before + 1);
   });
 
-  test("buying Recyclomancy after Wasteful raises remaining discards by 2 total (#426)", async () => {
+  test("buying Recyclomancy after Wasteful raises remaining discards by 2 total", async () => {
     const user = await openShopWithVoucher(0);
     const before = discardsValue();
     await overrideVoucher(user, "wasteful");
@@ -2086,7 +2086,7 @@ describe("Voucher effects integration", () => {
     expect(discardsValue()).toBe(before + 2);
   });
 
-  test("buying a non-hand voucher leaves the remaining hands unchanged (#426)", async () => {
+  test("buying a non-hand voucher leaves the remaining hands unchanged", async () => {
     const user = await openShopWithVoucher(0);
     await overrideVoucher(user, "clearance-sale");
     const before = handsValue();
@@ -2094,7 +2094,7 @@ describe("Voucher effects integration", () => {
     expect(handsValue()).toBe(before);
   });
 
-  test("buying a non-discard voucher leaves the remaining discards unchanged (#426)", async () => {
+  test("buying a non-discard voucher leaves the remaining discards unchanged", async () => {
     const user = await openShopWithVoucher(0);
     await overrideVoucher(user, "clearance-sale");
     const before = discardsValue();
@@ -2103,7 +2103,7 @@ describe("Voucher effects integration", () => {
   });
 });
 
-describe("Observatory voucher applies ×1.5 Mult per matching held Planet (#281)", () => {
+describe("Observatory voucher applies ×1.5 Mult per matching held Planet", () => {
   beforeEach(() => {
     useGame.getState().resetGame();
   });
@@ -2416,7 +2416,7 @@ describe("Joker drag and sell integration", () => {
   });
 });
 
-describe("Hand size modifier (issue #210)", () => {
+describe("Hand size modifier", () => {
   async function clickShrink(): Promise<ReturnType<typeof userEvent.setup>> {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -2498,7 +2498,7 @@ describe("Hand size modifier (issue #210)", () => {
   });
 });
 
-describe("Blind-select skip (issue #251)", () => {
+describe("Blind-select skip", () => {
   test("clicking Skip on Small Blind advances the current blind to Big", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -2541,7 +2541,7 @@ describe("Blind-select skip (issue #251)", () => {
   });
 });
 
-describe("Investment tag (issue #252)", () => {
+describe("Investment tag", () => {
   test("skipping Small grants one Investment tag visible on the screen", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -2604,7 +2604,7 @@ describe("Investment tag (issue #252)", () => {
   });
 });
 
-describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
+describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
   test("Add Chips bump survives toggling a card into the selection", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -2675,7 +2675,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     );
   });
 
-  test("Add Multiplier bumps the final round score (folded into scoring, #265)", async () => {
+  test("Add Multiplier bumps the final round score (folded into scoring)", async () => {
     mockShuffleConfig.useIdentity = true;
     const userA = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { unmount } = render(<App />);
@@ -2709,7 +2709,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
     expect(withDev).toBeGreaterThan(baseline);
   });
 
-  test("Multiply Multiplier doubles the final round score (folded into scoring, #265)", async () => {
+  test("Multiply Multiplier doubles the final round score (folded into scoring)", async () => {
     mockShuffleConfig.useIdentity = true;
     const userA = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { unmount } = render(<App />);
@@ -2744,7 +2744,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky (#265)", () => {
   });
 });
 
-describe("Shop is rendered inline in the hand slot (#370)", () => {
+describe("Shop is rendered inline in the hand slot", () => {
   async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -2794,7 +2794,7 @@ describe("Shop is rendered inline in the hand slot (#370)", () => {
   });
 });
 
-describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
+describe("Pack-pick is rendered inline (Phase 2)", () => {
   async function openShopThenPack(): Promise<ReturnType<typeof userEvent.setup>> {
     mockShuffleConfig.useIdentity = true;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -2830,7 +2830,7 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
     return Array.from(all).filter((b) => !/Open/i.test(b.textContent ?? ""));
   }
 
-  test("pack-pick renders inline (no overlay, no aria-modal) and locks the rest of the shop while open (#370)", async () => {
+  test("pack-pick renders inline (no overlay, no aria-modal) and locks the rest of the shop while open", async () => {
     await openShopThenPack();
     expect(document.querySelector(".pack-open-overlay")).toBeNull();
     const region = document
@@ -2865,7 +2865,7 @@ describe("Pack-pick is rendered inline (#370 Phase 2)", () => {
   });
 });
 
-describe("Apply Modifiers — Force Probabilities toggle (#354)", () => {
+describe("Apply Modifiers — Force Probabilities toggle", () => {
   test("renders a Force Probabilities button labelled 'On' by default", () => {
     render(<App />);
     expect(
@@ -3021,7 +3021,7 @@ describe("D6 tag next-shop queue", () => {
   });
 });
 
-describe("Skip tag pending list cleanup (#542)", () => {
+describe("Skip tag pending list cleanup", () => {
   test("a next-shop tag is removed from pendingTags after the shop closes", async () => {
     tagOfferRngConfig.rng = rngForTag("d6");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3229,7 +3229,7 @@ describe("Uncommon and Rare joker tags", () => {
     ).toBeGreaterThan(0);
   });
 
-  test("Uncommon tag does not grow the shop item-offer count (#603)", async () => {
+  test("Uncommon tag does not grow the shop item-offer count", async () => {
     tagOfferRngConfig.rng = rngForTag("uncommon");
     shopPickerRngConfig.rng = () => 0;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3243,7 +3243,7 @@ describe("Uncommon and Rare joker tags", () => {
     expect(items).toHaveLength(2);
   });
 
-  test("Rare tag does not grow the shop item-offer count (#603)", async () => {
+  test("Rare tag does not grow the shop item-offer count", async () => {
     tagOfferRngConfig.rng = rngForTag("rare");
     shopPickerRngConfig.rng = () => 0;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3286,7 +3286,7 @@ describe("Top-up tag", () => {
   });
   const jokerCount = () => screen.queryAllByTestId(/^joker-tile-filled-/).length;
 
-  test("Top-up tag flow: skipping with Top-up creates 2 jokers + shows ack modal + hides BlindSelect; dismissing brings BlindSelect back (#654)", async () => {
+  test("Top-up tag flow: skipping with Top-up creates 2 jokers + shows ack modal + hides BlindSelect; dismissing brings BlindSelect back", async () => {
     tagOfferRngConfig.rng = rngForTag("top-up");
     shopPickerRngConfig.rng = () => 0;
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
@@ -3300,7 +3300,7 @@ describe("Top-up tag", () => {
     expect(await screen.findByTestId("blind-select-play")).toBeInTheDocument();
   });
 
-  test("a non-Top-up tag creates no jokers and shows no joker-grant modal (negative #654)", async () => {
+  test("a non-Top-up tag creates no jokers and shows no joker-grant modal (negative)", async () => {
     tagOfferRngConfig.rng = rngForTag("economy");
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
@@ -3311,7 +3311,7 @@ describe("Top-up tag", () => {
   });
 });
 
-describe("Skip tag pack rewards hide BlindSelect (#654)", () => {
+describe("Skip tag pack rewards hide BlindSelect", () => {
   beforeEach(() => {
     useGame.getState().closeOpenedPack();
     useGame.getState().setPendingJokerGrantIds([]);
@@ -3394,7 +3394,7 @@ describe("Orbital tag", () => {
     expect(screen.getByTestId("run-info-level-High Card")).toHaveTextContent("4");
   });
 
-  test("the small-blind row preview shows which hand Orbital will upgrade (#596)", () => {
+  test("the small-blind row preview shows which hand Orbital will upgrade", () => {
     const ids = createTagCatalog().map((t) => t.id);
     const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
     let call = 0;

@@ -182,7 +182,7 @@ describe("Scoring trace — hand-level joker events", () => {
     expect(logText()).not.toContain("+4 Mult (+4 Mult)");
   });
 
-  test("Reserved Parking emits +$1 in the scoring log per held face card that procs (regression for #591)", async () => {
+  test("Reserved Parking emits +$1 in the scoring log per held face card that procs (regression for)", async () => {
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
     try {
       initialJokersConfig.factory = () => [createReservedParkingJoker()];
@@ -212,7 +212,7 @@ describe("Scoring trace — hand-level joker events", () => {
     }
   });
 
-  test("Reserved Parking emits no money event when no held card procs (negative, regression for #591)", async () => {
+  test("Reserved Parking emits no money event when no held card procs (negative, regression for)", async () => {
     const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
     try {
       initialJokersConfig.factory = () => [createReservedParkingJoker()];

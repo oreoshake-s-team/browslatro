@@ -15,7 +15,7 @@ const baseCtx = {
   money: 10,
 } as const;
 
-describe("Sixth Sense (#1019)", () => {
+describe("Sixth Sense", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("sixth-sense");

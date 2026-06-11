@@ -530,7 +530,7 @@ describe("Shop", () => {
       expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
     });
 
-    test("voucher price reflects Clearance Sale 25% off (#434)", () => {
+    test("voucher price reflects Clearance Sale 25% off", () => {
       renderShop({
         vouchers: [OVERSTOCK_VOUCHER],
         money: 10,
@@ -539,7 +539,7 @@ describe("Shop", () => {
       expect(screen.getByText("$8")).toBeInTheDocument();
     });
 
-    test("voucher buy label reflects Liquidation 50% off (#434)", () => {
+    test("voucher buy label reflects Liquidation 50% off", () => {
       renderShop({
         vouchers: [OVERSTOCK_VOUCHER],
         money: 10,
@@ -553,7 +553,7 @@ describe("Shop", () => {
       );
     });
 
-    test("voucher is affordable at the discounted price when full price isn't (#434, negative)", () => {
+    test("voucher is affordable at the discounted price when full price isn't (negative)", () => {
       renderShop({
         vouchers: [OVERSTOCK_VOUCHER],
         money: 8,
@@ -817,7 +817,7 @@ describe("Shop voucher override picker (dev)", () => {
   });
 });
 
-describe("Shop joker sticker badges (#558 / #792)", () => {
+describe("Shop joker sticker badges", () => {
   function perishableJokerOffer(): ShopItem {
     const joker = createPlusFourMultJoker();
     return {
@@ -867,7 +867,7 @@ describe("Shop joker sticker badges (#558 / #792)", () => {
   });
 });
 
-describe("Shop playing-card offer visual modifiers (#282)", () => {
+describe("Shop playing-card offer visual modifiers", () => {
   function playingCardOffer(
     overrides: Partial<import("../../cards/types").Card> = {},
   ): ShopItem {
@@ -953,7 +953,7 @@ describe("Shop playing-card offer visual modifiers (#282)", () => {
   });
 });
 
-describe("Shop i18n (#921)", () => {
+describe("Shop i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();
@@ -991,7 +991,7 @@ describe("Shop i18n (#921)", () => {
   });
 });
 
-describe("Shop card-label i18n (#923)", () => {
+describe("Shop card-label i18n", () => {
   function playingCardOffer(
     overrides: Partial<import("../../cards/types").Card> = {},
   ): ShopItem {

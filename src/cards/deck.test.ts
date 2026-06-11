@@ -115,7 +115,7 @@ describe("deal", () => {
   });
 });
 
-describe("drawCountForRefill (#231)", () => {
+describe("drawCountForRefill", () => {
   test("draws exactly the just-discarded count when the hand was at hand size", () => {
     expect(drawCountForRefill(8, 6, 44)).toBe(2);
   });
@@ -262,7 +262,7 @@ describe("sortCards", () => {
   });
 });
 
-describe("SUIT_DISPLAY_ORDER — alternation invariant (issue #114)", () => {
+describe("SUIT_DISPLAY_ORDER — alternation invariant", () => {
   const RED_SUITS: ReadonlySet<Suit> = new Set<Suit>(["hearts", "diamonds"]);
   const SHARP_SUITS: ReadonlySet<Suit> = new Set<Suit>(["spades", "diamonds"]);
 
@@ -342,7 +342,7 @@ describe("SUIT_DISPLAY_ORDER — alternation invariant (issue #114)", () => {
   });
 });
 
-describe("applyDeckCompositionTransform — drop-face-cards (Abandoned Deck, #570)", () => {
+describe("applyDeckCompositionTransform — drop-face-cards (Abandoned Deck)", () => {
   test("removes every Jack, Queen, and King", () => {
     const result = applyDeckCompositionTransform(createDeck(), "drop-face-cards");
     const facesRemaining = result.filter((c) =>
@@ -394,7 +394,7 @@ describe("applyDeckCompositionTransform — drop-face-cards (Abandoned Deck, #57
   });
 });
 
-describe("applyDeckCompositionTransform — spades-and-hearts-only (Checkered Deck, #571)", () => {
+describe("applyDeckCompositionTransform — spades-and-hearts-only (Checkered Deck)", () => {
   test("keeps the deck at 52 cards", () => {
     const result = applyDeckCompositionTransform(
       createDeck(),

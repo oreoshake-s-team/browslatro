@@ -83,7 +83,7 @@ describe("Hawaiian rendering", () => {
   });
 });
 
-describe("Hawaiian aria-labels (issue #924)", () => {
+describe("Hawaiian aria-labels", () => {
   afterEach(restoreEnglishLocale);
 
   test("Consumables tray exposes the Hawaiian aria-label", async () => {

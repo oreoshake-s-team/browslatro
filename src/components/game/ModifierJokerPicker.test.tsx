@@ -180,7 +180,7 @@ describe("ModifierJokerPicker", () => {
   });
 });
 
-describe("ModifierJokerPicker aria i18n (#987)", () => {
+describe("ModifierJokerPicker aria i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();

@@ -146,7 +146,7 @@ describe("PackOpenModal", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  test("an option at a picked index is removed from the list (#647)", () => {
+  test("an option at a picked index is removed from the list", () => {
     renderModal({
       pack: celestialPack("mega", 5),
       picksRemaining: 1,
@@ -155,7 +155,7 @@ describe("PackOpenModal", () => {
     expect(screen.queryByTestId("pack-open-pick-0")).not.toBeInTheDocument();
   });
 
-  test("other indices still render when one index is picked (#647)", () => {
+  test("other indices still render when one index is picked", () => {
     renderModal({
       pack: celestialPack("mega", 5),
       picksRemaining: 1,
@@ -164,7 +164,7 @@ describe("PackOpenModal", () => {
     expect(screen.getByTestId("pack-open-pick-1")).toBeInTheDocument();
   });
 
-  test("a remaining Pick button stays enabled after one index was picked (#647)", () => {
+  test("a remaining Pick button stays enabled after one index was picked", () => {
     renderModal({
       pack: celestialPack("mega", 5),
       picksRemaining: 1,
@@ -173,7 +173,7 @@ describe("PackOpenModal", () => {
     expect(screen.getByTestId("pack-open-pick-1")).not.toBeDisabled();
   });
 
-  test("with no picked indices, every option still renders (regression #647)", () => {
+  test("with no picked indices, every option still renders (regression)", () => {
     renderModal({
       pack: celestialPack("mega", 5),
       picksRemaining: 2,
@@ -510,7 +510,7 @@ const PREVIEW_HAND_FOR_CRYPTID = [
   { id: 4002, rank: "K" as const, suit: "hearts" as const },
 ];
 
-describe("PackOpenModal — Cryptid Pick gating (closes #630)", () => {
+describe("PackOpenModal — Cryptid Pick gating", () => {
   test("Cryptid Pick is disabled when no preview card is selected (negative)", () => {
     render(
       <PackOpenModal
@@ -949,7 +949,7 @@ describe("PackOpenModal — preview-hand sort toolbar", () => {
   });
 });
 
-describe("PackOpenModal — preview-hand reorder (#763)", () => {
+describe("PackOpenModal — preview-hand reorder", () => {
   const reorderPreview = [
     { id: 3001, rank: "5" as const, suit: "hearts" as const },
     { id: 3002, rank: "K" as const, suit: "spades" as const },
@@ -1080,7 +1080,7 @@ describe("PackOpenModal — preview-hand reorder (#763)", () => {
   });
 });
 
-describe("PackOpenModal — keyboard preview reorder (#910)", () => {
+describe("PackOpenModal — keyboard preview reorder", () => {
   // Rank sort is descending, so the display order is K♠ (3002),
   // 5♥ (3001), 2♣ (3003).
   const reorderPreview = [
@@ -1184,7 +1184,7 @@ describe("PackOpenModal — keyboard preview reorder (#910)", () => {
   });
 });
 
-describe("PackOpenModal — Buffoon pack sticker badges (closes #801)", () => {
+describe("PackOpenModal — Buffoon pack sticker badges", () => {
   function stickeredJokerPack(stickers: ReadonlyArray<JokerSticker>): PackOffer {
     const base = JOKERS[0];
     const stamped: Joker = { ...base, stickers };
@@ -1290,7 +1290,7 @@ describe("PackOpenModal — Buffoon pack sticker badges (closes #801)", () => {
   });
 });
 
-describe("PackOpenModal i18n (#921)", () => {
+describe("PackOpenModal i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();

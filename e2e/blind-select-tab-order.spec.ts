@@ -13,7 +13,7 @@ async function openBlindSelect(page: Page): Promise<void> {
   await expect(page.getByTestId("blind-select-play")).toBeVisible();
 }
 
-test.describe("BlindSelect tab order (#915)", () => {
+test.describe("BlindSelect tab order", () => {
   test("Tab cycles Play → Skip → Play with no tooltip or dev-override stops in between", async ({
     page,
   }) => {

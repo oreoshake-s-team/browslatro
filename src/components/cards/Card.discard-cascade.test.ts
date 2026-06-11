@@ -17,7 +17,7 @@ function ruleFor(selector: string): string {
   return m[1];
 }
 
-describe("Card .card-discarding animation cascade (#609)", () => {
+describe("Card .card-discarding animation cascade", () => {
   test("the card-discard animation declaration is !important so later scoring classes cannot override it", () => {
     const body = ruleFor(".card-discarding");
     expect(body).toMatch(/animation:\s*card-discard[^;]*!important/);

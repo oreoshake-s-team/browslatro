@@ -100,7 +100,7 @@ describe("deckStartingHandsDelta", () => {
   });
 });
 
-describe("Abandoned Deck spec (#570)", () => {
+describe("Abandoned Deck spec", () => {
   test("declares a drop-face-cards deck-composition modifier", () => {
     expect(getDeckSpec("abandoned-deck").modifiers).toEqual([
       { kind: "deck-composition", transform: "drop-face-cards" },
@@ -112,7 +112,7 @@ describe("Abandoned Deck spec (#570)", () => {
   });
 });
 
-describe("deckCompositionTransforms (#570)", () => {
+describe("deckCompositionTransforms", () => {
   test("Abandoned Deck returns the drop-face-cards transform", () => {
     expect(deckCompositionTransforms("abandoned-deck")).toEqual([
       "drop-face-cards",
@@ -128,7 +128,7 @@ describe("deckCompositionTransforms (#570)", () => {
   });
 });
 
-describe("Abandoned Deck initial deck materialization (#570)", () => {
+describe("Abandoned Deck initial deck materialization", () => {
   test("the deck startNewGame would produce is 40 cards", () => {
     const built = applyDeckCompositionTransforms(
       createDeck(),
@@ -162,7 +162,7 @@ describe("Abandoned Deck initial deck materialization (#570)", () => {
   });
 });
 
-describe("Checkered Deck spec (#571)", () => {
+describe("Checkered Deck spec", () => {
   test("declares a spades-and-hearts-only deck-composition modifier", () => {
     expect(getDeckSpec("checkered-deck").modifiers).toEqual([
       { kind: "deck-composition", transform: "spades-and-hearts-only" },
@@ -174,7 +174,7 @@ describe("Checkered Deck spec (#571)", () => {
   });
 });
 
-describe("deckCompositionTransforms — Checkered Deck (#571)", () => {
+describe("deckCompositionTransforms — Checkered Deck", () => {
   test("Checkered Deck returns the spades-and-hearts-only transform", () => {
     expect(deckCompositionTransforms("checkered-deck")).toEqual([
       "spades-and-hearts-only",
@@ -182,7 +182,7 @@ describe("deckCompositionTransforms — Checkered Deck (#571)", () => {
   });
 });
 
-describe("Checkered Deck initial deck materialization (#571)", () => {
+describe("Checkered Deck initial deck materialization", () => {
   test("the deck startNewGame would produce is 52 cards (regression — not 40)", () => {
     const built = applyDeckCompositionTransforms(
       createDeck(),
@@ -226,7 +226,7 @@ describe("deckJokerSlotsDelta", () => {
   });
 });
 
-describe("Green Deck spec (#818)", () => {
+describe("Green Deck spec", () => {
   test("declares the +$2 end-of-round and no-interest modifiers", () => {
     expect(getDeckSpec("green-deck").modifiers).toEqual([
       {
@@ -242,7 +242,7 @@ describe("Green Deck spec (#818)", () => {
   });
 });
 
-describe("deckEndOfRoundBonusPerRemainingHandAndDiscard (#818)", () => {
+describe("deckEndOfRoundBonusPerRemainingHandAndDiscard", () => {
   test("Green Deck returns $2", () => {
     expect(deckEndOfRoundBonusPerRemainingHandAndDiscard("green-deck")).toBe(2);
   });
@@ -258,7 +258,7 @@ describe("deckEndOfRoundBonusPerRemainingHandAndDiscard (#818)", () => {
   });
 });
 
-describe("deckSuppressesInterest (#818)", () => {
+describe("deckSuppressesInterest", () => {
   test("Green Deck suppresses interest", () => {
     expect(deckSuppressesInterest("green-deck")).toBe(true);
   });

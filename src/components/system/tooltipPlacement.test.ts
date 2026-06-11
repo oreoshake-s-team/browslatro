@@ -7,7 +7,7 @@ function rect(left: number, top: number, width: number, height: number): Placeme
   return { left, top, width, height };
 }
 
-describe("placeTooltip (#993)", () => {
+describe("placeTooltip", () => {
   const anchor = rect(600, 300, 72, 100);
   // Blocks the whole band above the anchor so tests can isolate the
   // downward-scan behavior.

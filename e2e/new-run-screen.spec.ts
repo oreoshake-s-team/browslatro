@@ -14,7 +14,7 @@ function statValue(page: Page, label: string) {
     .locator(".stat-value");
 }
 
-test.describe("New-run screen — deck selection (#561, #562, #564)", () => {
+test.describe("New-run screen — deck selection", () => {
   test("Yellow Deck starts the run with $14 (+$10 over the $4 baseline) and 3 baseline discards", async ({
     page,
   }) => {
@@ -37,7 +37,7 @@ test.describe("New-run screen — deck selection (#561, #562, #564)", () => {
   });
 });
 
-test.describe("New-run screen — Green Deck (#818)", () => {
+test.describe("New-run screen — Green Deck", () => {
   const HAND_CARDS = '[data-testid="hand-cards"] .card';
   const SUBMIT_BUTTON = /^Submit Hand/;
   const CONTINUE_BUTTON = /Continue/;

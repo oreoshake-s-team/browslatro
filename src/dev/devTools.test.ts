@@ -14,7 +14,7 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe("devToolsEnabled (#915)", () => {
+describe("devToolsEnabled", () => {
   test("true in dev builds regardless of the localStorage flag", () => {
     vi.stubEnv("DEV", true);
     stubDevToolsFlag(null);

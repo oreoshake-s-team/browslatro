@@ -13,7 +13,7 @@ describe("RoundProgress", () => {
   });
 });
 
-describe("RoundProgress live regions (#914)", () => {
+describe("RoundProgress live regions", () => {
   test("hands stat is a polite live region", () => {
     render(<RoundProgress remainingHands={4} remainingDiscards={3} />);
     expect(screen.getByTestId("hands-stat")).toHaveAttribute(

@@ -428,7 +428,7 @@ describe("pickShopOffers — spectral offer rate", () => {
     expect(spectralSeen).toBe(false);
   });
 
-  test("force100 override guarantees at least one spectral in a multi-slot shop (#354)", () => {
+  test("force100 override guarantees at least one spectral in a multi-slot shop", () => {
     chanceOverrideConfig.force100 = true;
     try {
       const offers = pickShopOffers({
@@ -442,7 +442,7 @@ describe("pickShopOffers — spectral offer rate", () => {
   });
 });
 
-describe("pickSingleShopOffer — Omen Globe tarot→spectral swap (#278)", () => {
+describe("pickSingleShopOffer — Omen Globe tarot→spectral swap", () => {
   function tarotOnlyArgs(rng: RandomSource): Parameters<typeof pickSingleShopOffer>[0] {
     return {
       jokerCatalog: [],
@@ -607,7 +607,7 @@ describe("pickSingleShopOffer", () => {
   });
 });
 
-describe("pickShopItemOffers — item-only generation for reroll (#374)", () => {
+describe("pickShopItemOffers — item-only generation for reroll", () => {
   test("returns SHOP_OFFER_SLOTS item offers", () => {
     expect(pickShopItemOffers(baseArgs(mulberry32(1)))).toHaveLength(
       SHOP_OFFER_SLOTS,
@@ -707,7 +707,7 @@ describe("pickShopOffers — forcedPackPools (dev queue)", () => {
   });
 });
 
-describe("pickShopOffers — browslatro:forcePackPool localStorage flag (#856)", () => {
+describe("pickShopOffers — browslatro:forcePackPool localStorage flag", () => {
   function packs(offers: ReadonlyArray<ShopItem>): ReadonlyArray<ShopItem> {
     return offers.filter((o) => o.kind === "pack");
   }
@@ -914,7 +914,7 @@ describe("ensureBaseJokerForEdition", () => {
   });
 });
 
-describe("mergeFreeJokerOffersIntoShop (#603)", () => {
+describe("mergeFreeJokerOffersIntoShop", () => {
   const catalog = createJokerCatalog();
   const planet = createPlanetCatalog()[0];
   const jokerItem = (id: string, price = 5): ShopItem => ({
@@ -1017,7 +1017,7 @@ describe("mergeFreeJokerOffersIntoShop (#603)", () => {
   });
 });
 
-describe("jokerOfferPrice (#577)", () => {
+describe("jokerOfferPrice", () => {
   test("a vanilla joker is priced at JOKER_BASE_PRICE", () => {
     const joker = createJokerCatalog()[0];
     expect(jokerOfferPrice(joker)).toBe(JOKER_BASE_PRICE);
@@ -1036,7 +1036,7 @@ describe("jokerOfferPrice (#577)", () => {
   });
 });
 
-describe("applyStakeStickersToShopOffers (#555)", () => {
+describe("applyStakeStickersToShopOffers", () => {
   function jokerOffer(id: string): ShopItem {
     const joker = { ...createBusinessCardJoker(), id };
     return { kind: "joker", joker, price: JOKER_BASE_PRICE, sold: false };
@@ -1083,7 +1083,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stamped[0].kind === "joker" && stamped[0].joker.stickers).toBeUndefined();
   });
 
-  test("Eternal sticker does not change the joker's price (#555)", () => {
+  test("Eternal sticker does not change the joker's price", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1137,7 +1137,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stamped[0]).toEqual(offer);
   });
 
-  test("stamps Perishable onto a shop joker offer when the roll succeeds (#558)", () => {
+  test("stamps Perishable onto a shop joker offer when the roll succeeds", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1149,7 +1149,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stickers).toEqual([{ kind: "perishable", roundsHeld: 0 }]);
   });
 
-  test("stamps Perishable on a Buffoon pack's joker option when the roll succeeds (#558)", () => {
+  test("stamps Perishable on a Buffoon pack's joker option when the roll succeeds", () => {
     const offers = [packOfferWithJokerOption("p1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1162,7 +1162,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     ]);
   });
 
-  test("does not stamp Perishable when the roll fails (negative) (#558)", () => {
+  test("does not stamp Perishable when the roll fails (negative)", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1173,7 +1173,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
       .toBeUndefined();
   });
 
-  test("at Orange Stake, shop joker rolls receive Perishable when the perishable roll hits (#558)", () => {
+  test("at Orange Stake, shop joker rolls receive Perishable when the perishable roll hits", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1185,7 +1185,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stickers?.some((s) => s.kind === "perishable")).toBe(true);
   });
 
-  test("at White Stake, shop joker rolls never receive Perishable (negative) (#558)", () => {
+  test("at White Stake, shop joker rolls never receive Perishable (negative)", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1196,7 +1196,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
       .toBeUndefined();
   });
 
-  test("at Gold Stake, shop joker rolls receive Rental when only the rental roll hits (#559)", () => {
+  test("at Gold Stake, shop joker rolls receive Rental when only the rental roll hits", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1208,7 +1208,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stickers?.some((s) => s.kind === "rental")).toBe(true);
   });
 
-  test("at Gold Stake, a rental shop joker is priced at RENTAL_BASE_PRICE (#559)", () => {
+  test("at Gold Stake, a rental shop joker is priced at RENTAL_BASE_PRICE", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1218,7 +1218,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stamped[0].kind === "joker" && stamped[0].price).toBe(RENTAL_BASE_PRICE);
   });
 
-  test("at Orange Stake, shop joker rolls never receive Rental (negative) (#559)", () => {
+  test("at Orange Stake, shop joker rolls never receive Rental (negative)", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1230,7 +1230,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
     expect(stickers?.some((s) => s.kind === "rental") ?? false).toBe(false);
   });
 
-  test("at Gold Stake, shop joker rolls do not receive Rental when every roll misses (negative) (#559)", () => {
+  test("at Gold Stake, shop joker rolls do not receive Rental when every roll misses (negative)", () => {
     const offers = [jokerOffer("j1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1241,7 +1241,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
       .toBeUndefined();
   });
 
-  test("at Gold Stake, Buffoon pack joker options can receive Rental (#559)", () => {
+  test("at Gold Stake, Buffoon pack joker options can receive Rental", () => {
     const offers = [packOfferWithJokerOption("p1")];
     const stamped = applyStakeStickersToShopOffers(
       offers,
@@ -1255,7 +1255,7 @@ describe("applyStakeStickersToShopOffers (#555)", () => {
   });
 });
 
-describe("applyAstronomerPricing (#741)", () => {
+describe("applyAstronomerPricing", () => {
   function planetOffer(id: string, price = 3): ShopItem {
     const planet = createPlanetCatalog().find((p) => p.id === id);
     if (!planet) throw new Error(`no planet ${id}`);
@@ -1319,7 +1319,7 @@ describe("applyAstronomerPricing (#741)", () => {
   });
 });
 
-describe("Telescope: guaranteedPlanetId on forced Celestial pack (#281)", () => {
+describe("Telescope: guaranteedPlanetId on forced Celestial pack", () => {
   test("a forced Celestial pack with a guaranteedPlanetId always includes that planet", () => {
     const offers = pickShopOffers({
       jokerCatalog: createJokerCatalog(),
@@ -1362,7 +1362,7 @@ describe("Telescope: guaranteedPlanetId on forced Celestial pack (#281)", () => 
   });
 });
 
-describe("rollPlayingCardOffer (#282)", () => {
+describe("rollPlayingCardOffer", () => {
   test("returns a playing-card offer with the base price by default", () => {
     const offer = rollPlayingCardOffer(mulberry32(1));
     expect(offer.kind).toBe("playing-card");
@@ -1418,7 +1418,7 @@ describe("rollPlayingCardOffer (#282)", () => {
   });
 });
 
-describe("pickShopItemOffers — Magic Trick playing-card offers (#282)", () => {
+describe("pickShopItemOffers — Magic Trick playing-card offers", () => {
   test("with Magic Trick NOT owned, never produces a playing-card offer (negative)", () => {
     let sawPlayingCard = false;
     for (let seed = 1; seed <= 50; seed += 1) {

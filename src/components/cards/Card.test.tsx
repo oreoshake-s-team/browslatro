@@ -361,7 +361,7 @@ describe("Card scoring pulse animation", () => {
   });
 });
 
-describe("Card face-down hides seal/enhancement/edition (#765)", () => {
+describe("Card face-down hides seal/enhancement/edition", () => {
   test("a face-down lucky card does not apply the enhancement class", () => {
     const lucky: CardType = {
       id: 40,
@@ -447,7 +447,7 @@ describe("Card face-down hides seal/enhancement/edition (#765)", () => {
   });
 });
 
-describe("Card accessible-name vs visible-text (#606)", () => {
+describe("Card accessible-name vs visible-text", () => {
   test("top corner visible glyphs are aria-hidden so they do not duplicate the aria-label", () => {
     const { container } = render(<Card card={aceOfSpades} />);
     const corner = container.querySelector(".card-corner-top");

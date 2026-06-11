@@ -23,7 +23,7 @@ function melted(joker: Joker, hands: number): Joker[] {
   return jokers;
 }
 
-describe("Ice Cream (#871)", () => {
+describe("Ice Cream", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("ice-cream");

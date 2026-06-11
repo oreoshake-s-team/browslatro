@@ -9,7 +9,7 @@ import {
 } from "../jokers";
 import { useGame } from "../../store/game";
 
-describe("Campfire (#894)", () => {
+describe("Campfire", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("campfire");

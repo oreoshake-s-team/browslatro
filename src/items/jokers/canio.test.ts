@@ -20,7 +20,7 @@ beforeEach(() => {
   nextId = 0;
 });
 
-describe("Canio (#1037)", () => {
+describe("Canio", () => {
   test("is registered in the legendary pool", () => {
     const ids = createLegendaryJokerCatalog().map((j) => j.id);
     expect(ids).toContain("canio");

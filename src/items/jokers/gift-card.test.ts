@@ -10,7 +10,7 @@ import { consumableSellValue } from "../consumables";
 import { useGame } from "../../store/game";
 import { createTarotCatalog } from "../tarots";
 
-describe("Gift Card (#1033)", () => {
+describe("Gift Card", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("gift-card");

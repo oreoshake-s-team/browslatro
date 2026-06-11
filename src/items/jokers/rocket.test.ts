@@ -8,7 +8,7 @@ import {
   createRocketJoker,
 } from "../jokers";
 
-describe("Rocket (#903)", () => {
+describe("Rocket", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("rocket");

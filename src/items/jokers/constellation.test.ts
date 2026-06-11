@@ -16,7 +16,7 @@ function afterPlanets(count: number): Joker[] {
   return jokers;
 }
 
-describe("Constellation (#894)", () => {
+describe("Constellation", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("constellation");

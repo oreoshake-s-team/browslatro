@@ -557,7 +557,7 @@ describe("Hand drag-and-drop reordering", () => {
   });
 });
 
-describe("Hand newly drawn markers (#929)", () => {
+describe("Hand newly drawn markers", () => {
   test("mounting with a non-empty newlyDrawnIds set does not mark cards (restored run)", () => {
     const deck = createDeck();
     renderHand({
@@ -592,7 +592,7 @@ describe("Hand newly drawn markers (#929)", () => {
   });
 });
 
-describe("Hand keyboard reordering (#908)", () => {
+describe("Hand keyboard reordering", () => {
   const fourCards: CardType[] = [
     { id: 1, rank: "K", suit: "hearts" },
     { id: 2, rank: "2", suit: "spades" },

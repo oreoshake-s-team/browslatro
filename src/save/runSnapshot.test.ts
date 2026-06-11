@@ -74,7 +74,7 @@ describe("deserializeRun", () => {
     expect([...decoded.inner.ids]).toEqual([7, 8]);
   });
 
-  test("round-trips a joker's state.value counter intact (#804 — Spare Trousers state)", () => {
+  test("round-trips a joker's state.value counter intact (Spare Trousers state)", () => {
     const jokers = [
       {
         id: "spare-trousers",
@@ -91,7 +91,7 @@ describe("deserializeRun", () => {
     expect(decoded.jokers[0].state).toEqual({ kind: "counter", value: 8 });
   });
 
-  test("round-trips a Wee Joker's chips-counter state intact (#825 — on-played-rank-stack-chips)", () => {
+  test("round-trips a Wee Joker's chips-counter state intact (on-played-rank-stack-chips)", () => {
     const jokers = [
       {
         id: "wee-joker",

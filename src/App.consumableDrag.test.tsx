@@ -50,7 +50,7 @@ async function mountWithPlanetConsumable(): Promise<void> {
   await screen.findByTestId("consumable-tile-filled-0");
 }
 
-describe("Consumable drag wiring (issue #936)", () => {
+describe("Consumable drag wiring", () => {
   beforeEach(() => {
     _resetBootShopForTests();
     window.localStorage.removeItem("browslatro:bootShop");

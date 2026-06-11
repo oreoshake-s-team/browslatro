@@ -12,7 +12,7 @@ const baseCtx = {
   money: 10,
 } as const;
 
-describe("Séance (#1019)", () => {
+describe("Séance", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("seance");

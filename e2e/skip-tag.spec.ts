@@ -29,7 +29,7 @@ async function moneyOf(page: Page): Promise<number> {
   return Number((txt ?? "$0").replace(/[^0-9-]/g, ""));
 }
 
-test.describe("Skip-tag flow (#697)", () => {
+test.describe("Skip-tag flow", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });

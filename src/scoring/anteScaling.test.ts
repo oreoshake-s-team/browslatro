@@ -51,7 +51,7 @@ describe("baseChipsForAnte", () => {
   });
 });
 
-describe("baseChipsForAnte — endless mode (#855)", () => {
+describe("baseChipsForAnte — endless mode", () => {
   test("ante 9 matches Balatro's published 110000", () => {
     expect(baseChipsForAnte(9)).toBe(110_000);
   });
@@ -208,7 +208,7 @@ describe("requiredChipsForBlind — Green stake", () => {
   });
 });
 
-describe("baseChipsForAnte — Purple stake (#557)", () => {
+describe("baseChipsForAnte — Purple stake", () => {
   test("returns PURPLE_STAKE_CHIPS for Purple stake", () => {
     expect(baseChipsForAnte(5, "purple")).toBe(PURPLE_STAKE_CHIPS[4]);
   });
@@ -226,7 +226,7 @@ describe("baseChipsForAnte — Purple stake (#557)", () => {
   });
 });
 
-describe("requiredChipsForBlind — Purple stake (#557)", () => {
+describe("requiredChipsForBlind — Purple stake", () => {
   test("Small Blind ante 8 returns 200000 (PURPLE_STAKE_CHIPS[7])", () => {
     expect(
       requiredChipsForBlind({

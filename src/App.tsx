@@ -103,7 +103,7 @@ function App() {
   const multiplier = useGame((state) => state.multiplier);
   // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
   // so the displayed chips/multiplier reflect manual bumps until a New game
-  // resets them. See #265.
+  // resets them.
   const devChipsBonus = useGame((state) => state.devChipsBonus);
   const devMultBonus = useGame((state) => state.devMultBonus);
   const devMultFactor = useGame((state) => state.devMultFactor);

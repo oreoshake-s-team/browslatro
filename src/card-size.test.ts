@@ -32,7 +32,7 @@ function blockBody(source: string, selector: string): string {
   return match[1];
 }
 
-describe("Card-size design tokens (issue #214)", () => {
+describe("Card-size design tokens", () => {
   test("--card-width is defined on :root", () => {
     expect(blockBody(indexCss, ":root")).toMatch(/--card-width:\s*[\d.]+rem/);
   });

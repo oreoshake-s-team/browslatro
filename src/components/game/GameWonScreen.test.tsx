@@ -88,7 +88,7 @@ describe("GameWonScreen", () => {
   });
 });
 
-describe("GameWonScreen i18n (#922)", () => {
+describe("GameWonScreen i18n", () => {
   afterEach(async () => {
     const { restoreEnglishLocale } = await import("../../i18n/i18n.test-helpers");
     await restoreEnglishLocale();
@@ -106,7 +106,7 @@ describe("GameWonScreen i18n (#922)", () => {
   });
 });
 
-describe("GameWonScreen focus trap (#949)", () => {
+describe("GameWonScreen focus trap", () => {
   test("traps Tab inside the dialog and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
     render(<button data-testid="opener">opener</button>);

@@ -12,7 +12,7 @@ function fixedRng(values: ReadonlyArray<number>): () => number {
   return () => values[Math.min(i++, values.length - 1)];
 }
 
-describe("Perkeo (#1037)", () => {
+describe("Perkeo", () => {
   test("is registered in the legendary pool", () => {
     const ids = createLegendaryJokerCatalog().map((j) => j.id);
     expect(ids).toContain("perkeo");

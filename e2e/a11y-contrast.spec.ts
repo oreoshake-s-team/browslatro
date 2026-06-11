@@ -54,7 +54,7 @@ function contrastRatio(fg: string, bg: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-test.describe("color contrast (issue #911)", () => {
+test.describe("color contrast", () => {
   test("blind select screen has no axe color-contrast violations", async ({
     page,
   }) => {

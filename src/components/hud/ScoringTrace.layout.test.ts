@@ -21,7 +21,7 @@ function blockBody(source: string, openerPattern: RegExp): string {
   throw new Error(`Unterminated block for ${openerPattern}`);
 }
 
-describe("ScoringTrace layout — fills remaining vertical space (issue #398)", () => {
+describe("ScoringTrace layout — fills remaining vertical space", () => {
   const traceBody = blockBody(scoringTraceCss, /(^|\n)\.scoring-trace\s*{/);
   const scrollBody = blockBody(scoringTraceCss, /(^|\n)\.scoring-trace__scroll\s*{/);
 
@@ -42,7 +42,7 @@ describe("ScoringTrace layout — fills remaining vertical space (issue #398)", 
   });
 });
 
-describe("ScoringTrace layout — portrait strip preserved (issue #398)", () => {
+describe("ScoringTrace layout — portrait strip preserved", () => {
   const portraitBlock = blockBody(
     scoringTraceCss,
     /@media\s*\(orientation:\s*portrait\)\s*and\s*\(max-width:\s*768px\)\s*{/,

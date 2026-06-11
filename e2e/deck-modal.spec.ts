@@ -28,7 +28,7 @@ async function heightOf(page: Page, selector: string): Promise<number> {
   return box.height;
 }
 
-test("Remaining Cards summary rows are readable on the dark theme (#887)", async ({
+test("Remaining Cards summary rows are readable on the dark theme", async ({
   page,
 }) => {
   await openDeckModal(page);
@@ -49,7 +49,7 @@ test("Remaining Cards summary rows are readable on the dark theme (#887)", async
   expect(headingColor).toBe("rgb(173, 181, 189)");
 });
 
-test("Remaining Cards summary column matches the card grid height (#437)", async ({
+test("Remaining Cards summary column matches the card grid height", async ({
   page,
 }) => {
   await openDeckModal(page);
@@ -58,7 +58,7 @@ test("Remaining Cards summary column matches the card grid height (#437)", async
   expect(Math.abs(summary - groups)).toBeLessThan(2);
 });
 
-test("Remaining Cards summary sections fill the column height (#437)", async ({
+test("Remaining Cards summary sections fill the column height", async ({
   page,
 }) => {
   await openDeckModal(page);
@@ -68,7 +68,7 @@ test("Remaining Cards summary sections fill the column height (#437)", async ({
   expect(suits + ranks).toBeGreaterThan(summary * 0.9);
 });
 
-test("deck modal cards use the high-visibility palette when enabled in Options (#950)", async ({
+test("deck modal cards use the high-visibility palette when enabled in Options", async ({
   page,
 }) => {
   await page.addInitScript(() => {
@@ -97,7 +97,7 @@ test("deck modal cards use the high-visibility palette when enabled in Options (
   expect(clubColor).toBe("rgb(26, 116, 49)");
 });
 
-test("deck modal cards keep the classic palette when high visibility is off (#950)", async ({
+test("deck modal cards keep the classic palette when high visibility is off", async ({
   page,
 }) => {
   await page.addInitScript(() => {

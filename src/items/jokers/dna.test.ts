@@ -5,7 +5,7 @@ import {
   firstHandCardCopyCount,
 } from "../jokers";
 
-describe("DNA (#1039)", () => {
+describe("DNA", () => {
   test("is registered in the joker catalog", () => {
     const ids = createJokerCatalog().map((j) => j.id);
     expect(ids).toContain("dna");

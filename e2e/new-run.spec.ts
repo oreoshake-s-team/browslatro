@@ -23,7 +23,7 @@ async function restartViaOptions(page: Page): Promise<void> {
   await page.getByRole("button", { name: "New game" }).click();
 }
 
-test.describe("New run clears lingering board state (closes #851)", () => {
+test.describe("New run clears lingering board state", () => {
   test("restarting mid-round leaves no previous hand or drawn-down deck behind the New-Run screen", async ({
     page,
   }) => {

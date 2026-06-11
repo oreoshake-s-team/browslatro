@@ -23,8 +23,7 @@ async function clickWin(page: Page): Promise<void> {
 // Single-screen stake math (payouts, required chips, the live New Run
 // preview) is covered by NewRunScreen.test.tsx, BlindSelectScreen.test.tsx,
 // items/stakes.test.ts, and scoring/anteScaling.test.ts; this journey keeps
-// the only multi-round behavior — Green Stake scaling kicking in at ante 2
-// (#935).
+// the only multi-round behavior — Green Stake scaling kicking in at ante 2.
 test("Green Stake: after advancing to Ante 2, Small Blind required is 900 (GREEN_STAKE_CHIPS[1])", async ({
   page,
 }) => {

@@ -19,7 +19,7 @@ function collectCssFiles(dir: string): string[] {
   });
 }
 
-describe("reduced motion coverage (issue #916)", () => {
+describe("reduced motion coverage", () => {
   test("index.css zeroes --animation-speed under prefers-reduced-motion", () => {
     expect(indexCss).toMatch(
       /@media \(prefers-reduced-motion: reduce\) \{\s*:root \{\s*--animation-speed: 0;/,
@@ -54,7 +54,7 @@ describe("reduced motion coverage (issue #916)", () => {
   });
 });
 
-describe("forced colors (issue #916)", () => {
+describe("forced colors", () => {
   test("index.css maps --focus-ring to Highlight when forced-colors is active", () => {
     expect(indexCss).toMatch(
       /@media \(forced-colors: active\) \{\s*:root \{\s*--focus-ring: Highlight;/,

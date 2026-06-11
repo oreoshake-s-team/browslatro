@@ -58,7 +58,7 @@ describe("calculateInterest", () => {
     expect(calculateInterest(-10)).toBe(0);
   });
 
-  test("would inflate interest if a caller folded end-of-round joker money into the wallet (#620)", () => {
+  test("would inflate interest if a caller folded end-of-round joker money into the wallet", () => {
     const walletBeforeEorJokers = 9;
     const cloud9Income = 1;
     const inflated = calculateInterest(walletBeforeEorJokers + cloud9Income);
