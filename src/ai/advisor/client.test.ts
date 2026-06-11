@@ -1,8 +1,18 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from "vitest";
 import type { Advice } from "./advice";
-import { ADVICE_ENDPOINT, fetchAdvice, PLAYER_KEY_HEADER } from "./client";
-import { candidatesFixture, modelStateFixture } from "./test-helpers";
+import {
+  ADVICE_ENDPOINT,
+  fetchAdvice,
+  fetchContextAdvice,
+  PLAYER_KEY_HEADER,
+} from "./client";
+import {
+  candidatesFixture,
+  modelStateFixture,
+  packAdviceRequestFixture,
+  shopAdviceRequestFixture,
+} from "./test-helpers";
 
 function adviceFixture(): Advice {
   return {
@@ -28,6 +38,34 @@ function fetchReturning(response: Response): typeof fetch {
 async function callFetchAdvice(fetchFn: typeof fetch) {
   return fetchAdvice(modelStateFixture(), candidatesFixture(), { fetchFn });
 }
+
+describe("fetchContextAdvice", () => {
+  test("posts the shop request body verbatim", async () => {
+    const fetchFn = fetchReturning(jsonResponse(200, { advice: adviceFixture() }));
+    await fetchContextAdvice(shopAdviceRequestFixture(), { fetchFn });
+    expect(fetchFn).toHaveBeenCalledWith(
+      ADVICE_ENDPOINT,
+      expect.objectContaining({
+        body: JSON.stringify(shopAdviceRequestFixture()),
+      }),
+    );
+  });
+
+  test("returns the advice for a pack request", async () => {
+    const result = await fetchContextAdvice(packAdviceRequestFixture(), {
+      fetchFn: fetchReturning(jsonResponse(200, { advice: adviceFixture() })),
+    });
+    expect(result).toEqual({ ok: true, advice: adviceFixture() });
+  });
+
+  test("rejects advice whose indices fall outside the candidate range", async () => {
+    const outOfRange = { ...adviceFixture(), recommendationIndex: 9 };
+    const result = await fetchContextAdvice(shopAdviceRequestFixture(), {
+      fetchFn: fetchReturning(jsonResponse(200, { advice: outOfRange })),
+    });
+    expect(result).toEqual({ ok: false, code: "invalid_response" });
+  });
+});
 
 describe("fetchAdvice", () => {
   test("returns the advice on a 200 response", async () => {

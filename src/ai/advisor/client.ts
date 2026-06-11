@@ -2,6 +2,11 @@ import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
 import { isAdvice, type Advice } from "./advice";
 import { readStoredPlayerKey } from "./playerKey";
+import type {
+  AdviceRequest,
+  PackAdviceRequest,
+  ShopAdviceRequest,
+} from "./types";
 
 export type AdviceClientErrorCode =
   | "method_not_allowed"
@@ -76,10 +81,9 @@ function serverErrorCode(body: unknown): AdviceClientErrorCode {
   return "invalid_response";
 }
 
-export async function fetchAdvice(
-  state: ModelState,
-  candidates: ReadonlyArray<HandOption>,
-  options: FetchAdviceOptions = {},
+async function postAdviceRequest(
+  request: AdviceRequest,
+  options: FetchAdviceOptions,
 ): Promise<AdviceClientResult> {
   const fetchFn = options.fetchFn ?? fetch;
   const timeoutMs = options.timeoutMs ?? ADVICE_CLIENT_TIMEOUT_MS;
@@ -96,7 +100,7 @@ export async function fetchAdvice(
     response = await fetchFn(ADVICE_ENDPOINT, {
       method: "POST",
       headers,
-      body: JSON.stringify({ state, candidates }),
+      body: JSON.stringify(request),
       signal: AbortSignal.timeout(timeoutMs),
     });
   } catch (error) {
@@ -116,8 +120,23 @@ export async function fetchAdvice(
     };
   }
   const advice = (body as { advice?: unknown } | null)?.advice;
-  if (!isAdvice(advice, candidates.length)) {
+  if (!isAdvice(advice, request.candidates.length)) {
     return { ok: false, code: "invalid_response" };
   }
   return { ok: true, advice };
+}
+
+export async function fetchAdvice(
+  state: ModelState,
+  candidates: ReadonlyArray<HandOption>,
+  options: FetchAdviceOptions = {},
+): Promise<AdviceClientResult> {
+  return postAdviceRequest({ state, candidates }, options);
+}
+
+export async function fetchContextAdvice(
+  request: ShopAdviceRequest | PackAdviceRequest,
+  options: FetchAdviceOptions = {},
+): Promise<AdviceClientResult> {
+  return postAdviceRequest(request, options);
 }
