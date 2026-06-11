@@ -83,11 +83,19 @@ export function createAdvisorRanker(
     },
     async rank(state, candidates) {
       if (!degraded) {
+        let ranker: CandidateRanker | null = null;
         try {
-          return await (await ensure()).rank(state, candidates);
+          ranker = await ensure();
         } catch (error) {
           degraded = true;
           onFallback?.(error);
+        }
+        if (ranker !== null) {
+          try {
+            return await ranker.rank(state, candidates);
+          } catch (error) {
+            onFallback?.(error);
+          }
         }
       }
       return greedyRanking(candidates);
