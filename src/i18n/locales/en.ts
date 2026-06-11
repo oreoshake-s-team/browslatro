@@ -185,6 +185,20 @@ export const en = {
   game: {
     submitHand: "Submit Hand",
   },
+  advisor: {
+    open: "Advisor",
+    title: "Coach",
+    thinking: "The coach is thinking\u2026",
+    recommendation: "Recommended move",
+    alternative: "Tempting alternative",
+    concept: "Concept",
+    engineSuggestion: "Engine suggestion",
+    playCandidate: "Play {{hand}} ({{cards}}) \u2014 {{score}} points",
+    discardCandidate: "Discard {{cards}}",
+    unavailable: "The coach's explanation is unavailable right now \u2014 this is the engine's top-ranked move.",
+    noCandidates: "No legal moves to analyze right now.",
+    close: "Close",
+  },
   suits: {
     spades: "Spades",
     hearts: "Hearts",
