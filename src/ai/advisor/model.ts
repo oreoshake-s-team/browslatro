@@ -3,9 +3,11 @@ import { isAdvice, type Advice } from "./advice.js";
 import type {
   AdviceRequest,
   HandAdviceRequest,
+  PackAdviceRequest,
   ShopAdviceRequest,
 } from "./types";
 import {
+  retrieveJokerWikiEntries,
   retrieveShopWikiEntries,
   retrieveWikiEntries,
   type JokerRef,
@@ -98,6 +100,29 @@ function buildShopMessage(request: ShopAdviceRequest): string {
   return lines.join("\n");
 }
 
+function packJokerRefs(request: PackAdviceRequest): ReadonlyArray<JokerRef> {
+  const offered = request.candidates.flatMap((candidate) =>
+    candidate.action === "pick" && candidate.option.optionType === "joker"
+      ? [{ id: candidate.option.id, name: candidate.option.name }]
+      : [],
+  );
+  return [...request.pack.jokers, ...offered];
+}
+
+function buildPackMessage(request: PackAdviceRequest): string {
+  const lines = [
+    "The player opened a booster pack and must pick an option or skip the remaining picks. The pack is already paid for; picking costs nothing extra.",
+    "Pack state:",
+    JSON.stringify(request.pack),
+  ];
+  pushWikiLines(lines, retrieveJokerWikiEntries(packJokerRefs(request)));
+  lines.push(
+    "Candidate pack actions (choose by index):",
+    indexedCandidates(request),
+  );
+  return lines.join("\n");
+}
+
 function buildHandMessage(request: HandAdviceRequest): string {
   const lines = ["Game state:", JSON.stringify(request.state)];
   if (request.state.jokers.length > 0) {
@@ -114,9 +139,9 @@ function buildHandMessage(request: HandAdviceRequest): string {
 }
 
 export function buildUserMessage(request: AdviceRequest): string {
-  return request.context === "shop"
-    ? buildShopMessage(request)
-    : buildHandMessage(request);
+  if (request.context === "shop") return buildShopMessage(request);
+  if (request.context === "pack") return buildPackMessage(request);
+  return buildHandMessage(request);
 }
 
 export function parseAdvice(text: string, candidateCount: number): Advice | null {

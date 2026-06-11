@@ -14,9 +14,28 @@ import {
   ECONOMY_WIKI,
   JOKER_WIKI,
   STAKE_WIKI,
+  retrieveJokerWikiEntries,
   retrieveShopWikiEntries,
   retrieveWikiEntries,
 } from "./wiki";
+
+describe("retrieveJokerWikiEntries", () => {
+  test("returns a joker entry for a known joker", () => {
+    const entries = retrieveJokerWikiEntries([
+      { id: "blueprint", name: "Blueprint" },
+    ]);
+    expect(entries).toContainEqual({
+      key: "blueprint",
+      kind: "joker",
+      title: "Blueprint",
+      text: JOKER_WIKI.blueprint,
+    });
+  });
+
+  test("does not append the economy entry", () => {
+    expect(retrieveJokerWikiEntries([])).toHaveLength(0);
+  });
+});
 
 describe("retrieveShopWikiEntries", () => {
   test("returns a joker entry for a known joker", () => {

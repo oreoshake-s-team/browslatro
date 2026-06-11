@@ -2,6 +2,9 @@ import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
 import type {
   HandAdviceRequest,
+  PackAdviceCandidate,
+  PackAdviceRequest,
+  PackAdviceState,
   ShopAdviceCandidate,
   ShopAdviceRequest,
   ShopAdviceState,
@@ -119,6 +122,52 @@ export function shopAdviceRequestFixture(): ShopAdviceRequest {
     context: "shop",
     shop: shopStateFixture(),
     candidates: shopCandidatesFixture(),
+  };
+}
+
+export function packStateFixture(): PackAdviceState {
+  return {
+    pool: "buffoon",
+    variant: "normal",
+    picksRemaining: 1,
+    money: 8,
+    ante: 3,
+    jokers: [{ id: "blueprint", name: "Blueprint" }],
+    jokerCapacity: 5,
+    consumables: [],
+    consumableCapacity: 2,
+  };
+}
+
+export function packCandidatesFixture(): ReadonlyArray<PackAdviceCandidate> {
+  return [
+    {
+      action: "pick",
+      option: {
+        optionType: "joker",
+        id: "jolly-joker",
+        name: "Jolly Joker",
+        description: "+8 Mult if played hand contains a Pair",
+      },
+    },
+    {
+      action: "pick",
+      option: {
+        optionType: "joker",
+        id: "supernova",
+        name: "Supernova",
+        description: "Adds the number of times this hand was played to Mult",
+      },
+    },
+    { action: "skip" },
+  ];
+}
+
+export function packAdviceRequestFixture(): PackAdviceRequest {
+  return {
+    context: "pack",
+    pack: packStateFixture(),
+    candidates: packCandidatesFixture(),
   };
 }
 

@@ -4,6 +4,9 @@ import {
   adviceRequestFixture,
   candidatesFixture,
   modelStateFixture,
+  packAdviceRequestFixture,
+  packCandidatesFixture,
+  packStateFixture,
   shopAdviceRequestFixture,
   shopCandidatesFixture,
   shopStateFixture,
@@ -208,6 +211,82 @@ describe("parseAdviceRequest shop context", () => {
       parseAdviceRequest({
         ...shopAdviceRequestFixture(),
         shop: { ...shopStateFixture(), money: Number.NaN },
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("parseAdviceRequest pack context", () => {
+  test("accepts a valid pack request", () => {
+    expect(parseAdviceRequest(packAdviceRequestFixture())).not.toBeNull();
+  });
+
+  test("rejects a pack request without pack state", () => {
+    expect(
+      parseAdviceRequest({
+        context: "pack",
+        candidates: packCandidatesFixture(),
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects fewer than two candidates", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        candidates: [{ action: "skip" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a pick candidate without a description", () => {
+    const [pick] = packCandidatesFixture();
+    if (pick.action !== "pick") throw new Error("expected a pick candidate");
+    const { description: _description, ...option } = pick.option;
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        candidates: [{ action: "pick", option }, { action: "skip" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a pack candidate with an unknown action", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        candidates: [{ action: "reroll", cost: 5 }, { action: "skip" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a non-string pool", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        pack: { ...packStateFixture(), pool: 3 },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects non-finite picksRemaining", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        pack: { ...packStateFixture(), picksRemaining: Number.NaN },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects more held jokers than the cap", () => {
+    const jokers = Array.from({ length: MAX_JOKERS + 1 }, (_, index) => ({
+      id: `joker-${index}`,
+      name: `Joker ${index}`,
+    }));
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        pack: { ...packStateFixture(), jokers },
       }),
     ).toBeNull();
   });
