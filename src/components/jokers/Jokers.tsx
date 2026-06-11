@@ -396,7 +396,7 @@ export default function Jokers({
                   </button>
                 )}
                 {tooltipOpen && tooltipRect && (
-                  <JokerTooltip id={tooltipId} joker={joker} anchorRect={tooltipRect} />
+                  <JokerTooltip id={tooltipId} joker={joker} jokers={jokers} jokerIndex={idx} anchorRect={tooltipRect} />
                 )}
               </li>
             </Fragment>

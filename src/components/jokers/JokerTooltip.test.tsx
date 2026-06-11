@@ -12,6 +12,8 @@ import {
   createBannerJoker,
   createBaronJoker,
   createBloodstoneJoker,
+  createBlueprintJoker,
+  createBrainstormJoker,
   createBullJoker,
   createBusinessCardJoker,
   createDriversLicenseJoker,
@@ -573,5 +575,42 @@ describe("Joker tooltip — To Do List description", () => {
     const desc = screen.getByTestId("joker-tooltip-description");
     expect(desc).toHaveTextContent(/Currently: \?\?\?/);
     expect(desc.querySelector("strong")).toHaveTextContent("???");
+  });
+});
+
+describe("Joker tooltip — copy-joker target", () => {
+  test("does not render the copy-target line for a non-copy joker", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-plus-four-mult"));
+    expect(screen.queryByTestId("joker-tooltip-copy-target")).not.toBeInTheDocument();
+  });
+
+  test("Blueprint with a right neighbor shows that joker's name", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBlueprintJoker(), createPlusFourMultJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-blueprint"));
+    expect(screen.getByTestId("joker-tooltip-copy-target")).toHaveTextContent("+4 Mult");
+  });
+
+  test("Blueprint as the rightmost joker shows 'incompatible'", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker(), createBlueprintJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-blueprint"));
+    expect(screen.getByTestId("joker-tooltip-copy-target")).toHaveTextContent("incompatible");
+  });
+
+  test("Brainstorm shows the leftmost joker's name", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createPlusFourMultJoker(), createBrainstormJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-brainstorm"));
+    expect(screen.getByTestId("joker-tooltip-copy-target")).toHaveTextContent("+4 Mult");
+  });
+
+  test("Brainstorm alone shows 'incompatible' (self-referential cycle)", async () => {
+    const user = userEvent.setup();
+    render(<Jokers jokers={[createBrainstormJoker()]} />);
+    await user.hover(screen.getByTestId("joker-tile-filled-brainstorm"));
+    expect(screen.getByTestId("joker-tooltip-copy-target")).toHaveTextContent("incompatible");
   });
 });

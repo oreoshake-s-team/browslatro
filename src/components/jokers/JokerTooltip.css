@@ -24,6 +24,12 @@
   font-size: 1rem;
 }
 
+.joker-tooltip-copy-target {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
 .joker-tooltip-description {
   color: var(--border-on-light);
 }
