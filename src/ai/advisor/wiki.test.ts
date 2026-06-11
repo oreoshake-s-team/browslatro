@@ -14,8 +14,54 @@ import {
   ECONOMY_WIKI,
   JOKER_WIKI,
   STAKE_WIKI,
+  retrieveShopWikiEntries,
   retrieveWikiEntries,
 } from "./wiki";
+
+describe("retrieveShopWikiEntries", () => {
+  test("returns a joker entry for a known joker", () => {
+    const entries = retrieveShopWikiEntries([
+      { id: "blueprint", name: "Blueprint" },
+    ]);
+    expect(entries).toContainEqual({
+      key: "blueprint",
+      kind: "joker",
+      title: "Blueprint",
+      text: JOKER_WIKI.blueprint,
+    });
+  });
+
+  test("dedupes repeated joker ids", () => {
+    const entries = retrieveShopWikiEntries([
+      { id: "blueprint", name: "Blueprint" },
+      { id: "blueprint", name: "Blueprint" },
+    ]);
+    expect(entries.filter((entry) => entry.key === "blueprint")).toHaveLength(1);
+  });
+
+  test("skips jokers without wiki entries", () => {
+    const entries = retrieveShopWikiEntries([{ id: "nope", name: "Nope" }]);
+    expect(entries.some((entry) => entry.kind === "joker")).toBe(false);
+  });
+
+  test("includes a combo entry when a participating joker is present", () => {
+    const combo = COMBO_WIKI[0];
+    const entries = retrieveShopWikiEntries([
+      { id: combo.jokers[0], name: "Fixture" },
+    ]);
+    expect(entries.some((entry) => entry.key === combo.key)).toBe(true);
+  });
+
+  test("always appends the economy entry", () => {
+    const entries = retrieveShopWikiEntries([]);
+    expect(entries.at(-1)).toEqual({
+      key: "economy",
+      kind: "strategy",
+      title: "Economy",
+      text: ECONOMY_WIKI,
+    });
+  });
+});
 
 function jokerFixture(id: string, name: string): ModelJoker {
   return {
