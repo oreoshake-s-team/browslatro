@@ -38,7 +38,7 @@ export interface GenerateDatasetResult {
   readonly runs: ReadonlyArray<HeadlessRunResult>;
 }
 
-function sameAction(option: HandOption, action: AgentAction): boolean {
+export function sameAction(option: HandOption, action: AgentAction): boolean {
   const optionKind = option.action === "play" ? "play" : "discard";
   if (optionKind !== action.kind) return false;
   if (option.cardIds.length !== action.cardIds.length) return false;
