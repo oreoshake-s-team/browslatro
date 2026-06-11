@@ -2,6 +2,9 @@
 import { describe, expect, test } from "vitest";
 import {
   adviceRequestFixture,
+  blindAdviceRequestFixture,
+  blindCandidatesFixture,
+  blindStateFixture,
   candidatesFixture,
   modelStateFixture,
   packAdviceRequestFixture,
@@ -287,6 +290,102 @@ describe("parseAdviceRequest pack context", () => {
       parseAdviceRequest({
         ...packAdviceRequestFixture(),
         pack: { ...packStateFixture(), jokers },
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("parseAdviceRequest blind context", () => {
+  test("accepts a valid blind request", () => {
+    expect(parseAdviceRequest(blindAdviceRequestFixture())).not.toBeNull();
+  });
+
+  test("accepts a null other skip offer", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        blind: { ...blindStateFixture(), otherSkipOffer: null },
+      }),
+    ).not.toBeNull();
+  });
+
+  test("rejects a blind request without blind state", () => {
+    expect(
+      parseAdviceRequest({
+        context: "blind",
+        candidates: blindCandidatesFixture(),
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects fewer than two candidates", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        candidates: [blindCandidatesFixture()[0]],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a play candidate without a payout", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        candidates: [
+          { action: "play", scoreTarget: 800 },
+          blindCandidatesFixture()[1],
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a skip candidate without a tag description", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        candidates: [
+          blindCandidatesFixture()[0],
+          { action: "skip", tag: { id: "charm", name: "Charm Tag" } },
+        ],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a blind candidate with an unknown action", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        candidates: [{ action: "reroll", cost: 5 }, blindCandidatesFixture()[1]],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a boss without a numeric score target", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        blind: {
+          ...blindStateFixture(),
+          boss: { id: "the-wall", name: "The Wall", description: "Extra large blind" },
+        },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a malformed other skip offer", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        blind: { ...blindStateFixture(), otherSkipOffer: { kind: "big" } },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects non-finite money", () => {
+    expect(
+      parseAdviceRequest({
+        ...blindAdviceRequestFixture(),
+        blind: { ...blindStateFixture(), money: Number.NaN },
       }),
     ).toBeNull();
   });
