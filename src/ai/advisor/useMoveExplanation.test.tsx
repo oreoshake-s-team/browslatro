@@ -87,6 +87,18 @@ describe("useMoveExplanation", () => {
     expect(state.phase === "error" && state.code).toBe("model_timeout");
   });
 
+  test("carries the retry-after seconds on a rate-limited error", async () => {
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: false, code: "rate_limited", retryAfterSeconds: 90 });
+    const { result } = renderHook(() =>
+      useMoveExplanation(makeDeps({ fetchAdviceFn })),
+    );
+    await act(() => result.current.explain(proposal()));
+    const state = result.current.state;
+    expect(state.phase === "error" && state.retryAfterSeconds).toBe(90);
+  });
+
   test("shows loading while the request is in flight", async () => {
     let release: (value: { ok: true; advice: Advice }) => void = () => {};
     const fetchAdviceFn = vi.fn().mockReturnValue(

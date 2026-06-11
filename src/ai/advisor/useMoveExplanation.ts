@@ -9,7 +9,11 @@ export type MoveExplanationState =
   | { readonly phase: "idle" }
   | { readonly phase: "loading" }
   | { readonly phase: "ready"; readonly explanation: string; readonly concept: string }
-  | { readonly phase: "error"; readonly code: AdviceClientErrorCode };
+  | {
+      readonly phase: "error";
+      readonly code: AdviceClientErrorCode;
+      readonly retryAfterSeconds?: number;
+    };
 
 export interface MoveExplanationDeps {
   readonly fetchAdviceFn: typeof fetchAdvice;
@@ -42,7 +46,11 @@ export function useMoveExplanation(
       const result = await fetchAdviceFn(modelState, [proposal]);
       if (requestIdRef.current !== requestId) return;
       if (!result.ok) {
-        setState({ phase: "error", code: result.code });
+        setState({
+          phase: "error",
+          code: result.code,
+          retryAfterSeconds: result.retryAfterSeconds,
+        });
         return;
       }
       setState({
