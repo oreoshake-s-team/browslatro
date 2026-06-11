@@ -262,12 +262,17 @@ export default function Card({
               aria-hidden="true"
               data-testid={`card-center-lucky-${card.id}`}
             >
-              <span className="card-center-lucky-icon">☘</span>
-              <span className="card-center-lucky-odds">
-                {t("cardLabels.luckyOddsMult", { n: luckyMultDenom })}
+              <span className="card-center-lucky-odds card-center-lucky-odds-mult">
+                {t("cardLabels.luckyOddsMult", {
+                  n: luckyMultDenom,
+                  amount: LUCKY_ENHANCEMENT_MULT_AMOUNT,
+                })}
               </span>
-              <span className="card-center-lucky-odds">
-                {t("cardLabels.luckyOddsMoney", { n: luckyMoneyDenom })}
+              <span className="card-center-lucky-odds card-center-lucky-odds-money">
+                {t("cardLabels.luckyOddsMoney", {
+                  n: luckyMoneyDenom,
+                  amount: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
+                })}
               </span>
             </span>
           ) : displayValue ? (

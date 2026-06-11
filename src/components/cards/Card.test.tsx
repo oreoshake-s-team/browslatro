@@ -324,13 +324,13 @@ describe("Card", () => {
     expect(container.querySelector(".card-center")).toHaveTextContent("\u2665");
   });
 
-  test("renders the clover icon and both odds in the center of a lucky number card", () => {
+  test("renders both odds as text in the center of a lucky number card", () => {
     const lucky: CardType = { id: 71, rank: "9", suit: "hearts", enhancement: "lucky" };
     render(<Card card={lucky} />);
     const center = screen.getByTestId("card-center-lucky-71");
-    expect(center).toHaveTextContent("\u2618");
-    expect(center).toHaveTextContent("1 in 5 \u2605");
-    expect(center).toHaveTextContent("1 in 15 $");
+    expect(center).not.toHaveTextContent("\u2618");
+    expect(center).toHaveTextContent("1/5 +20");
+    expect(center).toHaveTextContent("1/15 +$20");
   });
 
   test("does not render the lucky center treatment on a non-lucky card", () => {
@@ -354,7 +354,7 @@ describe("Card", () => {
   test("renders the lucky treatment on a lucky face card", () => {
     const lucky: CardType = { id: 74, rank: "Q", suit: "diamonds", enhancement: "lucky" };
     render(<Card card={lucky} />);
-    expect(screen.getByTestId("card-center-lucky-74")).toHaveTextContent("1 in 5 \u2605");
+    expect(screen.getByTestId("card-center-lucky-74")).toHaveTextContent("1/5 +20");
   });
 
   test("applies the stone enhancement class when the card is stone", () => {
