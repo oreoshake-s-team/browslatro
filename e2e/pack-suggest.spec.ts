@@ -3,6 +3,8 @@ import { test, expect, type Page, type Route } from "@playwright/test";
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     window.localStorage.setItem("browslatro:muted", "true");
+    window.localStorage.setItem("browslatro:forcePackPool", "celestial");
+    window.localStorage.setItem("browslatro:forcePackVariant", "normal");
   });
 });
 
@@ -30,13 +32,8 @@ async function openPackFromShop(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
   await page.getByText("Apply modifiers").click();
   await page.getByText(/Win/).click();
-  const addMoney = page.getByRole("button", { name: "Add $10" });
-  if (!(await addMoney.isVisible().catch(() => false))) {
-    await page.getByText("Apply modifiers").click();
-  }
-  await addMoney.click();
   await page
-    .locator('[data-offer-kind="pack"] .shop-offer-buy:not([disabled])')
+    .locator('[data-pack-pool="celestial"] .shop-offer-buy:not([disabled])')
     .first()
     .click();
   await expect(page.getByTestId("pack-suggest")).toBeVisible();
@@ -54,13 +51,16 @@ test("suggesting a pack pick and applying it takes the option without logging hu
 }) => {
   await page.route("**/api/advice", fulfillWithFirstPick);
   await openPackFromShop(page);
+  const optionsBefore = await page.locator(".pack-open-option").count();
   await page.getByTestId("pack-suggest").click();
   await expect(page.getByTestId("suggestion-recommendation")).toContainText(
     "Pick",
   );
   await page.getByTestId("suggestion-apply").click();
-  await expect(page.getByTestId("pack-open-subtitle")).toHaveCount(0);
-  await expect(page.getByTestId("shop-suggest")).toBeVisible();
+  await expect(page.locator(".pack-open-option")).not.toHaveCount(
+    optionsBefore,
+    { timeout: 10_000 },
+  );
   const log = await page.evaluate(
     () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
   );

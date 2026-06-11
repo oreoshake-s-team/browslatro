@@ -43,6 +43,8 @@ export default function PackSuggestion(
   const consumables = useGame((s) => s.consumables);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
+  const previewHandSize = useGame((s) => s.packPreviewHand.length);
+  const previewSelectedCount = useGame((s) => s.packPreviewSelectedIds.size);
   const { state, suggest, reset } = useSuggestion<PackSuggestionAction>(
     () =>
       buildPackAdvicePlan({
@@ -51,6 +53,8 @@ export default function PackSuggestion(
         pickedIndices: props.pickedIndices,
         jokerSlotsFull: props.jokerSlotsFull,
         consumableSlotsFull: props.consumableSlotsFull,
+        previewHandSize,
+        previewSelectedCount,
         money,
         ante,
         jokers,

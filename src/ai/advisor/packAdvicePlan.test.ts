@@ -4,6 +4,7 @@ import { createPlusFourMultJoker } from "../../items/jokers/factories";
 import type { PackOffer, PackOption } from "../../items/packs";
 import { createPlanetCatalog } from "../../items/planets";
 import { createSpectralCatalog } from "../../items/spectrals";
+import { createTarotCatalog } from "../../items/tarots";
 import {
   buildPackAdvicePlan,
   type PackAdviceInput,
@@ -30,6 +31,14 @@ function packFixture(options: ReadonlyArray<PackOption>): PackOffer {
   return { pool: "celestial", variant: "normal", options };
 }
 
+function enhancementTarotOption(): PackOption {
+  const tarot = createTarotCatalog().find(
+    (card) => card.effect.kind === "apply-enhancement",
+  );
+  if (!tarot) throw new Error("expected an apply-enhancement tarot");
+  return { kind: "tarot", tarot };
+}
+
 function inputFixture(overrides: Partial<PackAdviceInput> = {}): PackAdviceInput {
   return {
     pack: packFixture([planetOption(), jokerOption()]),
@@ -37,6 +46,8 @@ function inputFixture(overrides: Partial<PackAdviceInput> = {}): PackAdviceInput
     pickedIndices: new Set(),
     jokerSlotsFull: false,
     consumableSlotsFull: false,
+    previewHandSize: 0,
+    previewSelectedCount: 0,
     money: 10,
     ante: 2,
     jokers: [],
@@ -80,6 +91,49 @@ describe("buildPackAdvicePlan", () => {
       }),
     );
     expect(plan?.actions.some((action) => action.kind === "pick" && action.optionIdx === 0)).toBe(false);
+  });
+
+  test("excludes a selection-requiring tarot while the preview hand has no selection", () => {
+    const plan = buildPackAdvicePlan(
+      inputFixture({
+        pack: packFixture([enhancementTarotOption(), planetOption()]),
+        previewHandSize: 8,
+        previewSelectedCount: 0,
+      }),
+    );
+    expect(plan?.actions).toEqual([
+      { kind: "pick", optionIdx: 1 },
+      { kind: "skip" },
+    ]);
+  });
+
+  test("includes a selection-requiring tarot once a valid selection exists", () => {
+    const plan = buildPackAdvicePlan(
+      inputFixture({
+        pack: packFixture([enhancementTarotOption(), planetOption()]),
+        previewHandSize: 8,
+        previewSelectedCount: 1,
+      }),
+    );
+    expect(plan?.actions).toEqual([
+      { kind: "pick", optionIdx: 0 },
+      { kind: "pick", optionIdx: 1 },
+      { kind: "skip" },
+    ]);
+  });
+
+  test("excludes a tray-bound enhancement tarot when consumable slots are full", () => {
+    const plan = buildPackAdvicePlan(
+      inputFixture({
+        pack: packFixture([enhancementTarotOption(), planetOption()]),
+        previewHandSize: 0,
+        consumableSlotsFull: true,
+      }),
+    );
+    expect(plan?.actions).toEqual([
+      { kind: "pick", optionIdx: 1 },
+      { kind: "skip" },
+    ]);
   });
 
   test("returns null when no picks remain", () => {
