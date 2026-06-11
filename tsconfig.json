@@ -24,5 +24,5 @@
 
     "types": ["vitest/globals", "vite/client"]
   },
-  "include": ["src", "scripts", "vite.config.ts", ".storybook"]
+  "include": ["src", "api", "scripts", "vite.config.ts", ".storybook"]
 }
