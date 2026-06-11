@@ -50,6 +50,20 @@ export function sharedAdvisorRanker(): CandidateRanker {
   return sharedRanker;
 }
 
+let cachedAdvice: { readonly key: string; readonly report: AdvisorReport } | null =
+  null;
+
+function handKey(state: GameState): string {
+  return state.dealt.hand
+    .map((card) => card.id)
+    .sort((a, b) => a - b)
+    .join(",");
+}
+
+export function clearAdvisorAdviceCache(): void {
+  cachedAdvice = null;
+}
+
 function defaultDeps(): AdvisorDeps {
   return {
     ranker: sharedAdvisorRanker(),
@@ -77,6 +91,10 @@ export function useAdvisor(deps?: AdvisorDeps): UseAdvisorResult {
         if (requestIdRef.current === requestId) setState(next);
       };
       const game = getState();
+      if (options?.explain !== false && cachedAdvice?.key === handKey(game)) {
+        apply({ phase: "ready", report: cachedAdvice.report });
+        return;
+      }
       const candidates = getHandOptions(toSimulatePlayInput(game));
       if (candidates.length === 0) {
         apply({ phase: "degraded", topCandidate: null, code: "no_candidates" });
@@ -101,10 +119,12 @@ export function useAdvisor(deps?: AdvisorDeps): UseAdvisorResult {
         apply({ phase: "degraded", topCandidate: ordered[0], code: result.code });
         return;
       }
-      apply({
-        phase: "ready",
-        report: { candidates: ordered, advice: result.advice },
-      });
+      const report: AdvisorReport = {
+        candidates: ordered,
+        advice: result.advice,
+      };
+      cachedAdvice = { key: handKey(game), report };
+      apply({ phase: "ready", report });
     },
     [deps],
   );
