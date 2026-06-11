@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, test } from "vitest";
 import type { Card } from "../cards/types";
 import { useGame } from "../store/game";
 import { createHumanPlayLog, type HumanPlayLog, type LogStorage } from "./humanPlayLog";
-import { captureHumanDecision } from "./humanPlayWiring";
+import {
+  captureHumanDecision,
+  setHumanPlayRecordingSuppressed,
+} from "./humanPlayWiring";
 
 function memoryStorage(): LogStorage {
   const data = new Map<string, string>();
@@ -100,6 +103,31 @@ describe("captureHumanDecision", () => {
       { log: failingLog, seed: 7 },
     );
     expect(recorded).toBe(false);
+  });
+
+
+  test("records nothing while recording is suppressed", () => {
+    const log = makeLog();
+    setHumanPlayRecordingSuppressed(true);
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [1, 2] },
+      { log, seed: 7 },
+    );
+    setHumanPlayRecordingSuppressed(false);
+    expect(recorded).toBe(false);
+  });
+
+  test("resumes recording once unsuppressed", () => {
+    const log = makeLog();
+    setHumanPlayRecordingSuppressed(true);
+    setHumanPlayRecordingSuppressed(false);
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [1, 2] },
+      { log, seed: 7 },
+    );
+    expect(recorded).toBe(true);
   });
 
   test("swallows recorder exceptions instead of breaking gameplay", () => {

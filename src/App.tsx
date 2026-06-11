@@ -1,5 +1,6 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAutopilot } from "./hooks/useAutopilot";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -192,6 +193,11 @@ function App() {
     pendingDiscardCountRef,
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
+  });
+  const [autopilotEnabled, setAutopilotEnabled] = useState(false);
+  useAutopilot(autopilotEnabled, isScoring, {
+    play: submitHand,
+    discard: discardSelected,
   });
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
@@ -429,6 +435,8 @@ function App() {
       <Game
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
+        autopilotEnabled={autopilotEnabled}
+        onToggleAutopilot={() => setAutopilotEnabled((prev) => !prev)}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

@@ -40,10 +40,14 @@ export interface AdvisorDeps {
 
 let sharedRanker: CandidateRanker | null = null;
 
-function defaultDeps(): AdvisorDeps {
+export function sharedAdvisorRanker(): CandidateRanker {
   sharedRanker = sharedRanker ?? createAdvisorRanker(ADVISOR_MODEL_URL);
+  return sharedRanker;
+}
+
+function defaultDeps(): AdvisorDeps {
   return {
-    ranker: sharedRanker,
+    ranker: sharedAdvisorRanker(),
     fetchAdviceFn: fetchAdvice,
     getState: () => useGame.getState(),
   };
