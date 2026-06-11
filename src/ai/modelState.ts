@@ -75,6 +75,7 @@ export interface ModelState {
   readonly blind: ModelBlind;
   readonly ante: number;
   readonly round: number;
+  readonly stake: Stake;
   readonly money: number;
   readonly remainingHands: number;
   readonly remainingDiscards: number;
@@ -182,6 +183,7 @@ export function toModelState(input: ModelStateInput): ModelState {
     blind: toModelBlind(input),
     ante: input.ante,
     round: input.round,
+    stake: input.selectedStake,
     money: input.money,
     remainingHands: input.remainingHands,
     remainingDiscards: input.remainingDiscards,

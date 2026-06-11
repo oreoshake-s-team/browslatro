@@ -44,26 +44,27 @@ describe("buildHeadlessDeck", () => {
 });
 
 describe("playHeadlessRun", () => {
-  test("the same seed and agent reproduce an identical result", () => {
-    const first = playHeadlessRun(greedy, { seed: 123 });
-    const second = playHeadlessRun(greedy, { seed: 123 });
+  test("the same seed and agent reproduce an identical result", async () => {
+    const first = await playHeadlessRun(greedy, { seed: 123 });
+    const second = await playHeadlessRun(greedy, { seed: 123 });
     expect(first).toEqual(second);
   });
 
-  test("plays at least one hand", () => {
-    expect(playHeadlessRun(greedy, { seed: 1 }).handsPlayed).toBeGreaterThan(0);
+  test("plays at least one hand", async () => {
+    const result = await playHeadlessRun(greedy, { seed: 1 });
+    expect(result.handsPlayed).toBeGreaterThan(0);
   });
 
-  test("blinds cleared is consistent with the ante reached", () => {
-    const result = playHeadlessRun(greedy, { seed: 5 });
+  test("blinds cleared is consistent with the ante reached", async () => {
+    const result = await playHeadlessRun(greedy, { seed: 5 });
     const fullAntesCleared = result.won
       ? result.anteReached
       : result.anteReached - 1;
     expect(result.blindsCleared).toBeGreaterThanOrEqual(fullAntesCleared * 3);
   });
 
-  test("a powerful joker carries the run to a maxAnte win", () => {
-    const result = playHeadlessRun(greedy, {
+  test("a powerful joker carries the run to a maxAnte win", async () => {
+    const result = await playHeadlessRun(greedy, {
       seed: 11,
       maxAnte: 1,
       jokers: [joker({ effect: { kind: "additive-mult", amount: 100000 } })],
@@ -71,7 +72,7 @@ describe("playHeadlessRun", () => {
     expect(result).toMatchObject({ won: true, anteReached: 1, blindsCleared: 3 });
   });
 
-  test("deals a full hand at the start of every decision until the deck thins", () => {
+  test("deals a full hand at the start of every decision until the deck thins", async () => {
     const seen: number[] = [];
     const observer: HeadlessAgent = {
       name: "observer",
@@ -80,35 +81,35 @@ describe("playHeadlessRun", () => {
         return greedy.chooseAction(view);
       },
     };
-    playHeadlessRun(observer, { seed: 3, maxAnte: 1 });
+    await playHeadlessRun(observer, { seed: 3, maxAnte: 1 });
     expect(seen.every((total) => total <= 52)).toBe(true);
   });
 
-  test("throws when an agent discards with none remaining", () => {
+  test("throws when an agent discards with none remaining", async () => {
     const stubborn: HeadlessAgent = {
       name: "stubborn",
       chooseAction(view) {
         return { kind: "discard", cardIds: [view.dealt.hand[0].id] };
       },
     };
-    expect(() => playHeadlessRun(stubborn, { seed: 2 })).toThrow(
+    await expect(playHeadlessRun(stubborn, { seed: 2 })).rejects.toThrow(
       "discarded with none remaining",
     );
   });
 
-  test("throws when an agent plays cards it does not hold", () => {
+  test("throws when an agent plays cards it does not hold", async () => {
     const cheater: HeadlessAgent = {
       name: "cheater",
       chooseAction() {
         return { kind: "play", cardIds: [999999] };
       },
     };
-    expect(() => playHeadlessRun(cheater, { seed: 2 })).toThrow(
+    await expect(playHeadlessRun(cheater, { seed: 2 })).rejects.toThrow(
       "illegal play",
     );
   });
 
-  test("throws when an agent discards more than five cards", () => {
+  test("throws when an agent discards more than five cards", async () => {
     const dumper: HeadlessAgent = {
       name: "dumper",
       chooseAction(view) {
@@ -118,7 +119,7 @@ describe("playHeadlessRun", () => {
         };
       },
     };
-    expect(() => playHeadlessRun(dumper, { seed: 2 })).toThrow(
+    await expect(playHeadlessRun(dumper, { seed: 2 })).rejects.toThrow(
       "discarded 6 cards",
     );
   });

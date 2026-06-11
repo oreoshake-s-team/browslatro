@@ -57,7 +57,7 @@ export interface HeadlessRoundView extends SimulatePlayInput {
 
 export interface HeadlessAgent {
   readonly name: string;
-  chooseAction(view: HeadlessRoundView): AgentAction;
+  chooseAction(view: HeadlessRoundView): AgentAction | Promise<AgentAction>;
 }
 
 export interface HeadlessRunConfig {
@@ -99,10 +99,10 @@ export function removeAndRefill(
   };
 }
 
-export function playHeadlessRun(
+export async function playHeadlessRun(
   agent: HeadlessAgent,
   config: HeadlessRunConfig,
-): HeadlessRunResult {
+): Promise<HeadlessRunResult> {
   const rng = seededRng(config.seed);
   const maxAnte = config.maxAnte ?? FINAL_ANTE;
   const jokers = config.jokers ?? [];
@@ -122,7 +122,7 @@ export function playHeadlessRun(
     recentBossIds.add(boss.id);
     const playedCardKeysThisAnte = new Set<string>();
 
-    const playRound = (blind: Blind): boolean => {
+    const playRound = async (blind: Blind): Promise<boolean> => {
       const startCtx = {
         blind,
         boss,
@@ -169,7 +169,7 @@ export function playHeadlessRun(
           roundScore,
           scoreTarget,
         };
-        const action = agent.chooseAction(view);
+        const action = await agent.chooseAction(view);
         if (action.kind === "discard") {
           if (remainingDiscards <= 0) {
             throw new Error(`${agent.name} discarded with none remaining`);
@@ -214,7 +214,7 @@ export function playHeadlessRun(
     };
 
     for (const blind of [1, 2, 3] as const) {
-      if (!playRound(blind)) {
+      if (!(await playRound(blind))) {
         return { won: false, anteReached: ante, blindsCleared, handsPlayed };
       }
       blindsCleared += 1;

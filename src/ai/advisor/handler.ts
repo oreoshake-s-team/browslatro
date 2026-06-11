@@ -1,6 +1,6 @@
-import { requestAdviceText, type ClaudeAdviceResult } from "./claude";
-import { createRateLimiter, type RateLimiter } from "./rateLimit";
-import { parseAdvice, parseAdviceRequest, type AdviceRequest } from "./types";
+import { requestAdvice, type AdviceModelResult } from "./model.js";
+import { createRateLimiter, type RateLimiter } from "./rateLimit.js";
+import { parseAdviceRequest, type AdviceRequest } from "./types.js";
 
 export interface AdviceHandlerDeps {
   readonly ipLimiter: RateLimiter;
@@ -9,7 +9,7 @@ export interface AdviceHandlerDeps {
   readonly requestAdvice: (
     request: AdviceRequest,
     apiKey: string,
-  ) => Promise<ClaudeAdviceResult>;
+  ) => Promise<AdviceModelResult>;
 }
 
 export const IP_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
@@ -20,7 +20,7 @@ const defaultDeps: AdviceHandlerDeps = {
   ipLimiter: createRateLimiter(IP_RATE_LIMIT),
   globalLimiter: createRateLimiter(GLOBAL_RATE_LIMIT),
   getApiKey: () => process.env.ANTHROPIC_API_KEY,
-  requestAdvice: requestAdviceText,
+  requestAdvice,
 };
 
 function json(
@@ -70,28 +70,13 @@ export async function handleAdviceRequest(
   } catch {
     return json(400, { error: "invalid_json" });
   }
-  const adviceRequest = parseAdviceRequest(body);
-  if (adviceRequest === null) {
+  const parsed = parseAdviceRequest(body);
+  if (parsed === null) {
     return json(400, { error: "invalid_request" });
   }
-  let result: ClaudeAdviceResult;
-  try {
-    result = await deps.requestAdvice(adviceRequest, apiKey);
-  } catch {
-    return json(502, { error: "upstream_error" });
+  const result = await deps.requestAdvice(parsed, apiKey);
+  if (!result.ok) {
+    return json(result.status, { error: result.code });
   }
-  if (result.kind === "refusal") {
-    return json(502, { error: "refusal" });
-  }
-  let modelOutput: unknown;
-  try {
-    modelOutput = JSON.parse(result.text);
-  } catch {
-    return json(502, { error: "invalid_advice" });
-  }
-  const advice = parseAdvice(modelOutput, adviceRequest.candidates.length);
-  if (advice === null) {
-    return json(502, { error: "invalid_advice" });
-  }
-  return json(200, { advice });
+  return json(200, { advice: result.advice });
 }

@@ -238,6 +238,10 @@ describe("toModelState — context passthrough", () => {
       state.round,
     ]).toEqual([12, 2, 1, 450, 3, 8]);
   });
+
+  test("carries the selected stake", () => {
+    expect(toModelState(input({ selectedStake: "gold" })).stake).toBe("gold");
+  });
 });
 
 describe("toModelState — serializability", () => {

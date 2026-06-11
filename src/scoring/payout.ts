@@ -1,5 +1,5 @@
 import type { Card } from "../cards/types";
-import { countHeldEnhancement } from "../cards/heldInHand";
+import { countHeldEnhancement } from "../cards/heldInHand.js";
 
 export const INTEREST_RATE_PER = 5;
 export const INTEREST_CAP = 5;

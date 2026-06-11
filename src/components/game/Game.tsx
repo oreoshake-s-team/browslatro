@@ -1,4 +1,4 @@
-import { Suspense, lazy, useMemo } from "react";
+import { Suspense, lazy, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { tHandLabel } from "../../i18n/handLabels";
 import "./Game.css";
@@ -11,9 +11,11 @@ import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
+import LazyChunkErrorBoundary from "../system/LazyChunkErrorBoundary";
 const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
 const NopeAnimation = lazy(() => import("./NopeAnimation"));
+const AdvisorPanel = lazy(() => import("./AdvisorPanel"));
 import { useGame } from "../../store/game";
 import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
@@ -29,6 +31,8 @@ interface GameProps {
   onSubmitHand: () => void;
   onDiscard: () => void;
   canDiscard: boolean;
+  autopilotEnabled?: boolean;
+  onToggleAutopilot?: () => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -42,6 +46,8 @@ export default function Game({
   onSubmitHand,
   onDiscard,
   canDiscard,
+  autopilotEnabled = false,
+  onToggleAutopilot,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -51,6 +57,7 @@ export default function Game({
   onCardDiscardEnd,
 }: GameProps) {
   const { t } = useTranslation();
+  const [advisorOpen, setAdvisorOpen] = useState(false);
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
@@ -272,8 +279,33 @@ export default function Game({
             >
               <span aria-hidden="true">🗑️ </span>Discard
             </button>
+            <button
+              className="btn advisor-open-button"
+              onClick={() => setAdvisorOpen(true)}
+              disabled={isScoring}
+            >
+              <span aria-hidden="true">🎓 </span>
+              {t("advisor.open")}
+            </button>
+            {onToggleAutopilot && (
+              <button
+                className="btn autopilot-toggle-button"
+                onClick={onToggleAutopilot}
+                aria-pressed={autopilotEnabled}
+              >
+                <span aria-hidden="true">🤖 </span>
+                {t("advisor.autopilot")}
+              </button>
+            )}
           </div>
         </div>
+      )}
+      {advisorOpen && (
+        <LazyChunkErrorBoundary>
+          <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
+            <AdvisorPanel onClose={() => setAdvisorOpen(false)} />
+          </Suspense>
+        </LazyChunkErrorBoundary>
       )}
       <ModifierPanel />
       <Suspense fallback={<LazyChunkSpinner />}>

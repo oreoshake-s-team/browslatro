@@ -39,6 +39,13 @@ Browlatro is an educational journey meant to help the author brush up on their f
 
 Use semantic (or Conventional) Commits to provide a standardized framework for naming git commits.
 
+# Git & Worktrees
+
+- One worktree per branch/PR, created at `~/.cache/browslatro-worktrees/<branch>` (outside the project tree). Run `yarn install` in every fresh worktree before anything else.
+- Never edit files in a checkout whose current branch is `main` — a PreToolUse hook (`.claude/hooks/worktree-guard.sh`) denies such edits. Create the worktree first, then edit the worktree copy.
+- Before editing, verify you are in the right tree: `git rev-parse --show-toplevel` and `git branch --show-current` must match the issue/branch being worked. Re-verify after switching tasks.
+- When a session juggles multiple issues, never reuse another issue's worktree; each issue gets its own.
+
 # Work with feature branches
 
 - When creating a new issue, in addition to using semantic naming, set GitHub's native issue type (one of: `Bug`, `Feature`, `Task`, `Refactor`, `Chore`) and add a label for the feature space (e.g. shop). Do not use labels for the issue type.

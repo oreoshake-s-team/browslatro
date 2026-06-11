@@ -1,7 +1,7 @@
 """Trains the advisor candidate scorer and exports it to ONNX.
 
 Usage:
-    python train.py <dataset.jsonl> [--epochs 30] [--hidden 128] [--out advisor-policy.onnx]
+    python train.py <dataset.jsonl> [more.jsonl ...] [--human play.jsonl] [--human-weight 5] [--epochs 30] [--out advisor-policy.onnx]
 
 The model scores one (state, candidate) vector at a time; a decision is
 made by running every candidate through the net and taking the argmax.
@@ -17,7 +17,7 @@ import sys
 import torch
 from torch import nn
 
-from dataset import load_decisions, split_by_seed
+from dataset import load_all, split_by_seed
 from encoding import ENCODING_VERSION, INPUT_FEATURES
 
 
@@ -37,9 +37,9 @@ class CandidateScorer(nn.Module):
 
 
 def decision_loss(model, decision):
-    inputs, chosen = decision
+    inputs, chosen, weight = decision
     logits = model(torch.tensor(inputs, dtype=torch.float32))
-    return nn.functional.cross_entropy(
+    return weight * nn.functional.cross_entropy(
         logits.unsqueeze(0), torch.tensor([chosen])
     )
 
@@ -49,7 +49,7 @@ def accuracy(model, decisions):
         return 0.0
     correct = 0
     with torch.no_grad():
-        for inputs, chosen in decisions:
+        for inputs, chosen, _ in decisions:
             logits = model(torch.tensor(inputs, dtype=torch.float32))
             if int(torch.argmax(logits)) == chosen:
                 correct += 1
@@ -58,7 +58,9 @@ def accuracy(model, decisions):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("dataset")
+    parser.add_argument("datasets", nargs="+")
+    parser.add_argument("--human", action="append", default=[])
+    parser.add_argument("--human-weight", type=float, default=5.0)
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--hidden", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -69,11 +71,15 @@ def main():
     torch.manual_seed(args.seed)
     random.seed(args.seed)
 
-    decisions = load_decisions(args.dataset)
-    train, validation = split_by_seed(decisions)
+    train, validation = split_by_seed(load_all(args.datasets))
     if not train or not validation:
         sys.exit(f"dataset too small: {len(train)} train / {len(validation)} validation")
-    print(f"{len(train)} train decisions, {len(validation)} validation decisions")
+    human = load_all(args.human, args.human_weight)
+    train = train + [(inputs, chosen, weight) for inputs, chosen, _, weight in human]
+    print(
+        f"{len(train)} train decisions ({len(human)} human at "
+        f"weight {args.human_weight}), {len(validation)} validation decisions"
+    )
 
     model = CandidateScorer(args.hidden)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)

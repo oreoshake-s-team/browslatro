@@ -1,4 +1,4 @@
-import { handleAdviceRequest } from "../src/ai/advisor/handler";
+import { handleAdviceRequest } from "../src/ai/advisor/handler.js";
 
 export const maxDuration = 30;
 

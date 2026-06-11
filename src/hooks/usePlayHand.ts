@@ -76,6 +76,7 @@ import {
   steelHeldMultiplier,
 } from "../cards/heldInHand";
 import { cardKey, nextCardId } from "../cards/deck";
+import { captureHumanDecision } from "../ai/humanPlayWiring";
 import { recordHandPlayed } from "../run/runStats";
 
 export interface UsePlayHandParams {
@@ -343,6 +344,8 @@ export function usePlayHand({
       return;
     }
 
+    const preDecisionState = useGame.getState();
+
     const moneyPenalty =
       blind === 3
         ? bossMoneyPenaltyPerCard(currentBoss) * playedCards.length
@@ -360,6 +363,11 @@ export function usePlayHand({
     ) {
       return;
     }
+
+    captureHumanDecision(preDecisionState, {
+      kind: "play",
+      cardIds: playedCards.map((c) => c.id),
+    });
 
     pendingHandPlayResetRef.current = true;
 

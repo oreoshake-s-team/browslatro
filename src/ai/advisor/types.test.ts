@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
-  adviceFixture,
   adviceRequestFixture,
   candidatesFixture,
+  modelStateFixture,
 } from "./test-helpers";
-import { MAX_CANDIDATES, parseAdvice, parseAdviceRequest } from "./types";
+import { MAX_CANDIDATES, parseAdviceRequest } from "./types";
 
 describe("parseAdviceRequest", () => {
   test("accepts a valid request body", () => {
@@ -59,53 +59,62 @@ function modelStateOnly(): unknown {
   return adviceRequestFixture().state;
 }
 
-describe("parseAdvice", () => {
-  test("accepts valid advice", () => {
-    expect(parseAdvice(adviceFixture(), 2)).toEqual(adviceFixture());
-  });
-
-  test("accepts a null alternative", () => {
-    const advice = {
-      ...adviceFixture(),
-      alternativeIndex: null,
-      whyAlternativeWorse: null,
+describe("parseAdviceRequest hardening", () => {
+  test("rejects a hand larger than the cap", () => {
+    const state = {
+      ...modelStateFixture(),
+      hand: Array.from({ length: 17 }, (_, index) => ({
+        ...modelStateFixture().hand[0],
+        id: index + 1,
+      })),
     };
-    expect(parseAdvice(advice, 2)).toEqual(advice);
-  });
-
-  test("rejects a non-object value", () => {
-    expect(parseAdvice("nope", 2)).toBeNull();
-  });
-
-  test("rejects an out-of-range recommendation index", () => {
     expect(
-      parseAdvice({ ...adviceFixture(), recommendationIndex: 2 }, 2),
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
     ).toBeNull();
   });
 
-  test("rejects a negative recommendation index", () => {
+  test("rejects more jokers than the cap", () => {
+    const state = {
+      ...modelStateFixture(),
+      jokers: Array.from({ length: 17 }, () => ({})),
+    };
     expect(
-      parseAdvice({ ...adviceFixture(), recommendationIndex: -1 }, 2),
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
     ).toBeNull();
   });
 
-  test("rejects a fractional recommendation index", () => {
+  test("rejects a blind without a numeric score target", () => {
+    const state = {
+      ...modelStateFixture(),
+      blind: { ...modelStateFixture().blind, scoreTarget: "300" },
+    };
     expect(
-      parseAdvice({ ...adviceFixture(), recommendationIndex: 0.5 }, 2),
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
     ).toBeNull();
   });
 
-  test("rejects an out-of-range alternative index", () => {
+  test("rejects non-finite money", () => {
+    const state = { ...modelStateFixture(), money: Number.POSITIVE_INFINITY };
     expect(
-      parseAdvice({ ...adviceFixture(), alternativeIndex: 7 }, 2),
+      parseAdviceRequest({ state, candidates: candidatesFixture() }),
     ).toBeNull();
   });
 
-  test("rejects a non-string explanation", () => {
-    expect(parseAdvice({ ...adviceFixture(), explanation: 5 }, 2)).toBeNull();
+  test("rejects a candidate with more cards than a legal play", () => {
+    const candidates = [
+      { ...candidatesFixture()[0], cardIds: [1, 2, 3, 4, 5, 6] },
+    ];
+    expect(
+      parseAdviceRequest({ ...adviceRequestFixture(), candidates }),
+    ).toBeNull();
   });
 
-  test("rejects a missing concept", () => {
-    expect(parseAdvice({ ...adviceFixture(), concept: undefined }, 2)).toBeNull();
+  test("rejects a play candidate without scoring fields", () => {
+    const candidates = [
+      { action: "play", cardIds: [1, 2], handLabel: "Pair" },
+    ];
+    expect(
+      parseAdviceRequest({ ...adviceRequestFixture(), candidates }),
+    ).toBeNull();
   });
 });

@@ -1,22 +1,30 @@
 // @vitest-environment node
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   handleAdviceRequest,
   MAX_BODY_CHARS,
   type AdviceHandlerDeps,
 } from "./handler";
+import type { Advice, AdviceModelResult } from "./model";
 import { createRateLimiter } from "./rateLimit";
-import { adviceFixture, adviceRequestFixture, postAdvice } from "./test-helpers";
+import { adviceRequestFixture, postAdvice } from "./test-helpers";
+
+function adviceFixture(): Advice {
+  return {
+    recommendationIndex: 0,
+    alternativeIndex: 1,
+    whyAlternativeWorse: "Discarding wastes a strong pair.",
+    explanation: "Play the pair of nines for the highest scored hand.",
+    concept: "Bank guaranteed score before chasing draws.",
+  };
+}
 
 function makeDeps(extra?: Partial<AdviceHandlerDeps>): AdviceHandlerDeps {
   return {
     ipLimiter: createRateLimiter({ limit: 100, windowMs: 60_000 }),
     globalLimiter: createRateLimiter({ limit: 100, windowMs: 60_000 }),
     getApiKey: () => "sk-ant-test",
-    requestAdvice: async () => ({
-      kind: "text",
-      text: JSON.stringify(adviceFixture()),
-    }),
+    requestAdvice: async () => ({ ok: true, advice: adviceFixture() }),
     ...extra,
   };
 }
@@ -41,6 +49,24 @@ describe("handleAdviceRequest", () => {
   test("rejects malformed json", async () => {
     const response = await handleAdviceRequest(postAdvice("{nope"), makeDeps());
     expect(response.status).toBe(400);
+  });
+
+  test("rejects oversized bodies before parsing", async () => {
+    const oversized = JSON.stringify(adviceRequestFixture()).padEnd(
+      MAX_BODY_CHARS + 1,
+      " ",
+    );
+    const response = await handleAdviceRequest(postAdvice(oversized), makeDeps());
+    expect(response.status).toBe(413);
+  });
+
+  test("labels oversized bodies with a machine-readable code", async () => {
+    const oversized = JSON.stringify(adviceRequestFixture()).padEnd(
+      MAX_BODY_CHARS + 1,
+      " ",
+    );
+    const response = await handleAdviceRequest(postAdvice(oversized), makeDeps());
+    expect(await response.json()).toEqual({ error: "payload_too_large" });
   });
 
   test("rejects bodies that fail validation", async () => {
@@ -105,15 +131,7 @@ describe("handleAdviceRequest", () => {
     expect(second.status).toBe(429);
   });
 
-  test("returns advice on the happy path", async () => {
-    const response = await handleAdviceRequest(
-      postAdvice(adviceRequestFixture()),
-      makeDeps(),
-    );
-    expect(response.status).toBe(200);
-  });
-
-  test("surfaces the parsed advice payload", async () => {
+  test("answers valid requests with the model's advice", async () => {
     const response = await handleAdviceRequest(
       postAdvice(adviceRequestFixture()),
       makeDeps(),
@@ -121,64 +139,51 @@ describe("handleAdviceRequest", () => {
     expect(await response.json()).toEqual({ advice: adviceFixture() });
   });
 
-  test("maps upstream failures to a bad gateway", async () => {
+  test("answers valid requests with a 200 status", async () => {
     const response = await handleAdviceRequest(
       postAdvice(adviceRequestFixture()),
-      makeDeps({
-        requestAdvice: async () => {
-          throw new Error("boom");
-        },
-      }),
-    );
-    expect(response.status).toBe(502);
-  });
-
-  test("maps refusals to a bad gateway", async () => {
-    const response = await handleAdviceRequest(
-      postAdvice(adviceRequestFixture()),
-      makeDeps({ requestAdvice: async () => ({ kind: "refusal" }) }),
-    );
-    expect(response.status).toBe(502);
-  });
-
-  test("rejects oversized bodies before parsing", async () => {
-    const oversized = {
-      ...adviceRequestFixture(),
-      state: {
-        ...adviceRequestFixture().state,
-        blind: {
-          ...adviceRequestFixture().state.blind,
-          name: "x".repeat(MAX_BODY_CHARS),
-        },
-      },
-    };
-    const response = await handleAdviceRequest(
-      postAdvice(oversized),
       makeDeps(),
     );
-    expect(response.status).toBe(413);
+    expect(response.status).toBe(200);
   });
 
-  test("rejects model output that is not json", async () => {
-    const response = await handleAdviceRequest(
+  test("passes the configured api key to the model call", async () => {
+    const requestAdvice = vi
+      .fn<AdviceHandlerDeps["requestAdvice"]>()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    await handleAdviceRequest(
       postAdvice(adviceRequestFixture()),
-      makeDeps({
-        requestAdvice: async () => ({ kind: "text", text: "not json" }),
-      }),
+      makeDeps({ requestAdvice }),
     );
-    expect(response.status).toBe(502);
+    expect(requestAdvice).toHaveBeenCalledWith(
+      adviceRequestFixture(),
+      "sk-ant-test",
+    );
   });
 
-  test("rejects model output with an out-of-range index", async () => {
+  test("propagates a model failure's status code", async () => {
+    const failure: AdviceModelResult = {
+      ok: false,
+      status: 504,
+      code: "model_timeout",
+    };
     const response = await handleAdviceRequest(
       postAdvice(adviceRequestFixture()),
-      makeDeps({
-        requestAdvice: async () => ({
-          kind: "text",
-          text: JSON.stringify({ ...adviceFixture(), recommendationIndex: 9 }),
-        }),
-      }),
+      makeDeps({ requestAdvice: async () => failure }),
     );
-    expect(response.status).toBe(502);
+    expect(response.status).toBe(504);
+  });
+
+  test("propagates a model failure's error code", async () => {
+    const failure: AdviceModelResult = {
+      ok: false,
+      status: 503,
+      code: "advisor_busy",
+    };
+    const response = await handleAdviceRequest(
+      postAdvice(adviceRequestFixture()),
+      makeDeps({ requestAdvice: async () => failure }),
+    );
+    expect(await response.json()).toEqual({ error: "advisor_busy" });
   });
 });

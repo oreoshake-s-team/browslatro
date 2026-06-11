@@ -128,12 +128,12 @@ class FixtureTests(unittest.TestCase):
         self.assertGreater(len(decisions), 0)
 
     def test_all_fixture_inputs_have_the_documented_length(self):
-        for inputs, _, _ in load_decisions(FIXTURE):
+        for inputs, _, _, _ in load_decisions(FIXTURE):
             for vector in inputs:
                 self.assertEqual(len(vector), INPUT_FEATURES)
 
     def test_all_fixture_chosen_indices_are_in_range(self):
-        for inputs, chosen, _ in load_decisions(FIXTURE):
+        for inputs, chosen, _, _ in load_decisions(FIXTURE):
             self.assertTrue(0 <= chosen < len(inputs))
 
     def test_encode_decision_matches_state_plus_candidate(self):
@@ -147,7 +147,7 @@ class FixtureTests(unittest.TestCase):
 
 class SplitTests(unittest.TestCase):
     def test_split_keeps_seeds_disjoint(self):
-        decisions = [([[0.0]], 0, seed) for seed in [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]]
+        decisions = [([[0.0]], 0, seed, 1.0) for seed in [1, 1, 2, 2, 3, 3, 4, 4, 5, 5]]
         train, validation = split_by_seed(decisions, validation_fraction=0.2)
         self.assertEqual(len(train) + len(validation), len(decisions))
 

@@ -7,7 +7,7 @@ from encoding import encode_decision
 DATASET_SCHEMA_VERSION = 1
 
 
-def load_decisions(path):
+def load_decisions(path, weight=1.0):
     """Loads a JSONL file into (candidate_vectors, chosen_index) decisions.
 
     Skips records where the expert's action was not among the offered
@@ -29,8 +29,20 @@ def load_decisions(path):
             inputs, chosen = encode_decision(record)
             if chosen < 0 or not inputs:
                 continue
-            decisions.append((inputs, chosen, record["runSeed"]))
+            decisions.append((inputs, chosen, record["runSeed"], weight))
     return decisions
+
+
+def load_all(paths, weight=1.0):
+    """Concatenates decisions from several JSONL files.
+
+    Lets the generated expert dataset and in-game human-play exports train
+    together: each file is validated independently by load_decisions, and
+    every decision carries the given training weight.
+    """
+    return [
+        decision for path in paths for decision in load_decisions(path, weight)
+    ]
 
 
 def split_by_seed(decisions, validation_fraction=0.2):
@@ -41,9 +53,9 @@ def split_by_seed(decisions, validation_fraction=0.2):
     """
     if not 0 < validation_fraction < 1:
         raise ValueError(f"validation_fraction must be in (0, 1), got {validation_fraction}")
-    seeds = sorted({seed for _, _, seed in decisions})
+    seeds = sorted({seed for _, _, seed, _ in decisions})
     holdout = max(1, int(len(seeds) * validation_fraction)) if seeds else 0
     validation_seeds = set(seeds[-holdout:]) if holdout else set()
-    train = [(i, c) for i, c, s in decisions if s not in validation_seeds]
-    validation = [(i, c) for i, c, s in decisions if s in validation_seeds]
+    train = [(i, c, w) for i, c, s, w in decisions if s not in validation_seeds]
+    validation = [(i, c, w) for i, c, s, w in decisions if s in validation_seeds]
     return train, validation
