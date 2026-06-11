@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { humanPlayLog } from "../ai/humanPlayWiring";
 import { createPlusFourMultJoker } from "../items/jokers/factories";
+import { createPlanetCatalog } from "../items/planets";
 import { useGame } from "./game";
 
 beforeEach(() => {
@@ -84,6 +85,31 @@ describe("run event recording in store actions", () => {
       },
     ]);
     useGame.getState().rerollShopOffers(5);
+    expect(humanPlayLog().count()).toBe(0);
+  });
+
+
+  test("skipping an opened pack records a pack-pick with no chosen index", () => {
+    const planet = createPlanetCatalog()[0];
+    useGame.getState().setOpenedPack({
+      pool: "celestial",
+      variant: "normal",
+      options: [{ kind: "planet", planet }],
+    });
+    useGame.getState().setPackPicksRemaining(1);
+    useGame.getState().closeOpenedPack();
+    expect(humanPlayLog().toJsonl()).toContain('"pickedIndex":null');
+  });
+
+  test("closing a fully-picked pack records nothing", () => {
+    const planet = createPlanetCatalog()[0];
+    useGame.getState().setOpenedPack({
+      pool: "celestial",
+      variant: "normal",
+      options: [{ kind: "planet", planet }],
+    });
+    useGame.getState().setPackPicksRemaining(0);
+    useGame.getState().closeOpenedPack();
     expect(humanPlayLog().count()).toBe(0);
   });
 

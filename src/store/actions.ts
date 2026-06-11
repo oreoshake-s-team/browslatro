@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import { captureRunEvent } from "../ai/humanPlayWiring";
-import { shopItemSnapshot } from "../ai/runEvents";
+import { packOptionSnapshot, shopItemSnapshot } from "../ai/runEvents";
 import type { GameState } from "./game";
 import {
   MAX_CONSUMABLE_SLOTS,
@@ -587,6 +587,18 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
   },
   closeOpenedPack: () => {
     const s = get();
+    if (s.openedPack !== null && s.packPicksRemaining > 0) {
+      captureRunEvent(s, {
+        kind: "pack-pick",
+        pool: s.openedPack.pool,
+        variant: s.openedPack.variant,
+        options: s.openedPack.options
+          .filter((_, index) => !s.pickedPackOptionIndices.has(index))
+          .map(packOptionSnapshot),
+        pickedIndex: null,
+        picksRemaining: s.packPicksRemaining,
+      });
+    }
     s.setJokers((prev) => applyPackSkipToJokerStates(prev));
     s.setOpenedPack(null);
     s.setPackPicksRemaining(0);

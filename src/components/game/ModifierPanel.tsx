@@ -15,6 +15,7 @@ const HUMAN_PLAY_KIND_LABELS = {
   hand: "devMenu.kind_hand",
   purchase: "devMenu.kind_purchase",
   reroll: "devMenu.kind_reroll",
+  "pack-pick": "devMenu.kind_pack-pick",
   "consumable-use": "devMenu.kind_consumable-use",
   "joker-sell": "devMenu.kind_joker-sell",
   "blind-skip": "devMenu.kind_blind-skip",
