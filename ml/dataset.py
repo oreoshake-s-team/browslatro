@@ -33,6 +33,15 @@ def load_decisions(path):
     return decisions
 
 
+def load_all(paths):
+    """Concatenates decisions from several JSONL files.
+
+    Lets the generated expert dataset and in-game human-play exports train
+    together: each file is validated independently by load_decisions.
+    """
+    return [decision for path in paths for decision in load_decisions(path)]
+
+
 def split_by_seed(decisions, validation_fraction=0.2):
     """Deterministic train/validation split keyed on the run seed.
 
