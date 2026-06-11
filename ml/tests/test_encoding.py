@@ -11,9 +11,13 @@ from encoding import (
     INPUT_FEATURES,
     JOKER_SLOT_FEATURES,
     JOKER_SLOTS,
+    SHOP_CONTEXT_FEATURES,
+    SHOP_INPUT_FEATURES,
+    SHOP_ITEM_TYPES,
     STATE_FEATURES,
     encode_candidate,
     encode_decision,
+    encode_shop_decision,
     encode_state,
 )
 
@@ -178,6 +182,126 @@ class SplitTests(unittest.TestCase):
     def test_split_rejects_bad_fraction(self):
         with self.assertRaises(ValueError):
             split_by_seed([], validation_fraction=1.5)
+
+
+def shop_envelope(**kwargs):
+    base = {
+        "schemaVersion": 2,
+        "runSeed": 1,
+        "ante": 2,
+        "round": 6,
+        "blind": 0,
+        "money": 8,
+    }
+    base.update(kwargs)
+    return base
+
+
+def offer(item_type, item_id, cost):
+    return {"itemType": item_type, "id": item_id, "name": item_id, "cost": cost}
+
+
+def pack_option(option_type, option_id):
+    return {"optionType": option_type, "id": option_id, "name": option_id}
+
+
+class EncodeShopDecisionTests(unittest.TestCase):
+    def test_purchase_chosen_index_matches_bought_offer(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("planet", "mercury", 3),
+            offers=[offer("joker", "jolly", 5), offer("planet", "mercury", 3)],
+        )
+        _, chosen = encode_shop_decision(record)
+        self.assertEqual(chosen, 1)
+
+    def test_purchase_includes_leave_candidate(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(len(candidates), 2)
+
+    def test_reroll_chosen_index_is_reroll_candidate(self):
+        record = shop_envelope(
+            kind="reroll",
+            cost=1,
+            offers=[offer("planet", "mercury", 3), offer("joker", "jolly", 5)],
+        )
+        candidates, chosen = encode_shop_decision(record)
+        self.assertEqual(chosen, 2)
+
+    def test_reroll_appends_reroll_and_leave_after_offers(self):
+        record = shop_envelope(
+            kind="reroll",
+            cost=1,
+            offers=[offer("planet", "mercury", 3)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(len(candidates), 3)
+
+    def test_pack_pick_chosen_index_matches_picked(self):
+        record = shop_envelope(
+            kind="pack-pick",
+            pool="arcana",
+            variant="standard",
+            options=[pack_option("tarot", "fool"), pack_option("tarot", "magician")],
+            pickedIndex=1,
+            picksRemaining=1,
+        )
+        _, chosen = encode_shop_decision(record)
+        self.assertEqual(chosen, 1)
+
+    def test_pack_pick_null_maps_to_skip_candidate(self):
+        record = shop_envelope(
+            kind="pack-pick",
+            pool="arcana",
+            variant="standard",
+            options=[pack_option("tarot", "fool")],
+            pickedIndex=None,
+            picksRemaining=1,
+        )
+        candidates, chosen = encode_shop_decision(record)
+        self.assertEqual(chosen, len(candidates) - 1)
+
+    def test_candidate_vector_length_matches_shop_input_features(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(len(candidates[0]), SHOP_INPUT_FEATURES)
+
+    def test_unknown_kind_returns_empty_and_negative_chosen(self):
+        record = shop_envelope(kind="consumable-use")
+        candidates, chosen = encode_shop_decision(record)
+        self.assertEqual(candidates, [])
+        self.assertEqual(chosen, -1)
+
+    def test_can_afford_set_when_cost_within_money(self):
+        record = shop_envelope(
+            money=10,
+            kind="purchase",
+            item=offer("joker", "j", 5),
+            offers=[offer("joker", "j", 5)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        can_afford_idx = SHOP_CONTEXT_FEATURES + len(SHOP_ITEM_TYPES) + 1
+        self.assertEqual(candidates[0][can_afford_idx], 1.0)
+
+    def test_can_afford_clear_when_cost_exceeds_money(self):
+        record = shop_envelope(
+            money=3,
+            kind="purchase",
+            item=offer("joker", "j", 5),
+            offers=[offer("joker", "j", 5)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        can_afford_idx = SHOP_CONTEXT_FEATURES + len(SHOP_ITEM_TYPES) + 1
+        self.assertEqual(candidates[0][can_afford_idx], 0.0)
 
 
 if __name__ == "__main__":

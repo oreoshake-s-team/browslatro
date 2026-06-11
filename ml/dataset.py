@@ -2,9 +2,12 @@
 
 import json
 
-from encoding import encode_decision
+from encoding import encode_decision, encode_shop_decision
 
 DATASET_SCHEMA_VERSION = 1
+SHOP_SCHEMA_VERSION = 2
+
+_SHOP_KINDS = frozenset({"purchase", "reroll", "pack-pick"})
 
 
 def load_decisions(path, weight=1.0):
@@ -45,6 +48,34 @@ def load_all(paths, weight=1.0):
     return [
         decision for path in paths for decision in load_decisions(path, weight)
     ]
+
+
+def load_shop_decisions(path, weight=1.0):
+    """Loads shop/pack decisions from a JSONL file of schema-v2 RunEventRecords.
+
+    Handles purchase, reroll, and pack-pick kinds. Skips unrecognised kinds and
+    records where encoding produces no candidates or an invalid chosen index.
+    """
+    decisions = []
+    with open(path, encoding="utf-8") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            if record.get("kind") not in _SHOP_KINDS:
+                continue
+            version = record["schemaVersion"]
+            if version != SHOP_SCHEMA_VERSION:
+                raise ValueError(
+                    f"{path}:{line_number}: schemaVersion {version}, "
+                    f"expected {SHOP_SCHEMA_VERSION}"
+                )
+            inputs, chosen = encode_shop_decision(record)
+            if chosen < 0 or not inputs:
+                continue
+            decisions.append((inputs, chosen, record["runSeed"], weight))
+    return decisions
 
 
 def split_by_seed(decisions, validation_fraction=0.2):
