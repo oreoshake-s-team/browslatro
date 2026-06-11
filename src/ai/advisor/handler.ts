@@ -1,10 +1,15 @@
+import { requestAdvice, type AdviceModelResult } from "./model";
 import { createRateLimiter, type RateLimiter } from "./rateLimit";
-import { parseAdviceRequest } from "./types";
+import { parseAdviceRequest, type AdviceRequest } from "./types";
 
 export interface AdviceHandlerDeps {
   readonly ipLimiter: RateLimiter;
   readonly globalLimiter: RateLimiter;
   readonly getApiKey: () => string | undefined;
+  readonly requestAdvice: (
+    request: AdviceRequest,
+    apiKey: string,
+  ) => Promise<AdviceModelResult>;
 }
 
 export const IP_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
@@ -14,6 +19,7 @@ const defaultDeps: AdviceHandlerDeps = {
   ipLimiter: createRateLimiter(IP_RATE_LIMIT),
   globalLimiter: createRateLimiter(GLOBAL_RATE_LIMIT),
   getApiKey: () => process.env.ANTHROPIC_API_KEY,
+  requestAdvice,
 };
 
 function json(
@@ -59,8 +65,13 @@ export async function handleAdviceRequest(
   } catch {
     return json(400, { error: "invalid_json" });
   }
-  if (parseAdviceRequest(body) === null) {
+  const parsed = parseAdviceRequest(body);
+  if (parsed === null) {
     return json(400, { error: "invalid_request" });
   }
-  return json(501, { error: "not_implemented" });
+  const result = await deps.requestAdvice(parsed, apiKey);
+  if (!result.ok) {
+    return json(result.status, { error: result.code });
+  }
+  return json(200, { advice: result.advice });
 }

@@ -1,14 +1,26 @@
 // @vitest-environment node
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { handleAdviceRequest, type AdviceHandlerDeps } from "./handler";
+import type { Advice, AdviceModelResult } from "./model";
 import { createRateLimiter } from "./rateLimit";
 import { adviceRequestFixture, postAdvice } from "./test-helpers";
+
+function adviceFixture(): Advice {
+  return {
+    recommendationIndex: 0,
+    alternativeIndex: 1,
+    whyAlternativeWorse: "Discarding wastes a strong pair.",
+    explanation: "Play the pair of nines for the highest scored hand.",
+    concept: "Bank guaranteed score before chasing draws.",
+  };
+}
 
 function makeDeps(extra?: Partial<AdviceHandlerDeps>): AdviceHandlerDeps {
   return {
     ipLimiter: createRateLimiter({ limit: 100, windowMs: 60_000 }),
     globalLimiter: createRateLimiter({ limit: 100, windowMs: 60_000 }),
     getApiKey: () => "sk-ant-test",
+    requestAdvice: async () => ({ ok: true, advice: adviceFixture() }),
     ...extra,
   };
 }
@@ -97,11 +109,59 @@ describe("handleAdviceRequest", () => {
     expect(second.status).toBe(429);
   });
 
-  test("answers valid requests with not-implemented while the model call is pending", async () => {
+  test("answers valid requests with the model's advice", async () => {
     const response = await handleAdviceRequest(
       postAdvice(adviceRequestFixture()),
       makeDeps(),
     );
-    expect(response.status).toBe(501);
+    expect(await response.json()).toEqual({ advice: adviceFixture() });
+  });
+
+  test("answers valid requests with a 200 status", async () => {
+    const response = await handleAdviceRequest(
+      postAdvice(adviceRequestFixture()),
+      makeDeps(),
+    );
+    expect(response.status).toBe(200);
+  });
+
+  test("passes the configured api key to the model call", async () => {
+    const requestAdvice = vi
+      .fn<AdviceHandlerDeps["requestAdvice"]>()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    await handleAdviceRequest(
+      postAdvice(adviceRequestFixture()),
+      makeDeps({ requestAdvice }),
+    );
+    expect(requestAdvice).toHaveBeenCalledWith(
+      adviceRequestFixture(),
+      "sk-ant-test",
+    );
+  });
+
+  test("propagates a model failure's status code", async () => {
+    const failure: AdviceModelResult = {
+      ok: false,
+      status: 504,
+      code: "model_timeout",
+    };
+    const response = await handleAdviceRequest(
+      postAdvice(adviceRequestFixture()),
+      makeDeps({ requestAdvice: async () => failure }),
+    );
+    expect(response.status).toBe(504);
+  });
+
+  test("propagates a model failure's error code", async () => {
+    const failure: AdviceModelResult = {
+      ok: false,
+      status: 503,
+      code: "advisor_busy",
+    };
+    const response = await handleAdviceRequest(
+      postAdvice(adviceRequestFixture()),
+      makeDeps({ requestAdvice: async () => failure }),
+    );
+    expect(await response.json()).toEqual({ error: "advisor_busy" });
   });
 });
