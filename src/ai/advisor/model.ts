@@ -1,14 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { isAdvice, type Advice } from "./advice";
 import type { AdviceRequest } from "./types";
 import { retrieveWikiEntries } from "./wiki";
 
-export interface Advice {
-  readonly recommendationIndex: number;
-  readonly alternativeIndex: number;
-  readonly whyAlternativeWorse: string;
-  readonly explanation: string;
-  readonly concept: string;
-}
+export type { Advice } from "./advice";
 
 export type AdviceModelErrorCode = "advisor_busy" | "model_timeout" | "model_error";
 
@@ -82,17 +77,7 @@ export function parseAdvice(text: string, candidateCount: number): Advice | null
   } catch {
     return null;
   }
-  if (typeof parsed !== "object" || parsed === null) return null;
-  const advice = parsed as Advice;
-  const validIndex = (value: number): boolean =>
-    Number.isInteger(value) && value >= 0 && value < candidateCount;
-  if (!validIndex(advice.recommendationIndex)) return null;
-  if (!validIndex(advice.alternativeIndex)) return null;
-  if (advice.alternativeIndex === advice.recommendationIndex) return null;
-  if (typeof advice.whyAlternativeWorse !== "string") return null;
-  if (typeof advice.explanation !== "string") return null;
-  if (typeof advice.concept !== "string") return null;
-  return advice;
+  return isAdvice(parsed, candidateCount) ? parsed : null;
 }
 
 export function mapModelError(error: unknown): AdviceModelResult {
