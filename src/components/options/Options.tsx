@@ -24,6 +24,7 @@ import {
   readStoredPlayerKey,
   storePlayerKey,
 } from "../../ai/advisor/playerKey";
+import KeyStorageDisclosure from "../game/KeyStorageDisclosure";
 import { GET_KEY_URL } from "../game/PlayerKeyForm";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
@@ -183,6 +184,10 @@ function Options({
                     <button
                       className="options-button options-button--destructive"
                       onClick={() => {
+                        const confirmed = window.confirm(
+                          t("options.advisorKeyRemoveConfirm"),
+                        );
+                        if (!confirmed) return;
                         clearPlayerKey();
                         setStoredKey(null);
                       }}
@@ -229,6 +234,7 @@ function Options({
                 >
                   {t("advisor.keyLink")}
                 </a>
+                <KeyStorageDisclosure />
               </div>
               <button
                 className="options-button options-button--destructive"

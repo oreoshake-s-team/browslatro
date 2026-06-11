@@ -81,6 +81,7 @@ export const haw: LocaleMessages = {
     advisorKey: "Coach API key",
     advisorKeyReplace: "Replace",
     advisorKeyRemove: "Remove",
+    advisorKeyRemoveConfirm: "Remove your saved API key from this browser?",
     newGame: "Pāʻani hou",
     newGameConfirm: "Start a new game? This will end your current run.",
     close: "Pani",
@@ -233,6 +234,13 @@ export const haw: LocaleMessages = {
     keyStep2: "Add billing under Plans & billing",
     keyStep3: "Create a key under API Keys and paste it here",
     keyLink: "Get an API key \u2192",
+    keyStorageTitle: "How your key is handled",
+    keyStorageLocal:
+      "Stored unencrypted in this browser's local storage \u2014 it stays until you remove it.",
+    keyStorageProxy:
+      "Each coaching request sends it to our server, which forwards it to Anthropic. It never goes straight from your browser to Anthropic.",
+    keyStorageCaution:
+      "Anyone who can use this browser or device can read it. Prefer a dedicated key with a low spend limit, remove it on shared machines, and revoke it from the Anthropic console if it's ever exposed.",
   },
   suits: {
     spades: "Spades",

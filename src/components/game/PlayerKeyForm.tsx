@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { storePlayerKey } from "../../ai/advisor/playerKey";
+import KeyStorageDisclosure from "./KeyStorageDisclosure";
 import "./PlayerKeyForm.css";
 
 export const GET_KEY_URL = "https://console.anthropic.com/settings/keys";
@@ -61,6 +62,7 @@ export default function PlayerKeyForm({
         <li>{t("advisor.keyStep2")}</li>
         <li>{t("advisor.keyStep3")}</li>
       </ol>
+      <KeyStorageDisclosure />
       <a
         className="player-key-link"
         href={GET_KEY_URL}

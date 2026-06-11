@@ -44,4 +44,11 @@ describe("PlayerKeyForm", () => {
       "https://console.anthropic.com/settings/keys",
     );
   });
+
+  test("discloses how the key is stored and proxied", () => {
+    render(<PlayerKeyForm onSaved={vi.fn()} />);
+    expect(screen.getByTestId("key-storage-disclosure")).toHaveTextContent(
+      "local storage",
+    );
+  });
 });
