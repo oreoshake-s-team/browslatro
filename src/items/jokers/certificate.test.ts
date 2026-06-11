@@ -1,5 +1,7 @@
 // @vitest-environment node
 import {
+  createBlueprintJoker,
+  createBrainstormJoker,
   createCertificateJoker,
   createJokerCatalog,
   sealedCardsOnRoundBeginFromJokers,
@@ -30,5 +32,23 @@ describe("Certificate", () => {
     expect(
       sealedCardsOnRoundBeginFromJokers([createJokerCatalog()[0]]),
     ).toBe(0);
+  });
+
+  test("Blueprint copying Certificate adds a second sealed card on round begin", () => {
+    expect(
+      sealedCardsOnRoundBeginFromJokers([createBlueprintJoker(), createCertificateJoker()]),
+    ).toBe(2);
+  });
+
+  test("Brainstorm copying Certificate adds a second sealed card on round begin", () => {
+    expect(
+      sealedCardsOnRoundBeginFromJokers([createCertificateJoker(), createBrainstormJoker()]),
+    ).toBe(2);
+  });
+
+  test("Blueprint with no right neighbor contributes nothing (negative)", () => {
+    expect(
+      sealedCardsOnRoundBeginFromJokers([createCertificateJoker(), createBlueprintJoker()]),
+    ).toBe(1);
   });
 });
