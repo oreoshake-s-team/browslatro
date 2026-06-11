@@ -1,13 +1,9 @@
+import type { AdviceErrorCode } from "./errors";
+import { requestAdvice, type AdviceResult } from "./model";
 import { SlidingWindowRateLimiter } from "./rateLimit";
-import { parseAdviceRequest } from "./validate";
+import { parseAdviceRequest, type AdviceRequest } from "./validate";
 
-export type AdviceErrorCode =
-  | "rate_limited"
-  | "advisor_busy"
-  | "payload_too_large"
-  | "invalid_json"
-  | "invalid_request"
-  | "model_not_configured";
+export type AdviseFn = (request: AdviceRequest) => Promise<AdviceResult>;
 
 export interface AdviceHandlerConfig {
   readonly perIpLimit: number;
@@ -49,6 +45,7 @@ function clientKey(request: Request): string {
 
 export function createAdviceHandler(
   config: AdviceHandlerConfig = DEFAULT_ADVICE_CONFIG,
+  advise: AdviseFn = requestAdvice,
 ): (request: Request) => Promise<Response> {
   const perIpLimiter = new SlidingWindowRateLimiter({
     limit: config.perIpLimit,
@@ -87,7 +84,14 @@ export function createAdviceHandler(
     if (!parsed.ok) {
       return errorResponse(400, "invalid_request", { detail: parsed.error });
     }
-    return errorResponse(501, "model_not_configured");
+    const result = await advise(parsed.value);
+    if (!result.ok) {
+      return errorResponse(result.status, result.code);
+    }
+    return new Response(JSON.stringify({ advice: result.advice }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
   };
 }
 
