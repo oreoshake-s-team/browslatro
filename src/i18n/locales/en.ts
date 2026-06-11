@@ -207,6 +207,7 @@ export const en = {
     autopilotApprove: "Approve move",
     autopilotStop: "Stop suggesting",
     autopilotExplain: "Explain this move",
+    autopilotAskAi: "Ask the AI",
     autopilotExplainError: "The coach couldn't explain this move right now.",
     autopilotPlayProposal: "Play {{hand}}",
     autopilotDiscardProposal: "Discard the selected cards",

@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from "react";
 import { useGame, type GameState } from "../../store/game";
-import type { HandOption } from "../getHandOptions";
+import { getHandOptions, type HandOption } from "../getHandOptions";
 import { toModelState } from "../modelState";
 import { fetchAdvice, type AdviceClientErrorCode } from "./client";
-import { toModelStateInput } from "./snapshot";
+import { toModelStateInput, toSimulatePlayInput } from "./snapshot";
 
 export type MoveExplanationState =
   | { readonly phase: "idle" }
@@ -23,6 +23,7 @@ export interface MoveExplanationDeps {
 export interface UseMoveExplanationResult {
   readonly state: MoveExplanationState;
   readonly explain: (proposal: HandOption) => Promise<void>;
+  readonly suggestMove: () => Promise<HandOption | null>;
   readonly reset: () => void;
 }
 
@@ -62,10 +63,37 @@ export function useMoveExplanation(
     [deps],
   );
 
+  const suggestMove = useCallback(async (): Promise<HandOption | null> => {
+    const { fetchAdviceFn, getState } = deps ?? defaultDeps();
+    const game = getState();
+    const candidates = getHandOptions(toSimulatePlayInput(game));
+    if (candidates.length === 0) return null;
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+    setState({ phase: "loading" });
+    const modelState = toModelState(toModelStateInput(game));
+    const result = await fetchAdviceFn(modelState, candidates);
+    if (requestIdRef.current !== requestId) return null;
+    if (!result.ok) {
+      setState({
+        phase: "error",
+        code: result.code,
+        retryAfterSeconds: result.retryAfterSeconds,
+      });
+      return null;
+    }
+    setState({
+      phase: "ready",
+      explanation: result.advice.explanation,
+      concept: result.advice.concept,
+    });
+    return candidates[result.advice.recommendationIndex] ?? null;
+  }, [deps]);
+
   const reset = useCallback((): void => {
     requestIdRef.current += 1;
     setState({ phase: "idle" });
   }, []);
 
-  return { state, explain, reset };
+  return { state, explain, suggestMove, reset };
 }

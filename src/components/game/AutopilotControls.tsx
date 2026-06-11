@@ -15,6 +15,8 @@ export interface AutopilotControlsProps {
   readonly onApprove: () => void;
   readonly onStop: () => void;
   readonly onExplain: () => void;
+  readonly onAskAi: () => void;
+  readonly onRetry: () => void;
 }
 
 function describeProposal(t: TFunction, proposal: HandOption): string {
@@ -92,6 +94,8 @@ export default function AutopilotControls({
   onApprove,
   onStop,
   onExplain,
+  onAskAi,
+  onRetry,
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
   return (
@@ -140,12 +144,22 @@ export default function AutopilotControls({
             {t("advisor.autopilotExplain")}
           </button>
         )}
+        {proposal !== null && (
+          <button
+            className="btn autopilot-askai-button"
+            onClick={onAskAi}
+            disabled={explanation.phase === "loading"}
+          >
+            <span aria-hidden="true">🤖 </span>
+            {t("advisor.autopilotAskAi")}
+          </button>
+        )}
         <button className="btn autopilot-stop-button" onClick={onStop}>
           <span aria-hidden="true">🛑 </span>
           {t("advisor.autopilotStop")}
         </button>
       </div>
-      {renderExplanation(t, explanation, onExplain)}
+      {renderExplanation(t, explanation, onRetry)}
     </div>
   );
 }
