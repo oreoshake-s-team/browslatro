@@ -193,6 +193,13 @@ export const haw: LocaleMessages = {
   game: {
     submitHand: "Submit Hand",
   },
+  devMenu: {
+    humanPlayLog: "Human play log",
+    recordedDecisions_one: "{{count}} recorded decision",
+    recordedDecisions_other: "{{count}} recorded decisions",
+    exportLog: "Export log",
+    clearLog: "Clear log",
+  },
   advisor: {
     open: "Advisor",
     title: "Coach",

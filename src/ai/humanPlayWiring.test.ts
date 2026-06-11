@@ -1,0 +1,121 @@
+import { beforeEach, describe, expect, test } from "vitest";
+import type { Card } from "../cards/types";
+import { useGame } from "../store/game";
+import { createHumanPlayLog, type HumanPlayLog, type LogStorage } from "./humanPlayLog";
+import { captureHumanDecision } from "./humanPlayWiring";
+
+function memoryStorage(): LogStorage {
+  const data = new Map<string, string>();
+  return {
+    getItem: (key) => data.get(key) ?? null,
+    setItem: (key, value) => {
+      data.set(key, value);
+    },
+    removeItem: (key) => {
+      data.delete(key);
+    },
+  };
+}
+
+function pairHand(): Card[] {
+  return [
+    { id: 1, rank: "9", suit: "hearts" },
+    { id: 2, rank: "9", suit: "spades" },
+    { id: 3, rank: "K", suit: "clubs" },
+    { id: 4, rank: "4", suit: "diamonds" },
+    { id: 5, rank: "7", suit: "hearts" },
+  ];
+}
+
+function makeLog(): HumanPlayLog {
+  return createHumanPlayLog(memoryStorage());
+}
+
+beforeEach(() => {
+  useGame.getState().resetGame();
+  useGame.getState().setDealt({ hand: pairHand(), remaining: [] });
+});
+
+describe("captureHumanDecision", () => {
+  test("records a play decision", () => {
+    const log = makeLog();
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [1, 2] },
+      { log, seed: 7 },
+    );
+    expect(recorded).toBe(true);
+  });
+
+  test("appends the play record to the log", () => {
+    const log = makeLog();
+    captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [1, 2] },
+      { log, seed: 7 },
+    );
+    expect(log.count()).toBe(1);
+  });
+
+  test("records a discard decision", () => {
+    const log = makeLog();
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "discard", cardIds: [3] },
+      { log, seed: 7 },
+    );
+    expect(recorded).toBe(true);
+  });
+
+  test("rejects an action referencing cards outside the hand", () => {
+    const log = makeLog();
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [99] },
+      { log, seed: 7 },
+    );
+    expect(recorded).toBe(false);
+  });
+
+  test("does not log a rejected action", () => {
+    const log = makeLog();
+    captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [99] },
+      { log, seed: 7 },
+    );
+    expect(log.count()).toBe(0);
+  });
+
+  test("reports a storage failure as not recorded", () => {
+    const failingLog: HumanPlayLog = {
+      append: () => false,
+      count: () => 0,
+      toJsonl: () => "",
+      clear: () => {},
+    };
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [1, 2] },
+      { log: failingLog, seed: 7 },
+    );
+    expect(recorded).toBe(false);
+  });
+
+  test("swallows recorder exceptions instead of breaking gameplay", () => {
+    const throwingLog: HumanPlayLog = {
+      append: () => {
+        throw new Error("quota");
+      },
+      count: () => 0,
+      toJsonl: () => "",
+      clear: () => {},
+    };
+    const recorded = captureHumanDecision(
+      useGame.getState(),
+      { kind: "play", cardIds: [1, 2] },
+      { log: throwingLog, seed: 7 },
+    );
+    expect(recorded).toBe(false);
+  });
+});

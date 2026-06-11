@@ -202,3 +202,16 @@
   background-color: #fab005;
   border-color: #e67700;
 }
+
+.human-play-log {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.human-play-log-count {
+  font-size: 0.85rem;
+  color: #868e96;
+}

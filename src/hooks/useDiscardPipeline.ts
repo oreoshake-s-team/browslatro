@@ -1,5 +1,6 @@
 import { useRef, type MutableRefObject } from "react";
 import { useGame } from "../store/game";
+import { captureHumanDecision } from "../ai/humanPlayWiring";
 import type { Card } from "../cards/types";
 import {
   applyBossFaceDown,
@@ -245,6 +246,11 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     if (discardingIds.size > 0) return;
     if (selectedIds.size === 0) return;
     if (remainingDiscards <= 0) return;
+
+    captureHumanDecision(useGame.getState(), {
+      kind: "discard",
+      cardIds: [...selectedIds],
+    });
 
     runDiscard(selectedIds);
     setRemainingDiscards((prev) => prev - 1);
