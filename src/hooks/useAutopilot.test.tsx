@@ -235,4 +235,33 @@ describe("useAutopilot", () => {
     await new Promise((resolve) => setTimeout(resolve, 60));
     expect(result.current.pendingProposal).toBeNull();
   });
+
+  test("setProposal replaces the pending proposal with the given move", () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    const replacement = {
+      action: "discard" as const,
+      cardIds: [3, 4],
+      notes: [],
+    };
+    act(() => result.current.setProposal(replacement));
+    expect(result.current.pendingProposal).toBe(replacement);
+  });
+
+  test("setProposal selects the move's cards", () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    act(() =>
+      result.current.setProposal({
+        action: "discard",
+        cardIds: [3, 4],
+        notes: [],
+      }),
+    );
+    expect(useGame.getState().selectedIds).toEqual(new Set([3, 4]));
+  });
 });

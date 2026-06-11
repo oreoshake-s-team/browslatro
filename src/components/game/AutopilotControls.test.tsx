@@ -34,6 +34,8 @@ function renderControls(
     onApprove?: () => void;
     onStop?: () => void;
     onExplain?: () => void;
+    onAskAi?: () => void;
+    onRetry?: () => void;
   } = {},
 ) {
   return render(
@@ -44,6 +46,8 @@ function renderControls(
       onApprove={overrides.onApprove ?? vi.fn()}
       onStop={overrides.onStop ?? vi.fn()}
       onExplain={overrides.onExplain ?? vi.fn()}
+      onAskAi={overrides.onAskAi ?? vi.fn()}
+      onRetry={overrides.onRetry ?? vi.fn()}
     />,
   );
 }
@@ -193,16 +197,38 @@ describe("AutopilotControls", () => {
     expect(screen.getByText(/key was rejected/)).toBeInTheDocument();
   });
 
-  test("saving a key from the rescue form retries the explanation", async () => {
-    const onExplain = vi.fn();
+  test("saving a key from the rescue form retries the last request", async () => {
+    const onRetry = vi.fn();
     const user = userEvent.setup();
     renderControls({
       explanation: { phase: "error", code: "invalid_player_key" },
-      onExplain,
+      onRetry,
     });
     await user.type(screen.getByTestId("player-key-input"), "sk-ant-new");
     await user.click(screen.getByRole("button", { name: /Save key/ }));
-    expect(onExplain).toHaveBeenCalledTimes(1);
+    expect(onRetry).toHaveBeenCalledTimes(1);
     expect(readStoredPlayerKey()).toBe("sk-ant-new");
+  });
+
+  test("the ask-the-AI button invokes onAskAi", async () => {
+    const onAskAi = vi.fn();
+    const user = userEvent.setup();
+    renderControls({ onAskAi });
+    await user.click(screen.getByRole("button", { name: /Ask the AI/ }));
+    expect(onAskAi).toHaveBeenCalledTimes(1);
+  });
+
+  test("does not offer ask-the-AI while the model is downloading", () => {
+    renderControls({ proposal: null, modelProgress: { loaded: 0, total: null } });
+    expect(
+      screen.queryByRole("button", { name: /Ask the AI/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  test("disables the ask-the-AI button while a request is loading", () => {
+    renderControls({ explanation: { phase: "loading" } });
+    expect(
+      screen.getByRole("button", { name: /Ask the AI/ }),
+    ).toBeDisabled();
   });
 });

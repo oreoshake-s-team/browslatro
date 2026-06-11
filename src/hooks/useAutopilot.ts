@@ -27,6 +27,7 @@ export interface AutopilotControls {
   readonly modelProgress: DownloadProgress | null;
   readonly approve: () => void;
   readonly stop: () => void;
+  readonly setProposal: (option: HandOption) => void;
 }
 
 function defaultDeps(): AutopilotDeps {
@@ -135,5 +136,11 @@ export function useAutopilot(
     onStopRef.current();
   }, []);
 
-  return { pendingProposal, modelProgress, approve, stop };
+  const setProposal = useCallback((option: HandOption): void => {
+    const { getState } = depsRef.current ?? defaultDeps();
+    getState().setSelectedIds(new Set(option.cardIds));
+    setPendingProposal(option);
+  }, []);
+
+  return { pendingProposal, modelProgress, approve, stop, setProposal };
 }

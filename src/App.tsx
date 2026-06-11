@@ -204,9 +204,28 @@ function App() {
   );
   const autopilotExplanation = useMoveExplanation();
   const autopilotProposal = autopilot.pendingProposal;
+  const skipExplanationResetRef = useRef(false);
+  const lastAdviceRef = useRef<() => void>(() => {});
   useEffect(() => {
+    if (skipExplanationResetRef.current) {
+      skipExplanationResetRef.current = false;
+      return;
+    }
     autopilotExplanation.reset();
   }, [autopilotProposal, autopilotExplanation.reset]);
+  const explainCurrentMove = (): void => {
+    if (autopilot.pendingProposal !== null) {
+      void autopilotExplanation.explain(autopilot.pendingProposal);
+    }
+  };
+  const askAiForMove = (): void => {
+    void autopilotExplanation.suggestMove().then((picked) => {
+      if (picked !== null) {
+        skipExplanationResetRef.current = true;
+        autopilot.setProposal(picked);
+      }
+    });
+  };
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
       applyGainedTag,
@@ -451,10 +470,14 @@ function App() {
         onApproveAutopilot={autopilot.approve}
         onStopAutopilot={autopilot.stop}
         onExplainAutopilot={() => {
-          if (autopilot.pendingProposal !== null) {
-            void autopilotExplanation.explain(autopilot.pendingProposal);
-          }
+          lastAdviceRef.current = explainCurrentMove;
+          explainCurrentMove();
         }}
+        onAskAiAutopilot={() => {
+          lastAdviceRef.current = askAiForMove;
+          askAiForMove();
+        }}
+        onRetryAutopilot={() => lastAdviceRef.current()}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&
