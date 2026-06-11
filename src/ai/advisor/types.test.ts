@@ -1,7 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { adviceRequestFixture, candidatesFixture } from "./test-helpers";
-import { MAX_CANDIDATES, parseAdviceRequest } from "./types";
+import {
+  adviceFixture,
+  adviceRequestFixture,
+  candidatesFixture,
+} from "./test-helpers";
+import { MAX_CANDIDATES, parseAdvice, parseAdviceRequest } from "./types";
 
 describe("parseAdviceRequest", () => {
   test("accepts a valid request body", () => {
@@ -54,3 +58,54 @@ describe("parseAdviceRequest", () => {
 function modelStateOnly(): unknown {
   return adviceRequestFixture().state;
 }
+
+describe("parseAdvice", () => {
+  test("accepts valid advice", () => {
+    expect(parseAdvice(adviceFixture(), 2)).toEqual(adviceFixture());
+  });
+
+  test("accepts a null alternative", () => {
+    const advice = {
+      ...adviceFixture(),
+      alternativeIndex: null,
+      whyAlternativeWorse: null,
+    };
+    expect(parseAdvice(advice, 2)).toEqual(advice);
+  });
+
+  test("rejects a non-object value", () => {
+    expect(parseAdvice("nope", 2)).toBeNull();
+  });
+
+  test("rejects an out-of-range recommendation index", () => {
+    expect(
+      parseAdvice({ ...adviceFixture(), recommendationIndex: 2 }, 2),
+    ).toBeNull();
+  });
+
+  test("rejects a negative recommendation index", () => {
+    expect(
+      parseAdvice({ ...adviceFixture(), recommendationIndex: -1 }, 2),
+    ).toBeNull();
+  });
+
+  test("rejects a fractional recommendation index", () => {
+    expect(
+      parseAdvice({ ...adviceFixture(), recommendationIndex: 0.5 }, 2),
+    ).toBeNull();
+  });
+
+  test("rejects an out-of-range alternative index", () => {
+    expect(
+      parseAdvice({ ...adviceFixture(), alternativeIndex: 7 }, 2),
+    ).toBeNull();
+  });
+
+  test("rejects a non-string explanation", () => {
+    expect(parseAdvice({ ...adviceFixture(), explanation: 5 }, 2)).toBeNull();
+  });
+
+  test("rejects a missing concept", () => {
+    expect(parseAdvice({ ...adviceFixture(), concept: undefined }, 2)).toBeNull();
+  });
+});

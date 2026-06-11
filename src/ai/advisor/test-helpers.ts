@@ -1,6 +1,6 @@
 import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
-import type { AdviceRequest } from "./types";
+import type { Advice, AdviceRequest } from "./types";
 
 export function modelStateFixture(): ModelState {
   return {
@@ -77,6 +77,16 @@ export function candidatesFixture(): ReadonlyArray<HandOption> {
 
 export function adviceRequestFixture(): AdviceRequest {
   return { state: modelStateFixture(), candidates: candidatesFixture() };
+}
+
+export function adviceFixture(): Advice {
+  return {
+    recommendationIndex: 0,
+    alternativeIndex: 1,
+    whyAlternativeWorse: "Discarding forfeits the guaranteed pair score.",
+    explanation: "Play the pair of nines to bank the guaranteed 56 chips.",
+    concept: "Bank guaranteed score when it clears the blind.",
+  };
 }
 
 export function postAdvice(body: unknown, ip = "203.0.113.7"): Request {

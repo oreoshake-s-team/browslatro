@@ -1,19 +1,26 @@
+import { requestAdviceText, type ClaudeAdviceResult } from "./claude";
 import { createRateLimiter, type RateLimiter } from "./rateLimit";
-import { parseAdviceRequest } from "./types";
+import { parseAdvice, parseAdviceRequest, type AdviceRequest } from "./types";
 
 export interface AdviceHandlerDeps {
   readonly ipLimiter: RateLimiter;
   readonly globalLimiter: RateLimiter;
   readonly getApiKey: () => string | undefined;
+  readonly requestAdvice: (
+    request: AdviceRequest,
+    apiKey: string,
+  ) => Promise<ClaudeAdviceResult>;
 }
 
 export const IP_RATE_LIMIT = { limit: 10, windowMs: 60_000 };
 export const GLOBAL_RATE_LIMIT = { limit: 100, windowMs: 60_000 };
+export const MAX_BODY_CHARS = 60_000;
 
 const defaultDeps: AdviceHandlerDeps = {
   ipLimiter: createRateLimiter(IP_RATE_LIMIT),
   globalLimiter: createRateLimiter(GLOBAL_RATE_LIMIT),
   getApiKey: () => process.env.ANTHROPIC_API_KEY,
+  requestAdvice: requestAdviceText,
 };
 
 function json(
@@ -53,14 +60,38 @@ export async function handleAdviceRequest(
   if (!perIp.allowed) return rateLimited(perIp.retryAfterSeconds);
   const global = deps.globalLimiter.check("global");
   if (!global.allowed) return rateLimited(global.retryAfterSeconds);
+  const raw = await request.text();
+  if (raw.length > MAX_BODY_CHARS) {
+    return json(413, { error: "payload_too_large" });
+  }
   let body: unknown;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
     return json(400, { error: "invalid_json" });
   }
-  if (parseAdviceRequest(body) === null) {
+  const adviceRequest = parseAdviceRequest(body);
+  if (adviceRequest === null) {
     return json(400, { error: "invalid_request" });
   }
-  return json(501, { error: "not_implemented" });
+  let result: ClaudeAdviceResult;
+  try {
+    result = await deps.requestAdvice(adviceRequest, apiKey);
+  } catch {
+    return json(502, { error: "upstream_error" });
+  }
+  if (result.kind === "refusal") {
+    return json(502, { error: "refusal" });
+  }
+  let modelOutput: unknown;
+  try {
+    modelOutput = JSON.parse(result.text);
+  } catch {
+    return json(502, { error: "invalid_advice" });
+  }
+  const advice = parseAdvice(modelOutput, adviceRequest.candidates.length);
+  if (advice === null) {
+    return json(502, { error: "invalid_advice" });
+  }
+  return json(200, { advice });
 }

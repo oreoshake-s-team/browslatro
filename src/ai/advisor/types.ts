@@ -29,3 +29,40 @@ export function parseAdviceRequest(body: unknown): AdviceRequest | null {
   if (!body.candidates.every(isCandidate)) return null;
   return body as unknown as AdviceRequest;
 }
+
+export interface Advice {
+  readonly recommendationIndex: number;
+  readonly alternativeIndex: number | null;
+  readonly whyAlternativeWorse: string | null;
+  readonly explanation: string;
+  readonly concept: string;
+}
+
+function isIndex(value: unknown, count: number): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value < count
+  );
+}
+
+export function parseAdvice(
+  value: unknown,
+  candidateCount: number,
+): Advice | null {
+  if (!isRecord(value)) return null;
+  const altOk =
+    value.alternativeIndex === null ||
+    isIndex(value.alternativeIndex, candidateCount);
+  const whyOk =
+    value.whyAlternativeWorse === null ||
+    typeof value.whyAlternativeWorse === "string";
+  const ok =
+    isIndex(value.recommendationIndex, candidateCount) &&
+    altOk &&
+    whyOk &&
+    typeof value.explanation === "string" &&
+    typeof value.concept === "string";
+  return ok ? (value as unknown as Advice) : null;
+}
