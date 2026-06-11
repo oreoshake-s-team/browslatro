@@ -6,7 +6,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from dataset import load_all, load_decisions, split_by_seed
+from dataset import load_all, load_decisions, load_shop_decisions, split_by_seed
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
 
@@ -87,6 +87,84 @@ class RunEventSkipTest(unittest.TestCase):
             path = write_jsonl(directory, "future.jsonl", [record])
             with self.assertRaises(ValueError):
                 load_all([path])
+
+
+def shop_record(**kwargs):
+    base = {
+        "schemaVersion": 2,
+        "kind": "purchase",
+        "runSeed": 42,
+        "ante": 1,
+        "round": 3,
+        "blind": 0,
+        "money": 8,
+        "item": {"itemType": "joker", "id": "jolly", "name": "Jolly Joker", "cost": 5},
+        "offers": [{"itemType": "joker", "id": "jolly", "name": "Jolly Joker", "cost": 5}],
+    }
+    base.update(kwargs)
+    return base
+
+
+class LoadShopDecisionsTest(unittest.TestCase):
+    def test_loads_purchase_record(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record()])
+            self.assertEqual(len(load_shop_decisions(path)), 1)
+
+    def test_skips_hand_decision_records(self):
+        record = fixture_record()
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "mixed.jsonl", [record, shop_record()])
+            self.assertEqual(len(load_shop_decisions(path)), 1)
+
+    def test_skips_non_shop_run_events(self):
+        non_shop = dict(shop_record(), kind="consumable-use")
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "other.jsonl", [non_shop])
+            self.assertEqual(load_shop_decisions(path), [])
+
+    def test_rejects_unexpected_schema_version(self):
+        record = dict(shop_record(), schemaVersion=3)
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "future.jsonl", [record])
+            with self.assertRaises(ValueError):
+                load_shop_decisions(path)
+
+    def test_applies_weight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record()])
+            for _, _, _, weight in load_shop_decisions(path, weight=5.0):
+                self.assertEqual(weight, 5.0)
+
+    def test_loads_reroll_record(self):
+        record = shop_record(
+            kind="reroll",
+            cost=1,
+            offers=[{"itemType": "planet", "id": "mercury", "name": "Mercury", "cost": 3}],
+        )
+        del record["item"]
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "reroll.jsonl", [record])
+            self.assertEqual(len(load_shop_decisions(path)), 1)
+
+    def test_loads_pack_pick_record(self):
+        record = {
+            "schemaVersion": 2,
+            "kind": "pack-pick",
+            "runSeed": 7,
+            "ante": 1,
+            "round": 3,
+            "blind": 0,
+            "money": 5,
+            "pool": "arcana",
+            "variant": "standard",
+            "options": [{"optionType": "tarot", "id": "fool", "name": "The Fool"}],
+            "pickedIndex": 0,
+            "picksRemaining": 1,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "pack.jsonl", [record])
+            self.assertEqual(len(load_shop_decisions(path)), 1)
 
 
 if __name__ == "__main__":

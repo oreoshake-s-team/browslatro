@@ -391,6 +391,7 @@ export default function Shop({
         data-card-edition={cardEdition}
         data-card-seal={cardSeal}
         data-pack-pool={offer.kind === "pack" ? offer.pack.pool : undefined}
+        data-pack-variant={offer.kind === "pack" ? offer.pack.variant : undefined}
       >
         <span
           className={`shop-offer-kind shop-offer-kind-${offer.kind}`}

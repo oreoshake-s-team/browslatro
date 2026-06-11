@@ -155,3 +155,70 @@ def encode_decision(record):
         for candidate in record["candidates"]
     ]
     return inputs, record["chosenIndex"]
+
+
+SHOP_ENCODING_VERSION = 1
+SHOP_ITEM_TYPES = ["joker", "planet", "tarot", "spectral", "playing-card", "pack", "voucher"]
+SHOP_CONTEXT_FEATURES = 4
+SHOP_CANDIDATE_FEATURES = len(SHOP_ITEM_TYPES) + 5
+SHOP_INPUT_FEATURES = SHOP_CONTEXT_FEATURES + SHOP_CANDIDATE_FEATURES
+
+
+def _encode_shop_context(record):
+    return [
+        record["money"] / 20.0,
+        record["ante"] / 8.0,
+        record["round"] / 24.0,
+        record.get("picksRemaining", 0) / 5.0,
+    ]
+
+
+def _encode_shop_candidate(item_type, cost, money, *, is_reroll=False, is_leave=False, is_skip=False):
+    return (
+        _one_hot(item_type, SHOP_ITEM_TYPES)
+        + [cost / 20.0, 1.0 if cost <= money else 0.0]
+        + [1.0 if is_reroll else 0.0, 1.0 if is_leave else 0.0, 1.0 if is_skip else 0.0]
+    )
+
+
+def encode_shop_decision(record):
+    """Returns (per-candidate input vectors, chosen_index) for a shop/pack RunEventRecord.
+
+    purchase  → buy-candidates for each offer + leave; chosen = index of bought offer
+    reroll    → buy-candidates for each rejected offer + reroll + leave; chosen = reroll index
+    pack-pick → pick-candidates for each option + skip; chosen = pickedIndex or skip
+    """
+    ctx = _encode_shop_context(record)
+    kind = record["kind"]
+    money = record["money"]
+
+    if kind == "purchase":
+        offers = record["offers"]
+        candidates = [
+            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money) for o in offers
+        ]
+        candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
+        item = record["item"]
+        chosen = next((i for i, o in enumerate(offers) if o["id"] == item["id"]), -1)
+        return candidates, chosen
+
+    if kind == "reroll":
+        offers = record["offers"]
+        candidates = [
+            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money) for o in offers
+        ]
+        candidates.append(ctx + _encode_shop_candidate(None, record["cost"], money, is_reroll=True))
+        candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
+        return candidates, len(offers)
+
+    if kind == "pack-pick":
+        options = record["options"]
+        candidates = [
+            ctx + _encode_shop_candidate(o["optionType"], 0, money) for o in options
+        ]
+        candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_skip=True))
+        picked = record["pickedIndex"]
+        chosen = picked if picked is not None else len(options)
+        return candidates, chosen
+
+    return [], -1
