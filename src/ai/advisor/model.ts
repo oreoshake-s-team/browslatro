@@ -1,7 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { isAdvice, type Advice } from "./advice.js";
-import type { AdviceRequest } from "./types";
-import { retrieveWikiEntries } from "./wiki.js";
+import type {
+  AdviceRequest,
+  HandAdviceRequest,
+  ShopAdviceRequest,
+} from "./types";
+import {
+  retrieveShopWikiEntries,
+  retrieveWikiEntries,
+  type JokerRef,
+} from "./wiki.js";
 
 export type { Advice } from "./advice";
 
@@ -45,7 +53,7 @@ export const ADVICE_SCHEMA = {
 
 const SYSTEM_PROMPT = [
   "You are an educational Balatro coach. The player sees engine-vetted candidate",
-  "actions, each already scored by the game engine. Your job is to pick the best",
+  "actions. Your job is to pick the best",
   "candidate by index, explain why in plain language, name the most tempting",
   "alternative and why it is worse, and tie the choice to one transferable concept.",
   "Never invent numbers: every chip, mult, score, or money figure you mention must",
@@ -53,26 +61,62 @@ const SYSTEM_PROMPT = [
   "marginally weaker one teaches a clearly more valuable lesson, and say so when you do.",
 ].join(" ");
 
-export function buildUserMessage(request: AdviceRequest): string {
-  const candidates = request.candidates.map((candidate, index) => ({
-    index,
-    ...candidate,
-  }));
+function indexedCandidates(request: AdviceRequest): string {
+  return JSON.stringify(
+    request.candidates.map((candidate, index) => ({ index, ...candidate })),
+  );
+}
+
+function shopJokerRefs(request: ShopAdviceRequest): ReadonlyArray<JokerRef> {
+  const offered = request.candidates.flatMap((candidate) =>
+    candidate.action === "buy" && candidate.item.itemType === "joker"
+      ? [{ id: candidate.item.id, name: candidate.item.name }]
+      : [],
+  );
+  return [...request.shop.jokers, ...offered];
+}
+
+function pushWikiLines(lines: string[], wiki: ReadonlyArray<{ title: string; text: string }>): void {
+  if (wiki.length === 0) return;
+  lines.push("Reference notes:");
+  for (const entry of wiki) {
+    lines.push(`- ${entry.title}: ${entry.text}`);
+  }
+}
+
+function buildShopMessage(request: ShopAdviceRequest): string {
+  const lines = [
+    "The player is in the shop between rounds, deciding what to do with their money.",
+    "Shop state:",
+    JSON.stringify(request.shop),
+  ];
+  pushWikiLines(lines, retrieveShopWikiEntries(shopJokerRefs(request)));
+  lines.push(
+    "Candidate shop actions (choose by index):",
+    indexedCandidates(request),
+  );
+  return lines.join("\n");
+}
+
+function buildHandMessage(request: HandAdviceRequest): string {
   const lines = ["Game state:", JSON.stringify(request.state)];
   if (request.state.jokers.length > 0) {
     lines.push(
       "Joker order matters: jokers trigger left to right, in the order listed.",
     );
   }
-  const wiki = retrieveWikiEntries(request.state);
-  if (wiki.length > 0) {
-    lines.push("Reference notes:");
-    for (const entry of wiki) {
-      lines.push(`- ${entry.title}: ${entry.text}`);
-    }
-  }
-  lines.push("Candidate actions (choose by index):", JSON.stringify(candidates));
+  pushWikiLines(lines, retrieveWikiEntries(request.state));
+  lines.push(
+    "Candidate actions (choose by index):",
+    indexedCandidates(request),
+  );
   return lines.join("\n");
+}
+
+export function buildUserMessage(request: AdviceRequest): string {
+  return request.context === "shop"
+    ? buildShopMessage(request)
+    : buildHandMessage(request);
 }
 
 export function parseAdvice(text: string, candidateCount: number): Advice | null {

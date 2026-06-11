@@ -9,7 +9,11 @@ import {
 } from "./handler";
 import type { Advice, AdviceModelResult } from "./model";
 import { createRateLimiter } from "./rateLimit";
-import { adviceRequestFixture, postAdvice } from "./test-helpers";
+import {
+  adviceRequestFixture,
+  postAdvice,
+  shopAdviceRequestFixture,
+} from "./test-helpers";
 
 function adviceFixture(): Advice {
   return {
@@ -77,6 +81,14 @@ describe("handleAdviceRequest", () => {
       makeDeps(),
     );
     expect(response.status).toBe(400);
+  });
+
+  test("accepts a shop-context request", async () => {
+    const response = await handleAdviceRequest(
+      postAdvice(shopAdviceRequestFixture()),
+      makeDeps(),
+    );
+    expect(response.status).toBe(200);
   });
 
   test("rate limits a client that exceeds the per-ip limit", async () => {
