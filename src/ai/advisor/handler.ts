@@ -1,5 +1,6 @@
+import { createAdviceRateLimiter } from "./durableRateLimit.js";
 import { requestAdvice, type AdviceModelResult } from "./model.js";
-import { createRateLimiter, type RateLimiter } from "./rateLimit.js";
+import type { RateLimiter } from "./rateLimit.js";
 import { parseAdviceRequest, type AdviceRequest } from "./types.js";
 
 export interface AdviceHandlerDeps {
@@ -17,8 +18,8 @@ export const GLOBAL_RATE_LIMIT = { limit: 100, windowMs: 60_000 };
 export const MAX_BODY_CHARS = 60_000;
 
 const defaultDeps: AdviceHandlerDeps = {
-  ipLimiter: createRateLimiter(IP_RATE_LIMIT),
-  globalLimiter: createRateLimiter(GLOBAL_RATE_LIMIT),
+  ipLimiter: createAdviceRateLimiter(IP_RATE_LIMIT, "ip"),
+  globalLimiter: createAdviceRateLimiter(GLOBAL_RATE_LIMIT, "global"),
   getApiKey: () => process.env.ANTHROPIC_API_KEY,
   requestAdvice,
 };
@@ -56,9 +57,9 @@ export async function handleAdviceRequest(
   if (apiKey === undefined || apiKey === "") {
     return json(503, { error: "not_configured" });
   }
-  const perIp = deps.ipLimiter.check(clientIp(request));
+  const perIp = await deps.ipLimiter.check(clientIp(request));
   if (!perIp.allowed) return rateLimited(perIp.retryAfterSeconds);
-  const global = deps.globalLimiter.check("global");
+  const global = await deps.globalLimiter.check("global");
   if (!global.allowed) return rateLimited(global.retryAfterSeconds);
   const raw = await request.text();
   if (raw.length > MAX_BODY_CHARS) {
