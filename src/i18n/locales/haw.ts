@@ -203,6 +203,7 @@ export const haw: LocaleMessages = {
     exportLog: "Export log",
     kind_hand: "hands",
     kind_purchase: "purchases",
+    kind_reroll: "rerolls",
     "kind_consumable-use": "consumables",
     "kind_joker-sell": "sells",
     "kind_blind-skip": "skips",

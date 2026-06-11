@@ -358,6 +358,18 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     const s = get();
     if (!s.shopOffers) return;
     if (s.money < cost) return;
+    captureRunEvent(s, {
+      kind: "reroll",
+      cost,
+      offers: s.shopOffers
+        .filter((candidate) => !candidate.sold)
+        .map((candidate) =>
+          shopItemSnapshot(
+            candidate,
+            applyShopDiscount(candidate.price, s.ownedVoucherIds),
+          ),
+        ),
+    });
     s.spend(cost);
     s.setJokers((prev) => applyShopRerollToJokerStates(prev));
     const freshItems = pickShopItemOffers({

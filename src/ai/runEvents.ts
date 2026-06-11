@@ -6,6 +6,7 @@ export const RUN_EVENT_SCHEMA_VERSION = 2;
 
 export type RunEventKind =
   | "purchase"
+  | "reroll"
   | "consumable-use"
   | "joker-sell"
   | "blind-skip";
@@ -30,6 +31,12 @@ export interface ShopItemSnapshot {
 export interface PurchaseEvent {
   readonly kind: "purchase";
   readonly item: ShopItemSnapshot;
+  readonly offers: ReadonlyArray<ShopItemSnapshot>;
+}
+
+export interface RerollEvent {
+  readonly kind: "reroll";
+  readonly cost: number;
   readonly offers: ReadonlyArray<ShopItemSnapshot>;
 }
 
@@ -61,6 +68,7 @@ export interface BlindSkipEvent {
 
 export type RunEvent =
   | PurchaseEvent
+  | RerollEvent
   | ConsumableUseEvent
   | JokerSellEvent
   | BlindSkipEvent;

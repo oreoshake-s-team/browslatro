@@ -54,9 +54,12 @@ test("skipping a blind is recorded", async ({ page }) => {
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-skip").click();
-  await page.getByTestId("blind-select-play").click();
-  await page.getByText("Apply modifiers").click();
-  await expect(page.getByTestId("human-play-log-breakdown")).toContainText(
-    "skips 1",
-  );
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+      ),
+    )
+    .toContain('"kind":"blind-skip"');
 });

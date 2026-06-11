@@ -58,6 +58,35 @@ describe("run event recording in store actions", () => {
     expect(humanPlayLog().count()).toBe(0);
   });
 
+
+  test("rerolling the shop records a reroll with the rejected offers", () => {
+    useGame.getState().setMoney(20);
+    useGame.getState().setShopOffers([
+      {
+        kind: "joker",
+        joker: createPlusFourMultJoker(),
+        price: 5,
+        sold: false,
+      },
+    ]);
+    useGame.getState().rerollShopOffers(5);
+    expect(humanPlayLog().counts()).toEqual({ reroll: 1 });
+  });
+
+  test("an unaffordable reroll records nothing", () => {
+    useGame.getState().setMoney(2);
+    useGame.getState().setShopOffers([
+      {
+        kind: "joker",
+        joker: createPlusFourMultJoker(),
+        price: 5,
+        sold: false,
+      },
+    ]);
+    useGame.getState().rerollShopOffers(5);
+    expect(humanPlayLog().count()).toBe(0);
+  });
+
   test("buying an ante voucher records a voucher purchase", () => {
     const voucher = useGame.getState().currentAnteVouchers[0];
     if (!voucher) throw new Error("expected a seeded ante voucher");
