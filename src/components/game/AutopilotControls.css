@@ -84,16 +84,6 @@
   background-color: #ff8787;
 }
 
-.autopilot-explain-button {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-.autopilot-explain-button:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.16);
-}
-
 .autopilot-askai-button {
   background-color: rgba(132, 94, 247, 0.22);
   border-color: #845ef7;
