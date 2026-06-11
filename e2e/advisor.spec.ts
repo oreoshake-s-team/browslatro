@@ -23,7 +23,32 @@ const ADVICE_BODY = {
   },
 };
 
+async function preferWalkthrough(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    window.localStorage.setItem("browslatro:advisor-verbosity", "full");
+  });
+}
+
+test("the advisor defaults to just the move without touching the API", async ({
+  page,
+}) => {
+  let adviceCalls = 0;
+  await page.route("**/api/advice", (route) => {
+    adviceCalls += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(ADVICE_BODY),
+    });
+  });
+  await startRound(page);
+  await page.getByRole("button", { name: /Advisor/ }).click();
+  await expect(page.getByTestId("advisor-move-only")).toBeVisible();
+  expect(adviceCalls).toBe(0);
+});
+
 test("the advisor panel shows the coach's explanation", async ({ page }) => {
+  await preferWalkthrough(page);
   await page.route("**/api/advice", (route) =>
     route.fulfill({
       status: 200,
@@ -49,6 +74,7 @@ test("the advisor panel shows the coach's explanation", async ({ page }) => {
 test("the advisor degrades to the engine suggestion when the API is unavailable", async ({
   page,
 }) => {
+  await preferWalkthrough(page);
   await page.route("**/api/advice", (route) =>
     route.fulfill({
       status: 503,
@@ -64,6 +90,7 @@ test("the advisor degrades to the engine suggestion when the API is unavailable"
 });
 
 test("just-the-move verbosity skips the API and persists", async ({ page }) => {
+  await preferWalkthrough(page);
   let adviceCalls = 0;
   await page.route("**/api/advice", (route) => {
     adviceCalls += 1;

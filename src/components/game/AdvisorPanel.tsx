@@ -42,9 +42,9 @@ export type AdvisorVerbosity = "move" | "full";
 export const ADVISOR_VERBOSITY_KEY = "browslatro:advisor-verbosity";
 
 function readStoredVerbosity(): AdvisorVerbosity {
-  return window.localStorage.getItem(ADVISOR_VERBOSITY_KEY) === "move"
-    ? "move"
-    : "full";
+  return window.localStorage.getItem(ADVISOR_VERBOSITY_KEY) === "full"
+    ? "full"
+    : "move";
 }
 
 export default function AdvisorPanel({
