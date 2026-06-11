@@ -42,6 +42,7 @@ function makeDeps(extra?: Partial<AdvisorDeps>): AdvisorDeps {
 }
 
 beforeEach(() => {
+  window.localStorage.clear();
   useGame.getState().resetGame();
   useGame.getState().setDealt({ hand: pairHand(), remaining: [] });
 });
@@ -94,6 +95,55 @@ describe("AdvisorPanel", () => {
     expect(await screen.findByTestId("advisor-degraded")).toHaveTextContent(
       "explanation is unavailable",
     );
+  });
+
+  test("shows only the move when the stored verbosity is move", async () => {
+    window.localStorage.setItem("browslatro:advisor-verbosity", "move");
+    render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps()} />);
+    expect(await screen.findByTestId("advisor-move-only")).toBeInTheDocument();
+  });
+
+  test("never calls the API when the stored verbosity is move", async () => {
+    window.localStorage.setItem("browslatro:advisor-verbosity", "move");
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    render(
+      <AdvisorPanel onClose={vi.fn()} deps={makeDeps({ fetchAdviceFn })} />,
+    );
+    await screen.findByTestId("advisor-move-only");
+    expect(fetchAdviceFn).not.toHaveBeenCalled();
+  });
+
+  test("switching to just-the-move persists the preference", async () => {
+    const user = userEvent.setup();
+    render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps()} />);
+    await screen.findByText("Play the pair of nines for guaranteed value.");
+    await user.click(screen.getByRole("button", { name: "Just the move" }));
+    expect(window.localStorage.getItem("browslatro:advisor-verbosity")).toBe(
+      "move",
+    );
+  });
+
+  test("switching to just-the-move swaps the coach output for the bare move", async () => {
+    const user = userEvent.setup();
+    render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps()} />);
+    await screen.findByText("Play the pair of nines for guaranteed value.");
+    await user.click(screen.getByRole("button", { name: "Just the move" }));
+    expect(await screen.findByTestId("advisor-move-only")).toBeInTheDocument();
+  });
+
+  test("switching back to the walkthrough fetches the explanation", async () => {
+    window.localStorage.setItem("browslatro:advisor-verbosity", "move");
+    const user = userEvent.setup();
+    render(<AdvisorPanel onClose={vi.fn()} deps={makeDeps()} />);
+    await screen.findByTestId("advisor-move-only");
+    await user.click(
+      screen.getByRole("button", { name: "Walk me through it" }),
+    );
+    expect(
+      await screen.findByText("Play the pair of nines for guaranteed value."),
+    ).toBeInTheDocument();
   });
 
   test("closes via the close button", async () => {

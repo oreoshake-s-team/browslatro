@@ -197,6 +197,9 @@ export const en = {
     discardCandidate: "Discard {{cards}}",
     unavailable: "The coach's explanation is unavailable right now \u2014 this is the engine's top-ranked move.",
     noCandidates: "No legal moves to analyze right now.",
+    verbosityLabel: "Advice detail",
+    justTheMove: "Just the move",
+    walkMeThrough: "Walk me through it",
     close: "Close",
   },
   suits: {

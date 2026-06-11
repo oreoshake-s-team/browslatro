@@ -62,3 +62,27 @@ test("the advisor degrades to the engine suggestion when the API is unavailable"
   await expect(degraded).toBeVisible();
   await expect(degraded).toContainText("engine's top-ranked move");
 });
+
+test("just-the-move verbosity skips the API and persists", async ({ page }) => {
+  let adviceCalls = 0;
+  await page.route("**/api/advice", (route) => {
+    adviceCalls += 1;
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(ADVICE_BODY),
+    });
+  });
+  await startRound(page);
+  await page.getByRole("button", { name: /Advisor/ }).click();
+  await expect(
+    page.getByText("Coach says: take the strongest engine-vetted line."),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Just the move" }).click();
+  await expect(page.getByTestId("advisor-move-only")).toBeVisible();
+  const callsAfterToggle = adviceCalls;
+  await page.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: /Advisor/ }).click();
+  await expect(page.getByTestId("advisor-move-only")).toBeVisible();
+  expect(adviceCalls).toBe(callsAfterToggle);
+});

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
@@ -37,6 +37,16 @@ function describeCandidate(
   return t("advisor.discardCandidate", { cards });
 }
 
+export type AdvisorVerbosity = "move" | "full";
+
+export const ADVISOR_VERBOSITY_KEY = "browslatro:advisor-verbosity";
+
+function readStoredVerbosity(): AdvisorVerbosity {
+  return window.localStorage.getItem(ADVISOR_VERBOSITY_KEY) === "move"
+    ? "move"
+    : "full";
+}
+
 export default function AdvisorPanel({
   onClose,
   deps,
@@ -47,10 +57,16 @@ export default function AdvisorPanel({
   useEscapeToClose(onClose, true);
   useFocusTrap(overlayRef);
   const hand = useGame((s) => s.dealt.hand);
+  const [verbosity, setVerbosity] = useState<AdvisorVerbosity>(readStoredVerbosity);
 
   useEffect(() => {
-    void requestAdvice();
-  }, [requestAdvice]);
+    void requestAdvice({ explain: verbosity === "full" });
+  }, [requestAdvice, verbosity]);
+
+  const chooseVerbosity = (next: AdvisorVerbosity): void => {
+    window.localStorage.setItem(ADVISOR_VERBOSITY_KEY, next);
+    setVerbosity(next);
+  };
 
   return createPortal(
     <div
@@ -66,6 +82,26 @@ export default function AdvisorPanel({
           <span aria-hidden="true">🎓 </span>
           {t("advisor.title")}
         </h2>
+        <div
+          className="advisor-verbosity"
+          role="group"
+          aria-label={t("advisor.verbosityLabel")}
+        >
+          <button
+            className="btn advisor-verbosity-button"
+            aria-pressed={verbosity === "move"}
+            onClick={() => chooseVerbosity("move")}
+          >
+            {t("advisor.justTheMove")}
+          </button>
+          <button
+            className="btn advisor-verbosity-button"
+            aria-pressed={verbosity === "full"}
+            onClick={() => chooseVerbosity("full")}
+          >
+            {t("advisor.walkMeThrough")}
+          </button>
+        </div>
         {state.phase === "loading" && (
           <p className="advisor-thinking" role="status">
             {t("advisor.thinking")}
@@ -102,6 +138,18 @@ export default function AdvisorPanel({
             <section className="advisor-section advisor-section--concept">
               <h3 className="advisor-section-title">{t("advisor.concept")}</h3>
               <p className="advisor-explanation">{state.report.advice.concept}</p>
+            </section>
+          </div>
+        )}
+        {state.phase === "move-only" && (
+          <div className="advisor-report" data-testid="advisor-move-only">
+            <section className="advisor-section advisor-section--recommendation">
+              <h3 className="advisor-section-title">
+                {t("advisor.recommendation")}
+              </h3>
+              <p className="advisor-candidate">
+                {describeCandidate(t, state.topCandidate, hand)}
+              </p>
             </section>
           </div>
         )}
