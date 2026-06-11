@@ -6,6 +6,7 @@ Browlatro is an educational journey meant to help the author brush up on their f
 
 - This is a Balatro clone. Terms like 'tags', 'spectral cards', 'vouchers', 'boss blinds', etc. refer to **in-game Balatro mechanics**, not GitHub/repo concepts.
 - When implementing Balatro features (spectral cards, tarots, jokers, etc.), match the **authentic Balatro effects** - do not invent placeholder effects. Reference the Balatro wiki or ask the user if unsure.
+- A feature is not done when its data exists — it is done when it is **wired end-to-end**. Any new field or effect must be traced from its trigger through the scoring/payout pipeline to the surface where the player sees it (HUD, wallet, end-of-round breakdown), with at least one test exercising that full path. A field that is defined but never consumed by the pipeline is a bug (see Delayed Gratification's unwired moneyEarned payout).
 
 # Hard requirements
 
