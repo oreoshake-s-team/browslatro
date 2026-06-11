@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { isAdvice, type Advice } from "./advice";
+import { isAdvice, type Advice } from "./advice.js";
 import type { AdviceRequest } from "./types";
-import { retrieveWikiEntries } from "./wiki";
+import { retrieveWikiEntries } from "./wiki.js";
 
 export type { Advice } from "./advice";
 

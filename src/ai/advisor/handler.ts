@@ -1,6 +1,6 @@
-import { requestAdvice, type AdviceModelResult } from "./model";
-import { createRateLimiter, type RateLimiter } from "./rateLimit";
-import { parseAdviceRequest, type AdviceRequest } from "./types";
+import { requestAdvice, type AdviceModelResult } from "./model.js";
+import { createRateLimiter, type RateLimiter } from "./rateLimit.js";
+import { parseAdviceRequest, type AdviceRequest } from "./types.js";
 
 export interface AdviceHandlerDeps {
   readonly ipLimiter: RateLimiter;
