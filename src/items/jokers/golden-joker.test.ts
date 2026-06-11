@@ -4,6 +4,8 @@ import {
   applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyPerCardJokers,
+  createBlueprintJoker,
+  createBrainstormJoker,
   createGoldenJoker,
 } from "../jokers";
 import type { JokerRarity } from "../jokers";
@@ -54,5 +56,20 @@ describe("Golden Joker", () => {
 
   test("is a common joker", () => {
     expect(createGoldenJoker().rarity).toBe<JokerRarity>("common");
+  });
+
+  test("Blueprint copying Golden Joker doubles the end-of-round payout", () => {
+    const result = applyEndOfRoundJokers([createBlueprintJoker(), createGoldenJoker()]);
+    expect(result.moneyEarned).toBe(GOLDEN_JOKER_MONEY * 2);
+  });
+
+  test("Brainstorm copying Golden Joker doubles the end-of-round payout", () => {
+    const result = applyEndOfRoundJokers([createGoldenJoker(), createBrainstormJoker()]);
+    expect(result.moneyEarned).toBe(GOLDEN_JOKER_MONEY * 2);
+  });
+
+  test("Blueprint with no right neighbor contributes nothing (negative)", () => {
+    const result = applyEndOfRoundJokers([createGoldenJoker(), createBlueprintJoker()]);
+    expect(result.moneyEarned).toBe(GOLDEN_JOKER_MONEY);
   });
 });

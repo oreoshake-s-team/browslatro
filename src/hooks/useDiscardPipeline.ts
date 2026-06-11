@@ -26,6 +26,7 @@ import {
   applyOnDiscardJokers,
   extraStartingHandSizeFromJokers,
   isJokerActive,
+  resolveJokerEffect,
 } from "../items/jokers";
 import { cardLabel } from "../scoring/scoringTrace";
 import { detectHandLabel } from "../scoring/handEvaluator";
@@ -186,31 +187,32 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
       discardsUsedThisRound: discardsUsedThisRound + 1,
       rebateRank: useGame.getState().rebateRank,
     });
-    if (
-      discardsUsedThisRound === 0 &&
-      jokers.some(
-        (j) =>
-          j.effect.kind === "first-discard-upgrades-hand" && isJokerActive(j),
-      )
-    ) {
-      const discardedLabel = detectHandLabel(discardedCards);
-      const planet =
-        discardedLabel !== null
-          ? planetForHand(createPlanetCatalog(), discardedLabel)
-          : null;
-      if (planet && discardedLabel !== null) {
-        useGame
-          .getState()
-          .setHandStats((prev) => applyPlanetUpgrade(prev, planet));
-        setScoringEvents((prev) => [
-          ...prev,
-          {
-            kind: "hand-upgraded",
-            handLabel: discardedLabel,
-            level: useGame.getState().handStats[discardedLabel].level,
-            source: "Burnt Joker",
-          },
-        ]);
+    if (discardsUsedThisRound === 0) {
+      const activeJokersForDiscard = jokers.filter(isJokerActive);
+      let upgradeCount = 0;
+      for (let i = 0; i < activeJokersForDiscard.length; i += 1) {
+        if (resolveJokerEffect(activeJokersForDiscard, i).kind === "first-discard-upgrades-hand") upgradeCount += 1;
+      }
+      if (upgradeCount > 0) {
+        const discardedLabel = detectHandLabel(discardedCards);
+        const planet =
+          discardedLabel !== null
+            ? planetForHand(createPlanetCatalog(), discardedLabel)
+            : null;
+        if (planet && discardedLabel !== null) {
+          for (let u = 0; u < upgradeCount; u += 1) {
+            useGame.getState().setHandStats((prev) => applyPlanetUpgrade(prev, planet));
+          }
+          setScoringEvents((prev) => [
+            ...prev,
+            {
+              kind: "hand-upgraded",
+              handLabel: discardedLabel,
+              level: useGame.getState().handStats[discardedLabel].level,
+              source: "Burnt Joker",
+            },
+          ]);
+        }
       }
     }
     for (const step of onDiscardResult.steps) {

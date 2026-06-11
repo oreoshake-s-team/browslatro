@@ -44,6 +44,7 @@ import {
   extraStartingHandSizeFromJokers,
   initialJokersConfig,
   isJokerActive,
+  resolveJokerEffect,
   sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
   type Joker,
@@ -231,8 +232,9 @@ export function useRoundLifecycle({
     const deckForTargets = [...baseDeckCards, ...addedCards].filter(
       (c) => !destroyedCardIds.has(c.id),
     );
-    const needsIdol = equippedJokers.some(
-      (j) => j.effect.kind === "x-mult-on-idol-card",
+    const activeForBlind = equippedJokers.filter(isJokerActive);
+    const needsIdol = activeForBlind.some(
+      (_, i) => resolveJokerEffect(activeForBlind, i).kind === "x-mult-on-idol-card",
     );
     if (needsIdol && deckForTargets.length > 0) {
       const pick =
@@ -242,13 +244,11 @@ export function useRoundLifecycle({
       setIdolTarget(null);
     }
     setAncientSuit(
-      equippedJokers.some((j) => j.effect.kind === "x-mult-per-suit-rotating")
+      activeForBlind.some((_, i) => resolveJokerEffect(activeForBlind, i).kind === "x-mult-per-suit-rotating")
         ? SUITS[Math.floor(Math.random() * SUITS.length)]
         : null,
     );
-    if (
-      equippedJokers.some((j) => j.effect.kind === "money-on-todo-hand")
-    ) {
+    if (activeForBlind.some((_, i) => resolveJokerEffect(activeForBlind, i).kind === "money-on-todo-hand")) {
       const labels = Object.keys(emptyHandCounts()) as HandLabel[];
       setTodoHand(labels[Math.floor(Math.random() * labels.length)]);
     } else {
@@ -259,23 +259,23 @@ export function useRoundLifecycle({
       setJokers((prev) => applyMadnessOnBlindSelect(prev));
     }
     setRebateRank(
-      equippedJokers.some(
-        (j) => j.effect.kind === "money-per-discarded-rebate-rank",
+      activeForBlind.some(
+        (_, i) => resolveJokerEffect(activeForBlind, i).kind === "money-per-discarded-rebate-rank",
       )
         ? RANKS[Math.floor(Math.random() * RANKS.length)]
         : null,
     );
     setCastleSuit(
-      equippedJokers.some(
-        (j) => j.effect.kind === "stack-chips-per-rotating-suit-discard",
+      activeForBlind.some(
+        (_, i) => resolveJokerEffect(activeForBlind, i).kind === "stack-chips-per-rotating-suit-discard",
       )
         ? SUITS[Math.floor(Math.random() * SUITS.length)]
         : null,
     );
-    const activeForBlind = equippedJokers.filter(isJokerActive);
-    const blindTarots = activeForBlind.filter(
-      (j) => j.effect.kind === "blind-select-creates-tarot",
-    ).length;
+    let blindTarots = 0;
+    for (let i = 0; i < activeForBlind.length; i += 1) {
+      if (resolveJokerEffect(activeForBlind, i).kind === "blind-select-creates-tarot") blindTarots += 1;
+    }
     if (blindTarots > 0) {
       const tarotCapacity =
         MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
@@ -293,13 +293,11 @@ export function useRoundLifecycle({
         return next;
       });
     }
-    const commonJokerCreations = activeForBlind.reduce(
-      (sum, j) =>
-        j.effect.kind === "blind-select-creates-common-jokers"
-          ? sum + j.effect.count
-          : sum,
-      0,
-    );
+    let commonJokerCreations = 0;
+    for (let i = 0; i < activeForBlind.length; i += 1) {
+      const eff = resolveJokerEffect(activeForBlind, i);
+      if (eff.kind === "blind-select-creates-common-jokers") commonJokerCreations += eff.count;
+    }
     if (commonJokerCreations > 0) {
       const jokerCapacity = Math.max(
         0,

@@ -2,6 +2,7 @@ import type { Card, Enhancement } from "../../../cards/types";
 import type { Joker } from "../types";
 import { isFaceCardWith } from "./utils";
 import { isJokerActive } from "../stickers";
+import { resolveJokerEffect } from "./copy";
 
 export interface ScoredCardMutationsResult {
   readonly enhancementChanges: ReadonlyMap<number, Enhancement | null>;
@@ -22,8 +23,8 @@ export function applyScoredCardMutations(
   }
   const enhancementChanges = new Map<number, Enhancement | null>();
   let enhancementsEaten = 0;
-  for (const joker of jokers) {
-    const effect = joker.effect;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
     if (effect.kind === "played-faces-become-gold") {
       for (const card of unique) {
         if (!isFaceCardWith(card, jokers)) continue;

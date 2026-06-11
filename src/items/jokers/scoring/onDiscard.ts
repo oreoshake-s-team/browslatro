@@ -2,6 +2,7 @@ import type { Card, Rank } from "../../../cards/types";
 import type { Joker } from "../types";
 import { isFaceCardWith } from "./utils";
 import { isJokerActive } from "../stickers";
+import { resolveJokerEffect } from "./copy";
 
 export interface OnDiscardContext {
   readonly discardsUsedThisRound?: number;
@@ -28,8 +29,9 @@ export function applyOnDiscardJokers(
   const jokers = allJokers.filter(isJokerActive);
   let moneyEarned = 0;
   const steps: OnDiscardStep[] = [];
-  for (const joker of jokers) {
-    const effect = joker.effect;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const joker = jokers[i];
+    const effect = resolveJokerEffect(jokers, i);
     if (effect.kind === "on-discard-money-when-face-count-at-least") {
       let faceCount = 0;
       for (const c of discardedCards) {
