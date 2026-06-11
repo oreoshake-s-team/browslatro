@@ -4,8 +4,11 @@ import type { DatasetRecord } from "./dataset";
 import {
   createHumanPlayLog,
   HUMAN_PLAY_LOG_KEY,
+  MAX_LOG_RECORDS,
   type LogStorage,
 } from "./humanPlayLog";
+import { buildRunEventRecord } from "./runEvents";
+import { useGame } from "../store/game";
 
 function memoryStorage(): LogStorage & { readonly data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -92,5 +95,59 @@ describe("createHumanPlayLog", () => {
     });
     failing.append(record(2));
     expect(createHumanPlayLog(storage).count()).toBe(1);
+  });
+});
+
+describe("run event records", () => {
+  function purchaseRecord() {
+    return buildRunEventRecord(useGame.getState(), 7, {
+      kind: "purchase",
+      item: { itemType: "joker", id: "blueprint", name: "Blueprint", cost: 10 },
+      offers: [
+        { itemType: "joker", id: "blueprint", name: "Blueprint", cost: 10 },
+      ],
+    });
+  }
+
+  test("appends a run event alongside hand decisions", () => {
+    const log = createHumanPlayLog(memoryStorage());
+    expect(log.append(purchaseRecord())).toBe(true);
+  });
+
+  test("counts records per kind", () => {
+    const log = createHumanPlayLog(memoryStorage());
+    log.append(record(1));
+    log.append(purchaseRecord());
+    log.append(purchaseRecord());
+    expect(log.counts()).toEqual({ hand: 1, purchase: 2 });
+  });
+
+  test("rotation keeps the log at the cap", () => {
+    const log = createHumanPlayLog(memoryStorage());
+    for (let index = 0; index <= MAX_LOG_RECORDS; index += 1) {
+      log.append(purchaseRecord());
+    }
+    expect(log.count()).toBe(MAX_LOG_RECORDS);
+  });
+
+  test("rotation drops the oldest record first", () => {
+    const log = createHumanPlayLog(memoryStorage());
+    log.append(record(1));
+    for (let index = 0; index < MAX_LOG_RECORDS; index += 1) {
+      log.append(purchaseRecord());
+    }
+    expect(log.counts()).toEqual({ purchase: MAX_LOG_RECORDS });
+  });
+
+  test("the envelope carries the live store state", () => {
+    const record = buildRunEventRecord(useGame.getState(), 42, {
+      kind: "blind-skip",
+      tag: null,
+    });
+    expect([record.runSeed, record.ante, record.money]).toEqual([
+      42,
+      useGame.getState().ante,
+      useGame.getState().money,
+    ]);
   });
 });

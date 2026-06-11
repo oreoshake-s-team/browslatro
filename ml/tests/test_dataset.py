@@ -73,6 +73,21 @@ class WeightTest(unittest.TestCase):
         weights = {w for _, _, w in train + validation}
         self.assertEqual(weights, {3.0})
 
+class RunEventSkipTest(unittest.TestCase):
+    def test_skips_kind_carrying_run_events(self):
+        record = fixture_record()
+        run_event = {"schemaVersion": 2, "kind": "purchase", "runSeed": 7}
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "mixed.jsonl", [run_event, record])
+            self.assertEqual(len(load_all([path])), 1)
+
+    def test_still_rejects_unknown_hand_record_versions(self):
+        record = dict(fixture_record(), schemaVersion=3)
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "future.jsonl", [record])
+            with self.assertRaises(ValueError):
+                load_all([path])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -94,6 +94,7 @@ describe("captureHumanDecision", () => {
     const failingLog: HumanPlayLog = {
       append: () => false,
       count: () => 0,
+      counts: () => ({}),
       toJsonl: () => "",
       clear: () => {},
     };
@@ -136,6 +137,7 @@ describe("captureHumanDecision", () => {
         throw new Error("quota");
       },
       count: () => 0,
+      counts: () => ({}),
       toJsonl: () => "",
       clear: () => {},
     };

@@ -20,6 +20,8 @@ def load_decisions(path, weight=1.0):
             if not line:
                 continue
             record = json.loads(line)
+            if record.get("kind") is not None:
+                continue
             version = record["schemaVersion"]
             if version != DATASET_SCHEMA_VERSION:
                 raise ValueError(
