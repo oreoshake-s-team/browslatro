@@ -1,4 +1,6 @@
 import { useGame } from "../store/game";
+import { captureRunEvent } from "../ai/humanPlayWiring";
+import { packOptionSnapshot } from "../ai/runEvents";
 import { play } from "../components/system/sounds";
 import {
   applyPlanetUpgrade,
@@ -288,6 +290,14 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
     } else {
       return;
     }
+    captureRunEvent(useGame.getState(), {
+      kind: "pack-pick",
+      pool: openedPack.pool,
+      variant: openedPack.variant,
+      options: openedPack.options.map(packOptionSnapshot),
+      pickedIndex: optionIdx,
+      picksRemaining: packPicksRemaining,
+    });
     setPickedPackOptionIndices((prev) => {
       const next = new Set(prev);
       next.add(optionIdx);
