@@ -8,13 +8,16 @@ export interface WikiEntry {
 }
 
 /**
- * Joker and boss strategy notes adapted (condensed and reworded) from the
- * community-maintained Balatro Wiki: https://balatrowiki.org/
+ * Joker and boss strategy notes merged and adapted (condensed and reworded)
+ * from two community-maintained sources:
+ * - Balatro Wiki: https://balatrowiki.org/
+ *   (CC BY-NC-SA 3.0, https://creativecommons.org/licenses/by-nc-sa/3.0/)
+ * - Balatro Fandom Wiki: https://balatrogame.fandom.com/wiki/Balatro_Wiki
+ *   (CC BY-SA 3.0, https://creativecommons.org/licenses/by-sa/3.0/)
  *
- * That material is licensed under CC BY-NC-SA 3.0
- * (https://creativecommons.org/licenses/by-nc-sa/3.0/). As a derivative,
- * the entry text in JOKER_WIKI and BOSS_WIKI below is shared under the
- * same license and may be used for non-commercial purposes only.
+ * As a derivative, the entry text in JOKER_WIKI and BOSS_WIKI below is
+ * shared under CC BY-NC-SA 3.0, the more restrictive of the two, and may
+ * be used for non-commercial purposes only.
  */
 export const JOKER_WIKI: Readonly<Record<string, string>> = {
   blueprint:
