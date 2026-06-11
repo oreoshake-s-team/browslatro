@@ -48,7 +48,39 @@ export interface ShopAdviceRequest {
   readonly candidates: ReadonlyArray<ShopAdviceCandidate>;
 }
 
-export type AdviceRequest = HandAdviceRequest | ShopAdviceRequest;
+export interface PackAdviceOption {
+  readonly optionType: string;
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+}
+
+export type PackAdviceCandidate =
+  | { readonly action: "pick"; readonly option: PackAdviceOption }
+  | { readonly action: "skip" };
+
+export interface PackAdviceState {
+  readonly pool: string;
+  readonly variant: string;
+  readonly picksRemaining: number;
+  readonly money: number;
+  readonly ante: number;
+  readonly jokers: ReadonlyArray<NamedRef>;
+  readonly jokerCapacity: number;
+  readonly consumables: ReadonlyArray<NamedRef>;
+  readonly consumableCapacity: number;
+}
+
+export interface PackAdviceRequest {
+  readonly context: "pack";
+  readonly pack: PackAdviceState;
+  readonly candidates: ReadonlyArray<PackAdviceCandidate>;
+}
+
+export type AdviceRequest =
+  | HandAdviceRequest
+  | ShopAdviceRequest
+  | PackAdviceRequest;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -181,9 +213,50 @@ function parseShopAdviceRequest(
   return body as unknown as ShopAdviceRequest;
 }
 
+function isPackOption(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    typeof value.optionType === "string" &&
+    typeof value.id === "string" &&
+    typeof value.name === "string" &&
+    typeof value.description === "string"
+  );
+}
+
+function isPackCandidate(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  if (value.action === "pick") return isPackOption(value.option);
+  return value.action === "skip";
+}
+
+function isPackState(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  if (typeof value.pool !== "string" || typeof value.variant !== "string") {
+    return false;
+  }
+  if (!isNamedRefArray(value.jokers, MAX_JOKERS)) return false;
+  if (!isNamedRefArray(value.consumables, MAX_JOKERS)) return false;
+  return (
+    isFiniteNumber(value.picksRemaining) &&
+    isFiniteNumber(value.money) &&
+    isFiniteNumber(value.ante) &&
+    isFiniteNumber(value.jokerCapacity) &&
+    isFiniteNumber(value.consumableCapacity)
+  );
+}
+
+function parsePackAdviceRequest(
+  body: Record<string, unknown>,
+): PackAdviceRequest | null {
+  if (!isPackState(body.pack)) return null;
+  if (!isContextCandidates(body.candidates, isPackCandidate)) return null;
+  return body as unknown as PackAdviceRequest;
+}
+
 export function parseAdviceRequest(body: unknown): AdviceRequest | null {
   if (!isRecord(body)) return null;
   if (body.context === "shop") return parseShopAdviceRequest(body);
+  if (body.context === "pack") return parsePackAdviceRequest(body);
   if (body.context !== undefined) return null;
   if (!isModelState(body.state)) return null;
   if (!Array.isArray(body.candidates)) return null;

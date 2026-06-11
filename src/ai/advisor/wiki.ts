@@ -275,7 +275,7 @@ export interface JokerRef {
   readonly name: string;
 }
 
-export function retrieveShopWikiEntries(
+export function retrieveJokerWikiEntries(
   jokers: ReadonlyArray<JokerRef>,
 ): ReadonlyArray<WikiEntry> {
   const entries: WikiEntry[] = [];
@@ -297,13 +297,21 @@ export function retrieveShopWikiEntries(
       });
     }
   }
-  entries.push({
-    key: "economy",
-    kind: "strategy",
-    title: "Economy",
-    text: ECONOMY_WIKI,
-  });
   return entries;
+}
+
+export function retrieveShopWikiEntries(
+  jokers: ReadonlyArray<JokerRef>,
+): ReadonlyArray<WikiEntry> {
+  return [
+    ...retrieveJokerWikiEntries(jokers),
+    {
+      key: "economy",
+      kind: "strategy",
+      title: "Economy",
+      text: ECONOMY_WIKI,
+    },
+  ];
 }
 
 export function retrieveWikiEntries(state: ModelState): ReadonlyArray<WikiEntry> {

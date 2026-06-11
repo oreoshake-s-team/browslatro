@@ -12,6 +12,7 @@ import { createRateLimiter } from "./rateLimit";
 import {
   adviceRequestFixture,
   postAdvice,
+  packAdviceRequestFixture,
   shopAdviceRequestFixture,
 } from "./test-helpers";
 
@@ -86,6 +87,14 @@ describe("handleAdviceRequest", () => {
   test("accepts a shop-context request", async () => {
     const response = await handleAdviceRequest(
       postAdvice(shopAdviceRequestFixture()),
+      makeDeps(),
+    );
+    expect(response.status).toBe(200);
+  });
+
+  test("accepts a pack-context request", async () => {
+    const response = await handleAdviceRequest(
+      postAdvice(packAdviceRequestFixture()),
       makeDeps(),
     );
     expect(response.status).toBe(200);
