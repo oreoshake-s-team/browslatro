@@ -72,6 +72,10 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 
 See docs/conversation_summary.md for more background.
 
+# Onboarding
+
+See docs/onboarding/* for quick intros into how the application is structured.
+
 ## Project Environment
 
 - This project uses **Yarn Berry with `nodeLinker: pnpm`** (not npm). Use `yarn` commands, not `npm`. `node_modules` is generated per checkout (hardlinked from the global Yarn store) — run `yarn install` in every fresh clone or worktree before anything else.
