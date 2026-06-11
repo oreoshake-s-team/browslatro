@@ -104,8 +104,17 @@ describe("Portrait sidebar grid", () => {
     );
   });
 
-  test("portrait Run info/Options buttons split the row evenly like the stat rows", () => {
+  test("portrait sub-info is a two-column grid so Run info and Options split the row evenly", () => {
     const block = portraitBlock(sidebarCss);
-    expect(block).toMatch(/\.sub-info > button\s*{[^}]*flex\s*:\s*1 1 0/);
+    expect(block).toMatch(
+      /\.sub-info\s*{[^}]*grid-template-columns\s*:\s*1fr 1fr/,
+    );
+  });
+
+  test("the portrait Help button spans the full sub-info width on its own row", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(
+      /\.sub-info > button:last-child\s*{[^}]*grid-column\s*:\s*1 \/ -1/,
+    );
   });
 });

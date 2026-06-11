@@ -1,0 +1,85 @@
+.help-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: color-mix(in srgb, var(--black) 55%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.help-modal {
+  background-color: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 1.8rem 2rem;
+  width: min(90vw, 32rem);
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  box-sizing: border-box;
+}
+
+.help-title {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.help-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.help-section-title {
+  margin: 0;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.help-link-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.help-link-row {
+  margin: 0;
+}
+
+.help-link {
+  display: block;
+  padding: 0.55rem 0.7rem;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.help-link:hover {
+  border-color: var(--accent-chips-text);
+  color: var(--accent-chips-text);
+}
+
+.help-link:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.help-close {
+  align-self: center;
+  padding: 0.7rem 1.6rem;
+  font-size: 1rem;
+}
