@@ -332,6 +332,7 @@ export function usePlayHand({
   function submitHand(): void {
     if (discardingIds.size > 0) return;
     if (pipeline.isScoring) return;
+    if (selectedIds.size === 0) return;
 
     const handById = new Map(dealt.hand.map((c) => [c.id, c]));
     const playedCards = handDisplayOrder

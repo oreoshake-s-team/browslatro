@@ -29,6 +29,18 @@ async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
 }
 
+async function submitSingleLosingHand(
+  page: Page,
+  expectedHandsAfter: number,
+): Promise<void> {
+  await page.locator(HAND_CARDS).nth(0).click();
+  await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
+  await expect(statValue(page, "Hands")).toHaveText(String(expectedHandsAfter));
+  await expect(
+    page.locator('[data-testid="hand-cards"] .card-discarding'),
+  ).toHaveCount(0);
+}
+
 async function dismissBlindSelect(page: Page): Promise<void> {
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
@@ -119,13 +131,14 @@ test("losing 3 games in a row leaves exactly one chips/multiplier span in the si
 }) => {
   await page.goto("/");
   await dismissBlindSelect(page);
-  const submit = page.getByRole("button", { name: SUBMIT_BUTTON });
   const tryAgain = page.getByRole("button", { name: /Try again/ });
 
   for (let cycle = 0; cycle < 3; cycle += 1) {
-    for (let hand = 0; hand < 4; hand += 1) {
-      await submit.click();
-    }
+    await submitSingleLosingHand(page, 3);
+    await submitSingleLosingHand(page, 2);
+    await submitSingleLosingHand(page, 1);
+    await page.locator(HAND_CARDS).nth(0).click();
+    await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
     await tryAgain.click();
     await dismissBlindSelect(page);
     await expect(page.locator(".sidebar .chips")).toHaveCount(1);
@@ -133,7 +146,7 @@ test("losing 3 games in a row leaves exactly one chips/multiplier span in the si
   }
 });
 
-test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", async ({
+test("always-lose path: 4 single-card hands exhaust hands and trigger Game Over", async ({
   page,
 }) => {
   await page.goto("/");
@@ -141,20 +154,17 @@ test("always-lose path: 4 empty submits exhaust hands and trigger Game Over", as
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
   await expect(statValue(page, "Hands")).toHaveText("4");
 
-  const submit = page.getByRole("button", { name: SUBMIT_BUTTON });
-  await submit.click();
-  await expect(statValue(page, "Hands")).toHaveText("3");
+  await submitSingleLosingHand(page, 3);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
-  await submit.click();
-  await expect(statValue(page, "Hands")).toHaveText("2");
+  await submitSingleLosingHand(page, 2);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
-  await submit.click();
-  await expect(statValue(page, "Hands")).toHaveText("1");
+  await submitSingleLosingHand(page, 1);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
-  await submit.click();
+  await page.locator(HAND_CARDS).nth(0).click();
+  await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
   await expect(page.getByRole("dialog", { name: "Game Over" })).toBeVisible();
   await page.getByRole("button", { name: /Try again/ }).click();
   await dismissBlindSelect(page);

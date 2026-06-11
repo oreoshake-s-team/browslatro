@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
 import type { Card } from "./cards/types";
+import { useGame } from "./store/game";
 
 
 const playMock = play as MockedFunction<typeof play>;
@@ -55,6 +56,8 @@ function mkBossRng(idsPerAnte: ReadonlyArray<string>): () => number {
 beforeEach(() => {
   playMock.mockClear();
   bossPickerRngConfig.rng = () => 0;
+  useGame.getState().resetGame();
+  useGame.getState().setPendingRunSelect(false);
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
 
@@ -79,8 +82,8 @@ function getStatValue(label: string): HTMLElement {
 async function dismissBlindSelect(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
-  const btn = screen.queryByTestId("blind-select-play");
-  if (btn) await user.click(btn);
+  const btn = await screen.findByTestId("blind-select-play");
+  await user.click(btn);
 }
 
 function flushScoringSequence(): void {
@@ -108,6 +111,7 @@ async function advanceToTheClubBossBlind(
   await user.click(screen.getByRole("button", { name: /Next Round/ }));
   await dismissBlindSelect(user);
   await user.click(screen.getByText(/Win/));
+  await screen.findByTestId("shop-money");
   await user.click(screen.getByRole("button", { name: /Next Round/ }));
   await dismissBlindSelect(user);
 }
