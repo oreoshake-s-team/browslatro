@@ -9,10 +9,10 @@ export interface WikiEntry {
 
 /**
  * Joker and boss strategy notes adapted (condensed and reworded) from the
- * Balatro Wiki: https://balatrogame.fandom.com/wiki/Balatro_Wiki
+ * community-maintained Balatro Wiki: https://balatrowiki.org/
  *
- * That material is licensed under CC BY-NC-SA 4.0
- * (https://creativecommons.org/licenses/by-nc-sa/4.0/). As a derivative,
+ * That material is licensed under CC BY-NC-SA 3.0
+ * (https://creativecommons.org/licenses/by-nc-sa/3.0/). As a derivative,
  * the entry text in JOKER_WIKI and BOSS_WIKI below is shared under the
  * same license and may be used for non-commercial purposes only.
  */
@@ -24,7 +24,7 @@ export const JOKER_WIKI: Readonly<Record<string, string>> = {
   "four-fingers":
     "Flushes and Straights only need 4 matching cards. The fifth card is free to be anything, and near-misses become real hands — factor this into discard plans.",
   shortcut:
-    "Straights may include cards one rank apart, so straights with single-rank gaps count. Re-evaluate 'almost straights' before discarding them.",
+    "Straights may be made with gaps of one rank between cards (e.g. 2-3-5-7-8). Re-evaluate 'almost straights' before discarding them.",
   smeared:
     "Hearts and Diamonds count as one suit; Spades and Clubs count as one suit. Mixed red or mixed black flushes are real flushes.",
   splash:
