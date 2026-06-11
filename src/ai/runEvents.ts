@@ -1,3 +1,4 @@
+import type { PackOption } from "../items/packs";
 import type { ShopItem } from "../items/shop";
 import type { GameState } from "../store/game";
 import type { ModelState } from "./modelState";
@@ -7,6 +8,7 @@ export const RUN_EVENT_SCHEMA_VERSION = 2;
 export type RunEventKind =
   | "purchase"
   | "reroll"
+  | "pack-pick"
   | "consumable-use"
   | "joker-sell"
   | "blind-skip";
@@ -40,6 +42,21 @@ export interface RerollEvent {
   readonly offers: ReadonlyArray<ShopItemSnapshot>;
 }
 
+export interface PackOptionSnapshot {
+  readonly optionType: string;
+  readonly id: string;
+  readonly name: string;
+}
+
+export interface PackPickEvent {
+  readonly kind: "pack-pick";
+  readonly pool: string;
+  readonly variant: string;
+  readonly options: ReadonlyArray<PackOptionSnapshot>;
+  readonly pickedIndex: number | null;
+  readonly picksRemaining: number;
+}
+
 export interface ConsumableUseEvent {
   readonly kind: "consumable-use";
   readonly consumable: {
@@ -69,6 +86,7 @@ export interface BlindSkipEvent {
 export type RunEvent =
   | PurchaseEvent
   | RerollEvent
+  | PackPickEvent
   | ConsumableUseEvent
   | JokerSellEvent
   | BlindSkipEvent;
@@ -127,6 +145,29 @@ export function shopItemSnapshot(
         id: `${item.pack.pool}-${item.pack.variant}`,
         name: `${item.pack.variant} ${item.pack.pool} pack`,
         cost,
+      };
+  }
+}
+
+export function packOptionSnapshot(option: PackOption): PackOptionSnapshot {
+  switch (option.kind) {
+    case "planet":
+      return { optionType: "planet", id: option.planet.id, name: option.planet.name };
+    case "tarot":
+      return { optionType: "tarot", id: option.tarot.id, name: option.tarot.name };
+    case "joker":
+      return { optionType: "joker", id: option.joker.id, name: option.joker.name };
+    case "spectral":
+      return {
+        optionType: "spectral",
+        id: option.spectral.id,
+        name: option.spectral.name,
+      };
+    case "playing-card":
+      return {
+        optionType: "playing-card",
+        id: String(option.card.id),
+        name: `${option.card.rank} of ${option.card.suit}`,
       };
   }
 }
