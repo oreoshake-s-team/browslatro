@@ -73,6 +73,19 @@ class WeightTest(unittest.TestCase):
         weights = {w for _, _, w in train + validation}
         self.assertEqual(weights, {3.0})
 
+class WideHandSkipTest(unittest.TestCase):
+    def test_skips_decisions_with_hands_wider_than_the_encoding(self):
+        record = fixture_record()
+        wide_state = dict(
+            record["state"],
+            hand=record["state"]["hand"] + record["state"]["hand"][:2],
+        )
+        wide = dict(record, state=wide_state)
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "wide.jsonl", [wide, record])
+            self.assertEqual(len(load_all([path])), 1)
+
+
 class RunEventSkipTest(unittest.TestCase):
     def test_skips_kind_carrying_run_events(self):
         record = fixture_record()
