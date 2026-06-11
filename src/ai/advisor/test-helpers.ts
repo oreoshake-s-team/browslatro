@@ -1,6 +1,14 @@
 import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
-import type { AdviceRequest } from "./types";
+import type {
+  HandAdviceRequest,
+  PackAdviceCandidate,
+  PackAdviceRequest,
+  PackAdviceState,
+  ShopAdviceCandidate,
+  ShopAdviceRequest,
+  ShopAdviceState,
+} from "./types";
 
 export function modelStateFixture(): ModelState {
   return {
@@ -76,8 +84,91 @@ export function candidatesFixture(): ReadonlyArray<HandOption> {
   ];
 }
 
-export function adviceRequestFixture(): AdviceRequest {
+export function adviceRequestFixture(): HandAdviceRequest {
   return { state: modelStateFixture(), candidates: candidatesFixture() };
+}
+
+export function shopStateFixture(): ShopAdviceState {
+  return {
+    money: 12,
+    ante: 2,
+    jokers: [{ id: "blueprint", name: "Blueprint" }],
+    jokerCapacity: 5,
+    consumables: [{ id: "the-fool", name: "The Fool" }],
+    consumableCapacity: 2,
+    ownedVoucherIds: ["clearance-sale"],
+  };
+}
+
+export function shopCandidatesFixture(): ReadonlyArray<ShopAdviceCandidate> {
+  return [
+    {
+      action: "buy",
+      item: {
+        itemType: "joker",
+        id: "jolly-joker",
+        name: "Jolly Joker",
+        description: "+8 Mult if played hand contains a Pair",
+        cost: 3,
+      },
+    },
+    { action: "reroll", cost: 5 },
+    { action: "leave" },
+  ];
+}
+
+export function shopAdviceRequestFixture(): ShopAdviceRequest {
+  return {
+    context: "shop",
+    shop: shopStateFixture(),
+    candidates: shopCandidatesFixture(),
+  };
+}
+
+export function packStateFixture(): PackAdviceState {
+  return {
+    pool: "buffoon",
+    variant: "normal",
+    picksRemaining: 1,
+    money: 8,
+    ante: 3,
+    jokers: [{ id: "blueprint", name: "Blueprint" }],
+    jokerCapacity: 5,
+    consumables: [],
+    consumableCapacity: 2,
+  };
+}
+
+export function packCandidatesFixture(): ReadonlyArray<PackAdviceCandidate> {
+  return [
+    {
+      action: "pick",
+      option: {
+        optionType: "joker",
+        id: "jolly-joker",
+        name: "Jolly Joker",
+        description: "+8 Mult if played hand contains a Pair",
+      },
+    },
+    {
+      action: "pick",
+      option: {
+        optionType: "joker",
+        id: "supernova",
+        name: "Supernova",
+        description: "Adds the number of times this hand was played to Mult",
+      },
+    },
+    { action: "skip" },
+  ];
+}
+
+export function packAdviceRequestFixture(): PackAdviceRequest {
+  return {
+    context: "pack",
+    pack: packStateFixture(),
+    candidates: packCandidatesFixture(),
+  };
 }
 
 export function postAdvice(body: unknown, ip = "203.0.113.7"): Request {

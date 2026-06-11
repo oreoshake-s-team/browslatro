@@ -270,6 +270,50 @@ export const STAKE_WIKI: Readonly<Partial<Record<Stake, string>>> = {
   gold: "Jokers may roll Rental ($1 to buy, drains $3 each round) on top of every lower-stake effect. Economy carries the early game; late game, accept Rentals that raise the final score.",
 };
 
+export interface JokerRef {
+  readonly id: string;
+  readonly name: string;
+}
+
+export function retrieveJokerWikiEntries(
+  jokers: ReadonlyArray<JokerRef>,
+): ReadonlyArray<WikiEntry> {
+  const entries: WikiEntry[] = [];
+  const seen = new Set<string>();
+  for (const joker of jokers) {
+    const text = JOKER_WIKI[joker.id];
+    if (text === undefined || seen.has(joker.id)) continue;
+    seen.add(joker.id);
+    entries.push({ key: joker.id, kind: "joker", title: joker.name, text });
+  }
+  const present = new Set(jokers.map((joker) => joker.id));
+  for (const combo of COMBO_WIKI) {
+    if (combo.jokers.some((id) => present.has(id))) {
+      entries.push({
+        key: combo.key,
+        kind: "combo",
+        title: combo.title,
+        text: combo.text,
+      });
+    }
+  }
+  return entries;
+}
+
+export function retrieveShopWikiEntries(
+  jokers: ReadonlyArray<JokerRef>,
+): ReadonlyArray<WikiEntry> {
+  return [
+    ...retrieveJokerWikiEntries(jokers),
+    {
+      key: "economy",
+      kind: "strategy",
+      title: "Economy",
+      text: ECONOMY_WIKI,
+    },
+  ];
+}
+
 export function retrieveWikiEntries(state: ModelState): ReadonlyArray<WikiEntry> {
   const entries: WikiEntry[] = [];
   const seen = new Set<string>();

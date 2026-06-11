@@ -3,8 +3,12 @@ import Anthropic from "@anthropic-ai/sdk";
 import { describe, expect, test } from "vitest";
 import type { AdviceRequest } from "./types";
 import { buildUserMessage, mapModelError, parseAdvice, type Advice } from "./model";
-import { adviceRequestFixture } from "./test-helpers";
-import { JOKER_WIKI } from "./wiki";
+import {
+  adviceRequestFixture,
+  packAdviceRequestFixture,
+  shopAdviceRequestFixture,
+} from "./test-helpers";
+import { ECONOMY_WIKI, JOKER_WIKI } from "./wiki";
 
 function withBlueprintJoker(): AdviceRequest {
   const base = adviceRequestFixture();
@@ -67,6 +71,82 @@ describe("buildUserMessage", () => {
   test("omits the reference section when nothing is retrieved", () => {
     const message = buildUserMessage(adviceRequestFixture());
     expect(message).not.toContain("Reference notes:");
+  });
+});
+
+describe("buildUserMessage pack context", () => {
+  test("includes the serialized pack state", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).toContain('"pool":"buffoon"');
+  });
+
+  test("annotates every pack candidate with its index", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).toContain('"index":2');
+  });
+
+  test("labels the candidates as pack actions", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).toContain("Candidate pack actions (choose by index):");
+  });
+
+  test("injects the wiki entry for an offered joker", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).toContain(`- Supernova: ${JOKER_WIKI.supernova}`);
+  });
+
+  test("injects the wiki entry for a held joker", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).toContain(`- Blueprint: ${JOKER_WIKI.blueprint}`);
+  });
+
+  test("omits the economy note", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).not.toContain(ECONOMY_WIKI);
+  });
+
+  test("notes the pack is already paid for", () => {
+    const message = buildUserMessage(packAdviceRequestFixture());
+    expect(message).toContain("already paid for");
+  });
+});
+
+describe("buildUserMessage shop context", () => {
+  test("includes the serialized shop state", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).toContain('"jokerCapacity":5');
+  });
+
+  test("annotates every shop candidate with its index", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).toContain('"index":2');
+  });
+
+  test("labels the candidates as shop actions", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).toContain("Candidate shop actions (choose by index):");
+  });
+
+  test("injects the wiki entry for an offered joker", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).toContain(
+      `- Jolly Joker: ${JOKER_WIKI["jolly-joker"]}`,
+    );
+  });
+
+  test("injects the wiki entry for a held joker", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).toContain(`- Blueprint: ${JOKER_WIKI.blueprint}`);
+  });
+
+  test("always includes the economy note", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).toContain(`- Economy: ${ECONOMY_WIKI}`);
+  });
+
+  test("omits the joker-order note", () => {
+    const message = buildUserMessage(shopAdviceRequestFixture());
+    expect(message).not.toContain("jokers trigger left to right");
   });
 });
 

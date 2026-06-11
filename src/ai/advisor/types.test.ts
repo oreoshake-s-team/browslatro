@@ -4,8 +4,14 @@ import {
   adviceRequestFixture,
   candidatesFixture,
   modelStateFixture,
+  packAdviceRequestFixture,
+  packCandidatesFixture,
+  packStateFixture,
+  shopAdviceRequestFixture,
+  shopCandidatesFixture,
+  shopStateFixture,
 } from "./test-helpers";
-import { MAX_CANDIDATES, parseAdviceRequest } from "./types";
+import { MAX_CANDIDATES, MAX_JOKERS, parseAdviceRequest } from "./types";
 
 describe("parseAdviceRequest", () => {
   test("accepts a valid request body", () => {
@@ -115,6 +121,173 @@ describe("parseAdviceRequest hardening", () => {
     ];
     expect(
       parseAdviceRequest({ ...adviceRequestFixture(), candidates }),
+    ).toBeNull();
+  });
+});
+
+describe("parseAdviceRequest shop context", () => {
+  test("accepts a valid shop request", () => {
+    expect(parseAdviceRequest(shopAdviceRequestFixture())).not.toBeNull();
+  });
+
+  test("rejects an unknown context", () => {
+    expect(
+      parseAdviceRequest({ ...shopAdviceRequestFixture(), context: "casino" }),
+    ).toBeNull();
+  });
+
+  test("rejects a shop request without shop state", () => {
+    expect(
+      parseAdviceRequest({
+        context: "shop",
+        candidates: shopCandidatesFixture(),
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects fewer than two candidates", () => {
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        candidates: [{ action: "leave" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a buy candidate without a description", () => {
+    const [buy] = shopCandidatesFixture();
+    if (buy.action !== "buy") throw new Error("expected a buy candidate");
+    const { description: _description, ...item } = buy.item;
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        candidates: [{ action: "buy", item }, { action: "leave" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a reroll candidate without a numeric cost", () => {
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        candidates: [{ action: "reroll", cost: "5" }, { action: "leave" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a shop candidate with an unknown action", () => {
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        candidates: [{ action: "sell" }, { action: "leave" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects non-string voucher ids", () => {
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        shop: { ...shopStateFixture(), ownedVoucherIds: [3] },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects more held jokers than the cap", () => {
+    const jokers = Array.from({ length: MAX_JOKERS + 1 }, (_, index) => ({
+      id: `joker-${index}`,
+      name: `Joker ${index}`,
+    }));
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        shop: { ...shopStateFixture(), jokers },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects non-finite money", () => {
+    expect(
+      parseAdviceRequest({
+        ...shopAdviceRequestFixture(),
+        shop: { ...shopStateFixture(), money: Number.NaN },
+      }),
+    ).toBeNull();
+  });
+});
+
+describe("parseAdviceRequest pack context", () => {
+  test("accepts a valid pack request", () => {
+    expect(parseAdviceRequest(packAdviceRequestFixture())).not.toBeNull();
+  });
+
+  test("rejects a pack request without pack state", () => {
+    expect(
+      parseAdviceRequest({
+        context: "pack",
+        candidates: packCandidatesFixture(),
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects fewer than two candidates", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        candidates: [{ action: "skip" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a pick candidate without a description", () => {
+    const [pick] = packCandidatesFixture();
+    if (pick.action !== "pick") throw new Error("expected a pick candidate");
+    const { description: _description, ...option } = pick.option;
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        candidates: [{ action: "pick", option }, { action: "skip" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a pack candidate with an unknown action", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        candidates: [{ action: "reroll", cost: 5 }, { action: "skip" }],
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects a non-string pool", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        pack: { ...packStateFixture(), pool: 3 },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects non-finite picksRemaining", () => {
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        pack: { ...packStateFixture(), picksRemaining: Number.NaN },
+      }),
+    ).toBeNull();
+  });
+
+  test("rejects more held jokers than the cap", () => {
+    const jokers = Array.from({ length: MAX_JOKERS + 1 }, (_, index) => ({
+      id: `joker-${index}`,
+      name: `Joker ${index}`,
+    }));
+    expect(
+      parseAdviceRequest({
+        ...packAdviceRequestFixture(),
+        pack: { ...packStateFixture(), jokers },
+      }),
     ).toBeNull();
   });
 });
