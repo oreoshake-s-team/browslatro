@@ -86,9 +86,11 @@ export function firstHandCardCopyCount(
 export function chipsPerScoredCardFromJokers(
   allJokers: ReadonlyArray<Joker>,
 ): number {
+  const jokers = allJokers.filter(isJokerActive);
   let total = 0;
-  for (const j of allJokers.filter(isJokerActive)) {
-    if (j.effect.kind === "scored-cards-gain-chips") total += j.effect.amount;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "scored-cards-gain-chips") total += effect.amount;
   }
   return total;
 }
@@ -96,9 +98,11 @@ export function chipsPerScoredCardFromJokers(
 export function stoneCardsOnBlindSelectFromJokers(
   allJokers: ReadonlyArray<Joker>,
 ): number {
+  const jokers = allJokers.filter(isJokerActive);
   let count = 0;
-  for (const j of allJokers.filter(isJokerActive)) {
-    if (j.effect.kind === "blind-select-adds-stone-card") count += 1;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "blind-select-adds-stone-card") count += 1;
   }
   return count;
 }
@@ -106,9 +110,11 @@ export function stoneCardsOnBlindSelectFromJokers(
 export function sealedCardsOnRoundBeginFromJokers(
   allJokers: ReadonlyArray<Joker>,
 ): number {
+  const jokers = allJokers.filter(isJokerActive);
   let count = 0;
-  for (const j of allJokers.filter(isJokerActive)) {
-    if (j.effect.kind === "round-begin-adds-sealed-card") count += 1;
+  for (let i = 0; i < jokers.length; i += 1) {
+    const effect = resolveJokerEffect(jokers, i);
+    if (effect.kind === "round-begin-adds-sealed-card") count += 1;
   }
   return count;
 }

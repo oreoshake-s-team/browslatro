@@ -2,6 +2,8 @@
 import {
   HIKER_CHIPS_PER_SCORED,
   chipsPerScoredCardFromJokers,
+  createBlueprintJoker,
+  createBrainstormJoker,
   createHikerJoker,
   createJokerCatalog,
 } from "../jokers";
@@ -41,5 +43,23 @@ describe("Hiker", () => {
 
   test("a card without bonus chips scores its base chips (negative)", () => {
     expect(getCardChips(plainFive)).toBe(5);
+  });
+
+  test("Brainstorm copying Hiker doubles the per-card chip bonus", () => {
+    expect(
+      chipsPerScoredCardFromJokers([createHikerJoker(), createBrainstormJoker()]),
+    ).toBe(HIKER_CHIPS_PER_SCORED * 2);
+  });
+
+  test("Blueprint copying Hiker doubles the per-card chip bonus", () => {
+    expect(
+      chipsPerScoredCardFromJokers([createBlueprintJoker(), createHikerJoker()]),
+    ).toBe(HIKER_CHIPS_PER_SCORED * 2);
+  });
+
+  test("Blueprint with no right neighbor contributes nothing (negative)", () => {
+    expect(chipsPerScoredCardFromJokers([createHikerJoker(), createBlueprintJoker()])).toBe(
+      HIKER_CHIPS_PER_SCORED,
+    );
   });
 });

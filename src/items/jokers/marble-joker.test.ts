@@ -1,5 +1,7 @@
 // @vitest-environment node
 import {
+  createBlueprintJoker,
+  createBrainstormJoker,
   createJokerCatalog,
   createMarbleJoker,
   stoneCardsOnBlindSelectFromJokers,
@@ -28,5 +30,23 @@ describe("Marble Joker", () => {
     expect(stoneCardsOnBlindSelectFromJokers([createJokerCatalog()[0]])).toBe(
       0,
     );
+  });
+
+  test("Blueprint copying Marble Joker adds a second stone card on blind select", () => {
+    expect(
+      stoneCardsOnBlindSelectFromJokers([createBlueprintJoker(), createMarbleJoker()]),
+    ).toBe(2);
+  });
+
+  test("Brainstorm copying Marble Joker adds a second stone card on blind select", () => {
+    expect(
+      stoneCardsOnBlindSelectFromJokers([createMarbleJoker(), createBrainstormJoker()]),
+    ).toBe(2);
+  });
+
+  test("Blueprint with no right neighbor contributes nothing (negative)", () => {
+    expect(
+      stoneCardsOnBlindSelectFromJokers([createMarbleJoker(), createBlueprintJoker()]),
+    ).toBe(1);
   });
 });
