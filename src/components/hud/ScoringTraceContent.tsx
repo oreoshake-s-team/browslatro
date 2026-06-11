@@ -4,6 +4,7 @@ import {
   formatScoringEvent,
   groupEventsByHand,
   partitionByCategory,
+  resolveHandTotals,
   type ScoringEvent,
 } from "../../scoring/scoringTrace";
 import { formatNumber } from "../../utils/formatNumber";
@@ -30,6 +31,7 @@ export default function ScoringTraceContent({
           ? `${idPrefix}-hand-${group.base.handNumber}`
           : undefined;
         const { scoring, money } = partitionByCategory(group.events);
+        const totals = resolveHandTotals(group);
         return (
           <section
             key={key}
@@ -70,6 +72,15 @@ export default function ScoringTraceContent({
                   ))}
                 </ol>
               </div>
+            ) : null}
+            {totals ? (
+              <p className="scoring-trace__total">
+                {t("scoringTrace.handTotal", {
+                  chips: formatNumber(totals.chips),
+                  mult: formatNumber(totals.mult),
+                  total: formatNumber(totals.total),
+                })}
+              </p>
             ) : null}
           </section>
         );

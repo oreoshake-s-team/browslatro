@@ -94,6 +94,22 @@ describe("ScoringTrace", () => {
     ).toBeInTheDocument();
   });
 
+  test("renders a per-hand total line resolving chips × mult = score", () => {
+    const events = group(
+      { chips: 10, mult: 2, handLabel: "Pair", level: 1 },
+      { kind: "chips-delta", amount: 11, source: "A♠ rank" },
+    );
+    render(<ScoringTrace events={events} />);
+    expect(screen.getByText("21 Chips × 2 Mult = 42")).toBeInTheDocument();
+  });
+
+  test("does not render a total line for a base-less orphan group (negative)", () => {
+    const { container } = render(
+      <ScoringTrace events={[{ kind: "chips-delta", amount: 5, source: "orphan" }]} />,
+    );
+    expect(container.querySelector(".scoring-trace__total")).toBeNull();
+  });
+
   test("the scroll region is keyboard-focusable", () => {
     render(<ScoringTrace events={[]} />);
     const region = screen.getByRole("log");
