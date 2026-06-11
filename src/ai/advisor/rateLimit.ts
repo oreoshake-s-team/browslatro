@@ -4,7 +4,7 @@ export interface RateLimitDecision {
 }
 
 export interface RateLimiter {
-  check(key: string): RateLimitDecision;
+  check(key: string): Promise<RateLimitDecision>;
 }
 
 export interface RateLimiterOptions {
@@ -22,7 +22,7 @@ export function createRateLimiter({
 }: RateLimiterOptions): RateLimiter {
   const hitsByKey = new Map<string, ReadonlyArray<number>>();
   return {
-    check(key) {
+    async check(key) {
       const current = now();
       const cutoff = current - windowMs;
       if (hitsByKey.size >= MAX_TRACKED_KEYS) {
