@@ -149,6 +149,14 @@ class EncodeCandidateTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             encode_candidate(play_candidate([42]), s)
 
+    def test_face_down_slots_stay_zero_in_the_selection_mask(self):
+        s = state([
+            {"id": 7, "faceDown": True},
+            card(8, "9", "spades"),
+        ])
+        vector = encode_candidate(play_candidate([7, 8]), s)
+        self.assertEqual(vector[2:18], [0.0, 1.0] + [0.0] * 14)
+
 
 class FixtureTests(unittest.TestCase):
     def test_fixture_decisions_load(self):

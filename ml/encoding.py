@@ -122,7 +122,10 @@ def encode_candidate(candidate, state):
     hand_ids = [card["id"] for card in state["hand"]]
     mask = [0.0] * HAND_SLOTS
     for card_id in candidate["cardIds"]:
-        mask[hand_ids.index(card_id)] = 1.0
+        index = hand_ids.index(card_id)
+        if state["hand"][index].get("faceDown"):
+            continue
+        mask[index] = 1.0
     is_play = candidate["action"] == "play"
     target = max(1, state["blind"]["scoreTarget"])
     if is_play:
