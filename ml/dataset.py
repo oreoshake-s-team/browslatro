@@ -1,8 +1,9 @@
 """JSONL dataset loading for the advisor policy network."""
 
 import json
+import sys
 
-from encoding import encode_decision, encode_shop_decision
+from encoding import HAND_SLOTS, encode_decision, encode_shop_decision
 
 DATASET_SCHEMA_VERSION = 1
 SHOP_SCHEMA_VERSION = 2
@@ -14,9 +15,12 @@ def load_decisions(path, weight=1.0):
     """Loads a JSONL file into (candidate_vectors, chosen_index) decisions.
 
     Skips records where the expert's action was not among the offered
-    candidates (chosenIndex == -1).
+    candidates (chosenIndex == -1), and decisions the fixed-size encoding
+    cannot represent (hands wider than HAND_SLOTS, from hand-size jokers
+    and vouchers in human play).
     """
     decisions = []
+    unencodable = 0
     with open(path, encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
             line = line.strip()
@@ -31,10 +35,19 @@ def load_decisions(path, weight=1.0):
                     f"{path}:{line_number}: schemaVersion {version}, "
                     f"expected {DATASET_SCHEMA_VERSION}"
                 )
+            if len(record["state"]["hand"]) > HAND_SLOTS:
+                unencodable += 1
+                continue
             inputs, chosen = encode_decision(record)
             if chosen < 0 or not inputs:
                 continue
             decisions.append((inputs, chosen, record["runSeed"], weight))
+    if unencodable:
+        print(
+            f"{path}: skipped {unencodable} decision(s) with hands wider "
+            f"than {HAND_SLOTS} slots",
+            file=sys.stderr,
+        )
     return decisions
 
 

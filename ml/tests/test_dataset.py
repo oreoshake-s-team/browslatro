@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dataset import load_all, load_decisions, load_shop_decisions, split_by_seed
+from encoding import HAND_SLOTS
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
 
@@ -72,6 +73,20 @@ class WeightTest(unittest.TestCase):
         train, validation = split_by_seed(decisions, validation_fraction=0.34)
         weights = {w for _, _, w in train + validation}
         self.assertEqual(weights, {3.0})
+
+class WideHandSkipTest(unittest.TestCase):
+    def test_skips_decisions_with_hands_wider_than_the_encoding(self):
+        record = fixture_record()
+        single_card = record["state"]["hand"][:1]
+        wide_state = dict(
+            record["state"],
+            hand=single_card * (HAND_SLOTS + 1),
+        )
+        wide = dict(record, state=wide_state)
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "wide.jsonl", [wide, record])
+            self.assertEqual(len(load_all([path])), 1)
+
 
 class RunEventSkipTest(unittest.TestCase):
     def test_skips_kind_carrying_run_events(self):
