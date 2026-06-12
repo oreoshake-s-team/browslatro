@@ -28,8 +28,8 @@ dependency-free encoding tests run in CI; training itself runs locally.
    Exported rounds are checked in under `ml/data/human-play/` (one dated
    file per export) so retraining runs accumulate every round. Exports may
    interleave schemaVersion 2 run events (purchases, pack picks) and
-   decisions the fixed-size encoding cannot represent (hands wider than 8
-   slots); the loader skips both and reports the skipped-decision count.
+   decisions the fixed-size encoding cannot represent (hands wider than
+   `HAND_SLOTS`); the loader skips both and reports the skipped-decision count.
 
 2. **Train and export** (Python 3.11+):
 
