@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -120,15 +120,14 @@ if (isMain) {
     );
 
     let totalRecords = 0;
-    const parts: string[] = [];
+    writeFileSync(outPath, "");
     for (let i = 0; i < slices.length; i += 1) {
       const content = readFileSync(join(tmpDir, `chunk-${i}.jsonl`), "utf8").trimEnd();
       if (content.length > 0) {
         totalRecords += content.split("\n").length;
-        parts.push(content);
+        appendFileSync(outPath, `${content}\n`);
       }
     }
-    writeFileSync(outPath, `${parts.join("\n")}\n`);
     rmSync(tmpDir, { recursive: true });
 
     console.log(
