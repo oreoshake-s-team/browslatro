@@ -60,11 +60,28 @@ export interface HeadlessAgent {
   chooseAction(view: HeadlessRoundView): AgentAction | Promise<AgentAction>;
 }
 
+export interface ShopView {
+  readonly ante: number;
+  readonly money: number;
+  readonly jokers: ReadonlyArray<Joker>;
+  readonly rng: RandomSource;
+}
+
+export interface ShopResult {
+  readonly jokers: ReadonlyArray<Joker>;
+  readonly money: number;
+}
+
+export interface HeadlessShopAgent {
+  buyAfterAnte(view: ShopView): Promise<ShopResult>;
+}
+
 export interface HeadlessRunConfig {
   readonly seed: number;
   readonly maxAnte?: number;
   readonly jokers?: ReadonlyArray<Joker>;
   readonly stake?: Stake;
+  readonly shopAgent?: HeadlessShopAgent;
 }
 
 export interface HeadlessRunResult {
@@ -105,7 +122,7 @@ export async function playHeadlessRun(
 ): Promise<HeadlessRunResult> {
   const rng = seededRng(config.seed);
   const maxAnte = config.maxAnte ?? FINAL_ANTE;
-  const jokers = config.jokers ?? [];
+  let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
   const deck = buildHeadlessDeck();
   const handStats = createDefaultHandStats();
@@ -219,6 +236,11 @@ export async function playHeadlessRun(
       }
       blindsCleared += 1;
       money += blind + BLIND_CLEAR_REWARD_BASE;
+    }
+    if (config.shopAgent !== undefined) {
+      const result = await config.shopAgent.buyAfterAnte({ ante, money, jokers, rng });
+      jokers = result.jokers;
+      money = result.money;
     }
   }
   return { won: true, anteReached: maxAnte, blindsCleared, handsPlayed };

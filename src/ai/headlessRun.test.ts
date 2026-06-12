@@ -6,9 +6,13 @@ import {
   seededRng,
   type HeadlessAgent,
   type HeadlessRoundView,
+  type HeadlessShopAgent,
+  type ShopResult,
+  type ShopView,
 } from "./headlessRun";
 import { getHandOptions } from "./getHandOptions";
 import { joker } from "./test-helpers";
+import type { Joker } from "../items/jokers/types";
 
 const greedy: HeadlessAgent = {
   name: "greedy-test",
@@ -122,5 +126,55 @@ describe("playHeadlessRun", () => {
     await expect(playHeadlessRun(dumper, { seed: 2 })).rejects.toThrow(
       "discarded 6 cards",
     );
+  });
+
+  test("calls the shop agent once per completed ante", async () => {
+    const antesVisited: number[] = [];
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+        antesVisited.push(view.ante);
+        return { jokers: view.jokers, money: view.money };
+      },
+    };
+    const result = await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, shopAgent });
+    expect(antesVisited.length).toBe(result.won ? 2 : result.anteReached - 1);
+  });
+
+  test("shop agent jokers are visible in subsequent ante rounds", async () => {
+    const powerJoker: Joker = joker({ id: "power-joker", effect: { kind: "additive-mult", amount: 100000 } });
+    const addedJoker: Joker = joker({ id: "added-joker", effect: { kind: "additive-mult", amount: 1 } });
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+        return { jokers: [...view.jokers, addedJoker], money: view.money };
+      },
+    };
+    const seenJokerIds: Set<string>[] = [];
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        seenJokerIds.push(new Set(view.jokers.map((j) => j.id)));
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed: 4, maxAnte: 2, jokers: [powerJoker], shopAgent });
+    const beforeShopViews = seenJokerIds.filter((ids) => !ids.has(addedJoker.id));
+    const afterShopViews = seenJokerIds.filter((ids) => ids.has(addedJoker.id));
+    expect(beforeShopViews.length).toBeGreaterThan(0);
+    expect(afterShopViews.length).toBeGreaterThan(0);
+  });
+
+  test("shop agent money is deducted across antes", async () => {
+    const powerJoker: Joker = joker({ effect: { kind: "additive-mult", amount: 100000 } });
+    const moneyAfterShop: number[] = [];
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+        const spent = Math.min(view.money, 5);
+        moneyAfterShop.push(view.money - spent);
+        return { jokers: view.jokers, money: view.money - spent };
+      },
+    };
+    await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, jokers: [powerJoker], shopAgent });
+    expect(moneyAfterShop.length).toBeGreaterThan(0);
+    expect(moneyAfterShop[0]).toBeGreaterThanOrEqual(0);
   });
 });

@@ -3,10 +3,17 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
 import {
   generateDataset,
   serializeDatasetRecords,
 } from "../src/ai/dataset";
+
+function stringFlag(name: string, fallback: string): string {
+  const index = process.argv.indexOf(name);
+  if (index === -1 || index + 1 >= process.argv.length) return fallback;
+  return process.argv[index + 1];
+}
 
 function floatFlag(name: string, fallback: number): number {
   const index = process.argv.indexOf(name);
@@ -54,11 +61,12 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--parallel-jobs N]",
+      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--parallel-jobs N] [--shop-policy PATH]",
     );
     process.exit(1);
   }
 
+  const shopPolicyPath = stringFlag("--shop-policy", "");
   const config = {
     games: intFlag("--games", 100),
     seedOffset: intFlag("--seed-offset", 0),
@@ -95,6 +103,7 @@ if (isMain) {
             ...(config.jokerLoadoutFraction > 0
               ? ["--joker-loadout-fraction", String(config.jokerLoadoutFraction)]
               : []),
+            ...(shopPolicyPath !== "" ? ["--shop-policy", shopPolicyPath] : []),
           ];
           const proc = spawn(process.execPath, [...loaderArgs, ...args], { stdio: ["ignore", "ignore", "inherit"] });
           proc.on("close", (code) => {
@@ -128,7 +137,9 @@ if (isMain) {
     console.log(`wrote ${outPath}`);
   } else {
     const started = Date.now();
-    const { records, runs } = await generateDataset(config);
+    const shopAgent =
+      shopPolicyPath !== "" ? await createHeadlessShopAgent(shopPolicyPath) : undefined;
+    const { records, runs } = await generateDataset({ ...config, shopAgent });
     writeFileSync(outPath, `${serializeDatasetRecords(records)}\n`);
 
     const wins = runs.filter((r) => r.won).length;
