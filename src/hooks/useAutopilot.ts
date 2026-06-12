@@ -25,6 +25,7 @@ export interface AutopilotDeps {
 export interface AutopilotControls {
   readonly pendingProposal: HandOption | null;
   readonly modelProgress: DownloadProgress | null;
+  readonly proposalUnavailable: boolean;
   readonly approve: () => void;
   readonly stop: () => void;
   readonly setProposal: (option: HandOption) => void;
@@ -49,6 +50,7 @@ export function useAutopilot(
   const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
     null,
   );
+  const [proposalUnavailable, setProposalUnavailable] = useState(false);
   const modelLoadedRef = useRef(false);
   const proposalRef = useRef<HandOption | null>(null);
   proposalRef.current = pendingProposal;
@@ -77,6 +79,7 @@ export function useAutopilot(
     if (!enabled) {
       setPendingProposal(null);
       setModelProgress(null);
+      setProposalUnavailable(false);
       return;
     }
     if (isScoring || pendingProposal !== null) return;
@@ -98,7 +101,12 @@ export function useAutopilot(
         const fresh = getState();
         if (cancelled || !autopilotIdle(fresh)) return;
         const action = await chooseAutopilotAction(fresh, ranker);
-        if (cancelled || action === null) return;
+        if (cancelled) return;
+        if (action === null) {
+          setProposalUnavailable(true);
+          return;
+        }
+        setProposalUnavailable(false);
         fresh.selectCards(action.cardIds);
         setPendingProposal(action);
       })();
@@ -156,5 +164,12 @@ export function useAutopilot(
     setPendingProposal(option);
   }, []);
 
-  return { pendingProposal, modelProgress, approve, stop, setProposal };
+  return {
+    pendingProposal,
+    modelProgress,
+    proposalUnavailable,
+    approve,
+    stop,
+    setProposal,
+  };
 }

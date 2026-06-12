@@ -1,5 +1,9 @@
 import type { GameState } from "../../store/game";
-import { getHandOptions, type HandOption } from "../getHandOptions";
+import {
+  excludeFaceDownCandidates,
+  getHandOptions,
+  type HandOption,
+} from "../getHandOptions";
 import { toModelState } from "../modelState";
 import type { CandidateRanker } from "../policy";
 import { toModelStateInput, toSimulatePlayInput } from "./snapshot";
@@ -23,7 +27,10 @@ export async function chooseAutopilotAction(
   state: GameState,
   ranker: CandidateRanker,
 ): Promise<HandOption | null> {
-  const candidates = getHandOptions(toSimulatePlayInput(state));
+  const candidates = excludeFaceDownCandidates(
+    getHandOptions(toSimulatePlayInput(state)),
+    state.dealt.hand,
+  );
   if (candidates.length === 0) return null;
   const ranking = await ranker.rank(
     toModelState(toModelStateInput(state)),

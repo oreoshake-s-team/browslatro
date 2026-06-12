@@ -55,6 +55,7 @@ function renderControls(
   overrides: {
     proposal?: HandOption | null;
     modelProgress?: { loaded: number; total: number | null } | null;
+    proposalUnavailable?: boolean;
     explanation?: MoveExplanationState;
     onApprove?: () => void;
     onStop?: () => void;
@@ -66,6 +67,7 @@ function renderControls(
     <AutopilotControls
       proposal={"proposal" in overrides ? (overrides.proposal ?? null) : playProposal()}
       modelProgress={overrides.modelProgress ?? null}
+      proposalUnavailable={overrides.proposalUnavailable ?? false}
       explanation={overrides.explanation ?? { phase: "idle" }}
       onApprove={overrides.onApprove ?? vi.fn()}
       onStop={overrides.onStop ?? vi.fn()}
@@ -79,6 +81,18 @@ describe("AutopilotControls", () => {
   test("labels the panel as a suggested move", () => {
     renderControls({ proposal: playProposal() });
     expect(screen.getByText(/Suggested move/)).toBeInTheDocument();
+  });
+
+  test("announces when no suggestion is available", () => {
+    renderControls({ proposal: null, proposalUnavailable: true });
+    expect(screen.getByTestId("autopilot-no-suggestion")).toHaveTextContent(
+      "No suggestion available",
+    );
+  });
+
+  test("does not announce unavailability while a proposal exists", () => {
+    renderControls({ proposal: playProposal(), proposalUnavailable: true });
+    expect(screen.queryByTestId("autopilot-no-suggestion")).not.toBeInTheDocument();
   });
 
   test("describes a play proposal with its hand label", () => {

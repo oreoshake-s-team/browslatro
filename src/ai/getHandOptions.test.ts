@@ -2,7 +2,11 @@
 import { describe, expect, test } from "vitest";
 import type { Card, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import type { HandLabel } from "../scoring/handEvaluator";
-import { getHandOptions, type PlayOption } from "./getHandOptions";
+import {
+  excludeFaceDownCandidates,
+  getHandOptions,
+  type PlayOption,
+} from "./getHandOptions";
 import { seededRng } from "./headlessRun";
 import { simulatePlay, type SimulatePlayInput } from "./simulatePlay";
 import { boss, card, simulateInput } from "./test-helpers";
@@ -238,5 +242,43 @@ describe("getHandOptions — fast path equivalence with full simulation", () => 
     for (const option of plays) {
       expect(reference.get(option.handLabel)?.score).toBe(option.score);
     }
+  });
+});
+
+describe("excludeFaceDownCandidates", () => {
+  const hand: ReadonlyArray<Card> = [
+    { id: 1, rank: "9", suit: "hearts", faceDown: true },
+    { id: 2, rank: "9", suit: "spades" },
+    { id: 3, rank: "K", suit: "clubs" },
+  ];
+
+  function candidate(cardIds: ReadonlyArray<number>): PlayOption {
+    return {
+      action: "play",
+      cardIds,
+      handLabel: "High Card",
+      score: 10,
+      chips: 5,
+      mult: 2,
+      notes: [],
+    };
+  }
+
+  test("drops candidates that include a face-down card", () => {
+    const kept = excludeFaceDownCandidates(
+      [candidate([1, 2]), candidate([2, 3])],
+      hand,
+    );
+    expect(kept).toEqual([candidate([2, 3])]);
+  });
+
+  test("returns the same list when no cards are face-down", () => {
+    const faceUp = hand.map((c) => ({ ...c, faceDown: undefined }));
+    const candidates = [candidate([1, 2])];
+    expect(excludeFaceDownCandidates(candidates, faceUp)).toEqual(candidates);
+  });
+
+  test("returns an empty list when every candidate uses a face-down card", () => {
+    expect(excludeFaceDownCandidates([candidate([1])], hand)).toHaveLength(0);
   });
 });

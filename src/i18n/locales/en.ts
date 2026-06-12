@@ -257,6 +257,8 @@ export const en = {
     autopilotPlayProposal: "Play {{hand}}",
     autopilotDiscardProposal: "Discard the selected cards",
     downloadingModel: "Downloading the coach\u2026",
+    noSuggestionAvailable:
+      "No suggestion available \u2014 the coach can't see any face-up cards to suggest.",
     thinking: "The coach is thinking\u2026",
     keyLabel: "Your Anthropic API key",
     keySave: "Save key",

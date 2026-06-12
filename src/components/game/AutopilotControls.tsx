@@ -14,6 +14,7 @@ import "./AutopilotControls.css";
 export interface AutopilotControlsProps {
   readonly proposal: HandOption | null;
   readonly modelProgress: DownloadProgress | null;
+  readonly proposalUnavailable?: boolean;
   readonly explanation: MoveExplanationState;
   readonly onApprove: () => void;
   readonly onStop: () => void;
@@ -140,6 +141,7 @@ function renderExplanation(
 export default function AutopilotControls({
   proposal,
   modelProgress,
+  proposalUnavailable = false,
   explanation,
   onApprove,
   onStop,
@@ -176,6 +178,14 @@ export default function AutopilotControls({
             }
           />
         </div>
+      ) : proposalUnavailable ? (
+        <p
+          className="autopilot-proposal"
+          data-testid="autopilot-no-suggestion"
+          role="status"
+        >
+          {t("advisor.noSuggestionAvailable")}
+        </p>
       ) : null}
       <div className="autopilot-actions">
         {proposal !== null && (

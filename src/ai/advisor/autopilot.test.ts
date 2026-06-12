@@ -92,4 +92,24 @@ describe("chooseAutopilotAction", () => {
       await chooseAutopilotAction(useGame.getState(), passthroughRanker),
     ).toBeNull();
   });
+
+  test("never proposes an action that uses a face-down card", async () => {
+    const hand = pairHand().map((card) =>
+      card.id === 1 ? { ...card, faceDown: true } : card,
+    );
+    useGame.getState().setDealt({ hand, remaining: [] });
+    const action = await chooseAutopilotAction(
+      useGame.getState(),
+      passthroughRanker,
+    );
+    expect(action !== null && !action.cardIds.includes(1)).toBe(true);
+  });
+
+  test("returns null when the whole hand is face-down", async () => {
+    const hand = pairHand().map((card) => ({ ...card, faceDown: true }));
+    useGame.getState().setDealt({ hand, remaining: [] });
+    expect(
+      await chooseAutopilotAction(useGame.getState(), passthroughRanker),
+    ).toBeNull();
+  });
 });
