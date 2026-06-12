@@ -69,12 +69,32 @@ export default function SuggestionAdvice<TAction>({
   switch (state.phase) {
     case "idle":
       return null;
-    case "loading":
+    case "loading": {
+      const onnxCandidate =
+        state.onnxIndex !== null ? state.candidates[state.onnxIndex] : undefined;
       return (
-        <p className="suggestion-advice-status" role="status">
-          {t("advisor.thinking")}
-        </p>
+        <div className="suggestion-advice suggestion-advice--onnx" role="status" data-testid="suggestion-onnx">
+          <p className="suggestion-advice-status">{t("advisor.thinking")}</p>
+          {onnxCandidate !== undefined && (
+            <section className="suggestion-section suggestion-section--recommendation">
+              <p className="suggestion-label">{t("advisor.recommendation")}</p>
+              <p className="suggestion-move" data-testid="suggestion-onnx-recommendation">
+                {describeContextCandidate(t, onnxCandidate)}
+              </p>
+              <button
+                type="button"
+                className="btn suggestion-apply"
+                data-testid="suggestion-apply"
+                onClick={onApply}
+              >
+                <span aria-hidden="true">✅ </span>
+                {t("advisor.suggestApply")}
+              </button>
+            </section>
+          )}
+        </div>
       );
+    }
     case "error": {
       const showKeyForm =
         state.code === "invalid_player_key" ||

@@ -25,7 +25,12 @@ export interface SuggestionPlan<TAction> {
 
 export type SuggestionState<TAction> =
   | { readonly phase: "idle" }
-  | { readonly phase: "loading" }
+  | {
+      readonly phase: "loading";
+      readonly onnxIndex: number | null;
+      readonly candidates: ReadonlyArray<ContextAdviceCandidate>;
+      readonly actions: ReadonlyArray<TAction>;
+    }
   | {
       readonly phase: "ready";
       readonly advice: Advice;
@@ -51,6 +56,7 @@ export interface UseSuggestionResult<TAction> {
 export function useSuggestion<TAction>(
   buildPlan: () => SuggestionPlan<TAction> | null,
   deps?: SuggestionDeps,
+  preRank?: (candidates: ReadonlyArray<ContextAdviceCandidate>) => Promise<number | null>,
 ): UseSuggestionResult<TAction> {
   const [state, setState] = useState<SuggestionState<TAction>>({
     phase: "idle",
@@ -60,6 +66,8 @@ export function useSuggestion<TAction>(
   buildPlanRef.current = buildPlan;
   const depsRef = useRef(deps);
   depsRef.current = deps;
+  const preRankRef = useRef(preRank);
+  preRankRef.current = preRank;
 
   const suggest = useCallback(async (): Promise<void> => {
     const plan = buildPlanRef.current();
@@ -67,7 +75,18 @@ export function useSuggestion<TAction>(
     const fetchAdviceFn = depsRef.current?.fetchAdviceFn ?? fetchContextAdvice;
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
-    setState({ phase: "loading" });
+    const candidates = plan.request.candidates;
+    const actions = plan.actions;
+    setState({ phase: "loading", onnxIndex: null, candidates, actions });
+
+    if (preRankRef.current) {
+      const rank = preRankRef.current;
+      void rank(candidates).then((idx) => {
+        if (requestIdRef.current !== requestId) return;
+        setState((s) => (s.phase === "loading" ? { ...s, onnxIndex: idx } : s));
+      }).catch(() => undefined);
+    }
+
     const result = await fetchAdviceFn(plan.request);
     if (requestIdRef.current !== requestId) return;
     if (!result.ok) {
@@ -78,12 +97,7 @@ export function useSuggestion<TAction>(
       });
       return;
     }
-    setState({
-      phase: "ready",
-      advice: result.advice,
-      candidates: plan.request.candidates,
-      actions: plan.actions,
-    });
+    setState({ phase: "ready", advice: result.advice, candidates, actions });
   }, []);
 
   const reset = useCallback((): void => {

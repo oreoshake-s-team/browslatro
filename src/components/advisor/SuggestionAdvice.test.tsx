@@ -77,10 +77,37 @@ describe("SuggestionAdvice", () => {
   });
 
   test("announces the loading phase", () => {
-    renderAdvice({ phase: "loading" });
+    renderAdvice({ phase: "loading", onnxIndex: null, candidates: [], actions: [] });
     expect(screen.getByRole("status")).toHaveTextContent(
       "The coach is thinking",
     );
+  });
+
+  test("shows ONNX recommendation when onnxIndex is set during loading", () => {
+    renderAdvice({
+      phase: "loading",
+      onnxIndex: 0,
+      candidates: candidates(),
+      actions: [],
+    });
+    expect(screen.getByTestId("suggestion-onnx-recommendation")).toHaveTextContent(
+      "Buy Jolly Joker for $3",
+    );
+  });
+
+  test("shows apply button alongside ONNX recommendation during loading", async () => {
+    const onApply = vi.fn();
+    renderAdvice(
+      { phase: "loading", onnxIndex: 0, candidates: candidates(), actions: [] },
+      { onApply },
+    );
+    await userEvent.click(screen.getByTestId("suggestion-apply"));
+    expect(onApply).toHaveBeenCalledOnce();
+  });
+
+  test("does not show recommendation when onnxIndex is null during loading", () => {
+    renderAdvice({ phase: "loading", onnxIndex: null, candidates: candidates(), actions: [] });
+    expect(screen.queryByTestId("suggestion-onnx-recommendation")).not.toBeInTheDocument();
   });
 
   test("describes the recommended buy candidate", () => {
