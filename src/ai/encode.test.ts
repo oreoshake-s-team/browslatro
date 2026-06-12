@@ -116,6 +116,22 @@ describe("encode — shape contracts", () => {
     );
   });
 
+  test("face-down slots stay zero in the selection mask", () => {
+    const state: ModelState = {
+      ...sample.state,
+      hand: [{ id: 7, faceDown: true }, sample.state.hand[0]],
+    };
+    const candidate: HandOption = {
+      ...sample.candidates[0],
+      cardIds: [7, sample.state.hand[0].id],
+    } as HandOption;
+    expect(encodeCandidate(candidate, state).slice(2, 18)).toEqual([
+      0,
+      1,
+      ...new Array<number>(14).fill(0),
+    ]);
+  });
+
   test("an equipped joker sets its presence flag and effect-category bit", () => {
     const state: ModelState = {
       ...sample.state,

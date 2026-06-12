@@ -152,6 +152,7 @@ export function encodeCandidate(
   for (const cardId of candidate.cardIds) {
     const index = handIds.indexOf(cardId);
     if (index === -1) throw new Error(`candidate card ${cardId} not in hand`);
+    if (state.hand[index].faceDown) continue;
     mask[index] = 1;
   }
   const isPlay = candidate.action === "play";
