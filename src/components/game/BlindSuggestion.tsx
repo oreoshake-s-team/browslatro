@@ -68,7 +68,7 @@ export default function BlindSuggestion(
   const trigger = (
     <button
       type="button"
-      className="btn btn--ghost blind-suggest-button"
+      className="btn btn--advisor blind-suggest-button"
       data-testid="blind-suggest"
       disabled={state.phase === "loading"}
       aria-label={t("advisor.suggestBlindButton")}

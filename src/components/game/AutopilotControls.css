@@ -84,16 +84,6 @@
   background-color: var(--edition-poly);
 }
 
-.autopilot-askai-button {
-  background-color: color-mix(in srgb, var(--enhance-wild-border) 22%, transparent);
-  border-color: var(--enhance-wild-border);
-  color: var(--text-primary);
-}
-
-.autopilot-askai-button:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--enhance-wild-border) 34%, transparent);
-}
-
 .autopilot-explanation {
   margin: 0;
   display: flex;

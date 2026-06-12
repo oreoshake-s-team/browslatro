@@ -103,7 +103,7 @@ export default function ShopSuggestion(
   const trigger = (
     <button
       type="button"
-      className="btn shop-suggest-button"
+      className="btn btn--advisor shop-suggest-button"
       data-testid="shop-suggest"
       disabled={props.disabled || state.phase === "loading"}
       aria-label={t("advisor.suggestShopButton")}

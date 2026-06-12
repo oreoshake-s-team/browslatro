@@ -111,7 +111,7 @@ export default function PackSuggestion(
   const trigger = (
     <button
       type="button"
-      className="btn pack-suggest-button"
+      className="btn btn--advisor pack-suggest-button"
       data-testid="pack-suggest"
       disabled={state.phase === "loading"}
       aria-label={t("advisor.suggestPackButton")}
