@@ -9,6 +9,7 @@ import {
   type AgentAction,
   type HeadlessAgent,
   type HeadlessRunResult,
+  type HeadlessShopAgent,
 } from "./headlessRun";
 import { toModelState, type ModelState } from "./modelState";
 import { createSearchAgent } from "./searchAgent";
@@ -34,6 +35,7 @@ export interface GenerateDatasetConfig {
   readonly maxAnte?: number;
   readonly jokers?: ReadonlyArray<Joker>;
   readonly jokerLoadoutFraction?: number;
+  readonly shopAgent?: HeadlessShopAgent;
 }
 
 export interface GenerateDatasetResult {
@@ -104,6 +106,7 @@ export async function generateDataset(
         seed,
         maxAnte: config.maxAnte,
         jokers: gameJokers,
+        shopAgent: config.shopAgent,
       }),
     );
   }

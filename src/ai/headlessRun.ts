@@ -9,7 +9,7 @@ import type { VoucherId } from "../items/vouchers";
 import { emptyHandCounts } from "../components/hud/handPlayCounts";
 import { requiredChipsForBlind } from "../scoring/anteScaling";
 import type { HandLabel } from "../scoring/handEvaluator";
-import { createDefaultHandStats } from "../scoring/handStats";
+import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
 import {
   computeStartingDiscards,
   computeStartingHands,
@@ -60,11 +60,30 @@ export interface HeadlessAgent {
   chooseAction(view: HeadlessRoundView): AgentAction | Promise<AgentAction>;
 }
 
+export interface ShopView {
+  readonly ante: number;
+  readonly money: number;
+  readonly jokers: ReadonlyArray<Joker>;
+  readonly handStats: HandStats;
+  readonly rng: RandomSource;
+}
+
+export interface ShopResult {
+  readonly jokers: ReadonlyArray<Joker>;
+  readonly money: number;
+  readonly handStats: HandStats;
+}
+
+export interface HeadlessShopAgent {
+  buyAfterAnte(view: ShopView): Promise<ShopResult>;
+}
+
 export interface HeadlessRunConfig {
   readonly seed: number;
   readonly maxAnte?: number;
   readonly jokers?: ReadonlyArray<Joker>;
   readonly stake?: Stake;
+  readonly shopAgent?: HeadlessShopAgent;
 }
 
 export interface HeadlessRunResult {
@@ -105,10 +124,10 @@ export async function playHeadlessRun(
 ): Promise<HeadlessRunResult> {
   const rng = seededRng(config.seed);
   const maxAnte = config.maxAnte ?? FINAL_ANTE;
-  const jokers = config.jokers ?? [];
+  let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
   const deck = buildHeadlessDeck();
-  const handStats = createDefaultHandStats();
+  let handStats = createDefaultHandStats();
   const ownedVoucherIds: ReadonlySet<VoucherId> = new Set();
   const recentBossIds = new Set<string>();
 
@@ -219,6 +238,12 @@ export async function playHeadlessRun(
       }
       blindsCleared += 1;
       money += blind + BLIND_CLEAR_REWARD_BASE;
+    }
+    if (config.shopAgent !== undefined) {
+      const result = await config.shopAgent.buyAfterAnte({ ante, money, jokers, handStats, rng });
+      jokers = result.jokers;
+      money = result.money;
+      handStats = result.handStats;
     }
   }
   return { won: true, anteReached: maxAnte, blindsCleared, handsPlayed };
