@@ -1,0 +1,534 @@
+[
+  {
+    "record": {
+      "schemaVersion": 2,
+      "runSeed": 1,
+      "ante": 2,
+      "round": 6,
+      "blind": 0,
+      "money": 10,
+      "kind": "purchase",
+      "item": {
+        "itemType": "joker",
+        "id": "jolly",
+        "name": "jolly",
+        "cost": 4
+      },
+      "offers": [
+        {
+          "itemType": "joker",
+          "id": "jolly",
+          "name": "jolly",
+          "cost": 4
+        },
+        {
+          "itemType": "planet",
+          "id": "mercury",
+          "name": "mercury",
+          "cost": 3
+        }
+      ]
+    },
+    "candidates": [
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.2,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.15,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0
+      ]
+    ],
+    "chosenIndex": 0
+  },
+  {
+    "record": {
+      "schemaVersion": 2,
+      "runSeed": 1,
+      "ante": 2,
+      "round": 6,
+      "blind": 0,
+      "money": 10,
+      "kind": "purchase",
+      "item": {
+        "itemType": "planet",
+        "id": "mercury",
+        "name": "mercury",
+        "cost": 3
+      },
+      "offers": [
+        {
+          "itemType": "joker",
+          "id": "jolly",
+          "name": "jolly",
+          "cost": 4
+        },
+        {
+          "itemType": "planet",
+          "id": "mercury",
+          "name": "mercury",
+          "cost": 3
+        }
+      ]
+    },
+    "candidates": [
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.2,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.15,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0
+      ]
+    ],
+    "chosenIndex": 1
+  },
+  {
+    "record": {
+      "schemaVersion": 2,
+      "runSeed": 1,
+      "ante": 2,
+      "round": 6,
+      "blind": 0,
+      "money": 10,
+      "kind": "reroll",
+      "cost": 5,
+      "offers": [
+        {
+          "itemType": "tarot",
+          "id": "fool",
+          "name": "fool",
+          "cost": 4
+        },
+        {
+          "itemType": "spectral",
+          "id": "hex",
+          "name": "hex",
+          "cost": 6
+        }
+      ]
+    },
+    "candidates": [
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.2,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.3,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.25,
+        1.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0
+      ]
+    ],
+    "chosenIndex": 2
+  },
+  {
+    "record": {
+      "schemaVersion": 2,
+      "runSeed": 1,
+      "ante": 2,
+      "round": 6,
+      "blind": 0,
+      "money": 3,
+      "kind": "purchase",
+      "item": {
+        "itemType": "joker",
+        "id": "jolly",
+        "name": "jolly",
+        "cost": 5
+      },
+      "offers": [
+        {
+          "itemType": "joker",
+          "id": "jolly",
+          "name": "jolly",
+          "cost": 5
+        }
+      ]
+    },
+    "candidates": [
+      [
+        0.15,
+        0.25,
+        0.25,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.15,
+        0.25,
+        0.25,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        1.0,
+        0.0
+      ]
+    ],
+    "chosenIndex": 0
+  },
+  {
+    "record": {
+      "schemaVersion": 2,
+      "runSeed": 1,
+      "ante": 2,
+      "round": 6,
+      "blind": 0,
+      "money": 10,
+      "kind": "pack-pick",
+      "pool": "arcana",
+      "variant": "standard",
+      "options": [
+        {
+          "optionType": "tarot",
+          "id": "fool",
+          "name": "fool"
+        },
+        {
+          "optionType": "tarot",
+          "id": "magician",
+          "name": "magician"
+        },
+        {
+          "optionType": "planet",
+          "id": "mercury",
+          "name": "mercury"
+        }
+      ],
+      "pickedIndex": 1,
+      "picksRemaining": 2
+    },
+    "candidates": [
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.4,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.4,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.4,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.4,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "chosenIndex": 1
+  },
+  {
+    "record": {
+      "schemaVersion": 2,
+      "runSeed": 1,
+      "ante": 2,
+      "round": 6,
+      "blind": 0,
+      "money": 10,
+      "kind": "pack-pick",
+      "pool": "celestial",
+      "variant": "standard",
+      "options": [
+        {
+          "optionType": "planet",
+          "id": "jupiter",
+          "name": "jupiter"
+        },
+        {
+          "optionType": "planet",
+          "id": "saturn",
+          "name": "saturn"
+        }
+      ],
+      "pickedIndex": null,
+      "picksRemaining": 1
+    },
+    "candidates": [
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.2,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.2,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.5,
+        0.25,
+        0.25,
+        0.2,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "chosenIndex": 2
+  }
+]
