@@ -6,7 +6,7 @@ import {
   GREEN_STAKE_CHIPS,
   PURPLE_STAKE_CHIPS,
 } from "../constants";
-import type { BossBlind } from "../items/bosses";
+import { createBossCatalog, type BossBlind } from "../items/bosses";
 
 const TEST_BOSS: BossBlind = {
   id: "test-boss",
@@ -126,6 +126,20 @@ describe("requiredChipsForBlind — White (base)", () => {
         stake: "white",
       }),
     ).toBe(BASE_CHIPS[0] * TEST_BOSS.scoreMultiplier);
+  });
+
+  test("Violet Vessel applies its 6x multiplier at the ante 8 base chips", () => {
+    const vessel = createBossCatalog().find((b) => b.id === "violet-vessel")!;
+    expect(
+      requiredChipsForBlind({ ante: 8, blind: 3, boss: vessel, stake: "white" }),
+    ).toBe(baseChipsForAnte(8) * 6);
+  });
+
+  test("Violet Vessel scales with the endless-mode base chips at ante 16", () => {
+    const vessel = createBossCatalog().find((b) => b.id === "violet-vessel")!;
+    expect(
+      requiredChipsForBlind({ ante: 16, blind: 3, boss: vessel, stake: "white" }),
+    ).toBe(baseChipsForAnte(16) * 6);
   });
 });
 

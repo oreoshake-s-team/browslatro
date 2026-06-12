@@ -31,7 +31,8 @@ export type BossEffect =
   | { readonly kind: "face-down-faces" }
   | { readonly kind: "post-play-random-held-discard"; readonly count: number }
   | { readonly kind: "fixed-refill-count"; readonly value: number }
-  | { readonly kind: "zero-wallet-on-most-played-hand" };
+  | { readonly kind: "zero-wallet-on-most-played-hand" }
+  | { readonly kind: "debuff-all-until-joker-sold" };
 
 export interface BossBlind {
   readonly id: string;
@@ -227,7 +228,31 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     anteMin: 6,
     effect: { kind: "zero-wallet-on-most-played-hand" },
   },
+  {
+    id: "violet-vessel",
+    name: "Violet Vessel",
+    description: "Very large blind.",
+    scoreMultiplier: 6,
+    anteMin: 8,
+    effect: { kind: "none" },
+  },
+  {
+    id: "verdant-leaf",
+    name: "Verdant Leaf",
+    description: "All cards debuffed until 1 Joker sold.",
+    scoreMultiplier: 2,
+    anteMin: 8,
+    effect: { kind: "debuff-all-until-joker-sold" },
+  },
 ];
+
+const SHOWDOWN_BOSS_IDS: ReadonlySet<string> = new Set([
+  "amber-acorn",
+  "verdant-leaf",
+  "violet-vessel",
+  "crimson-heart",
+  "cerulean-bell",
+]);
 
 export function createBossCatalog(): BossBlind[] {
   return BOSS_SPECS.slice();
@@ -238,6 +263,20 @@ export function availableBosses(
   ante: number,
 ): BossBlind[] {
   return catalog.filter((b) => ante >= b.anteMin);
+}
+
+export function isShowdownAnte(ante: number): boolean {
+  return ante > 0 && ante % 8 === 0;
+}
+
+export function bossPoolForAnte(
+  catalog: ReadonlyArray<BossBlind>,
+  ante: number,
+): BossBlind[] {
+  const showdown = isShowdownAnte(ante);
+  return availableBosses(catalog, ante).filter(
+    (b) => SHOWDOWN_BOSS_IDS.has(b.id) === showdown,
+  );
 }
 
 export type BossRandomSource = () => number;
@@ -271,7 +310,7 @@ export interface PickBossArgs {
 export function pickBossForAnte(args: PickBossArgs): BossBlind {
   const catalog = args.catalog ?? createBossCatalog();
   const rng = args.rng ?? bossPickerRngConfig.rng;
-  const eligible = availableBosses(catalog, args.ante);
+  const eligible = bossPoolForAnte(catalog, args.ante);
   if (eligible.length === 0) {
     throw new Error(`No boss available for ante ${args.ante}`);
   }
@@ -326,6 +365,8 @@ export function isCardDebuffedByBoss(
       return card.suit === boss.effect.suit;
     case "debuff-face":
       return FACE_RANKS.has(card.rank);
+    case "debuff-all-until-joker-sold":
+      return true;
     default:
       return false;
   }
