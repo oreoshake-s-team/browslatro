@@ -1,3 +1,6 @@
+// @vitest-environment node
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   encodePackCandidates,
@@ -159,5 +162,101 @@ describe("encodePackCandidates", () => {
     const encoded = encodePackCandidates(input);
     const isSkipIndex = 4 + 7 + 1 + 1 + 1 + 1;
     expect(encoded[isSkipIndex]).toBe(1);
+  });
+});
+
+const FIXTURES = join(__dirname, "..", "..", "..", "ml", "tests", "fixtures");
+
+interface GoldenOffer {
+  readonly itemType: string;
+  readonly id: string;
+  readonly name: string;
+  readonly cost: number;
+}
+
+interface GoldenOption {
+  readonly optionType: string;
+  readonly id: string;
+  readonly name: string;
+}
+
+interface GoldenRecord {
+  readonly kind: "purchase" | "reroll" | "pack-pick";
+  readonly money: number;
+  readonly ante: number;
+  readonly round: number;
+  readonly picksRemaining?: number;
+  readonly offers?: ReadonlyArray<GoldenOffer>;
+  readonly options?: ReadonlyArray<GoldenOption>;
+  readonly cost?: number;
+}
+
+interface GoldenCase {
+  readonly record: GoldenRecord;
+  readonly candidates: ReadonlyArray<ReadonlyArray<number>>;
+  readonly chosenIndex: number;
+}
+
+function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
+  const { money, ante, round } = rec;
+
+  if (rec.kind === "purchase") {
+    const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
+      action: "buy" as const,
+      item: { id: o.id, name: o.name, itemType: o.itemType, cost: o.cost, description: "" },
+    }));
+    candidates.push({ action: "leave" });
+    return { money, ante, round, candidates };
+  }
+
+  if (rec.kind === "reroll") {
+    const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
+      action: "buy" as const,
+      item: { id: o.id, name: o.name, itemType: o.itemType, cost: o.cost, description: "" },
+    }));
+    candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
+    candidates.push({ action: "leave" });
+    return { money, ante, round, candidates };
+  }
+
+  const packCandidates: PackAdviceCandidate[] = (rec.options ?? []).map((o) => ({
+    action: "pick" as const,
+    option: { id: o.id, name: o.name, optionType: o.optionType, description: "" },
+  }));
+  packCandidates.push({ action: "skip" });
+  return { money, ante, round, picksRemaining: rec.picksRemaining ?? 0, candidates: packCandidates };
+}
+
+describe("encodeShopCandidates / encodePackCandidates — cross-language golden vectors", () => {
+  function goldenCases(): ReadonlyArray<GoldenCase> {
+    return JSON.parse(
+      readFileSync(join(FIXTURES, "shop-golden.json"), "utf8"),
+    ) as GoldenCase[];
+  }
+
+  test("matches the Python encoder on all fixture cases", () => {
+    for (const { record, candidates: expected } of goldenCases()) {
+      const input = recordToInput(record);
+      const encoded =
+        record.kind === "pack-pick"
+          ? encodePackCandidates(input as PackRankInput)
+          : encodeShopCandidates(input as ShopRankInput);
+      expect(encoded.length).toBe(expected.length * SHOP_INPUT_FEATURES);
+      for (let i = 0; i < expected.length; i++) {
+        for (let j = 0; j < SHOP_INPUT_FEATURES; j++) {
+          expect(encoded[i * SHOP_INPUT_FEATURES + j]).toBeCloseTo(
+            expected[i][j],
+            5,
+          );
+        }
+      }
+    }
+  });
+
+  test("fixture covers purchase, reroll, and pack-pick cases", () => {
+    const kinds = goldenCases().map((c) => c.record.kind);
+    expect(kinds).toContain("purchase");
+    expect(kinds).toContain("reroll");
+    expect(kinds).toContain("pack-pick");
   });
 });

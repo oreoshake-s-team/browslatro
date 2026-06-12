@@ -91,3 +91,16 @@ test("a rate-limited keyless player gets the key form inline", async ({
     page.getByLabel("Your Anthropic API key"),
   ).toBeVisible();
 });
+
+test("ONNX policy shows a recommendation while the LLM is still loading", async ({
+  page,
+}) => {
+  await page.route("**/api/advice", () => {/* never respond — keep loading state */});
+  await openShop(page);
+  await page.getByTestId("shop-suggest").click();
+  await expect(page.getByTestId("suggestion-onnx")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByTestId("suggestion-onnx-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByTestId("suggestion-onnx-recommendation")).not.toBeEmpty();
+});
