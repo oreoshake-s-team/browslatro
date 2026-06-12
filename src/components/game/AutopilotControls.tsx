@@ -196,7 +196,7 @@ export default function AutopilotControls({
         )}
         {proposal !== null && (
           <button
-            className="btn autopilot-askai-button"
+            className="btn btn--advisor autopilot-askai-button"
             onClick={onAskAi}
             disabled={explanation.phase === "loading"}
           >

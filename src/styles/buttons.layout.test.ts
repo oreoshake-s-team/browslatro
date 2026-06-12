@@ -17,7 +17,7 @@ function ruleBody(selector: string): string {
 }
 
 describe("button variant system", () => {
-  test.each(["primary", "secondary", "danger", "ghost"])(
+  test.each(["primary", "secondary", "danger", "ghost", "advisor"])(
     "buttons.css defines the %s variant",
     (variant) => {
       expect(buttonsCss).toMatch(new RegExp(`\\.btn--${variant}\\s*{`));
@@ -66,5 +66,14 @@ describe("button variant system", () => {
   test("negative: the shop reroll no longer uses white-on-orange", () => {
     const css = componentCss("shop", "Shop.css");
     expect(css).not.toMatch(/\.shop-reroll\s*{[^}]*color\s*:\s*white/);
+  });
+
+  test("advisor uses the wild border token", () => {
+    expect(ruleBody(".btn--advisor")).toMatch(/var\(--enhance-wild-border\)/);
+  });
+
+  test("negative: AutopilotControls.css no longer defines advisor button colors", () => {
+    const css = componentCss("game", "AutopilotControls.css");
+    expect(css).not.toMatch(/\.autopilot-askai-button\s*{[^}]*background-color/);
   });
 });

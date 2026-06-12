@@ -58,3 +58,13 @@
   background-color: color-mix(in srgb, var(--white) 6%, transparent);
   color: var(--text-primary);
 }
+
+.btn--advisor {
+  background-color: color-mix(in srgb, var(--enhance-wild-border) 22%, transparent);
+  border-color: var(--enhance-wild-border);
+  color: var(--text-primary);
+}
+
+.btn--advisor:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--enhance-wild-border) 34%, transparent);
+}
