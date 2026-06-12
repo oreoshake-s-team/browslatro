@@ -1,10 +1,14 @@
+import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   buildShopAdvicePlan,
   type ShopSuggestionAction,
 } from "../../ai/advisor/shopAdvicePlan";
+import { sharedShopRanker } from "../../ai/advisor/shopRanker";
+import type { ShopAdviceCandidate } from "../../ai/advisor/types";
 import {
+  type ContextAdviceCandidate,
   useSuggestion,
   type SuggestionDeps,
 } from "../../ai/advisor/useSuggestion";
@@ -42,6 +46,19 @@ export default function ShopSuggestion(
   const ante = useGame((s) => s.ante);
   const jokers = useGame((s) => s.jokers);
   const consumables = useGame((s) => s.consumables);
+  const shopRanker = sharedShopRanker();
+  const preRank = useCallback(
+    (candidates: ReadonlyArray<ContextAdviceCandidate>) =>
+      shopRanker
+        .rankShop({
+          money: props.money,
+          ante,
+          round: (ante - 1) * 3,
+          candidates: candidates as ReadonlyArray<ShopAdviceCandidate>,
+        })
+        .then((ranked) => ranked[0] ?? null),
+    [shopRanker, props.money, ante],
+  );
   const { state, suggest, reset } = useSuggestion<ShopSuggestionAction>(
     () =>
       buildShopAdvicePlan({
@@ -60,11 +77,16 @@ export default function ShopSuggestion(
         rerollCost: props.rerollCost,
       }),
     props.suggestionDeps,
+    preRank,
   );
 
   function apply(): void {
-    if (state.phase !== "ready") return;
-    const action = state.actions[state.advice.recommendationIndex];
+    let action: ShopSuggestionAction | undefined;
+    if (state.phase === "ready") {
+      action = state.actions[state.advice.recommendationIndex];
+    } else if (state.phase === "loading" && state.onnxIndex !== null) {
+      action = state.actions[state.onnxIndex];
+    }
     if (action === undefined) return;
     setHumanPlayRecordingSuppressed(true);
     try {

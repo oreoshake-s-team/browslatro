@@ -1,10 +1,14 @@
+import { useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
   buildPackAdvicePlan,
   type PackSuggestionAction,
 } from "../../ai/advisor/packAdvicePlan";
+import { sharedShopRanker } from "../../ai/advisor/shopRanker";
+import type { PackAdviceCandidate } from "../../ai/advisor/types";
 import {
+  type ContextAdviceCandidate,
   useSuggestion,
   type SuggestionDeps,
 } from "../../ai/advisor/useSuggestion";
@@ -45,6 +49,20 @@ export default function PackSuggestion(
   const selectedDeck = useGame((s) => s.selectedDeck);
   const previewHandSize = useGame((s) => s.packPreviewHand.length);
   const previewSelectedCount = useGame((s) => s.packPreviewSelectedIds.size);
+  const shopRanker = sharedShopRanker();
+  const preRank = useCallback(
+    (candidates: ReadonlyArray<ContextAdviceCandidate>) =>
+      shopRanker
+        .rankPack({
+          money,
+          ante,
+          round: (ante - 1) * 3,
+          picksRemaining: props.picksRemaining,
+          candidates: candidates as ReadonlyArray<PackAdviceCandidate>,
+        })
+        .then((ranked) => ranked[0] ?? null),
+    [shopRanker, money, ante, props.picksRemaining],
+  );
   const { state, suggest, reset } = useSuggestion<PackSuggestionAction>(
     () =>
       buildPackAdvicePlan({
@@ -69,11 +87,16 @@ export default function PackSuggestion(
           MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds),
       }),
     props.suggestionDeps,
+    preRank,
   );
 
   function apply(): void {
-    if (state.phase !== "ready") return;
-    const action = state.actions[state.advice.recommendationIndex];
+    let action: PackSuggestionAction | undefined;
+    if (state.phase === "ready") {
+      action = state.actions[state.advice.recommendationIndex];
+    } else if (state.phase === "loading" && state.onnxIndex !== null) {
+      action = state.actions[state.onnxIndex];
+    }
     if (action === undefined) return;
     setHumanPlayRecordingSuppressed(true);
     try {

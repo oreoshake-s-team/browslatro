@@ -17,15 +17,15 @@ import sys
 import torch
 from torch import nn
 
-from dataset import load_all, split_by_seed
-from encoding import ENCODING_VERSION, INPUT_FEATURES
+from dataset import load_all, load_shop_decisions, split_by_seed
+from encoding import ENCODING_VERSION, INPUT_FEATURES, SHOP_ENCODING_VERSION, SHOP_INPUT_FEATURES
 
 
 class CandidateScorer(nn.Module):
-    def __init__(self, hidden):
+    def __init__(self, input_features, hidden):
         super().__init__()
         self.layers = nn.Sequential(
-            nn.Linear(INPUT_FEATURES, hidden),
+            nn.Linear(input_features, hidden),
             nn.ReLU(),
             nn.Linear(hidden, hidden // 2),
             nn.ReLU(),
@@ -65,23 +65,41 @@ def main():
     parser.add_argument("--hidden", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=0)
-    parser.add_argument("--out", default="advisor-policy.onnx")
+    parser.add_argument("--shop", action="store_true", help="train on shop/pack decisions")
+    parser.add_argument("--out", default=None)
     args = parser.parse_args()
+
+    if args.out is None:
+        args.out = "advisor-shop-policy-v1.onnx" if args.shop else "advisor-policy.onnx"
 
     torch.manual_seed(args.seed)
     random.seed(args.seed)
 
-    train, validation = split_by_seed(load_all(args.datasets))
+    if args.shop:
+        features = SHOP_INPUT_FEATURES
+        all_decisions = []
+        for path in args.datasets:
+            all_decisions.extend(load_shop_decisions(path))
+        train, validation = split_by_seed(all_decisions)
+        enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}"
+    else:
+        features = INPUT_FEATURES
+        train, validation = split_by_seed(load_all(args.datasets))
+        human = load_all(args.human, args.human_weight)
+        train = train + [(inputs, chosen, weight) for inputs, chosen, _, weight in human]
+        print(
+            f"{len(train)} train decisions ({len(human)} human at "
+            f"weight {args.human_weight}), {len(validation)} validation decisions"
+        )
+        enc_label = f"encoding v{ENCODING_VERSION}"
+
     if not train or not validation:
         sys.exit(f"dataset too small: {len(train)} train / {len(validation)} validation")
-    human = load_all(args.human, args.human_weight)
-    train = train + [(inputs, chosen, weight) for inputs, chosen, _, weight in human]
-    print(
-        f"{len(train)} train decisions ({len(human)} human at "
-        f"weight {args.human_weight}), {len(validation)} validation decisions"
-    )
 
-    model = CandidateScorer(args.hidden)
+    if args.shop:
+        print(f"{len(train)} train / {len(validation)} validation shop decisions")
+
+    model = CandidateScorer(features, args.hidden)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     for epoch in range(args.epochs):
         random.shuffle(train)
@@ -100,7 +118,7 @@ def main():
     print(f"final: train_acc={accuracy(model, train):.3f} val_acc={accuracy(model, validation):.3f}")
 
     model.eval()
-    example = torch.zeros((2, INPUT_FEATURES), dtype=torch.float32)
+    example = torch.zeros((2, features), dtype=torch.float32)
     torch.onnx.export(
         model,
         (example,),
@@ -111,7 +129,7 @@ def main():
         opset_version=18,
         external_data=False,
     )
-    print(f"exported {args.out} (encoding v{ENCODING_VERSION}, {INPUT_FEATURES} features)")
+    print(f"exported {args.out} ({enc_label}, {features} features)")
 
 
 if __name__ == "__main__":

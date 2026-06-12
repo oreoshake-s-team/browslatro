@@ -102,6 +102,54 @@ describe("useSuggestion", () => {
     expect(result.current.state).toEqual({ phase: "idle" });
   });
 
+  test("loading state carries candidates and actions with null onnxIndex", async () => {
+    let release: (value: AdviceClientResult) => void = () => undefined;
+    const pending = new Promise<AdviceClientResult>((resolve) => {
+      release = resolve;
+    });
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, { fetchAdviceFn: vi.fn().mockReturnValue(pending) }),
+    );
+    act(() => {
+      void result.current.suggest();
+    });
+    expect(result.current.state).toEqual({
+      phase: "loading",
+      onnxIndex: null,
+      candidates: shopAdviceRequestFixture().candidates,
+      actions: planFixture().actions,
+    });
+    release({ ok: false, code: "rate_limited" });
+  });
+
+  test("preRank updates onnxIndex while still loading", async () => {
+    let release: (value: AdviceClientResult) => void = () => undefined;
+    const pending = new Promise<AdviceClientResult>((resolve) => {
+      release = resolve;
+    });
+    const preRank = vi.fn().mockResolvedValue(1);
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, { fetchAdviceFn: vi.fn().mockReturnValue(pending) }, preRank),
+    );
+    await act(async () => {
+      void result.current.suggest();
+      await Promise.resolve();
+    });
+    expect(result.current.state).toMatchObject({ phase: "loading", onnxIndex: 1 });
+    release({ ok: false, code: "rate_limited" });
+  });
+
+  test("LLM ready result overrides preRank onnxIndex", async () => {
+    const preRank = vi.fn().mockResolvedValue(2);
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, {
+        fetchAdviceFn: fetchResolving({ ok: true, advice: adviceFixture() }),
+      }, preRank),
+    );
+    await act(() => result.current.suggest());
+    expect(result.current.state.phase).toBe("ready");
+  });
+
   test("a reset during flight discards the late response", async () => {
     let release: (value: AdviceClientResult) => void = () => undefined;
     const pending = new Promise<AdviceClientResult>((resolve) => {
