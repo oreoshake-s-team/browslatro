@@ -39,6 +39,7 @@ export interface BossBlind {
   readonly description: string;
   readonly scoreMultiplier: number;
   readonly anteMin: number;
+  readonly showdown?: boolean;
   readonly effect: BossEffect;
 }
 
@@ -49,6 +50,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Extra large blind requirement.",
     scoreMultiplier: 4,
     anteMin: 2,
+    showdown: true,
     effect: { kind: "none" },
   },
   {
@@ -57,6 +59,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Play only 1 hand.",
     scoreMultiplier: 1,
     anteMin: 2,
+    showdown: true,
     effect: { kind: "start-with-hands", value: 1 },
   },
   {
@@ -65,6 +68,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Start with 0 discards.",
     scoreMultiplier: 2,
     anteMin: 2,
+    showdown: true,
     effect: { kind: "start-with-discards", value: 0 },
   },
   {
@@ -81,6 +85,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Play 5 cards or score 0.",
     scoreMultiplier: 2,
     anteMin: 1,
+    showdown: true,
     effect: { kind: "force-card-count", value: 5 },
   },
   {
@@ -89,6 +94,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Lose $1 per card played.",
     scoreMultiplier: 2,
     anteMin: 3,
+    showdown: true,
     effect: { kind: "money-per-card-played", value: 1 },
   },
   {
@@ -105,6 +111,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "All Spade cards are debuffed.",
     scoreMultiplier: 2,
     anteMin: 1,
+    showdown: true,
     effect: { kind: "debuff-suit", suit: "spades" },
   },
   {
@@ -121,6 +128,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "All Heart cards are debuffed.",
     scoreMultiplier: 2,
     anteMin: 1,
+    showdown: true,
     effect: { kind: "debuff-suit", suit: "hearts" },
   },
   {
@@ -129,6 +137,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "All face cards are debuffed.",
     scoreMultiplier: 2,
     anteMin: 4,
+    showdown: true,
     effect: { kind: "debuff-face" },
   },
   {
@@ -137,6 +146,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Only one hand type can be played this round.",
     scoreMultiplier: 2,
     anteMin: 2,
+    showdown: true,
     effect: { kind: "single-hand-type" },
   },
   {
@@ -145,6 +155,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "No repeated hand types this round.",
     scoreMultiplier: 2,
     anteMin: 3,
+    showdown: true,
     effect: { kind: "no-repeat-hand-type" },
   },
   {
@@ -169,6 +180,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "Base Chips and Mult for played hands are halved.",
     scoreMultiplier: 2,
     anteMin: 2,
+    showdown: true,
     effect: { kind: "hand-stats-multiplier", chipsFactor: 0.5, multFactor: 0.5 },
   },
   {
@@ -217,6 +229,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     description: "After Play or Discard, always draw 3 cards.",
     scoreMultiplier: 2,
     anteMin: 5,
+    showdown: true,
     effect: { kind: "fixed-refill-count", value: 3 },
   },
   {
@@ -233,11 +246,18 @@ export function createBossCatalog(): BossBlind[] {
   return BOSS_SPECS.slice();
 }
 
+export function isShowdownAnte(ante: number): boolean {
+  return ante % 8 === 0;
+}
+
 export function availableBosses(
   catalog: ReadonlyArray<BossBlind>,
   ante: number,
 ): BossBlind[] {
-  return catalog.filter((b) => ante >= b.anteMin);
+  const showdown = isShowdownAnte(ante);
+  return catalog.filter(
+    (b) => (b.showdown ?? false) === showdown && ante >= b.anteMin,
+  );
 }
 
 export type BossRandomSource = () => number;

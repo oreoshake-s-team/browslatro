@@ -17,6 +17,7 @@ import {
   createBossCatalog,
   debuffedHandIds,
   isCardDebuffedByBoss,
+  isShowdownAnte,
   pickBossForAnte,
   pickHookDiscardIds,
   type BossBlind,
@@ -39,7 +40,7 @@ describe("createBossCatalog", () => {
 });
 
 describe("availableBosses — ante gating", () => {
-  test("ante 1 excludes The Wall (anteMin=2)", () => {
+  test("ante 1 excludes The Wall (showdown boss)", () => {
     const ids = availableBosses(createBossCatalog(), 1).map((b) => b.id);
     expect(ids).not.toContain("the-wall");
   });
@@ -49,9 +50,14 @@ describe("availableBosses — ante gating", () => {
     expect(ids).toContain("the-manacle");
   });
 
-  test("ante 2 includes The Wall", () => {
-    const ids = availableBosses(createBossCatalog(), 2).map((b) => b.id);
+  test("ante 8 includes The Wall (showdown ante)", () => {
+    const ids = availableBosses(createBossCatalog(), 8).map((b) => b.id);
     expect(ids).toContain("the-wall");
+  });
+
+  test("ante 2 excludes The Wall (not a showdown ante)", () => {
+    const ids = availableBosses(createBossCatalog(), 2).map((b) => b.id);
+    expect(ids).not.toContain("the-wall");
   });
 });
 
@@ -625,8 +631,13 @@ describe("Phase 5 boss catalog — The Serpent", () => {
     expect(ids).not.toContain("the-serpent");
   });
 
-  test("ante 5 includes The Serpent", () => {
+  test("ante 5 excludes The Serpent (showdown boss, not a showdown ante)", () => {
     const ids = availableBosses(createBossCatalog(), 5).map((b) => b.id);
+    expect(ids).not.toContain("the-serpent");
+  });
+
+  test("ante 8 includes The Serpent (showdown ante)", () => {
+    const ids = availableBosses(createBossCatalog(), 8).map((b) => b.id);
     expect(ids).toContain("the-serpent");
   });
 });
@@ -728,12 +739,12 @@ describe("bossShouldZeroWallet (The Ox)", () => {
 });
 
 describe("pickBossForAnte — Phase 5 ante gating", () => {
-  test("returns The Serpent for ante 5 when picker selects it", () => {
+  test("returns The Serpent for ante 8 (showdown ante) when picker selects it", () => {
     const catalog = createBossCatalog();
     const serpent = catalog.find((b) => b.id === "the-serpent")!;
     expect(
       pickBossForAnte({
-        ante: 5,
+        ante: 8,
         catalog: [serpent],
         rng: () => 0,
       }).id,
@@ -743,6 +754,12 @@ describe("pickBossForAnte — Phase 5 ante gating", () => {
   test("never returns The Serpent at ante 4", () => {
     const catalog = createBossCatalog();
     const eligible = availableBosses(catalog, 4);
+    expect(eligible.some((b) => b.id === "the-serpent")).toBe(false);
+  });
+
+  test("never returns The Serpent at ante 5 (showdown boss, non-showdown ante)", () => {
+    const catalog = createBossCatalog();
+    const eligible = availableBosses(catalog, 5);
     expect(eligible.some((b) => b.id === "the-serpent")).toBe(false);
   });
 
@@ -762,6 +779,98 @@ describe("pickBossForAnte — Phase 5 ante gating", () => {
     const catalog = createBossCatalog();
     const eligible = availableBosses(catalog, 5);
     expect(eligible.some((b) => b.id === "the-ox")).toBe(false);
+  });
+});
+
+describe("isShowdownAnte", () => {
+  test("returns true for ante 8", () => {
+    expect(isShowdownAnte(8)).toBe(true);
+  });
+
+  test("returns true for ante 16", () => {
+    expect(isShowdownAnte(16)).toBe(true);
+  });
+
+  test("returns true for ante 24", () => {
+    expect(isShowdownAnte(24)).toBe(true);
+  });
+
+  test("returns false for ante 7", () => {
+    expect(isShowdownAnte(7)).toBe(false);
+  });
+
+  test("returns false for ante 1", () => {
+    expect(isShowdownAnte(1)).toBe(false);
+  });
+
+  test("returns false for ante 9", () => {
+    expect(isShowdownAnte(9)).toBe(false);
+  });
+});
+
+describe("Showdown Boss Blinds — availableBosses selection", () => {
+  test("ante 8 returns only showdown bosses", () => {
+    const result = availableBosses(createBossCatalog(), 8);
+    expect(result.every((b) => b.showdown === true)).toBe(true);
+  });
+
+  test("ante 16 returns only showdown bosses", () => {
+    const result = availableBosses(createBossCatalog(), 16);
+    expect(result.every((b) => b.showdown === true)).toBe(true);
+  });
+
+  test("ante 7 returns no showdown bosses", () => {
+    const result = availableBosses(createBossCatalog(), 7);
+    expect(result.some((b) => b.showdown === true)).toBe(false);
+  });
+
+  test("ante 8 includes all 12 showdown bosses", () => {
+    const ids = availableBosses(createBossCatalog(), 8).map((b) => b.id);
+    expect(ids).toContain("the-wall");
+    expect(ids).toContain("the-psychic");
+    expect(ids).toContain("the-goad");
+    expect(ids).toContain("the-water");
+    expect(ids).toContain("the-eye");
+    expect(ids).toContain("the-mouth");
+    expect(ids).toContain("the-plant");
+    expect(ids).toContain("the-serpent");
+    expect(ids).toContain("the-needle");
+    expect(ids).toContain("the-head");
+    expect(ids).toContain("the-tooth");
+    expect(ids).toContain("the-flint");
+  });
+
+  test("ante 7 excludes all 12 showdown bosses", () => {
+    const ids = availableBosses(createBossCatalog(), 7).map((b) => b.id);
+    expect(ids).not.toContain("the-wall");
+    expect(ids).not.toContain("the-psychic");
+    expect(ids).not.toContain("the-goad");
+    expect(ids).not.toContain("the-water");
+    expect(ids).not.toContain("the-eye");
+    expect(ids).not.toContain("the-mouth");
+    expect(ids).not.toContain("the-plant");
+    expect(ids).not.toContain("the-serpent");
+    expect(ids).not.toContain("the-needle");
+    expect(ids).not.toContain("the-head");
+    expect(ids).not.toContain("the-tooth");
+    expect(ids).not.toContain("the-flint");
+  });
+});
+
+describe("Showdown Boss Blinds — pickBossForAnte", () => {
+  test("picks from showdown pool at ante 8", () => {
+    const boss = pickBossForAnte({ ante: 8, rng: () => 0 });
+    expect(boss.showdown).toBe(true);
+  });
+
+  test("picks from showdown pool at ante 16", () => {
+    const boss = pickBossForAnte({ ante: 16, rng: () => 0 });
+    expect(boss.showdown).toBe(true);
+  });
+
+  test("picks from non-showdown pool at ante 7", () => {
+    const boss = pickBossForAnte({ ante: 7, rng: () => 0 });
+    expect(boss.showdown).toBeUndefined();
   });
 });
 
