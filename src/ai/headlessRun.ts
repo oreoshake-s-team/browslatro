@@ -4,6 +4,12 @@ import { FINAL_ANTE } from "../constants";
 import { pickBossForAnte } from "../items/bosses";
 import { DEFAULT_DECK } from "../items/decks";
 import type { Joker, RandomSource } from "../items/jokers/types";
+import { createJokerCatalog } from "../items/jokers/catalog";
+import { createPlanetCatalog } from "../items/planets";
+import { createSpectralCatalog } from "../items/spectrals";
+import { createTarotCatalog } from "../items/tarots";
+import type { ShopItem } from "../items/shop";
+import { pickShopItemOffers, rerollCostFor } from "../items/shop";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
 import type { VoucherId } from "../items/vouchers";
 import { emptyHandCounts } from "../components/hud/handPlayCounts";
@@ -60,11 +66,30 @@ export interface HeadlessAgent {
   chooseAction(view: HeadlessRoundView): AgentAction | Promise<AgentAction>;
 }
 
+export interface ShopContext {
+  readonly ante: number;
+  readonly money: number;
+  readonly jokers: ReadonlyArray<Joker>;
+  readonly offers: ReadonlyArray<ShopItem>;
+  readonly rerollCount: number;
+  readonly rng: RandomSource;
+}
+
+export type ShopAction =
+  | { readonly kind: "buy"; readonly offer: ShopItem }
+  | { readonly kind: "reroll" }
+  | { readonly kind: "leave" };
+
+export interface HeadlessShopAgent {
+  chooseShopAction(ctx: ShopContext): ShopAction | Promise<ShopAction>;
+}
+
 export interface HeadlessRunConfig {
   readonly seed: number;
   readonly maxAnte?: number;
   readonly jokers?: ReadonlyArray<Joker>;
   readonly stake?: Stake;
+  readonly shopAgent?: HeadlessShopAgent;
 }
 
 export interface HeadlessRunResult {
@@ -77,6 +102,68 @@ export interface HeadlessRunResult {
 const STARTING_MONEY = 4;
 const BLIND_CLEAR_REWARD_BASE = 2;
 const MAX_DISCARD_SIZE = 5;
+const MAX_SHOP_STEPS = 20;
+
+interface ShopCatalogs {
+  readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly planetCatalog: ReturnType<typeof createPlanetCatalog>;
+  readonly tarotCatalog: ReturnType<typeof createTarotCatalog>;
+  readonly spectralCatalog: ReturnType<typeof createSpectralCatalog>;
+}
+
+function buildShopCatalogs(): ShopCatalogs {
+  return {
+    jokerCatalog: createJokerCatalog(),
+    planetCatalog: createPlanetCatalog(),
+    tarotCatalog: createTarotCatalog(),
+    spectralCatalog: createSpectralCatalog(),
+  };
+}
+
+function generateOffers(
+  catalogs: ShopCatalogs,
+  ownedJokerIds: ReadonlyArray<string>,
+  rng: RandomSource,
+): ReadonlyArray<ShopItem> {
+  return pickShopItemOffers({
+    ...catalogs,
+    excludedJokerIds: ownedJokerIds,
+    rng,
+  });
+}
+
+async function runShopPhase(
+  agent: HeadlessShopAgent,
+  ante: number,
+  initialMoney: number,
+  initialJokers: ReadonlyArray<Joker>,
+  rng: RandomSource,
+  catalogs: ShopCatalogs,
+): Promise<{ readonly money: number; readonly jokers: ReadonlyArray<Joker> }> {
+  let rerollCount = 0;
+  let money = initialMoney;
+  let jokers = initialJokers;
+  let offers = generateOffers(catalogs, jokers.map((j) => j.id), rng);
+
+  for (let step = 0; step < MAX_SHOP_STEPS; step += 1) {
+    const action = await agent.chooseShopAction({ ante, money, jokers, offers, rerollCount, rng });
+    if (action.kind === "leave") break;
+    if (action.kind === "reroll") {
+      const cost = rerollCostFor(rerollCount);
+      if (money < cost) break;
+      money -= cost;
+      rerollCount += 1;
+      offers = generateOffers(catalogs, jokers.map((j) => j.id), rng);
+    } else if (action.kind === "buy") {
+      const { offer } = action;
+      if (offer.sold || offer.price > money) break;
+      money -= offer.price;
+      if (offer.kind === "joker") jokers = [...jokers, offer.joker];
+      offers = offers.map((o) => (o === offer ? { ...o, sold: true } : o));
+    }
+  }
+  return { money, jokers };
+}
 
 export interface Pile {
   readonly hand: ReadonlyArray<Card>;
@@ -105,8 +192,9 @@ export async function playHeadlessRun(
 ): Promise<HeadlessRunResult> {
   const rng = seededRng(config.seed);
   const maxAnte = config.maxAnte ?? FINAL_ANTE;
-  const jokers = config.jokers ?? [];
+  let currentJokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
+  const shopCatalogs = config.shopAgent ? buildShopCatalogs() : null;
   const deck = buildHeadlessDeck();
   const handStats = createDefaultHandStats();
   const ownedVoucherIds: ReadonlySet<VoucherId> = new Set();
@@ -128,7 +216,7 @@ export async function playHeadlessRun(
         boss,
         ownedVoucherIds,
         deck: DEFAULT_DECK,
-        jokers,
+        jokers: currentJokers,
         stake,
       };
       let remainingHands = computeStartingHands(startCtx);
@@ -147,7 +235,7 @@ export async function playHeadlessRun(
           addedCards: [],
           cardEnhancementsById: new Map(),
           cardSealsById: new Map(),
-          jokers,
+          jokers: currentJokers,
           handStats,
           handPlayCounts,
           handHistoryThisRound,
@@ -219,6 +307,11 @@ export async function playHeadlessRun(
       }
       blindsCleared += 1;
       money += blind + BLIND_CLEAR_REWARD_BASE;
+    }
+    if (config.shopAgent && shopCatalogs) {
+      const result = await runShopPhase(config.shopAgent, ante, money, currentJokers, rng, shopCatalogs);
+      money = result.money;
+      currentJokers = result.jokers;
     }
   }
   return { won: true, anteReached: maxAnte, blindsCleared, handsPlayed };

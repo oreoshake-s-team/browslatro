@@ -7,6 +7,13 @@ import {
   generateDataset,
   serializeDatasetRecords,
 } from "../src/ai/dataset";
+import { createShopPolicyAgent } from "../src/ai/shopPolicyAgent";
+
+function stringFlag(name: string): string | undefined {
+  const index = process.argv.indexOf(name);
+  if (index === -1 || index + 1 >= process.argv.length) return undefined;
+  return process.argv[index + 1];
+}
 
 function floatFlag(name: string, fallback: number): number {
   const index = process.argv.indexOf(name);
@@ -54,11 +61,12 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--parallel-jobs N]",
+      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--shop-policy <path>] [--parallel-jobs N]",
     );
     process.exit(1);
   }
 
+  const shopPolicyPath = stringFlag("--shop-policy");
   const config = {
     games: intFlag("--games", 100),
     seedOffset: intFlag("--seed-offset", 0),
@@ -66,6 +74,7 @@ if (isMain) {
     topN: intFlag("--top-n", 3),
     maxAnte: intFlag("--max-ante", 8),
     jokerLoadoutFraction: floatFlag("--joker-loadout-fraction", 0),
+    shopAgent: shopPolicyPath !== undefined ? createShopPolicyAgent(shopPolicyPath) : undefined,
   };
 
   const parallelJobs = intFlag("--parallel-jobs", 1);
@@ -95,6 +104,7 @@ if (isMain) {
             ...(config.jokerLoadoutFraction > 0
               ? ["--joker-loadout-fraction", String(config.jokerLoadoutFraction)]
               : []),
+            ...(shopPolicyPath !== undefined ? ["--shop-policy", shopPolicyPath] : []),
           ];
           const proc = spawn(process.execPath, [...loaderArgs, ...args], { stdio: ["ignore", "ignore", "inherit"] });
           proc.on("close", (code) => {
