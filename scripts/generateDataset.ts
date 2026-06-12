@@ -18,7 +18,7 @@ function floatFlag(name: string, fallback: number): number {
   return value;
 }
 
-function intFlag(name: string, fallback: number): number {
+export function intFlag(name: string, fallback: number): number {
   const index = process.argv.indexOf(name);
   if (index === -1 || index + 1 >= process.argv.length) return fallback;
   const value = Number.parseInt(process.argv[index + 1], 10);
