@@ -231,6 +231,19 @@ function pairedRanksDiscard(hand: ReadonlyArray<Card>): DiscardOption | null {
   };
 }
 
+export function excludeFaceDownCandidates(
+  candidates: ReadonlyArray<HandOption>,
+  hand: ReadonlyArray<Card>,
+): ReadonlyArray<HandOption> {
+  const faceDownIds = new Set(
+    hand.filter((card) => card.faceDown).map((card) => card.id),
+  );
+  if (faceDownIds.size === 0) return candidates;
+  return candidates.filter((candidate) =>
+    candidate.cardIds.every((id) => !faceDownIds.has(id)),
+  );
+}
+
 export function getHandOptions(
   input: SimulatePlayInput,
   topN: number = DEFAULT_TOP_N,

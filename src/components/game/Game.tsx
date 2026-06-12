@@ -37,6 +37,7 @@ interface GameProps {
   onToggleAutopilot?: () => void;
   autopilotProposal?: HandOption | null;
   autopilotModelProgress?: DownloadProgress | null;
+  autopilotProposalUnavailable?: boolean;
   autopilotExplanation?: MoveExplanationState;
   onApproveAutopilot?: () => void;
   onStopAutopilot?: () => void;
@@ -59,6 +60,7 @@ export default function Game({
   onToggleAutopilot,
   autopilotProposal = null,
   autopilotModelProgress = null,
+  autopilotProposalUnavailable = false,
   autopilotExplanation = { phase: "idle" },
   onApproveAutopilot,
   onStopAutopilot,
@@ -305,12 +307,15 @@ export default function Game({
               </button>
             )}
           </div>
-          {(autopilotProposal || autopilotModelProgress) &&
+          {(autopilotProposal ||
+            autopilotModelProgress ||
+            autopilotProposalUnavailable) &&
             onApproveAutopilot &&
             onStopAutopilot && (
               <AutopilotControls
                 proposal={autopilotProposal}
                 modelProgress={autopilotModelProgress}
+                proposalUnavailable={autopilotProposalUnavailable}
                 explanation={autopilotExplanation}
                 onApprove={onApproveAutopilot}
                 onStop={onStopAutopilot}

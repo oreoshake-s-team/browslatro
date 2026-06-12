@@ -336,3 +336,41 @@ describe("useAutopilot", () => {
     expect(useGame.getState().selectedIds).toEqual(new Set([3, 4]));
   });
 });
+
+describe("useAutopilot with face-down cards", () => {
+  test("reports the proposal as unavailable when the whole hand is face-down", async () => {
+    useGame.getState().setDealt({
+      hand: pairHand().map((card) => ({ ...card, faceDown: true })),
+      remaining: [],
+    });
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitFor(() => expect(result.current.proposalUnavailable).toBe(true));
+  });
+
+  test("a proposal from visible cards clears the unavailable flag", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    expect(result.current.proposalUnavailable).toBe(false);
+  });
+
+  test("never proposes a play that uses a face-down card", async () => {
+    useGame.getState().setDealt({
+      hand: pairHand().map((card) =>
+        card.id === 1 ? { ...card, faceDown: true } : card,
+      ),
+      remaining: [],
+    });
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    expect(result.current.pendingProposal?.cardIds).not.toContain(1);
+  });
+});

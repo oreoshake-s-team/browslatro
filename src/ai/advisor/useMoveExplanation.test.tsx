@@ -172,6 +172,40 @@ describe("useMoveExplanation", () => {
     expect(fetchAdviceFn.mock.calls[0][1]).toHaveLength(expectedCount);
   });
 
+  test("suggestMove sends no candidate that uses a face-down card", async () => {
+    useGame.getState().setDealt({
+      hand: pairHand().map((card) =>
+        card.id === 1 ? { ...card, faceDown: true } : card,
+      ),
+      remaining: [],
+    });
+    const fetchAdviceFn = vi
+      .fn()
+      .mockResolvedValue({ ok: true, advice: adviceFixture() });
+    const { result } = renderHook(() =>
+      useMoveExplanation(makeDeps({ fetchAdviceFn })),
+    );
+    await act(() => result.current.suggestMove());
+    const sent = fetchAdviceFn.mock.calls[0][1] as ReadonlyArray<HandOption>;
+    expect(
+      sent.length > 0 &&
+        sent.every((candidate) => !candidate.cardIds.includes(1)),
+    ).toBe(true);
+  });
+
+  test("suggestMove returns null when the whole hand is face-down", async () => {
+    useGame.getState().setDealt({
+      hand: pairHand().map((card) => ({ ...card, faceDown: true })),
+      remaining: [],
+    });
+    const { result } = renderHook(() => useMoveExplanation(makeDeps()));
+    let picked: HandOption | null = proposal();
+    await act(async () => {
+      picked = await result.current.suggestMove();
+    });
+    expect(picked).toBeNull();
+  });
+
   test("suggestMove leaves the coach reasoning in the ready state", async () => {
     dealPairHand();
     const { result } = renderHook(() => useMoveExplanation(makeDeps()));

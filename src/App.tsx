@@ -460,6 +460,7 @@ function App() {
         onToggleAutopilot={() => setAutopilotEnabled((prev) => !prev)}
         autopilotProposal={autopilot.pendingProposal}
         autopilotModelProgress={autopilot.modelProgress}
+        autopilotProposalUnavailable={autopilot.proposalUnavailable}
         autopilotExplanation={autopilotExplanation.state}
         onApproveAutopilot={autopilot.approve}
         onStopAutopilot={autopilot.stop}

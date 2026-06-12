@@ -1,6 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import { useGame, type GameState } from "../../store/game";
-import { getHandOptions, type HandOption } from "../getHandOptions";
+import {
+  excludeFaceDownCandidates,
+  getHandOptions,
+  type HandOption,
+} from "../getHandOptions";
 import { toModelState } from "../modelState";
 import type { Advice } from "./advice";
 import { fetchAdvice, type AdviceClientErrorCode } from "./client";
@@ -44,7 +48,10 @@ export function useMoveExplanation(
   const suggestMove = useCallback(async (): Promise<HandOption | null> => {
     const { fetchAdviceFn, getState } = deps ?? defaultDeps();
     const game = getState();
-    const candidates = getHandOptions(toSimulatePlayInput(game));
+    const candidates = excludeFaceDownCandidates(
+      getHandOptions(toSimulatePlayInput(game)),
+      game.dealt.hand,
+    );
     if (candidates.length === 0) return null;
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
