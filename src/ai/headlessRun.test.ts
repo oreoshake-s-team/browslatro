@@ -133,7 +133,7 @@ describe("playHeadlessRun", () => {
     const shopAgent: HeadlessShopAgent = {
       async buyAfterAnte(view: ShopView): Promise<ShopResult> {
         antesVisited.push(view.ante);
-        return { jokers: view.jokers, money: view.money };
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats };
       },
     };
     const result = await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, shopAgent });
@@ -145,7 +145,7 @@ describe("playHeadlessRun", () => {
     const addedJoker: Joker = joker({ id: "added-joker", effect: { kind: "additive-mult", amount: 1 } });
     const shopAgent: HeadlessShopAgent = {
       async buyAfterAnte(view: ShopView): Promise<ShopResult> {
-        return { jokers: [...view.jokers, addedJoker], money: view.money };
+        return { jokers: [...view.jokers, addedJoker], money: view.money, handStats: view.handStats };
       },
     };
     const seenJokerIds: Set<string>[] = [];
@@ -170,11 +170,34 @@ describe("playHeadlessRun", () => {
       async buyAfterAnte(view: ShopView): Promise<ShopResult> {
         const spent = Math.min(view.money, 5);
         moneyAfterShop.push(view.money - spent);
-        return { jokers: view.jokers, money: view.money - spent };
+        return { jokers: view.jokers, money: view.money - spent, handStats: view.handStats };
       },
     };
     await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, jokers: [powerJoker], shopAgent });
     expect(moneyAfterShop.length).toBeGreaterThan(0);
     expect(moneyAfterShop[0]).toBeGreaterThanOrEqual(0);
+  });
+
+  test("shop agent handStats are carried into subsequent antes", async () => {
+    const powerJoker: Joker = joker({ id: "power-joker", effect: { kind: "additive-mult", amount: 100000 } });
+    const seenChips: number[] = [];
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+        const boosted = { ...view.handStats, "High Card": { ...view.handStats["High Card"], chips: view.handStats["High Card"].chips + 100 } };
+        return { jokers: view.jokers, money: view.money, handStats: boosted };
+      },
+    };
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        seenChips.push(view.handStats["High Card"].chips);
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed: 4, maxAnte: 2, jokers: [powerJoker], shopAgent });
+    const ante1Chips = seenChips[0];
+    const lastChips = seenChips[seenChips.length - 1];
+    expect(ante1Chips).toBeDefined();
+    expect(lastChips).toBeGreaterThan(ante1Chips ?? 0);
   });
 });

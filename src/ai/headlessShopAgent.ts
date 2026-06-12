@@ -1,81 +1,117 @@
 import { readFileSync } from "node:fs";
+import { applyPlanetUpgrade, createPlanetCatalog } from "../items/planets";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
-import type { Joker } from "../items/jokers/types";
-import { jokerOfferPrice } from "../items/shop";
-import { SHOP_INPUT_FEATURES, encodeShopCandidates } from "./advisor/shopEncoding";
-import type { ShopAdviceCandidate } from "./advisor/types";
+import { packPickLimit, type PackOption } from "../items/packs";
+import { pickShopOffers, rerollCostFor, type ShopItem } from "../items/shop";
+import { createSpectralCatalog } from "../items/spectrals";
+import { createTarotCatalog } from "../items/tarots";
+import type { HandStats } from "../scoring/handStats";
+import {
+  SHOP_INPUT_FEATURES,
+  encodePackCandidates,
+  encodeShopCandidates,
+} from "./advisor/shopEncoding";
+import type { PackAdviceCandidate, ShopAdviceCandidate } from "./advisor/types";
 import type { HeadlessShopAgent, ShopResult, ShopView } from "./headlessRun";
 
-const SHOP_OFFER_SLOTS = 2;
+const MAX_REROLLS = 2;
 
-export async function createHeadlessShopAgent(
-  modelPath: string,
-): Promise<HeadlessShopAgent> {
+function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
+  if (opt.kind === "joker") return { action: "pick", option: { optionType: "joker", id: opt.joker.id, name: opt.joker.name, description: "" } };
+  if (opt.kind === "planet") return { action: "pick", option: { optionType: "planet", id: opt.planet.id, name: opt.planet.name, description: "" } };
+  if (opt.kind === "tarot") return { action: "pick", option: { optionType: "tarot", id: opt.tarot.id, name: opt.tarot.name, description: "" } };
+  if (opt.kind === "spectral") return { action: "pick", option: { optionType: "spectral", id: opt.spectral.id, name: opt.spectral.name, description: "" } };
+  return { action: "pick", option: { optionType: "playing-card", id: "card", name: "Card", description: "" } };
+}
+
+function shopItemCandidate(item: ShopItem): ShopAdviceCandidate {
+  if (item.kind === "joker") return { action: "buy", item: { itemType: "joker", id: item.joker.id, name: item.joker.name, description: "", cost: item.price } };
+  if (item.kind === "planet") return { action: "buy", item: { itemType: "planet", id: item.planet.id, name: item.planet.name, description: "", cost: item.price } };
+  if (item.kind === "tarot") return { action: "buy", item: { itemType: "tarot", id: item.tarot.id, name: item.tarot.name, description: "", cost: item.price } };
+  if (item.kind === "spectral") return { action: "buy", item: { itemType: "spectral", id: item.spectral.id, name: item.spectral.name, description: "", cost: item.price } };
+  if (item.kind === "pack") return { action: "buy", item: { itemType: "pack", id: item.pack.pool, name: item.pack.pool, description: "", cost: item.price } };
+  return { action: "buy", item: { itemType: "playing-card", id: "card", name: "Card", description: "", cost: item.price } };
+}
+
+export async function createHeadlessShopAgent(modelPath: string): Promise<HeadlessShopAgent> {
   const bytes = readFileSync(modelPath);
   const ort = await import("onnxruntime-web");
   const session = await ort.InferenceSession.create(bytes);
-  const catalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
+  const jokerCatalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
+  const planetCatalog = createPlanetCatalog();
+  const tarotCatalog = createTarotCatalog();
+  const spectralCatalog = createSpectralCatalog();
 
-  async function rankCandidates(
-    candidates: ReadonlyArray<ShopAdviceCandidate>,
-    money: number,
-    ante: number,
-    round: number,
-  ): Promise<ReadonlyArray<number>> {
-    const n = candidates.length;
-    if (n === 0) return [];
-    const encoded = encodeShopCandidates({ money, ante, round, candidates });
+  async function runSession(encoded: Float32Array, n: number): Promise<Float32Array> {
     const input = new ort.Tensor("float32", encoded, [n, SHOP_INPUT_FEATURES]);
     const { logits } = await session.run({ candidates: input });
-    const data = logits.data as Float32Array;
-    return Array.from({ length: n }, (_, i) => i).sort((a, b) => data[b] - data[a]);
+    return logits.data as Float32Array;
+  }
+
+  async function topRanked(encoded: Float32Array, n: number): Promise<number> {
+    const data = await runSession(encoded, n);
+    return Array.from({ length: n }, (_, i) => i).sort((a, b) => data[b] - data[a])[0] ?? 0;
+  }
+
+  function rollOffers(ownedIds: ReadonlySet<string>, rng: () => number): ShopItem[] {
+    return [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, rng })];
   }
 
   return {
     async buyAfterAnte(view: ShopView): Promise<ShopResult> {
       const jokers = [...view.jokers];
+      let handStats: HandStats = view.handStats;
       let money = view.money;
       const ownedIds = new Set(jokers.map((j) => j.id));
+      let offers = rollOffers(ownedIds, view.rng);
+      let rerollsDone = 0;
 
-      const pool = catalog.filter((j) => !ownedIds.has(j.id));
-      const offers: Joker[] = [];
-      for (let i = 0; i < SHOP_OFFER_SLOTS && pool.length > 0; i += 1) {
-        const idx = Math.floor(view.rng() * pool.length);
-        offers.push(...pool.splice(idx, 1));
-      }
-
-      const round = view.ante * 3;
-      while (jokers.length < MAX_JOKERS && offers.length > 0) {
+      for (;;) {
+        const rerollCost = rerollCostFor(rerollsDone);
         const candidates: ShopAdviceCandidate[] = [
-          ...offers.map((j) => ({
-            action: "buy" as const,
-            item: {
-              itemType: "joker" as const,
-              id: j.id,
-              name: j.name,
-              description: "",
-              cost: jokerOfferPrice(j),
-            },
-          })),
+          ...offers.map(shopItemCandidate),
+          ...(rerollsDone < MAX_REROLLS && rerollCost <= money ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
-
-        const ranked = await rankCandidates(candidates, money, view.ante, round);
-        const topIdx = ranked[0];
-        if (topIdx === undefined) break;
+        const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.ante * 3, candidates }), candidates.length);
         const choice = candidates[topIdx];
-        if (choice.action !== "buy" || choice.item.cost > money) break;
+        if (choice === undefined || choice.action === "leave") break;
 
-        const bought = offers.find((j) => j.id === choice.item.id);
-        if (bought === undefined) break;
-        money -= choice.item.cost;
-        jokers.push(bought);
-        ownedIds.add(bought.id);
-        offers.splice(offers.indexOf(bought), 1);
+        if (choice.action === "reroll") {
+          money -= rerollCost;
+          rerollsDone += 1;
+          offers = rollOffers(ownedIds, view.rng);
+          continue;
+        }
+
+        const offer = offers[topIdx];
+        if (offer === undefined || offer.price > money) break;
+        money -= offer.price;
+        offers = offers.filter((_, i) => i !== topIdx);
+
+        if (offer.kind === "joker" && jokers.length < MAX_JOKERS) {
+          jokers.push(offer.joker);
+          ownedIds.add(offer.joker.id);
+        } else if (offer.kind === "planet") {
+          handStats = applyPlanetUpgrade(handStats, offer.planet);
+        } else if (offer.kind === "pack") {
+          let packOptions = [...offer.pack.options];
+          let picksLeft = packPickLimit(offer.pack.variant);
+          while (picksLeft > 0 && packOptions.length > 0) {
+            const packCandidates: PackAdviceCandidate[] = [...packOptions.map(packOptionToCandidate), { action: "skip" }];
+            const pickIdx = await topRanked(encodePackCandidates({ money, ante: view.ante, round: view.ante * 3, picksRemaining: picksLeft, candidates: packCandidates }), packCandidates.length);
+            const picked = packOptions[pickIdx];
+            if (picked === undefined) break;
+            packOptions = packOptions.filter((_, i) => i !== pickIdx);
+            picksLeft -= 1;
+            if (picked.kind === "joker" && jokers.length < MAX_JOKERS) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
+            else if (picked.kind === "planet") { handStats = applyPlanetUpgrade(handStats, picked.planet); }
+          }
+        }
       }
 
-      return { jokers, money };
+      return { jokers, money, handStats };
     },
   };
 }
