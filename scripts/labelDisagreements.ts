@@ -75,13 +75,46 @@ export async function relabelDisagreements(
   return labeled;
 }
 
+export interface QualityGateConfig {
+  readonly minScoreFraction: number;
+}
+
+export const DEFAULT_QUALITY_GATE: QualityGateConfig = { minScoreFraction: 0.25 };
+
+export function isLabelJustified(
+  candidates: ReadonlyArray<HandOption>,
+  chosenIndex: number,
+  config: QualityGateConfig = DEFAULT_QUALITY_GATE,
+): boolean {
+  const chosen = candidates[chosenIndex];
+  if (chosen === undefined) return false;
+  if (chosen.action !== "play") return true;
+  const playScores = candidates.flatMap((c) =>
+    c.action === "play" ? [c.score] : [],
+  );
+  const bestPlayScore = playScores.length > 0 ? Math.max(...playScores) : 0;
+  if (bestPlayScore <= 0) return true;
+  return chosen.score >= bestPlayScore * config.minScoreFraction;
+}
+
+export function applyQualityGate(
+  records: ReadonlyArray<DatasetRecord>,
+  config: QualityGateConfig = DEFAULT_QUALITY_GATE,
+): ReadonlyArray<DatasetRecord> {
+  return records.filter((record) =>
+    isLabelJustified(record.candidates, record.chosenIndex, config),
+  );
+}
+
 export async function labelDisagreements(args: {
   readonly records: ReadonlyArray<DatasetRecord>;
   readonly ranker: CandidateRanker;
   readonly teacher: TeacherLabeler;
+  readonly gate?: QualityGateConfig;
 }): Promise<ReadonlyArray<DatasetRecord>> {
   const disagreements = await findDisagreements(args.records, args.ranker);
-  return relabelDisagreements(disagreements, args.teacher);
+  const labeled = await relabelDisagreements(disagreements, args.teacher);
+  return applyQualityGate(labeled, args.gate ?? DEFAULT_QUALITY_GATE);
 }
 
 export function createRequestAdviceTeacher(apiKey: string): TeacherLabeler {
@@ -98,6 +131,16 @@ function stringFlag(name: string, fallback: string): string {
   return process.argv[index + 1];
 }
 
+function floatFlag(name: string, fallback: number): number {
+  const raw = stringFlag(name, "");
+  if (raw === "") return fallback;
+  const value = Number.parseFloat(raw);
+  if (Number.isNaN(value)) {
+    throw new Error(`${name} expects a number, got ${raw}`);
+  }
+  return value;
+}
+
 async function main(): Promise<void> {
   const inPath = process.argv[2];
   const outPath = process.argv[3];
@@ -108,7 +151,7 @@ async function main(): Promise<void> {
     outPath.startsWith("--")
   ) {
     console.error(
-      "Usage: yarn dlx tsx scripts/labelDisagreements.ts <dataset.jsonl> <out.jsonl> --model <policy.onnx>",
+      "Usage: yarn dlx tsx scripts/labelDisagreements.ts <dataset.jsonl> <out.jsonl> --model <policy.onnx> [--min-score-fraction 0.25]",
     );
     process.exit(1);
   }
@@ -122,6 +165,10 @@ async function main(): Promise<void> {
     console.error("ANTHROPIC_API_KEY is required");
     process.exit(1);
   }
+  const minScoreFraction = floatFlag(
+    "--min-score-fraction",
+    DEFAULT_QUALITY_GATE.minScoreFraction,
+  );
 
   const records = parseDatasetRecords(readFileSync(inPath, "utf8"));
   const { loadPolicyRanker } = await import("../src/ai/policy");
@@ -131,10 +178,12 @@ async function main(): Promise<void> {
   const started = Date.now();
   const disagreements = await findDisagreements(records, ranker);
   const labeled = await relabelDisagreements(disagreements, teacher);
-  writeFileSync(outPath, `${serializeDatasetRecords(labeled)}\n`);
+  const gated = applyQualityGate(labeled, { minScoreFraction });
+  writeFileSync(outPath, `${serializeDatasetRecords(gated)}\n`);
   console.log(
     `${records.length} records → ${disagreements.length} disagreements → ` +
-      `${labeled.length} teacher-labeled (${((Date.now() - started) / 1000).toFixed(1)}s)`,
+      `${labeled.length} teacher-labeled → ${gated.length} pass quality gate ` +
+      `(min-score-fraction=${minScoreFraction}, ${((Date.now() - started) / 1000).toFixed(1)}s)`,
   );
 }
 
