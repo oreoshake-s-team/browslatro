@@ -105,7 +105,11 @@ function resolveBuyState(
   consumableCapacity: number,
 ): BuyButtonState {
   if (offer.sold) return { kind: "sold" };
-  if (offer.kind === "joker" && equippedJokerCount >= jokerCapacity) {
+  if (
+    offer.kind === "joker" &&
+    offer.joker.edition !== "negative" &&
+    equippedJokerCount >= jokerCapacity
+  ) {
     return { kind: "slots-full" };
   }
   if (
