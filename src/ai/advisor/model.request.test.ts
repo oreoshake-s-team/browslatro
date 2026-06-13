@@ -80,4 +80,19 @@ describe("requestAdvice", () => {
       expect.objectContaining({ model: "claude-haiku-4-5" }),
     );
   });
+
+  test("sends the system prompt as an ephemeral cached block", async () => {
+    createMock.mockResolvedValue(textResponse(adviceText()));
+    await requestAdvice(adviceRequestFixture(), "sk-test");
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        system: [
+          expect.objectContaining({
+            type: "text",
+            cache_control: { type: "ephemeral" },
+          }),
+        ],
+      }),
+    );
+  });
 });
