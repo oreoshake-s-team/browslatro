@@ -117,6 +117,23 @@ describe("ScoringTrace", () => {
   });
 });
 
+describe("ScoringTrace auto-scroll", () => {
+  test("scrolls to the bottom when events are added", () => {
+    const { rerender } = render(<ScoringTrace events={[]} />);
+    const log = screen.getByRole("log");
+    Object.defineProperty(log, "scrollHeight", { value: 500, configurable: true });
+    rerender(<ScoringTrace events={group({ chips: 10, mult: 2, handLabel: "Pair", level: 1 })} />);
+    expect(log.scrollTop).toBe(500);
+  });
+
+  test("scrolls to the bottom on initial render with events", () => {
+    const events = group({ chips: 10, mult: 2, handLabel: "Pair", level: 1 });
+    render(<ScoringTrace events={events} />);
+    const log = screen.getByRole("log");
+    expect(log.scrollTop).toBe(log.scrollHeight);
+  });
+});
+
 describe("ScoringTrace expand affordance", () => {
   test("renders an Expand button", () => {
     render(<ScoringTrace events={[]} />);
