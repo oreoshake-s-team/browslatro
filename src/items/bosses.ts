@@ -33,7 +33,8 @@ export type BossEffect =
   | { readonly kind: "fixed-refill-count"; readonly value: number }
   | { readonly kind: "zero-wallet-on-most-played-hand" }
   | { readonly kind: "debuff-all-until-joker-sold" }
-  | { readonly kind: "flip-shuffle-jokers" };
+  | { readonly kind: "flip-shuffle-jokers" }
+  | { readonly kind: "disable-random-joker-each-hand" };
 
 export interface BossBlind {
   readonly id: string;
@@ -253,6 +254,14 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     anteMin: 8,
     effect: { kind: "flip-shuffle-jokers" },
   },
+  {
+    id: "crimson-heart",
+    name: "Crimson Heart",
+    description: "Disables 1 random Joker each hand.",
+    scoreMultiplier: 2,
+    anteMin: 8,
+    effect: { kind: "disable-random-joker-each-hand" },
+  },
 ];
 
 const SHOWDOWN_BOSS_IDS: ReadonlySet<string> = new Set([
@@ -366,6 +375,10 @@ export function bossMoneyPenaltyPerCard(boss: BossBlind | null): number {
 
 export function bossHidesJokers(boss: BossBlind | null): boolean {
   return boss?.effect.kind === "flip-shuffle-jokers";
+}
+
+export function bossDisablesRandomJoker(boss: BossBlind | null): boolean {
+  return boss?.effect.kind === "disable-random-joker-each-hand";
 }
 
 export function isCardDebuffedByBoss(

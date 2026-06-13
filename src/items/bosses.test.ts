@@ -12,6 +12,7 @@ import {
   bossShouldZeroWallet,
   bossStartingDiscards,
   bossStartingHands,
+  bossDisablesRandomJoker,
   bossHidesJokers,
   bossPoolForAnte,
   bossVoidReason,
@@ -855,6 +856,32 @@ describe("showdown boss catalog entries", () => {
   test("Amber Acorn only appears from ante 8", () => {
     const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
     expect(acorn.anteMin).toBe(8);
+  });
+
+  test("Crimson Heart disables a random Joker each hand", () => {
+    const heart = createBossCatalog().find((b) => b.id === "crimson-heart")!;
+    expect(heart.effect).toEqual({ kind: "disable-random-joker-each-hand" });
+  });
+
+  test("Crimson Heart only appears from ante 8", () => {
+    const heart = createBossCatalog().find((b) => b.id === "crimson-heart")!;
+    expect(heart.anteMin).toBe(8);
+  });
+});
+
+describe("bossDisablesRandomJoker", () => {
+  test("is true for Crimson Heart", () => {
+    const heart = createBossCatalog().find((b) => b.id === "crimson-heart")!;
+    expect(bossDisablesRandomJoker(heart)).toBe(true);
+  });
+
+  test("is false for a non-disabling boss (negative)", () => {
+    const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
+    expect(bossDisablesRandomJoker(acorn)).toBe(false);
+  });
+
+  test("is false when there is no boss (negative)", () => {
+    expect(bossDisablesRandomJoker(null)).toBe(false);
   });
 });
 

@@ -856,3 +856,75 @@ describe("Boss Blinds — showdown Amber Acorn", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Boss Blinds — showdown Crimson Heart", () => {
+  function startCrimsonRound(bossId: string): void {
+    const boss = createBossCatalog().find((b) => b.id === bossId)!;
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setCurrentBoss(boss);
+      useGame.getState().setJokers([
+        createPlusFourMultJoker(),
+        createBusinessCardJoker(),
+        createJokerStencilJoker(),
+      ]);
+      useGame.getState().setBlind(3);
+      useGame.getState().setPendingBlindSelect(true);
+    });
+  }
+
+  test("entering the boss round disables exactly one Joker", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    startCrimsonRound("crimson-heart");
+    await user.click(screen.getByTestId("blind-select-play"));
+    const disabled = document.querySelectorAll(
+      '[data-testid="jokers-tray"] .joker-tile-debuffed',
+    );
+    expect(disabled).toHaveLength(1);
+    expect(
+      screen
+        .getByTestId("joker-tile-filled-plus-four-mult")
+        .getAttribute("data-debuffed"),
+    ).toBe("true");
+    random.mockRestore();
+  });
+
+  test("a non-disabling showdown boss leaves every Joker active (negative)", async () => {
+    const vessel = "violet-vessel";
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    startCrimsonRound(vessel);
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(
+      document.querySelectorAll(
+        '[data-testid="jokers-tray"] .joker-tile-debuffed',
+      ),
+    ).toHaveLength(0);
+  });
+
+  test("the disable clears when the next round starts", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    startCrimsonRound("crimson-heart");
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(
+      document.querySelectorAll(
+        '[data-testid="jokers-tray"] .joker-tile-debuffed',
+      ),
+    ).toHaveLength(1);
+    act(() => {
+      useGame.getState().setBlind(1);
+      useGame.getState().setPendingBlindSelect(true);
+    });
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(
+      document.querySelectorAll(
+        '[data-testid="jokers-tray"] .joker-tile-debuffed',
+      ),
+    ).toHaveLength(0);
+    random.mockRestore();
+  });
+});

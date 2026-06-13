@@ -4,6 +4,7 @@ import { play } from "../components/system/sounds";
 import type { Blind } from "../cards/types";
 import {
   applyBossFaceDown,
+  bossDisablesRandomJoker,
   bossHandSize,
   bossHidesJokers,
   bossPickerRngConfig,
@@ -53,6 +54,11 @@ import {
   applyCeremonialDaggerOnBlindSelect,
   applyMadnessOnBlindSelect,
 } from "../items/jokers";
+import {
+  clearJokerDisable,
+  disableJokerAt,
+  pickDisabledJokerIndex,
+} from "../items/jokers/crimsonHeart";
 import { initialRunStats, recordBlindSkipped, type RunStats } from "../run/runStats";
 import {
   pruneTagsByCategory,
@@ -262,6 +268,10 @@ export function useRoundLifecycle({
     }
     if (isBossRound && bossHidesJokers(effectiveBoss)) {
       setJokers((prev) => shuffle(prev));
+    }
+    setJokers((prev) => clearJokerDisable(prev));
+    if (isBossRound && bossDisablesRandomJoker(effectiveBoss)) {
+      setJokers((prev) => disableJokerAt(prev, pickDisabledJokerIndex(prev)));
     }
     setRebateRank(
       activeForBlind.some(

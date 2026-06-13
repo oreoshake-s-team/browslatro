@@ -194,6 +194,8 @@ export const BOSS_WIKI: Readonly<Record<string, string>> = {
     "Every card is debuffed — scoring nothing — until you sell a Joker. Sell one early to lift the debuff, then play normally with whatever engine remains.",
   "amber-acorn":
     "Your Jokers are flipped face down and shuffled at the start of the blind. They still apply their effects — only your view of which is which is scrambled, so rely on what you remember rather than reading the tiles.",
+  "crimson-heart":
+    "One random Joker is disabled each hand and re-rolls after every play. Avoid leaning on a single must-fire Joker — spread your value so a disabled slot does not sink the hand.",
 };
 
 export const COMBO_WIKI: ReadonlyArray<ComboWikiEntry> = [
