@@ -89,6 +89,23 @@ dependency-free encoding tests run in CI; training itself runs locally.
    from the generated training seeds (`--seed-offset`), and only ship a
    candidate that beats the current model on average blinds cleared.
 
+   **One-command distillation cycle.** `scripts/distillPolicy.ts` runs the whole
+   loop — label disagreements with the LLM teacher, train with `--teacher`,
+   benchmark the candidate against the current model, and print a `SHIP`/`HOLD`
+   verdict on average blinds cleared:
+
+   ```sh
+   ANTHROPIC_API_KEY=sk-... yarn dlx tsx scripts/distillPolicy.ts \
+     --base ml/dataset.jsonl --model public/models/advisor-policy-v5.onnx \
+     --out ml/candidate.onnx --teacher-weight 5 --min-score-fraction 0.25 \
+     --games 500 --seed-offset 5000 --python python3
+   ```
+
+   `--dry-run` swaps the LLM teacher for a local best-play stand-in, so the full
+   label → train → benchmark wiring can be validated with no API spend. The
+   verdict only reports `SHIP` when the candidate strictly beats the current
+   model, so a worse run is never promoted.
+
 4. **Run in the browser** — issue #1055 consumes the exported model with
    onnxruntime-web. The browser-side encoder must match `encoding.py`
    byte-for-byte; `ENCODING_VERSION` is bumped on any change, and the
