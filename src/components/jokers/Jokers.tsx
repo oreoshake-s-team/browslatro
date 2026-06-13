@@ -33,6 +33,7 @@ export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 interface JokersProps {
   jokers: ReadonlyArray<Joker>;
   capacity?: number;
+  faceDown?: boolean;
   pulseCounters?: Readonly<Record<string, number>>;
   onReorder?: (orderedIds: ReadonlyArray<string>) => void;
   onSell?: (index: number) => void;
@@ -45,6 +46,7 @@ interface JokersProps {
 export default function Jokers({
   jokers,
   capacity = MAX_JOKERS,
+  faceDown = false,
   pulseCounters,
   onReorder,
   onSell,
@@ -67,8 +69,8 @@ export default function Jokers({
   });
   const listRef = useRef<HTMLUListElement | null>(null);
   const emptyCount = Math.max(0, capacity - effectiveJokerCount(jokers));
-  const reorderable = Boolean(onReorder);
-  const sellable = Boolean(onSell);
+  const reorderable = Boolean(onReorder) && !faceDown;
+  const sellable = Boolean(onSell) && !faceDown;
   const tileDraggable = reorderable || sellable;
 
   useEffect(() => {
@@ -235,6 +237,21 @@ export default function Jokers({
         onDrop={reorderable ? handleListDrop : undefined}
       >
         {jokers.map((joker, idx) => {
+          if (faceDown) {
+            return (
+              <li
+                key={jokerKeys[idx]}
+                className="joker-tile joker-tile-face-down"
+                aria-label={t("a11y.faceDownJoker", {
+                  position: idx + 1,
+                  total: jokers.length,
+                })}
+                data-testid="joker-tile-face-down"
+              >
+                <div className="joker-tile-inner joker-tile-back" aria-hidden="true" />
+              </li>
+            );
+          }
           const pulse = pulseCounters?.[joker.id] ?? 0;
           const isDragging = draggingId === joker.id;
           const sellValue = jokerSellValue(joker);

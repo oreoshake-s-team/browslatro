@@ -32,7 +32,8 @@ export type BossEffect =
   | { readonly kind: "post-play-random-held-discard"; readonly count: number }
   | { readonly kind: "fixed-refill-count"; readonly value: number }
   | { readonly kind: "zero-wallet-on-most-played-hand" }
-  | { readonly kind: "debuff-all-until-joker-sold" };
+  | { readonly kind: "debuff-all-until-joker-sold" }
+  | { readonly kind: "flip-shuffle-jokers" };
 
 export interface BossBlind {
   readonly id: string;
@@ -244,6 +245,14 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     anteMin: 8,
     effect: { kind: "debuff-all-until-joker-sold" },
   },
+  {
+    id: "amber-acorn",
+    name: "Amber Acorn",
+    description: "Flips and shuffles all Jokers.",
+    scoreMultiplier: 2,
+    anteMin: 8,
+    effect: { kind: "flip-shuffle-jokers" },
+  },
 ];
 
 const SHOWDOWN_BOSS_IDS: ReadonlySet<string> = new Set([
@@ -353,6 +362,10 @@ export function bossRequiredCardCount(boss: BossBlind | null): number | null {
 export function bossMoneyPenaltyPerCard(boss: BossBlind | null): number {
   if (!boss || boss.effect.kind !== "money-per-card-played") return 0;
   return boss.effect.value;
+}
+
+export function bossHidesJokers(boss: BossBlind | null): boolean {
+  return boss?.effect.kind === "flip-shuffle-jokers";
 }
 
 export function isCardDebuffedByBoss(

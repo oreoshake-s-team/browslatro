@@ -4,6 +4,10 @@ import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
 import { createPlusFourMultJoker } from "./items/jokers/factories";
+import {
+  createBusinessCardJoker,
+  createJokerStencilJoker,
+} from "./items/jokers";
 import { emptyHandCounts } from "./components/hud/handPlayCounts";
 import type { HandLabel } from "./scoring/handEvaluator";
 
@@ -803,5 +807,52 @@ describe("Boss Blinds — showdown Verdant Leaf", () => {
     expect(
       document.querySelectorAll('[data-testid="hand-cards"] .card-debuffed'),
     ).toHaveLength(0);
+  });
+});
+
+describe("Boss Blinds — showdown Amber Acorn", () => {
+  test("entering the boss round flips the Jokers face down and shuffles their order", async () => {
+    const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    mockShuffleConfig.useReverse = true;
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setCurrentBoss(acorn);
+      useGame.getState().setJokers([
+        createPlusFourMultJoker(),
+        createBusinessCardJoker(),
+        createJokerStencilJoker(),
+      ]);
+      useGame.getState().setBlind(3);
+      useGame.getState().setPendingBlindSelect(true);
+    });
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(screen.getAllByTestId("joker-tile-face-down")).toHaveLength(3);
+    expect(useGame.getState().jokers.map((j) => j.id)).toEqual([
+      "joker-stencil",
+      "business-card",
+      "plus-four-mult",
+    ]);
+  });
+
+  test("a non-flip showdown boss leaves the Jokers face up (negative)", async () => {
+    const vessel = createBossCatalog().find((b) => b.id === "violet-vessel")!;
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setCurrentBoss(vessel);
+      useGame.getState().setJokers([createPlusFourMultJoker()]);
+      useGame.getState().setBlind(3);
+      useGame.getState().setPendingBlindSelect(true);
+    });
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(
+      screen.queryByTestId("joker-tile-face-down"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("joker-tile-filled-plus-four-mult"),
+    ).toBeInTheDocument();
   });
 });

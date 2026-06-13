@@ -22,7 +22,11 @@ import { useGame } from "../../store/game";
 import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { play } from "../system/sounds";
-import { canSubmitHand, debuffedHandIds } from "../../items/bosses";
+import {
+  bossHidesJokers,
+  canSubmitHand,
+  debuffedHandIds,
+} from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
 import { MAX_JOKERS } from "../../items/jokers";
 import { deckJokerSlotsDelta } from "../../items/decks";
@@ -184,6 +188,7 @@ export default function Game({
         <Jokers
           jokers={jokers}
           capacity={jokerCapacity}
+          faceDown={blind === 3 && bossHidesJokers(currentBoss)}
           pulseCounters={jokerPulseCounters}
           onReorder={reorderJokers}
           onSell={sellJoker}
