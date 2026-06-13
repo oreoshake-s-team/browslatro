@@ -8,3 +8,8 @@
 .blind-suggest-slot {
   display: contents;
 }
+
+.blind-suggest-button {
+  padding: 1.2rem 2.4rem;
+  font-size: 1.4rem;
+}
