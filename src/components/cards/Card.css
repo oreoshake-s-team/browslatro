@@ -857,3 +857,19 @@
     outline-offset: 2px;
   }
 }
+
+.card-forced {
+  outline: 2px solid var(--accent-chips);
+  outline-offset: 1px;
+}
+
+.card-forced-badge {
+  position: absolute;
+  top: 0.25rem;
+  left: 0.25rem;
+  font-size: 0.7rem;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 4;
+  filter: drop-shadow(0 1px 1px var(--shadow-md));
+}

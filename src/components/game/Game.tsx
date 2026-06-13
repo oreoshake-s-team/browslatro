@@ -21,8 +21,14 @@ const NopeAnimation = lazy(() => import("./NopeAnimation"));
 import { useGame } from "../../store/game";
 import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
+import { useCeruleanForcedCard } from "../../hooks/useCeruleanForcedCard";
 import { play } from "../system/sounds";
-import { bossHidesJokers, debuffedHandIds } from "../../items/bosses";
+import { announce } from "../system/LiveAnnouncer";
+import {
+  bossForcesCardSelection,
+  bossHidesJokers,
+  debuffedHandIds,
+} from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
 import { MAX_JOKERS } from "../../items/jokers";
 import { deckJokerSlotsDelta } from "../../items/decks";
@@ -93,6 +99,7 @@ export default function Game({
   const luckyMoneyProcIds = useGame((s) => s.luckyMoneyProcIds);
   const handPlaySignal = useGame((s) => s.handPlaySignal);
   const toggleCard = useGame((s) => s.toggleCard);
+  const forcedCardId = useGame((s) => s.forcedCardId);
   const setHandDisplayOrder = useGame((s) => s.setHandDisplayOrder);
   const reorderJokers = useGame((s) => s.reorderJokers);
   const blind = useGame((s) => s.blind);
@@ -133,6 +140,15 @@ export default function Game({
     blind === 3,
     playedCardKeysThisAnte,
   );
+  useCeruleanForcedCard();
+  const forcesCard = blind === 3 && bossForcesCardSelection(currentBoss);
+  const handleToggleCard = (card: Card) => {
+    if (forcesCard && forcedCardId === card.id) {
+      announce(t("a11y.cardLockedAttempt"));
+      return;
+    }
+    toggleCard(card);
+  };
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
   const jokerCapacity = Math.max(
@@ -225,6 +241,7 @@ export default function Game({
           hand={hand}
           remaining={inHandRemaining}
           selectedIds={selectedIds}
+          forcedCardId={forcesCard ? forcedCardId : null}
           discardingIds={discardingIds}
           newlyDrawnIds={newlyDrawnIds}
           debuffedIds={debuffedIds}
@@ -235,7 +252,7 @@ export default function Game({
           luckyMultProcIds={luckyMultProcIds}
           luckyMoneyProcIds={luckyMoneyProcIds}
           handPlaySignal={handPlaySignal}
-          onToggleCard={toggleCard}
+          onToggleCard={handleToggleCard}
           onCardDiscardEnd={onCardDiscardEnd}
           onDisplayOrderChange={setHandDisplayOrder}
           consumableDropEnabled={dragging}

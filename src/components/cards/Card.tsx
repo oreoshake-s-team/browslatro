@@ -93,6 +93,7 @@ function isFaceRank(rank: Rank): rank is FaceRank {
 interface CardProps {
   card: CardType;
   selected?: boolean;
+  forced?: boolean;
   discarding?: boolean;
   newlyDrawn?: boolean;
   debuffed?: boolean;
@@ -110,6 +111,7 @@ interface CardProps {
 export default function Card({
   card,
   selected = false,
+  forced = false,
   discarding = false,
   newlyDrawn = false,
   debuffed = false,
@@ -226,18 +228,22 @@ export default function Card({
   const withDebuff = debuffed
     ? t("a11y.cardDebuffed", { name: withEdition })
     : withEdition;
+  const withForced = forced
+    ? t("a11y.cardForced", { name: withDebuff })
+    : withDebuff;
   const ariaLabel = showBack
     ? t("a11y.faceDownCard")
     : newlyDrawn
-      ? t("a11y.cardNewlyDrawn", { name: withDebuff })
-      : withDebuff;
+      ? t("a11y.cardNewlyDrawn", { name: withForced })
+      : withForced;
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
   const faceDownClass = showBack ? "card-face-down" : "";
+  const forcedClass = forced ? "card-forced" : "";
 
   const cardClassName =
-    `card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass}`
+    `card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass} ${forcedClass}`
       .replace(/\s+/g, " ")
       .trim();
   const content = (
@@ -307,6 +313,15 @@ export default function Card({
           aria-hidden="true"
           data-testid={`card-seal-${card.id}`}
         />
+      )}
+      {forced && !showBack && (
+        <span
+          className="card-forced-badge"
+          aria-hidden="true"
+          data-testid={`card-forced-${card.id}`}
+        >
+          🔒
+        </span>
       )}
       {luckyMultScoring && (
         <span

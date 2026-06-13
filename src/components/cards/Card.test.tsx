@@ -562,3 +562,27 @@ describe("Card accessible-name vs visible-text", () => {
     expect(screen.getByRole("button")).toHaveAccessibleName("A of Spades");
   });
 });
+
+describe("Card — forced (Cerulean Bell)", () => {
+  test("applies the forced class when forced", () => {
+    render(<Card card={aceOfSpades} forced />);
+    expect(screen.getByRole("button")).toHaveClass("card-forced");
+  });
+
+  test("renders the forced lock badge when forced", () => {
+    render(<Card card={aceOfSpades} forced />);
+    expect(screen.getByTestId("card-forced-1")).toBeInTheDocument();
+  });
+
+  test("notes the forced state in the accessible label", () => {
+    render(<Card card={aceOfSpades} forced />);
+    expect(
+      screen.getByRole("button", { name: /forced selection/i }),
+    ).toBeInTheDocument();
+  });
+
+  test("renders no forced badge when not forced (negative)", () => {
+    render(<Card card={aceOfSpades} />);
+    expect(screen.queryByTestId("card-forced-1")).not.toBeInTheDocument();
+  });
+});

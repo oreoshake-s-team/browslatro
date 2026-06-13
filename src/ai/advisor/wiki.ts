@@ -196,6 +196,8 @@ export const BOSS_WIKI: Readonly<Record<string, string>> = {
     "Your Jokers are flipped face down and shuffled at the start of the blind. They still apply their effects — only your view of which is which is scrambled, so rely on what you remember rather than reading the tiles.",
   "crimson-heart":
     "One random Joker is disabled each hand and re-rolls after every play. Avoid leaning on a single must-fire Joker — spread your value so a disabled slot does not sink the hand.",
+  "cerulean-bell":
+    "One random card is force-selected and cannot be deselected; a new card is forced each hand. Build your play around the locked card rather than fighting it.",
 };
 
 export const COMBO_WIKI: ReadonlyArray<ComboWikiEntry> = [

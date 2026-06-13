@@ -34,7 +34,8 @@ export type BossEffect =
   | { readonly kind: "zero-wallet-on-most-played-hand" }
   | { readonly kind: "debuff-all-until-joker-sold" }
   | { readonly kind: "flip-shuffle-jokers" }
-  | { readonly kind: "disable-random-joker-each-hand" };
+  | { readonly kind: "disable-random-joker-each-hand" }
+  | { readonly kind: "force-card-selected" };
 
 export interface BossBlind {
   readonly id: string;
@@ -262,6 +263,14 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
     anteMin: 8,
     effect: { kind: "disable-random-joker-each-hand" },
   },
+  {
+    id: "cerulean-bell",
+    name: "Cerulean Bell",
+    description: "Forces 1 card to always be selected.",
+    scoreMultiplier: 2,
+    anteMin: 8,
+    effect: { kind: "force-card-selected" },
+  },
 ];
 
 const SHOWDOWN_BOSS_IDS: ReadonlySet<string> = new Set([
@@ -379,6 +388,10 @@ export function bossHidesJokers(boss: BossBlind | null): boolean {
 
 export function bossDisablesRandomJoker(boss: BossBlind | null): boolean {
   return boss?.effect.kind === "disable-random-joker-each-hand";
+}
+
+export function bossForcesCardSelection(boss: BossBlind | null): boolean {
+  return boss?.effect.kind === "force-card-selected";
 }
 
 export function isCardDebuffedByBoss(

@@ -13,6 +13,7 @@ import {
   bossStartingDiscards,
   bossStartingHands,
   bossDisablesRandomJoker,
+  bossForcesCardSelection,
   bossHidesJokers,
   bossPoolForAnte,
   bossVoidReason,
@@ -866,6 +867,32 @@ describe("showdown boss catalog entries", () => {
   test("Crimson Heart only appears from ante 8", () => {
     const heart = createBossCatalog().find((b) => b.id === "crimson-heart")!;
     expect(heart.anteMin).toBe(8);
+  });
+
+  test("Cerulean Bell forces a card to be selected", () => {
+    const bell = createBossCatalog().find((b) => b.id === "cerulean-bell")!;
+    expect(bell.effect).toEqual({ kind: "force-card-selected" });
+  });
+
+  test("Cerulean Bell only appears from ante 8", () => {
+    const bell = createBossCatalog().find((b) => b.id === "cerulean-bell")!;
+    expect(bell.anteMin).toBe(8);
+  });
+});
+
+describe("bossForcesCardSelection", () => {
+  test("is true for Cerulean Bell", () => {
+    const bell = createBossCatalog().find((b) => b.id === "cerulean-bell")!;
+    expect(bossForcesCardSelection(bell)).toBe(true);
+  });
+
+  test("is false for a non-forcing boss (negative)", () => {
+    const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
+    expect(bossForcesCardSelection(acorn)).toBe(false);
+  });
+
+  test("is false when there is no boss (negative)", () => {
+    expect(bossForcesCardSelection(null)).toBe(false);
   });
 });
 
