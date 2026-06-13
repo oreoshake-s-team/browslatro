@@ -8,6 +8,7 @@ import type { Card } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
 import { cardLabel } from "../../scoring/scoringTrace";
 import { useGame } from "../../store/game";
+import { useModelLoadProgress } from "./useModelLoadProgress";
 import PlayerKeyForm from "./PlayerKeyForm";
 import "./AutopilotControls.css";
 
@@ -150,6 +151,7 @@ export default function AutopilotControls({
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
+  const loadProgress = useModelLoadProgress(modelProgress);
   return (
     <div
       className="autopilot-controls"
@@ -170,12 +172,8 @@ export default function AutopilotControls({
           <progress
             className="autopilot-progress"
             aria-label={t("advisor.downloadingModel")}
-            value={
-              modelProgress.total !== null ? modelProgress.loaded : undefined
-            }
-            max={
-              modelProgress.total !== null ? modelProgress.total : undefined
-            }
+            value={loadProgress}
+            max={1}
           />
         </div>
       ) : proposalUnavailable ? (
