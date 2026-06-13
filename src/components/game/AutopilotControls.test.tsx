@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { HandOption } from "../../ai/getHandOptions";
 import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
 import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
@@ -11,6 +11,23 @@ beforeEach(() => {
   window.localStorage.clear();
   useGame.getState().resetGame();
 });
+
+afterEach(() => {
+  Reflect.deleteProperty(window, "matchMedia");
+});
+
+function mockReducedMotion(reduce: boolean): void {
+  window.matchMedia = vi.fn().mockReturnValue({
+    matches: reduce,
+    media: "(prefers-reduced-motion: reduce)",
+    onchange: null,
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }) as unknown as typeof window.matchMedia;
+}
 
 function playProposal(): HandOption {
   return {
@@ -123,9 +140,26 @@ describe("AutopilotControls", () => {
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
-  test("shows a download progress bar while the model loads", () => {
+  test("shows a determinate download progress bar while the model loads", () => {
     renderControls({ proposal: null, modelProgress: { loaded: 64, total: 128 } });
-    expect(screen.getByRole("progressbar")).toHaveAttribute("value", "64");
+    expect(screen.getByRole("progressbar")).toHaveAttribute("max", "1");
+  });
+
+  test("reflects real download progress when motion is reduced", () => {
+    mockReducedMotion(true);
+    renderControls({ proposal: null, modelProgress: { loaded: 64, total: 128 } });
+    expect(screen.getByRole("progressbar")).toHaveAttribute("value", "0.45");
+  });
+
+  test("parks near the ceiling for an indeterminate load when motion is reduced", () => {
+    mockReducedMotion(true);
+    renderControls({ proposal: null, modelProgress: { loaded: 0, total: null } });
+    expect(screen.getByRole("progressbar")).toHaveAttribute("value", "0.9");
+  });
+
+  test("does not render the progress bar once the model is loaded (negative)", () => {
+    renderControls({ proposal: playProposal(), modelProgress: null });
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
   test("does not offer approve while the model is downloading", () => {
