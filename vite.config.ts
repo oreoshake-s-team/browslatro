@@ -4,7 +4,6 @@ import { join } from "node:path";
 import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
-import { VitePWA } from "vite-plugin-pwa";
 import { applySiteUrl } from "./src/seo/siteUrl";
 
 const analyzePlugin: PluginOption | false =
@@ -16,17 +15,6 @@ const analyzePlugin: PluginOption | false =
     template: "treemap",
     open: false,
   });
-
-const pwaPlugin: PluginOption[] = process.env.VITEST
-  ? []
-  : VitePWA({
-      registerType: "autoUpdate",
-      injectRegister: false,
-      manifest: false,
-      workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,mp3,json}"],
-      },
-    });
 
 const siteUrl =
   process.env.SITE_URL ??
@@ -57,7 +45,6 @@ export default defineConfig({
   plugins: [
     react(),
     siteUrlPlugin,
-    ...pwaPlugin,
     ...(analyzePlugin ? [analyzePlugin] : []),
   ],
   build: {
