@@ -22,6 +22,7 @@ function config(overrides: Partial<DistillConfig> = {}): DistillConfig {
     epochs: 30,
     games: 200,
     seedOffset: 5000,
+    limit: 0,
     python: "python3",
     ...overrides,
   };

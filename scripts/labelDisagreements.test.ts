@@ -9,6 +9,7 @@ import type { ModelState } from "../src/ai/modelState";
 import type { CandidateRanker } from "../src/ai/policy";
 import {
   applyQualityGate,
+  capDisagreements,
   createRequestAdviceTeacher,
   findDisagreements,
   isLabelJustified,
@@ -240,6 +241,46 @@ describe("labelDisagreements quality gate", () => {
     const teacher = vi.fn().mockResolvedValue(1);
     const labeled = await labelDisagreements({ records: [record], ranker, teacher });
     expect(labeled).toHaveLength(0);
+  });
+});
+
+describe("capDisagreements", () => {
+  function disagreements(n: number): ReadonlyArray<Disagreement> {
+    return Array.from({ length: n }, (_, i) => ({
+      record: makeRecord(modelStateFixture(), candidatesFixture(), 0, i),
+      expertIndex: 0,
+      onnxIndex: 1,
+    }));
+  }
+
+  test("returns all disagreements when the limit is zero", () => {
+    expect(capDisagreements(disagreements(10), 0)).toHaveLength(10);
+  });
+
+  test("returns all disagreements when below the limit", () => {
+    expect(capDisagreements(disagreements(3), 5)).toHaveLength(3);
+  });
+
+  test("caps to exactly the limit when above it", () => {
+    expect(capDisagreements(disagreements(10), 4)).toHaveLength(4);
+  });
+
+  test("samples evenly across the disagreements", () => {
+    const seeds = capDisagreements(disagreements(10), 5).map((d) => d.record.runSeed);
+    expect(seeds).toEqual([0, 2, 4, 6, 8]);
+  });
+});
+
+describe("labelDisagreements limit", () => {
+  test("labels at most the configured number of disagreements", async () => {
+    const states = [modelStateFixture(), modelStateFixture(), modelStateFixture()];
+    const records = states.map((state, i) =>
+      makeRecord(state, candidatesFixture(), 0, i),
+    );
+    const ranker = rankerFrom(new Map(states.map((state) => [state, [1, 0]])));
+    const teacher = vi.fn().mockResolvedValue(1);
+    const labeled = await labelDisagreements({ records, ranker, teacher, limit: 2 });
+    expect(labeled).toHaveLength(2);
   });
 });
 

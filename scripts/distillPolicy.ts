@@ -20,6 +20,7 @@ export interface DistillConfig {
   readonly epochs: number;
   readonly games: number;
   readonly seedOffset: number;
+  readonly limit: number;
   readonly python: string;
 }
 
@@ -126,7 +127,7 @@ async function main(): Promise<void> {
     console.error(
       "Usage: yarn dlx tsx scripts/distillPolicy.ts --base <dataset.jsonl> --model <current.onnx> " +
         "[--out <candidate.onnx>] [--teacher-out <labels.jsonl>] [--teacher-weight 5] " +
-        "[--min-score-fraction 0.25] [--epochs 30] [--games 200] [--seed-offset 5000] " +
+        "[--min-score-fraction 0.25] [--limit N] [--epochs 30] [--games 200] [--seed-offset 5000] " +
         "[--python python3] [--dry-run]",
     );
     process.exit(1);
@@ -142,6 +143,7 @@ async function main(): Promise<void> {
     epochs: numberFlag("--epochs", 30),
     games: numberFlag("--games", 200),
     seedOffset: numberFlag("--seed-offset", 5000),
+    limit: numberFlag("--limit", 0),
     python: stringFlag("--python", "python3"),
   };
 
@@ -166,6 +168,7 @@ async function main(): Promise<void> {
     ranker,
     teacher,
     gate: { minScoreFraction: config.minScoreFraction },
+    limit: config.limit,
   });
   writeFileSync(config.teacherOut, `${serializeDatasetRecords(labeled)}\n`);
   console.log(

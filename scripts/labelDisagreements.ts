@@ -106,14 +106,25 @@ export function applyQualityGate(
   );
 }
 
+export function capDisagreements(
+  disagreements: ReadonlyArray<Disagreement>,
+  limit: number,
+): ReadonlyArray<Disagreement> {
+  if (limit <= 0 || disagreements.length <= limit) return disagreements;
+  const stride = disagreements.length / limit;
+  return Array.from({ length: limit }, (_, i) => disagreements[Math.floor(i * stride)]);
+}
+
 export async function labelDisagreements(args: {
   readonly records: ReadonlyArray<DatasetRecord>;
   readonly ranker: CandidateRanker;
   readonly teacher: TeacherLabeler;
   readonly gate?: QualityGateConfig;
+  readonly limit?: number;
 }): Promise<ReadonlyArray<DatasetRecord>> {
   const disagreements = await findDisagreements(args.records, args.ranker);
-  const labeled = await relabelDisagreements(disagreements, args.teacher);
+  const capped = capDisagreements(disagreements, args.limit ?? 0);
+  const labeled = await relabelDisagreements(capped, args.teacher);
   return applyQualityGate(labeled, args.gate ?? DEFAULT_QUALITY_GATE);
 }
 
@@ -141,6 +152,16 @@ function floatFlag(name: string, fallback: number): number {
   return value;
 }
 
+function intFlag(name: string, fallback: number): number {
+  const raw = stringFlag(name, "");
+  if (raw === "") return fallback;
+  const value = Number.parseInt(raw, 10);
+  if (Number.isNaN(value)) {
+    throw new Error(`${name} expects an integer, got ${raw}`);
+  }
+  return value;
+}
+
 async function main(): Promise<void> {
   const inPath = process.argv[2];
   const outPath = process.argv[3];
@@ -151,7 +172,7 @@ async function main(): Promise<void> {
     outPath.startsWith("--")
   ) {
     console.error(
-      "Usage: yarn dlx tsx scripts/labelDisagreements.ts <dataset.jsonl> <out.jsonl> --model <policy.onnx> [--min-score-fraction 0.25]",
+      "Usage: yarn dlx tsx scripts/labelDisagreements.ts <dataset.jsonl> <out.jsonl> --model <policy.onnx> [--min-score-fraction 0.25] [--limit N]",
     );
     process.exit(1);
   }
@@ -169,6 +190,7 @@ async function main(): Promise<void> {
     "--min-score-fraction",
     DEFAULT_QUALITY_GATE.minScoreFraction,
   );
+  const limit = intFlag("--limit", 0);
 
   const records = parseDatasetRecords(readFileSync(inPath, "utf8"));
   const { loadPolicyRanker } = await import("../src/ai/policy");
@@ -177,12 +199,13 @@ async function main(): Promise<void> {
 
   const started = Date.now();
   const disagreements = await findDisagreements(records, ranker);
-  const labeled = await relabelDisagreements(disagreements, teacher);
+  const capped = capDisagreements(disagreements, limit);
+  const labeled = await relabelDisagreements(capped, teacher);
   const gated = applyQualityGate(labeled, { minScoreFraction });
   writeFileSync(outPath, `${serializeDatasetRecords(gated)}\n`);
   console.log(
     `${records.length} records → ${disagreements.length} disagreements → ` +
-      `${labeled.length} teacher-labeled → ${gated.length} pass quality gate ` +
+      `${capped.length} labeled (cap ${limit || "none"}) → ${gated.length} pass quality gate ` +
       `(min-score-fraction=${minScoreFraction}, ${((Date.now() - started) / 1000).toFixed(1)}s)`,
   );
 }
