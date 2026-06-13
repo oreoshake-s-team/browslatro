@@ -116,8 +116,8 @@ function Options({
                 onClick={handleToggleMute}
               >
                 {muted
-                  ? `🔇 ${t("options.unmuteSounds")}`
-                  : `🔊 ${t("options.muteSounds")}`}
+                  ? t("options.unmuteSounds")
+                  : t("options.muteSounds")}
               </button>
               <button
                 className="options-button options-button--toggle"
@@ -125,8 +125,8 @@ function Options({
                 onClick={handleToggleHighVisibility}
               >
                 {highVisibility
-                  ? `🎨 ${t("options.disableHighVisibility")}`
-                  : `🎨 ${t("options.enableHighVisibility")}`}
+                  ? t("options.disableHighVisibility")
+                  : t("options.enableHighVisibility")}
               </button>
               <label
                 className="options-field"
