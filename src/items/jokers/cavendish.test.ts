@@ -9,6 +9,8 @@ import {
 } from "../jokers";
 import type { Joker } from "../jokers";
 import { useGame } from "../../store/game";
+import { shopPickerRngConfig } from "../shop";
+import { sequenceRng } from "../../test/rng";
 
 describe("Cavendish", () => {
   test("is registered in the joker catalog", () => {
@@ -79,5 +81,40 @@ describe("Cavendish spawn gating", () => {
     useGame.getState().setGrosMichelDestroyed(true);
     useGame.getState().resetGame();
     expect(useGame.getState().grosMichelDestroyed).toBe(false);
+  });
+});
+
+describe("Cavendish reroll gating", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  afterEach(() => {
+    shopPickerRngConfig.rng = Math.random;
+  });
+
+  test("rerolled shop offers exclude cavendish when grosMichelDestroyed is false", () => {
+    const catalog = createJokerCatalog();
+    const cavendishIdx = catalog.findIndex((j) => j.id === "cavendish");
+    shopPickerRngConfig.rng = sequenceRng([0.99, 0.05, (cavendishIdx + 0.5) / catalog.length]);
+    const game = useGame.getState();
+    game.setMoney(100);
+    game.setShopOffers([]);
+    game.rerollShopOffers(5);
+    const offers = useGame.getState().shopOffers ?? [];
+    expect(offers.some((o) => o.kind === "joker" && o.joker.id === "cavendish")).toBe(false);
+  });
+
+  test("rerolled shop offers include cavendish when grosMichelDestroyed is true", () => {
+    const catalog = createJokerCatalog();
+    const cavendishIdx = catalog.findIndex((j) => j.id === "cavendish");
+    shopPickerRngConfig.rng = sequenceRng([0.99, 0.05, (cavendishIdx + 0.5) / catalog.length]);
+    const game = useGame.getState();
+    game.setGrosMichelDestroyed(true);
+    game.setMoney(100);
+    game.setShopOffers([]);
+    game.rerollShopOffers(5);
+    const offers = useGame.getState().shopOffers ?? [];
+    expect(offers.some((o) => o.kind === "joker" && o.joker.id === "cavendish")).toBe(true);
   });
 });

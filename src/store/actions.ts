@@ -384,6 +384,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       excludedJokerIds: [
         ...(allowsDuplicateJokers(s.jokers) ? [] : s.jokers.map((j) => j.id)),
         ...s.soldJokerIdsThisShopVisit,
+        ...(s.grosMichelDestroyed ? [] : ["cavendish"]),
       ],
       planetCatalog: availablePlanets(createPlanetCatalog(), s.handPlayCounts),
       tarotCatalog: createTarotCatalog(),
