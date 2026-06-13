@@ -466,6 +466,22 @@ export function usePlayHand({
     const adjustedHandEntry = isBossRound
       ? bossAdjustHandEntry(currentBoss, label, baseHandEntry)
       : baseHandEntry;
+    if (
+      isBossRound &&
+      currentBoss.effect.kind === "hand-level-delta" &&
+      adjustedHandEntry.level < baseHandEntry.level
+    ) {
+      useGame.getState().setHandStats((prev) => ({
+        ...prev,
+        [label]: adjustedHandEntry,
+      }));
+      showBossEffectToast(
+        t("game.bossArmLowered", {
+          hand: tHandLabel(t, label),
+          level: adjustedHandEntry.level,
+        }),
+      );
+    }
     const forcedCount = isBossRound
       ? bossRequiredCardCount(currentBoss)
       : null;
