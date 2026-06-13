@@ -188,6 +188,10 @@ export const BOSS_WIKI: Readonly<Record<string, string>> = {
     "You always draw exactly 3 cards after a play or discard, regardless of how many you used. Big plays shrink your hand; small plays and discards can grow it.",
   "the-ox":
     "Playing your most-played hand type drops your money to $0. Avoid that type unless it is the only way to survive — losing savings also kills interest.",
+  "violet-vessel":
+    "A showdown blind with no special rule, just a massively larger score target. Commit your biggest scoring engine and spend discards freely to assemble it.",
+  "verdant-leaf":
+    "Every card is debuffed — scoring nothing — until you sell a Joker. Sell one early to lift the debuff, then play normally with whatever engine remains.",
 };
 
 export const COMBO_WIKI: ReadonlyArray<ComboWikiEntry> = [

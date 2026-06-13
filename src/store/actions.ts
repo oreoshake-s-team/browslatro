@@ -334,6 +334,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (entry.effect.kind === "sell-disables-boss-blind" && s.blind === 3) {
       s.setCurrentBoss({ ...s.currentBoss, effect: { kind: "none" } });
     }
+    if (
+      s.blind === 3 &&
+      s.currentBoss.effect.kind === "debuff-all-until-joker-sold"
+    ) {
+      s.setCurrentBoss({ ...s.currentBoss, effect: { kind: "none" } });
+    }
     const duplicatesOnSell =
       entry.effect.kind === "sell-after-rounds-duplicates-joker" &&
       entry.state?.kind === "counter" &&

@@ -3,6 +3,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
+import { createPlusFourMultJoker } from "./items/jokers/factories";
 import { emptyHandCounts } from "./components/hud/handPlayCounts";
 import type { HandLabel } from "./scoring/handEvaluator";
 
@@ -766,5 +767,41 @@ describe("Boss Blinds — Phase 5 The Ox", () => {
     fireEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     expect(useGame.getState().money).toBe(20);
+  });
+});
+
+describe("Boss Blinds — showdown Verdant Leaf", () => {
+  test("debuffs every card in hand until a Joker is sold", () => {
+    const leaf = createBossCatalog().find((b) => b.id === "verdant-leaf")!;
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setBlind(3);
+      useGame.getState().setCurrentBoss(leaf);
+      useGame.getState().setJokers([createPlusFourMultJoker()]);
+    });
+    const debuffedBefore = document.querySelectorAll(
+      '[data-testid="hand-cards"] .card-debuffed',
+    );
+    expect(debuffedBefore.length).toBeGreaterThan(0);
+    act(() => {
+      useGame.getState().sellJoker(0);
+    });
+    expect(
+      document.querySelectorAll('[data-testid="hand-cards"] .card-debuffed'),
+    ).toHaveLength(0);
+  });
+
+  test("leaves the hand undebuffed on a non-boss blind (negative)", () => {
+    const leaf = createBossCatalog().find((b) => b.id === "verdant-leaf")!;
+    render(<App />);
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setBlind(1);
+      useGame.getState().setCurrentBoss(leaf);
+    });
+    expect(
+      document.querySelectorAll('[data-testid="hand-cards"] .card-debuffed'),
+    ).toHaveLength(0);
   });
 });

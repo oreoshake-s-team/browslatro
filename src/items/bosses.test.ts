@@ -13,10 +13,12 @@ import {
   bossShouldZeroWallet,
   bossStartingDiscards,
   bossStartingHands,
+  bossPoolForAnte,
   canSubmitHand,
   createBossCatalog,
   debuffedHandIds,
   isCardDebuffedByBoss,
+  isShowdownAnte,
   pickBossForAnte,
   pickHookDiscardIds,
   type BossBlind,
@@ -808,5 +810,116 @@ describe("pickHookDiscardIds", () => {
     const rng = vi.fn().mockReturnValueOnce(0.75).mockReturnValueOnce(0);
     const picked = pickHookDiscardIds(hand, new Set(), 2, rng);
     expect(picked).toEqual([4, 1]);
+  });
+});
+
+const SHOWDOWN_IDS = [
+  "amber-acorn",
+  "verdant-leaf",
+  "violet-vessel",
+  "crimson-heart",
+  "cerulean-bell",
+];
+
+describe("isShowdownAnte", () => {
+  test.each([
+    [8, true],
+    [16, true],
+    [24, true],
+    [1, false],
+    [7, false],
+    [9, false],
+    [0, false],
+  ])("ante %i -> %s", (ante, expected) => {
+    expect(isShowdownAnte(ante)).toBe(expected);
+  });
+});
+
+describe("showdown boss catalog entries", () => {
+  test("Violet Vessel is a 6x blind with no special rule", () => {
+    const vessel = createBossCatalog().find((b) => b.id === "violet-vessel")!;
+    expect(vessel.scoreMultiplier).toBe(6);
+  });
+
+  test("Violet Vessel only appears from ante 8", () => {
+    const vessel = createBossCatalog().find((b) => b.id === "violet-vessel")!;
+    expect(vessel.anteMin).toBe(8);
+  });
+
+  test("Verdant Leaf debuffs all cards until a Joker is sold", () => {
+    const leaf = createBossCatalog().find((b) => b.id === "verdant-leaf")!;
+    expect(leaf.effect).toEqual({ kind: "debuff-all-until-joker-sold" });
+  });
+
+  test("Verdant Leaf only appears from ante 8", () => {
+    const leaf = createBossCatalog().find((b) => b.id === "verdant-leaf")!;
+    expect(leaf.anteMin).toBe(8);
+  });
+});
+
+describe("bossPoolForAnte — showdown gating", () => {
+  test("ante 8 draws only from the showdown pool", () => {
+    const ids = bossPoolForAnte(createBossCatalog(), 8).map((b) => b.id);
+    expect(ids.every((id) => SHOWDOWN_IDS.includes(id))).toBe(true);
+  });
+
+  test("ante 8 includes the implemented showdown bosses", () => {
+    const ids = bossPoolForAnte(createBossCatalog(), 8).map((b) => b.id);
+    expect(ids).toEqual(
+      expect.arrayContaining(["violet-vessel", "verdant-leaf"]),
+    );
+  });
+
+  test("ante 16 draws only from the showdown pool", () => {
+    const ids = bossPoolForAnte(createBossCatalog(), 16).map((b) => b.id);
+    expect(ids.every((id) => SHOWDOWN_IDS.includes(id))).toBe(true);
+  });
+
+  test("ante 7 never includes a showdown boss (negative)", () => {
+    const ids = bossPoolForAnte(createBossCatalog(), 7).map((b) => b.id);
+    expect(ids.some((id) => SHOWDOWN_IDS.includes(id))).toBe(false);
+  });
+
+  test("ante 9 never includes a showdown boss (negative)", () => {
+    const ids = bossPoolForAnte(createBossCatalog(), 9).map((b) => b.id);
+    expect(ids.some((id) => SHOWDOWN_IDS.includes(id))).toBe(false);
+  });
+});
+
+describe("pickBossForAnte — showdown antes", () => {
+  test("ante 8 returns a showdown boss", () => {
+    expect(SHOWDOWN_IDS).toContain(pickBossForAnte({ ante: 8, rng: () => 0 }).id);
+  });
+
+  test("ante 16 returns a showdown boss", () => {
+    expect(SHOWDOWN_IDS).toContain(
+      pickBossForAnte({ ante: 16, rng: () => 0.99 }).id,
+    );
+  });
+
+  test("ante 7 never returns a showdown boss (negative)", () => {
+    const picks = [0, 0.3, 0.6, 0.99].map(
+      (r) => pickBossForAnte({ ante: 7, rng: () => r }).id,
+    );
+    expect(picks.some((id) => SHOWDOWN_IDS.includes(id))).toBe(false);
+  });
+});
+
+describe("isCardDebuffedByBoss — Verdant Leaf", () => {
+  const leaf = createBossCatalog().find((b) => b.id === "verdant-leaf")!;
+
+  test("debuffs an arbitrary card while active", () => {
+    expect(isCardDebuffedByBoss(leaf, { id: 1, rank: "5", suit: "clubs" })).toBe(
+      true,
+    );
+  });
+
+  test("debuffs every card in a mixed hand", () => {
+    const hand: ReadonlyArray<Card> = [
+      { id: 1, rank: "2", suit: "hearts" },
+      { id: 2, rank: "K", suit: "spades" },
+      { id: 3, rank: "9", suit: "diamonds" },
+    ];
+    expect(debuffedHandIds(hand, leaf, true).size).toBe(3);
   });
 });
