@@ -8,7 +8,6 @@ import "./i18n";
 import App from "./App";
 import { Telemetry } from "./Telemetry";
 import reportWebVitals from "./reportWebVitals";
-import { registerServiceWorker } from "./pwa/registerServiceWorker";
 import { restoreSnapshotIfPresent, subscribeAndAutoSave } from "./save/restore";
 
 enableDragDropTouch();
@@ -25,5 +24,3 @@ root.render(
 );
 
 reportWebVitals();
-
-registerServiceWorker();
