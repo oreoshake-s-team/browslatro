@@ -5,6 +5,7 @@ import type { Blind } from "../cards/types";
 import {
   applyBossFaceDown,
   bossHandSize,
+  bossHidesJokers,
   bossPickerRngConfig,
   pickBossForAnte,
   type BossBlind,
@@ -26,6 +27,7 @@ import {
   createDeck,
   nextCardId,
   resetCardIds,
+  shuffle,
 } from "../cards/deck";
 import { fullDeckPile, initialDeal } from "../cards/deckBuild";
 import { SEAL_KINDS, pickRandomTarot } from "../cards/seals";
@@ -257,6 +259,9 @@ export function useRoundLifecycle({
     setJokers((prev) => applyCeremonialDaggerOnBlindSelect(prev));
     if (effectiveBlind !== 3) {
       setJokers((prev) => applyMadnessOnBlindSelect(prev));
+    }
+    if (isBossRound && bossHidesJokers(effectiveBoss)) {
+      setJokers((prev) => shuffle(prev));
     }
     setRebateRank(
       activeForBlind.some(

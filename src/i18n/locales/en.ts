@@ -344,6 +344,7 @@ export const en = {
     atEnd: "{{item}} is already at the last position",
     equippedJokers: "Equipped jokers",
     emptyJokerSlot: "Empty joker slot",
+    faceDownJoker: "Face-down joker, slot {{position}} of {{total}}",
     jokerDebuffed: "Debuffed — does not score.",
     jokerEdition: "{{name}} edition: {{description}}.",
     sellHint: "Shift-click or drag to deck to sell for ${{value}}.",

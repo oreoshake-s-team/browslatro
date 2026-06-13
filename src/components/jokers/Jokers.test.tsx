@@ -880,3 +880,34 @@ describe("To Do List tile description", () => {
     expect(desc).not.toHaveTextContent(/Currently:/);
   });
 });
+
+describe("Jokers UI — face-down (Amber Acorn)", () => {
+  test("renders a face-down tile for each equipped joker", () => {
+    render(<Jokers jokers={threeMixedJokers()} faceDown />);
+    expect(screen.getAllByTestId("joker-tile-face-down")).toHaveLength(3);
+  });
+
+  test("hides the joker name while face-down", () => {
+    render(<Jokers jokers={threeMixedJokers()} faceDown />);
+    expect(screen.queryByText("+4 Mult")).not.toBeInTheDocument();
+  });
+
+  test("announces the slot position without revealing identity", () => {
+    render(<Jokers jokers={threeMixedJokers()} faceDown />);
+    expect(
+      screen.getByLabelText("Face-down joker, slot 1 of 3"),
+    ).toBeInTheDocument();
+  });
+
+  test("suppresses the sell control while face-down (negative)", () => {
+    render(<Jokers jokers={threeMixedJokers()} faceDown onSell={vi.fn()} />);
+    expect(
+      screen.queryByTestId("joker-sell-plus-four-mult"),
+    ).not.toBeInTheDocument();
+  });
+
+  test("renders normal filled tiles when faceDown is not set (negative)", () => {
+    render(<Jokers jokers={threeMixedJokers()} />);
+    expect(screen.queryByTestId("joker-tile-face-down")).not.toBeInTheDocument();
+  });
+});

@@ -105,6 +105,47 @@
   }
 }
 
+.joker-tile-face-down {
+  border-color: var(--card-facedown-border);
+  background-color: var(--edition-foil-deep);
+  background-image: repeating-linear-gradient(
+      45deg,
+      var(--border) 0,
+      var(--border) 4px,
+      transparent 4px,
+      transparent 10px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      color-mix(in srgb, var(--white) 8%, transparent) 0,
+      color-mix(in srgb, var(--white) 8%, transparent) 4px,
+      transparent 4px,
+      transparent 10px
+    );
+}
+
+.joker-tile-back {
+  height: 100%;
+}
+
+@keyframes joker-flip {
+  0% {
+    transform: rotateY(0deg);
+  }
+  50% {
+    transform: rotateY(90deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .joker-tile-face-down {
+    animation: joker-flip calc(0.4s * var(--animation-speed, 1)) ease-out;
+  }
+}
+
 .joker-tile-name {
   font-weight: 700;
   font-size: 0.85rem;

@@ -192,6 +192,8 @@ export const BOSS_WIKI: Readonly<Record<string, string>> = {
     "A showdown blind with no special rule, just a massively larger score target. Commit your biggest scoring engine and spend discards freely to assemble it.",
   "verdant-leaf":
     "Every card is debuffed — scoring nothing — until you sell a Joker. Sell one early to lift the debuff, then play normally with whatever engine remains.",
+  "amber-acorn":
+    "Your Jokers are flipped face down and shuffled at the start of the blind. They still apply their effects — only your view of which is which is scrambled, so rely on what you remember rather than reading the tiles.",
 };
 
 export const COMBO_WIKI: ReadonlyArray<ComboWikiEntry> = [

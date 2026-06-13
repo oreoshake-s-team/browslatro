@@ -13,6 +13,7 @@ import {
   bossShouldZeroWallet,
   bossStartingDiscards,
   bossStartingHands,
+  bossHidesJokers,
   bossPoolForAnte,
   canSubmitHand,
   createBossCatalog,
@@ -854,6 +855,32 @@ describe("showdown boss catalog entries", () => {
   test("Verdant Leaf only appears from ante 8", () => {
     const leaf = createBossCatalog().find((b) => b.id === "verdant-leaf")!;
     expect(leaf.anteMin).toBe(8);
+  });
+
+  test("Amber Acorn flips and shuffles Jokers", () => {
+    const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
+    expect(acorn.effect).toEqual({ kind: "flip-shuffle-jokers" });
+  });
+
+  test("Amber Acorn only appears from ante 8", () => {
+    const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
+    expect(acorn.anteMin).toBe(8);
+  });
+});
+
+describe("bossHidesJokers", () => {
+  test("is true for Amber Acorn", () => {
+    const acorn = createBossCatalog().find((b) => b.id === "amber-acorn")!;
+    expect(bossHidesJokers(acorn)).toBe(true);
+  });
+
+  test("is false for a non-flip boss (negative)", () => {
+    const vessel = createBossCatalog().find((b) => b.id === "violet-vessel")!;
+    expect(bossHidesJokers(vessel)).toBe(false);
+  });
+
+  test("is false when there is no boss (negative)", () => {
+    expect(bossHidesJokers(null)).toBe(false);
   });
 });
 

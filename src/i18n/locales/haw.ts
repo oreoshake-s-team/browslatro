@@ -352,6 +352,7 @@ export const haw: LocaleMessages = {
     atEnd: "Aia ʻo {{item}} ma ke kūlana hope",
     equippedJokers: "Nā Joker i hoʻokomo ʻia",
     emptyJokerSlot: "Wahi joker hakahaka",
+    faceDownJoker: "Joker huli i lalo, wahi {{position}} o {{total}}",
     jokerDebuffed: "Debuffed — ʻaʻole helu ʻia.",
     jokerEdition: "{{name}} edition: {{description}}.",
     sellHint: "Shift-kaomi a kauō paha i ka pūʻulu e kūʻai aku no ${{value}}.",
