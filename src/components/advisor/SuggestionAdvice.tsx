@@ -87,7 +87,6 @@ export default function SuggestionAdvice<TAction>({
                 data-testid="suggestion-apply"
                 onClick={onApply}
               >
-                <span aria-hidden="true">✅ </span>
                 {t("advisor.suggestApply")}
               </button>
             </section>

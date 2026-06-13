@@ -109,7 +109,6 @@ export default function ShopSuggestion(
       aria-label={t("advisor.suggestShopButton")}
       onClick={() => void suggest()}
     >
-      <span aria-hidden="true">💡 </span>
       {t("advisor.suggestShopButton")}
     </button>
   );

@@ -481,7 +481,7 @@ export default function Shop({
     >
       <div className="shop-inner">
         <h2 id="shop-title" className="shop-title">
-          🛒 {t("shop.title")}
+          {t("shop.title")}
         </h2>
         <p className="shop-money" data-testid="shop-money">
           {t("shop.money", { amount: money })}
