@@ -7,6 +7,7 @@ import HandComponent from "../cards/Hand";
 import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
+import { foolCopyTargetText } from "../../i18n/foolCopyTarget";
 import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import ModifierPanel from "./ModifierPanel";
@@ -74,7 +75,7 @@ export default function Game({
   packOpen,
   onCardDiscardEnd,
 }: GameProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
@@ -88,6 +89,7 @@ export default function Game({
   const jokers = useGame((s) => s.jokers);
   const jokerPulseCounters = useGame((s) => s.jokerPulseCounters);
   const consumables = useGame((s) => s.consumables);
+  const lastUsedConsumable = useGame((s) => s.lastUsedConsumable);
   const scoringPulseTick = useGame((s) => s.scoringIndex);
   const luckyMultProcIds = useGame((s) => s.luckyMultProcIds);
   const luckyMoneyProcIds = useGame((s) => s.luckyMoneyProcIds);
@@ -135,6 +137,7 @@ export default function Game({
   );
   const consumableCapacity =
     MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+  const foolCopyTarget = foolCopyTargetText(t, i18n.language, lastUsedConsumable);
   const jokerCapacity = Math.max(
     0,
     MAX_JOKERS +
@@ -190,6 +193,7 @@ export default function Game({
         />
         <Consumables
           consumables={consumables}
+          foolCopyTarget={foolCopyTarget}
           selectedCount={consumableSelectedCount}
           previewMode={previewActive}
           capacity={consumableCapacity}
@@ -212,12 +216,12 @@ export default function Game({
       </div>
       {packOpen && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
-          <PackOpenModal {...packOpen} />
+          <PackOpenModal {...packOpen} foolCopyTarget={foolCopyTarget} />
         </Suspense>
       )}
       {shop && (
         <Suspense fallback={<LazyChunkSpinner />}>
-          <Shop {...shop} disabled={!!packOpen} />
+          <Shop {...shop} disabled={!!packOpen} foolCopyTarget={foolCopyTarget} />
         </Suspense>
       )}
       {handVisible && (

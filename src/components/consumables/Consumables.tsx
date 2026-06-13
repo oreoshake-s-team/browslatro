@@ -4,6 +4,7 @@ import {
   localizedConsumableDescription,
   localizedConsumableName,
 } from "../../i18n/contentOverrides";
+import { appendFoolHint } from "../../i18n/foolCopyTarget";
 import {
   MAX_CONSUMABLE_SLOTS,
   consumableSellValue,
@@ -15,6 +16,7 @@ export const CONSUMABLE_DRAG_MIME = "application/x-browslatro-consumable";
 
 interface ConsumablesProps {
   consumables: ReadonlyArray<Consumable>;
+  foolCopyTarget?: string;
   selectedCount: number;
   previewMode?: boolean;
   capacity?: number;
@@ -26,6 +28,7 @@ interface ConsumablesProps {
 
 export default function Consumables({
   consumables,
+  foolCopyTarget,
   selectedCount,
   previewMode = false,
   capacity = MAX_CONSUMABLE_SLOTS,
@@ -51,6 +54,15 @@ export default function Consumables({
           const canSell = Boolean(onSell);
           const useDisabled = block !== null;
           const interactionDisabled = useDisabled && !canSell;
+          const description = appendFoolHint(
+            localizedConsumableDescription(
+              i18n.language,
+              entry.card.id,
+              entry.card.description,
+            ),
+            entry.card.id,
+            foolCopyTarget,
+          );
           return (
             <li key={`${entry.kind}-${entry.card.id}-${idx}`}>
               <button
@@ -59,14 +71,7 @@ export default function Consumables({
                 data-testid={`consumable-tile-filled-${idx}`}
                 data-consumable-kind={entry.kind}
                 data-use-disabled={useDisabled || undefined}
-                title={
-                  block ??
-                  localizedConsumableDescription(
-                    i18n.language,
-                    entry.card.id,
-                    entry.card.description,
-                  )
-                }
+                title={block ?? description}
                 aria-label={t("a11y.consumableTile", {
                   name: localizedConsumableName(
                     i18n.language,
@@ -101,11 +106,7 @@ export default function Consumables({
                   )}
                 </span>
                 <span className="consumable-tile-description">
-                  {localizedConsumableDescription(
-                    i18n.language,
-                    entry.card.id,
-                    entry.card.description,
-                  )}
+                  {description}
                 </span>
                 {canSell && (
                   <span className="consumable-tile-sell" aria-hidden="true">

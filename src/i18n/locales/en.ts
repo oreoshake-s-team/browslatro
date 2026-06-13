@@ -211,6 +211,10 @@ export const en = {
     sortManual: "Manual",
     manualOrderHint: "Manual order (drag a card to rearrange)",
   },
+  consumables: {
+    foolWillCreate: "Will create {{name}} ({{kind}})",
+    foolCopyNone: "No card used yet — creates nothing",
+  },
   game: {
     submitHand: "Submit Hand",
     bossVoidedMouth: "{{hand}} scored 0 — The Mouth locks you to {{locked}}",

@@ -1364,3 +1364,23 @@ describe("PackOpenModal — suggest trigger placement", () => {
     expect(panelHost?.closest(".pack-open-actions")).toBeNull();
   });
 });
+
+describe("PackOpenModal — The Fool copy target", () => {
+  const foolPack: PackOffer = {
+    pool: "arcana",
+    variant: "normal",
+    options: [
+      { kind: "tarot", tarot: TAROTS.find((tarot) => tarot.id === "the-fool")! },
+    ],
+  };
+
+  test("appends the copy-target hint to a Fool option", () => {
+    renderModal({
+      pack: foolPack,
+      foolCopyTarget: "Will create Mercury (Planet)",
+    });
+    expect(
+      screen.getByText(/Will create Mercury \(Planet\)/),
+    ).toBeInTheDocument();
+  });
+});

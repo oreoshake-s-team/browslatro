@@ -6,6 +6,7 @@ import {
   localizedConsumableDescription,
   localizedConsumableName,
 } from "../../i18n/contentOverrides";
+import { appendFoolHint } from "../../i18n/foolCopyTarget";
 import {
   localizedJokerDescription,
   localizedJokerName,
@@ -65,6 +66,7 @@ export interface PackOpenModalProps {
   onReorderPreview?: (orderedIds: ReadonlyArray<number>) => void;
   onPick: (optionIdx: number) => void;
   onClose: () => void;
+  foolCopyTarget?: string;
 }
 
 interface OptionView {
@@ -206,6 +208,7 @@ export default function PackOpenModal({
   onReorderPreview,
   onPick,
   onClose,
+  foolCopyTarget,
 }: PackOpenModalProps) {
   const { t, i18n } = useTranslation();
   useEscapeToClose(onClose, true);
@@ -352,7 +355,7 @@ export default function PackOpenModal({
                 <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
                 <span className="pack-open-option-name">{view.name}</span>
                 <span className="pack-open-option-description">
-                  {view.description}
+                  {appendFoolHint(view.description, view.id, foolCopyTarget)}
                 </span>
                 {view.joker && <JokerStickerBadges joker={view.joker} />}
                 <button
