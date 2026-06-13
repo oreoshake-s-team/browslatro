@@ -1,7 +1,7 @@
 """Trains the advisor candidate scorer and exports it to ONNX.
 
 Usage:
-    python train.py <dataset.jsonl> [more.jsonl ...] [--human play.jsonl] [--human-weight 5] [--epochs 30] [--out advisor-policy.onnx]
+    python train.py <dataset.jsonl> [more.jsonl ...] [--human play.jsonl] [--human-weight 5] [--teacher labels.jsonl] [--teacher-weight 5] [--epochs 30] [--out advisor-policy.onnx]
 
 The model scores one (state, candidate) vector at a time; a decision is
 made by running every candidate through the net and taking the argmax.
@@ -17,7 +17,7 @@ import sys
 import torch
 from torch import nn
 
-from dataset import load_all, load_shop_decisions, split_by_seed
+from dataset import build_training_set, load_all, load_shop_decisions, split_by_seed
 from encoding import ENCODING_VERSION, INPUT_FEATURES, SHOP_ENCODING_VERSION, SHOP_INPUT_FEATURES
 
 
@@ -61,6 +61,13 @@ def main():
     parser.add_argument("datasets", nargs="+")
     parser.add_argument("--human", action="append", default=[])
     parser.add_argument("--human-weight", type=float, default=5.0)
+    parser.add_argument(
+        "--teacher",
+        action="append",
+        default=[],
+        help="JSONL of LLM teacher labels (e.g. from labelDisagreements); trains, never held out",
+    )
+    parser.add_argument("--teacher-weight", type=float, default=5.0)
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--hidden", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -84,12 +91,14 @@ def main():
         enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}"
     else:
         features = INPUT_FEATURES
-        train, validation = split_by_seed(load_all(args.datasets))
+        generated_train, validation = split_by_seed(load_all(args.datasets))
         human = load_all(args.human, args.human_weight)
-        train = train + [(inputs, chosen, weight) for inputs, chosen, _, weight in human]
+        teacher = load_all(args.teacher, args.teacher_weight)
+        train = build_training_set(generated_train, human, teacher)
         print(
             f"{len(train)} train decisions ({len(human)} human at "
-            f"weight {args.human_weight}), {len(validation)} validation decisions"
+            f"weight {args.human_weight}, {len(teacher)} teacher at "
+            f"weight {args.teacher_weight}), {len(validation)} validation decisions"
         )
         enc_label = f"encoding v{ENCODING_VERSION}"
 

@@ -56,6 +56,21 @@ dependency-free encoding tests run in CI; training itself runs locally.
    human decision trains and validation accuracy stays an unweighted
    measure against the search expert.
 
+   **Distilled LLM teacher labels.** `scripts/labelDisagreements.ts` relabels
+   the states where the ONNX policy disagrees with the search expert using the
+   LLM advisor as an offline teacher, emitting the same `schemaVersion: 1`
+   format. Pass that output via `--teacher` to fold the teacher's judgment into
+   the student. Teacher labels train at their own weight (default 5x, tunable
+   with `--teacher-weight`), independent of `--human-weight`, and like human
+   play are never held out — they exist precisely *because* they disagree with
+   the expert, so validation accuracy (measured against the expert) is the
+   wrong success signal for them. Select the shipped model on the outcome
+   metric from `scripts/benchmarkPolicy.ts` instead.
+
+   ```sh
+   python train.py ../dataset.jsonl --teacher ../teacher-labels.jsonl --teacher-weight 5 --out advisor-policy.onnx
+   ```
+
    Reports per-epoch loss and validation accuracy versus the expert
    (train/validation split is by run seed so games never straddle the split),
    then exports ONNX: input `candidates` of shape `[N, INPUT_FEATURES]`,

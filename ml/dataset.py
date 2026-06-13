@@ -91,6 +91,23 @@ def load_shop_decisions(path, weight=1.0):
     return decisions
 
 
+def build_training_set(train, *extra_sources):
+    """Appends extra decision sources to the generated training split.
+
+    The generated split from split_by_seed is already (inputs, chosen, weight)
+    tuples. Each extra source — in-game human play, distilled LLM teacher
+    labels — is a list of (inputs, chosen, seed, weight) tuples from load_all;
+    the seed is dropped here so these decisions always train and are never held
+    out for validation. Sources are independent: pass each at its own weight.
+    """
+    combined = list(train)
+    for source in extra_sources:
+        combined.extend(
+            (inputs, chosen, weight) for inputs, chosen, _, weight in source
+        )
+    return combined
+
+
 def split_by_seed(decisions, validation_fraction=0.2):
     """Deterministic train/validation split keyed on the run seed.
 

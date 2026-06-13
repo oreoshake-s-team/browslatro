@@ -6,7 +6,13 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from dataset import load_all, load_decisions, load_shop_decisions, split_by_seed
+from dataset import (
+    build_training_set,
+    load_all,
+    load_decisions,
+    load_shop_decisions,
+    split_by_seed,
+)
 from encoding import HAND_SLOTS
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
@@ -73,6 +79,33 @@ class WeightTest(unittest.TestCase):
         train, validation = split_by_seed(decisions, validation_fraction=0.34)
         weights = {w for _, _, w in train + validation}
         self.assertEqual(weights, {3.0})
+
+
+class BuildTrainingSetTest(unittest.TestCase):
+    def test_appends_each_source_to_the_generated_split(self):
+        train = [([[0.0]], 0, 1.0)]
+        human = [([[1.0]], 1, 9, 5.0)]
+        teacher = [([[2.0]], 0, 4, 7.0)]
+        self.assertEqual(len(build_training_set(train, human, teacher)), 3)
+
+    def test_drops_the_seed_from_extra_sources(self):
+        teacher = [([[2.0]], 0, 4, 7.0)]
+        self.assertEqual(build_training_set([], teacher)[0], ([[2.0]], 0, 7.0))
+
+    def test_keeps_human_and_teacher_weights_independent(self):
+        human = [([[1.0]], 1, 9, 5.0)]
+        teacher = [([[2.0]], 0, 4, 7.0)]
+        weights = [w for _, _, w in build_training_set([], human, teacher)]
+        self.assertEqual(weights, [5.0, 7.0])
+
+    def test_returns_the_generated_split_unchanged_with_no_extra_sources(self):
+        train = [([[0.0]], 0, 1.0)]
+        self.assertEqual(build_training_set(train), train)
+
+    def test_does_not_mutate_the_input_train_list(self):
+        train = [([[0.0]], 0, 1.0)]
+        build_training_set(train, [([[2.0]], 0, 4, 7.0)])
+        self.assertEqual(len(train), 1)
 
 class WideHandSkipTest(unittest.TestCase):
     def test_skips_decisions_with_hands_wider_than_the_encoding(self):
