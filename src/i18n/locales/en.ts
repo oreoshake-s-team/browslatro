@@ -348,6 +348,7 @@ export const en = {
     emptyJokerSlot: "Empty joker slot",
     faceDownJoker: "Face-down joker, slot {{position}} of {{total}}",
     jokerDebuffed: "Debuffed — does not score.",
+    jokerDisabledByBoss: "{{name}} is disabled this hand.",
     jokerEdition: "{{name}} edition: {{description}}.",
     sellHint: "Shift-click or drag to deck to sell for ${{value}}.",
     sellJoker: "Sell {{name}} (worth ${{value}})",

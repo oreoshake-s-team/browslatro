@@ -45,6 +45,7 @@ export function canDestroyJoker(joker: Joker): boolean {
 }
 
 export function isJokerActive(joker: Joker): boolean {
+  if (joker.disabled) return false;
   for (const s of jokerStickers(joker)) {
     if (s.kind === "perishable" && s.roundsHeld >= PERISHABLE_LIFE) return false;
   }

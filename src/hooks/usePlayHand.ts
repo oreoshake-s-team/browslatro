@@ -20,6 +20,7 @@ import {
 } from "../scoring/payout";
 import {
   bossAdjustHandEntry,
+  bossDisablesRandomJoker,
   bossMoneyPenaltyPerCard,
   bossRequiredCardCount,
   bossShouldZeroWallet,
@@ -27,6 +28,12 @@ import {
   bossVoidsHandLabel,
   debuffedHandIds,
 } from "../items/bosses";
+import {
+  clearJokerDisable,
+  disableJokerAt,
+  pickDisabledJokerIndex,
+} from "../items/jokers/crimsonHeart";
+import { announce } from "../components/system/LiveAnnouncer";
 import { showBossEffectToast } from "../components/system/BossEffectToast";
 import {
   allCardsScoreFromJokers,
@@ -214,6 +221,7 @@ export function usePlayHand({
     }
 
     if (roundWon) {
+      setJokers((prev) => clearJokerDisable(prev));
       if (playedHandLabel !== null) {
         const blueHeld = blueSealHeldCards(dealt.hand, submittedSelection);
         if (blueHeld.length > 0) {
@@ -329,6 +337,17 @@ export function usePlayHand({
 
     if (remainingHands > 1) {
       setRemainingHands((prev) => prev - 1);
+      if (
+        blind === 3 &&
+        bossDisablesRandomJoker(currentBoss) &&
+        jokers.length > 0
+      ) {
+        const targetIdx = pickDisabledJokerIndex(jokers, Math.random);
+        setJokers((prev) => disableJokerAt(prev, targetIdx));
+        announce(
+          t("a11y.jokerDisabledByBoss", { name: jokers[targetIdx].name }),
+        );
+      }
     } else {
       loseGame({ roundScore: newRoundScore, requiredScore });
     }

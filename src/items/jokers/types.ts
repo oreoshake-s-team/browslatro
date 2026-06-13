@@ -389,4 +389,6 @@ export interface Joker {
   /** Excluded from random generation until the full deck holds a card with this enhancement. */
   readonly requiresEnhancementInDeck?: Enhancement;
   readonly sellBonus?: number;
+  /** Transiently disabled for the current hand (e.g. by the Crimson Heart boss). */
+  readonly disabled?: boolean;
 }
