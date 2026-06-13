@@ -7,6 +7,7 @@ import { createTarotCatalog } from "../../items/tarots";
 import {
   PERISHABLE_LIFE,
   createJokerCatalog,
+  withEdition,
   type Joker,
   type JokerSticker,
 } from "../../items/jokers";
@@ -323,6 +324,26 @@ describe("PackOpenModal — Buffoon pack rendering", () => {
     );
     const picks = screen.getAllByRole("button", { name: /^Pick / });
     for (const btn of picks) expect(btn).toBeDisabled();
+  });
+
+  test("a Negative joker Pick button stays enabled when joker slots are full", () => {
+    const negativePack: PackOffer = {
+      pool: "buffoon",
+      variant: "normal",
+      options: [{ kind: "joker", joker: withEdition(JOKERS[0], "negative") }],
+    };
+    render(
+      <PackOpenModal
+        pack={negativePack}
+        picksRemaining={1}
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: /^Pick / }),
+    ).not.toBeDisabled();
   });
 
   test("Pick buttons stay enabled in a Buffoon pack when only consumable slots are full", () => {

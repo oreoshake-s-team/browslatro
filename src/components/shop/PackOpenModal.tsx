@@ -149,7 +149,7 @@ function describeOption(
         option.joker.description,
       ),
       needsConsumableSlot: false,
-      needsJokerSlot: true,
+      needsJokerSlot: option.joker.edition !== "negative",
       joker: option.joker,
     };
   }
