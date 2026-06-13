@@ -260,7 +260,12 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         );
       }
     } else if (option.kind === "joker") {
-      if (effectiveJokerCount(jokers) >= MAX_JOKERS) return;
+      if (
+        option.joker.edition !== "negative" &&
+        effectiveJokerCount(jokers) >= MAX_JOKERS
+      ) {
+        return;
+      }
       play("pop");
       setJokers((prev) => [...prev, option.joker]);
     } else if (option.kind === "spectral") {
