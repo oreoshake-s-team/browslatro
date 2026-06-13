@@ -1,4 +1,4 @@
-import { Suspense, lazy, useCallback, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
@@ -16,6 +16,11 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const open = useCallback(() => setIsExpanded(true), []);
   const close = useCallback(() => setIsExpanded(false), []);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [events]);
   return (
     <section className="scoring-trace">
       <div className="scoring-trace__header">
@@ -31,6 +36,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
         </button>
       </div>
       <div
+        ref={scrollRef}
         className="scoring-trace__scroll"
         role="log"
         aria-live="polite"
