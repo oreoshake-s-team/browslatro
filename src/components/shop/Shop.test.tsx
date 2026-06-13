@@ -267,6 +267,34 @@ describe("Shop", () => {
     expect(jokerBuy).not.toBeDisabled();
   });
 
+  test("a Negative joker buy button stays enabled when joker slots are full", () => {
+    const offer: ShopItem = {
+      kind: "joker",
+      joker: withEdition(createPlusFourMultJoker(), "negative"),
+      price: 5,
+      sold: false,
+    };
+    renderShop({ offers: [offer], equippedJokerCount: MAX_JOKERS });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).not.toBeDisabled();
+  });
+
+  test("a Negative joker buy button shows the buy price instead of Slots full", () => {
+    const offer: ShopItem = {
+      kind: "joker",
+      joker: withEdition(createPlusFourMultJoker(), "negative"),
+      price: 5,
+      sold: false,
+    };
+    renderShop({ offers: [offer], equippedJokerCount: MAX_JOKERS });
+    const jokerBuy = screen
+      .getByTestId("shop-offer-0")
+      .querySelector("button.shop-offer-buy");
+    expect(jokerBuy).toHaveTextContent("$5");
+  });
+
   test("the planet buy button is disabled when the player can't afford the planet price", () => {
     renderShop({ money: 2 });
     const planetBuy = screen

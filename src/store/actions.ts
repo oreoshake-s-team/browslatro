@@ -644,13 +644,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     if (s.money < price) return false;
     if (offer.kind === "joker") {
       if (
+        offer.joker.edition !== "negative" &&
         effectiveJokerCount(s.jokers) >=
-        Math.max(
-          0,
-          MAX_JOKERS +
-            extraJokerSlots(s.ownedVoucherIds) +
-            deckJokerSlotsDelta(s.selectedDeck),
-        )
+          Math.max(
+            0,
+            MAX_JOKERS +
+              extraJokerSlots(s.ownedVoucherIds) +
+              deckJokerSlotsDelta(s.selectedDeck),
+          )
       ) {
         return false;
       }

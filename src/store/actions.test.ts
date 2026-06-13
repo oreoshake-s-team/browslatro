@@ -10,6 +10,7 @@ import {
   hasSticker,
   isJokerActive,
   jokerSellValue,
+  withEdition,
 } from "../items/jokers";
 import { createPlanetCatalog } from "../items/planets";
 import { consumableSellValue, type Consumable } from "../items/consumables";
@@ -382,6 +383,42 @@ describe("game actions slice", () => {
     game.setShopOffers([{ kind: "joker", joker, price: 9, sold: false }]);
     game.setMoney(2);
     expect(game.buyShopOffer(0)).toBe(false);
+  });
+
+  test("buyShopOffer blocks a non-Negative joker when slots are full (negative)", () => {
+    const catalog = createJokerCatalog();
+    const game = useGame.getState();
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: catalog[MAX_JOKERS], price: 3, sold: false },
+    ]);
+    game.setMoney(10);
+    expect(game.buyShopOffer(0)).toBe(false);
+  });
+
+  test("buyShopOffer allows a Negative joker when slots are full", () => {
+    const catalog = createJokerCatalog();
+    const negative = withEdition(catalog[MAX_JOKERS], "negative");
+    const game = useGame.getState();
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: negative, price: 3, sold: false },
+    ]);
+    game.setMoney(10);
+    expect(game.buyShopOffer(0)).toBe(true);
+  });
+
+  test("buyShopOffer adds the Negative joker to the row when slots are full", () => {
+    const catalog = createJokerCatalog();
+    const negative = withEdition(catalog[MAX_JOKERS], "negative");
+    const game = useGame.getState();
+    game.setJokers(catalog.slice(0, MAX_JOKERS));
+    game.setShopOffers([
+      { kind: "joker", joker: negative, price: 3, sold: false },
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().jokers).toHaveLength(MAX_JOKERS + 1);
   });
 
   test("buyShopOffer adds a consumable for a planet offer", () => {
