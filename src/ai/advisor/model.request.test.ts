@@ -95,4 +95,32 @@ describe("requestAdvice", () => {
       }),
     );
   });
+
+  test("requests adaptive thinking and low effort by default", async () => {
+    createMock.mockResolvedValue(textResponse(adviceText()));
+    await requestAdvice(adviceRequestFixture(), "sk-test");
+    const params = createMock.mock.calls[0][0] as {
+      thinking?: unknown;
+      output_config: { effort?: unknown };
+    };
+    expect({ thinking: params.thinking, effort: params.output_config.effort }).toEqual({
+      thinking: { type: "adaptive" },
+      effort: "low",
+    });
+  });
+
+  test("omits adaptive thinking when ADVISOR_THINKING is none", async () => {
+    vi.stubEnv("ADVISOR_THINKING", "none");
+    createMock.mockResolvedValue(textResponse(adviceText()));
+    await requestAdvice(adviceRequestFixture(), "sk-test");
+    expect(createMock.mock.calls[0][0]).not.toHaveProperty("thinking");
+  });
+
+  test("omits the effort parameter when ADVISOR_EFFORT is none", async () => {
+    vi.stubEnv("ADVISOR_EFFORT", "none");
+    createMock.mockResolvedValue(textResponse(adviceText()));
+    await requestAdvice(adviceRequestFixture(), "sk-test");
+    const params = createMock.mock.calls[0][0] as { output_config: object };
+    expect(params.output_config).not.toHaveProperty("effort");
+  });
 });

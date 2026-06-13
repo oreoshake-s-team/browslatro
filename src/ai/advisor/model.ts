@@ -195,6 +195,30 @@ export function mapModelError(error: unknown): AdviceModelResult {
   return { ok: false, status: 502, code: "model_error" };
 }
 
+export function buildCreateParams(
+  request: AdviceRequest,
+): Anthropic.Messages.MessageCreateParamsNonStreaming {
+  const useThinking = process.env.ADVISOR_THINKING !== "none";
+  const useEffort = process.env.ADVISOR_EFFORT !== "none";
+  return {
+    model: process.env.ADVISOR_MODEL ?? MODEL_ID,
+    max_tokens: MAX_OUTPUT_TOKENS,
+    ...(useThinking ? { thinking: { type: "adaptive" as const } } : {}),
+    output_config: {
+      ...(useEffort ? { effort: "low" as const } : {}),
+      format: { type: "json_schema", schema: ADVICE_SCHEMA },
+    },
+    system: [
+      {
+        type: "text",
+        text: SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [{ role: "user", content: buildUserMessage(request) }],
+  };
+}
+
 export async function requestAdvice(
   request: AdviceRequest,
   apiKey: string,
@@ -206,23 +230,7 @@ export async function requestAdvice(
   });
   let response: Anthropic.Message;
   try {
-    response = await client.messages.create({
-      model: process.env.ADVISOR_MODEL ?? MODEL_ID,
-      max_tokens: MAX_OUTPUT_TOKENS,
-      thinking: { type: "adaptive" },
-      output_config: {
-        effort: "low",
-        format: { type: "json_schema", schema: ADVICE_SCHEMA },
-      },
-      system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      messages: [{ role: "user", content: buildUserMessage(request) }],
-    });
+    response = await client.messages.create(buildCreateParams(request));
   } catch (error) {
     return mapModelError(error);
   }
