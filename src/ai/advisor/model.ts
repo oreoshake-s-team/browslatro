@@ -214,7 +214,13 @@ export async function requestAdvice(
         effort: "low",
         format: { type: "json_schema", schema: ADVICE_SCHEMA },
       },
-      system: SYSTEM_PROMPT,
+      system: [
+        {
+          type: "text",
+          text: SYSTEM_PROMPT,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
       messages: [{ role: "user", content: buildUserMessage(request) }],
     });
   } catch (error) {
