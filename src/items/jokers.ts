@@ -106,6 +106,7 @@ export {
 } from "./jokers/scoring/scoredCardMutations";
 export { consumableCreationsOnHandPlayed } from "./jokers/scoring/consumableCreators";
 export {
+  advanceStackGainsForScoring,
   applyCardsDestroyedToJokerStates,
   applyCeremonialDaggerOnBlindSelect,
   applyDiscardToJokerStates,

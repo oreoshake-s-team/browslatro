@@ -37,6 +37,7 @@ import { announce } from "../components/system/LiveAnnouncer";
 import { showBossEffectToast } from "../components/system/BossEffectToast";
 import {
   allCardsScoreFromJokers,
+  advanceStackGainsForScoring,
   applyEndOfRoundJokers,
   applyHandLevelJokers,
   applyHandPlayedToJokerStates,
@@ -611,9 +612,14 @@ export function usePlayHand({
         handPlayCounts,
       }),
     );
+    const scoringJokers = advanceStackGainsForScoring(jokers, {
+      playedHandLabel: label,
+      playedCardCount: playedCards.length,
+      scoredCards: scoring,
+    });
     if (scoring.length === 0) {
       const noCardsHandJokerResult = applyHandLevelJokers(
-        jokers,
+        scoringJokers,
         {
           playedHandLabel: label,
           playedCardCount: playedCards.length,
@@ -676,7 +682,7 @@ export function usePlayHand({
       ...handPlayCounts,
       [label]: handPlayCounts[label] + 1,
     };
-    const handJokerResult = applyHandLevelJokers(jokers, {
+    const handJokerResult = applyHandLevelJokers(scoringJokers, {
       playedHandLabel: label,
       playedCardCount: playedCards.length,
       scoredCards: scoring,

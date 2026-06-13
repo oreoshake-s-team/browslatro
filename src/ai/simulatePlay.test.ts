@@ -2,6 +2,12 @@
 import { describe, expect, test } from "vitest";
 import { simulatePlay } from "./simulatePlay";
 import { boss, card, joker, simulateInput as input } from "./test-helpers";
+import {
+  createRunnerJoker,
+  createSpareTrousersJoker,
+  RUNNER_CHIPS_PER_STRAIGHT,
+  SPARE_TROUSERS_MULT_PER_TWO_PAIR,
+} from "../items/jokers";
 
 describe("simulatePlay — legality", () => {
   test("rejects an empty selection", () => {
@@ -195,5 +201,48 @@ describe("simulatePlay — purity", () => {
     const first = simulatePlay(state, nines.map((c) => c.id));
     const second = simulatePlay(state, nines.map((c) => c.id));
     expect(first).toEqual(second);
+  });
+});
+
+describe("simulatePlay — gains-X stack jokers apply on the same hand", () => {
+  const twoPair = [
+    card("9", "hearts"),
+    card("9", "spades"),
+    card("5", "clubs"),
+    card("5", "diamonds"),
+  ];
+  const straight = [
+    card("9", "hearts"),
+    card("8", "spades"),
+    card("7", "clubs"),
+    card("6", "diamonds"),
+    card("5", "hearts"),
+  ];
+
+  function mult(cards: ReturnType<typeof card>[], jokers: ReturnType<typeof createSpareTrousersJoker>[]): number {
+    const result = simulatePlay(input(cards, { jokers }), cards.map((c) => c.id));
+    return result.legal ? result.mult : NaN;
+  }
+
+  function chips(cards: ReturnType<typeof card>[], jokers: ReturnType<typeof createRunnerJoker>[]): number {
+    const result = simulatePlay(input(cards, { jokers }), cards.map((c) => c.id));
+    return result.legal ? result.chips : NaN;
+  }
+
+  test("a fresh Spare Trousers adds its +2 Mult on the Two Pair that earns it", () => {
+    expect(
+      mult(twoPair, [createSpareTrousersJoker()]) - mult(twoPair, []),
+    ).toBe(SPARE_TROUSERS_MULT_PER_TWO_PAIR);
+  });
+
+  test("a fresh Spare Trousers adds no Mult on a non-Two-Pair hand (negative)", () => {
+    const pair = [card("9", "hearts"), card("9", "spades")];
+    expect(mult(pair, [createSpareTrousersJoker()]) - mult(pair, [])).toBe(0);
+  });
+
+  test("a fresh Runner adds its chips on the Straight that earns them", () => {
+    expect(chips(straight, [createRunnerJoker()]) - chips(straight, [])).toBe(
+      RUNNER_CHIPS_PER_STRAIGHT,
+    );
   });
 });

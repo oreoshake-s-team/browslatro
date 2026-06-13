@@ -18,6 +18,7 @@ import {
   type BossBlind,
 } from "../items/bosses";
 import {
+  advanceStackGainsForScoring,
   allCardsScoreFromJokers,
   applyHandLevelJokers,
   applyPerCardJokers,
@@ -167,7 +168,12 @@ export function simulatePlay(
     ...input.handPlayCounts,
     [label]: input.handPlayCounts[label] + 1,
   };
-  const handJokerResult = applyHandLevelJokers(input.jokers, {
+  const scoringJokers = advanceStackGainsForScoring(input.jokers, {
+    playedHandLabel: label,
+    playedCardCount: playedCards.length,
+    scoredCards: scoring,
+  });
+  const handJokerResult = applyHandLevelJokers(scoringJokers, {
     playedHandLabel: label,
     playedCardCount: playedCards.length,
     scoredCards: scoring,
