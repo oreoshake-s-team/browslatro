@@ -34,6 +34,53 @@ export interface HandPlayedContext {
   readonly handPlayCounts?: HandPlayCounts;
 }
 
+function sameHandStackAdvance(
+  joker: Joker,
+  ctx: HandPlayedContext,
+  jokers: ReadonlyArray<Joker>,
+): Joker {
+  const effect = joker.effect;
+  switch (effect.kind) {
+    case "on-hand-type-stack-mult":
+    case "on-hand-type-stack-chips":
+      return handContains(ctx.playedHandLabel, effect.requires)
+        ? { ...joker, state: counterState(prevCount(joker) + effect.amount) }
+        : joker;
+    case "on-played-card-count-stack-chips":
+      return ctx.playedCardCount === effect.count
+        ? { ...joker, state: counterState(prevCount(joker) + effect.amount) }
+        : joker;
+    case "on-played-rank-stack-chips": {
+      let matches = 0;
+      for (const c of ctx.scoredCards) {
+        if (effect.ranks.includes(c.rank)) matches += 1;
+      }
+      return matches > 0
+        ? {
+            ...joker,
+            state: counterState(prevCount(joker) + effect.amount * matches),
+          }
+        : joker;
+    }
+    case "on-no-face-stack-mult": {
+      const anyFace = ctx.scoredCards.some((c) => isFaceCardWith(c, jokers));
+      return {
+        ...joker,
+        state: counterState(anyFace ? 0 : prevCount(joker) + effect.amount),
+      };
+    }
+    default:
+      return joker;
+  }
+}
+
+export function advanceStackGainsForScoring(
+  jokers: ReadonlyArray<Joker>,
+  ctx: HandPlayedContext,
+): Joker[] {
+  return jokers.map((joker) => sameHandStackAdvance(joker, ctx, jokers));
+}
+
 export function applyHandPlayedToJokerStates(
   jokers: ReadonlyArray<Joker>,
   ctx: HandPlayedContext,
@@ -42,30 +89,11 @@ export function applyHandPlayedToJokerStates(
     const effect = joker.effect;
     switch (effect.kind) {
       case "on-hand-type-stack-mult":
-      case "on-hand-type-stack-chips": {
-        if (!handContains(ctx.playedHandLabel, effect.requires)) return joker;
-        return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
-      }
-      case "on-played-card-count-stack-chips": {
-        if (ctx.playedCardCount !== effect.count) return joker;
-        return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
-      }
-      case "on-played-rank-stack-chips": {
-        let matches = 0;
-        for (const c of ctx.scoredCards) {
-          if (effect.ranks.includes(c.rank)) matches += 1;
-        }
-        if (matches === 0) return joker;
-        return {
-          ...joker,
-          state: counterState(prevCount(joker) + effect.amount * matches),
-        };
-      }
-      case "on-no-face-stack-mult": {
-        const anyFace = ctx.scoredCards.some((c) => isFaceCardWith(c, jokers));
-        if (anyFace) return { ...joker, state: counterState(0) };
-        return { ...joker, state: counterState(prevCount(joker) + effect.amount) };
-      }
+      case "on-hand-type-stack-chips":
+      case "on-played-card-count-stack-chips":
+      case "on-played-rank-stack-chips":
+      case "on-no-face-stack-mult":
+        return sameHandStackAdvance(joker, ctx, jokers);
       case "every-n-hands-xmult": {
         return { ...joker, state: counterState(prevCount(joker) + 1) };
       }
