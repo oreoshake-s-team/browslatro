@@ -33,7 +33,7 @@ describe("simulatePlay — legality", () => {
     });
   });
 
-  test("rejects a hand label blocked by the boss on a boss round", () => {
+  test("a hand voided by The Mouth is legal but scores 0", () => {
     const c = card("A", "spades");
     const result = simulatePlay(
       input([c], {
@@ -43,7 +43,28 @@ describe("simulatePlay — legality", () => {
       }),
       [c.id],
     );
-    expect(result).toEqual({ legal: false, reason: "boss-blocks-hand" });
+    expect(result).toEqual({
+      legal: true,
+      handLabel: "High Card",
+      score: 0,
+      chips: 0,
+      mult: 0,
+      scoringCardIds: [],
+      bossTriggered: true,
+    });
+  });
+
+  test("a hand repeated under The Eye is legal but scores 0", () => {
+    const pair = [card("9", "hearts"), card("9", "spades")];
+    const result = simulatePlay(
+      input(pair, {
+        blind: 3,
+        currentBoss: boss({ effect: { kind: "no-repeat-hand-type" } }),
+        handHistoryThisRound: ["Pair"],
+      }),
+      pair.map((c) => c.id),
+    );
+    expect(result).toMatchObject({ legal: true, score: 0, bossTriggered: true });
   });
 });
 

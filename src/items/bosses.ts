@@ -1,4 +1,4 @@
-import type { Blind, Card, Hand, Rank, Suit } from "../cards/types";
+import type { Card, Rank, Suit } from "../cards/types";
 import { cardKey } from "../cards/deck";
 import { createRngConfig } from "../dev/rngConfig";
 import type { HandLabel } from "../scoring/handEvaluator";
@@ -404,7 +404,7 @@ export function debuffedHandIds(
   );
 }
 
-export function bossBlocksHandLabel(
+export function bossVoidsHandLabel(
   boss: BossBlind | null,
   label: HandLabel,
   history: ReadonlyArray<HandLabel>,
@@ -419,15 +419,18 @@ export function bossBlocksHandLabel(
   return false;
 }
 
-export function canSubmitHand(
-  blind: Blind,
+export function bossVoidReason(
   boss: BossBlind | null,
-  selectedHand: Hand | null,
   history: ReadonlyArray<HandLabel>,
-): boolean {
-  if (blind !== 3) return true;
-  if (!selectedHand) return true;
-  return !bossBlocksHandLabel(boss, selectedHand.label as HandLabel, history);
+): { readonly kind: "mouth"; readonly lockedHand: HandLabel } | { readonly kind: "eye" } | null {
+  if (!boss) return null;
+  if (boss.effect.kind === "single-hand-type" && history.length > 0) {
+    return { kind: "mouth", lockedHand: history[0] };
+  }
+  if (boss.effect.kind === "no-repeat-hand-type") {
+    return { kind: "eye" };
+  }
+  return null;
 }
 
 export type FaceDownContext = "initial" | "refill";

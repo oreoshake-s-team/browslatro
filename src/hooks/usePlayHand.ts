@@ -1,10 +1,12 @@
 import type { MutableRefObject } from "react";
+import { useTranslation } from "react-i18next";
 import { useGame } from "../store/game";
 import { createSpectralCatalog } from "../items/spectrals";
 import { useScoringPipeline } from "./useScoringPipeline";
 import { play } from "../components/system/sounds";
 import type { Card } from "../cards/types";
 import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
+import { tHandLabel } from "../i18n/handLabels";
 import {
   getCardChips,
   getCardMultDelta,
@@ -18,12 +20,14 @@ import {
 } from "../scoring/payout";
 import {
   bossAdjustHandEntry,
-  bossBlocksHandLabel,
   bossMoneyPenaltyPerCard,
   bossRequiredCardCount,
   bossShouldZeroWallet,
+  bossVoidReason,
+  bossVoidsHandLabel,
   debuffedHandIds,
 } from "../items/bosses";
+import { showBossEffectToast } from "../components/system/BossEffectToast";
 import {
   allCardsScoreFromJokers,
   applyEndOfRoundJokers,
@@ -103,6 +107,7 @@ export function usePlayHand({
   pendingHandPlayResetRef,
   skipDrawAfterDiscardRef,
 }: UsePlayHandParams): UsePlayHandResult {
+  const { t } = useTranslation();
   const pipeline = useScoringPipeline({ stepMs });
 
   const discardingIds = useGame((s) => s.discardingIds);
@@ -360,8 +365,31 @@ export function usePlayHand({
     const isBossRound = blind === 3;
     if (
       isBossRound &&
-      bossBlocksHandLabel(currentBoss, label, handHistoryThisRound)
+      bossVoidsHandLabel(currentBoss, label, handHistoryThisRound)
     ) {
+      const reason = bossVoidReason(currentBoss, handHistoryThisRound);
+      pendingHandPlayResetRef.current = true;
+      setRunStats(recordHandPlayed);
+      setHandHistoryThisRound((prev) => [...prev, label]);
+      setScoringEvents([
+        {
+          kind: "boss-adjustment",
+          description:
+            reason?.kind === "mouth"
+              ? `${label} voided — locked to ${reason.lockedHand}`
+              : `${label} voided — no repeat hand types`,
+          source: currentBoss.name,
+        },
+      ]);
+      showBossEffectToast(
+        reason?.kind === "mouth"
+          ? t("game.bossVoidedMouth", {
+              hand: tHandLabel(t, label),
+              locked: tHandLabel(t, reason.lockedHand),
+            })
+          : t("game.bossVoidedEye", { hand: tHandLabel(t, label) }),
+      );
+      finalizeHandSubmission(0, submittedSelection, label);
       return;
     }
 

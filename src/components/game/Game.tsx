@@ -22,11 +22,7 @@ import { useGame } from "../../store/game";
 import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { play } from "../system/sounds";
-import {
-  bossHidesJokers,
-  canSubmitHand,
-  debuffedHandIds,
-} from "../../items/bosses";
+import { bossHidesJokers, debuffedHandIds } from "../../items/bosses";
 import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
 import { MAX_JOKERS } from "../../items/jokers";
 import { deckJokerSlotsDelta } from "../../items/decks";
@@ -107,7 +103,6 @@ export default function Game({
   const devChipsBonus = useGame((s) => s.devChipsBonus);
   const devMultBonus = useGame((s) => s.devMultBonus);
   const devMultFactor = useGame((s) => s.devMultFactor);
-  const handHistoryThisRound = useGame((s) => s.handHistoryThisRound);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
@@ -132,12 +127,6 @@ export default function Game({
     sellJoker,
   });
 
-  const canSubmit = canSubmitHand(
-    blind,
-    currentBoss,
-    selectedHand,
-    handHistoryThisRound,
-  );
   const debuffedIds = debuffedHandIds(
     hand,
     currentBoss,
@@ -261,7 +250,7 @@ export default function Game({
             <button
               className="btn btn--primary submit-hand-button"
               onClick={onSubmitHand}
-              disabled={isScoring || selectedIds.size === 0 || !canSubmit}
+              disabled={isScoring || selectedIds.size === 0}
               aria-label={
                 selectedHand
                   ? t("a11y.submitHandWith", {

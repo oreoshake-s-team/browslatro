@@ -221,6 +221,8 @@ export const haw: LocaleMessages = {
   },
   game: {
     submitHand: "Submit Hand",
+    bossVoidedMouth: "{{hand}} scored 0 — The Mouth locks you to {{locked}}",
+    bossVoidedEye: "{{hand}} scored 0 — The Eye blocks repeat hand types",
   },
   devMenu: {
     humanPlayLog: "Human play log",

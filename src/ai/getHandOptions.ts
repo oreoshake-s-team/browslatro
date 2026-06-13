@@ -7,6 +7,7 @@ import {
   getCardMultTimes,
   getScoringCards,
 } from "../scoring/scoring";
+import { bossVoidsHandLabel } from "../items/bosses";
 import {
   MAX_PLAYED_CARDS,
   simulatePlay,
@@ -162,6 +163,16 @@ function bestPlayPerLabel(
     for (const cardIds of combinations(handIds, size)) {
       const result = simulatePlay(input, cardIds);
       if (!result.legal) continue;
+      if (
+        input.blind === 3 &&
+        bossVoidsHandLabel(
+          input.currentBoss,
+          result.handLabel,
+          input.handHistoryThisRound,
+        )
+      ) {
+        continue;
+      }
       const current = best.get(result.handLabel);
       if (current !== undefined && current.score >= result.score) continue;
       best.set(result.handLabel, {
