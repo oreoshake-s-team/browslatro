@@ -207,7 +207,6 @@ export async function playHeadlessRun(
         }
         const result = simulatePlay(view, action.cardIds);
         if (!result.legal) {
-          if (result.reason === "boss-blocks-hand") return false;
           throw new Error(
             `${agent.name} made an illegal play: ${result.reason}`,
           );

@@ -354,7 +354,7 @@ describe("Boss Blinds — Phase 3 round-state effects", () => {
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
   }
 
-  test("The Mouth disables Submit when the second-played-hand type would differ from the first", async () => {
+  test("The Mouth keeps Submit enabled once a card is selected", async () => {
     bossPickerRngConfig.rng = mkBossRng(["the-manacle", "the-mouth"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);

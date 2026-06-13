@@ -4,7 +4,6 @@ import {
   applyBossFaceDown,
   availableBosses,
   bossAdjustHandEntry,
-  bossBlocksHandLabel,
   bossHandSize,
   bossMoneyPenaltyPerCard,
   bossPostPlayDiscardCount,
@@ -15,7 +14,8 @@ import {
   bossStartingHands,
   bossHidesJokers,
   bossPoolForAnte,
-  canSubmitHand,
+  bossVoidReason,
+  bossVoidsHandLabel,
   createBossCatalog,
   debuffedHandIds,
   isCardDebuffedByBoss,
@@ -24,7 +24,7 @@ import {
   pickHookDiscardIds,
   type BossBlind,
 } from "./bosses";
-import type { Card, Hand } from "../cards/types";
+import type { Card } from "../cards/types";
 import type { HandLabel } from "../scoring/handEvaluator";
 
 describe("createBossCatalog", () => {
@@ -316,72 +316,62 @@ describe("Phase 3 round-state catalog entries", () => {
   });
 });
 
-describe("bossBlocksHandLabel", () => {
+describe("bossVoidsHandLabel", () => {
   const mouth = createBossCatalog().find((b) => b.id === "the-mouth")!;
   const eye = createBossCatalog().find((b) => b.id === "the-eye")!;
   const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
 
-  test("Mouth allows the first played hand of any label", () => {
-    expect(bossBlocksHandLabel(mouth, "Pair", [])).toBe(false);
+  test("Mouth does not void the first played hand of any label", () => {
+    expect(bossVoidsHandLabel(mouth, "Pair", [])).toBe(false);
   });
 
-  test("Mouth blocks a different label after the first play", () => {
-    expect(bossBlocksHandLabel(mouth, "Flush", ["Pair"])).toBe(true);
+  test("Mouth voids a different label after the first play", () => {
+    expect(bossVoidsHandLabel(mouth, "Flush", ["Pair"])).toBe(true);
   });
 
-  test("Mouth allows the same label after the first play", () => {
-    expect(bossBlocksHandLabel(mouth, "Pair", ["Pair"])).toBe(false);
+  test("Mouth does not void the same label after the first play", () => {
+    expect(bossVoidsHandLabel(mouth, "Pair", ["Pair"])).toBe(false);
   });
 
-  test("Eye blocks a repeated label", () => {
-    expect(bossBlocksHandLabel(eye, "Pair", ["Pair"])).toBe(true);
+  test("Eye voids a repeated label", () => {
+    expect(bossVoidsHandLabel(eye, "Pair", ["Pair"])).toBe(true);
   });
 
-  test("Eye allows a fresh label after a different one was played", () => {
-    expect(bossBlocksHandLabel(eye, "Flush", ["Pair"])).toBe(false);
+  test("Eye does not void a fresh label after a different one was played", () => {
+    expect(bossVoidsHandLabel(eye, "Flush", ["Pair"])).toBe(false);
   });
 
-  test("Non-restriction bosses never block", () => {
-    expect(bossBlocksHandLabel(wall, "Pair", ["Pair", "Pair"])).toBe(false);
+  test("Non-restriction bosses never void", () => {
+    expect(bossVoidsHandLabel(wall, "Pair", ["Pair", "Pair"])).toBe(false);
   });
 
-  test("null boss never blocks", () => {
-    expect(bossBlocksHandLabel(null, "Pair", ["Pair"])).toBe(false);
+  test("null boss never voids", () => {
+    expect(bossVoidsHandLabel(null, "Pair", ["Pair"])).toBe(false);
   });
 });
 
-describe("canSubmitHand", () => {
+describe("bossVoidReason", () => {
   const mouth = createBossCatalog().find((b) => b.id === "the-mouth")!;
   const eye = createBossCatalog().find((b) => b.id === "the-eye")!;
-  const pair: Hand = { label: "Pair", chips: 10, multiplier: 2 };
-  const flush: Hand = { label: "Flush", chips: 35, multiplier: 4 };
+  const wall = createBossCatalog().find((b) => b.id === "the-wall")!;
 
-  test("returns true when no hand is selected", () => {
-    expect(canSubmitHand(3, mouth, null, ["Pair"])).toBe(true);
+  test("Mouth reports the locked hand from the first play", () => {
+    expect(bossVoidReason(mouth, ["Pair"])).toEqual({
+      kind: "mouth",
+      lockedHand: "Pair",
+    });
   });
 
-  test("returns true on blind 1 even when the boss rule would block", () => {
-    expect(canSubmitHand(1, eye, pair, ["Pair"])).toBe(true);
+  test("Mouth reports null before any hand is locked", () => {
+    expect(bossVoidReason(mouth, [])).toBeNull();
   });
 
-  test("returns true on blind 2 even when the boss rule would block", () => {
-    expect(canSubmitHand(2, eye, pair, ["Pair"])).toBe(true);
+  test("Eye reports the eye reason", () => {
+    expect(bossVoidReason(eye, ["Pair"])).toEqual({ kind: "eye" });
   });
 
-  test("returns true on blind 3 when the boss does not block this label", () => {
-    expect(canSubmitHand(3, mouth, pair, ["Pair"])).toBe(true);
-  });
-
-  test("returns false on blind 3 when The Eye sees a repeat (negative)", () => {
-    expect(canSubmitHand(3, eye, pair, ["Pair"])).toBe(false);
-  });
-
-  test("returns false on blind 3 when The Mouth sees a different label (negative)", () => {
-    expect(canSubmitHand(3, mouth, flush, ["Pair"])).toBe(false);
-  });
-
-  test("returns true on blind 3 when there is no boss", () => {
-    expect(canSubmitHand(3, null, pair, ["Pair"])).toBe(true);
+  test("Non-restriction bosses report null", () => {
+    expect(bossVoidReason(wall, ["Pair"])).toBeNull();
   });
 });
 

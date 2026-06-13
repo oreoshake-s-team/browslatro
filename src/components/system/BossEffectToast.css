@@ -1,0 +1,35 @@
+.boss-effect-toast {
+  position: fixed;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: min(90vw, 30rem);
+  padding: 0.7rem 1.2rem;
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--accent-danger) 22%, var(--surface-raised));
+  border: 1px solid var(--accent-danger);
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 6px 20px var(--shadow-md);
+  pointer-events: none;
+  animation: boss-effect-toast-in 180ms ease-out;
+}
+
+@keyframes boss-effect-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boss-effect-toast {
+    animation: none;
+  }
+}

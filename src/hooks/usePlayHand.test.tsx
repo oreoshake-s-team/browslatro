@@ -2,6 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { usePlayHand, type UsePlayHandParams } from "./usePlayHand";
 import { useGame } from "../store/game";
+import { createBossCatalog } from "../items/bosses";
 import type { Card } from "../cards/types";
 
 function card(id: number, rank: Card["rank"] = "5", suit: Card["suit"] = "clubs"): Card {
@@ -55,5 +56,67 @@ describe("usePlayHand — empty hand guard", () => {
     act(() => result.current.submitHand());
 
     expect(useGame.getState().roundScore).toBe(0);
+  });
+});
+
+describe("usePlayHand — The Mouth voids a non-matching hand", () => {
+  const mouth = createBossCatalog().find((b) => b.id === "the-mouth")!;
+
+  function setupLockedMouth(): void {
+    useGame.getState().setCurrentBoss(mouth);
+    useGame.getState().setBlind(3);
+    useGame.getState().setHandHistoryThisRound(["Pair"]);
+    useGame.getState().setDealt({
+      hand: [card(1, "A", "spades")],
+      remaining: [card(2, "3", "hearts")],
+    });
+    useGame.getState().setHandDisplayOrder([1]);
+    useGame.getState().setSelectedIds(new Set([1]));
+    useGame.getState().setRemainingHands(4);
+    useGame.getState().setRoundScore(0);
+  }
+
+  test("a non-matching hand does NOT advance the round score", () => {
+    setupLockedMouth();
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().roundScore).toBe(0);
+  });
+
+  test("a non-matching hand still consumes a hand", () => {
+    setupLockedMouth();
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().remainingHands).toBe(3);
+  });
+
+  test("a non-matching hand records a boss-adjustment void note", () => {
+    setupLockedMouth();
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(
+      useGame
+        .getState()
+        .scoringEvents.some(
+          (e) => e.kind === "boss-adjustment" && e.description.includes("voided"),
+        ),
+    ).toBe(true);
+  });
+
+  test("loses the game when the last hand is voided below the requirement", () => {
+    setupLockedMouth();
+    useGame.getState().setRemainingHands(1);
+    const loseGame = vi.fn();
+    const { result } = renderHook(() => usePlayHand(makeParams(loseGame)));
+
+    act(() => result.current.submitHand());
+
+    expect(loseGame).toHaveBeenCalled();
   });
 });

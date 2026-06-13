@@ -12,8 +12,8 @@ import type {
 import type { Consumable } from "../items/consumables";
 import {
   bossAdjustHandEntry,
-  bossBlocksHandLabel,
   bossRequiredCardCount,
+  bossVoidsHandLabel,
   debuffedHandIds,
   type BossBlind,
 } from "../items/bosses";
@@ -72,8 +72,7 @@ export interface SimulatePlayInput {
 export type IllegalPlayReason =
   | "empty-selection"
   | "too-many-cards"
-  | "card-not-in-hand"
-  | "boss-blocks-hand";
+  | "card-not-in-hand";
 
 export type SimulatePlayResult =
   | { readonly legal: false; readonly reason: IllegalPlayReason }
@@ -110,9 +109,17 @@ export function simulatePlay(
   const isBossRound = input.blind === 3;
   if (
     isBossRound &&
-    bossBlocksHandLabel(input.currentBoss, label, input.handHistoryThisRound)
+    bossVoidsHandLabel(input.currentBoss, label, input.handHistoryThisRound)
   ) {
-    return { legal: false, reason: "boss-blocks-hand" };
+    return {
+      legal: true,
+      handLabel: label,
+      score: 0,
+      chips: 0,
+      mult: 0,
+      scoringCardIds: [],
+      bossTriggered: true,
+    };
   }
 
   const baseHandEntry = input.handStats[label];
