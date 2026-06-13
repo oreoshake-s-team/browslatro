@@ -8,13 +8,31 @@ import type { HandOption } from "../src/ai/getHandOptions";
 import type { ModelState } from "../src/ai/modelState";
 import type { CandidateRanker } from "../src/ai/policy";
 import {
+  applyQualityGate,
   createRequestAdviceTeacher,
   findDisagreements,
+  isLabelJustified,
   labelDisagreements,
   parseDatasetRecords,
   relabelDisagreements,
   type Disagreement,
 } from "./labelDisagreements";
+
+function playOption(cardIds: ReadonlyArray<number>, score: number): HandOption {
+  return {
+    action: "play",
+    cardIds: [...cardIds],
+    handLabel: "Pair",
+    score,
+    chips: score,
+    mult: 1,
+    notes: [],
+  };
+}
+
+function discardOption(cardIds: ReadonlyArray<number>): HandOption {
+  return { action: "discard", cardIds: [...cardIds], notes: [] };
+}
 
 function makeRecord(
   state: ModelState,
@@ -154,6 +172,74 @@ describe("labelDisagreements", () => {
     const teacher = vi.fn().mockResolvedValue(1);
     const labeled = await labelDisagreements({ records, ranker, teacher });
     expect(labeled.map((r) => r.runSeed)).toEqual([1]);
+  });
+});
+
+describe("isLabelJustified", () => {
+  test("accepts a discard pick without scoring it", () => {
+    const candidates = [playOption([1, 2], 100), discardOption([3])];
+    expect(isLabelJustified(candidates, 1)).toBe(true);
+  });
+
+  test("accepts the top-scoring play", () => {
+    const candidates = [playOption([1, 2], 100), playOption([3], 10)];
+    expect(isLabelJustified(candidates, 0)).toBe(true);
+  });
+
+  test("rejects a play scoring below the default floor", () => {
+    const candidates = [playOption([1, 2], 100), playOption([3], 10)];
+    expect(isLabelJustified(candidates, 1)).toBe(false);
+  });
+
+  test("accepts a play exactly at the floor", () => {
+    const candidates = [playOption([1, 2], 100), playOption([3], 25)];
+    expect(isLabelJustified(candidates, 1)).toBe(true);
+  });
+
+  test("accepts any play when no play has a positive score", () => {
+    const candidates = [playOption([1], 0), discardOption([2])];
+    expect(isLabelJustified(candidates, 0)).toBe(true);
+  });
+
+  test("returns false for an out-of-range index", () => {
+    expect(isLabelJustified([playOption([1], 100)], 5)).toBe(false);
+  });
+
+  test("respects a custom minScoreFraction", () => {
+    const candidates = [playOption([1, 2], 100), playOption([3], 10)];
+    expect(isLabelJustified(candidates, 1, { minScoreFraction: 0.05 })).toBe(true);
+  });
+});
+
+describe("applyQualityGate", () => {
+  test("drops records whose teacher label fails the gate", () => {
+    const record = makeRecord(
+      modelStateFixture(),
+      [playOption([1, 2], 100), playOption([3], 10)],
+      1,
+    );
+    expect(applyQualityGate([record])).toHaveLength(0);
+  });
+
+  test("keeps records whose teacher label passes the gate", () => {
+    const record = makeRecord(
+      modelStateFixture(),
+      [playOption([1, 2], 100), playOption([3], 40)],
+      1,
+    );
+    expect(applyQualityGate([record])).toHaveLength(1);
+  });
+});
+
+describe("labelDisagreements quality gate", () => {
+  test("drops a teacher label the engine numbers cannot justify", async () => {
+    const state = modelStateFixture();
+    const candidates = [playOption([1, 2], 100), playOption([3], 10)];
+    const record = makeRecord(state, candidates, 0);
+    const ranker = rankerFrom(new Map([[state, [1, 0]]]));
+    const teacher = vi.fn().mockResolvedValue(1);
+    const labeled = await labelDisagreements({ records: [record], ranker, teacher });
+    expect(labeled).toHaveLength(0);
   });
 });
 
