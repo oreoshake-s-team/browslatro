@@ -23,6 +23,7 @@ function config(overrides: Partial<DistillConfig> = {}): DistillConfig {
     games: 200,
     seedOffset: 5000,
     limit: 0,
+    concurrency: 1,
     python: "python3",
     ...overrides,
   };

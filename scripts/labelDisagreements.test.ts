@@ -14,6 +14,7 @@ import {
   findDisagreements,
   isLabelJustified,
   labelDisagreements,
+  mapWithConcurrency,
   parseDatasetRecords,
   relabelDisagreements,
   type Disagreement,
@@ -281,6 +282,44 @@ describe("labelDisagreements limit", () => {
     const teacher = vi.fn().mockResolvedValue(1);
     const labeled = await labelDisagreements({ records, ranker, teacher, limit: 2 });
     expect(labeled).toHaveLength(2);
+  });
+});
+
+describe("mapWithConcurrency", () => {
+  test("preserves input order in the results", async () => {
+    const out = await mapWithConcurrency([1, 2, 3, 4], 2, async (n) => n * 10);
+    expect(out).toEqual([10, 20, 30, 40]);
+  });
+
+  test("never exceeds the concurrency limit", async () => {
+    let active = 0;
+    let peak = 0;
+    await mapWithConcurrency(Array.from({ length: 12 }), 3, async () => {
+      active += 1;
+      peak = Math.max(peak, active);
+      await Promise.resolve();
+      active -= 1;
+      return 0;
+    });
+    expect(peak).toBeLessThanOrEqual(3);
+  });
+
+  test("returns an empty array for no items", async () => {
+    expect(await mapWithConcurrency([], 4, async () => 1)).toEqual([]);
+  });
+});
+
+describe("relabelDisagreements concurrency", () => {
+  test("produces the same ordered labels as the sequential path", async () => {
+    const states = [modelStateFixture(), modelStateFixture(), modelStateFixture()];
+    const disagreements: Disagreement[] = states.map((state, i) => ({
+      record: makeRecord(state, candidatesFixture(), 0, i),
+      expertIndex: 0,
+      onnxIndex: 1,
+    }));
+    const teacher = vi.fn().mockResolvedValue(1);
+    const labeled = await relabelDisagreements(disagreements, teacher, 3);
+    expect(labeled.map((r) => r.runSeed)).toEqual([0, 1, 2]);
   });
 });
 
