@@ -260,3 +260,31 @@ describe("Consumables content overrides", () => {
     expect(screen.getByText(tarot.name)).toBeInTheDocument();
   });
 });
+
+describe("Consumables — The Fool copy target", () => {
+  const fool: Consumable = {
+    kind: "tarot",
+    card: createTarotCatalog().find((c) => c.id === "the-fool")!,
+  };
+
+  test("appends the copy-target hint to The Fool's description", () => {
+    renderConsumables({
+      consumables: [fool],
+      foolCopyTarget: "Will create Mercury (Planet)",
+    });
+    expect(screen.getByTestId("consumable-tile-filled-0")).toHaveTextContent(
+      "Will create Mercury (Planet)",
+    );
+  });
+
+  test("does not append the hint to a non-Fool consumable (negative)", () => {
+    const entry: Consumable = { kind: "planet", card: planet };
+    renderConsumables({
+      consumables: [entry],
+      foolCopyTarget: "Will create Mercury (Planet)",
+    });
+    expect(
+      screen.getByTestId("consumable-tile-filled-0"),
+    ).not.toHaveTextContent("Will create Mercury");
+  });
+});

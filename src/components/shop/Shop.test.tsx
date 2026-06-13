@@ -1092,3 +1092,32 @@ describe("Shop — suggest trigger placement", () => {
     expect(await screen.findByTestId("shop-suggest")).toBeDisabled();
   });
 });
+
+describe("Shop — The Fool copy target", () => {
+  const foolOffer: ShopItem = {
+    kind: "tarot",
+    tarot: createTarotCatalog().find((c) => c.id === "the-fool")!,
+    price: 4,
+    sold: false,
+  };
+
+  test("a Fool offer appends the copy-target hint to its description", () => {
+    renderShop({
+      offers: [foolOffer],
+      foolCopyTarget: "Will create Mercury (Planet)",
+    });
+    expect(screen.getByTestId("shop-offer-0")).toHaveTextContent(
+      "Will create Mercury (Planet)",
+    );
+  });
+
+  test("a non-Fool offer does not get the hint (negative)", () => {
+    renderShop({
+      offers: [planetOffer("pluto")],
+      foolCopyTarget: "Will create Mercury (Planet)",
+    });
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveTextContent(
+      "Will create Mercury",
+    );
+  });
+});

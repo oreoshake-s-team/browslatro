@@ -6,6 +6,7 @@ import {
   localizedConsumableDescription,
   localizedConsumableName,
 } from "../../i18n/contentOverrides";
+import { appendFoolHint } from "../../i18n/foolCopyTarget";
 import {
   localizedJokerDescription,
   localizedJokerName,
@@ -48,6 +49,7 @@ export interface ShopProps {
   disabled?: boolean;
   extraRerollReduction?: number;
   freeFirstReroll?: boolean;
+  foolCopyTarget?: string;
 }
 
 interface VoucherButtonState {
@@ -322,6 +324,7 @@ export default function Shop({
   disabled = false,
   extraRerollReduction = 0,
   freeFirstReroll = false,
+  foolCopyTarget,
 }: ShopProps) {
   const { t, i18n } = useTranslation();
   const lockTooltip = t("shop.finishPickingFirst");
@@ -443,7 +446,9 @@ export default function Shop({
             </span>
           )}
         </span>
-        <span className="shop-offer-description">{subject.description}</span>
+        <span className="shop-offer-description">
+          {appendFoolHint(subject.description, subject.id, foolCopyTarget)}
+        </span>
         {offer.kind === "joker" && (
           <JokerStickerBadges joker={offer.joker} />
         )}
