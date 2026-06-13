@@ -88,6 +88,7 @@ interface HandProps {
   hand: ReadonlyArray<CardType>;
   remaining: ReadonlyArray<CardType>;
   selectedIds: ReadonlySet<number>;
+  forcedCardId?: number | null;
   discardingIds: ReadonlySet<number>;
   newlyDrawnIds?: ReadonlySet<number>;
   debuffedIds?: ReadonlySet<number>;
@@ -111,6 +112,7 @@ export default function Hand({
   hand,
   remaining,
   selectedIds,
+  forcedCardId = null,
   discardingIds,
   newlyDrawnIds,
   debuffedIds,
@@ -404,6 +406,7 @@ export default function Hand({
                   <Card
                     card={card}
                     selected={selectedIds.has(card.id)}
+                    forced={forcedCardId === card.id}
                     discarding={discardingIds.has(card.id)}
                     newlyDrawn={showNewlyDrawn && newlyDrawnIds.has(card.id)}
                     debuffed={debuffedIds?.has(card.id) ?? false}

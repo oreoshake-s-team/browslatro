@@ -26,6 +26,7 @@ export interface BossState {
   pendingLose: RoundLostInfo | null;
   handSizeModifier: number;
   bossRerollsUsedThisAnte: number;
+  forcedCardId: number | null;
   setCurrentBoss: (update: Updater<BossBlind>) => void;
   setRecentBossIds: (update: Updater<ReadonlySet<string>>) => void;
   setHandHistoryThisRound: (update: Updater<ReadonlyArray<HandLabel>>) => void;
@@ -34,6 +35,7 @@ export interface BossState {
   setPendingLose: (update: Updater<RoundLostInfo | null>) => void;
   setHandSizeModifier: (update: Updater<number>) => void;
   setBossRerollsUsedThisAnte: (update: Updater<number>) => void;
+  setForcedCardId: (update: Updater<number | null>) => void;
   resetBoss: () => void;
 }
 
@@ -46,6 +48,7 @@ export const createBossSlice: StateCreator<GameState, [], [], BossState> = (set)
   pendingLose: null,
   handSizeModifier: 0,
   bossRerollsUsedThisAnte: 0,
+  forcedCardId: null,
   setCurrentBoss: (update) =>
     set((state) => ({ currentBoss: resolve(update, state.currentBoss) })),
   setRecentBossIds: (update) =>
@@ -68,6 +71,8 @@ export const createBossSlice: StateCreator<GameState, [], [], BossState> = (set)
     set((state) => ({
       bossRerollsUsedThisAnte: resolve(update, state.bossRerollsUsedThisAnte),
     })),
+  setForcedCardId: (update) =>
+    set((state) => ({ forcedCardId: resolve(update, state.forcedCardId) })),
   resetBoss: () =>
     set({
       currentBoss: freshBoss(),
@@ -78,5 +83,6 @@ export const createBossSlice: StateCreator<GameState, [], [], BossState> = (set)
       pendingLose: null,
       handSizeModifier: 0,
       bossRerollsUsedThisAnte: 0,
+      forcedCardId: null,
     }),
 });

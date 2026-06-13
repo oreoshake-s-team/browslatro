@@ -1,5 +1,5 @@
 import type { MockedFunction } from "vitest";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
 import { bossPickerRngConfig, createBossCatalog } from "./items/bosses";
@@ -926,5 +926,58 @@ describe("Boss Blinds — showdown Crimson Heart", () => {
       ),
     ).toHaveLength(0);
     random.mockRestore();
+  });
+});
+
+describe("Boss Blinds — showdown Cerulean Bell", () => {
+  function startBellRound(bossId: string): void {
+    const boss = createBossCatalog().find((b) => b.id === bossId)!;
+    act(() => {
+      useGame.getState().setAnte(8);
+      useGame.getState().setCurrentBoss(boss);
+      useGame.getState().setBlind(3);
+      useGame.getState().setPendingBlindSelect(true);
+    });
+  }
+
+  test("entering the boss round forces exactly one card to be selected", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    startBellRound("cerulean-bell");
+    await user.click(screen.getByTestId("blind-select-play"));
+    await waitFor(() => {
+      expect(document.querySelectorAll(".card-forced")).toHaveLength(1);
+    });
+    expect(useGame.getState().forcedCardId).not.toBeNull();
+    expect(
+      useGame.getState().selectedIds.has(useGame.getState().forcedCardId!),
+    ).toBe(true);
+    random.mockRestore();
+  });
+
+  test("clicking the forced card does not deselect it", async () => {
+    const random = vi.spyOn(Math, "random").mockReturnValue(0);
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    startBellRound("cerulean-bell");
+    await user.click(screen.getByTestId("blind-select-play"));
+    await waitFor(() => {
+      expect(document.querySelector(".card-forced")).not.toBeNull();
+    });
+    const forcedId = useGame.getState().forcedCardId!;
+    await user.click(document.querySelector(".card-forced") as HTMLElement);
+    expect(useGame.getState().selectedIds.has(forcedId)).toBe(true);
+    expect(document.querySelectorAll(".card-forced")).toHaveLength(1);
+    random.mockRestore();
+  });
+
+  test("a non-forcing showdown boss forces no card (negative)", async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    startBellRound("violet-vessel");
+    await user.click(screen.getByTestId("blind-select-play"));
+    expect(document.querySelectorAll(".card-forced")).toHaveLength(0);
+    expect(useGame.getState().forcedCardId).toBeNull();
   });
 });
