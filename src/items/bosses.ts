@@ -161,7 +161,7 @@ const BOSS_SPECS: ReadonlyArray<BossBlind> = [
   {
     id: "the-arm",
     name: "The Arm",
-    description: "Played poker hand is treated as one level lower.",
+    description: "Decrease level of played poker hand by 1.",
     scoreMultiplier: 2,
     anteMin: 2,
     effect: { kind: "hand-level-delta", value: -1 },

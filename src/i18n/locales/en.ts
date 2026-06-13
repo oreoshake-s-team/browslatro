@@ -215,6 +215,7 @@ export const en = {
     submitHand: "Submit Hand",
     bossVoidedMouth: "{{hand}} scored 0 — The Mouth locks you to {{locked}}",
     bossVoidedEye: "{{hand}} scored 0 — The Eye blocks repeat hand types",
+    bossArmLowered: "The Arm lowered {{hand}} to level {{level}}",
   },
   devMenu: {
     humanPlayLog: "Human play log",

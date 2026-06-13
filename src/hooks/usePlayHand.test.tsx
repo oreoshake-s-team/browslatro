@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { usePlayHand, type UsePlayHandParams } from "./usePlayHand";
 import { useGame } from "../store/game";
 import { createBossCatalog } from "../items/bosses";
+import { applyPlanetUpgrade } from "../items/planets";
+import { createPlanetCatalog } from "../items/planets";
 import type { Card } from "../cards/types";
 
 function card(id: number, rank: Card["rank"] = "5", suit: Card["suit"] = "clubs"): Card {
@@ -118,5 +120,63 @@ describe("usePlayHand — The Mouth voids a non-matching hand", () => {
     act(() => result.current.submitHand());
 
     expect(loseGame).toHaveBeenCalled();
+  });
+});
+
+describe("usePlayHand — The Arm lowers the played hand level", () => {
+  const arm = createBossCatalog().find((b) => b.id === "the-arm")!;
+
+  function setupArm(pairLevel: number): void {
+    useGame.getState().setCurrentBoss(arm);
+    useGame.getState().setBlind(3);
+    if (pairLevel > 1) {
+      const planet = createPlanetCatalog().find((p) =>
+        p.hands.includes("Pair"),
+      )!;
+      let stats = useGame.getState().handStats;
+      for (let i = 1; i < pairLevel; i += 1) {
+        stats = applyPlanetUpgrade(stats, planet);
+      }
+      useGame.getState().setHandStats(stats);
+    }
+    useGame.getState().setDealt({
+      hand: [card(1, "5", "clubs"), card(2, "5", "hearts")],
+      remaining: [card(3, "9", "spades"), card(4, "2", "diamonds")],
+    });
+    useGame.getState().setHandDisplayOrder([1, 2]);
+    useGame.getState().setSelectedIds(new Set([1, 2]));
+    useGame.getState().setRemainingHands(4);
+    useGame.getState().setRoundScore(0);
+  }
+
+  test("permanently lowers a level-2 played hand to level 1", () => {
+    setupArm(2);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().handStats["Pair"].level).toBe(1);
+  });
+
+  test("floors at level 1 for an already level-1 hand (negative)", () => {
+    setupArm(1);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().handStats["Pair"].level).toBe(1);
+  });
+
+  test("records a boss-adjustment note when it lowers a level", () => {
+    setupArm(2);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(
+      useGame
+        .getState()
+        .scoringEvents.some((e) => e.kind === "boss-adjustment"),
+    ).toBe(true);
   });
 });
