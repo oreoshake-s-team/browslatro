@@ -1,8 +1,10 @@
+import type { Deck } from "../items/decks";
 import type { Joker } from "../items/jokers/types";
 import {
   playHeadlessRun,
   type HeadlessAgent,
   type HeadlessRunResult,
+  type HeadlessShopAgent,
 } from "./headlessRun";
 
 export interface EvaluateAgentConfig {
@@ -10,6 +12,8 @@ export interface EvaluateAgentConfig {
   readonly seedOffset?: number;
   readonly maxAnte?: number;
   readonly jokers?: ReadonlyArray<Joker>;
+  readonly deck?: Deck;
+  readonly shopAgent?: HeadlessShopAgent;
 }
 
 export interface EvaluationResult {
@@ -41,6 +45,8 @@ export async function evaluateAgent(
         seed,
         maxAnte: config.maxAnte,
         jokers: config.jokers,
+        deck: config.deck,
+        shopAgent: config.shopAgent,
       }),
     );
   }

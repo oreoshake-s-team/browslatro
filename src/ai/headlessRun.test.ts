@@ -128,23 +128,23 @@ describe("playHeadlessRun", () => {
     );
   });
 
-  test("calls the shop agent once per completed ante", async () => {
-    const antesVisited: number[] = [];
+  test("calls the shop agent once per cleared round", async () => {
+    const roundsVisited: number[] = [];
     const shopAgent: HeadlessShopAgent = {
-      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
-        antesVisited.push(view.ante);
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        roundsVisited.push(view.ante);
         return { jokers: view.jokers, money: view.money, handStats: view.handStats };
       },
     };
     const result = await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, shopAgent });
-    expect(antesVisited.length).toBe(result.won ? 2 : result.anteReached - 1);
+    expect(roundsVisited.length).toBe(result.blindsCleared);
   });
 
   test("shop agent jokers are visible in subsequent ante rounds", async () => {
     const powerJoker: Joker = joker({ id: "power-joker", effect: { kind: "additive-mult", amount: 100000 } });
     const addedJoker: Joker = joker({ id: "added-joker", effect: { kind: "additive-mult", amount: 1 } });
     const shopAgent: HeadlessShopAgent = {
-      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
         return { jokers: [...view.jokers, addedJoker], money: view.money, handStats: view.handStats };
       },
     };
@@ -167,7 +167,7 @@ describe("playHeadlessRun", () => {
     const powerJoker: Joker = joker({ effect: { kind: "additive-mult", amount: 100000 } });
     const moneyAfterShop: number[] = [];
     const shopAgent: HeadlessShopAgent = {
-      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
         const spent = Math.min(view.money, 5);
         moneyAfterShop.push(view.money - spent);
         return { jokers: view.jokers, money: view.money - spent, handStats: view.handStats };
@@ -182,7 +182,7 @@ describe("playHeadlessRun", () => {
     const powerJoker: Joker = joker({ id: "power-joker", effect: { kind: "additive-mult", amount: 100000 } });
     const seenChips: number[] = [];
     const shopAgent: HeadlessShopAgent = {
-      async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
         const boosted = { ...view.handStats, "High Card": { ...view.handStats["High Card"], chips: view.handStats["High Card"].chips + 100 } };
         return { jokers: view.jokers, money: view.money, handStats: boosted };
       },
