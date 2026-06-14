@@ -32,6 +32,7 @@ function candidateForAction(
     if (!action.cardIds.every((id) => handIds.has(id))) return null;
     return { action: "discard", cardIds: action.cardIds, notes: [] };
   }
+  if (action.kind === "skip") return null;
   const result = simulatePlay(input, action.cardIds);
   if (!result.legal) return null;
   return {

@@ -53,6 +53,7 @@ function applyAction(
       remainingDiscards: position.remainingDiscards - 1,
     };
   }
+  if (action.kind === "skip") return null;
   const result = simulatePlay(viewAt(view, position), action.cardIds);
   if (!result.legal) return null;
   return {

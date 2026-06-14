@@ -2,6 +2,7 @@
 import { describe, expect, test } from "vitest";
 import {
   buildHeadlessDeck,
+  grantTagMoney,
   playHeadlessRun,
   seededRng,
   type HeadlessAgent,
@@ -10,6 +11,7 @@ import {
   type ShopResult,
   type ShopView,
 } from "./headlessRun";
+import { initialRunStats } from "../run/runStats";
 import { getHandOptions } from "./getHandOptions";
 import { joker } from "./test-helpers";
 import type { Joker } from "../items/jokers/types";
@@ -394,5 +396,82 @@ describe("playHeadlessRun vouchers", () => {
     const first = discardsAtRoundStart.get(1);
     const later = discardsAtRoundStart.get(2);
     expect(later).toBe((first ?? 0) + 1);
+  });
+});
+
+describe("grantTagMoney", () => {
+  test("the speed tag pays $5 per blind skipped", () => {
+    const stats = { ...initialRunStats(), blindsSkipped: 3 };
+    expect(grantTagMoney("speed", stats, 10)).toBe(15);
+  });
+
+  test("the economy tag doubles money up to its cap", () => {
+    expect(grantTagMoney("economy", initialRunStats(), 30)).toBe(30);
+  });
+
+  test("the economy tag is capped at $40", () => {
+    expect(grantTagMoney("economy", initialRunStats(), 100)).toBe(40);
+  });
+
+  test("a non-immediate-money tag grants no money", () => {
+    expect(grantTagMoney("investment", initialRunStats(), 50)).toBe(0);
+  });
+});
+
+describe("playHeadlessRun skip-tag", () => {
+  const powerJoker: Joker = joker({
+    effect: { kind: "additive-mult", amount: 100000 },
+  });
+
+  const skipper: HeadlessAgent = {
+    name: "skipper",
+    chooseAction(view) {
+      if (view.offeredTag !== null) return { kind: "skip" };
+      return greedy.chooseAction(view);
+    },
+  };
+
+  test("skipping the small and big blinds is tracked in blindsSkipped", async () => {
+    const result = await playHeadlessRun(skipper, {
+      seed: 4,
+      maxAnte: 1,
+      jokers: [powerJoker],
+    });
+    expect(result.blindsSkipped).toBe(2);
+  });
+
+  test("a skipped run still clears the boss blind", async () => {
+    const result = await playHeadlessRun(skipper, {
+      seed: 4,
+      maxAnte: 1,
+      jokers: [powerJoker],
+    });
+    expect(result.blindsCleared).toBe(1);
+  });
+
+  test("the boss blind is not skippable (no offered tag)", async () => {
+    const tagByBlind = new Map<number, string | null>();
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        if (!tagByBlind.has(view.blind)) tagByBlind.set(view.blind, view.offeredTag);
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed: 4, maxAnte: 1, jokers: [powerJoker] });
+    expect(tagByBlind.get(3)).toBeNull();
+  });
+
+  test("small and big blinds offer a skip tag", async () => {
+    const tagByBlind = new Map<number, string | null>();
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        if (!tagByBlind.has(view.blind)) tagByBlind.set(view.blind, view.offeredTag);
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed: 4, maxAnte: 1, jokers: [powerJoker] });
+    expect(tagByBlind.get(1)).not.toBeNull();
   });
 });
