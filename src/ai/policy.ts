@@ -33,6 +33,16 @@ export function greedyRanking(
   });
 }
 
+export function greedyRanker(): CandidateRanker {
+  return {
+    load: async (): Promise<void> => {},
+    rank: async (
+      _state: ModelState,
+      candidates: ReadonlyArray<HandOption>,
+    ): Promise<ReadonlyArray<number>> => greedyRanking(candidates),
+  };
+}
+
 export async function loadPolicyRanker(
   model: string | Uint8Array,
   onProgress?: DownloadProgressListener,

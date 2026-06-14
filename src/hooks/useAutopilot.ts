@@ -5,7 +5,8 @@ import {
 } from "../ai/advisor/autopilot";
 import { sharedAdvisorRanker } from "../ai/advisor/advisorRanker";
 import { setHumanPlayRecordingSuppressed } from "../ai/humanPlayWiring";
-import type { CandidateRanker, DownloadProgress } from "../ai/policy";
+import { fakeAutopilotPolicyEnabled } from "../dev/fakeAutopilotPolicy";
+import { greedyRanker, type CandidateRanker, type DownloadProgress } from "../ai/policy";
 import type { HandOption } from "../ai/getHandOptions";
 import { useGame, type GameState } from "../store/game";
 
@@ -33,7 +34,7 @@ export interface AutopilotControls {
 
 function defaultDeps(): AutopilotDeps {
   return {
-    ranker: sharedAdvisorRanker(),
+    ranker: fakeAutopilotPolicyEnabled() ? greedyRanker() : sharedAdvisorRanker(),
     getState: () => useGame.getState(),
     stepMs: AUTOPILOT_STEP_MS,
   };
