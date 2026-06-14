@@ -290,3 +290,38 @@ describe("playHeadlessRun forward-from-state", () => {
     expect(chipsSeen[0]).toBe(base["High Card"].chips + 500);
   });
 });
+
+describe("playHeadlessRun end-of-round economy", () => {
+  const powerJoker: Joker = joker({
+    effect: { kind: "additive-mult", amount: 100000 },
+  });
+
+  async function firstShopMoney(startMoney: number): Promise<number> {
+    let seen = -1;
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        if (seen < 0) seen = view.money;
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats };
+      },
+    };
+    await playHeadlessRun(greedy, {
+      seed: 4,
+      maxAnte: 1,
+      startMoney,
+      jokers: [powerJoker],
+      shopAgent,
+    });
+    return seen;
+  }
+
+  test("a larger bankroll banks more than its starting-money advantage via interest", async () => {
+    const rich = await firstShopMoney(20);
+    const poor = await firstShopMoney(5);
+    expect(rich - poor).toBeGreaterThan(15);
+  });
+
+  test("the round payout exceeds the flat blind reward (interest + unused hands)", async () => {
+    const money = await firstShopMoney(20);
+    expect(money).toBeGreaterThan(20 + 1 + 2);
+  });
+});

@@ -3,13 +3,15 @@ import type { Blind, Card, Rank, Suit } from "../cards/types";
 import { FINAL_ANTE } from "../constants";
 import { pickBossForAnte } from "../items/bosses";
 import { DEFAULT_DECK, deckStartingMoneyDelta, type Deck } from "../items/decks";
+import { interestMultiplierFromJokers } from "../items/jokers/collection";
 import type { Joker, RandomSource } from "../items/jokers/types";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
-import type { VoucherId } from "../items/vouchers";
+import { interestCapFor, type VoucherId } from "../items/vouchers";
 import { emptyHandCounts } from "../components/hud/handPlayCounts";
 import { requiredChipsForBlind } from "../scoring/anteScaling";
 import type { HandLabel } from "../scoring/handEvaluator";
 import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
+import { calculateInterest, REMAINING_HAND_BONUS } from "../scoring/payout";
 import {
   computeStartingDiscards,
   computeStartingHands,
@@ -151,7 +153,7 @@ export async function playHeadlessRun(
     recentBossIds.add(boss.id);
     const playedCardKeysThisAnte = new Set<string>();
 
-    const playRound = async (blind: Blind): Promise<boolean> => {
+    const playRound = async (blind: Blind): Promise<number> => {
       const startCtx = {
         blind,
         boss,
@@ -168,7 +170,7 @@ export async function playHeadlessRun(
       const handHistoryThisRound: HandLabel[] = [];
 
       while (remainingHands > 0) {
-        if (pile.hand.length === 0) return false;
+        if (pile.hand.length === 0) return -1;
         const view: HeadlessRoundView = {
           dealt: pile,
           baseDeckCards: deck,
@@ -234,19 +236,27 @@ export async function playHeadlessRun(
             playedCardKeysThisAnte.add(cardKey(played));
           }
         }
-        if (roundScore >= scoreTarget) return true;
+        if (roundScore >= scoreTarget) return remainingHands - 1;
         remainingHands -= 1;
         pile = removeAndRefill(pile, action.cardIds);
       }
-      return false;
+      return -1;
     };
 
     for (const blind of [1, 2, 3] as const) {
-      if (!(await playRound(blind))) {
+      const unusedHands = await playRound(blind);
+      if (unusedHands < 0) {
         return { won: false, anteReached: ante, blindsCleared, handsPlayed };
       }
       blindsCleared += 1;
-      money += blind + BLIND_CLEAR_REWARD_BASE;
+      const interest =
+        calculateInterest(money, interestCapFor(ownedVoucherIds)) *
+        interestMultiplierFromJokers(jokers);
+      money +=
+        blind +
+        BLIND_CLEAR_REWARD_BASE +
+        interest +
+        REMAINING_HAND_BONUS * unusedHands;
       if (blindsCleared >= roundBudget) {
         return { won: false, anteReached: ante, blindsCleared, handsPlayed };
       }

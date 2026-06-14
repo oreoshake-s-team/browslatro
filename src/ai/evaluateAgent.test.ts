@@ -63,7 +63,7 @@ describe("evaluateAgent", () => {
     };
     const red = await firstShopMoney("red-deck");
     const yellow = await firstShopMoney("yellow-deck");
-    expect(yellow - red).toBe(10);
+    expect(yellow - red).toBe(12);
   });
 
   test("leaves the shop agent untouched when it is not configured (negative)", async () => {
