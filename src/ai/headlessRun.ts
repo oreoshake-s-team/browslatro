@@ -75,7 +75,7 @@ export interface ShopResult {
 }
 
 export interface HeadlessShopAgent {
-  buyAfterAnte(view: ShopView): Promise<ShopResult>;
+  buyAfterRound(view: ShopView): Promise<ShopResult>;
 }
 
 export interface HeadlessRunConfig {
@@ -237,12 +237,12 @@ export async function playHeadlessRun(
       }
       blindsCleared += 1;
       money += blind + BLIND_CLEAR_REWARD_BASE;
-    }
-    if (config.shopAgent !== undefined) {
-      const result = await config.shopAgent.buyAfterAnte({ ante, money, jokers, handStats, rng });
-      jokers = result.jokers;
-      money = result.money;
-      handStats = result.handStats;
+      if (config.shopAgent !== undefined) {
+        const result = await config.shopAgent.buyAfterRound({ ante, money, jokers, handStats, rng });
+        jokers = result.jokers;
+        money = result.money;
+        handStats = result.handStats;
+      }
     }
   }
   return { won: true, anteReached: maxAnte, blindsCleared, handsPlayed };

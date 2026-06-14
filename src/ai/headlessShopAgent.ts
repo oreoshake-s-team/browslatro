@@ -59,7 +59,7 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
   }
 
   return {
-    async buyAfterAnte(view: ShopView): Promise<ShopResult> {
+    async buyAfterRound(view: ShopView): Promise<ShopResult> {
       const jokers = [...view.jokers];
       let handStats: HandStats = view.handStats;
       let money = view.money;
