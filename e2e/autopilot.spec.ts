@@ -5,6 +5,8 @@ test.describe.configure({ timeout: 90_000 });
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
     window.localStorage.setItem("browslatro:muted", "true");
+    window.localStorage.setItem("browslatro:fakeAutopilotPolicy", "1");
+    window.localStorage.setItem("browslatro:deterministicShuffle", "1");
   });
 });
 
@@ -19,32 +21,22 @@ test("autopilot proposes a move and plays it after approval", async ({
   page,
 }) => {
   await startRound(page);
-  const hands = page.getByTestId("hands-stat");
-  const discards = page.getByTestId("discards-stat");
-  const handsBefore = await hands.textContent();
-  const discardsBefore = await discards.textContent();
+  const roundScore = page.locator(".round-score-value");
+  await expect(roundScore).toHaveText("0");
 
   const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
 
   const approve = page.getByRole("button", { name: /Approve move/ });
-  await expect(approve).toBeVisible({ timeout: 30_000 });
+  await expect(approve).toBeVisible({ timeout: 10_000 });
 
-  const handsNow = await hands.textContent();
-  const discardsNow = await discards.textContent();
-  expect(handsNow === handsBefore && discardsNow === discardsBefore).toBe(true);
+  // The proposal is pending — it must not execute until approved.
+  await expect(roundScore).toHaveText("0");
 
-  await expect(async () => {
-    if (await approve.isVisible().catch(() => false)) {
-      await approve.click();
-    }
-    const handsAfter = await hands.textContent().catch(() => null);
-    const discardsAfter = await discards.textContent().catch(() => null);
-    expect(
-      handsAfter !== handsBefore || discardsAfter !== discardsBefore,
-    ).toBe(true);
-  }).toPass({ timeout: 30_000 });
+  await approve.click();
+  // Approving plays the proposed hand, which scores.
+  await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
 });
 
 test("autopilot stops without executing the proposed move", async ({
@@ -60,7 +52,7 @@ test("autopilot stops without executing the proposed move", async ({
   await toggle.click();
 
   const stop = page.getByRole("button", { name: /Stop suggesting/ });
-  await expect(stop).toBeVisible({ timeout: 30_000 });
+  await expect(stop).toBeVisible({ timeout: 10_000 });
   await stop.click();
 
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
@@ -84,7 +76,7 @@ test("a pending suggestion fills the Submit Hand preview and sidebar hand score"
   await toggle.click();
 
   const approve = page.getByRole("button", { name: /Approve move/ });
-  await expect(approve).toBeVisible({ timeout: 30_000 });
+  await expect(approve).toBeVisible({ timeout: 10_000 });
 
   await expect(page.getByTestId("submit-hand-detected")).toBeVisible();
   await expect(page.locator(".hand-score .chips")).not.toHaveText("0");

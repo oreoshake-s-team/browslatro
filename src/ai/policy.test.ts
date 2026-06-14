@@ -7,6 +7,7 @@ import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
 import {
   createAdvisorRanker,
+  greedyRanker,
   greedyRanking,
   loadPolicyRanker,
 } from "./policy";
@@ -63,6 +64,22 @@ describe("greedyRanking", () => {
 
   test("returns an empty ranking for no candidates", () => {
     expect(greedyRanking([])).toEqual([]);
+  });
+});
+
+describe("greedyRanker", () => {
+  test("load resolves instantly without downloading a model", async () => {
+    await expect(greedyRanker().load()).resolves.toBeUndefined();
+  });
+
+  test("rank returns the greedy ordering of the candidates", async () => {
+    const candidates: HandOption[] = [
+      { action: "discard", cardIds: [9], notes: [] },
+      playOption(50, [1]),
+      playOption(200, [2]),
+    ];
+    const ranking = await greedyRanker().rank({} as ModelState, candidates);
+    expect(ranking).toEqual([2, 1, 0]);
   });
 });
 
