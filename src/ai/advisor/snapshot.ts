@@ -38,6 +38,7 @@ export function toModelStateInput(state: GameState): ModelStateInput {
     round: state.round,
     currentBoss: state.currentBoss,
     selectedStake: state.selectedStake,
+    selectedDeck: state.selectedDeck,
     money: state.money,
     remainingHands: state.remainingHands,
     remainingDiscards: state.remainingDiscards,

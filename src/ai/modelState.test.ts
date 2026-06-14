@@ -44,6 +44,7 @@ function input(extra?: Partial<ModelStateInput>): ModelStateInput {
     round: 1,
     currentBoss: boss(),
     selectedStake: "white",
+    selectedDeck: "red-deck",
     money: 4,
     remainingHands: 4,
     remainingDiscards: 3,
@@ -241,6 +242,16 @@ describe("toModelState — context passthrough", () => {
 
   test("carries the selected stake", () => {
     expect(toModelState(input({ selectedStake: "gold" })).stake).toBe("gold");
+  });
+
+  test("carries the selected deck id", () => {
+    expect(toModelState(input({ selectedDeck: "plasma-deck" })).deckId).toBe(
+      "plasma-deck",
+    );
+  });
+
+  test("defaults the deck id to the fixture's red deck (negative)", () => {
+    expect(toModelState(input({})).deckId).toBe("red-deck");
   });
 });
 

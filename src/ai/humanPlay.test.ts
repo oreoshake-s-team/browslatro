@@ -17,6 +17,7 @@ function input(
     ante: 1,
     round: 1,
     selectedStake: "white",
+    selectedDeck: "red-deck",
     roundScore: 0,
     ...extra,
   };

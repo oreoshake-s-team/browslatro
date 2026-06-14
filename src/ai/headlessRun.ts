@@ -75,6 +75,7 @@ export interface HeadlessRoundView extends SimulatePlayInput {
   readonly ante: number;
   readonly round: number;
   readonly selectedStake: Stake;
+  readonly selectedDeck: Deck;
   readonly roundScore: number;
   readonly scoreTarget: number;
   readonly offeredTag: TagId | null;
@@ -287,6 +288,7 @@ export async function playHeadlessRun(
           ante,
           round: blindsCleared + 1,
           selectedStake: stake,
+          selectedDeck: deckId,
           roundScore,
           scoreTarget,
           offeredTag: firstAction ? offeredTag : null,

@@ -1,4 +1,6 @@
 import type { Blind } from "../cards/types";
+import type { Deck } from "../items/decks";
+import type { Stake } from "../items/stakes";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
 import type { Joker } from "../items/jokers/types";
@@ -36,6 +38,8 @@ export interface GenerateDatasetConfig {
   readonly jokers?: ReadonlyArray<Joker>;
   readonly jokerLoadoutFraction?: number;
   readonly shopAgent?: HeadlessShopAgent;
+  readonly deck?: Deck;
+  readonly stake?: Stake;
 }
 
 export interface GenerateDatasetResult {
@@ -107,6 +111,8 @@ export async function generateDataset(
         maxAnte: config.maxAnte,
         jokers: gameJokers,
         shopAgent: config.shopAgent,
+        deck: config.deck,
+        stake: config.stake,
       }),
     );
   }

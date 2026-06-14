@@ -4,6 +4,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
+import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
+import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import {
   generateDataset,
   serializeDatasetRecords,
@@ -13,6 +15,21 @@ function stringFlag(name: string, fallback: string): string {
   const index = process.argv.indexOf(name);
   if (index === -1 || index + 1 >= process.argv.length) return fallback;
   return process.argv[index + 1];
+}
+
+function deckFlag(): Deck {
+  const raw = stringFlag("--deck", DEFAULT_DECK);
+  const spec = createDeckCatalog().find((d) => d.id === raw);
+  if (spec === undefined) throw new Error(`unknown deck "${raw}"`);
+  if (!spec.implemented) throw new Error(`deck "${raw}" is not implemented`);
+  return spec.id;
+}
+
+function stakeFlag(): Stake {
+  const raw = stringFlag("--stake", DEFAULT_STAKE);
+  const stake = STAKE_ORDER.find((s) => s === raw);
+  if (stake === undefined) throw new Error(`unknown stake "${raw}"`);
+  return stake;
 }
 
 function floatFlag(name: string, fallback: number): number {
@@ -61,7 +78,7 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--parallel-jobs N] [--shop-policy PATH]",
+      "Usage: yarn dlx tsx scripts/generateDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--rollouts N] [--top-n N] [--max-ante N] [--joker-loadout-fraction F] [--deck ID] [--stake ID] [--parallel-jobs N] [--shop-policy PATH]",
     );
     process.exit(1);
   }
@@ -74,6 +91,8 @@ if (isMain) {
     topN: intFlag("--top-n", 3),
     maxAnte: intFlag("--max-ante", 8),
     jokerLoadoutFraction: floatFlag("--joker-loadout-fraction", 0),
+    deck: deckFlag(),
+    stake: stakeFlag(),
   };
 
   const parallelJobs = intFlag("--parallel-jobs", 1);
@@ -100,6 +119,8 @@ if (isMain) {
             "--rollouts", String(config.rollouts),
             "--top-n", String(config.topN),
             "--max-ante", String(config.maxAnte),
+            "--deck", config.deck,
+            "--stake", config.stake,
             ...(config.jokerLoadoutFraction > 0
               ? ["--joker-loadout-fraction", String(config.jokerLoadoutFraction)]
               : []),
