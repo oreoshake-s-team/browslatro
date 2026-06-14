@@ -86,6 +86,10 @@ export interface HeadlessRunConfig {
   readonly stake?: Stake;
   readonly deck?: Deck;
   readonly shopAgent?: HeadlessShopAgent;
+  readonly startAnte?: number;
+  readonly startHandStats?: HandStats;
+  readonly startMoney?: number;
+  readonly maxRounds?: number;
 }
 
 export interface HeadlessRunResult {
@@ -126,20 +130,23 @@ export async function playHeadlessRun(
 ): Promise<HeadlessRunResult> {
   const rng = seededRng(config.seed);
   const maxAnte = config.maxAnte ?? FINAL_ANTE;
+  const startAnte = config.startAnte ?? 1;
+  const roundBudget = config.maxRounds ?? Infinity;
   let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
   const deckId = config.deck ?? DEFAULT_DECK;
   const deck = buildHeadlessDeck();
-  let handStats = createDefaultHandStats();
+  let handStats = config.startHandStats ?? createDefaultHandStats();
   const ownedVoucherIds: ReadonlySet<VoucherId> = new Set();
   const recentBossIds = new Set<string>();
 
-  let money = STARTING_MONEY + deckStartingMoneyDelta(deckId);
+  let money =
+    config.startMoney ?? STARTING_MONEY + deckStartingMoneyDelta(deckId);
   let blindsCleared = 0;
   let handsPlayed = 0;
   let handPlayCounts = emptyHandCounts();
 
-  for (let ante = 1; ante <= maxAnte; ante += 1) {
+  for (let ante = startAnte; ante <= maxAnte; ante += 1) {
     const boss = pickBossForAnte({ ante, rng, recentIds: recentBossIds });
     recentBossIds.add(boss.id);
     const playedCardKeysThisAnte = new Set<string>();
@@ -240,6 +247,9 @@ export async function playHeadlessRun(
       }
       blindsCleared += 1;
       money += blind + BLIND_CLEAR_REWARD_BASE;
+      if (blindsCleared >= roundBudget) {
+        return { won: false, anteReached: ante, blindsCleared, handsPlayed };
+      }
       if (config.shopAgent !== undefined) {
         const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, rng });
         jokers = result.jokers;
