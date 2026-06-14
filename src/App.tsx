@@ -426,6 +426,7 @@ function App() {
     <div
       className="App"
       data-app-shell=""
+      data-deck={selectedDeck}
       style={appStyle}
       data-hands-played={runStats.handsPlayed}
       data-unused-discards={runStats.unusedDiscards}

@@ -7,13 +7,16 @@ import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
+import { getDeckSpec } from "../../items/decks";
+import { getStakeSpec, STAKE_ORDER } from "../../items/stakes";
+import { useGame } from "../../store/game";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
 import type { HandPlayCounts } from "./handPlayCounts";
 
-type TabId = "hands" | "vouchers";
+type TabId = "hands" | "vouchers" | "deck";
 
-const TAB_ORDER: ReadonlyArray<TabId> = ["hands", "vouchers"];
+const TAB_ORDER: ReadonlyArray<TabId> = ["hands", "vouchers", "deck"];
 
 interface RunInfoDialogProps {
   handPlayCounts: HandPlayCounts;
@@ -29,12 +32,16 @@ export default function RunInfoDialog({
   onClose,
 }: RunInfoDialogProps) {
   const { t } = useTranslation();
+  const selectedDeck = useGame((s) => s.selectedDeck);
+  const selectedStake = useGame((s) => s.selectedStake);
+  const deckSpec = getDeckSpec(selectedDeck);
   const [activeTab, setActiveTab] = useState<TabId>("hands");
   const titleId = useId();
   const tabIdPrefix = useId();
   const tabRefs = useRef<Record<TabId, HTMLButtonElement | null>>({
     hands: null,
     vouchers: null,
+    deck: null,
   });
 
   const handleClose = useCallback(() => onClose(), [onClose]);
@@ -115,6 +122,7 @@ export default function RunInfoDialog({
           <button {...tabButtonProps("vouchers")}>
             {t("runInfo.vouchersTab")}
           </button>
+          <button {...tabButtonProps("deck")}>{t("runInfo.deckTab")}</button>
         </div>
         <div className="run-info-panels">
           <div {...panelProps("hands")}>
@@ -180,6 +188,52 @@ export default function RunInfoDialog({
                 ))}
               </ul>
             )}
+          </div>
+          <div {...panelProps("deck")} className="run-info-deck-panel">
+            <section className="run-info-deck-section">
+              <h3 className="run-info-subhead">{t("runInfo.deckHeading")}</h3>
+              <p
+                className="run-info-deck-name"
+                data-testid="run-info-deck-name"
+              >
+                {deckSpec.name}
+              </p>
+              <p className="run-info-deck-description">
+                {deckSpec.description}
+              </p>
+            </section>
+            <section className="run-info-deck-section">
+              <h3 className="run-info-subhead">
+                {t("runInfo.stakeLadderHeading")}
+              </h3>
+              <ul className="run-info-stake-list">
+                {STAKE_ORDER.map((stakeId) => {
+                  const spec = getStakeSpec(stakeId);
+                  const current = stakeId === selectedStake;
+                  return (
+                    <li
+                      key={stakeId}
+                      className={`run-info-stake-row${current ? " run-info-stake-row-current" : ""}`}
+                      data-testid={`run-info-stake-row-${stakeId}`}
+                      aria-current={current ? "true" : undefined}
+                    >
+                      <span className="run-info-stake-name">
+                        {spec.name}
+                        {current && (
+                          <span className="run-info-stake-current">
+                            {" "}
+                            {t("runInfo.currentStakeMarker")}
+                          </span>
+                        )}
+                      </span>
+                      <span className="run-info-stake-description">
+                        {spec.description}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           </div>
         </div>
         <button

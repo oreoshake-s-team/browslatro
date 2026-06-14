@@ -5,6 +5,9 @@ import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import { createDefaultHandStats, type HandStats } from "../../scoring/handStats";
 import { VOUCHER_CATALOG, type Voucher } from "../../items/vouchers";
+import type { Deck } from "../../items/decks";
+import { STAKE_ORDER, type Stake } from "../../items/stakes";
+import { useGame } from "../../store/game";
 
 function findVoucher(id: Voucher["id"]): Voucher {
   const v = VOUCHER_CATALOG.find((entry) => entry.id === id);
@@ -219,10 +222,10 @@ describe("RunInfo tab control", () => {
     return user;
   }
 
-  test("renders a tablist with exactly two tabs", async () => {
+  test("renders a tablist with exactly three tabs", async () => {
     await openWithVouchers();
     const tablist = screen.getByRole("tablist");
-    expect(within(tablist).getAllByRole("tab")).toHaveLength(2);
+    expect(within(tablist).getAllByRole("tab")).toHaveLength(3);
   });
 
   test("renders a Hands tab", async () => {
@@ -304,10 +307,9 @@ describe("RunInfo tab control", () => {
     const user = await openWithVouchers();
     screen.getByRole("tab", { name: "Hands" }).focus();
     await user.keyboard("{End}");
-    expect(screen.getByRole("tab", { name: "Vouchers" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(
+      screen.getByRole("tab", { name: "Deck & Stake" }),
+    ).toHaveAttribute("aria-selected", "true");
   });
 
   test("reopening the modal resets the active tab to Hands", async () => {
@@ -438,5 +440,66 @@ describe("RunInfo dialog focus trap", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Run info" })).toHaveFocus();
+  });
+});
+
+describe("RunInfo deck tab", () => {
+  async function openDeckTab(
+    deck: Deck,
+    stake: Stake,
+  ): Promise<ReturnType<typeof userEvent.setup>> {
+    useGame.getState().setSelectedDeck(deck);
+    useGame.getState().setSelectedStake(stake);
+    const user = userEvent.setup();
+    render(
+      <RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Run info" }));
+    await screen.findByRole("dialog");
+    await user.click(screen.getByRole("tab", { name: "Deck & Stake" }));
+    return user;
+  }
+
+  test("renders the Deck & Stake tab", async () => {
+    await openDeckTab("red-deck", "white");
+    expect(
+      screen.getByRole("tab", { name: "Deck & Stake" }),
+    ).toBeInTheDocument();
+  });
+
+  test("shows the current deck name", async () => {
+    await openDeckTab("blue-deck", "white");
+    expect(screen.getByTestId("run-info-deck-name")).toHaveTextContent(
+      "Blue Deck",
+    );
+  });
+
+  test("shows the current deck effect", async () => {
+    await openDeckTab("blue-deck", "white");
+    expect(screen.getByText("+1 hand each round.")).toBeInTheDocument();
+  });
+
+  test("lists the full stake ladder", async () => {
+    await openDeckTab("red-deck", "white");
+    for (const stakeId of STAKE_ORDER) {
+      expect(
+        screen.getByTestId(`run-info-stake-row-${stakeId}`),
+      ).toBeInTheDocument();
+    }
+  });
+
+  test("marks the current stake row", async () => {
+    await openDeckTab("red-deck", "gold");
+    expect(screen.getByTestId("run-info-stake-row-gold")).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+  });
+
+  test("does not mark a non-current stake row (negative)", async () => {
+    await openDeckTab("red-deck", "gold");
+    expect(
+      screen.getByTestId("run-info-stake-row-white"),
+    ).not.toHaveAttribute("aria-current");
   });
 });

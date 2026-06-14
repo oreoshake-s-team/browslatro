@@ -106,12 +106,12 @@
 }
 
 .joker-tile-face-down {
-  border-color: var(--card-facedown-border);
-  background-color: var(--edition-foil-deep);
+  border-color: var(--deck-back-stripe, var(--card-facedown-border));
+  background-color: var(--deck-back, var(--edition-foil-deep));
   background-image: repeating-linear-gradient(
       45deg,
-      var(--border) 0,
-      var(--border) 4px,
+      var(--deck-back-stripe, var(--border)) 0,
+      var(--deck-back-stripe, var(--border)) 4px,
       transparent 4px,
       transparent 10px
     ),
