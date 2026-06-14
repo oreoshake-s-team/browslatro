@@ -15,6 +15,15 @@ function ctx(): ConsumableContext {
   };
 }
 
+function bigCtx(): ConsumableContext {
+  const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"] as const;
+  return {
+    deck: ranks.map((r) => card(r, "clubs")),
+    money: 10,
+    jokers: [],
+  };
+}
+
 describe("applyTarotEffectToDeck", () => {
   test("apply-enhancement targets the highest-rank card", () => {
     const r = applyTarotEffectToDeck(
@@ -57,6 +66,27 @@ describe("applyTarotEffectToDeck", () => {
     expect(r.money).toBe(20);
   });
 
+  test("destroy-selected removes the targeted top cards from the deck", () => {
+    const r = applyTarotEffectToDeck(bigCtx(), { kind: "destroy-selected", maxTargets: 2 }, () => 0);
+    expect(r.deck.length).toBe(10);
+  });
+
+  test("destroy-selected leaves a small deck intact so it can still deal (negative)", () => {
+    const base = ctx();
+    const r = applyTarotEffectToDeck(base, { kind: "destroy-selected", maxTargets: 2 }, () => 0);
+    expect(r.deck.length).toBe(base.deck.length);
+  });
+
+  test("death-copy turns the left target into a copy of the right", () => {
+    const r = applyTarotEffectToDeck(bigCtx(), { kind: "death-copy", requiredTargets: 2 }, () => 0);
+    expect(r.deck.filter((c) => c.rank === "Q").length).toBe(2);
+  });
+
+  test("death-copy keeps the deck size unchanged", () => {
+    const r = applyTarotEffectToDeck(bigCtx(), { kind: "death-copy", requiredTargets: 2 }, () => 0);
+    expect(r.deck.length).toBe(12);
+  });
+
   test("an unmodeled tarot effect leaves the deck and money unchanged (negative)", () => {
     const base = ctx();
     const r = applyTarotEffectToDeck(base, { kind: "create-joker" }, () => 0);
@@ -77,6 +107,42 @@ describe("applySpectralEffectToDeck", () => {
   test("aura adds an edition to the highest-rank card", () => {
     const r = applySpectralEffectToDeck(ctx(), { kind: "aura", maxTargets: 1 }, () => 0);
     expect(r.deck.find((c) => c.rank === "K")?.edition).not.toBeUndefined();
+  });
+
+  test("immolate destroys cards from the deck", () => {
+    const r = applySpectralEffectToDeck(
+      bigCtx(),
+      { kind: "immolate", destroyCount: 3, moneyGain: 20 },
+      () => 0,
+    );
+    expect(r.deck.length).toBe(9);
+  });
+
+  test("immolate pays out its money gain", () => {
+    const r = applySpectralEffectToDeck(
+      bigCtx(),
+      { kind: "immolate", destroyCount: 3, moneyGain: 20 },
+      () => 0,
+    );
+    expect(r.money).toBe(30);
+  });
+
+  test("duplicate-selected adds copies of the top card to the deck", () => {
+    const r = applySpectralEffectToDeck(
+      ctx(),
+      { kind: "duplicate-selected", copies: 1, maxTargets: 1 },
+      () => 0,
+    );
+    expect(r.deck.filter((c) => c.rank === "K").length).toBe(2);
+  });
+
+  test("transmute replaces one card with new enhanced additions", () => {
+    const r = applySpectralEffectToDeck(
+      bigCtx(),
+      { kind: "transmute", rankFilter: "numbered", addCount: 2 },
+      () => 0,
+    );
+    expect(r.deck.length).toBe(13);
   });
 
   test("an unmodeled spectral effect leaves the deck unchanged (negative)", () => {
