@@ -36,6 +36,7 @@ dependency-free encoding tests run in CI; training itself runs locally.
    ```sh
    cd ml
    python3 -m venv .venv && . .venv/bin/activate
+   pip install --upgrade pip
    pip install -r requirements.txt
    python train.py ../dataset.jsonl --epochs 30 --out advisor-policy.onnx
    ```
