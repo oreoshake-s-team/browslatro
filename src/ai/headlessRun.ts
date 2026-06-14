@@ -1,5 +1,12 @@
 import { cardKey, deal, shuffle, HAND_SIZE } from "../cards/deck";
-import type { Blind, Card, Rank, Suit } from "../cards/types";
+import type {
+  Blind,
+  Card,
+  Enhancement,
+  Rank,
+  Seal,
+  Suit,
+} from "../cards/types";
 import { FINAL_ANTE } from "../constants";
 import { pickBossForAnte } from "../items/bosses";
 import { DEFAULT_DECK, deckStartingMoneyDelta, type Deck } from "../items/decks";
@@ -109,6 +116,8 @@ export interface HeadlessRunConfig {
   readonly startHandStats?: HandStats;
   readonly startMoney?: number;
   readonly maxRounds?: number;
+  readonly startCardEnhancements?: ReadonlyMap<number, Enhancement | null>;
+  readonly startCardSeals?: ReadonlyMap<number, Seal>;
 }
 
 export interface HeadlessRunResult {
@@ -146,6 +155,26 @@ export function removeAndRefill(
 
 const SKIPPED = -2;
 
+function applyCardModifiers(
+  deck: ReadonlyArray<Card>,
+  enhancements: ReadonlyMap<number, Enhancement | null> | undefined,
+  seals: ReadonlyMap<number, Seal> | undefined,
+): Card[] {
+  if (
+    (enhancements === undefined || enhancements.size === 0) &&
+    (seals === undefined || seals.size === 0)
+  ) {
+    return [...deck];
+  }
+  return deck.map((card) => ({
+    ...card,
+    ...(enhancements?.has(card.id)
+      ? { enhancement: enhancements.get(card.id) }
+      : {}),
+    ...(seals?.has(card.id) ? { seal: seals.get(card.id) } : {}),
+  }));
+}
+
 export function grantTagMoney(tagId: TagId, stats: RunStats, money: number): number {
   const effect = resolveTagEffect(tagId);
   if (effect.category !== "immediate") return 0;
@@ -173,7 +202,11 @@ export async function playHeadlessRun(
   let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
   const deckId = config.deck ?? DEFAULT_DECK;
-  const deck = buildHeadlessDeck();
+  const deck = applyCardModifiers(
+    buildHeadlessDeck(),
+    config.startCardEnhancements,
+    config.startCardSeals,
+  );
   let handStats = config.startHandStats ?? createDefaultHandStats();
   let ownedVoucherIds: ReadonlySet<VoucherId> = new Set();
   const recentBossIds = new Set<string>();
