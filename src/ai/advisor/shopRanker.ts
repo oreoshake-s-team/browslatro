@@ -1,4 +1,4 @@
-import { fetchModelBytes } from "./download";
+import { fetchModelBytes, type DownloadProgressListener } from "./download";
 import {
   encodePackCandidates,
   encodeShopCandidates,
@@ -9,14 +9,17 @@ import type { PackRankInput, ShopRankInput } from "./shopEncoding";
 export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v1.onnx";
 
 export interface ShopCandidateRanker {
-  load(): Promise<void>;
+  load(onProgress?: DownloadProgressListener): Promise<void>;
   rankShop(input: ShopRankInput): Promise<ReadonlyArray<number>>;
   rankPack(input: PackRankInput): Promise<ReadonlyArray<number>>;
 }
 
-async function loadRawShopRanker(modelUrl: string): Promise<ShopCandidateRanker> {
+async function loadRawShopRanker(
+  modelUrl: string,
+  onProgress?: DownloadProgressListener,
+): Promise<ShopCandidateRanker> {
   const ort = await import("onnxruntime-web");
-  const bytes = await fetchModelBytes(modelUrl);
+  const bytes = await fetchModelBytes(modelUrl, onProgress);
   const session = await ort.InferenceSession.create(bytes);
 
   async function rank(encoded: Float32Array, n: number): Promise<ReadonlyArray<number>> {
@@ -37,8 +40,10 @@ async function loadRawShopRanker(modelUrl: string): Promise<ShopCandidateRanker>
 export function createShopRanker(modelUrl: string): ShopCandidateRanker {
   let loaded: Promise<ShopCandidateRanker> | null = null;
   let failed = false;
-  const ensure = (): Promise<ShopCandidateRanker> => {
-    loaded = loaded ?? loadRawShopRanker(modelUrl);
+  const ensure = (
+    onProgress?: DownloadProgressListener,
+  ): Promise<ShopCandidateRanker> => {
+    loaded = loaded ?? loadRawShopRanker(modelUrl, onProgress);
     return loaded;
   };
   const identity = (n: number): ReadonlyArray<number> => Array.from({ length: n }, (_, i) => i);
@@ -54,8 +59,8 @@ export function createShopRanker(modelUrl: string): ShopCandidateRanker {
   }
 
   return {
-    async load() {
-      if (!failed) await ensure().catch(() => { failed = true; });
+    async load(onProgress) {
+      if (!failed) await ensure(onProgress).catch(() => { failed = true; });
     },
     async rankShop(i) { return safe((r) => r.rankShop(i), identity(i.candidates.length)); },
     async rankPack(i) { return safe((r) => r.rankPack(i), identity(i.candidates.length)); },

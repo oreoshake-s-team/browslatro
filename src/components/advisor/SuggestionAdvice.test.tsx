@@ -5,6 +5,7 @@ import type {
   ContextAdviceCandidate,
   SuggestionState,
 } from "../../ai/advisor/useSuggestion";
+import type { DownloadProgress } from "../../ai/policy";
 import { storePlayerKey } from "../../ai/advisor/playerKey";
 import SuggestionAdvice from "./SuggestionAdvice";
 
@@ -58,11 +59,13 @@ function renderAdvice(
     onApply: () => void;
     onDismiss: () => void;
     onRetry: () => void;
+    modelProgress: DownloadProgress | null;
   }> = {},
 ) {
   return render(
     <SuggestionAdvice
       state={state}
+      modelProgress={handlers.modelProgress ?? null}
       onApply={handlers.onApply ?? vi.fn()}
       onDismiss={handlers.onDismiss ?? vi.fn()}
       onRetry={handlers.onRetry ?? vi.fn()}
@@ -108,6 +111,29 @@ describe("SuggestionAdvice", () => {
   test("does not show recommendation when onnxIndex is null during loading", () => {
     renderAdvice({ phase: "loading", onnxIndex: null, candidates: candidates(), actions: [] });
     expect(screen.queryByTestId("suggestion-onnx-recommendation")).not.toBeInTheDocument();
+  });
+
+  test("renders the model progress bar while the model is downloading", () => {
+    renderAdvice(
+      { phase: "loading", onnxIndex: null, candidates: [], actions: [] },
+      { modelProgress: { loaded: 0, total: null } },
+    );
+    expect(screen.getByTestId("suggestion-model-progress")).toBeInTheDocument();
+  });
+
+  test("labels the loading status as downloading while the model loads", () => {
+    renderAdvice(
+      { phase: "loading", onnxIndex: null, candidates: [], actions: [] },
+      { modelProgress: { loaded: 0, total: null } },
+    );
+    expect(screen.getByRole("status")).toHaveTextContent("Downloading the coach");
+  });
+
+  test("does not render the progress bar when no model download is in flight (negative)", () => {
+    renderAdvice({ phase: "loading", onnxIndex: null, candidates: [], actions: [] });
+    expect(
+      screen.queryByTestId("suggestion-model-progress"),
+    ).not.toBeInTheDocument();
   });
 
   test("describes the recommended buy candidate", () => {
