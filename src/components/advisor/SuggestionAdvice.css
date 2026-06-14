@@ -61,3 +61,29 @@
   flex-wrap: wrap;
   gap: 0.5rem;
 }
+
+.suggestion-progress {
+  width: 100%;
+  height: 0.5rem;
+  margin-top: 0.4rem;
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
+}
+
+.suggestion-progress::-webkit-progress-bar {
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
+  border-radius: 999px;
+}
+
+.suggestion-progress::-webkit-progress-value {
+  background-color: var(--edition-foil);
+  border-radius: 999px;
+}
+
+.suggestion-progress::-moz-progress-bar {
+  background-color: var(--edition-foil);
+  border-radius: 999px;
+}

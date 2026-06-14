@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,6 +6,7 @@ import {
   type ShopSuggestionAction,
 } from "../../ai/advisor/shopAdvicePlan";
 import { sharedShopRanker } from "../../ai/advisor/shopRanker";
+import type { DownloadProgress } from "../../ai/policy";
 import type { ShopAdviceCandidate } from "../../ai/advisor/types";
 import {
   type ContextAdviceCandidate,
@@ -47,16 +48,24 @@ export default function ShopSuggestion(
   const jokers = useGame((s) => s.jokers);
   const consumables = useGame((s) => s.consumables);
   const shopRanker = sharedShopRanker();
+  const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
+    null,
+  );
   const preRank = useCallback(
-    (candidates: ReadonlyArray<ContextAdviceCandidate>) =>
-      shopRanker
+    (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
+      setModelProgress({ loaded: 0, total: null });
+      void shopRanker
+        .load((progress) => setModelProgress(progress))
+        .finally(() => setModelProgress(null));
+      return shopRanker
         .rankShop({
           money: props.money,
           ante,
           round: (ante - 1) * 3,
           candidates: candidates as ReadonlyArray<ShopAdviceCandidate>,
         })
-        .then((ranked) => ranked[0] ?? null),
+        .then((ranked) => ranked[0] ?? null);
+    },
     [shopRanker, props.money, ante],
   );
   const { state, suggest, reset } = useSuggestion<ShopSuggestionAction>(
@@ -120,6 +129,7 @@ export default function ShopSuggestion(
         : trigger}
       <SuggestionAdvice
         state={state}
+        modelProgress={modelProgress}
         onApply={apply}
         onDismiss={reset}
         onRetry={() => void suggest()}

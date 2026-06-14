@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,6 +6,7 @@ import {
   type PackSuggestionAction,
 } from "../../ai/advisor/packAdvicePlan";
 import { sharedShopRanker } from "../../ai/advisor/shopRanker";
+import type { DownloadProgress } from "../../ai/policy";
 import type { PackAdviceCandidate } from "../../ai/advisor/types";
 import {
   type ContextAdviceCandidate,
@@ -50,9 +51,16 @@ export default function PackSuggestion(
   const previewHandSize = useGame((s) => s.packPreviewHand.length);
   const previewSelectedCount = useGame((s) => s.packPreviewSelectedIds.size);
   const shopRanker = sharedShopRanker();
+  const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
+    null,
+  );
   const preRank = useCallback(
-    (candidates: ReadonlyArray<ContextAdviceCandidate>) =>
-      shopRanker
+    (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
+      setModelProgress({ loaded: 0, total: null });
+      void shopRanker
+        .load((progress) => setModelProgress(progress))
+        .finally(() => setModelProgress(null));
+      return shopRanker
         .rankPack({
           money,
           ante,
@@ -60,7 +68,8 @@ export default function PackSuggestion(
           picksRemaining: props.picksRemaining,
           candidates: candidates as ReadonlyArray<PackAdviceCandidate>,
         })
-        .then((ranked) => ranked[0] ?? null),
+        .then((ranked) => ranked[0] ?? null);
+    },
     [shopRanker, money, ante, props.picksRemaining],
   );
   const { state, suggest, reset } = useSuggestion<PackSuggestionAction>(
@@ -128,6 +137,7 @@ export default function PackSuggestion(
         : trigger}
       <SuggestionAdvice
         state={state}
+        modelProgress={modelProgress}
         onApply={apply}
         onDismiss={reset}
         onRetry={() => void suggest()}

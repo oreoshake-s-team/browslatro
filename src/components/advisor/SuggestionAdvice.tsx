@@ -5,7 +5,9 @@ import type {
   ContextAdviceCandidate,
   SuggestionState,
 } from "../../ai/advisor/useSuggestion";
+import type { DownloadProgress } from "../../ai/policy";
 import PlayerKeyForm from "../game/PlayerKeyForm";
+import { useModelLoadProgress } from "../game/useModelLoadProgress";
 import "./SuggestionAdvice.css";
 
 export function describeContextCandidate(
@@ -57,6 +59,7 @@ export interface SuggestionAdviceProps<TAction> {
   readonly onApply: () => void;
   readonly onDismiss: () => void;
   readonly onRetry: () => void;
+  readonly modelProgress?: DownloadProgress | null;
 }
 
 export default function SuggestionAdvice<TAction>({
@@ -64,17 +67,31 @@ export default function SuggestionAdvice<TAction>({
   onApply,
   onDismiss,
   onRetry,
+  modelProgress = null,
 }: SuggestionAdviceProps<TAction>): React.JSX.Element | null {
   const { t } = useTranslation();
+  const loadProgress = useModelLoadProgress(modelProgress);
   switch (state.phase) {
     case "idle":
       return null;
     case "loading": {
       const onnxCandidate =
         state.onnxIndex !== null ? state.candidates[state.onnxIndex] : undefined;
+      const downloading = modelProgress !== null;
       return (
         <div className="suggestion-advice suggestion-advice--onnx" role="status" data-testid="suggestion-onnx">
-          <p className="suggestion-advice-status">{t("advisor.thinking")}</p>
+          <p className="suggestion-advice-status">
+            {downloading ? t("advisor.downloadingModel") : t("advisor.thinking")}
+          </p>
+          {downloading && (
+            <progress
+              className="suggestion-progress"
+              data-testid="suggestion-model-progress"
+              aria-label={t("advisor.downloadingModel")}
+              value={loadProgress}
+              max={1}
+            />
+          )}
           {onnxCandidate !== undefined && (
             <section className="suggestion-section suggestion-section--recommendation">
               <p className="suggestion-label">{t("advisor.recommendation")}</p>
