@@ -39,6 +39,8 @@ export function applyHandLevelJokers(
   let additiveMult = 0;
   let additiveChips = 0;
   let xMult = 1;
+  let heldAdditiveMult = 0;
+  let heldXMult = 1;
   let moneyEarned = 0;
   const fired: string[] = [];
   const steps: JokerHandLevelStep[] = [];
@@ -154,13 +156,13 @@ export function applyHandLevelJokers(
           fired.push(joker.id);
           if (effect.mult !== undefined) {
             const total = effect.mult * matched;
-            additiveMult += total;
-            steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: total });
+            heldAdditiveMult += total;
+            steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: total, phase: "held" });
           }
           if (effect.xMult !== undefined) {
             const factor = effect.xMult ** matched;
-            xMult *= factor;
-            steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: factor });
+            heldXMult *= factor;
+            steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: factor, phase: "held" });
           }
         }
         break;
@@ -174,9 +176,9 @@ export function applyHandLevelJokers(
             if (value < lowest) lowest = value;
           }
           const bonus = effect.multiplier * lowest * (1 + heldRetriggers);
-          additiveMult += bonus;
+          heldAdditiveMult += bonus;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, additiveMult: bonus, phase: "held" });
         }
         break;
       }
@@ -204,9 +206,9 @@ export function applyHandLevelJokers(
         const held = context.heldInHandCards ?? [];
         const allMatch = held.every((c) => effect.suits.includes(c.suit));
         if (allMatch) {
-          xMult *= effect.amount;
+          heldXMult *= effect.amount;
           fired.push(joker.id);
-          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount });
+          steps.push({ jokerId: joker.id, jokerName: joker.name, xMultFactor: effect.amount, phase: "held" });
         }
         break;
       }
@@ -647,5 +649,14 @@ export function applyHandLevelJokers(
     }
   }
 
-  return { additiveMult, additiveChips, xMult, moneyEarned, firedJokerIds: fired, steps };
+  return {
+    additiveMult,
+    additiveChips,
+    xMult,
+    heldAdditiveMult,
+    heldXMult,
+    moneyEarned,
+    firedJokerIds: fired,
+    steps,
+  };
 }

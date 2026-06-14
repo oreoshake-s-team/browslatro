@@ -758,9 +758,13 @@ export function usePlayHand({
       ownedVoucherIds,
       matchingObservatoryPlanets,
     );
-    const preHandXMultNoSteel =
-      handJokerResult.xMult * enhancementXMult * perCardXMult;
-    const totalXMult = preHandXMultNoSteel * steelMult * observatoryMult;
+    const cardMult =
+      (handEntry.multiplier + perCardAdditiveMult) *
+      enhancementXMult *
+      perCardXMult;
+    const heldMult =
+      (cardMult * steelMult + handJokerResult.heldAdditiveMult) *
+      handJokerResult.heldXMult;
 
     const scoringChipsTotal =
       handEntry.chips +
@@ -768,10 +772,9 @@ export function usePlayHand({
       handJokerResult.additiveChips +
       perCardAdditiveChips;
     const scoringMult =
-      (handEntry.multiplier +
-        handJokerResult.additiveMult +
-        perCardAdditiveMult) *
-      totalXMult;
+      (heldMult + handJokerResult.additiveMult) *
+      handJokerResult.xMult *
+      observatoryMult;
     const adjustedChips = scoringChipsTotal + devChipsBonus;
     const adjustedMult = (scoringMult + devMultBonus) * devMultFactor;
     const finalScore = Math.floor(adjustedChips * adjustedMult);
@@ -801,8 +804,14 @@ export function usePlayHand({
         runObservatory();
         return;
       }
+      const stepRank = (s: (typeof handJokerResult.steps)[number]): number =>
+        (s.phase === "held" ? 0 : 2) +
+        (s.xMultFactor !== undefined && s.xMultFactor !== 1 ? 1 : 0);
+      const orderedSteps = [...handJokerResult.steps].sort(
+        (a, b) => stepRank(a) - stepRank(b),
+      );
       pipeline.handLevelFinalizeRef.current = runObservatory;
-      setHandLevelSteps(handJokerResult.steps);
+      setHandLevelSteps(orderedSteps);
       setHandLevelIndex(0);
     };
     pipeline.scoringFinalizeRef.current = () => {

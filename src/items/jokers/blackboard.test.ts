@@ -22,7 +22,7 @@ describe("Blackboard", () => {
     const result = applyHandLevelJokers([createBlackboardJoker()], {
       heldInHandCards: [card("K", "spades"), card("3", "clubs")],
     });
-    expect(result.xMult).toBe(BLACKBOARD_X_MULT);
+    expect(result.heldXMult).toBe(BLACKBOARD_X_MULT);
   });
 
   test("fires when every held card is a Spade or Club", () => {
@@ -36,14 +36,14 @@ describe("Blackboard", () => {
     const result = applyHandLevelJokers([createBlackboardJoker()], {
       heldInHandCards: [card("K", "spades"), card("3", "hearts")],
     });
-    expect(result.xMult).toBe(1);
+    expect(result.heldXMult).toBe(1);
   });
 
   test("does not multiply when a held card is a Diamond", () => {
     const result = applyHandLevelJokers([createBlackboardJoker()], {
       heldInHandCards: [card("3", "clubs"), card("Q", "diamonds")],
     });
-    expect(result.xMult).toBe(1);
+    expect(result.heldXMult).toBe(1);
   });
 
   test("does not fire when a held card breaks the suit condition", () => {
@@ -57,12 +57,12 @@ describe("Blackboard", () => {
     const result = applyHandLevelJokers([createBlackboardJoker()], {
       heldInHandCards: [],
     });
-    expect(result.xMult).toBe(BLACKBOARD_X_MULT);
+    expect(result.heldXMult).toBe(BLACKBOARD_X_MULT);
   });
 
   test("multiplies vacuously when heldInHandCards is missing from context", () => {
     const result = applyHandLevelJokers([createBlackboardJoker()], {});
-    expect(result.xMult).toBe(BLACKBOARD_X_MULT);
+    expect(result.heldXMult).toBe(BLACKBOARD_X_MULT);
   });
 
   test("ignores the suits of played/scored cards", () => {
@@ -70,7 +70,7 @@ describe("Blackboard", () => {
       scoredCards: [card("Q", "hearts"), card("Q", "diamonds")],
       heldInHandCards: [card("3", "clubs")],
     });
-    expect(result.xMult).toBe(BLACKBOARD_X_MULT);
+    expect(result.heldXMult).toBe(BLACKBOARD_X_MULT);
   });
 
   test("does not contribute in the per-card pass", () => {

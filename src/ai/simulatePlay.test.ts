@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { simulatePlay } from "./simulatePlay";
 import { boss, card, joker, simulateInput as input } from "./test-helpers";
 import {
+  createBaronJoker,
   createRunnerJoker,
   createSpareTrousersJoker,
   RUNNER_CHIPS_PER_STRAIGHT,
@@ -244,5 +245,31 @@ describe("simulatePlay — gains-X stack jokers apply on the same hand", () => {
     expect(chips(straight, [createRunnerJoker()]) - chips(straight, [])).toBe(
       RUNNER_CHIPS_PER_STRAIGHT,
     );
+  });
+});
+
+describe("simulatePlay — held-in-hand phase applies before the joker phase", () => {
+  const nines = [card("9", "hearts"), card("9", "spades")];
+  const heldKing = card("K", "clubs");
+
+  function multWith(jokers: ReturnType<typeof createBaronJoker>[]): number {
+    const result = simulatePlay(
+      input([...nines, heldKing], { jokers }),
+      nines.map((c) => c.id),
+    );
+    return result.legal ? result.mult : NaN;
+  }
+
+  test("Baron's held xMult multiplies the base before the joker +Mult is added", () => {
+    // base Pair mult 2 -> (2 x 1.5) + 4 = 7, NOT the old lumped (2 + 4) x 1.5 = 9
+    expect(multWith([createBaronJoker(), joker()])).toBe(7);
+  });
+
+  test("Baron alone xMults the base mult", () => {
+    expect(multWith([createBaronJoker()])).toBe(3);
+  });
+
+  test("the +Mult joker alone leaves the base mult additive", () => {
+    expect(multWith([joker()])).toBe(6);
   });
 });

@@ -211,8 +211,11 @@ export function simulatePlay(
 
   if (scoring.length === 0) {
     const chips = handEntry.chips + handJokerResult.additiveChips;
+    const heldMult =
+      (handEntry.multiplier + handJokerResult.heldAdditiveMult) *
+      handJokerResult.heldXMult;
     const mult =
-      (handEntry.multiplier + handJokerResult.additiveMult) *
+      (heldMult + handJokerResult.additiveMult) *
       handJokerResult.xMult *
       observatoryMult;
     return {
@@ -259,12 +262,13 @@ export function simulatePlay(
     (m, card) => m * applyCardEnhancement(card).multTimes,
     1,
   );
-  const totalXMult =
-    handJokerResult.xMult *
+  const cardMult =
+    (handEntry.multiplier + perCardAdditiveMult) *
     enhancementXMult *
-    perCardXMult *
-    steelMult *
-    observatoryMult;
+    perCardXMult;
+  const heldMult =
+    (cardMult * steelMult + handJokerResult.heldAdditiveMult) *
+    handJokerResult.heldXMult;
 
   const chips =
     handEntry.chips +
@@ -272,10 +276,9 @@ export function simulatePlay(
     handJokerResult.additiveChips +
     perCardAdditiveChips;
   const mult =
-    (handEntry.multiplier +
-      handJokerResult.additiveMult +
-      perCardAdditiveMult) *
-    totalXMult;
+    (heldMult + handJokerResult.additiveMult) *
+    handJokerResult.xMult *
+    observatoryMult;
   return {
     legal: true,
     handLabel: label,

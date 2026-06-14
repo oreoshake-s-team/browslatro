@@ -22,21 +22,21 @@ describe("Shoot the Moon joker", () => {
     const result = applyHandLevelJokers([createShootTheMoonJoker()], {
       heldInHandCards: [card("Q")],
     });
-    expect(result.additiveMult).toBe(SHOOT_THE_MOON_MULT);
+    expect(result.heldAdditiveMult).toBe(SHOOT_THE_MOON_MULT);
   });
 
   test("scales mult for multiple Queens held in hand", () => {
     const result = applyHandLevelJokers([createShootTheMoonJoker()], {
       heldInHandCards: [card("Q"), card("Q")],
     });
-    expect(result.additiveMult).toBe(SHOOT_THE_MOON_MULT * 2);
+    expect(result.heldAdditiveMult).toBe(SHOOT_THE_MOON_MULT * 2);
   });
 
   test("adds no mult when no Queens are held", () => {
     const result = applyHandLevelJokers([createShootTheMoonJoker()], {
       heldInHandCards: [card("K"), card("3")],
     });
-    expect(result.additiveMult).toBe(0);
+    expect(result.heldAdditiveMult).toBe(0);
   });
 
   test("does not fire when no Queens are held", () => {
@@ -51,7 +51,7 @@ describe("Shoot the Moon joker", () => {
       scoredCards: [card("Q"), card("Q")],
       heldInHandCards: [],
     });
-    expect(result.additiveMult).toBe(0);
+    expect(result.heldAdditiveMult).toBe(0);
   });
 
   test("does not contribute in the per-card pass", () => {

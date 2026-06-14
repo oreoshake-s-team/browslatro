@@ -22,28 +22,28 @@ describe("Raised Fist joker", () => {
     const result = applyHandLevelJokers([createRaisedFistJoker()], {
       heldInHandCards: [card("5"), card("K")],
     });
-    expect(result.additiveMult).toBe(RAISED_FIST_MULTIPLIER * 5);
+    expect(result.heldAdditiveMult).toBe(RAISED_FIST_MULTIPLIER * 5);
   });
 
   test("treats an Ace as the high card, not the lowest", () => {
     const result = applyHandLevelJokers([createRaisedFistJoker()], {
       heldInHandCards: [card("K"), card("A")],
     });
-    expect(result.additiveMult).toBe(RAISED_FIST_MULTIPLIER * 10);
+    expect(result.heldAdditiveMult).toBe(RAISED_FIST_MULTIPLIER * 10);
   });
 
   test("uses the Ace value when an Ace is the only card held", () => {
     const result = applyHandLevelJokers([createRaisedFistJoker()], {
       heldInHandCards: [card("A")],
     });
-    expect(result.additiveMult).toBe(RAISED_FIST_MULTIPLIER * 11);
+    expect(result.heldAdditiveMult).toBe(RAISED_FIST_MULTIPLIER * 11);
   });
 
   test("adds no mult when no cards are held", () => {
     const result = applyHandLevelJokers([createRaisedFistJoker()], {
       heldInHandCards: [],
     });
-    expect(result.additiveMult).toBe(0);
+    expect(result.heldAdditiveMult).toBe(0);
   });
 
   test("does not fire when no cards are held", () => {
