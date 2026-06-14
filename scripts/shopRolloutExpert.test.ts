@@ -4,12 +4,20 @@ import { getHandOptions } from "../src/ai/getHandOptions";
 import type { HeadlessAgent, HeadlessRoundView } from "../src/ai/headlessRun";
 import { joker } from "../src/ai/test-helpers";
 import type { Joker } from "../src/items/jokers/types";
+import { createPlanetCatalog } from "../src/items/planets";
+import type { ShopItem } from "../src/items/shop";
 import { createDefaultHandStats } from "../src/scoring/handStats";
 import {
+  applyShopBuy,
+  labelByRollout,
   pickBestState,
   scoreShopState,
   type ShopForwardState,
 } from "./shopRolloutExpert";
+
+function jokerItem(j: Joker, price: number): ShopItem {
+  return { kind: "joker", joker: j, price, sold: false };
+}
 
 const greedy: HeadlessAgent = {
   name: "greedy",
@@ -79,5 +87,37 @@ describe("pickBestState", () => {
 
   test("returns -1 for an empty list", () => {
     expect(pickBestState([])).toBe(-1);
+  });
+});
+
+describe("applyShopBuy", () => {
+  test("appends a bought joker and deducts its price", () => {
+    const next = applyShopBuy(state({ money: 10 }), jokerItem(powerJoker, 6));
+    expect({ jokers: next.jokers.length, money: next.money }).toEqual({ jokers: 1, money: 4 });
+  });
+
+  test("upgrades hand stats when a planet is bought", () => {
+    const planet = createPlanetCatalog()[0];
+    const item: ShopItem = { kind: "planet", planet, price: 3, sold: false };
+    const next = applyShopBuy(state({ money: 5 }), item);
+    expect(next.money).toBe(2);
+  });
+
+  test("does not append a joker when the joker slots are full", () => {
+    const full = state({ jokers: Array.from({ length: 16 }, () => powerJoker), money: 10 });
+    expect(applyShopBuy(full, jokerItem(powerJoker, 6)).jokers.length).toBe(16);
+  });
+});
+
+describe("labelByRollout", () => {
+  test("labels the candidate whose loadout rolls out best", async () => {
+    const weak = state({ jokers: [] });
+    const strong = state({ jokers: [powerJoker] });
+    const chosen = await labelByRollout([weak, strong, weak], {
+      agent: greedy,
+      seeds: [1, 2],
+      maxRounds: 4,
+    });
+    expect(chosen).toBe(1);
   });
 });
