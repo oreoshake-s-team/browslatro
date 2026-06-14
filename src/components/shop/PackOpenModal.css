@@ -201,3 +201,14 @@
   opacity: 0.5;
 }
 
+
+.pack-open-option-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.pack-open-option-badges .card-mod-badge {
+  margin-left: 0;
+}

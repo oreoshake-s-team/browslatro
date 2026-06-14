@@ -11,12 +11,6 @@ import {
   localizedJokerDescription,
   localizedJokerName,
 } from "../../i18n/jokerOverrides";
-import type {
-  CardEdition,
-  Enhancement,
-  Seal,
-} from "../../cards/types";
-import { type JokerEdition } from "../../items/jokers";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
@@ -26,6 +20,7 @@ import {
   type VoucherId,
 } from "../../items/vouchers";
 import JokerStickerBadges from "../jokers/JokerStickerBadges";
+import CardModifierBadges from "../cards/CardModifierBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 
 const ShopSuggestion = lazy(() => import("./ShopSuggestion"));
@@ -174,30 +169,6 @@ const SUIT_GLYPH: Record<string, string> = {
   clubs: "♣",
 };
 
-const ENHANCEMENT_LABEL_KEY = {
-  bonus: "cardLabels.enhancementBonus",
-  mult: "cardLabels.enhancementMult",
-  wild: "cardLabels.enhancementWild",
-  glass: "cardLabels.enhancementGlass",
-  steel: "cardLabels.enhancementSteel",
-  stone: "cardLabels.enhancementStone",
-  gold: "cardLabels.enhancementGold",
-  lucky: "cardLabels.enhancementLucky",
-} as const satisfies Record<Enhancement, string>;
-
-const CARD_EDITION_LABEL_KEY = {
-  foil: "cardLabels.editionFoil",
-  holographic: "cardLabels.editionHolographic",
-  polychrome: "cardLabels.editionPolychrome",
-} as const satisfies Record<CardEdition, string>;
-
-const SEAL_LABEL_KEY = {
-  gold: "cardLabels.sealGold",
-  red: "cardLabels.sealRed",
-  blue: "cardLabels.sealBlue",
-  purple: "cardLabels.sealPurple",
-} as const satisfies Record<Seal, string>;
-
 function playingCardSummary(
   t: TFunction,
   card: import("../../cards/types").Card,
@@ -297,13 +268,6 @@ const OFFER_KIND_LABEL_KEY = {
   "playing-card": "shop.kindCard",
   pack: "shop.kindPack",
 } as const satisfies Record<ShopItem["kind"], string>;
-
-const JOKER_EDITION_LABEL_KEY = {
-  foil: "cardLabels.editionFoil",
-  holographic: "cardLabels.editionHolographic",
-  polychrome: "cardLabels.editionPolychrome",
-  negative: "cardLabels.editionNegative",
-} as const satisfies Record<JokerEdition, string>;
 
 export default function Shop({
   money,
@@ -413,38 +377,14 @@ export default function Shop({
         </span>
         <span className="shop-offer-name">
           {subject.name}
-          {edition && (
-            <span
-              className="shop-offer-edition-badge"
-              data-testid={`shop-edition-${idx}`}
-            >
-              {t(JOKER_EDITION_LABEL_KEY[edition])}
-            </span>
-          )}
-          {cardEnhancement && (
-            <span
-              className={`shop-offer-card-badge shop-offer-card-enhancement-badge shop-offer-card-enhancement-${cardEnhancement}`}
-              data-testid={`shop-card-enhancement-${idx}`}
-            >
-              {t(ENHANCEMENT_LABEL_KEY[cardEnhancement])}
-            </span>
-          )}
-          {cardEdition && (
-            <span
-              className={`shop-offer-card-badge shop-offer-card-edition-badge shop-offer-card-edition-${cardEdition}`}
-              data-testid={`shop-card-edition-${idx}`}
-            >
-              {t(CARD_EDITION_LABEL_KEY[cardEdition])}
-            </span>
-          )}
-          {cardSeal && (
-            <span
-              className={`shop-offer-card-badge shop-offer-card-seal-badge shop-offer-card-seal-${cardSeal}`}
-              data-testid={`shop-card-seal-${idx}`}
-            >
-              {t(SEAL_LABEL_KEY[cardSeal])}
-            </span>
-          )}
+          <CardModifierBadges
+            scope="shop"
+            suffix={idx}
+            jokerEdition={edition}
+            enhancement={cardEnhancement}
+            cardEdition={cardEdition}
+            seal={cardSeal}
+          />
         </span>
         <span className="shop-offer-description">
           {appendFoolHint(subject.description, subject.id, foolCopyTarget)}

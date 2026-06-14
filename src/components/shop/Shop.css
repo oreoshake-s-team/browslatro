@@ -324,20 +324,6 @@
   letter-spacing: 0.05em;
 }
 
-.shop-offer-edition-badge {
-  display: inline-block;
-  margin-left: 0.4rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  vertical-align: middle;
-  background-color: var(--surface-on-light-2);
-  color: var(--text-on-light-subtle);
-}
-
 .shop-offer[data-edition="foil"] {
   border-color: var(--edition-foil);
   border-left-color: var(--edition-foil-deep);
@@ -345,21 +331,11 @@
   background: linear-gradient(135deg, var(--edition-foil-tint) 0%, var(--accent-money-pale) 100%);
 }
 
-.shop-offer[data-edition="foil"] .shop-offer-edition-badge {
-  background-color: var(--edition-foil);
-  color: var(--white);
-}
-
 .shop-offer[data-edition="holographic"] {
   border-color: var(--edition-holo);
   border-left-color: var(--edition-holo-deep);
   box-shadow: 0 0 10px color-mix(in srgb, var(--edition-holo) 55%, transparent);
   background: linear-gradient(135deg, var(--edition-holo-tint) 0%, var(--accent-money-pale) 50%, var(--edition-holo-tint-2) 100%);
-}
-
-.shop-offer[data-edition="holographic"] .shop-offer-edition-badge {
-  background-color: var(--edition-holo);
-  color: var(--white);
 }
 
 .shop-offer[data-edition="polychrome"] {
@@ -376,11 +352,6 @@
   );
 }
 
-.shop-offer[data-edition="polychrome"] .shop-offer-edition-badge {
-  background-color: var(--edition-poly);
-  color: var(--white);
-}
-
 .shop-offer[data-edition="negative"] {
   border-color: var(--shop-muted-on-light);
   border-left-color: var(--text-on-light);
@@ -392,11 +363,6 @@
 .shop-offer[data-edition="negative"] .shop-offer-name,
 .shop-offer[data-edition="negative"] .shop-offer-description {
   color: var(--surface-on-light-2);
-}
-
-.shop-offer[data-edition="negative"] .shop-offer-edition-badge {
-  background-color: var(--accent-money-light);
-  color: var(--text-on-light);
 }
 
 .shop-offer-playing-card-enhanced {
@@ -432,95 +398,6 @@
     var(--edition-poly-tint-blue) 75%,
     var(--edition-poly-tint-purple) 100%
   );
-}
-
-.shop-offer-card-badge {
-  display: inline-block;
-  margin-left: 0.4rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  vertical-align: middle;
-  background-color: var(--surface-on-light-2);
-  color: var(--text-on-light-subtle);
-}
-
-.shop-offer-card-enhancement-bonus {
-  background-color: var(--edition-foil);
-  color: var(--white);
-}
-
-.shop-offer-card-enhancement-mult {
-  background-color: var(--accent-mult-lighter);
-  color: var(--white);
-}
-
-.shop-offer-card-enhancement-wild {
-  background-color: var(--edition-holo);
-  color: var(--white);
-}
-
-.shop-offer-card-enhancement-glass {
-  background-color: var(--enhance-glass-badge);
-  color: var(--enhance-glass-badge-text);
-}
-
-.shop-offer-card-enhancement-steel {
-  background-color: var(--text-muted);
-  color: var(--text-on-light);
-}
-
-.shop-offer-card-enhancement-stone {
-  background-color: var(--accent-stone);
-  color: var(--enhance-stone-text);
-}
-
-.shop-offer-card-enhancement-gold {
-  background-color: var(--accent-money);
-  color: var(--accent-money-text);
-}
-
-.shop-offer-card-enhancement-lucky {
-  background-color: var(--accent-success);
-  color: var(--enhance-lucky-text);
-}
-
-.shop-offer-card-edition-foil {
-  background-color: var(--edition-foil);
-  color: var(--white);
-}
-
-.shop-offer-card-edition-holographic {
-  background-color: var(--edition-holo);
-  color: var(--white);
-}
-
-.shop-offer-card-edition-polychrome {
-  background: linear-gradient(90deg, var(--edition-poly), var(--accent-money), var(--accent-success), var(--edition-foil), var(--edition-holo));
-  color: var(--white);
-}
-
-.shop-offer-card-seal-gold {
-  background-color: var(--accent-money);
-  color: var(--accent-money-text);
-}
-
-.shop-offer-card-seal-red {
-  background-color: var(--accent-mult-lighter);
-  color: var(--white);
-}
-
-.shop-offer-card-seal-blue {
-  background-color: var(--edition-foil);
-  color: var(--white);
-}
-
-.shop-offer-card-seal-purple {
-  background-color: var(--type-tarot-border);
-  color: var(--white);
 }
 
 @media (prefers-reduced-motion: reduce) {

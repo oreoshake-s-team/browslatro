@@ -1,0 +1,100 @@
+.card-mod-badge {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  vertical-align: middle;
+  background-color: var(--surface-on-light-2);
+  color: var(--text-on-light-subtle);
+}
+
+.card-mod-enhancement-bonus {
+  background-color: var(--edition-foil);
+  color: var(--white);
+}
+
+.card-mod-enhancement-mult {
+  background-color: var(--accent-mult-lighter);
+  color: var(--white);
+}
+
+.card-mod-enhancement-wild {
+  background-color: var(--edition-holo);
+  color: var(--white);
+}
+
+.card-mod-enhancement-glass {
+  background-color: var(--enhance-glass-badge);
+  color: var(--enhance-glass-badge-text);
+}
+
+.card-mod-enhancement-steel {
+  background-color: var(--text-muted);
+  color: var(--text-on-light);
+}
+
+.card-mod-enhancement-stone {
+  background-color: var(--accent-stone);
+  color: var(--enhance-stone-text);
+}
+
+.card-mod-enhancement-gold {
+  background-color: var(--accent-money);
+  color: var(--accent-money-text);
+}
+
+.card-mod-enhancement-lucky {
+  background-color: var(--accent-success);
+  color: var(--enhance-lucky-text);
+}
+
+.card-mod-edition-foil,
+.card-mod-joker-edition-foil {
+  background-color: var(--edition-foil);
+  color: var(--white);
+}
+
+.card-mod-edition-holographic,
+.card-mod-joker-edition-holographic {
+  background-color: var(--edition-holo);
+  color: var(--white);
+}
+
+.card-mod-edition-polychrome {
+  background: linear-gradient(90deg, var(--edition-poly), var(--accent-money), var(--accent-success), var(--edition-foil), var(--edition-holo));
+  color: var(--white);
+}
+
+.card-mod-joker-edition-polychrome {
+  background-color: var(--edition-poly);
+  color: var(--white);
+}
+
+.card-mod-joker-edition-negative {
+  background-color: var(--accent-money-light);
+  color: var(--text-on-light);
+}
+
+.card-mod-seal-gold {
+  background-color: var(--accent-money);
+  color: var(--accent-money-text);
+}
+
+.card-mod-seal-red {
+  background-color: var(--accent-mult-lighter);
+  color: var(--white);
+}
+
+.card-mod-seal-blue {
+  background-color: var(--edition-foil);
+  color: var(--white);
+}
+
+.card-mod-seal-purple {
+  background-color: var(--type-tarot-border);
+  color: var(--white);
+}

@@ -27,6 +27,12 @@ import {
   type Joker,
 } from "../../items/jokers";
 import Card from "../cards/Card";
+import CardModifierBadges, {
+  CARD_EDITION_LABEL_KEY,
+  ENHANCEMENT_LABEL_KEY,
+  JOKER_EDITION_LABEL_KEY,
+  SEAL_LABEL_KEY,
+} from "../cards/CardModifierBadges";
 import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { announce } from "../system/LiveAnnouncer";
 import { useEscapeToClose } from "../system/useEscapeToClose";
@@ -78,6 +84,7 @@ interface OptionView {
   readonly needsJokerSlot: boolean;
   readonly requiresPreviewSelection?: { readonly maxTargets: 1 | 2 | 3 };
   readonly joker?: Joker;
+  readonly card?: CardType;
 }
 
 function stickerSummary(joker: Joker): string {
@@ -181,16 +188,14 @@ function describeOption(
       diamonds: "♦",
       clubs: "♣",
     };
-    const tags: string[] = [];
-    if (c.enhancement) tags.push(c.enhancement);
-    if (c.seal) tags.push(`${c.seal} seal`);
     return {
       id: String(c.id),
       icon: suitGlyph[c.suit] ?? "🂠",
       name: `${c.rank}${suitGlyph[c.suit] ?? ""}`,
-      description: tags.length > 0 ? tags.join(", ") : t("pack.addToDeck"),
+      description: t("pack.addToDeck"),
       needsConsumableSlot: false,
       needsJokerSlot: false,
+      card: c,
     };
   }
   return null;
@@ -343,9 +348,25 @@ export default function PackOpenModal({
               view.joker && jokerStickers(view.joker).length > 0
                 ? stickerTooltip(view.joker)
                 : undefined;
+            const modifierLabels: string[] = [];
+            if (view.card?.enhancement)
+              modifierLabels.push(t(ENHANCEMENT_LABEL_KEY[view.card.enhancement]));
+            if (view.card?.edition)
+              modifierLabels.push(t(CARD_EDITION_LABEL_KEY[view.card.edition]));
+            if (view.card?.seal)
+              modifierLabels.push(t(SEAL_LABEL_KEY[view.card.seal]));
+            if (view.joker?.edition)
+              modifierLabels.push(t(JOKER_EDITION_LABEL_KEY[view.joker.edition]));
+            const nameForAria =
+              modifierLabels.length > 0
+                ? t("a11y.cardWithDetail", {
+                    name: view.name,
+                    detail: modifierLabels.join(", "),
+                  })
+                : view.name;
             const pickAriaLabel = stickerNames
-              ? t("a11y.pickOptionWith", { name: view.name, stickers: stickerNames })
-              : t("a11y.pickOption", { name: view.name });
+              ? t("a11y.pickOptionWith", { name: nameForAria, stickers: stickerNames })
+              : t("a11y.pickOption", { name: nameForAria });
             return (
               <li
                 key={`${view.id}-${idx}`}
@@ -357,6 +378,18 @@ export default function PackOpenModal({
                 <span className="pack-open-option-description">
                   {appendFoolHint(view.description, view.id, foolCopyTarget)}
                 </span>
+                {modifierLabels.length > 0 && (
+                  <span className="pack-open-option-badges">
+                    <CardModifierBadges
+                      scope="pack"
+                      suffix={idx}
+                      enhancement={view.card?.enhancement}
+                      cardEdition={view.card?.edition}
+                      seal={view.card?.seal}
+                      jokerEdition={view.joker?.edition}
+                    />
+                  </span>
+                )}
                 {view.joker && <JokerStickerBadges joker={view.joker} />}
                 <button
                   type="button"

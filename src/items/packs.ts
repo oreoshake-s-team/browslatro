@@ -13,6 +13,15 @@ const FORCE_PACK_TAROT_IDS_KEY = "browslatro:forcePackTarotIds";
 const FORCE_PACK_SPECTRAL_IDS_KEY = "browslatro:forcePackSpectralIds";
 const FORCE_PACK_VARIANT_KEY = "browslatro:forcePackVariant";
 const FORCE_PACK_POOL_KEY = "browslatro:forcePackPool";
+const FORCE_PACK_STANDARD_ENHANCEMENT_KEY =
+  "browslatro:forcePackStandardEnhancement";
+
+function readForcedStandardEnhancement(): Enhancement | null {
+  const raw = readForcedIdsFromStorage(FORCE_PACK_STANDARD_ENHANCEMENT_KEY)[0];
+  return raw && (ENHANCEMENT_KINDS as ReadonlyArray<string>).includes(raw)
+    ? (raw as Enhancement)
+    : null;
+}
 
 function isPackPool(value: string): value is PackPool {
   return value in PACK_POOL_WEIGHTS;
@@ -251,11 +260,13 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
 export function rollStandardCard(rng: RandomSource): Card {
   const rank = RANKS[Math.floor(rng() * RANKS.length)];
   const suit = SUITS[Math.floor(rng() * SUITS.length)];
-  const enhancement = rollChance(STANDARD_ENHANCEMENT_CHANCE, rng)
-    ? STANDARD_ENHANCEMENT_POOL[
-        Math.floor(rng() * STANDARD_ENHANCEMENT_POOL.length)
-      ]
-    : undefined;
+  const enhancement =
+    readForcedStandardEnhancement() ??
+    (rollChance(STANDARD_ENHANCEMENT_CHANCE, rng)
+      ? STANDARD_ENHANCEMENT_POOL[
+          Math.floor(rng() * STANDARD_ENHANCEMENT_POOL.length)
+        ]
+      : undefined);
   const seal = rollChance(STANDARD_SEAL_CHANCE, rng)
     ? SEAL_KINDS[Math.floor(rng() * SEAL_KINDS.length)]
     : undefined;

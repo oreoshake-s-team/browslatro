@@ -75,7 +75,7 @@ describe("Boss Blinds — ante 2 fresh-pool pick (phase 0)", () => {
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
@@ -116,10 +116,10 @@ describe("Boss Blinds — Phase 1 effects", () => {
   ): Promise<void> {
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
   }
 
@@ -221,7 +221,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
     await dismissBlindSelect(user);
     for (let i = 0; i < 5; i += 1) {
       await user.click(screen.getByText(/^Win$/));
-      await user.click(screen.getByRole("button", { name: /Next Round/ }));
+      await user.click(await screen.findByRole("button", { name: /Next Round/ }));
       await dismissBlindSelect(user);
     }
   }
@@ -251,7 +251,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(screen.getByText("Options"));
     await user.click(screen.getByText("New game"));
@@ -287,10 +287,10 @@ describe("Boss Blinds — Phase 2 debuffs", () => {
   ): Promise<void> {
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
   }
 
@@ -351,7 +351,7 @@ describe("Boss Blinds — Phase 3 round-state effects", () => {
   ): Promise<void> {
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
   }
 
   test("The Mouth keeps Submit enabled once a card is selected", async () => {
@@ -414,7 +414,7 @@ describe("Boss Blinds — Phase 4 face-down effects", () => {
   ): Promise<void> {
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/Win/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
   }
 
   test("The House makes every card in the initial boss-blind deal face-down", async () => {
@@ -496,10 +496,10 @@ describe("Boss Blinds — Phase 5 The Hook", () => {
   ): Promise<void> {
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
     await user.click(screen.getByText(/^Win$/));
-    await user.click(screen.getByRole("button", { name: /Next Round/ }));
+    await user.click(await screen.findByRole("button", { name: /Next Round/ }));
     await dismissBlindSelect(user);
   }
 
