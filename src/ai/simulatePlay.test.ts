@@ -273,3 +273,25 @@ describe("simulatePlay — held-in-hand phase applies before the joker phase", (
     expect(multWith([joker()])).toBe(6);
   });
 });
+
+describe("simulatePlay — jokers apply left-to-right within the joker phase", () => {
+  const pair = [card("9", "hearts"), card("9", "spades")];
+  const xMult3 = joker({
+    id: "xmult3",
+    effect: { kind: "on-hand-type-x-mult", requires: "Pair", amount: 3 },
+  });
+  const plus4 = joker({ id: "plus4", effect: { kind: "additive-mult", amount: 4 } });
+
+  function mult(jokers: ReturnType<typeof joker>[]): number {
+    const result = simulatePlay(input(pair, { jokers }), pair.map((c) => c.id));
+    return result.legal ? result.mult : NaN;
+  }
+
+  test("a xMult before a +Mult multiplies the base, then adds: 2 x 3 + 4 = 10", () => {
+    expect(mult([xMult3, plus4])).toBe(10);
+  });
+
+  test("a +Mult before a xMult adds first, then multiplies: (2 + 4) x 3 = 18", () => {
+    expect(mult([plus4, xMult3])).toBe(18);
+  });
+});

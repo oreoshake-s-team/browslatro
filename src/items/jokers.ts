@@ -80,7 +80,7 @@ export type {
   PerCardContext,
 } from "./jokers/scoring/types";
 export { resolveJokerEffect, resolveJokerTargetIndex } from "./jokers/scoring/copy";
-export { applyHandLevelJokers } from "./jokers/scoring/handLevel";
+export { applyHandLevelJokers, sequentialMult } from "./jokers/scoring/handLevel";
 export { applyPerCardJokers } from "./jokers/scoring/perCard";
 export {
   applyJokersToScoring,
