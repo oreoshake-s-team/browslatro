@@ -17,7 +17,12 @@ import sys
 import torch
 from torch import nn
 
-from dataset import build_training_set, load_all, load_shop_decisions, split_by_seed
+from dataset import (
+    build_training_set,
+    load_all,
+    load_shop_decisions_split,
+    split_by_seed,
+)
 from encoding import ENCODING_VERSION, INPUT_FEATURES, SHOP_ENCODING_VERSION, SHOP_INPUT_FEATURES
 
 
@@ -84,10 +89,9 @@ def main():
 
     if args.shop:
         features = SHOP_INPUT_FEATURES
-        all_decisions = []
-        for path in args.datasets:
-            all_decisions.extend(load_shop_decisions(path))
-        train, validation = split_by_seed(all_decisions)
+        rollout, teacher = load_shop_decisions_split(args.datasets, args.teacher_weight)
+        generated_train, validation = split_by_seed(rollout)
+        train = build_training_set(generated_train, teacher)
         enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}"
     else:
         features = INPUT_FEATURES
@@ -106,7 +110,10 @@ def main():
         sys.exit(f"dataset too small: {len(train)} train / {len(validation)} validation")
 
     if args.shop:
-        print(f"{len(train)} train / {len(validation)} validation shop decisions")
+        print(
+            f"{len(train)} train ({len(teacher)} teacher at weight "
+            f"{args.teacher_weight}) / {len(validation)} validation shop decisions"
+        )
 
     model = CandidateScorer(features, args.hidden)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
