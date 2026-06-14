@@ -1,4 +1,4 @@
-import { RANKS } from "../cards/deck";
+import { HAND_SIZE, RANKS } from "../cards/deck";
 import {
   applyEditionOverrides,
   applyEnhancementOverrides,
@@ -12,7 +12,11 @@ import {
   resolveTemperancePayout,
   type TarotEffect,
 } from "../items/tarots";
-import type { SpectralEffect } from "../items/spectrals";
+import {
+  duplicateSelectedInHand,
+  transmuteHand,
+  type SpectralEffect,
+} from "../items/spectrals";
 
 export interface ConsumableContext {
   readonly deck: ReadonlyArray<Card>;
@@ -30,6 +34,12 @@ function topCardIds(deck: ReadonlyArray<Card>, count: number): number[] {
     .sort((a, b) => RANKS.indexOf(b.rank) - RANKS.indexOf(a.rank))
     .slice(0, count)
     .map((c) => c.id);
+}
+
+function destroyTopCards(deck: ReadonlyArray<Card>, count: number): Card[] {
+  const removable = Math.max(0, deck.length - HAND_SIZE);
+  const ids = new Set(topCardIds(deck, Math.min(count, removable)));
+  return deck.filter((c) => !ids.has(c.id));
 }
 
 export function applyTarotEffectToDeck(
@@ -74,6 +84,19 @@ export function applyTarotEffectToDeck(
     }
     case "joker-sell-value-payout":
       return { deck, money: money + resolveTemperancePayout(ctx.jokers, effect.cap) };
+    case "destroy-selected":
+      return { deck: destroyTopCards(deck, effect.maxTargets), money };
+    case "death-copy": {
+      const ids = topCardIds(deck, effect.requiredTargets);
+      if (ids.length < 2) return { deck, money };
+      const [leftId, rightId] = ids;
+      const right = deck.find((c) => c.id === rightId);
+      if (right === undefined) return { deck, money };
+      return {
+        deck: deck.map((c) => (c.id === leftId ? { ...right, id: leftId } : c)),
+        money,
+      };
+    }
     default:
       return { deck, money };
   }
@@ -96,6 +119,21 @@ export function applySpectralEffectToDeck(
       if (id === undefined) return { deck, money };
       const overrides = new Map([[id, pickRandomCardEdition(rng)]]);
       return { deck: applyEditionOverrides(deck, overrides), money };
+    }
+    case "immolate":
+      return {
+        deck: destroyTopCards(deck, effect.destroyCount),
+        money: money + effect.moneyGain,
+      };
+    case "duplicate-selected": {
+      const [id] = topCardIds(deck, 1);
+      if (id === undefined) return { deck, money };
+      const { hand } = duplicateSelectedInHand(deck, new Set([id]), effect.copies);
+      return { deck: hand, money };
+    }
+    case "transmute": {
+      const { hand } = transmuteHand(deck, effect.rankFilter, effect.addCount, rng);
+      return { deck: hand, money };
     }
     default:
       return { deck, money };
