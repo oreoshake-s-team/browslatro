@@ -6,7 +6,7 @@ Mirrors the TypeScript `ModelState` / `HandOption` JSON shapes produced by
 on any change.
 """
 
-ENCODING_VERSION = 3
+ENCODING_VERSION = 4
 
 HAND_SLOTS = 16
 JOKER_SLOTS = 5
@@ -15,6 +15,17 @@ SUITS = ["spades", "hearts", "diamonds", "clubs"]
 ENHANCEMENTS = ["bonus", "mult", "wild", "glass", "steel", "stone", "gold", "lucky"]
 SEALS = ["gold", "red", "blue", "purple"]
 EDITIONS = ["foil", "holographic", "polychrome"]
+DECKS = [
+    "red-deck", "blue-deck", "yellow-deck", "green-deck", "black-deck",
+    "magic-deck", "nebula-deck", "ghost-deck", "abandoned-deck", "checkered-deck",
+    "zodiac-deck", "painted-deck", "anaglyph-deck", "plasma-deck", "erratic-deck",
+]
+STAKES = ["white", "red", "green", "black", "blue", "purple", "orange", "gold"]
+_DECK_STARTING_HANDS_DELTA = {"blue-deck": 1, "black-deck": -1}
+_DECK_STARTING_DISCARDS_DELTA = {"red-deck": 1}
+_DECK_JOKER_SLOTS_DELTA = {"black-deck": 1}
+_DECK_END_OF_ROUND_BONUS = {"green-deck": 2}
+_DECK_NO_INTEREST = {"green-deck"}
 BLIND_KINDS = ["small", "big", "boss"]
 HAND_LABELS = [
     "High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
@@ -30,7 +41,10 @@ JOKER_RARITIES = ["common", "uncommon", "rare", "legendary"]
 JOKER_EDITIONS = ["foil", "holographic", "polychrome", "negative"]
 
 CARD_FEATURES = 2 + len(RANKS) + len(SUITS) + len(ENHANCEMENTS) + len(SEALS) + len(EDITIONS) + 1
-CONTEXT_FEATURES = 6 + len(BLIND_KINDS) + 1 + len(SUITS) + len(RANKS)
+CONTEXT_FEATURES = (
+    6 + len(BLIND_KINDS) + 1 + len(SUITS) + len(RANKS)
+    + len(DECKS) + len(STAKES) + 5 + 1
+)
 JOKER_SLOT_FEATURES = 1 + len(JOKER_EFFECT_CATEGORIES) + len(JOKER_RARITIES) + len(JOKER_EDITIONS) + 1
 JOKER_FEATURES = JOKER_SLOTS * JOKER_SLOT_FEATURES
 STATE_FEATURES = HAND_SLOTS * CARD_FEATURES + CONTEXT_FEATURES + JOKER_FEATURES
@@ -55,6 +69,10 @@ def _one_hot(value, vocabulary):
     if value is not None:
         vector[vocabulary.index(value)] = 1.0
     return vector
+
+
+def _stake_starting_discards_delta(stake):
+    return -1 if STAKES.index(stake) >= STAKES.index("blue") else 0
 
 
 def _encode_joker_slot(joker):
@@ -95,6 +113,8 @@ def encode_state(state):
     target = max(1, state["blind"]["scoreTarget"])
     deck = state["deck"]
     deck_total = max(1, deck["total"])
+    deck_id = state.get("deckId", "red-deck")
+    stake = state.get("stake", "white")
     context = (
         [
             state["money"] / 20.0,
@@ -108,6 +128,16 @@ def encode_state(state):
         + [deck["total"] / 52.0]
         + [deck["bySuit"][suit] / deck_total for suit in SUITS]
         + [deck["byRank"][rank] / deck_total for rank in RANKS]
+        + _one_hot(deck_id, DECKS)
+        + _one_hot(stake, STAKES)
+        + [
+            _DECK_STARTING_HANDS_DELTA.get(deck_id, 0) / 2.0,
+            _DECK_STARTING_DISCARDS_DELTA.get(deck_id, 0) / 2.0,
+            _DECK_JOKER_SLOTS_DELTA.get(deck_id, 0) / 2.0,
+            _DECK_END_OF_ROUND_BONUS.get(deck_id, 0) / 5.0,
+            1.0 if deck_id in _DECK_NO_INTEREST else 0.0,
+            _stake_starting_discards_delta(stake) / 2.0,
+        ]
     )
     jokers = state.get("jokers", [])
     joker_slots = []

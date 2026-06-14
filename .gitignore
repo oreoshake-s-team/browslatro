@@ -56,3 +56,9 @@ yarn-error.log*
 package-lock.json
 __pycache__/
 *.pyc
+
+# Local ML training artifacts (datasets and candidate models are regenerated
+# locally; only the selected model under public/models is committed)
+/ml/dataset*.jsonl
+/ml/candidate*.onnx
+/ml/teacher*.jsonl

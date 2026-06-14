@@ -46,6 +46,8 @@ def state(hand, **extra):
         "blind": {"kind": "small", "name": "Small Blind", "scoreTarget": 300, "boss": None},
         "ante": 1,
         "round": 1,
+        "stake": "white",
+        "deckId": "red-deck",
         "money": 4,
         "remainingHands": 4,
         "remainingDiscards": 3,
@@ -125,6 +127,38 @@ class EncodeStateTests(unittest.TestCase):
         joker_start = 16 * CARD_FEATURES + context_bytes
         vector = encode_state(state([card(1, "A", "spades")]))
         self.assertEqual(vector[joker_start:joker_start + JOKER_SLOT_FEATURES], [0.0] * JOKER_SLOT_FEATURES)
+
+    def test_deck_one_hot_marks_active_deck(self):
+        cond = 16 * CARD_FEATURES + 27
+        vector = encode_state(state([card(1, "A", "spades")], deckId="black-deck"))
+        self.assertEqual(vector[cond + 4], 1.0)
+
+    def test_stake_one_hot_marks_active_stake(self):
+        cond = 16 * CARD_FEATURES + 27
+        vector = encode_state(state([card(1, "A", "spades")], stake="purple"))
+        self.assertEqual(vector[cond + 15 + 5], 1.0)
+
+    def test_green_deck_flags_interest_suppression(self):
+        derived = 16 * CARD_FEATURES + 27 + 15 + 8
+        vector = encode_state(state([card(1, "A", "spades")], deckId="green-deck"))
+        self.assertEqual(vector[derived + 4], 1.0)
+
+    def test_unmodified_deck_leaves_derived_scalars_zero(self):
+        derived = 16 * CARD_FEATURES + 27 + 15 + 8
+        vector = encode_state(state([card(1, "A", "spades")], deckId="yellow-deck"))
+        self.assertEqual(vector[derived:derived + 5], [0.0] * 5)
+
+    def test_blue_stake_encodes_discard_penalty(self):
+        derived = 16 * CARD_FEATURES + 27 + 15 + 8
+        vector = encode_state(state([card(1, "A", "spades")], stake="blue"))
+        self.assertEqual(vector[derived + 5], -0.5)
+
+    def test_missing_deck_id_defaults_to_red(self):
+        cond = 16 * CARD_FEATURES + 27
+        base = state([card(1, "A", "spades")])
+        del base["deckId"]
+        vector = encode_state(base)
+        self.assertEqual(vector[cond], 1.0)
 
 
 class EncodeCandidateTests(unittest.TestCase):
