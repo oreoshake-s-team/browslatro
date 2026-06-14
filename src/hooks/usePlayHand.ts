@@ -40,6 +40,7 @@ import {
   advanceStackGainsForScoring,
   applyEndOfRoundJokers,
   applyHandLevelJokers,
+  sequentialMult,
   applyHandPlayedToJokerStates,
   expandScoringRetriggers,
   applyLuckyTriggersToJokerStates,
@@ -658,10 +659,15 @@ export function usePlayHand({
       );
       const noCardsChips =
         handEntry.chips + noCardsHandJokerResult.additiveChips;
+      const noCardsHeldMult = sequentialMult(
+        handEntry.multiplier,
+        noCardsHandJokerResult.steps.filter((s) => s.phase === "held"),
+      );
       const noCardsMult =
-        (handEntry.multiplier + noCardsHandJokerResult.additiveMult) *
-        noCardsHandJokerResult.xMult *
-        noCardsObservatoryMult;
+        sequentialMult(
+          noCardsHeldMult,
+          noCardsHandJokerResult.steps.filter((s) => s.phase !== "held"),
+        ) * noCardsObservatoryMult;
       const handOnlyScore = Math.floor(noCardsChips * noCardsMult);
       finalizeHandSubmission(handOnlyScore, submittedSelection, label);
       return;
@@ -762,9 +768,9 @@ export function usePlayHand({
       (handEntry.multiplier + perCardAdditiveMult) *
       enhancementXMult *
       perCardXMult;
-    const heldMult =
-      (cardMult * steelMult + handJokerResult.heldAdditiveMult) *
-      handJokerResult.heldXMult;
+    const heldSteps = handJokerResult.steps.filter((s) => s.phase === "held");
+    const jokerSteps = handJokerResult.steps.filter((s) => s.phase !== "held");
+    const heldMult = sequentialMult(cardMult * steelMult, heldSteps);
 
     const scoringChipsTotal =
       handEntry.chips +
@@ -772,9 +778,7 @@ export function usePlayHand({
       handJokerResult.additiveChips +
       perCardAdditiveChips;
     const scoringMult =
-      (heldMult + handJokerResult.additiveMult) *
-      handJokerResult.xMult *
-      observatoryMult;
+      sequentialMult(heldMult, jokerSteps) * observatoryMult;
     const adjustedChips = scoringChipsTotal + devChipsBonus;
     const adjustedMult = (scoringMult + devMultBonus) * devMultFactor;
     const finalScore = Math.floor(adjustedChips * adjustedMult);
@@ -804,12 +808,10 @@ export function usePlayHand({
         runObservatory();
         return;
       }
-      const stepRank = (s: (typeof handJokerResult.steps)[number]): number =>
-        (s.phase === "held" ? 0 : 2) +
-        (s.xMultFactor !== undefined && s.xMultFactor !== 1 ? 1 : 0);
-      const orderedSteps = [...handJokerResult.steps].sort(
-        (a, b) => stepRank(a) - stepRank(b),
-      );
+      const orderedSteps = [
+        ...heldSteps,
+        ...jokerSteps,
+      ];
       pipeline.handLevelFinalizeRef.current = runObservatory;
       setHandLevelSteps(orderedSteps);
       setHandLevelIndex(0);

@@ -21,6 +21,7 @@ import {
   advanceStackGainsForScoring,
   allCardsScoreFromJokers,
   applyHandLevelJokers,
+  sequentialMult,
   applyPerCardJokers,
   applyScoredCardMutations,
   applyScoredMutationsToCards,
@@ -211,13 +212,10 @@ export function simulatePlay(
 
   if (scoring.length === 0) {
     const chips = handEntry.chips + handJokerResult.additiveChips;
-    const heldMult =
-      (handEntry.multiplier + handJokerResult.heldAdditiveMult) *
-      handJokerResult.heldXMult;
-    const mult =
-      (heldMult + handJokerResult.additiveMult) *
-      handJokerResult.xMult *
-      observatoryMult;
+    const heldSteps = handJokerResult.steps.filter((s) => s.phase === "held");
+    const jokerSteps = handJokerResult.steps.filter((s) => s.phase !== "held");
+    const heldMult = sequentialMult(handEntry.multiplier, heldSteps);
+    const mult = sequentialMult(heldMult, jokerSteps) * observatoryMult;
     return {
       legal: true,
       handLabel: label,
@@ -266,19 +264,16 @@ export function simulatePlay(
     (handEntry.multiplier + perCardAdditiveMult) *
     enhancementXMult *
     perCardXMult;
-  const heldMult =
-    (cardMult * steelMult + handJokerResult.heldAdditiveMult) *
-    handJokerResult.heldXMult;
+  const heldSteps = handJokerResult.steps.filter((s) => s.phase === "held");
+  const jokerSteps = handJokerResult.steps.filter((s) => s.phase !== "held");
+  const heldMult = sequentialMult(cardMult * steelMult, heldSteps);
 
   const chips =
     handEntry.chips +
     cardChipsTotal +
     handJokerResult.additiveChips +
     perCardAdditiveChips;
-  const mult =
-    (heldMult + handJokerResult.additiveMult) *
-    handJokerResult.xMult *
-    observatoryMult;
+  const mult = sequentialMult(heldMult, jokerSteps) * observatoryMult;
   return {
     legal: true,
     handLabel: label,

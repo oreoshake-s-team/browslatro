@@ -23,6 +23,25 @@ import { isJokerActive } from "../stickers";
 import { ramenXMultFactor } from "../state";
 import { perCountXMultFactor } from "../currentValue";
 
+/**
+ * Folds a phase's hand-level steps onto a running multiplier in board order,
+ * so each `+Mult` / `×Mult` applies left-to-right (authentic Balatro) rather
+ * than summing all additives then multiplying all ×Mults.
+ */
+export function sequentialMult(
+  start: number,
+  steps: ReadonlyArray<JokerHandLevelStep>,
+): number {
+  let mult = start;
+  for (const step of steps) {
+    if (step.additiveMult !== undefined) mult += step.additiveMult;
+    if (step.xMultFactor !== undefined && step.xMultFactor !== 1) {
+      mult *= step.xMultFactor;
+    }
+  }
+  return mult;
+}
+
 export function applyHandLevelJokers(
   allJokers: ReadonlyArray<Joker>,
   context: HandLevelContext = {},
