@@ -1,0 +1,38 @@
+/* Per-deck card-back colors, consumed by face-down cards, the deck pile, and
+   face-down joker tiles via the --deck-back / --deck-back-stripe variables.
+   Set on the App shell via data-deck. */
+
+[data-deck="red-deck"] {
+  --deck-back: var(--accent-mult-strong);
+  --deck-back-stripe: var(--accent-red-deep);
+}
+
+[data-deck="yellow-deck"] {
+  --deck-back: var(--accent-money-strong);
+  --deck-back-stripe: var(--accent-money-deeper);
+}
+
+[data-deck="blue-deck"] {
+  --deck-back: var(--accent-chips-strong);
+  --deck-back-stripe: var(--accent-chips-deep);
+}
+
+[data-deck="green-deck"] {
+  --deck-back: var(--accent-success-mid);
+  --deck-back-stripe: color-mix(in srgb, var(--accent-success-mid) 55%, var(--black));
+}
+
+[data-deck="black-deck"] {
+  --deck-back: var(--text-on-light);
+  --deck-back-stripe: var(--black);
+}
+
+[data-deck="abandoned-deck"] {
+  --deck-back: var(--accent-money-text);
+  --deck-back-stripe: color-mix(in srgb, var(--accent-money-text) 60%, var(--black));
+}
+
+[data-deck="checkered-deck"] {
+  --deck-back: var(--accent-red-deep);
+  --deck-back-stripe: var(--text-on-light);
+}

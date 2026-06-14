@@ -811,11 +811,11 @@
 }
 
 .card-face-down {
-  background-color: var(--edition-foil-deep);
+  background-color: var(--deck-back, var(--edition-foil-deep));
   background-image: repeating-linear-gradient(
       45deg,
-      var(--border) 0,
-      var(--border) 4px,
+      var(--deck-back-stripe, var(--border)) 0,
+      var(--deck-back-stripe, var(--border)) 4px,
       transparent 4px,
       transparent 10px
     ),
@@ -826,7 +826,7 @@
       transparent 4px,
       transparent 10px
     );
-  border-color: var(--card-facedown-border);
+  border-color: var(--deck-back-stripe, var(--card-facedown-border));
   color: transparent;
 }
 

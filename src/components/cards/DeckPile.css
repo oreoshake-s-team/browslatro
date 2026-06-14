@@ -2,15 +2,15 @@
   position: relative;
   width: var(--card-width);
   height: var(--card-height);
-  border: 2px solid var(--edition-foil-deep);
+  border: 2px solid var(--deck-back-stripe, var(--edition-foil-deep));
   border-radius: 8px;
-  background-color: var(--accent-chips-strong);
+  background-color: var(--deck-back, var(--accent-chips-strong));
   background-image: repeating-linear-gradient(
     45deg,
-    var(--accent-chips-strong) 0,
-    var(--accent-chips-strong) 6px,
-    var(--edition-foil-deep) 6px,
-    var(--edition-foil-deep) 12px
+    var(--deck-back, var(--accent-chips-strong)) 0,
+    var(--deck-back, var(--accent-chips-strong)) 6px,
+    var(--deck-back-stripe, var(--edition-foil-deep)) 6px,
+    var(--deck-back-stripe, var(--edition-foil-deep)) 12px
   );
   color: var(--white);
   font-weight: 700;
