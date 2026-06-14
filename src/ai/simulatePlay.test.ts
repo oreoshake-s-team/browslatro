@@ -6,6 +6,9 @@ import {
   createBaronJoker,
   createRunnerJoker,
   createSpareTrousersJoker,
+  FOIL_CHIPS,
+  HOLOGRAPHIC_MULT,
+  POLYCHROME_X_MULT,
   RUNNER_CHIPS_PER_STRAIGHT,
   SPARE_TROUSERS_MULT_PER_TWO_PAIR,
 } from "../items/jokers";
@@ -134,6 +137,44 @@ describe("simulatePlay — base scoring", () => {
     expect(plainScore.legal && luckyScore.legal && luckyScore.score).toBe(
       plainScore.legal && plainScore.score,
     );
+  });
+});
+
+describe("simulatePlay — card editions", () => {
+  const chipsOf = (r: ReturnType<typeof simulatePlay>): number =>
+    r.legal ? r.chips : 0;
+  const multOf = (r: ReturnType<typeof simulatePlay>): number =>
+    r.legal ? r.mult : 0;
+
+  test("a foil card adds chips when scored", () => {
+    const plain = card("A", "spades");
+    const foil = card("A", "spades", { edition: "foil" });
+    const base = simulatePlay(input([plain]), [plain.id]);
+    const result = simulatePlay(input([foil]), [foil.id]);
+    expect(chipsOf(result) - chipsOf(base)).toBe(FOIL_CHIPS);
+  });
+
+  test("a holographic card adds mult when scored", () => {
+    const plain = card("A", "spades");
+    const holo = card("A", "spades", { edition: "holographic" });
+    const base = simulatePlay(input([plain]), [plain.id]);
+    const result = simulatePlay(input([holo]), [holo.id]);
+    expect(multOf(result) - multOf(base)).toBe(HOLOGRAPHIC_MULT);
+  });
+
+  test("a polychrome card multiplies the mult when scored", () => {
+    const plain = card("A", "spades");
+    const poly = card("A", "spades", { edition: "polychrome" });
+    const base = simulatePlay(input([plain]), [plain.id]);
+    const result = simulatePlay(input([poly]), [poly.id]);
+    expect(multOf(result)).toBe(multOf(base) * POLYCHROME_X_MULT);
+  });
+
+  test("a plain card has no edition contribution (negative)", () => {
+    const plain = card("A", "spades");
+    const base = simulatePlay(input([plain]), [plain.id]);
+    const again = simulatePlay(input([plain]), [plain.id]);
+    expect(chipsOf(again)).toBe(chipsOf(base));
   });
 });
 
