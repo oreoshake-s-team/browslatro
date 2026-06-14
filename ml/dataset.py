@@ -63,13 +63,12 @@ def load_all(paths, weight=1.0):
     ]
 
 
-def load_shop_decisions(path, weight=1.0):
-    """Loads shop/pack decisions from a JSONL file of schema-v2 RunEventRecords.
+def _iter_shop_records(path):
+    """Yields validated schema-v2 shop RunEventRecords from a JSONL file.
 
-    Handles purchase, reroll, and pack-pick kinds. Skips unrecognised kinds and
-    records where encoding produces no candidates or an invalid chosen index.
+    Skips blank lines and non-shop run events; raises on an unexpected schema
+    version so a stale dataset fails loudly.
     """
-    decisions = []
     with open(path, encoding="utf-8") as handle:
         for line_number, line in enumerate(handle, start=1):
             line = line.strip()
@@ -84,11 +83,46 @@ def load_shop_decisions(path, weight=1.0):
                     f"{path}:{line_number}: schemaVersion {version}, "
                     f"expected {SHOP_SCHEMA_VERSION}"
                 )
+            yield record
+
+
+def load_shop_decisions(path, weight=1.0):
+    """Loads shop/pack decisions from a JSONL file of schema-v2 RunEventRecords.
+
+    Handles purchase, reroll, and pack-pick kinds. Skips unrecognised kinds and
+    records where encoding produces no candidates or an invalid chosen index.
+    """
+    decisions = []
+    for record in _iter_shop_records(path):
+        inputs, chosen = encode_shop_decision(record)
+        if chosen < 0 or not inputs:
+            continue
+        decisions.append((inputs, chosen, record["runSeed"], weight))
+    return decisions
+
+
+def load_shop_decisions_split(paths, teacher_weight=5.0):
+    """Loads shop decisions, partitioned into (rollout, teacher) lists.
+
+    Records the generator marked teacherLabeled (the Sonnet 4.6 teacher chose
+    them on a contested shop) go to the teacher list at teacher_weight; they are
+    meant to always train and never be held out for validation. Everything else
+    is a rollout label at weight 1.0, split by seed as usual. Datasets with no
+    teacher records yield an empty teacher list, so rollout-only data trains
+    exactly as before.
+    """
+    rollout = []
+    teacher = []
+    for path in paths:
+        for record in _iter_shop_records(path):
             inputs, chosen = encode_shop_decision(record)
             if chosen < 0 or not inputs:
                 continue
-            decisions.append((inputs, chosen, record["runSeed"], weight))
-    return decisions
+            if record.get("teacherLabeled") is True:
+                teacher.append((inputs, chosen, record["runSeed"], teacher_weight))
+            else:
+                rollout.append((inputs, chosen, record["runSeed"], 1.0))
+    return rollout, teacher
 
 
 def build_training_set(train, *extra_sources):

@@ -11,6 +11,7 @@ from dataset import (
     load_all,
     load_decisions,
     load_shop_decisions,
+    load_shop_decisions_split,
     split_by_seed,
 )
 from encoding import HAND_SLOTS
@@ -213,6 +214,38 @@ class LoadShopDecisionsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = write_jsonl(directory, "pack.jsonl", [record])
             self.assertEqual(len(load_shop_decisions(path)), 1)
+
+
+class LoadShopDecisionsSplitTest(unittest.TestCase):
+    def test_routes_teacher_records_to_the_teacher_list(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record(teacherLabeled=True)])
+            _, teacher = load_shop_decisions_split([path])
+            self.assertEqual(len(teacher), 1)
+
+    def test_routes_rollout_records_to_the_rollout_list(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record(teacherLabeled=False)])
+            rollout, teacher = load_shop_decisions_split([path])
+            self.assertEqual((len(rollout), len(teacher)), (1, 0))
+
+    def test_unmarked_records_are_rollout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record()])
+            rollout, teacher = load_shop_decisions_split([path])
+            self.assertEqual((len(rollout), len(teacher)), (1, 0))
+
+    def test_teacher_records_carry_the_teacher_weight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record(teacherLabeled=True)])
+            _, teacher = load_shop_decisions_split([path], teacher_weight=7.0)
+            self.assertEqual(teacher[0][3], 7.0)
+
+    def test_rollout_records_carry_unit_weight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record()])
+            rollout, _ = load_shop_decisions_split([path], teacher_weight=7.0)
+            self.assertEqual(rollout[0][3], 1.0)
 
 
 if __name__ == "__main__":
