@@ -2,6 +2,7 @@ import { cardKey, deal, shuffle, HAND_SIZE } from "../cards/deck";
 import type {
   Blind,
   Card,
+  CardEdition,
   Enhancement,
   Rank,
   Seal,
@@ -119,6 +120,7 @@ export interface HeadlessRunConfig {
   readonly startCardEnhancements?: ReadonlyMap<number, Enhancement | null>;
   readonly startCardSeals?: ReadonlyMap<number, Seal>;
   readonly startCardBonusChips?: ReadonlyMap<number, number>;
+  readonly startCardEditions?: ReadonlyMap<number, CardEdition>;
 }
 
 export interface HeadlessRunResult {
@@ -160,13 +162,14 @@ interface CardModifierMaps {
   readonly enhancements?: ReadonlyMap<number, Enhancement | null>;
   readonly seals?: ReadonlyMap<number, Seal>;
   readonly bonusChips?: ReadonlyMap<number, number>;
+  readonly editions?: ReadonlyMap<number, CardEdition>;
 }
 
 function applyCardModifiers(
   deck: ReadonlyArray<Card>,
   mods: CardModifierMaps,
 ): Card[] {
-  const maps = [mods.enhancements, mods.seals, mods.bonusChips];
+  const maps = [mods.enhancements, mods.seals, mods.bonusChips, mods.editions];
   if (maps.every((m) => m === undefined || m.size === 0)) {
     return [...deck];
   }
@@ -178,6 +181,9 @@ function applyCardModifiers(
     ...(mods.seals?.has(card.id) ? { seal: mods.seals.get(card.id) } : {}),
     ...(mods.bonusChips?.has(card.id)
       ? { bonusChips: mods.bonusChips.get(card.id) }
+      : {}),
+    ...(mods.editions?.has(card.id)
+      ? { edition: mods.editions.get(card.id) }
       : {}),
   }));
 }
@@ -212,6 +218,7 @@ export async function playHeadlessRun(
   const deck = applyCardModifiers(buildHeadlessDeck(), {
     enhancements: config.startCardEnhancements,
     seals: config.startCardSeals,
+    editions: config.startCardEditions,
     bonusChips: config.startCardBonusChips,
   });
   let handStats = config.startHandStats ?? createDefaultHandStats();

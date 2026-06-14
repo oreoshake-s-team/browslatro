@@ -1,4 +1,5 @@
 import { applyCardEnhancement } from "../cards/enhancements";
+import { applyCardEdition } from "../cards/editions";
 import { fullDeckPile } from "../cards/deckBuild";
 import { getHeldInHand, steelHeldMultiplier } from "../cards/heldInHand";
 import type {
@@ -247,6 +248,12 @@ export function simulatePlay(
     perCardAdditiveChips += perCard.additiveChips;
     perCardAdditiveMult += getCardMultDelta(card);
     perCardXMult *= perCard.xMult;
+    const edition = applyCardEdition(card);
+    if (edition !== null) {
+      perCardAdditiveChips += edition.additiveChips;
+      perCardAdditiveMult += edition.additiveMult;
+      perCardXMult *= edition.xMult;
+    }
     if (isFaceCard(card)) firstFaceAlreadyScored = true;
   }
 
