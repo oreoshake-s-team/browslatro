@@ -3,7 +3,7 @@ import { ADVISOR_MODEL_URL, sharedAdvisorRanker } from "./advisorRanker";
 
 describe("sharedAdvisorRanker", () => {
   test("points at the committed model asset", () => {
-    expect(ADVISOR_MODEL_URL).toBe("/models/advisor-policy-v6.onnx");
+    expect(ADVISOR_MODEL_URL).toBe("/models/advisor-policy-v7.onnx");
   });
 
   test("exposes a ranker with load and rank", () => {
