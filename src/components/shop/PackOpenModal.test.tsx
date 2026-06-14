@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PackOpenModal from "./PackOpenModal";
 import type { PackOffer } from "../../items/packs";
+import type { Card } from "../../cards/types";
 import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
 import {
@@ -346,6 +347,23 @@ describe("PackOpenModal — Buffoon pack rendering", () => {
     ).not.toBeDisabled();
   });
 
+  test("a Buffoon joker option shows its edition badge", () => {
+    const foilPack: PackOffer = {
+      pool: "buffoon",
+      variant: "normal",
+      options: [{ kind: "joker", joker: withEdition(JOKERS[0], "foil") }],
+    };
+    render(
+      <PackOpenModal
+        pack={foilPack}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-edition-0")).toHaveTextContent("Foil");
+  });
+
   test("Pick buttons stay enabled in a Buffoon pack when only consumable slots are full", () => {
     render(
       <PackOpenModal
@@ -594,13 +612,7 @@ describe("PackOpenModal — Cryptid Pick gating", () => {
 
 function standardPack(
   variant: "normal" | "jumbo" | "mega",
-  cards: ReadonlyArray<{
-    id: number;
-    rank: "A" | "K" | "2";
-    suit: "spades" | "hearts";
-    enhancement?: "mult" | "lucky";
-    seal?: "red";
-  }>,
+  cards: ReadonlyArray<Card>,
 ): PackOffer {
   return {
     pool: "standard",
@@ -677,7 +689,7 @@ describe("PackOpenModal — Standard pack rendering", () => {
     expect(onPick).toHaveBeenCalledWith(1);
   });
 
-  test("playing-card description includes the enhancement label when present", () => {
+  test("playing-card option shows an enhancement badge when present", () => {
     render(
       <PackOpenModal
         pack={standardPack("normal", [
@@ -688,10 +700,12 @@ describe("PackOpenModal — Standard pack rendering", () => {
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByText(/lucky/)).toBeInTheDocument();
+    expect(screen.getByTestId("pack-card-enhancement-0")).toHaveTextContent(
+      "Lucky",
+    );
   });
 
-  test("playing-card description includes the seal label when present", () => {
+  test("playing-card option shows a seal badge when present", () => {
     render(
       <PackOpenModal
         pack={standardPack("normal", [
@@ -702,7 +716,54 @@ describe("PackOpenModal — Standard pack rendering", () => {
         onClose={vi.fn()}
       />,
     );
-    expect(screen.getByText(/red seal/)).toBeInTheDocument();
+    expect(screen.getByTestId("pack-card-seal-0")).toHaveTextContent("Red Seal");
+  });
+
+  test("playing-card option shows an edition badge when present", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9009, rank: "Q", suit: "clubs", edition: "polychrome" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-card-edition-0")).toHaveTextContent(
+      "Polychrome",
+    );
+  });
+
+  test("the Pick action announces the card modifiers", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9010, rank: "A", suit: "spades", enhancement: "steel", seal: "red" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const pick = screen.getByTestId("pack-open-pick-0");
+    expect(pick.getAttribute("aria-label")).toMatch(/Steel.*Red Seal/);
+  });
+
+  test("a plain playing-card option renders no modifier badges (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={standardPack("normal", [
+          { id: 9011, rank: "2", suit: "clubs" },
+        ])}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(
+      screen.queryByTestId("pack-card-enhancement-0"),
+    ).not.toBeInTheDocument();
   });
 });
 

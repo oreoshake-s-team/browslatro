@@ -42,6 +42,18 @@ async function winRound1AndOpenShop(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
 }
 
+async function forceStandardEnhancement(
+  page: Page,
+  enhancement: string,
+): Promise<void> {
+  await page.addInitScript((value: string) => {
+    window.localStorage.setItem(
+      "browslatro:forcePackStandardEnhancement",
+      value,
+    );
+  }, enhancement);
+}
+
 async function buyFirstPackOffer(page: Page): Promise<void> {
   const packOffer = page
     .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
@@ -65,6 +77,22 @@ test.describe("Pack opening flow", () => {
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
     await page.getByTestId("pack-open-pick-0").click();
     await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
+  });
+
+  test("Standard pack: an enhanced card surfaces a modifier badge on its pick tile", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await forceStandardEnhancement(page, "steel");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    const badge = page.getByTestId("pack-card-enhancement-0");
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText("Steel");
+    await expect(page.getByTestId("pack-open-pick-0")).toHaveAttribute(
+      "aria-label",
+      /Steel/,
+    );
   });
 
   test("closing the pack modal without picking leaves consumables unchanged (negative)", async ({
