@@ -17,12 +17,15 @@ export interface JokerHandLevelStep {
   readonly additiveChips?: number;
   readonly xMultFactor?: number;
   readonly moneyEarned?: number;
+  readonly phase?: "held";
 }
 
 export interface JokerHandResult {
   readonly additiveMult: number;
   readonly additiveChips: number;
   readonly xMult: number;
+  readonly heldAdditiveMult: number;
+  readonly heldXMult: number;
   readonly moneyEarned: number;
   readonly firedJokerIds: ReadonlyArray<string>;
   readonly steps: ReadonlyArray<JokerHandLevelStep>;
