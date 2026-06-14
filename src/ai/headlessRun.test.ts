@@ -15,6 +15,7 @@ import { initialRunStats } from "../run/runStats";
 import { getHandOptions } from "./getHandOptions";
 import { joker } from "./test-helpers";
 import type { Joker } from "../items/jokers/types";
+import type { Enhancement, Seal } from "../cards/types";
 import type { VoucherId } from "../items/vouchers";
 import { createDefaultHandStats } from "../scoring/handStats";
 
@@ -473,5 +474,50 @@ describe("playHeadlessRun skip-tag", () => {
     };
     await playHeadlessRun(observer, { seed: 4, maxAnte: 1, jokers: [powerJoker] });
     expect(tagByBlind.get(1)).not.toBeNull();
+  });
+});
+
+describe("playHeadlessRun card modifiers", () => {
+  async function firstPlayScore(
+    enhancements?: ReadonlyMap<number, Enhancement | null>,
+    seals?: ReadonlyMap<number, Seal>,
+  ): Promise<number> {
+    const scores: number[] = [];
+    const fixedPlay: HeadlessAgent = {
+      name: "fixed",
+      chooseAction(view) {
+        scores.push(view.roundScore);
+        return { kind: "play", cardIds: view.dealt.hand.slice(0, 5).map((c) => c.id) };
+      },
+    };
+    await playHeadlessRun(fixedPlay, {
+      seed: 1,
+      maxAnte: 1,
+      startCardEnhancements: enhancements,
+      startCardSeals: seals,
+    });
+    return scores[1] ?? scores[0];
+  }
+
+  function allCards<T>(value: T): ReadonlyMap<number, T> {
+    return new Map(Array.from({ length: 52 }, (_, i) => [i + 1, value]));
+  }
+
+  test("a bonus enhancement raises the played hand's score", async () => {
+    const enhanced = await firstPlayScore(allCards<Enhancement>("bonus"));
+    const plain = await firstPlayScore();
+    expect(enhanced).toBeGreaterThan(plain);
+  });
+
+  test("a red seal raises the played hand's score by retriggering", async () => {
+    const sealed = await firstPlayScore(undefined, allCards<Seal>("red"));
+    const plain = await firstPlayScore();
+    expect(sealed).toBeGreaterThan(plain);
+  });
+
+  test("omitting modifiers matches passing empty maps", async () => {
+    const empty = await firstPlayScore(new Map());
+    const omitted = await firstPlayScore();
+    expect(empty).toBe(omitted);
   });
 });
