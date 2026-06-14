@@ -1,4 +1,5 @@
 import type { RandomSource } from "../items/jokers/types";
+import type { TagId } from "../items/tags";
 import { getHandOptions } from "./getHandOptions";
 import type {
   AgentAction,
@@ -7,6 +8,31 @@ import type {
 } from "./headlessRun";
 
 const RANDOM_DISCARD_CHANCE = 0.25;
+
+const SKIP_WORTHY_TAGS: ReadonlySet<TagId> = new Set<TagId>([
+  "speed",
+  "economy",
+  "investment",
+]);
+
+export function defaultShouldSkipTag(tag: TagId): boolean {
+  return SKIP_WORTHY_TAGS.has(tag);
+}
+
+export function createSkipAgent(
+  base: HeadlessAgent,
+  shouldSkip: (tag: TagId) => boolean = defaultShouldSkipTag,
+): HeadlessAgent {
+  return {
+    name: `skip(${base.name})`,
+    chooseAction(view: HeadlessRoundView): AgentAction | Promise<AgentAction> {
+      if (view.offeredTag !== null && shouldSkip(view.offeredTag)) {
+        return { kind: "skip" };
+      }
+      return base.chooseAction(view);
+    },
+  };
+}
 
 function randomSubset(
   ids: ReadonlyArray<number>,

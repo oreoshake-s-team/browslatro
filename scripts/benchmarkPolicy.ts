@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { basename } from "node:path";
-import { createGreedyAgent } from "../src/ai/agents";
+import { createGreedyAgent, createSkipAgent } from "../src/ai/agents";
 import { evaluateAgent, type EvaluationResult } from "../src/ai/evaluateAgent";
+import type { HeadlessAgent } from "../src/ai/headlessRun";
 import type { HeadlessShopAgent } from "../src/ai/headlessRun";
 import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
 import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
@@ -53,7 +54,7 @@ const modelPaths = process.argv
   .filter((arg, index, args) => !arg.startsWith("--") && args[index - 1]?.startsWith("--") !== true);
 if (modelPaths.length === 0) {
   console.error(
-    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--no-shop]",
+    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--no-shop] [--skip]",
   );
   process.exit(1);
 }
@@ -68,6 +69,10 @@ const shopAgent: HeadlessShopAgent | undefined = shopDisabled
   ? undefined
   : await createHeadlessShopAgent(shopPolicyPath);
 
+const useSkip = process.argv.includes("--skip");
+const withSkip = (agent: HeadlessAgent): HeadlessAgent =>
+  useSkip ? createSkipAgent(agent) : agent;
+
 function formatRow(label: string, result: EvaluationResult): string {
   return [
     label.padEnd(28),
@@ -75,21 +80,23 @@ function formatRow(label: string, result: EvaluationResult): string {
     result.averageAnteReached.toFixed(2).padStart(9),
     result.averageBlindsCleared.toFixed(2).padStart(11),
     result.averageHandsPlayed.toFixed(2).padStart(11),
+    result.averageBlindsSkipped.toFixed(2).padStart(11),
   ].join("");
 }
 
 const started = Date.now();
 const rows: string[] = [];
-const greedy = await evaluateAgent(() => createGreedyAgent(), {
+const greedy = await evaluateAgent(() => withSkip(createGreedyAgent()), {
   games,
   seedOffset,
   deck,
+  stake,
   shopAgent,
 });
 rows.push(formatRow("greedy (baseline)", greedy));
 for (const path of modelPaths) {
   const ranker = await loadPolicyRanker(readFileSync(path));
-  const result = await evaluateAgent(() => createPolicyAgent(ranker), {
+  const result = await evaluateAgent(() => withSkip(createPolicyAgent(ranker)), {
     games,
     seedOffset,
     deck,
@@ -100,10 +107,10 @@ for (const path of modelPaths) {
 }
 
 console.log(`${games} games per agent, seeds ${seedOffset}..${seedOffset + games - 1}`);
-console.log(`deck: ${deck}, stake: ${stake}`);
+console.log(`deck: ${deck}, stake: ${stake}, skip: ${useSkip ? "on" : "off"}`);
 console.log(`shop: ${shopAgent ? basename(shopPolicyPath) : "disabled (no purchases)"}`);
 console.log(
-  ["model".padEnd(28), "winRate".padStart(8), "avgAnte".padStart(9), "avgBlinds".padStart(11), "avgHands".padStart(11)].join(""),
+  ["model".padEnd(28), "winRate".padStart(8), "avgAnte".padStart(9), "avgBlinds".padStart(11), "avgHands".padStart(11), "avgSkipped".padStart(11)].join(""),
 );
 for (const row of rows) console.log(row);
 console.log(`done in ${((Date.now() - started) / 1000).toFixed(1)}s`);

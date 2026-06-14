@@ -26,6 +26,7 @@ export interface EvaluationResult {
   readonly averageAnteReached: number;
   readonly averageBlindsCleared: number;
   readonly averageHandsPlayed: number;
+  readonly averageBlindsSkipped: number;
 }
 
 export async function evaluateAgent(
@@ -64,5 +65,6 @@ export async function evaluateAgent(
     averageAnteReached: average((r) => r.anteReached),
     averageBlindsCleared: average((r) => r.blindsCleared),
     averageHandsPlayed: average((r) => r.handsPlayed),
+    averageBlindsSkipped: average((r) => r.blindsSkipped),
   };
 }
