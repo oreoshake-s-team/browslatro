@@ -46,6 +46,7 @@ export function modelStateFixture(): ModelState {
     remainingHands: 4,
     remainingDiscards: 3,
     roundScore: 0,
+    deckId: "red-deck",
     deck: {
       total: 2,
       bySuit: { spades: 1, hearts: 0, diamonds: 0, clubs: 1 },

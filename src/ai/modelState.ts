@@ -16,6 +16,7 @@ import type {
   JokerStickerKind,
 } from "../items/jokers/types";
 import type { Stake } from "../items/stakes";
+import type { Deck } from "../items/decks";
 import { requiredChipsForBlind } from "../scoring/anteScaling";
 
 export interface ModelCard {
@@ -80,6 +81,7 @@ export interface ModelState {
   readonly remainingHands: number;
   readonly remainingDiscards: number;
   readonly roundScore: number;
+  readonly deckId: Deck;
   readonly deck: ModelDeckComposition;
 }
 
@@ -94,6 +96,7 @@ export interface ModelStateInput {
   readonly round: number;
   readonly currentBoss: BossBlind;
   readonly selectedStake: Stake;
+  readonly selectedDeck: Deck;
   readonly money: number;
   readonly remainingHands: number;
   readonly remainingDiscards: number;
@@ -188,6 +191,7 @@ export function toModelState(input: ModelStateInput): ModelState {
     remainingHands: input.remainingHands,
     remainingDiscards: input.remainingDiscards,
     roundScore: input.roundScore,
+    deckId: input.selectedDeck,
     deck: toDeckComposition(input.dealt.remaining),
   };
 }

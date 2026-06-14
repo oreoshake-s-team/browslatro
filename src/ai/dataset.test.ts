@@ -64,6 +64,19 @@ describe("generateDataset", () => {
       records[0].state,
     );
   });
+
+  test("threads the configured deck into the recorded state", async () => {
+    const { records } = await generateDataset({
+      ...SMALL_CONFIG,
+      deck: "blue-deck",
+    });
+    expect(records.every((r) => r.state.deckId === "blue-deck")).toBe(true);
+  });
+
+  test("defaults the recorded deck to red when none is configured (negative)", async () => {
+    const { records } = await generateDataset(SMALL_CONFIG);
+    expect(records.every((r) => r.state.deckId === "red-deck")).toBe(true);
+  });
 });
 
 describe("serializeDatasetRecords", () => {
