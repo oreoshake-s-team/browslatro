@@ -182,6 +182,30 @@ describe("playHeadlessRun", () => {
     expect(afterShopViews.length).toBeGreaterThan(0);
   });
 
+  test("a deck mutation from the shop agent is dealt in subsequent rounds", async () => {
+    const powerJoker: Joker = joker({ effect: { kind: "additive-mult", amount: 100000 } });
+    const goldDeckAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        return {
+          jokers: view.jokers,
+          money: view.money,
+          handStats: view.handStats,
+          deck: view.deck.map((c) => ({ ...c, enhancement: "gold" as const })),
+        };
+      },
+    };
+    const sawGold: boolean[] = [];
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        sawGold.push(view.dealt.hand.some((c) => c.enhancement === "gold"));
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed: 4, maxAnte: 2, jokers: [powerJoker], shopAgent: goldDeckAgent });
+    expect(sawGold.some((g) => g)).toBe(true);
+  });
+
   test("shop agent money is deducted across antes", async () => {
     const powerJoker: Joker = joker({ effect: { kind: "additive-mult", amount: 100000 } });
     const moneyAfterShop: number[] = [];
