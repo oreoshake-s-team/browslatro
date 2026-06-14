@@ -6,6 +6,12 @@ import { packPickLimit, type PackOption } from "../items/packs";
 import { pickShopOffers, rerollCostFor, type ShopItem } from "../items/shop";
 import { createSpectralCatalog } from "../items/spectrals";
 import { createTarotCatalog } from "../items/tarots";
+import {
+  extraShopOfferSlots,
+  pickVoucherForAnte,
+  type Voucher,
+  type VoucherId,
+} from "../items/vouchers";
 import type { HandStats } from "../scoring/handStats";
 import {
   SHOP_INPUT_FEATURES,
@@ -34,6 +40,13 @@ function shopItemCandidate(item: ShopItem): ShopAdviceCandidate {
   return { action: "buy", item: { itemType: "playing-card", id: "card", name: "Card", description: "", cost: item.price } };
 }
 
+export function voucherCandidate(voucher: Voucher): ShopAdviceCandidate {
+  return {
+    action: "buy",
+    item: { itemType: "voucher", id: voucher.id, name: voucher.name, description: "", cost: voucher.cost },
+  };
+}
+
 export async function createHeadlessShopAgent(modelPath: string): Promise<HeadlessShopAgent> {
   const bytes = readFileSync(modelPath);
   const ort = await import("onnxruntime-web");
@@ -54,8 +67,12 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
     return Array.from({ length: n }, (_, i) => i).sort((a, b) => data[b] - data[a])[0] ?? 0;
   }
 
-  function rollOffers(ownedIds: ReadonlySet<string>, rng: () => number): ShopItem[] {
-    return [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, rng })];
+  function rollOffers(
+    ownedIds: ReadonlySet<string>,
+    rng: () => number,
+    extraSlots: number,
+  ): ShopItem[] {
+    return [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, extraSlots, rng })];
   }
 
   return {
@@ -63,14 +80,17 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
       const jokers = [...view.jokers];
       let handStats: HandStats = view.handStats;
       let money = view.money;
+      let ownedVoucherIds: ReadonlySet<VoucherId> = view.ownedVoucherIds;
       const ownedIds = new Set(jokers.map((j) => j.id));
-      let offers = rollOffers(ownedIds, view.rng);
+      let offers = rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds));
+      let voucher = pickVoucherForAnte({ ante: view.ante, ownedIds: ownedVoucherIds, rng: view.rng });
       let rerollsDone = 0;
 
       for (;;) {
         const rerollCost = rerollCostFor(rerollsDone);
         const candidates: ShopAdviceCandidate[] = [
           ...offers.map(shopItemCandidate),
+          ...(voucher !== null && voucher.cost <= money ? [voucherCandidate(voucher)] : []),
           ...(rerollsDone < MAX_REROLLS && rerollCost <= money ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
@@ -81,7 +101,14 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
         if (choice.action === "reroll") {
           money -= rerollCost;
           rerollsDone += 1;
-          offers = rollOffers(ownedIds, view.rng);
+          offers = rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds));
+          continue;
+        }
+
+        if (choice.action === "buy" && choice.item.itemType === "voucher" && voucher !== null) {
+          money -= voucher.cost;
+          ownedVoucherIds = new Set(ownedVoucherIds).add(voucher.id);
+          voucher = null;
           continue;
         }
 
@@ -111,7 +138,7 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
         }
       }
 
-      return { jokers, money, handStats };
+      return { jokers, money, handStats, ownedVoucherIds };
     },
   };
 }

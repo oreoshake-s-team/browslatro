@@ -13,6 +13,7 @@ import {
 import { getHandOptions } from "./getHandOptions";
 import { joker } from "./test-helpers";
 import type { Joker } from "../items/jokers/types";
+import type { VoucherId } from "../items/vouchers";
 import { createDefaultHandStats } from "../scoring/handStats";
 
 const greedy: HeadlessAgent = {
@@ -323,5 +324,75 @@ describe("playHeadlessRun end-of-round economy", () => {
   test("the round payout exceeds the flat blind reward (interest + unused hands)", async () => {
     const money = await firstShopMoney(20);
     expect(money).toBeGreaterThan(20 + 1 + 2);
+  });
+});
+
+describe("playHeadlessRun vouchers", () => {
+  const powerJoker: Joker = joker({
+    effect: { kind: "additive-mult", amount: 100000 },
+  });
+
+  function buysVoucher(id: VoucherId): HeadlessShopAgent {
+    return {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        return {
+          jokers: view.jokers,
+          money: view.money,
+          handStats: view.handStats,
+          ownedVoucherIds: new Set<VoucherId>([...view.ownedVoucherIds, id]),
+        };
+      },
+    };
+  }
+
+  test("the shop view starts with an empty owned-voucher set", async () => {
+    let firstSize = -1;
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        if (firstSize < 0) firstSize = view.ownedVoucherIds.size;
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats };
+      },
+    };
+    await playHeadlessRun(greedy, { seed: 1, maxAnte: 1, jokers: [powerJoker], shopAgent });
+    expect(firstSize).toBe(0);
+  });
+
+  test("a bought voucher persists into later shop views", async () => {
+    const seen: number[] = [];
+    let bought = false;
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        seen.push(view.ownedVoucherIds.size);
+        const owned: ReadonlySet<VoucherId> = bought
+          ? view.ownedVoucherIds
+          : new Set<VoucherId>([...view.ownedVoucherIds, "wasteful"]);
+        bought = true;
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats, ownedVoucherIds: owned };
+      },
+    };
+    await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, jokers: [powerJoker], shopAgent });
+    expect(seen[seen.length - 1]).toBeGreaterThan(0);
+  });
+
+  test("a bought wasteful voucher grants +1 discard in later rounds", async () => {
+    const discardsAtRoundStart = new Map<number, number>();
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        if (!discardsAtRoundStart.has(view.round)) {
+          discardsAtRoundStart.set(view.round, view.remainingDiscards);
+        }
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, {
+      seed: 1,
+      maxAnte: 2,
+      jokers: [powerJoker],
+      shopAgent: buysVoucher("wasteful"),
+    });
+    const first = discardsAtRoundStart.get(1);
+    const later = discardsAtRoundStart.get(2);
+    expect(later).toBe((first ?? 0) + 1);
   });
 });
