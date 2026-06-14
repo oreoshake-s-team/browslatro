@@ -43,6 +43,29 @@ describe("evaluateAgent", () => {
     expect(visited.length).toBeGreaterThan(0);
   });
 
+  test("applies the configured deck's starting-money delta before the shop", async () => {
+    const firstShopMoney = async (deck: "red-deck" | "yellow-deck"): Promise<number> => {
+      let captured = -1;
+      const shopAgent: HeadlessShopAgent = {
+        async buyAfterRound(view: ShopView): Promise<ShopResult> {
+          if (captured === -1) captured = view.money;
+          return { jokers: view.jokers, money: view.money, handStats: view.handStats };
+        },
+      };
+      await evaluateAgent(() => createGreedyAgent(), {
+        games: 1,
+        maxAnte: 1,
+        jokers: [powerJoker],
+        deck,
+        shopAgent,
+      });
+      return captured;
+    };
+    const red = await firstShopMoney("red-deck");
+    const yellow = await firstShopMoney("yellow-deck");
+    expect(yellow - red).toBe(10);
+  });
+
   test("leaves the shop agent untouched when it is not configured (negative)", async () => {
     let calls = 0;
     const shopAgent: HeadlessShopAgent = {
