@@ -4,16 +4,47 @@ import { tmpdir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { seededRng } from "../src/ai/headlessRun";
+import { createGreedyAgent } from "../src/ai/agents";
+import {
+  playHeadlessRun,
+  seededRng,
+  type HeadlessShopAgent,
+  type ShopResult,
+  type ShopView,
+} from "../src/ai/headlessRun";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
 import type { PackOptionSnapshot } from "../src/ai/runEvents";
 import type { PackOption } from "../src/items/packs";
 import { rollPackOptions, packPickLimit } from "../src/items/packs";
-import { MAX_JOKERS } from "../src/items/jokers/constants";
-import { createJokerCatalog, pickRandomFromCatalog } from "../src/items/jokers";
-import { jokerOfferPrice, BASE_REROLL_COST, SHOP_OFFER_SLOTS } from "../src/items/shop";
-import { createPlanetCatalog } from "../src/items/planets";
+import { createJokerCatalog } from "../src/items/jokers";
+import { applyPlanetUpgrade, createPlanetCatalog } from "../src/items/planets";
+import { pickShopItemOffers, type ShopItem } from "../src/items/shop";
+import {
+  applyShopBuy,
+  labelByRollout,
+  type RolloutConfig,
+  type ShopForwardState,
+} from "./shopRolloutExpert";
 import { intFlag, sliceJobs } from "./generateDataset";
+
+type BuyableOffer = Extract<ShopItem, { kind: "joker" | "planet" }>;
+
+const ROLLOUT: RolloutConfig = {
+  agent: createGreedyAgent(),
+  seeds: [1, 2],
+  maxRounds: 3,
+};
+
+function shopItemSnapshot(item: BuyableOffer): {
+  readonly itemType: string;
+  readonly id: string;
+  readonly name: string;
+  readonly cost: number;
+} {
+  return item.kind === "joker"
+    ? { itemType: "joker", id: item.joker.id, name: item.joker.name, cost: item.price }
+    : { itemType: "planet", id: item.planet.id, name: item.planet.name, cost: item.price };
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const isMain = !!process.argv[1] && resolvePath(process.argv[1]) === __filename;
@@ -42,71 +73,114 @@ export interface ShopGeneratorConfig {
   readonly seedOffset: number;
 }
 
-export function generateShopDecisions(config: ShopGeneratorConfig): string {
-  const jokerCatalog = createJokerCatalog();
+export async function generateShopDecisions(
+  config: ShopGeneratorConfig,
+): Promise<string> {
+  const jokerCatalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
   const planetCatalog = createPlanetCatalog();
+  const hand = createGreedyAgent();
   const lines: string[] = [];
 
   for (let g = 0; g < config.games; g += 1) {
     const seed = config.seedOffset + g;
-    const rng = seededRng(seed);
+    const recorder: string[] = [];
 
-    const ante = 1 + Math.floor(rng() * 8);
-    const round = (ante - 1) * 3;
-    const money = 2 + Math.floor(rng() * 19);
-    const jokerCount = Math.floor(rng() * (MAX_JOKERS + 1));
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        const envelope = {
+          schemaVersion: RUN_EVENT_SCHEMA_VERSION,
+          runSeed: seed,
+          ante: view.ante,
+          round: view.round,
+          blind: 0,
+          money: view.money,
+        };
+        let result: ShopForwardState = {
+          ante: view.ante,
+          jokers: view.jokers,
+          handStats: view.handStats,
+          money: view.money,
+        };
 
-    const envelope = {
-      schemaVersion: RUN_EVENT_SCHEMA_VERSION,
-      runSeed: seed,
-      ante,
-      round,
-      blind: 0,
-      money,
-    };
+        const offers = pickShopItemOffers({
+          jokerCatalog,
+          excludedJokerIds: view.jokers.map((j) => j.id),
+          planetCatalog,
+          tarotCatalog: [],
+          spectralCatalog: [],
+          rng: view.rng,
+        }).filter(
+          (o): o is BuyableOffer => o.kind === "joker" || o.kind === "planet",
+        );
+        const affordable = offers
+          .map((o, i) => ({ o, i }))
+          .filter(({ o }) => o.price <= result.money);
+        if (affordable.length > 0) {
+          const candidates = [
+            ...affordable.map(({ o }) => applyShopBuy(result, o)),
+            result,
+          ];
+          const chosen = await labelByRollout(candidates, ROLLOUT);
+          if (chosen < affordable.length) {
+            const offerIdx = affordable[chosen].i;
+            const snapshots = offers.map(shopItemSnapshot);
+            recorder.push(
+              JSON.stringify({
+                ...envelope,
+                kind: "purchase",
+                item: snapshots[offerIdx],
+                offers: snapshots,
+              }),
+            );
+            result = applyShopBuy(result, offers[offerIdx]);
+          }
+        }
 
-    const picked = new Set<string>();
-    const offers: Array<{ itemType: string; id: string; name: string; cost: number }> = [];
-    for (let slot = 0; slot < SHOP_OFFER_SLOTS; slot += 1) {
-      const joker = pickRandomFromCatalog(jokerCatalog, (j) => !picked.has(j.id), rng);
-      if (joker !== null) {
-        const cost = jokerOfferPrice(joker);
-        offers.push({ itemType: "joker", id: joker.id, name: joker.name, cost });
-        picked.add(joker.id);
-      }
-    }
-
-    const affordable = offers.find((o) => o.cost <= money);
-    if (affordable !== undefined && jokerCount < MAX_JOKERS) {
-      lines.push(JSON.stringify({ ...envelope, kind: "purchase", item: affordable, offers }));
-    } else if (money >= BASE_REROLL_COST) {
-      lines.push(JSON.stringify({ ...envelope, kind: "reroll", cost: BASE_REROLL_COST, offers }));
-    }
-
-    const packRng = seededRng(seed + 1_000_000);
-    const options = rollPackOptions({
-      pool: "celestial",
-      variant: "normal",
-      planetCatalog,
-      tarotCatalog: [],
-      jokerCatalog,
-      spectralCatalog: [],
-      rng: packRng,
-    });
-    const snapshots = options.map(packOptionSnapshot);
-    if (snapshots.length > 0) {
-      lines.push(
-        JSON.stringify({
-          ...envelope,
-          kind: "pack-pick",
+        const packRng = seededRng(seed * 1000 + view.round);
+        const options = rollPackOptions({
           pool: "celestial",
           variant: "normal",
-          options: snapshots,
-          pickedIndex: 0,
-          picksRemaining: packPickLimit("normal"),
-        }),
-      );
-    }
+          planetCatalog,
+          tarotCatalog: [],
+          jokerCatalog,
+          spectralCatalog: [],
+          rng: packRng,
+        }).filter((o): o is Extract<PackOption, { kind: "planet" }> => o.kind === "planet");
+        if (options.length > 0) {
+          const candidates = [
+            ...options.map((o) => ({
+              ...result,
+              handStats: applyPlanetUpgrade(result.handStats, o.planet),
+            })),
+            result,
+          ];
+          const chosen = await labelByRollout(candidates, ROLLOUT);
+          const pickedIndex = chosen < options.length ? chosen : null;
+          recorder.push(
+            JSON.stringify({
+              ...envelope,
+              kind: "pack-pick",
+              pool: "celestial",
+              variant: "normal",
+              options: options.map(packOptionSnapshot),
+              pickedIndex,
+              picksRemaining: packPickLimit("normal"),
+            }),
+          );
+          if (pickedIndex !== null) {
+            result = {
+              ...result,
+              handStats: applyPlanetUpgrade(result.handStats, options[pickedIndex].planet),
+            };
+          }
+        }
+
+        return { jokers: result.jokers, money: result.money, handStats: result.handStats };
+      },
+    };
+
+    await playHeadlessRun(hand, { seed, shopAgent });
+    lines.push(...recorder);
   }
 
   return lines.join("\n");
@@ -186,7 +260,7 @@ if (isMain) {
     console.log(`wrote ${outPath}`);
   } else {
     const started = Date.now();
-    const content = generateShopDecisions(config);
+    const content = await generateShopDecisions(config);
     writeFileSync(outPath, content.length > 0 ? `${content}\n` : "");
     const count = content.split("\n").filter(Boolean).length;
     console.log(
