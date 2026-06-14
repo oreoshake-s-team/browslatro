@@ -5,6 +5,7 @@ import { evaluateAgent, type EvaluationResult } from "../src/ai/evaluateAgent";
 import type { HeadlessShopAgent } from "../src/ai/headlessRun";
 import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
 import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
+import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 
@@ -20,6 +21,15 @@ function deckFlag(): Deck {
     throw new Error(`deck "${raw}" is not implemented`);
   }
   return spec.id;
+}
+
+function stakeFlag(): Stake {
+  const raw = stringFlag("--stake", DEFAULT_STAKE);
+  const stake = STAKE_ORDER.find((s) => s === raw);
+  if (stake === undefined) {
+    throw new Error(`unknown stake "${raw}"`);
+  }
+  return stake;
 }
 
 function intFlag(name: string, fallback: number): number {
@@ -43,7 +53,7 @@ const modelPaths = process.argv
   .filter((arg, index, args) => !arg.startsWith("--") && args[index - 1]?.startsWith("--") !== true);
 if (modelPaths.length === 0) {
   console.error(
-    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--shop-policy PATH] [--no-shop]",
+    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--no-shop]",
   );
   process.exit(1);
 }
@@ -51,6 +61,7 @@ if (modelPaths.length === 0) {
 const games = intFlag("--games", 200);
 const seedOffset = intFlag("--seed-offset", 5000);
 const deck = deckFlag();
+const stake = stakeFlag();
 const shopDisabled = process.argv.includes("--no-shop");
 const shopPolicyPath = stringFlag("--shop-policy", DEFAULT_SHOP_POLICY);
 const shopAgent: HeadlessShopAgent | undefined = shopDisabled
@@ -82,13 +93,14 @@ for (const path of modelPaths) {
     games,
     seedOffset,
     deck,
+    stake,
     shopAgent,
   });
   rows.push(formatRow(basename(path), result));
 }
 
 console.log(`${games} games per agent, seeds ${seedOffset}..${seedOffset + games - 1}`);
-console.log(`deck: ${deck}`);
+console.log(`deck: ${deck}, stake: ${stake}`);
 console.log(`shop: ${shopAgent ? basename(shopPolicyPath) : "disabled (no purchases)"}`);
 console.log(
   ["model".padEnd(28), "winRate".padStart(8), "avgAnte".padStart(9), "avgBlinds".padStart(11), "avgHands".padStart(11)].join(""),
