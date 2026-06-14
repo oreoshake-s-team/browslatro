@@ -20,6 +20,10 @@ import {
 } from "./advisor/shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./advisor/types";
 import type { HeadlessShopAgent, ShopResult, ShopView } from "./headlessRun";
+import {
+  applySpectralEffectToDeck,
+  applyTarotEffectToDeck,
+} from "./headlessConsumables";
 
 const MAX_REROLLS = 2;
 
@@ -80,6 +84,7 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
       const jokers = [...view.jokers];
       let handStats: HandStats = view.handStats;
       let money = view.money;
+      let deck = view.deck;
       let ownedVoucherIds: ReadonlySet<VoucherId> = view.ownedVoucherIds;
       const ownedIds = new Set(jokers.map((j) => j.id));
       let offers = rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds));
@@ -122,6 +127,10 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
           ownedIds.add(offer.joker.id);
         } else if (offer.kind === "planet") {
           handStats = applyPlanetUpgrade(handStats, offer.planet);
+        } else if (offer.kind === "tarot") {
+          ({ deck, money } = applyTarotEffectToDeck({ deck, money, jokers }, offer.tarot.effect, view.rng));
+        } else if (offer.kind === "spectral") {
+          ({ deck, money } = applySpectralEffectToDeck({ deck, money, jokers }, offer.spectral.effect, view.rng));
         } else if (offer.kind === "pack") {
           let packOptions = [...offer.pack.options];
           let picksLeft = packPickLimit(offer.pack.variant);
@@ -134,11 +143,13 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
             picksLeft -= 1;
             if (picked.kind === "joker" && jokers.length < MAX_JOKERS) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
             else if (picked.kind === "planet") { handStats = applyPlanetUpgrade(handStats, picked.planet); }
+            else if (picked.kind === "tarot") { ({ deck, money } = applyTarotEffectToDeck({ deck, money, jokers }, picked.tarot.effect, view.rng)); }
+            else if (picked.kind === "spectral") { ({ deck, money } = applySpectralEffectToDeck({ deck, money, jokers }, picked.spectral.effect, view.rng)); }
           }
         }
       }
 
-      return { jokers, money, handStats, ownedVoucherIds };
+      return { jokers, money, handStats, ownedVoucherIds, deck };
     },
   };
 }

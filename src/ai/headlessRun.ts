@@ -91,6 +91,7 @@ export interface ShopView {
   readonly money: number;
   readonly jokers: ReadonlyArray<Joker>;
   readonly handStats: HandStats;
+  readonly deck: ReadonlyArray<Card>;
   readonly ownedVoucherIds: ReadonlySet<VoucherId>;
   readonly rng: RandomSource;
 }
@@ -99,6 +100,7 @@ export interface ShopResult {
   readonly jokers: ReadonlyArray<Joker>;
   readonly money: number;
   readonly handStats: HandStats;
+  readonly deck?: ReadonlyArray<Card>;
   readonly ownedVoucherIds?: ReadonlySet<VoucherId>;
 }
 
@@ -215,7 +217,7 @@ export async function playHeadlessRun(
   let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
   const deckId = config.deck ?? DEFAULT_DECK;
-  const deck = applyCardModifiers(buildHeadlessDeck(), {
+  let deck: ReadonlyArray<Card> = applyCardModifiers(buildHeadlessDeck(), {
     enhancements: config.startCardEnhancements,
     seals: config.startCardSeals,
     editions: config.startCardEditions,
@@ -368,10 +370,11 @@ export async function playHeadlessRun(
         return { won: false, anteReached: ante, blindsCleared, handsPlayed, blindsSkipped: runStats.blindsSkipped };
       }
       if (config.shopAgent !== undefined) {
-        const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, ownedVoucherIds, rng });
+        const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, deck, ownedVoucherIds, rng });
         jokers = result.jokers;
         money = result.money;
         handStats = result.handStats;
+        deck = result.deck ?? deck;
         ownedVoucherIds = result.ownedVoucherIds ?? ownedVoucherIds;
       }
     }
