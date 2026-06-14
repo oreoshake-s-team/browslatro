@@ -13,6 +13,7 @@ import {
 import { getHandOptions } from "./getHandOptions";
 import { joker } from "./test-helpers";
 import type { Joker } from "../items/jokers/types";
+import { createDefaultHandStats } from "../scoring/handStats";
 
 const greedy: HeadlessAgent = {
   name: "greedy-test",
@@ -213,5 +214,79 @@ describe("playHeadlessRun", () => {
     const lastChips = seenChips[seenChips.length - 1];
     expect(ante1Chips).toBeDefined();
     expect(lastChips).toBeGreaterThan(ante1Chips ?? 0);
+  });
+});
+
+describe("playHeadlessRun forward-from-state", () => {
+  const powerJoker: Joker = joker({
+    effect: { kind: "additive-mult", amount: 100000 },
+  });
+
+  test("startAnte begins the run at the given ante", async () => {
+    const antesSeen: number[] = [];
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        antesSeen.push(view.ante);
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, {
+      seed: 4,
+      startAnte: 3,
+      maxAnte: 3,
+      jokers: [powerJoker],
+    });
+    expect(Math.min(...antesSeen)).toBe(3);
+  });
+
+  test("maxRounds caps the number of blinds cleared", async () => {
+    const result = await playHeadlessRun(greedy, {
+      seed: 4,
+      maxRounds: 2,
+      jokers: [powerJoker],
+    });
+    expect(result.blindsCleared).toBe(2);
+  });
+
+  test("startMoney sets the starting bankroll", async () => {
+    const moneySeen: number[] = [];
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        moneySeen.push(view.money);
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats };
+      },
+    };
+    await playHeadlessRun(greedy, {
+      seed: 4,
+      maxAnte: 1,
+      startMoney: 50,
+      jokers: [powerJoker],
+      shopAgent,
+    });
+    expect(moneySeen[0]).toBeGreaterThanOrEqual(50);
+  });
+
+  test("startHandStats seeds the opening hand stats", async () => {
+    const chipsSeen: number[] = [];
+    const observer: HeadlessAgent = {
+      name: "observer",
+      chooseAction(view) {
+        chipsSeen.push(view.handStats["High Card"].chips);
+        return greedy.chooseAction(view);
+      },
+    };
+    const base = createDefaultHandStats();
+    const boosted = {
+      ...base,
+      "High Card": { ...base["High Card"], chips: base["High Card"].chips + 500 },
+    };
+    await playHeadlessRun(observer, {
+      seed: 4,
+      maxAnte: 1,
+      startHandStats: boosted,
+      jokers: [powerJoker],
+    });
+    expect(chipsSeen[0]).toBe(base["High Card"].chips + 500);
   });
 });
