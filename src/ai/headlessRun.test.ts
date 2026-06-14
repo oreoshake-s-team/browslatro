@@ -140,6 +140,20 @@ describe("playHeadlessRun", () => {
     expect(roundsVisited.length).toBe(result.blindsCleared);
   });
 
+  test("the shop view round is the sequential per-round counter, not ante times three", async () => {
+    const rounds: number[] = [];
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        rounds.push(view.round);
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats };
+      },
+    };
+    const result = await playHeadlessRun(greedy, { seed: 1, maxAnte: 2, shopAgent });
+    expect(rounds).toEqual(
+      Array.from({ length: result.blindsCleared }, (_, i) => i + 1),
+    );
+  });
+
   test("shop agent jokers are visible in subsequent ante rounds", async () => {
     const powerJoker: Joker = joker({ id: "power-joker", effect: { kind: "additive-mult", amount: 100000 } });
     const addedJoker: Joker = joker({ id: "added-joker", effect: { kind: "additive-mult", amount: 1 } });

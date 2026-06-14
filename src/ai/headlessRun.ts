@@ -62,6 +62,7 @@ export interface HeadlessAgent {
 
 export interface ShopView {
   readonly ante: number;
+  readonly round: number;
   readonly money: number;
   readonly jokers: ReadonlyArray<Joker>;
   readonly handStats: HandStats;
@@ -240,7 +241,7 @@ export async function playHeadlessRun(
       blindsCleared += 1;
       money += blind + BLIND_CLEAR_REWARD_BASE;
       if (config.shopAgent !== undefined) {
-        const result = await config.shopAgent.buyAfterRound({ ante, money, jokers, handStats, rng });
+        const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, rng });
         jokers = result.jokers;
         money = result.money;
         handStats = result.handStats;
