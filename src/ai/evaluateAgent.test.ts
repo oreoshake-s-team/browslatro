@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import { evaluateAgent } from "./evaluateAgent";
-import { createGreedyAgent } from "./agents";
+import { createGreedyAgent, createSkipAgent } from "./agents";
 import { joker } from "./test-helpers";
 import type {
   HeadlessShopAgent,
@@ -16,6 +16,14 @@ describe("evaluateAgent", () => {
     await expect(
       evaluateAgent(() => createGreedyAgent(), { games: 0 }),
     ).rejects.toThrow("games must be positive");
+  });
+
+  test("reports the average blinds skipped by a skip expert", async () => {
+    const result = await evaluateAgent(
+      () => createSkipAgent(createGreedyAgent(), () => true),
+      { games: 3, maxAnte: 1, jokers: [powerJoker] },
+    );
+    expect(result.averageBlindsSkipped).toBe(2);
   });
 
   test("reports the requested number of games", async () => {

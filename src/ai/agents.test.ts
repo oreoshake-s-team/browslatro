@@ -1,9 +1,16 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { createGreedyAgent, createRandomAgent } from "./agents";
+import {
+  createGreedyAgent,
+  createRandomAgent,
+  createSkipAgent,
+  defaultShouldSkipTag,
+} from "./agents";
 import { evaluateAgent } from "./evaluateAgent";
 import { playHeadlessRun, seededRng } from "./headlessRun";
 import { joker } from "./test-helpers";
+
+const powerJoker = joker({ effect: { kind: "additive-mult", amount: 100000 } });
 
 describe("createRandomAgent", () => {
   test("completes a seeded run without illegal actions", async () => {
@@ -26,6 +33,38 @@ describe("createGreedyAgent", () => {
   test("completes a seeded run without illegal actions", async () => {
     const result = await playHeadlessRun(createGreedyAgent(), { seed: 99 });
     expect(result.handsPlayed).toBeGreaterThan(0);
+  });
+});
+
+describe("defaultShouldSkipTag", () => {
+  test("skips for an economy tag", () => {
+    expect(defaultShouldSkipTag("economy")).toBe(true);
+  });
+
+  test("does not skip for a non-worthy tag", () => {
+    expect(defaultShouldSkipTag("d6")).toBe(false);
+  });
+});
+
+describe("createSkipAgent", () => {
+  test("skips the small and big blinds when its rule says to", async () => {
+    const result = await playHeadlessRun(
+      createSkipAgent(createGreedyAgent(), () => true),
+      { seed: 4, maxAnte: 1, jokers: [powerJoker] },
+    );
+    expect(result.blindsSkipped).toBe(2);
+  });
+
+  test("never skips when its rule declines", async () => {
+    const result = await playHeadlessRun(
+      createSkipAgent(createGreedyAgent(), () => false),
+      { seed: 4, maxAnte: 1, jokers: [powerJoker] },
+    );
+    expect(result.blindsSkipped).toBe(0);
+  });
+
+  test("delegates its name to the wrapped agent", () => {
+    expect(createSkipAgent(createGreedyAgent()).name).toBe("skip(greedy)");
   });
 });
 
