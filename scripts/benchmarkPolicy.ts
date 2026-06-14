@@ -8,7 +8,7 @@ import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 
-const DEFAULT_SHOP_POLICY = "public/models/advisor-shop-policy-v1.onnx";
+const DEFAULT_SHOP_POLICY = "public/models/advisor-shop-policy-v2.onnx";
 
 function deckFlag(): Deck {
   const raw = stringFlag("--deck", DEFAULT_DECK);

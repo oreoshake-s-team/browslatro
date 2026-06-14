@@ -6,7 +6,7 @@ import {
 } from "./shopEncoding";
 import type { PackRankInput, ShopRankInput } from "./shopEncoding";
 
-export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v1.onnx";
+export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v2.onnx";
 
 export interface ShopCandidateRanker {
   load(): Promise<void>;
