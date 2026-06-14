@@ -478,10 +478,13 @@ describe("playHeadlessRun skip-tag", () => {
 });
 
 describe("playHeadlessRun card modifiers", () => {
-  async function firstPlayScore(
-    enhancements?: ReadonlyMap<number, Enhancement | null>,
-    seals?: ReadonlyMap<number, Seal>,
-  ): Promise<number> {
+  interface Mods {
+    startCardEnhancements?: ReadonlyMap<number, Enhancement | null>;
+    startCardSeals?: ReadonlyMap<number, Seal>;
+    startCardBonusChips?: ReadonlyMap<number, number>;
+  }
+
+  async function firstPlayScore(mods: Mods = {}): Promise<number> {
     const scores: number[] = [];
     const fixedPlay: HeadlessAgent = {
       name: "fixed",
@@ -490,12 +493,7 @@ describe("playHeadlessRun card modifiers", () => {
         return { kind: "play", cardIds: view.dealt.hand.slice(0, 5).map((c) => c.id) };
       },
     };
-    await playHeadlessRun(fixedPlay, {
-      seed: 1,
-      maxAnte: 1,
-      startCardEnhancements: enhancements,
-      startCardSeals: seals,
-    });
+    await playHeadlessRun(fixedPlay, { seed: 1, maxAnte: 1, ...mods });
     return scores[1] ?? scores[0];
   }
 
@@ -504,19 +502,25 @@ describe("playHeadlessRun card modifiers", () => {
   }
 
   test("a bonus enhancement raises the played hand's score", async () => {
-    const enhanced = await firstPlayScore(allCards<Enhancement>("bonus"));
+    const enhanced = await firstPlayScore({ startCardEnhancements: allCards<Enhancement>("bonus") });
     const plain = await firstPlayScore();
     expect(enhanced).toBeGreaterThan(plain);
   });
 
   test("a red seal raises the played hand's score by retriggering", async () => {
-    const sealed = await firstPlayScore(undefined, allCards<Seal>("red"));
+    const sealed = await firstPlayScore({ startCardSeals: allCards<Seal>("red") });
     const plain = await firstPlayScore();
     expect(sealed).toBeGreaterThan(plain);
   });
 
+  test("per-card bonus chips raise the played hand's score", async () => {
+    const bonused = await firstPlayScore({ startCardBonusChips: allCards<number>(50) });
+    const plain = await firstPlayScore();
+    expect(bonused).toBeGreaterThan(plain);
+  });
+
   test("omitting modifiers matches passing empty maps", async () => {
-    const empty = await firstPlayScore(new Map());
+    const empty = await firstPlayScore({ startCardEnhancements: new Map() });
     const omitted = await firstPlayScore();
     expect(empty).toBe(omitted);
   });
