@@ -122,6 +122,8 @@ browslatro/
 │   ├── save/                            localStorage snapshot (Sets & Maps survive round-trips)
 │   ├── store/                           The 17 Zustand slices — the single game store
 │   ├── hooks/                           Orchestration: play-hand, scoring pipeline, discard, lifecycle
+│   ├── ai/                              AI/ML advisor: headless loop, candidate enum, encoding,
+│   │   └── advisor/                     ONNX policy + LLM advisor (see docs/ai-advisor/)
 │   ├── components/                      UI by feature (cards, jokers, hud, shop, game, options, system)
 │   ├── i18n/                            i18next setup, en + haw locales, typed keys, content overrides
 │   ├── styles/                          Design tokens (tokens.css), shared button classes
@@ -132,6 +134,10 @@ browslatro/
 A useful heuristic: **`src/items` and `src/scoring` are where the *rules* live;
 `src/store` and `src/hooks` are where the *game loop* lives; `src/components` is the
 *skin*.**
+
+For the AI move-suggestion system (the in-game Suggest buttons, autopilot, the ONNX
+policy, and the offline training pipeline under `ml/`), see the dedicated
+[**AI/ML advisor docs**](../ai-advisor/README.md).
 
 ---
 
