@@ -58,7 +58,8 @@
   color: var(--edition-foil-tint);
 }
 
-.coach-advice-apply {
+.coach-advice-apply,
+.coach-advice-get {
   align-self: flex-start;
 }
 

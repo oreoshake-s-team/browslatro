@@ -280,6 +280,8 @@ export const en = {
     suggestRetry: "Try again",
     suggestError: "The coach couldn't make a suggestion right now.",
     coachLabel: "Coach · local · instant",
+    coachTip: "Coach tip",
+    coachGetPick: "Get coach pick",
     coachComputing: "Coaching…",
     coachHide: "Hide coach",
     askAiButton: "Ask AI (rate-limited)",

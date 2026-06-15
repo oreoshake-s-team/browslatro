@@ -4,3 +4,8 @@
   gap: 0.6rem;
   width: 100%;
 }
+
+.shop-suggest-button {
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+}

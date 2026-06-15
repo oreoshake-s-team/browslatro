@@ -44,16 +44,29 @@ async function openShop(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
   await page.getByText("Apply modifiers").click();
   await page.getByText(/Win/).click();
-  await expect(page.getByTestId("coach-advice")).toBeVisible();
+  await expect(page.getByTestId("coach-trigger")).toBeVisible();
 }
 
-test("the local coach auto-recommends a move in the shop without any click", async ({
-  page,
-}) => {
-  await openShop(page);
+async function revealCoachPick(page: Page): Promise<void> {
+  await page.getByTestId("coach-trigger").click();
+  await page.getByTestId("coach-get-pick").click();
   await expect(page.getByTestId("coach-recommendation")).toBeVisible({
     timeout: 10_000,
   });
+}
+
+test("the shop offers a Coach tip trigger and no panel by default", async ({
+  page,
+}) => {
+  await openShop(page);
+  await expect(page.getByTestId("coach-advice")).toHaveCount(0);
+});
+
+test("revealing then getting the coach pick shows a recommendation", async ({
+  page,
+}) => {
+  await openShop(page);
+  await revealCoachPick(page);
   await expect(page.getByTestId("coach-recommendation")).not.toBeEmpty();
 });
 
@@ -61,6 +74,7 @@ test("a keyless player sees the rate-limited Ask AI affordance", async ({
   page,
 }) => {
   await openShop(page);
+  await revealCoachPick(page);
   await expect(page.getByTestId("coach-ask-ai")).toContainText("rate-limited");
 });
 
@@ -69,6 +83,7 @@ test("asking the AI annotates the coach pick with a verdict", async ({
 }) => {
   await page.route("**/api/advice", fulfillWithBuyAdvice);
   await openShop(page);
+  await revealCoachPick(page);
   await page.getByTestId("coach-ask-ai").click();
   await expect(page.getByTestId("coach-ai-verdict")).toBeVisible({
     timeout: 10_000,
@@ -86,15 +101,18 @@ test("a rate-limited keyless player gets the key form inline after asking the AI
     }),
   );
   await openShop(page);
+  await revealCoachPick(page);
   await page.getByTestId("coach-ask-ai").click();
   await expect(page.getByTestId("coach-ai-error")).toContainText("10 min");
   await expect(page.getByLabel("Your Anthropic API key")).toBeVisible();
 });
 
-test("dismissing hides the coach panel for the current shop", async ({
+test("dismissing collapses the panel back to the Coach tip trigger", async ({
   page,
 }) => {
   await openShop(page);
+  await revealCoachPick(page);
   await page.getByTestId("coach-dismiss").click();
   await expect(page.getByTestId("coach-advice")).toHaveCount(0);
+  await expect(page.getByTestId("coach-trigger")).toBeVisible();
 });

@@ -68,6 +68,7 @@ function errorState(code: AdviceClientErrorCode): SuggestionState<TestAction> {
 function renderCoach(
   state: SuggestionState<TestAction>,
   handlers: Partial<{
+    onCoach: () => void;
     onApply: () => void;
     onAskAi: () => void;
     onDismiss: () => void;
@@ -76,6 +77,7 @@ function renderCoach(
   render(
     <CoachAdvice
       state={state}
+      onCoach={handlers.onCoach ?? vi.fn()}
       onApply={handlers.onApply ?? vi.fn()}
       onAskAi={handlers.onAskAi ?? vi.fn()}
       onDismiss={handlers.onDismiss ?? vi.fn()}
@@ -84,9 +86,16 @@ function renderCoach(
 }
 
 describe("CoachAdvice", () => {
-  test("renders nothing while idle", () => {
+  test("shows a Get coach pick prompt while idle", () => {
     renderCoach({ phase: "idle" });
-    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+    expect(screen.getByTestId("coach-get-pick")).toBeInTheDocument();
+  });
+
+  test("clicking Get coach pick invokes the coach handler", async () => {
+    const onCoach = vi.fn();
+    renderCoach({ phase: "idle" }, { onCoach });
+    await userEvent.click(screen.getByTestId("coach-get-pick"));
+    expect(onCoach).toHaveBeenCalledOnce();
   });
 
   test("shows the coach pick from the onnx index", () => {

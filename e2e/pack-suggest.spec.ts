@@ -41,16 +41,30 @@ async function openPackFromShop(page: Page): Promise<Locator> {
     .first()
     .click();
   const modal = packModal(page);
-  await expect(modal.getByTestId("coach-recommendation")).toBeVisible({
-    timeout: 10_000,
-  });
+  await expect(modal.getByTestId("coach-trigger")).toBeVisible();
   return modal;
 }
 
-test("the local coach auto-recommends a move when a pack opens", async ({
+async function revealCoachPick(modal: Locator): Promise<void> {
+  await modal.getByTestId("coach-trigger").click();
+  await modal.getByTestId("coach-get-pick").click();
+  await expect(modal.getByTestId("coach-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+}
+
+test("the pack offers a Coach tip trigger and no panel by default", async ({
   page,
 }) => {
   const modal = await openPackFromShop(page);
+  await expect(modal.getByTestId("coach-advice")).toHaveCount(0);
+});
+
+test("revealing then getting the coach pick shows a recommendation", async ({
+  page,
+}) => {
+  const modal = await openPackFromShop(page);
+  await revealCoachPick(modal);
   await expect(modal.getByTestId("coach-recommendation")).not.toBeEmpty();
 });
 
@@ -58,6 +72,7 @@ test("a keyless player sees the rate-limited Ask AI affordance", async ({
   page,
 }) => {
   const modal = await openPackFromShop(page);
+  await revealCoachPick(modal);
   await expect(modal.getByTestId("coach-ask-ai")).toContainText("rate-limited");
 });
 
@@ -66,14 +81,19 @@ test("asking the AI annotates the coach pick with a verdict", async ({
 }) => {
   await page.route("**/api/advice", fulfillWithFirstPick);
   const modal = await openPackFromShop(page);
+  await revealCoachPick(modal);
   await modal.getByTestId("coach-ask-ai").click();
   await expect(modal.getByTestId("coach-ai-verdict")).toBeVisible({
     timeout: 10_000,
   });
 });
 
-test("dismissing hides the coach panel", async ({ page }) => {
+test("dismissing collapses the panel back to the Coach tip trigger", async ({
+  page,
+}) => {
   const modal = await openPackFromShop(page);
+  await revealCoachPick(modal);
   await modal.getByTestId("coach-dismiss").click();
   await expect(modal.getByTestId("coach-advice")).toHaveCount(0);
+  await expect(modal.getByTestId("coach-trigger")).toBeVisible();
 });

@@ -70,22 +70,40 @@ function renderSuggestion(
   return props;
 }
 
-describe("PackSuggestion coach-first", () => {
-  test("auto-shows the local coach pick without any click", async () => {
+async function revealCoachPick(): Promise<void> {
+  await userEvent.click(screen.getByTestId("coach-trigger"));
+  await userEvent.click(screen.getByTestId("coach-get-pick"));
+}
+
+describe("PackSuggestion click-to-reveal", () => {
+  test("shows a Coach tip trigger, not the panel, by default", () => {
     renderSuggestion();
+    expect(screen.getByTestId("coach-trigger")).toBeInTheDocument();
+  });
+
+  test("the coach panel is not shown until the trigger is clicked", () => {
+    renderSuggestion();
+    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+  });
+
+  test("getting the coach pick shows the local recommendation", async () => {
+    renderSuggestion();
+    await revealCoachPick();
     await expect(
       screen.findByTestId("coach-recommendation"),
     ).resolves.toHaveTextContent(/^Pick /);
   });
 
-  test("does not call the LLM when the coach auto-runs", async () => {
+  test("getting the coach pick does not call the LLM", async () => {
     const props = renderSuggestion();
+    await revealCoachPick();
     await screen.findByTestId("coach-recommendation");
     expect(props.suggestionDeps?.fetchAdviceFn).not.toHaveBeenCalled();
   });
 
   test("applying the coach pick picks the mapped option", async () => {
     const props = renderSuggestion();
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onPick).toHaveBeenCalledWith(0);
   });
@@ -93,12 +111,14 @@ describe("PackSuggestion coach-first", () => {
   test("applying a skip coach pick closes the pack", async () => {
     rankState.value = [2];
     const props = renderSuggestion();
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onClose).toHaveBeenCalledOnce();
   });
 
   test("a picked option maps back to its original index", async () => {
     const props = renderSuggestion({ pickedIndices: new Set([0]) });
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onPick).toHaveBeenCalledWith(1);
   });
@@ -108,6 +128,7 @@ describe("PackSuggestion coach-first", () => {
       .fn()
       .mockResolvedValue({ ok: true, advice: adviceFixture() });
     renderSuggestion({ suggestionDeps: { fetchAdviceFn } });
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-ask-ai"));
     await screen.findByTestId("coach-ai-verdict");
     expect(fetchAdviceFn).toHaveBeenCalledWith(
@@ -117,6 +138,7 @@ describe("PackSuggestion coach-first", () => {
 
   test("the Ask AI button reads rate-limited without a stored key", async () => {
     renderSuggestion();
+    await revealCoachPick();
     await expect(screen.findByTestId("coach-ask-ai")).resolves.toHaveTextContent(
       "rate-limited",
     );
@@ -125,6 +147,7 @@ describe("PackSuggestion coach-first", () => {
   test("the Ask AI button drops the rate-limited note when a key is stored", async () => {
     storePlayerKey("sk-ant-test-1234");
     renderSuggestion();
+    await revealCoachPick();
     const button = await screen.findByTestId("coach-ask-ai");
     expect(button).not.toHaveTextContent("rate-limited");
   });
@@ -137,14 +160,17 @@ describe("PackSuggestion coach-first", () => {
           .mockResolvedValue({ ok: false, code: "model_error" }),
       },
     });
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-ask-ai"));
     await screen.findByTestId("coach-ai-error");
     expect(screen.getByTestId("coach-recommendation")).toBeInTheDocument();
   });
 
-  test("dismissing hides the coach panel", async () => {
+  test("dismissing collapses the panel back to the trigger", async () => {
     renderSuggestion();
-    await userEvent.click(await screen.findByTestId("coach-dismiss"));
+    await revealCoachPick();
+    await userEvent.click(screen.getByTestId("coach-dismiss"));
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+    expect(screen.getByTestId("coach-trigger")).toBeInTheDocument();
   });
 });
