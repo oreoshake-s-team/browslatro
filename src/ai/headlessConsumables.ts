@@ -6,6 +6,7 @@ import {
 } from "../cards/deckBuild";
 import { rollCardEdition } from "../cards/editions";
 import type { Card } from "../cards/types";
+import { createRandomJoker } from "../items/jokers/collection";
 import type { Joker } from "../items/jokers/types";
 import {
   nextRankUp,
@@ -22,11 +23,14 @@ export interface ConsumableContext {
   readonly deck: ReadonlyArray<Card>;
   readonly money: number;
   readonly jokers: ReadonlyArray<Joker>;
+  readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly jokerCapacity: number;
 }
 
 export interface ConsumableResult {
   readonly deck: ReadonlyArray<Card>;
   readonly money: number;
+  readonly createdJoker?: Joker;
 }
 
 function topCardIds(deck: ReadonlyArray<Card>, count: number): number[] {
@@ -96,6 +100,15 @@ export function applyTarotEffectToDeck(
         deck: deck.map((c) => (c.id === leftId ? { ...right, id: leftId } : c)),
         money,
       };
+    }
+    case "create-joker": {
+      const createdJoker = createRandomJoker(
+        ctx.jokers,
+        ctx.jokerCatalog,
+        ctx.jokerCapacity,
+        rng,
+      );
+      return createdJoker === null ? { deck, money } : { deck, money, createdJoker };
     }
     default:
       return { deck, money };

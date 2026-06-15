@@ -5,7 +5,7 @@ import { MAX_JOKERS } from "../items/jokers/constants";
 import { packPickLimit, type PackOption } from "../items/packs";
 import { pickShopOffers, rerollCostFor, type ShopItem } from "../items/shop";
 import { createSpectralCatalog } from "../items/spectrals";
-import { createTarotCatalog } from "../items/tarots";
+import { createTarotCatalog, type TarotEffect } from "../items/tarots";
 import {
   extraShopOfferSlots,
   pickVoucherForAnte,
@@ -91,6 +91,27 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
       let voucher = pickVoucherForAnte({ ante: view.ante, ownedIds: ownedVoucherIds, rng: view.rng });
       let rerollsDone = 0;
 
+      const applyTarot = (effect: TarotEffect): void => {
+        const result = applyTarotEffectToDeck(
+          { deck, money, jokers, jokerCatalog, jokerCapacity: MAX_JOKERS },
+          effect,
+          view.rng,
+        );
+        deck = result.deck;
+        money = result.money;
+        if (result.createdJoker !== undefined) {
+          jokers.push(result.createdJoker);
+          ownedIds.add(result.createdJoker.id);
+        }
+      };
+      const applySpectral = (effect: Parameters<typeof applySpectralEffectToDeck>[1]): void => {
+        ({ deck, money } = applySpectralEffectToDeck(
+          { deck, money, jokers, jokerCatalog, jokerCapacity: MAX_JOKERS },
+          effect,
+          view.rng,
+        ));
+      };
+
       for (;;) {
         const rerollCost = rerollCostFor(rerollsDone);
         const candidates: ShopAdviceCandidate[] = [
@@ -128,9 +149,9 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
         } else if (offer.kind === "planet") {
           handStats = applyPlanetUpgrade(handStats, offer.planet);
         } else if (offer.kind === "tarot") {
-          ({ deck, money } = applyTarotEffectToDeck({ deck, money, jokers }, offer.tarot.effect, view.rng));
+          applyTarot(offer.tarot.effect);
         } else if (offer.kind === "spectral") {
-          ({ deck, money } = applySpectralEffectToDeck({ deck, money, jokers }, offer.spectral.effect, view.rng));
+          applySpectral(offer.spectral.effect);
         } else if (offer.kind === "pack") {
           let packOptions = [...offer.pack.options];
           let picksLeft = packPickLimit(offer.pack.variant);
@@ -143,8 +164,8 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
             picksLeft -= 1;
             if (picked.kind === "joker" && jokers.length < MAX_JOKERS) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
             else if (picked.kind === "planet") { handStats = applyPlanetUpgrade(handStats, picked.planet); }
-            else if (picked.kind === "tarot") { ({ deck, money } = applyTarotEffectToDeck({ deck, money, jokers }, picked.tarot.effect, view.rng)); }
-            else if (picked.kind === "spectral") { ({ deck, money } = applySpectralEffectToDeck({ deck, money, jokers }, picked.spectral.effect, view.rng)); }
+            else if (picked.kind === "tarot") { applyTarot(picked.tarot.effect); }
+            else if (picked.kind === "spectral") { applySpectral(picked.spectral.effect); }
           }
         }
       }
