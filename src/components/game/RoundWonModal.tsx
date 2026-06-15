@@ -102,7 +102,8 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         onClick={(e) => e.stopPropagation()}
       >
         <h2 id="round-won-title" className="round-won-title">
-          🏆 {t("roundEnd.wonTitle")}
+          <span aria-hidden="true">🏆 </span>
+          {t("roundEnd.wonTitle")}
         </h2>
         <dl className="round-won-stats">
           <div className="round-won-stat">

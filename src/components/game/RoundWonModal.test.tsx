@@ -436,4 +436,12 @@ describe("RoundWonModal i18n", () => {
       "on $15",
     );
   });
+
+  test("the trophy glyph is aria-hidden so it does not split the title's accessible name", () => {
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    const decoration = document
+      .getElementById("round-won-title")
+      ?.querySelector("span[aria-hidden='true']");
+    expect(decoration).toHaveTextContent("🏆");
+  });
 });

@@ -304,7 +304,8 @@ export default function PackOpenModal({
     >
       <div className="pack-open-inner">
         <h2 id="pack-open-title" className="pack-open-title">
-          🎁 {title}
+          <span aria-hidden="true">🎁 </span>
+          {title}
         </h2>
         <p className="pack-open-subtitle" data-testid="pack-open-subtitle">
           {subtitle}
