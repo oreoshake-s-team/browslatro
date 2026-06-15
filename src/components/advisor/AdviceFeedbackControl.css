@@ -1,0 +1,52 @@
+.advice-feedback {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.advice-feedback-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--accent-danger) 8%, transparent);
+}
+
+.advice-feedback-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.advice-feedback-legend {
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.advice-feedback-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.advice-feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.advice-feedback-recorded {
+  margin: 0;
+  font-weight: 700;
+  color: var(--accent-success);
+}
