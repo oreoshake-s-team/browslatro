@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import "./DeckPile.css";
 import Card from "./Card";
 import DeckSummary from "./DeckSummary";
-import type { Card as CardType, Suit } from "../../cards/types";
+import type { Card as CardType } from "../../cards/types";
 import { SUITS, groupBySuit } from "../../cards/deck";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
@@ -12,12 +12,6 @@ import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
 import { JOKER_DRAG_MIME } from "../jokers/Jokers";
 
-const SUIT_LABELS: Record<Suit, string> = {
-  spades: "Spades",
-  hearts: "Hearts",
-  diamonds: "Diamonds",
-  clubs: "Clubs",
-};
 
 interface DeckPileProps {
   remaining: ReadonlyArray<CardType>;
@@ -114,7 +108,7 @@ export default function DeckPile({
                   {SUITS.map((suit) => (
                     <section key={suit} className="deck-modal-group">
                       <h4>
-                        {SUIT_LABELS[suit]} ({grouped[suit].length})
+                        {t(`suits.${suit}`)} ({grouped[suit].length})
                       </h4>
                       <div className="deck-modal-cards">
                         {grouped[suit].map((card) => (
