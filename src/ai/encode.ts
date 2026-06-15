@@ -6,11 +6,21 @@ import type {
   Suit,
 } from "../cards/types";
 import type { JokerEdition, JokerRarity } from "../items/jokers/types";
+import type { Deck } from "../items/decks";
+import {
+  deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckJokerSlotsDelta,
+  deckStartingDiscardsDelta,
+  deckStartingHandsDelta,
+  deckSuppressesInterest,
+} from "../items/decks";
+import type { Stake } from "../items/stakes";
+import { stakeStartingDiscardsDelta } from "../items/stakes";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandOption, HandOptionNote } from "./getHandOptions";
 import type { ModelHandCard, ModelJoker, ModelState } from "./modelState";
 
-export const ENCODING_VERSION = 3;
+export const ENCODING_VERSION = 4;
 
 export const HAND_SLOTS = 16;
 export const JOKER_SLOTS = 5;
@@ -34,6 +44,17 @@ const JOKER_EDITIONS: ReadonlyArray<JokerEdition> = [
   "foil", "holographic", "polychrome", "negative",
 ];
 
+const DECKS: ReadonlyArray<Deck> = [
+  "red-deck", "blue-deck", "yellow-deck", "green-deck", "black-deck",
+  "magic-deck", "nebula-deck", "ghost-deck", "abandoned-deck", "checkered-deck",
+  "zodiac-deck", "painted-deck", "anaglyph-deck", "plasma-deck", "erratic-deck",
+];
+const STAKES: ReadonlyArray<Stake> = [
+  "white", "red", "green", "black", "blue", "purple", "orange", "gold",
+];
+const DECK_DERIVED_FEATURES = 5;
+const STAKE_DERIVED_FEATURES = 1;
+
 const BLIND_KINDS = ["small", "big", "boss"] as const;
 const HAND_LABELS: ReadonlyArray<HandLabel> = [
   "High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
@@ -48,7 +69,8 @@ const NOTE_KINDS: ReadonlyArray<HandOptionNote["kind"]> = [
 export const CARD_FEATURES =
   2 + RANKS.length + SUITS.length + ENHANCEMENTS.length + SEALS.length + EDITIONS.length + 1;
 export const CONTEXT_FEATURES =
-  6 + BLIND_KINDS.length + 1 + SUITS.length + RANKS.length;
+  6 + BLIND_KINDS.length + 1 + SUITS.length + RANKS.length +
+  DECKS.length + STAKES.length + DECK_DERIVED_FEATURES + STAKE_DERIVED_FEATURES;
 export const JOKER_SLOT_FEATURES =
   1 + JOKER_EFFECT_CATEGORIES.length + JOKER_RARITIES.length + JOKER_EDITIONS.length + 1;
 export const JOKER_FEATURES = JOKER_SLOTS * JOKER_SLOT_FEATURES;
@@ -139,6 +161,14 @@ export function encodeState(state: ModelState): number[] {
     state.deck.total / 52,
     ...SUITS.map((suit) => state.deck.bySuit[suit] / deckTotal),
     ...RANKS.map((rank) => state.deck.byRank[rank] / deckTotal),
+    ...oneHot(state.deckId, DECKS),
+    ...oneHot(state.stake, STAKES),
+    deckStartingHandsDelta(state.deckId) / 2,
+    deckStartingDiscardsDelta(state.deckId) / 2,
+    deckJokerSlotsDelta(state.deckId) / 2,
+    deckEndOfRoundBonusPerRemainingHandAndDiscard(state.deckId) / 5,
+    deckSuppressesInterest(state.deckId) ? 1 : 0,
+    stakeStartingDiscardsDelta(state.stake) / 2,
     ...jokerSlots,
   ];
 }

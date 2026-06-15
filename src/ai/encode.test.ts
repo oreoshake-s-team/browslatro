@@ -166,3 +166,55 @@ describe("encode — shape contracts", () => {
     );
   });
 });
+
+describe("encode — deck/stake conditioning", () => {
+  const sample = fixtureRecords()[0];
+  const BASE_CONTEXT = 6 + 3 + 1 + 4 + 13;
+  const CONDITIONING_START = 16 * CARD_FEATURES + BASE_CONTEXT;
+  const DECK_ONEHOT = 15;
+  const STAKE_ONEHOT = 8;
+  const DECK_DERIVED_START = CONDITIONING_START + DECK_ONEHOT + STAKE_ONEHOT;
+
+  test("the deck one-hot marks the active deck", () => {
+    const vec = encodeState({ ...sample.state, deckId: "black-deck" });
+    expect(vec[CONDITIONING_START + 4]).toBe(1);
+  });
+
+  test("the deck one-hot is otherwise zero", () => {
+    const vec = encodeState({ ...sample.state, deckId: "black-deck" });
+    const onehot = vec.slice(CONDITIONING_START, CONDITIONING_START + DECK_ONEHOT);
+    expect(onehot.filter((v) => v === 1)).toHaveLength(1);
+  });
+
+  test("the stake one-hot marks the active stake", () => {
+    const vec = encodeState({ ...sample.state, stake: "purple" });
+    expect(vec[CONDITIONING_START + DECK_ONEHOT + 5]).toBe(1);
+  });
+
+  test("the black deck encodes its joker-slot delta", () => {
+    const vec = encodeState({ ...sample.state, deckId: "black-deck" });
+    expect(vec[DECK_DERIVED_START + 2]).toBe(0.5);
+  });
+
+  test("the green deck flags interest suppression", () => {
+    const vec = encodeState({ ...sample.state, deckId: "green-deck" });
+    expect(vec[DECK_DERIVED_START + 4]).toBe(1);
+  });
+
+  test("the green deck encodes its end-of-round bonus", () => {
+    const vec = encodeState({ ...sample.state, deckId: "green-deck" });
+    expect(vec[DECK_DERIVED_START + 3]).toBeCloseTo(0.4, 5);
+  });
+
+  test("an unmodified deck leaves all derived deck scalars zero", () => {
+    const vec = encodeState({ ...sample.state, deckId: "yellow-deck" });
+    expect(vec.slice(DECK_DERIVED_START, DECK_DERIVED_START + 5)).toEqual([
+      0, 0, 0, 0, 0,
+    ]);
+  });
+
+  test("the blue stake encodes its discard penalty", () => {
+    const vec = encodeState({ ...sample.state, stake: "blue" });
+    expect(vec[DECK_DERIVED_START + 5]).toBe(-0.5);
+  });
+});
