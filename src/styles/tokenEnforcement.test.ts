@@ -57,6 +57,19 @@ describe("design-token enforcement", () => {
     );
     expect(rules).toEqual([]);
   });
+
+  it("rejects a named color in component CSS", async () => {
+    const rules = await firedRules(".probe { color: white; }", componentFile);
+    expect(rules).toContain("color-named");
+  });
+
+  it("allows the transparent keyword in component CSS", async () => {
+    const rules = await firedRules(
+      ".probe { background: transparent; }",
+      componentFile,
+    );
+    expect(rules).not.toContain("color-named");
+  });
 });
 
 describe("stylelint-config-standard adoption", () => {
