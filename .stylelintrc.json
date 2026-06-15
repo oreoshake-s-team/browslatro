@@ -1,5 +1,8 @@
 {
   "extends": "stylelint-config-standard",
+  "reportDescriptionlessDisables": true,
+  "reportNeedlessDisables": true,
+  "reportInvalidScopeDisables": true,
   "rules": {
     "selector-class-pattern": [
       "^[a-z][a-z0-9]*(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
@@ -20,6 +23,12 @@
       {
         "message": "Raw color functions are not allowed. Use a design token (var(--token)) from src/styles/tokens.css, or color-mix() over a token."
       }
+    ],
+    "color-named": [
+      "never",
+      {
+        "message": "Named colors are not allowed. Use a design token (var(--token)) from src/styles/tokens.css."
+      }
     ]
   },
   "overrides": [
@@ -27,7 +36,8 @@
       "files": ["src/styles/tokens.css"],
       "rules": {
         "color-no-hex": null,
-        "function-disallowed-list": null
+        "function-disallowed-list": null,
+        "color-named": null
       }
     }
   ]
