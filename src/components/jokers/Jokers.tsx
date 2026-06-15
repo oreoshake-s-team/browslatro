@@ -1,9 +1,6 @@
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  localizedJokerDescription,
-  localizedJokerName,
-} from "../../i18n/jokerOverrides";
+import { localizedJokerName } from "../../i18n/jokerOverrides";
 import "./Jokers.css";
 import {
   JOKER_EDITION_INFO,
@@ -16,9 +13,10 @@ import {
   type Joker,
 } from "../../items/jokers";
 import {
-  toDoListDescriptionNode,
-  toDoListDescriptionText,
-} from "../../items/jokers/toDoListDescription";
+  dynamicJokerDescriptionNode,
+  dynamicJokerDescriptionText,
+} from "../../items/jokers/dynamicJokerDescription";
+import { tSuitName } from "../../i18n/strings";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { useGame } from "../../store/game";
 import { announce } from "../system/LiveAnnouncer";
@@ -57,6 +55,8 @@ export default function Jokers({
 }: JokersProps) {
   const { t, i18n } = useTranslation();
   const todoHand = useGame((s) => s.todoHand);
+  const castleSuit = useGame((s) => s.castleSuit);
+  const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
@@ -283,14 +283,14 @@ export default function Jokers({
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
                   isDragging ? " joker-tile-dragging" : ""
                 }${editionClass}${debuffedClass}`}
-                title={
-                  joker.id === "to-do-list"
-                    ? toDoListDescriptionText(
-                        localizedJokerDescription(i18n.language, joker.id, joker.description),
-                        todoHand,
-                      )
-                    : localizedJokerDescription(i18n.language, joker.id, joker.description)
-                }
+                title={dynamicJokerDescriptionText({
+                  language: i18n.language,
+                  jokerId: joker.id,
+                  description: joker.description,
+                  todoHand,
+                  castleSuit,
+                  castleSuitName,
+                })}
                 aria-label={ariaLabel}
                 aria-describedby={tooltipOpen ? tooltipId : undefined}
                 tabIndex={0}
@@ -342,12 +342,14 @@ export default function Jokers({
                     className="joker-tile-description"
                     data-testid={`joker-tile-description-${joker.id}`}
                   >
-                    {joker.id === "to-do-list"
-                      ? toDoListDescriptionNode(
-                          localizedJokerDescription(i18n.language, joker.id, joker.description),
-                          todoHand,
-                        )
-                      : localizedJokerDescription(i18n.language, joker.id, joker.description)}
+                    {dynamicJokerDescriptionNode({
+                      language: i18n.language,
+                      jokerId: joker.id,
+                      description: joker.description,
+                      todoHand,
+                      castleSuit,
+                      castleSuitName,
+                    })}
                   </span>
                   {(joker.edition || jokerStickers(joker).length > 0) && (
                     <div className="joker-tile-badges">

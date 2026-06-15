@@ -1732,7 +1732,7 @@ export function createCastleJoker(): Joker {
     id: "castle",
     rarity: "uncommon",
     name: "Castle",
-    description: `This Joker gains +${CASTLE_CHIPS_PER_DISCARD} Chips per discarded card of the chosen suit; suit changes every round`,
+    description: `+${CASTLE_CHIPS_PER_DISCARD} Chips per discarded card of the chosen suit`,
     effect: {
       kind: "stack-chips-per-rotating-suit-discard",
       amount: CASTLE_CHIPS_PER_DISCARD,

@@ -160,6 +160,22 @@
   word-break: break-word;
 }
 
+.castle-suit-spades {
+  color: var(--text-primary);
+}
+
+.castle-suit-hearts {
+  color: var(--seal-red-light);
+}
+
+.castle-suit-diamonds {
+  color: var(--seal-blue-light);
+}
+
+.castle-suit-clubs {
+  color: var(--edition-poly-tint-green);
+}
+
 .joker-tile-sell {
   margin-top: 0.35rem;
   padding: 0.15rem 0.4rem;
