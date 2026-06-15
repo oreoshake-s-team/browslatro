@@ -5,6 +5,7 @@ import { createSpectralCatalog } from "../items/spectrals";
 import { useScoringPipeline } from "./useScoringPipeline";
 import { play } from "../components/system/sounds";
 import type { Card } from "../cards/types";
+import { applyCardEdition } from "../cards/editions";
 import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
 import { tHandLabel } from "../i18n/handLabels";
 import {
@@ -726,6 +727,12 @@ export function usePlayHand({
       perCardAdditiveChips += perCard.additiveChips;
       perCardAdditiveMult += getCardMultDelta(scoring[i]);
       perCardXMult *= perCard.xMult;
+      const edition = applyCardEdition(scoring[i]);
+      if (edition !== null) {
+        perCardAdditiveChips += edition.additiveChips;
+        perCardAdditiveMult += edition.additiveMult;
+        perCardXMult *= edition.xMult;
+      }
       const luckyRoll = applyLuckyRolls(scoring[i]);
       luckyRollsByScoringIndex.push(luckyRoll);
       perCardAdditiveMult += luckyRoll.multBonus;
