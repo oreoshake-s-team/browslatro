@@ -137,6 +137,62 @@ class RunEventSkipTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 load_all([path])
 
+    def test_skips_shop_advice_feedback_records(self):
+        record = fixture_record()
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(
+                directory,
+                "feedback.jsonl",
+                [shop_advice_feedback_record(), record],
+            )
+            self.assertEqual(len(load_all([path])), 1)
+
+
+def shop_advice_feedback_record(**kwargs):
+    base = {
+        "schemaVersion": 3,
+        "kind": "advice-feedback",
+        "runSeed": 7,
+        "ante": 1,
+        "round": 3,
+        "blind": 0,
+        "money": 8,
+        "advisorKind": "policy",
+        "model": "advisor-shop-policy-v2",
+        "recommendationIndex": 0,
+        "alternativeIndex": None,
+        "verdict": "bad",
+        "correctedIndex": 1,
+        "source": "explicit",
+        "decision": {
+            "context": "shop",
+            "state": {
+                "money": 8,
+                "ante": 1,
+                "jokers": [],
+                "jokerCapacity": 5,
+                "consumables": [],
+                "consumableCapacity": 2,
+                "ownedVoucherIds": [],
+            },
+            "candidates": [
+                {
+                    "action": "buy",
+                    "item": {
+                        "itemType": "joker",
+                        "id": "jolly",
+                        "name": "Jolly Joker",
+                        "description": "",
+                        "cost": 5,
+                    },
+                },
+                {"action": "leave"},
+            ],
+        },
+    }
+    base.update(kwargs)
+    return base
+
 
 def shop_record(**kwargs):
     base = {
@@ -171,6 +227,15 @@ class LoadShopDecisionsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = write_jsonl(directory, "other.jsonl", [non_shop])
             self.assertEqual(load_shop_decisions(path), [])
+
+    def test_tolerates_shop_advice_feedback_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(
+                directory,
+                "feedback.jsonl",
+                [shop_advice_feedback_record(), shop_record()],
+            )
+            self.assertEqual(len(load_shop_decisions(path)), 1)
 
     def test_rejects_unexpected_schema_version(self):
         record = dict(shop_record(), schemaVersion=99)
