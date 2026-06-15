@@ -106,7 +106,7 @@
   padding-left: 1.75rem;
 }
 
-@media (orientation: portrait) and (max-width: 768px) {
+@media (orientation: portrait) and (width <= 768px) {
   .scoring-trace-modal {
     width: 100%;
     height: 100%;

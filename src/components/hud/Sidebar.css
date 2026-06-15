@@ -2,7 +2,6 @@
   width: 30rem;
   flex-shrink: 0;
   padding: 1.25rem;
-  padding-bottom: 1.25rem;
   background-color: var(--surface);
   border-right: 1px solid var(--border);
   overflow-y: auto;
@@ -61,7 +60,7 @@
   min-width: 0;
 }
 
-@media (orientation: landscape) and (max-width: 1024px) {
+@media (orientation: landscape) and (width <= 1024px) {
   .sidebar {
     width: 18rem;
     padding: 1rem 1.2rem;
@@ -86,7 +85,7 @@
   }
 }
 
-@media (orientation: portrait) and (max-width: 768px) {
+@media (orientation: portrait) and (width <= 768px) {
   .sidebar {
     width: 100%;
     min-width: 0;
@@ -99,8 +98,7 @@
     grid-template-columns: max-content max-content minmax(16rem, 1fr);
     grid-auto-columns: max-content;
     align-items: start;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: auto hidden;
     gap: 0.6rem 1rem;
   }
 

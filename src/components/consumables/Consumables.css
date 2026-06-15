@@ -99,14 +99,14 @@
   font-weight: 700;
   font-size: 0.85rem;
   line-height: 1.15;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .consumable-tile-description {
   font-size: 0.7rem;
   line-height: 1.2;
   margin-top: 0.3rem;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .consumable-tile:hover:not(:disabled) {

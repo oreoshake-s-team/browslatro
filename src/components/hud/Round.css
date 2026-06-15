@@ -61,7 +61,7 @@
   color: var(--accent-success);
 }
 
-@media (orientation: portrait) and (max-width: 768px) {
+@media (orientation: portrait) and (width <= 768px) {
   .round-info {
     max-width: 16rem;
   }

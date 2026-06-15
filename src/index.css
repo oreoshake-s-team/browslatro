@@ -6,19 +6,19 @@
   --game-padding-x: 2rem;
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   :root {
     --game-padding-x: 1rem;
   }
 }
 
-@media (orientation: landscape) and (max-width: 1024px) {
+@media (orientation: landscape) and (width <= 1024px) {
   :root {
     --sidebar-width: 18rem;
   }
 }
 
-@media (orientation: portrait) and (max-width: 768px) {
+@media (orientation: portrait) and (width <= 768px) {
   :root {
     --sidebar-width: 0rem;
   }
@@ -44,31 +44,31 @@ html {
   overflow-x: hidden;
 }
 
-@media (min-width: 1280px) {
+@media (width >= 1280px) {
   html {
     font-size: 75%;
   }
 }
 
-@media (min-width: 1440px) {
+@media (width >= 1440px) {
   html {
     font-size: 87.5%;
   }
 }
 
-@media (min-width: 1700px) {
+@media (width >= 1700px) {
   html {
     font-size: 100%;
   }
 }
 
-@media (min-width: 1920px) {
+@media (width >= 1920px) {
   html {
     font-size: 112.5%;
   }
 }
 
-@media (min-width: 2400px) {
+@media (width >= 2400px) {
   html {
     font-size: 125%;
   }
