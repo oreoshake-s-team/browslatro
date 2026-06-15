@@ -62,6 +62,14 @@ async function suggestAndApply(): Promise<void> {
 }
 
 describe("PackSuggestion", () => {
+  test("the suggest trigger leads with the robot AI glyph", () => {
+    renderSuggestion();
+    const decoration = screen
+      .getByTestId("pack-suggest")
+      .querySelector("span[aria-hidden='true']");
+    expect(decoration).toHaveTextContent("🤖");
+  });
+
   test("shows the recommended pick after asking for a suggestion", async () => {
     renderSuggestion();
     await userEvent.click(screen.getByTestId("pack-suggest"));

@@ -95,6 +95,19 @@ describe("button variant system", () => {
     expect(ruleBody(".btn--advisor")).toMatch(/var\(--enhance-wild-border\)/);
   });
 
+  test("the advisor pressed state stays in the wild-border family", () => {
+    expect(ruleBody('.btn--advisor[aria-pressed="true"]')).toMatch(
+      /var\(--enhance-wild-border\)/,
+    );
+  });
+
+  test("negative: Game.css no longer gives the autopilot toggle its own pressed color", () => {
+    const css = componentCss("game", "Game.css");
+    expect(css).not.toMatch(
+      /\.autopilot-toggle-button\[aria-pressed="true"\]\s*{/,
+    );
+  });
+
   test("negative: AutopilotControls.css no longer defines advisor button colors", () => {
     const css = componentCss("game", "AutopilotControls.css");
     expect(css).not.toMatch(/\.autopilot-askai-button\s*{[^}]*background-color/);

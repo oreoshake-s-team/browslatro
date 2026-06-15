@@ -69,6 +69,11 @@
   background-color: color-mix(in srgb, var(--enhance-wild-border) 34%, transparent);
 }
 
+.btn--advisor[aria-pressed="true"] {
+  background-color: color-mix(in srgb, var(--enhance-wild-border) 48%, transparent);
+  color: var(--white);
+}
+
 .btn--toggle {
   background-color: var(--surface-raised);
   color: var(--text-secondary);

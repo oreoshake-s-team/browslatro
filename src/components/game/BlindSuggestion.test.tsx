@@ -50,6 +50,14 @@ async function suggestAndApply(): Promise<void> {
 }
 
 describe("BlindSuggestion", () => {
+  test("the suggest trigger leads with the robot AI glyph", () => {
+    renderSuggestion();
+    const decoration = screen
+      .getByTestId("blind-suggest")
+      .querySelector("span[aria-hidden='true']");
+    expect(decoration).toHaveTextContent("🤖");
+  });
+
   test("describes a skip recommendation with the tag name", async () => {
     renderSuggestion();
     await userEvent.click(screen.getByTestId("blind-suggest"));
