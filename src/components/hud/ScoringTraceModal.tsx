@@ -34,7 +34,7 @@ export default function ScoringTraceModal({ events, onClose }: ScoringTraceModal
       <div className="scoring-trace-modal" onClick={(e) => e.stopPropagation()}>
         <div className="scoring-trace-modal__header">
           <h2 id="scoring-trace-modal-title" className="scoring-trace-modal__title">
-            Scoring Trace
+            {t("scoringTrace.title")}
           </h2>
           <button
             type="button"
@@ -43,7 +43,7 @@ export default function ScoringTraceModal({ events, onClose }: ScoringTraceModal
             aria-label={t("a11y.closeScoringTrace")}
             autoFocus
           >
-            ✕ Close
+<span aria-hidden="true">✕ </span>{t("scoringTrace.close")}
           </button>
         </div>
         <div

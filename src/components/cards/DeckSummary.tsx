@@ -26,7 +26,7 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
       data-testid="deck-summary"
     >
       <div className="deck-summary-section deck-summary-section-suits">
-        <h4 className="deck-summary-heading">By suit</h4>
+        <h4 className="deck-summary-heading">{t("cardPiles.bySuit")}</h4>
         <ul className="deck-summary-list">
           {SUITS.map((suit) => (
             <li
@@ -49,7 +49,7 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
         </ul>
       </div>
       <div className="deck-summary-section deck-summary-section-ranks">
-        <h4 className="deck-summary-heading">By rank</h4>
+        <h4 className="deck-summary-heading">{t("cardPiles.byRank")}</h4>
         <ul className="deck-summary-list">
           {RANKS_DESC.map((rank) => (
             <li

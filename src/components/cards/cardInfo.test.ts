@@ -26,6 +26,23 @@ describe("formatChanceRatio", () => {
   });
 });
 
+describe("getCardInfo — suit label", () => {
+  test("defaults the suit label to English when no resolver is provided", () => {
+    expect(getCardInfo({ id: 60, rank: "9", suit: "spades" }).suitLabel).toBe(
+      "Spades",
+    );
+  });
+
+  test("uses the provided suit-label resolver when given", () => {
+    expect(
+      getCardInfo(
+        { id: 61, rank: "9", suit: "spades" },
+        { suitLabel: (suit) => `localized:${suit}` },
+      ).suitLabel,
+    ).toBe("localized:spades");
+  });
+});
+
 describe("getCardInfo — lucky enhancement description", () => {
   test("exposes a card's accumulated bonus chips", () => {
     expect(

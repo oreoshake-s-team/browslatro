@@ -46,7 +46,7 @@ export default function PlayerKeyForm({
           type="password"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          placeholder="sk-ant-…"
+          placeholder={t("advisor.keyPlaceholder")}
           data-testid="player-key-input"
         />
         <button

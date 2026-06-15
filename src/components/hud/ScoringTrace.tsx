@@ -24,7 +24,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
   return (
     <section className="scoring-trace">
       <div className="scoring-trace__header">
-        <h2 className="scoring-trace__title">Scoring Trace</h2>
+        <h2 className="scoring-trace__title">{t("scoringTrace.title")}</h2>
         <button
           type="button"
           className="scoring-trace__expand"
@@ -32,7 +32,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
           aria-haspopup="dialog"
           title={t("a11y.expandScoringTrace")}
         >
-          <span aria-hidden="true">⤢ </span>Expand
+          <span aria-hidden="true">⤢ </span>{t("scoringTrace.expand")}
         </button>
       </div>
       <div

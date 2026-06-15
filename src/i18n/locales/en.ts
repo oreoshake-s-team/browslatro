@@ -61,8 +61,28 @@ export const en = {
     sealPurple: "Purple Seal",
   },
   scoringTrace: {
+    title: "Scoring Trace",
+    expand: "Expand",
+    close: "Close",
     handHeading: "Hand {{number}}: {{hand}} (Lv {{level}})",
     handTotal: "{{chips}} Chips × {{mult}} Mult = {{total}}",
+  },
+  cardPiles: {
+    discardLabel: "Discard",
+    discardedTitle: "Discarded Cards",
+    remainingTitle: "Remaining Cards",
+    sell: "Sell",
+    bySuit: "By suit",
+    byRank: "By rank",
+    close: "Close",
+  },
+  newRun: {
+    title: "Start New Run",
+    deck: "Deck",
+    stake: "Stake",
+    startingHands: "starting hands",
+    startingDiscards: "starting discards",
+    startRun: "Start Run →",
   },
   handScore: {
     preview: "{{chips}} chips × {{mult}} mult",
@@ -240,6 +260,7 @@ export const en = {
     clearLog: "Clear log",
   },
   advisor: {
+    keyPlaceholder: "sk-ant-…",
     autopilot: "Suggest",
     suggestTitle: "Suggested move",
     recommendation: "Recommended move",

@@ -379,7 +379,10 @@ export default function Card({
       {tooltipRect && !showBack && (
         <CardTooltip
           id={tooltipId}
-          info={getCardInfo(card, { probabilityMultiplier })}
+          info={getCardInfo(card, {
+            probabilityMultiplier,
+            suitLabel: (suit) => tSuitName(t, suit),
+          })}
           anchorRect={tooltipRect}
         />
       )}

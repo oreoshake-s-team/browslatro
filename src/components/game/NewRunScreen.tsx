@@ -87,7 +87,7 @@ export default function NewRunScreen({
       <div className="new-run-modal">
         <div className="new-run-header">
           <h2 id="new-run-title" className="new-run-title">
-            Start New Run
+            {t("newRun.title")}
           </h2>
           <p
             className="new-run-header-preview"
@@ -103,7 +103,7 @@ export default function NewRunScreen({
               >
                 {startingHands}
               </span>{" "}
-              starting hands
+              {t("newRun.startingHands")}
             </span>
             <span aria-hidden="true" className="new-run-header-preview-sep">
               ·
@@ -118,7 +118,7 @@ export default function NewRunScreen({
               >
                 {startingDiscards}
               </span>{" "}
-              starting discards
+              {t("newRun.startingDiscards")}
             </span>
           </p>
         </div>
@@ -127,7 +127,7 @@ export default function NewRunScreen({
           aria-labelledby="new-run-deck-label"
         >
           <h3 id="new-run-deck-label" className="new-run-section-label">
-            Deck
+            {t("newRun.deck")}
           </h3>
           <div
             className="new-run-deck-grid"
@@ -175,7 +175,7 @@ export default function NewRunScreen({
           aria-labelledby="new-run-stake-label"
         >
           <h3 id="new-run-stake-label" className="new-run-section-label">
-            Stake
+            {t("newRun.stake")}
           </h3>
           <div
             className="new-run-stake-grid"
@@ -238,7 +238,7 @@ export default function NewRunScreen({
             onClick={() => onConfirm({ stake, deck })}
             autoFocus
           >
-            Start Run →
+            {t("newRun.startRun")}
           </button>
         </div>
       </div>

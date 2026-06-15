@@ -83,7 +83,7 @@ export default function DeckPile({
             data-testid="consumable-drop-overlay-sell"
             aria-hidden="true"
           >
-            <span className="consumable-drop-overlay-label">Sell</span>
+            <span className="consumable-drop-overlay-label">{t("cardPiles.sell")}</span>
           </span>
         )}
       </button>
@@ -101,7 +101,7 @@ export default function DeckPile({
               className="modal deck-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 id={titleId}>Remaining Cards</h3>
+              <h3 id={titleId}>{t("cardPiles.remainingTitle")}</h3>
               <div className="deck-modal-body">
                 <DeckSummary remaining={remaining} />
                 <div className="deck-modal-groups">
@@ -120,7 +120,7 @@ export default function DeckPile({
                 </div>
               </div>
               <button className="btn btn--secondary modal-close" onClick={handleClose}>
-                Close
+                {t("cardPiles.close")}
               </button>
             </div>
           </div>,
