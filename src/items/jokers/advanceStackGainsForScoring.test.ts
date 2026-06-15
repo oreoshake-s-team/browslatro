@@ -1,6 +1,8 @@
 // @vitest-environment node
 import { advanceStackGainsForScoring } from "./state";
+import { GREEN_JOKER_MULT_PER_HAND } from "./constants";
 import {
+  createGreenJokerJoker,
   createLoyaltyCardJoker,
   createRideTheBusJoker,
   createRunnerJoker,
@@ -93,6 +95,11 @@ describe("advanceStackGainsForScoring", () => {
       scoredCards: [card("K")],
     });
     expect(counter(advanced)).toBe(0);
+  });
+
+  test("advances Green Joker on any hand played", () => {
+    const [advanced] = advanceStackGainsForScoring([createGreenJokerJoker()], baseCtx);
+    expect(counter(advanced)).toBe(GREEN_JOKER_MULT_PER_HAND);
   });
 
   test("leaves a non-gains counter joker untouched (negative — every-n-hands)", () => {

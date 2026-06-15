@@ -4,9 +4,11 @@ import { simulatePlay } from "./simulatePlay";
 import { boss, card, joker, simulateInput as input } from "./test-helpers";
 import {
   createBaronJoker,
+  createGreenJokerJoker,
   createRunnerJoker,
   createSpareTrousersJoker,
   FOIL_CHIPS,
+  GREEN_JOKER_MULT_PER_HAND,
   HOLOGRAPHIC_MULT,
   POLYCHROME_X_MULT,
   RUNNER_CHIPS_PER_STRAIGHT,
@@ -286,6 +288,12 @@ describe("simulatePlay — gains-X stack jokers apply on the same hand", () => {
     expect(chips(straight, [createRunnerJoker()]) - chips(straight, [])).toBe(
       RUNNER_CHIPS_PER_STRAIGHT,
     );
+  });
+
+  test("a fresh Green Joker adds its +Mult on the hand that earns it", () => {
+    expect(
+      mult(twoPair, [createGreenJokerJoker()]) - mult(twoPair, []),
+    ).toBe(GREEN_JOKER_MULT_PER_HAND);
   });
 });
 
