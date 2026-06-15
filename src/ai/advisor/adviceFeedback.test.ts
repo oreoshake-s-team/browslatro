@@ -110,7 +110,7 @@ const shopState: ShopAdviceState = {
 const shopCandidates: ShopAdviceCandidate[] = [
   {
     action: "buy",
-    item: { itemType: "joker", id: "blueprint", name: "Blueprint", description: "", cost: 10 },
+    item: { itemType: "joker", category: "joker-x-mult", id: "blueprint", name: "Blueprint", description: "", cost: 10 },
   },
   { action: "reroll", cost: 5 },
   { action: "leave" },
