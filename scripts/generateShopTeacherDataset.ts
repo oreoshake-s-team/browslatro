@@ -123,6 +123,7 @@ export async function generateShopTeacherDecisions(
   config: ShopTeacherGeneratorConfig,
   teacher: ShopTeacherLabeler,
   stats?: ShopTeacherGeneratorStats,
+  onProgress?: (gamesDone: number) => void,
 ): Promise<string> {
   const jokerCatalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
   const planetCatalog = createPlanetCatalog();
@@ -251,6 +252,7 @@ export async function generateShopTeacherDecisions(
 
     await playHeadlessRun(hand, { seed, shopAgent });
     lines.push(...recorder);
+    onProgress?.(g + 1);
   }
 
   return lines.join("\n");
@@ -343,7 +345,15 @@ if (isMain) {
     const started = Date.now();
     const stats = { teacherCalls: 0 };
     const teacher = createShopTeacher(apiKey);
-    const content = await generateShopTeacherDecisions(config, teacher, stats);
+    const progressEvery = 25;
+    const onProgress = (gamesDone: number): void => {
+      if (gamesDone % progressEvery !== 0 && gamesDone !== config.games) return;
+      process.stderr.write(
+        `  [seed ${config.seedOffset}] ${gamesDone}/${config.games} games, ` +
+          `${stats.teacherCalls} teacher calls\n`,
+      );
+    };
+    const content = await generateShopTeacherDecisions(config, teacher, stats, onProgress);
     writeFileSync(outPath, content.length > 0 ? `${content}\n` : "");
     const count = content.split("\n").filter(Boolean).length;
     console.log(
