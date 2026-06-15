@@ -5,6 +5,7 @@ import {
   buildShopAdvicePlan,
   type ShopSuggestionAction,
 } from "../../ai/advisor/shopAdvicePlan";
+import { buildShopPolicyFeedbackEvent } from "../../ai/advisor/adviceFeedback";
 import { sharedShopRanker } from "../../ai/advisor/shopRanker";
 import type { DownloadProgress } from "../../ai/policy";
 import type { ShopAdviceCandidate } from "../../ai/advisor/types";
@@ -13,7 +14,10 @@ import {
   useSuggestion,
   type SuggestionDeps,
 } from "../../ai/advisor/useSuggestion";
-import { setHumanPlayRecordingSuppressed } from "../../ai/humanPlayWiring";
+import {
+  captureAdviceFeedback,
+  setHumanPlayRecordingSuppressed,
+} from "../../ai/humanPlayWiring";
 import type { ShopItem } from "../../items/shop";
 import type { Voucher, VoucherId } from "../../items/vouchers";
 import { useGame } from "../../store/game";
@@ -52,6 +56,22 @@ export default function ShopSuggestion(
     null,
   );
   const [revealed, setRevealed] = useState(false);
+  const [feedbackRecorded, setFeedbackRecorded] = useState(false);
+  const planInput = {
+    money: props.money,
+    ante,
+    jokers,
+    consumables,
+    equippedJokerCount: props.equippedJokerCount,
+    jokerCapacity: props.jokerCapacity,
+    consumableCount: props.consumableCount,
+    consumableCapacity: props.consumableCapacity,
+    offers: props.offers,
+    vouchers: props.vouchers,
+    soldVoucherIds: props.soldVoucherIds,
+    ownedVoucherIds: props.ownedVoucherIds,
+    rerollCost: props.rerollCost,
+  };
   const preRank = useCallback(
     (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
       setModelProgress({ loaded: 0, total: null });
@@ -70,25 +90,28 @@ export default function ShopSuggestion(
     [shopRanker, props.money, ante],
   );
   const { state, coach, askAi, reset } = useSuggestion<ShopSuggestionAction>(
-    () =>
-      buildShopAdvicePlan({
-        money: props.money,
-        ante,
-        jokers,
-        consumables,
-        equippedJokerCount: props.equippedJokerCount,
-        jokerCapacity: props.jokerCapacity,
-        consumableCount: props.consumableCount,
-        consumableCapacity: props.consumableCapacity,
-        offers: props.offers,
-        vouchers: props.vouchers,
-        soldVoucherIds: props.soldVoucherIds,
-        ownedVoucherIds: props.ownedVoucherIds,
-        rerollCost: props.rerollCost,
-      }),
+    () => buildShopAdvicePlan(planInput),
     props.suggestionDeps,
     preRank,
   );
+
+  function handleFeedback(correctedIndex: number | null): void {
+    if (state.phase === "idle" || state.onnxIndex === null) return;
+    const plan = buildShopAdvicePlan(planInput);
+    if (plan === null) return;
+    captureAdviceFeedback(
+      useGame.getState(),
+      buildShopPolicyFeedbackEvent(
+        plan.request.shop,
+        plan.request.candidates,
+        state.onnxIndex,
+        correctedIndex,
+      ),
+    );
+    setFeedbackRecorded(true);
+    reset();
+    setRevealed(false);
+  }
 
   function apply(): void {
     if (state.phase === "idle") return;
@@ -114,6 +137,7 @@ export default function ShopSuggestion(
       data-testid="coach-trigger"
       disabled={props.disabled}
       onClick={() => {
+        setFeedbackRecorded(false);
         setRevealed(true);
         void coach();
       }}
@@ -125,6 +149,15 @@ export default function ShopSuggestion(
 
   return (
     <div className="shop-suggestion">
+      {!revealed && feedbackRecorded && (
+        <p
+          className="shop-suggestion-recorded"
+          role="status"
+          data-testid="coach-feedback-recorded"
+        >
+          {t("advisor.feedbackRecorded")}
+        </p>
+      )}
       {!revealed &&
         (props.triggerContainer
           ? createPortal(trigger, props.triggerContainer)
@@ -132,6 +165,7 @@ export default function ShopSuggestion(
       {revealed && (
         <CoachAdvice
           state={state}
+          onFeedback={handleFeedback}
           modelProgress={modelProgress}
           onApply={apply}
           onAskAi={() => void askAi()}

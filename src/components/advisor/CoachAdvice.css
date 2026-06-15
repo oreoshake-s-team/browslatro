@@ -58,6 +58,13 @@
   color: var(--edition-foil-tint);
 }
 
+.coach-advice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
 .coach-advice-apply {
   align-self: flex-start;
 }

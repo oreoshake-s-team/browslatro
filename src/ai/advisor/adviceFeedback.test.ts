@@ -4,8 +4,13 @@ import type { Card } from "../../cards/types";
 import { useGame } from "../../store/game";
 import type { CandidateRanker } from "../policy";
 import { decideAutopilotAction, type AutopilotDecision } from "./autopilot";
-import { buildHandPolicyFeedbackEvent } from "./adviceFeedback";
+import {
+  buildHandPolicyFeedbackEvent,
+  buildShopPolicyFeedbackEvent,
+} from "./adviceFeedback";
 import { ADVISOR_POLICY_MODEL_ID } from "./advisorRanker";
+import { SHOP_POLICY_MODEL_ID } from "./shopRanker";
+import type { ShopAdviceCandidate, ShopAdviceState } from "./types";
 
 const ranker: CandidateRanker = {
   load: async () => {},
@@ -89,5 +94,69 @@ describe("buildHandPolicyFeedbackEvent", () => {
     expect(
       buildHandPolicyFeedbackEvent(d, 1).decision.candidates.length,
     ).toBe(d.candidates.length);
+  });
+});
+
+const shopState: ShopAdviceState = {
+  money: 9,
+  ante: 2,
+  jokers: [],
+  jokerCapacity: 5,
+  consumables: [],
+  consumableCapacity: 2,
+  ownedVoucherIds: [],
+};
+
+const shopCandidates: ShopAdviceCandidate[] = [
+  {
+    action: "buy",
+    item: { itemType: "joker", id: "blueprint", name: "Blueprint", description: "", cost: 10 },
+  },
+  { action: "reroll", cost: 5 },
+  { action: "leave" },
+];
+
+describe("buildShopPolicyFeedbackEvent", () => {
+  test("records the policy advisor kind", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).advisorKind,
+    ).toBe("policy");
+  });
+
+  test("records the shop policy model id", () => {
+    expect(buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).model).toBe(
+      SHOP_POLICY_MODEL_ID,
+    );
+  });
+
+  test("carries the policy's recommendation index", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).recommendationIndex,
+    ).toBe(0);
+  });
+
+  test("records the corrective pick", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).correctedIndex,
+    ).toBe(1);
+  });
+
+  test("records a bare downvote as null", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, null).correctedIndex,
+    ).toBeNull();
+  });
+
+  test("embeds the shop decision context", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).decision.context,
+    ).toBe("shop");
+  });
+
+  test("embeds the shop candidate list", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).decision.candidates
+        .length,
+    ).toBe(3);
   });
 });

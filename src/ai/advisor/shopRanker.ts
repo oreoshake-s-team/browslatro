@@ -7,6 +7,7 @@ import {
 import type { PackRankInput, ShopRankInput } from "./shopEncoding";
 
 export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v2.onnx";
+export const SHOP_POLICY_MODEL_ID = "advisor-shop-policy-v2";
 
 export interface ShopCandidateRanker {
   load(onProgress?: DownloadProgressListener): Promise<void>;

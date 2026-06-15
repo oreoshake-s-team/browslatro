@@ -13,7 +13,8 @@ const { rankState } = vi.hoisted(() => ({
   rankState: { value: [0] as ReadonlyArray<number> },
 }));
 
-vi.mock("../../ai/advisor/shopRanker", () => ({
+vi.mock("../../ai/advisor/shopRanker", async (importActual) => ({
+  ...(await importActual<typeof import("../../ai/advisor/shopRanker")>()),
   sharedShopRanker: () => ({
     load: () => Promise.resolve(),
     rankShop: () => Promise.resolve(rankState.value),
@@ -188,6 +189,32 @@ describe("ShopSuggestion click-to-reveal", () => {
   test("the trigger is disabled while the shop is locked", () => {
     renderSuggestion({ disabled: true });
     expect(screen.getByTestId("coach-trigger")).toBeDisabled();
+  });
+
+  test("the revealed coach panel offers a bad-pick affordance", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await expect(
+      screen.findByTestId("advice-feedback-open"),
+    ).resolves.toBeInTheDocument();
+  });
+
+  test("a corrective pick records a policy advice-feedback event", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-option-1"));
+    await userEvent.click(screen.getByTestId("advice-feedback-submit"));
+    expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
+  });
+
+  test("submitting feedback dismisses the panel and confirms", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
+    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+    expect(screen.getByTestId("coach-feedback-recorded")).toBeInTheDocument();
   });
 
   test("an applied coach purchase is not recorded as human play, while a manual one after it is", async () => {
