@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "color-no-hex": [
+      true,
+      {
+        "message": "Raw hex colors are not allowed. Use a design token (var(--token)) from src/styles/tokens.css, or color-mix() over a token."
+      }
+    ],
+    "function-disallowed-list": [
+      ["rgb", "rgba", "hsl", "hsla"],
+      {
+        "message": "Raw color functions are not allowed. Use a design token (var(--token)) from src/styles/tokens.css, or color-mix() over a token."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["src/styles/tokens.css"],
+      "rules": {
+        "color-no-hex": null,
+        "function-disallowed-list": null
+      }
+    }
+  ]
+}

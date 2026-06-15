@@ -23,6 +23,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "lint:css": "stylelint \"src/**/*.css\"",
+    "lint:css:fix": "stylelint \"src/**/*.css\" --fix",
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
@@ -58,6 +60,7 @@
     "jsdom": "^29.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "10.4.2",
+    "stylelint": "^17.13.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.0",
     "vitest": "^4.0.0"
