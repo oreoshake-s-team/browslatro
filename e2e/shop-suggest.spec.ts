@@ -115,3 +115,29 @@ test("dismissing collapses the panel back to the Coach tip trigger", async ({
   await expect(page.getByTestId("coach-advice")).toHaveCount(0);
   await expect(page.getByTestId("coach-trigger")).toBeVisible();
 });
+
+test("downvoting the coach pick records policy advice feedback", async ({
+  page,
+}) => {
+  await openShop(page);
+  await revealCoachPick(page);
+
+  await page.getByTestId("advice-feedback-open").click();
+  await page.getByTestId("advice-feedback-option-1").click();
+  await page.getByTestId("advice-feedback-submit").click();
+
+  await expect(page.getByTestId("coach-advice")).toHaveCount(0);
+  await expect(page.getByTestId("coach-feedback-recorded")).toBeVisible();
+
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+      ),
+    )
+    .toContain('"advisorKind":"policy"');
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).toContain('"context":"shop"');
+});

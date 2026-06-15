@@ -4,6 +4,7 @@ import type { SuggestionState } from "../../ai/advisor/useSuggestion";
 import type { DownloadProgress } from "../../ai/policy";
 import PlayerKeyForm from "../game/PlayerKeyForm";
 import { useModelLoadProgress } from "../game/useModelLoadProgress";
+import AdviceFeedbackControl from "./AdviceFeedbackControl";
 import { describeContextCandidate, errorMessage } from "./SuggestionAdvice";
 import "./CoachAdvice.css";
 
@@ -12,6 +13,7 @@ export interface CoachAdviceProps<TAction> {
   readonly onApply: () => void;
   readonly onAskAi: () => void;
   readonly onDismiss: () => void;
+  readonly onFeedback?: (correctedIndex: number | null) => void;
   readonly modelProgress?: DownloadProgress | null;
 }
 
@@ -20,6 +22,7 @@ export default function CoachAdvice<TAction>({
   onApply,
   onAskAi,
   onDismiss,
+  onFeedback,
   modelProgress = null,
 }: CoachAdviceProps<TAction>): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -57,15 +60,25 @@ export default function CoachAdvice<TAction>({
           <p className="coach-advice-move" data-testid="coach-recommendation">
             {describeContextCandidate(t, coachCandidate)}
           </p>
-          <button
-            type="button"
-            className="btn coach-advice-apply"
-            data-testid="coach-apply"
-            onClick={onApply}
-          >
-            <span aria-hidden="true">✅ </span>
-            {t("advisor.suggestApply")}
-          </button>
+          <div className="coach-advice-actions">
+            <button
+              type="button"
+              className="btn coach-advice-apply"
+              data-testid="coach-apply"
+              onClick={onApply}
+            >
+              <span aria-hidden="true">✅ </span>
+              {t("advisor.suggestApply")}
+            </button>
+            {onFeedback !== undefined && (
+              <AdviceFeedbackControl
+                candidateLabels={state.candidates.map((c) =>
+                  describeContextCandidate(t, c),
+                )}
+                onSubmit={onFeedback}
+              />
+            )}
+          </div>
         </>
       )}
 

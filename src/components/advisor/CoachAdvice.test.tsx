@@ -71,6 +71,7 @@ function renderCoach(
     onApply: () => void;
     onAskAi: () => void;
     onDismiss: () => void;
+    onFeedback: (correctedIndex: number | null) => void;
   }> = {},
 ) {
   render(
@@ -79,6 +80,7 @@ function renderCoach(
       onApply={handlers.onApply ?? vi.fn()}
       onAskAi={handlers.onAskAi ?? vi.fn()}
       onDismiss={handlers.onDismiss ?? vi.fn()}
+      onFeedback={handlers.onFeedback}
     />,
   );
 }
@@ -160,5 +162,37 @@ describe("CoachAdvice", () => {
   test("a rate-limit error offers the key form to keyless players", () => {
     renderCoach(errorState("rate_limited"));
     expect(screen.getByLabelText("Your Anthropic API key")).toBeInTheDocument();
+  });
+
+  test("shows the bad-pick affordance when onFeedback is provided", () => {
+    renderCoach(coachState(0), { onFeedback: vi.fn() });
+    expect(screen.getByTestId("advice-feedback-open")).toBeInTheDocument();
+  });
+
+  test("omits the bad-pick affordance without onFeedback (negative)", () => {
+    renderCoach(coachState(0));
+    expect(screen.queryByTestId("advice-feedback-open")).not.toBeInTheDocument();
+  });
+
+  test("a corrective pick reports the chosen candidate index", async () => {
+    const onFeedback = vi.fn();
+    renderCoach(coachState(0), { onFeedback });
+    await userEvent.click(screen.getByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-option-1"));
+    await userEvent.click(screen.getByTestId("advice-feedback-submit"));
+    expect(onFeedback).toHaveBeenCalledWith(1);
+  });
+
+  test("a bare downvote reports a null corrected index", async () => {
+    const onFeedback = vi.fn();
+    renderCoach(coachState(0), { onFeedback });
+    await userEvent.click(screen.getByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
+    expect(onFeedback).toHaveBeenCalledWith(null);
+  });
+
+  test("the downvote stays available after asking the AI", () => {
+    renderCoach(readyState(0, 1), { onFeedback: vi.fn() });
+    expect(screen.getByTestId("advice-feedback-open")).toBeInTheDocument();
   });
 });
