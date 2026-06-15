@@ -55,7 +55,7 @@ import {
   planetForHand,
 } from "../items/planets";
 import { createTarotCatalog, nextRankUp } from "../items/tarots";
-import { pickRandomCardEdition } from "../cards/editions";
+import { rollCardEdition } from "../cards/editions";
 import {
   convertHandToRank,
   convertHandToSuit,
@@ -1046,7 +1046,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     // overlay so it survives future deals.
     const rolled = s.packPreviewHand.map((c) =>
       ids.has(c.id)
-        ? { ...c, edition: pickRandomCardEdition(Math.random) }
+        ? { ...c, edition: rollCardEdition(Math.random) }
         : c,
     );
     s.setPackPreviewHand(rolled);

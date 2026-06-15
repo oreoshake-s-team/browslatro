@@ -3,7 +3,7 @@ import {
   CARD_EDITION_INFO,
   CARD_EDITION_KINDS,
   applyCardEdition,
-  pickRandomCardEdition,
+  rollCardEdition,
   withCardEdition,
 } from "./editions";
 import { FOIL_CHIPS, HOLOGRAPHIC_MULT, POLYCHROME_X_MULT } from "../items/jokers";
@@ -104,22 +104,22 @@ describe("applyCardEdition", () => {
   });
 });
 
-describe("pickRandomCardEdition", () => {
+describe("rollCardEdition", () => {
   test("returns foil for rng value 0", () => {
-    expect(pickRandomCardEdition(() => 0)).toBe("foil");
+    expect(rollCardEdition(() => 0)).toBe("foil");
   });
 
   test("returns holographic for rng value 0.5", () => {
-    expect(pickRandomCardEdition(() => 0.5)).toBe("holographic");
+    expect(rollCardEdition(() => 0.5)).toBe("holographic");
   });
 
   test("returns polychrome for rng value 0.99", () => {
-    expect(pickRandomCardEdition(() => 0.99)).toBe("polychrome");
+    expect(rollCardEdition(() => 0.99)).toBe("polychrome");
   });
 
   test("never returns an edition outside the catalog (negative)", () => {
     const samples: ReadonlyArray<number> = [0, 0.1, 0.34, 0.5, 0.7, 0.99];
-    const results = samples.map((v) => pickRandomCardEdition(() => v));
+    const results = samples.map((v) => rollCardEdition(() => v));
     expect(results.every((e) => CARD_EDITION_KINDS.includes(e))).toBe(true);
   });
 });

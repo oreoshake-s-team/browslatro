@@ -4,7 +4,7 @@ import {
   applyEnhancementOverrides,
   applySealOverrides,
 } from "../cards/deckBuild";
-import { pickRandomCardEdition } from "../cards/editions";
+import { rollCardEdition } from "../cards/editions";
 import type { Card } from "../cards/types";
 import type { Joker } from "../items/jokers/types";
 import {
@@ -72,7 +72,7 @@ export function applyTarotEffectToDeck(
     case "edition-roll": {
       const [id] = topCardIds(deck, 1);
       if (id === undefined || rng() >= effect.chance) return { deck, money };
-      const overrides = new Map([[id, pickRandomCardEdition(rng)]]);
+      const overrides = new Map([[id, rollCardEdition(rng)]]);
       return { deck: applyEditionOverrides(deck, overrides), money };
     }
     case "money-multiply": {
@@ -117,7 +117,7 @@ export function applySpectralEffectToDeck(
     case "aura": {
       const [id] = topCardIds(deck, 1);
       if (id === undefined) return { deck, money };
-      const overrides = new Map([[id, pickRandomCardEdition(rng)]]);
+      const overrides = new Map([[id, rollCardEdition(rng)]]);
       return { deck: applyEditionOverrides(deck, overrides), money };
     }
     case "immolate":
