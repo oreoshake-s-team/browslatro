@@ -123,7 +123,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
         drawn,
         currentBoss,
         blind === 3,
-        "refill",
+        wasHandPlayReset ? "refill-after-play" : "refill-after-discard",
       );
       setDealt({ hand: [...kept, ...drawnWithFaceDown], remaining: newRemaining });
       setNewlyDrawnIds(new Set(drawnWithFaceDown.map((c) => c.id)));
