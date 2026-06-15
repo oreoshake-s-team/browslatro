@@ -1,8 +1,8 @@
 .new-run-overlay {
   position: fixed;
   inset: 0;
-  z-index: 130;
-  background: var(--shadow-xl);
+  z-index: var(--z-modal-top);
+  background: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
