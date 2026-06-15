@@ -1,30 +1,11 @@
-.round-won-overlay {
-  position: fixed;
-  inset: 0;
-  background-color: var(--overlay-backdrop);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: var(--z-modal);
-}
-
 .round-won-modal {
-  background-color: var(--text-primary);
-  border: 2px solid var(--border-on-light);
-  border-radius: 12px;
-  padding: 2rem 2.4rem;
   min-width: 22rem;
-  max-width: 32rem;
-  box-shadow: 0 10px 30px var(--shadow-md);
-  display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
 }
 
 .round-won-title {
   margin: 0;
   font-size: 1.6rem;
-  color: var(--shop-muted-on-light);
+  color: var(--accent-success-mid);
   text-align: center;
 }
 
@@ -37,7 +18,7 @@
 
 .round-won-stat dt {
   font-size: 0.9rem;
-  color: var(--shop-muted-on-light);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -46,16 +27,16 @@
   margin: 0;
   font-size: 1.2rem;
   font-weight: 600;
-  color: var(--text-on-light);
+  color: var(--text-primary);
 }
 
 .round-won-stat-beat dd {
-  color: var(--positive-money-on-light);
+  color: var(--accent-success-mid);
 }
 
 .round-won-payout {
-  background-color: var(--white);
-  border: 1px solid var(--border-on-light);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.8rem 1rem;
 }
@@ -63,7 +44,7 @@
 .round-won-payout-title {
   margin: 0 0 0.6rem 0;
   font-size: 0.9rem;
-  color: var(--shop-muted-on-light);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -81,7 +62,7 @@
   justify-content: space-between;
   gap: 0.6rem;
   font-size: 1rem;
-  color: var(--shop-muted-on-light);
+  color: var(--text-secondary);
 }
 
 .round-won-payout-row dt {
@@ -95,8 +76,8 @@
 
 .round-won-payout-total {
   font-weight: 600;
-  color: var(--text-on-light);
-  border-top: 1px solid var(--border-on-light);
+  color: var(--text-primary);
+  border-top: 1px solid var(--border);
   padding-top: 0.4rem;
   margin-top: 0.2rem;
 }
