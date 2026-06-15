@@ -422,7 +422,7 @@
 }
 
 .shop-offer-buy:hover:not(:disabled) {
-  background-color: var(--edition-foil-deep);
+  background-color: var(--accent-chips-deep);
 }
 
 .shop-offer-buy:disabled {

@@ -9,7 +9,7 @@
   background-color: var(--surface);
   color: var(--text-primary);
   border: 2px solid var(--accent-pack);
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   padding: 1.4rem 1.8rem;
   width: 100%;
   box-shadow: 0 4px 14px var(--shadow-md);
@@ -190,7 +190,7 @@
 
 .pack-open-preview-move-button:focus-visible {
   outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .pack-open-preview-card:active {

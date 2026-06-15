@@ -106,15 +106,15 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
           {t("roundEnd.wonTitle")}
         </h2>
         <dl className="round-won-stats">
-          <div className="round-won-stat">
+          <div className="stat-pill round-won-stat">
             <dt>{t("roundEnd.roundScore")}</dt>
             <dd data-testid="round-won-score">{formatNumber(roundScore)}</dd>
           </div>
-          <div className="round-won-stat">
+          <div className="stat-pill round-won-stat">
             <dt>{t("roundEnd.requiredScore")}</dt>
             <dd data-testid="round-won-required">{formatNumber(requiredScore)}</dd>
           </div>
-          <div className="round-won-stat round-won-stat-beat">
+          <div className="stat-pill round-won-stat round-won-stat-beat">
             <dt>{t("roundEnd.beatBy")}</dt>
             <dd data-testid="round-won-beat-by">+{formatNumber(beatBy)}</dd>
           </div>

@@ -234,7 +234,7 @@
   position: absolute;
   inset: 0.35rem;
   border: 1px solid var(--text-secondary);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   pointer-events: none;
 }
 
@@ -860,7 +860,7 @@
 
 .card-forced {
   outline: 2px solid var(--accent-chips);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .card-forced-badge {

@@ -44,13 +44,7 @@
 }
 
 .game-won-stat {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 0.4rem 0.6rem;
-  background-color: var(--white);
-  border: 1px solid var(--accent-money-light);
-  border-radius: 6px;
+  border-color: var(--accent-money-light);
 }
 
 .game-won-stat dt {

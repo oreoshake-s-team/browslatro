@@ -19,7 +19,7 @@ async function ensureModifierPanelOpen(page: Page): Promise<void> {
 
 async function clickWin(page: Page): Promise<void> {
   await ensureModifierPanelOpen(page);
-  await page.locator("button.win-button").click();
+  await page.getByRole("button", { name: "Win", exact: true }).click();
 }
 
 async function addMoney(page: Page, times: number): Promise<void> {

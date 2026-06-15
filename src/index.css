@@ -92,21 +92,6 @@ body {
   max-width: 100%;
 }
 
-/* shared button base used by Game and Options */
-.win-button {
-  padding: 10px 20px;
-  font-size: 1.1rem;
-  background-color: var(--surface-raised);
-  color: var(--text-primary);
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.win-button:hover {
-  background-color: var(--surface-hover);
-}
-
 /* shared stat display used by RoundProgress and RunProgress */
 .stat {
   display: flex;
@@ -119,6 +104,17 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   box-sizing: border-box;
+}
+
+/* shared on-light stat pill used by the round/game result modals */
+.stat-pill {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.4rem 0.6rem;
+  background-color: var(--white);
+  border: 1px solid var(--border-on-light);
+  border-radius: var(--radius-md);
 }
 
 .stat-value {
