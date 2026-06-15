@@ -3,6 +3,14 @@ import type { ShopItem } from "../items/shop";
 import type { GameState } from "../store/game";
 import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
+import type {
+  BlindAdviceCandidate,
+  BlindAdviceState,
+  PackAdviceCandidate,
+  PackAdviceState,
+  ShopAdviceCandidate,
+  ShopAdviceState,
+} from "./advisor/types";
 
 export const RUN_EVENT_SCHEMA_VERSION = 3;
 
@@ -95,7 +103,29 @@ export interface HandAdviceDecision {
   readonly candidates: ReadonlyArray<HandOption>;
 }
 
-export type AdviceDecision = HandAdviceDecision;
+export interface ShopAdviceDecision {
+  readonly context: "shop";
+  readonly state: ShopAdviceState;
+  readonly candidates: ReadonlyArray<ShopAdviceCandidate>;
+}
+
+export interface PackAdviceDecision {
+  readonly context: "pack";
+  readonly state: PackAdviceState;
+  readonly candidates: ReadonlyArray<PackAdviceCandidate>;
+}
+
+export interface BlindAdviceDecision {
+  readonly context: "blind";
+  readonly state: BlindAdviceState;
+  readonly candidates: ReadonlyArray<BlindAdviceCandidate>;
+}
+
+export type AdviceDecision =
+  | HandAdviceDecision
+  | ShopAdviceDecision
+  | PackAdviceDecision
+  | BlindAdviceDecision;
 
 export interface AdviceFeedbackEvent {
   readonly kind: "advice-feedback";
