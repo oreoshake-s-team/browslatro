@@ -182,25 +182,12 @@
 .blind-select-boss-reroll {
   align-self: flex-start;
   padding: 0.5rem 0.9rem;
-  border-radius: 8px;
   background-color: color-mix(in srgb, var(--accent-boss-blind) 18%, transparent);
   color: var(--type-planet-badge-bg);
-  border: 1px solid var(--accent-boss-blind);
-  font-weight: 600;
+  border-color: var(--accent-boss-blind);
   font-size: 1rem;
-  cursor: pointer;
 }
 
 .blind-select-boss-reroll:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--accent-boss-blind) 32%, transparent);
-}
-
-.blind-select-boss-reroll:focus-visible {
-  outline: 2px solid var(--text-muted);
-  outline-offset: 2px;
-}
-
-.blind-select-boss-reroll:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }

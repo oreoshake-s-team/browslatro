@@ -17,12 +17,35 @@ function ruleBody(selector: string): string {
 }
 
 describe("button variant system", () => {
-  test.each(["primary", "secondary", "danger", "ghost", "advisor"])(
+  test.each(["primary", "secondary", "danger", "ghost", "advisor", "toggle"])(
     "buttons.css defines the %s variant",
     (variant) => {
       expect(buttonsCss).toMatch(new RegExp(`\\.btn--${variant}\\s*{`));
     },
   );
+
+  test("the toggle pressed state uses the chips accent token", () => {
+    expect(ruleBody('.btn--toggle[aria-pressed="true"]')).toMatch(
+      /background-color\s*:\s*var\(--accent-chips-strong\)/,
+    );
+  });
+
+  test("negative: PackOpenModal.css no longer defines its own sort-button colors", () => {
+    const css = componentCss("shop", "PackOpenModal.css");
+    expect(css).not.toMatch(
+      /\.pack-open-preview-sort-button\s*{[^}]*background-color/,
+    );
+  });
+
+  test("negative: the shop Buy button no longer hardcodes its own radius", () => {
+    const css = componentCss("shop", "Shop.css");
+    expect(css).not.toMatch(/\.shop-offer-buy\s*{[^}]*border-radius/);
+  });
+
+  test("negative: BlindSelectScreen.css no longer gives the boss reroll its own radius", () => {
+    const css = componentCss("game", "BlindSelectScreen.css");
+    expect(css).not.toMatch(/\.blind-select-boss-reroll\s*{[^}]*border-radius/);
+  });
 
   test("the shared base sets a single radius", () => {
     expect(ruleBody(".btn")).toMatch(/border-radius\s*:\s*6px/);

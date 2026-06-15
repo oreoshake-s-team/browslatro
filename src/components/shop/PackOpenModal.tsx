@@ -429,11 +429,7 @@ export default function PackOpenModal({
               </span>
               <button
                 type="button"
-                className={`pack-open-preview-sort-button${
-                  previewSortMode === "rank"
-                    ? " pack-open-preview-sort-button-active"
-                    : ""
-                }`}
+                className="btn btn--toggle pack-open-preview-sort-button"
                 data-testid="pack-open-preview-sort-rank"
                 aria-pressed={previewSortMode === "rank"}
                 onClick={() => selectPreviewSort("rank")}
@@ -442,11 +438,7 @@ export default function PackOpenModal({
               </button>
               <button
                 type="button"
-                className={`pack-open-preview-sort-button${
-                  previewSortMode === "suit"
-                    ? " pack-open-preview-sort-button-active"
-                    : ""
-                }`}
+                className="btn btn--toggle pack-open-preview-sort-button"
                 data-testid="pack-open-preview-sort-suit"
                 aria-pressed={previewSortMode === "suit"}
                 onClick={() => selectPreviewSort("suit")}

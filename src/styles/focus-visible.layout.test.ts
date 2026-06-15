@@ -17,6 +17,7 @@ const blindSelectCss = componentCss("game", "BlindSelectScreen.css");
 const shopCss = componentCss("shop", "Shop.css");
 const handCss = componentCss("cards", "Hand.css");
 const packOpenCss = componentCss("shop", "PackOpenModal.css");
+const buttonsCss = readFileSync(join(__dirname, "buttons.css"), "utf8");
 
 describe("focus-visible outlines", () => {
   test("boss-blind override focus-visible uses the focus-ring token", () => {
@@ -61,10 +62,10 @@ describe("focus-visible outlines", () => {
     );
   });
 
-  test("pack preview sort buttons gain a focus-visible outline", () => {
-    expect(
-      ruleBody(packOpenCss, ".pack-open-preview-sort-button:focus-visible"),
-    ).toMatch(/outline\s*:\s*2px solid var\(--focus-ring\)/);
+  test("pack preview sort buttons gain a focus-visible outline via the shared .btn base", () => {
+    expect(ruleBody(buttonsCss, ".btn:focus-visible")).toMatch(
+      /outline\s*:\s*2px solid var\(--focus-ring\)/,
+    );
   });
 
   test("negative: no focus-visible rule in the touched files suppresses the outline", () => {

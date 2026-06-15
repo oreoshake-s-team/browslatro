@@ -414,11 +414,7 @@
   padding: 0.4rem 0.9rem;
   background-color: var(--accent-chips-strong);
   color: var(--white);
-  border: none;
-  border-radius: 4px;
   font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .shop-offer-buy:hover:not(:disabled) {
@@ -427,7 +423,6 @@
 
 .shop-offer-buy:disabled {
   background-color: var(--text-muted);
-  cursor: not-allowed;
 }
 
 .shop-actions {

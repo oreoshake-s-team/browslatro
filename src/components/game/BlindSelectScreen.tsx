@@ -212,7 +212,7 @@ export default function BlindSelectScreen({
                 {b === 3 && showRerollBoss && (
                   <button
                     type="button"
-                    className="blind-select-boss-reroll"
+                    className="btn blind-select-boss-reroll"
                     data-testid="blind-select-boss-reroll"
                     onClick={onRerollBoss}
                     disabled={canAffordBossReroll === false}

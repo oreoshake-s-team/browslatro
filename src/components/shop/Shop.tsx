@@ -406,7 +406,7 @@ export default function Shop({
         </span>
         <button
           type="button"
-          className="shop-offer-buy"
+          className="btn shop-offer-buy"
           disabled={disabled || state.kind !== "available"}
           title={
             disabled
