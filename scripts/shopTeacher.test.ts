@@ -22,6 +22,7 @@ function shopViewFixture(overrides: Partial<ShopView> = {}): ShopView {
     handStats: createDefaultHandStats(),
     deck: [],
     ownedVoucherIds: new Set(["overstock"]),
+    lastConsumable: null,
     rng: seededRng(0),
     ...overrides,
   };

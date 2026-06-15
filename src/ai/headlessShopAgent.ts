@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs";
-import { applyPlanetUpgrade, createPlanetCatalog } from "../items/planets";
+import type { Consumable } from "../items/consumables";
+import { createPlanetCatalog } from "../items/planets";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
 import { packPickLimit, type PackOption } from "../items/packs";
 import { pickShopOffers, rerollCostFor, type ShopItem } from "../items/shop";
 import { createSpectralCatalog } from "../items/spectrals";
-import { createTarotCatalog, type TarotEffect } from "../items/tarots";
+import { createTarotCatalog } from "../items/tarots";
 import {
   extraShopOfferSlots,
   pickVoucherForAnte,
@@ -20,10 +21,7 @@ import {
 } from "./advisor/shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./advisor/types";
 import type { HeadlessShopAgent, ShopResult, ShopView } from "./headlessRun";
-import {
-  applySpectralEffectToDeck,
-  applyTarotEffectToDeck,
-} from "./headlessConsumables";
+import { applyConsumable } from "./headlessConsumables";
 
 const MAX_REROLLS = 2;
 
@@ -89,27 +87,24 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
       const ownedIds = new Set(jokers.map((j) => j.id));
       let offers = rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds));
       let voucher = pickVoucherForAnte({ ante: view.ante, ownedIds: ownedVoucherIds, rng: view.rng });
+      let lastConsumable: Consumable | null = view.lastConsumable;
       let rerollsDone = 0;
 
-      const applyTarot = (effect: TarotEffect): void => {
-        const result = applyTarotEffectToDeck(
-          { deck, money, jokers, jokerCatalog, jokerCapacity: MAX_JOKERS },
-          effect,
+      const useConsumable = (consumable: Consumable): void => {
+        const result = applyConsumable(
+          { deck, money, handStats, lastConsumable, createdJokers: [] },
+          consumable,
+          { jokers, jokerCatalog, jokerCapacity: MAX_JOKERS, tarotCatalog, planetCatalog },
           view.rng,
         );
         deck = result.deck;
         money = result.money;
-        if (result.createdJoker !== undefined) {
-          jokers.push(result.createdJoker);
-          ownedIds.add(result.createdJoker.id);
+        handStats = result.handStats;
+        lastConsumable = result.lastConsumable;
+        for (const created of result.createdJokers) {
+          jokers.push(created);
+          ownedIds.add(created.id);
         }
-      };
-      const applySpectral = (effect: Parameters<typeof applySpectralEffectToDeck>[1]): void => {
-        ({ deck, money } = applySpectralEffectToDeck(
-          { deck, money, jokers, jokerCatalog, jokerCapacity: MAX_JOKERS },
-          effect,
-          view.rng,
-        ));
       };
 
       for (;;) {
@@ -147,11 +142,11 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
           jokers.push(offer.joker);
           ownedIds.add(offer.joker.id);
         } else if (offer.kind === "planet") {
-          handStats = applyPlanetUpgrade(handStats, offer.planet);
+          useConsumable({ kind: "planet", card: offer.planet });
         } else if (offer.kind === "tarot") {
-          applyTarot(offer.tarot.effect);
+          useConsumable({ kind: "tarot", card: offer.tarot });
         } else if (offer.kind === "spectral") {
-          applySpectral(offer.spectral.effect);
+          useConsumable({ kind: "spectral", card: offer.spectral });
         } else if (offer.kind === "pack") {
           let packOptions = [...offer.pack.options];
           let picksLeft = packPickLimit(offer.pack.variant);
@@ -163,14 +158,14 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
             packOptions = packOptions.filter((_, i) => i !== pickIdx);
             picksLeft -= 1;
             if (picked.kind === "joker" && jokers.length < MAX_JOKERS) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
-            else if (picked.kind === "planet") { handStats = applyPlanetUpgrade(handStats, picked.planet); }
-            else if (picked.kind === "tarot") { applyTarot(picked.tarot.effect); }
-            else if (picked.kind === "spectral") { applySpectral(picked.spectral.effect); }
+            else if (picked.kind === "planet") { useConsumable({ kind: "planet", card: picked.planet }); }
+            else if (picked.kind === "tarot") { useConsumable({ kind: "tarot", card: picked.tarot }); }
+            else if (picked.kind === "spectral") { useConsumable({ kind: "spectral", card: picked.spectral }); }
           }
         }
       }
 
-      return { jokers, money, handStats, ownedVoucherIds, deck };
+      return { jokers, money, handStats, ownedVoucherIds, deck, lastConsumable };
     },
   };
 }

@@ -11,6 +11,7 @@ import type {
 import { FINAL_ANTE } from "../constants";
 import { pickBossForAnte } from "../items/bosses";
 import { DEFAULT_DECK, deckStartingMoneyDelta, type Deck } from "../items/decks";
+import type { Consumable } from "../items/consumables";
 import { interestMultiplierFromJokers } from "../items/jokers/collection";
 import type { Joker, RandomSource } from "../items/jokers/types";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
@@ -94,6 +95,7 @@ export interface ShopView {
   readonly handStats: HandStats;
   readonly deck: ReadonlyArray<Card>;
   readonly ownedVoucherIds: ReadonlySet<VoucherId>;
+  readonly lastConsumable: Consumable | null;
   readonly rng: RandomSource;
 }
 
@@ -103,6 +105,7 @@ export interface ShopResult {
   readonly handStats: HandStats;
   readonly deck?: ReadonlyArray<Card>;
   readonly ownedVoucherIds?: ReadonlySet<VoucherId>;
+  readonly lastConsumable?: Consumable | null;
 }
 
 export interface HeadlessShopAgent {
@@ -226,6 +229,7 @@ export async function playHeadlessRun(
   });
   let handStats = config.startHandStats ?? createDefaultHandStats();
   let ownedVoucherIds: ReadonlySet<VoucherId> = new Set();
+  let lastConsumable: Consumable | null = null;
   const recentBossIds = new Set<string>();
 
   let money =
@@ -372,12 +376,13 @@ export async function playHeadlessRun(
         return { won: false, anteReached: ante, blindsCleared, handsPlayed, blindsSkipped: runStats.blindsSkipped };
       }
       if (config.shopAgent !== undefined) {
-        const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, deck, ownedVoucherIds, rng });
+        const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, deck, ownedVoucherIds, lastConsumable, rng });
         jokers = result.jokers;
         money = result.money;
         handStats = result.handStats;
         deck = result.deck ?? deck;
         ownedVoucherIds = result.ownedVoucherIds ?? ownedVoucherIds;
+        lastConsumable = result.lastConsumable ?? lastConsumable;
       }
     }
   }
