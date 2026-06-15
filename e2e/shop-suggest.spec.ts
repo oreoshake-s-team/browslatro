@@ -44,37 +44,38 @@ async function openShop(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
   await page.getByText("Apply modifiers").click();
   await page.getByText(/Win/).click();
-  await expect(page.getByTestId("shop-suggest")).toBeVisible();
+  await expect(page.getByTestId("coach-advice")).toBeVisible();
 }
 
-test("suggesting a purchase and applying it buys the offer without logging human play", async ({
+test("the local coach auto-recommends a move in the shop without any click", async ({
+  page,
+}) => {
+  await openShop(page);
+  await expect(page.getByTestId("coach-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByTestId("coach-recommendation")).not.toBeEmpty();
+});
+
+test("a keyless player sees the rate-limited Ask AI affordance", async ({
+  page,
+}) => {
+  await openShop(page);
+  await expect(page.getByTestId("coach-ask-ai")).toContainText("rate-limited");
+});
+
+test("asking the AI annotates the coach pick with a verdict", async ({
   page,
 }) => {
   await page.route("**/api/advice", fulfillWithBuyAdvice);
   await openShop(page);
-  await page.getByTestId("shop-suggest").click();
-  await expect(page.getByTestId("suggestion-recommendation")).toContainText(
-    "Buy",
-  );
-  await page.getByTestId("suggestion-apply").click();
-  await expect(page.locator(".shop-offer-sold").first()).toBeVisible();
-  await expect(page.getByTestId("suggestion-advice")).toHaveCount(0);
-  const log = await page.evaluate(
-    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
-  );
-  expect(log).not.toContain('"kind":"purchase"');
+  await page.getByTestId("coach-ask-ai").click();
+  await expect(page.getByTestId("coach-ai-verdict")).toBeVisible({
+    timeout: 10_000,
+  });
 });
 
-test("the suggest button sits in the Next Round action row", async ({
-  page,
-}) => {
-  await openShop(page);
-  const row = page.locator(".shop-actions");
-  await expect(row.getByTestId("shop-suggest")).toBeVisible();
-  await expect(row.locator(".shop-next")).toBeVisible();
-});
-
-test("a rate-limited keyless player gets the key form inline", async ({
+test("a rate-limited keyless player gets the key form inline after asking the AI", async ({
   page,
 }) => {
   await page.route("**/api/advice", (route) =>
@@ -85,22 +86,15 @@ test("a rate-limited keyless player gets the key form inline", async ({
     }),
   );
   await openShop(page);
-  await page.getByTestId("shop-suggest").click();
-  await expect(page.getByTestId("suggestion-error")).toContainText("10 min");
-  await expect(
-    page.getByLabel("Your Anthropic API key"),
-  ).toBeVisible();
+  await page.getByTestId("coach-ask-ai").click();
+  await expect(page.getByTestId("coach-ai-error")).toContainText("10 min");
+  await expect(page.getByLabel("Your Anthropic API key")).toBeVisible();
 });
 
-test("ONNX policy shows a recommendation while the LLM is still loading", async ({
+test("dismissing hides the coach panel for the current shop", async ({
   page,
 }) => {
-  await page.route("**/api/advice", () => {/* never respond — keep loading state */});
   await openShop(page);
-  await page.getByTestId("shop-suggest").click();
-  await expect(page.getByTestId("suggestion-onnx")).toBeVisible({ timeout: 5_000 });
-  await expect(page.getByTestId("suggestion-onnx-recommendation")).toBeVisible({
-    timeout: 10_000,
-  });
-  await expect(page.getByTestId("suggestion-onnx-recommendation")).not.toBeEmpty();
+  await page.getByTestId("coach-dismiss").click();
+  await expect(page.getByTestId("coach-advice")).toHaveCount(0);
 });

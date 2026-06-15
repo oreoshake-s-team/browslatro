@@ -38,7 +38,7 @@ export function describeContextCandidate(
   }
 }
 
-function errorMessage(
+export function errorMessage(
   t: TFunction,
   code: string,
   retryAfterSeconds: number | undefined,
@@ -73,6 +73,8 @@ export default function SuggestionAdvice<TAction>({
   const loadProgress = useModelLoadProgress(modelProgress);
   switch (state.phase) {
     case "idle":
+    case "coach":
+    case "asking":
       return null;
     case "loading": {
       const onnxCandidate =

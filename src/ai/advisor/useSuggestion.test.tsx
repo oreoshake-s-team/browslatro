@@ -48,6 +48,7 @@ describe("useSuggestion", () => {
     expect(result.current.state).toEqual({
       phase: "ready",
       advice: adviceFixture(),
+      onnxIndex: null,
       candidates: shopAdviceRequestFixture().candidates,
       actions: planFixture().actions,
     });
@@ -88,6 +89,9 @@ describe("useSuggestion", () => {
       phase: "error",
       code: "rate_limited",
       retryAfterSeconds: 120,
+      onnxIndex: null,
+      candidates: shopAdviceRequestFixture().candidates,
+      actions: planFixture().actions,
     });
   });
 
@@ -148,6 +152,61 @@ describe("useSuggestion", () => {
     );
     await act(() => result.current.suggest());
     expect(result.current.state.phase).toBe("ready");
+  });
+
+  test("coach resolves to the coach phase with the preRank onnxIndex", async () => {
+    const preRank = vi.fn().mockResolvedValue(1);
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, {
+        fetchAdviceFn: fetchResolving({ ok: true, advice: adviceFixture() }),
+      }, preRank),
+    );
+    await act(() => result.current.coach());
+    expect(result.current.state).toMatchObject({ phase: "coach", onnxIndex: 1 });
+  });
+
+  test("coach never calls the advice client", async () => {
+    const fetchAdviceFn = fetchResolving({ ok: true, advice: adviceFixture() });
+    const preRank = vi.fn().mockResolvedValue(0);
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, { fetchAdviceFn }, preRank),
+    );
+    await act(() => result.current.coach());
+    expect(fetchAdviceFn).not.toHaveBeenCalled();
+  });
+
+  test("coach leaves onnxIndex null when no preRank is provided", async () => {
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, {
+        fetchAdviceFn: fetchResolving({ ok: true, advice: adviceFixture() }),
+      }),
+    );
+    await act(() => result.current.coach());
+    expect(result.current.state).toMatchObject({ phase: "coach", onnxIndex: null });
+  });
+
+  test("askAi resolves to ready while preserving the coach onnxIndex", async () => {
+    const preRank = vi.fn().mockResolvedValue(2);
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, {
+        fetchAdviceFn: fetchResolving({ ok: true, advice: adviceFixture() }),
+      }, preRank),
+    );
+    await act(() => result.current.coach());
+    await act(() => result.current.askAi());
+    expect(result.current.state).toMatchObject({ phase: "ready", onnxIndex: 2 });
+  });
+
+  test("askAi surfaces client errors while keeping the coach onnxIndex", async () => {
+    const preRank = vi.fn().mockResolvedValue(2);
+    const { result } = renderHook(() =>
+      useSuggestion(planFixture, {
+        fetchAdviceFn: fetchResolving({ ok: false, code: "model_error" }),
+      }, preRank),
+    );
+    await act(() => result.current.coach());
+    await act(() => result.current.askAi());
+    expect(result.current.state).toMatchObject({ phase: "error", onnxIndex: 2 });
   });
 
   test("a reset during flight discards the late response", async () => {
