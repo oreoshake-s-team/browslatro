@@ -4,12 +4,14 @@ import { GREEN_JOKER_MULT_PER_HAND } from "./constants";
 import {
   createGreenJokerJoker,
   createLoyaltyCardJoker,
+  createObeliskJoker,
   createRideTheBusJoker,
   createRunnerJoker,
   createSpareTrousersJoker,
   createSquareJokerJoker,
   createWeeJokerJoker,
 } from "./factories";
+import { emptyHandCounts } from "../../components/hud/handPlayCounts";
 import type { Joker } from "./types";
 import type { Card } from "../../cards/types";
 
@@ -102,12 +104,43 @@ describe("advanceStackGainsForScoring", () => {
     expect(counter(advanced)).toBe(GREEN_JOKER_MULT_PER_HAND);
   });
 
-  test("leaves a non-gains counter joker untouched (negative — every-n-hands)", () => {
+  test("advances Loyalty Card by 1 on any hand played", () => {
     const loyalty: Joker = {
       ...createLoyaltyCardJoker(),
       state: { kind: "counter", value: 3 },
     };
     const [advanced] = advanceStackGainsForScoring([loyalty], baseCtx);
-    expect(counter(advanced)).toBe(3);
+    expect(counter(advanced)).toBe(4);
+  });
+
+  test("advances Obelisk on an off-meta hand", () => {
+    const counts = { ...emptyHandCounts(), Flush: 5, "Two Pair": 1 };
+    const [advanced] = advanceStackGainsForScoring([createObeliskJoker()], {
+      ...baseCtx,
+      handPlayCounts: counts,
+    });
+    expect(counter(advanced)).toBe(1);
+  });
+
+  test("resets Obelisk when the played hand is the most played", () => {
+    const grown: Joker = {
+      ...createObeliskJoker(),
+      state: { kind: "counter", value: 4 },
+    };
+    const counts = { ...emptyHandCounts(), "Two Pair": 5, Flush: 1 };
+    const [advanced] = advanceStackGainsForScoring([grown], {
+      ...baseCtx,
+      handPlayCounts: counts,
+    });
+    expect(counter(advanced)).toBe(0);
+  });
+
+  test("leaves Obelisk untouched when handPlayCounts is absent (negative)", () => {
+    const grown: Joker = {
+      ...createObeliskJoker(),
+      state: { kind: "counter", value: 4 },
+    };
+    const [advanced] = advanceStackGainsForScoring([grown], baseCtx);
+    expect(counter(advanced)).toBe(4);
   });
 });

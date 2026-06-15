@@ -74,6 +74,17 @@ function sameHandStackAdvance(
         ...joker,
         state: counterState(prevCount(joker) + effect.growAmount),
       };
+    case "every-n-hands-xmult":
+      return { ...joker, state: counterState(prevCount(joker) + 1) };
+    case "x-mult-per-hand-without-most-played": {
+      const counts = ctx.handPlayCounts;
+      if (counts === undefined) return joker;
+      const max = Math.max(...Object.values(counts));
+      if (counts[ctx.playedHandLabel] >= max) {
+        return { ...joker, state: counterState(0) };
+      }
+      return { ...joker, state: counterState(prevCount(joker) + 1) };
+    }
     default:
       return joker;
   }
