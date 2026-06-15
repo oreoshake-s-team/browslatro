@@ -80,7 +80,8 @@ export default function ModifierSpectralPicker() {
               onBlur={() => closeTooltip(card.id)}
               onClick={() => addSpectral(card.id)}
             >
-              👻 {card.name}
+              <span aria-hidden="true">👻 </span>
+              {card.name}
               {open && tooltip && (
                 <SpectralTooltip
                   id={tooltipId}

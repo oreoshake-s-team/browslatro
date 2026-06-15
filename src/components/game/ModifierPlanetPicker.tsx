@@ -80,7 +80,8 @@ export default function ModifierPlanetPicker() {
               onBlur={() => closeTooltip(card.id)}
               onClick={() => addPlanet(card.id)}
             >
-              🌌 {card.name}
+              <span aria-hidden="true">🌌 </span>
+              {card.name}
               {open && tooltip && (
                 <PlanetTooltip
                   id={tooltipId}

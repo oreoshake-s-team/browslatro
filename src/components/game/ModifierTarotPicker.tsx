@@ -80,7 +80,8 @@ export default function ModifierTarotPicker() {
               onBlur={() => closeTooltip(card.id)}
               onClick={() => addTarot(card.id)}
             >
-              🔮 {card.name}
+              <span aria-hidden="true">🔮 </span>
+              {card.name}
               {open && tooltip && (
                 <TarotTooltip
                   id={tooltipId}
