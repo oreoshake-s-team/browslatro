@@ -163,6 +163,13 @@ export const SUIT_DISPLAY_ORDER: Record<Suit, number> = {
   hearts: 3,
 };
 
+export const SUIT_GLYPHS: Record<Suit, string> = {
+  spades: "♠",
+  hearts: "♥",
+  diamonds: "♦",
+  clubs: "♣",
+};
+
 const RANK_DISPLAY_ORDER: Record<Rank, number> = {
   "2": 0,
   "3": 1,

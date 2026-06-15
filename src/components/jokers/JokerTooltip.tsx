@@ -1,13 +1,9 @@
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "./JokerTooltip.css";
-import {
-  localizedJokerDescription,
-  localizedJokerName,
-} from "../../i18n/jokerOverrides";
-import {
-  toDoListDescriptionNode,
-} from "../../items/jokers/toDoListDescription";
+import { localizedJokerName } from "../../i18n/jokerOverrides";
+import { dynamicJokerDescriptionNode } from "../../items/jokers/dynamicJokerDescription";
+import { tSuitName } from "../../i18n/strings";
 import {
   JOKER_EDITION_INFO,
   JOKER_STICKER_INFO,
@@ -44,7 +40,7 @@ interface JokerTooltipProps {
 }
 
 export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, anchorRect }: JokerTooltipProps) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
   const copyTargetLabel = computeCopyTargetLabel(jokers, jokerIndex);
   const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
@@ -52,6 +48,8 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
     ? `joker-tooltip-edition-${joker.edition}`
     : "";
   const todoHand = useGame((s) => s.todoHand);
+  const castleSuit = useGame((s) => s.castleSuit);
+  const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
   const effectiveOdds = useEffectiveOdds(joker);
@@ -73,12 +71,14 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
         {rarityLabel(joker.rarity)}
       </p>
       <p className="joker-tooltip-description" data-testid="joker-tooltip-description">
-        {joker.id === "to-do-list"
-          ? toDoListDescriptionNode(
-              localizedJokerDescription(i18n.language, joker.id, joker.description),
-              todoHand,
-            )
-          : localizedJokerDescription(i18n.language, joker.id, joker.description)}
+        {dynamicJokerDescriptionNode({
+          language: i18n.language,
+          jokerId: joker.id,
+          description: joker.description,
+          todoHand,
+          castleSuit,
+          castleSuitName,
+        })}
       </p>
       {currentValue && (
         <p
