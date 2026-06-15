@@ -460,7 +460,10 @@ export function bossVoidReason(
   return null;
 }
 
-export type FaceDownContext = "initial" | "refill";
+export type FaceDownContext =
+  | "initial"
+  | "refill-after-play"
+  | "refill-after-discard";
 
 export function applyBossFaceDown(
   cards: ReadonlyArray<Card>,
@@ -478,7 +481,7 @@ export function applyBossFaceDown(
         faceDown = context === "initial";
         break;
       case "face-down-on-refill":
-        faceDown = context === "refill";
+        faceDown = context === "refill-after-play";
         break;
       case "face-down-chance":
         faceDown = rng() < 1 / effect.oneIn;

@@ -488,7 +488,9 @@ describe("applyBossFaceDown", () => {
 
   test("The House leaves refill draws face-up", () => {
     expect(
-      applyBossFaceDown(sample, house, true, "refill").some((c) => c.faceDown),
+      applyBossFaceDown(sample, house, true, "refill-after-play").some(
+        (c) => c.faceDown,
+      ),
     ).toBe(false);
   });
 
@@ -498,12 +500,20 @@ describe("applyBossFaceDown", () => {
     ).toBe(false);
   });
 
-  test("The Fish face-downs every refill draw", () => {
+  test("The Fish face-downs refill draws after a played hand", () => {
     expect(
-      applyBossFaceDown(sample, fish, true, "refill").every(
+      applyBossFaceDown(sample, fish, true, "refill-after-play").every(
         (c) => c.faceDown === true,
       ),
     ).toBe(true);
+  });
+
+  test("The Fish leaves refill draws after a discard face-up", () => {
+    expect(
+      applyBossFaceDown(sample, fish, true, "refill-after-discard").some(
+        (c) => c.faceDown,
+      ),
+    ).toBe(false);
   });
 
   test("The Mark face-downs only face cards", () => {

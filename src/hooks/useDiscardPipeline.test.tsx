@@ -403,6 +403,48 @@ describe("The Serpent — fixed refill count", () => {
   });
 });
 
+describe("The Fish — face down only after a played hand", () => {
+  function setupFishRound(
+    handIds: ReadonlyArray<number>,
+    remainingIds: ReadonlyArray<number>,
+  ) {
+    const fish = createBossCatalog().find((b) => b.id === "the-fish")!;
+    useGame.getState().setCurrentBoss(fish);
+    useGame.getState().setBlind(3);
+    useGame.getState().setDealt(buildDeal(handIds, remainingIds));
+    useGame.getState().setRemainingDiscards(3);
+  }
+
+  test("a discard draws its replacement cards face up", () => {
+    setupFishRound([1, 2], [10]);
+    useGame.getState().setSelectedIds(new Set([1]));
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => result.current.discardSelected());
+    act(() => result.current.handleCardDiscardEnd(card(1)));
+
+    const drawn = useGame.getState().dealt.hand.find((c) => c.id === 10);
+    expect(drawn?.faceDown).toBeUndefined();
+  });
+
+  test("the refill after a played hand draws face down", () => {
+    setupFishRound([1, 2], [10]);
+    const { result } = renderHook(() => useDiscardPipeline());
+    result.current.pendingHandPlayResetRef.current = true;
+    result.current.pendingDiscardCountRef.current = 1;
+
+    act(() => {
+      useGame.getState().setDiscardingIds(new Set([1]));
+    });
+    act(() => {
+      result.current.handleCardDiscardEnd(card(1));
+    });
+
+    const drawn = useGame.getState().dealt.hand.find((c) => c.id === 10);
+    expect(drawn?.faceDown).toBe(true);
+  });
+});
+
 describe("useDiscardPipeline — Green Joker counter shrinks on discard", () => {
   beforeEach(() => {
     useGame.getState().setRemainingDiscards(3);
