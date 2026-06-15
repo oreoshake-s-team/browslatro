@@ -72,9 +72,33 @@ Use semantic (or Conventional) Commits to provide a standardized framework for n
 
 See docs/conversation_summary.md for more background.
 
-# Onboarding
+# Documentation
 
-See docs/onboarding/* for quick intros into how the application is structured.
+Consult these before diving into unfamiliar areas — they're kept current and cross-linked.
+
+## Onboarding (`docs/onboarding/`)
+
+Quick intros into how the application is structured. Start at `docs/onboarding/README.md`.
+
+- `architecture.md` — boot order, the Zustand state store, the React hooks driving the game loop, and how a click flows to a re-render.
+- `scoring-pipeline.md` — the full scoring path from "which cards count" to the final floored integer; the hardest part of the codebase.
+- `jokers-and-content.md` — the 150-joker catalog and the "effects as data, pure engines as code" pattern used for most game content.
+- `animations.md` — how the staged scoring animation (chips/mult ticking, card pops, joker pulses) is built.
+- `patterns.md` — recurring idioms and conventions (Zustand slices, etc.).
+
+## AI/ML advisor (`docs/ai-advisor/`)
+
+How Browslatro suggests moves to the player — both the prompted LLM coach and the offline-trained ONNX policy. Start at `docs/ai-advisor/README.md` (end-to-end overview).
+
+- `engine-plumbing.md` — the deterministic engine half: turning a live position into scored candidate moves and a numeric feature vector. Both advisor paths sit on top of this.
+- `llm-advisor.md` — the Claude-powered advisor in `src/ai/advisor/` (recommendation + explanation + alternative + concept).
+- `api-layer.md` — the server-side `/api/advice` Vercel function: rate limiting, secrets, error codes, client contract.
+- `wiki-retrieval.md` — how the prompted advisor is grounded with curated Balatro notes (`src/ai/advisor/wiki.ts`).
+- `ml-pipeline.md` — the offline pipeline: headless play, datasets, training, evaluation, ONNX export.
+- `running-locally.md` — exercising each advisor piece locally (JS/TS via Yarn; `ml/` via Python).
+- `glossary.md` — domain terms (Balatro mechanics, ML, infrastructure) with authoritative links.
+
+See also `src/ai/advisor/model.ts` for the advisor `MODEL_ID` and `ml/README.md` for the canonical ML workflow.
 
 ## Project Environment
 
