@@ -5,7 +5,7 @@ import {
   getHandOptions,
   type HandOption,
 } from "../getHandOptions";
-import { toModelState } from "../modelState";
+import { toModelState, type ModelState } from "../modelState";
 import type { Advice } from "./advice";
 import { fetchAdvice, type AdviceClientErrorCode } from "./client";
 import { toModelStateInput, toSimulatePlayInput } from "./snapshot";
@@ -17,6 +17,7 @@ export type MoveExplanationState =
       readonly phase: "ready";
       readonly candidates: ReadonlyArray<HandOption>;
       readonly advice: Advice;
+      readonly modelState: ModelState;
     }
   | {
       readonly phase: "error";
@@ -67,7 +68,7 @@ export function useMoveExplanation(
       });
       return null;
     }
-    setState({ phase: "ready", candidates, advice: result.advice });
+    setState({ phase: "ready", candidates, advice: result.advice, modelState });
     return candidates[result.advice.recommendationIndex] ?? null;
   }, [deps]);
 

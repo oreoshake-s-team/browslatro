@@ -4,6 +4,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { HandOption } from "../../ai/getHandOptions";
 import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
 import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
+import { toModelState } from "../../ai/modelState";
+import { toModelStateInput } from "../../ai/advisor/snapshot";
 import { useGame } from "../../store/game";
 import AutopilotControls from "./AutopilotControls";
 
@@ -65,6 +67,7 @@ function readyExplanation(
       concept: "Lock in value.",
       ...advice,
     },
+    modelState: toModelState(toModelStateInput(useGame.getState())),
   };
 }
 
@@ -78,6 +81,7 @@ function renderControls(
     onStop?: () => void;
     onAskAi?: () => void;
     onRetry?: () => void;
+    onFeedback?: (correctedIndex: number | null) => void;
   } = {},
 ) {
   return render(
@@ -90,6 +94,7 @@ function renderControls(
       onStop={overrides.onStop ?? vi.fn()}
       onAskAi={overrides.onAskAi ?? vi.fn()}
       onRetry={overrides.onRetry ?? vi.fn()}
+      onFeedback={overrides.onFeedback}
     />,
   );
 }
@@ -211,6 +216,35 @@ describe("AutopilotControls", () => {
   test("renders the transferable concept when ready", () => {
     renderControls({ explanation: readyExplanation() });
     expect(screen.getByText("Lock in value.")).toBeInTheDocument();
+  });
+
+  test("shows the bad-pick affordance when ready and onFeedback is provided", () => {
+    renderControls({ explanation: readyExplanation(), onFeedback: vi.fn() });
+    expect(screen.getByTestId("advice-feedback-open")).toBeInTheDocument();
+  });
+
+  test("omits the bad-pick affordance when onFeedback is not provided (negative)", () => {
+    renderControls({ explanation: readyExplanation() });
+    expect(screen.queryByTestId("advice-feedback-open")).not.toBeInTheDocument();
+  });
+
+  test("a corrective pick reports the chosen candidate index", async () => {
+    const onFeedback = vi.fn();
+    const user = userEvent.setup();
+    renderControls({ explanation: readyExplanation(), onFeedback });
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    await user.click(screen.getByTestId("advice-feedback-option-1"));
+    await user.click(screen.getByTestId("advice-feedback-submit"));
+    expect(onFeedback).toHaveBeenCalledWith(1);
+  });
+
+  test("a bare downvote reports a null corrected index", async () => {
+    const onFeedback = vi.fn();
+    const user = userEvent.setup();
+    renderControls({ explanation: readyExplanation(), onFeedback });
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    await user.click(screen.getByTestId("advice-feedback-just-bad"));
+    expect(onFeedback).toHaveBeenCalledWith(null);
   });
 
   test("renders an error message when the explanation fails", () => {

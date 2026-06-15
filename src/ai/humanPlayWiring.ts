@@ -53,12 +53,11 @@ export function captureHumanDecision(
   }
 }
 
-export function captureRunEvent(
+function appendRunEvent(
   state: GameState,
   event: RunEvent,
   deps?: CaptureDeps,
 ): boolean {
-  if (recordingSuppressed) return false;
   try {
     const record = buildRunEventRecord(
       state,
@@ -71,10 +70,19 @@ export function captureRunEvent(
   }
 }
 
+export function captureRunEvent(
+  state: GameState,
+  event: RunEvent,
+  deps?: CaptureDeps,
+): boolean {
+  if (recordingSuppressed) return false;
+  return appendRunEvent(state, event, deps);
+}
+
 export function captureAdviceFeedback(
   state: GameState,
   feedback: AdviceFeedbackEvent,
   deps?: CaptureDeps,
 ): boolean {
-  return captureRunEvent(state, feedback, deps);
+  return appendRunEvent(state, feedback, deps);
 }

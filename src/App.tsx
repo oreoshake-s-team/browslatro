@@ -2,6 +2,8 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAutopilot } from "./hooks/useAutopilot";
 import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
+import { captureAdviceFeedback } from "./ai/humanPlayWiring";
+import { buildHandAdviceFeedbackEvent } from "./ai/advisor/adviceFeedback";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -220,6 +222,14 @@ function App() {
         autopilot.setProposal(picked);
       }
     });
+  };
+  const handleAutopilotFeedback = (correctedIndex: number | null): void => {
+    const explanation = autopilotExplanation.state;
+    if (explanation.phase !== "ready") return;
+    captureAdviceFeedback(
+      useGame.getState(),
+      buildHandAdviceFeedbackEvent(explanation, correctedIndex),
+    );
   };
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
@@ -468,6 +478,7 @@ function App() {
         onStopAutopilot={autopilot.stop}
         onAskAiAutopilot={askAiForMove}
         onRetryAutopilot={askAiForMove}
+        onAutopilotFeedback={handleAutopilotFeedback}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

@@ -1,6 +1,20 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page, type Route } from "@playwright/test";
 
 test.describe.configure({ timeout: 90_000 });
+
+async function fulfillWithAdvice(route: Route): Promise<void> {
+  await route.fulfill({
+    json: {
+      advice: {
+        recommendationIndex: 0,
+        alternativeIndex: 1,
+        whyAlternativeWorse: "The discard throws away a made hand.",
+        explanation: "Play the pair to bank guaranteed chips.",
+        concept: "Lock in value before chasing draws.",
+      },
+    },
+  });
+}
 
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
@@ -66,6 +80,35 @@ test("autopilot can be switched off", async ({ page }) => {
   await toggle.click();
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
+});
+
+test("downvoting an AI explanation with a corrective pick records advice feedback", async ({
+  page,
+}) => {
+  await page.route("**/api/advice", fulfillWithAdvice);
+  await startRound(page);
+
+  const toggle = page.getByRole("button", { name: "Suggest" });
+  await toggle.click();
+  await expect(page.getByRole("button", { name: /Approve move/ })).toBeVisible({
+    timeout: 10_000,
+  });
+
+  await page.getByRole("button", { name: /Ask the AI/ }).click();
+  const badPick = page.getByTestId("advice-feedback-open");
+  await expect(badPick).toBeVisible({ timeout: 10_000 });
+  await badPick.click();
+
+  await page.getByTestId("advice-feedback-option-1").click();
+  await page.getByTestId("advice-feedback-submit").click();
+
+  await expect(page.getByTestId("advice-feedback-recorded")).toBeVisible();
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).toContain('"kind":"advice-feedback"');
+  expect(log).toContain('"advisorKind":"llm"');
+  expect(log).toContain('"correctedIndex":1');
 });
 
 test("a pending suggestion fills the Submit Hand preview and sidebar hand score", async ({

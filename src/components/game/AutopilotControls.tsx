@@ -10,6 +10,7 @@ import { cardLabel } from "../../scoring/scoringTrace";
 import { useGame } from "../../store/game";
 import { useModelLoadProgress } from "./useModelLoadProgress";
 import PlayerKeyForm from "./PlayerKeyForm";
+import AdviceFeedbackControl from "../advisor/AdviceFeedbackControl";
 import "./AutopilotControls.css";
 
 export interface AutopilotControlsProps {
@@ -21,6 +22,7 @@ export interface AutopilotControlsProps {
   readonly onStop: () => void;
   readonly onAskAi: () => void;
   readonly onRetry: () => void;
+  readonly onFeedback?: (correctedIndex: number | null) => void;
 }
 
 function describeProposal(t: TFunction, proposal: HandOption): string {
@@ -73,6 +75,7 @@ function renderExplanation(
   explanation: MoveExplanationState,
   hand: ReadonlyArray<Card>,
   onRetry: () => void,
+  onFeedback?: (correctedIndex: number | null) => void,
 ): React.JSX.Element | null {
   switch (explanation.phase) {
     case "idle":
@@ -133,6 +136,14 @@ function renderExplanation(
             <p className="autopilot-advice-label">{t("advisor.concept")}</p>
             <p className="autopilot-concept">{advice.concept}</p>
           </section>
+          {onFeedback !== undefined && (
+            <AdviceFeedbackControl
+              candidateLabels={candidates.map((c) =>
+                describeCandidate(t, c, hand),
+              )}
+              onSubmit={onFeedback}
+            />
+          )}
         </div>
       );
     }
@@ -148,6 +159,7 @@ export default function AutopilotControls({
   onStop,
   onAskAi,
   onRetry,
+  onFeedback,
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
@@ -207,7 +219,7 @@ export default function AutopilotControls({
           {t("advisor.autopilotStop")}
         </button>
       </div>
-      {renderExplanation(t, explanation, hand, onRetry)}
+      {renderExplanation(t, explanation, hand, onRetry, onFeedback)}
     </div>
   );
 }

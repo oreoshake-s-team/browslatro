@@ -213,7 +213,7 @@ describe("captureAdviceFeedback", () => {
     expect(recorded).toBe(true);
   });
 
-  test("does not record advice feedback while recording is suppressed", () => {
+  test("records explicit feedback even while autopilot suppresses move recording", () => {
     const log = makeLog();
     setHumanPlayRecordingSuppressed(true);
     const recorded = captureAdviceFeedback(useGame.getState(), feedbackEvent(), {
@@ -221,6 +221,14 @@ describe("captureAdviceFeedback", () => {
       seed: 7,
     });
     setHumanPlayRecordingSuppressed(false);
-    expect(recorded).toBe(false);
+    expect(recorded).toBe(true);
+  });
+
+  test("appends the feedback record even while recording is suppressed (negative on suppression)", () => {
+    const log = makeLog();
+    setHumanPlayRecordingSuppressed(true);
+    captureAdviceFeedback(useGame.getState(), feedbackEvent(), { log, seed: 7 });
+    setHumanPlayRecordingSuppressed(false);
+    expect(log.counts()["advice-feedback"]).toBe(1);
   });
 });
