@@ -334,7 +334,7 @@ export default function Game({
               )}
             </button>
             <button
-              className="btn btn--danger discard-button"
+              className="btn btn--secondary discard-button"
               onClick={onDiscard}
               disabled={!canDiscard}
             >
