@@ -172,11 +172,11 @@ The TypeScript encoder ([`src/ai/encode.ts`](../../src/ai/encode.ts)) runs **at 
 
 Shop and pack decisions use a **separate, much smaller encoder** because the action space is different (buy item / reroll / leave / pick / skip rather than play/discard subsets).
 
-- `SHOP_INPUT_FEATURES = 16` = 4 context + 12 candidate.
+- `SHOP_INPUT_FEATURES = 28` = 4 context + 24 candidate.
 - **Context (4):** `money/20, ante/8, round/24, picks/5`.
-- **Candidate (12):** a 7-way one-hot over item types `[joker, planet, tarot, spectral, playing-card, pack, voucher]`, plus `cost/20`, an affordability flag (`cost ≤ money`), and `is-reroll`/`is-leave`/`is-skip` flags.
+- **Candidate (24):** a 7-way one-hot over item types `[joker, planet, tarot, spectral, playing-card, pack, voucher]`, plus `cost/20`, an affordability flag (`cost ≤ money`), `is-reroll`/`is-leave`/`is-skip` flags, and a 12-way one-hot over **effect categories** (`joker-mult/x-mult/retrigger/money/passive`, `planet`, `tarot-enhance/economy/create/deck`, `spectral`, `other`) so the policy can tell a strong consumable from a weak one. The category is computed from the catalogs by [`shopCategory.ts`](../../src/ai/advisor/shopCategory.ts) and mirrored verbatim in `encoding.py`.
 
-`encodeShopCandidates` / `encodePackCandidates` flatten the candidates into a `Float32Array` for the [shop ONNX policy](./ml-pipeline.md#the-shop-policy). The shipped shop model is [`advisor-shop-policy-v2.onnx`](../../public/models/advisor-shop-policy-v2.onnx) (`SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts)).
+`encodeShopCandidates` / `encodePackCandidates` flatten the candidates into a `Float32Array` for the [shop ONNX policy](./ml-pipeline.md#the-shop-policy). The shipped shop model is [`advisor-shop-policy-v3.onnx`](../../public/models/advisor-shop-policy-v3.onnx) (`SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts)).
 
 ---
 

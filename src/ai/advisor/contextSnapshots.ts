@@ -2,6 +2,7 @@ import type { Consumable } from "../../items/consumables";
 import type { Joker } from "../../items/jokers";
 import { packPickLimit, type PackOption } from "../../items/packs";
 import type { ShopItem } from "../../items/shop";
+import { categorizePackOption, categorizeShopItem } from "./shopCategory";
 import type {
   NamedRef,
   PackAdviceOption,
@@ -65,6 +66,7 @@ export function shopAdviceItem(offer: ShopItem, cost: number): ShopAdviceItem {
   const { itemType, item } = shopItemDescribed(offer);
   return {
     itemType,
+    category: categorizeShopItem(offer),
     id: item.id,
     name: item.name,
     description: item.description,
@@ -78,6 +80,7 @@ export function voucherAdviceItem(
 ): ShopAdviceItem {
   return {
     itemType: "voucher",
+    category: "other",
     id: voucher.id,
     name: voucher.name,
     description: voucher.description,
@@ -110,6 +113,7 @@ export function packAdviceOption(option: PackOption): PackAdviceOption {
   const { optionType, item } = packOptionDescribed(option);
   return {
     optionType,
+    category: categorizePackOption(option),
     id: item.id,
     name: item.name,
     description: item.description,

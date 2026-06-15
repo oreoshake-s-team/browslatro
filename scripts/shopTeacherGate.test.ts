@@ -19,8 +19,8 @@ function shopViewFixture(): ShopView {
 }
 
 const CANDIDATES: ReadonlyArray<ShopAdviceCandidate> = [
-  { action: "buy", item: { itemType: "joker", id: "a", name: "A", description: "", cost: 4 } },
-  { action: "buy", item: { itemType: "joker", id: "b", name: "B", description: "", cost: 5 } },
+  { action: "buy", item: { itemType: "joker", category: "joker-mult", id: "a", name: "A", description: "", cost: 4 } },
+  { action: "buy", item: { itemType: "joker", category: "joker-mult", id: "b", name: "B", description: "", cost: 5 } },
   { action: "leave" },
 ];
 

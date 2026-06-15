@@ -36,7 +36,7 @@ const SEALS: ReadonlyArray<Seal> = ["gold", "red", "blue", "purple"];
 const EDITIONS: ReadonlyArray<CardEdition> = [
   "foil", "holographic", "polychrome",
 ];
-const JOKER_EFFECT_CATEGORIES = ["mult", "x-mult", "retrigger", "money", "passive"] as const;
+export const JOKER_EFFECT_CATEGORIES = ["mult", "x-mult", "retrigger", "money", "passive"] as const;
 const JOKER_RARITIES: ReadonlyArray<JokerRarity> = [
   "common", "uncommon", "rare", "legendary",
 ];
@@ -81,7 +81,7 @@ export const INPUT_FEATURES = STATE_FEATURES + CANDIDATE_FEATURES;
 
 type JokerEffectCategory = (typeof JOKER_EFFECT_CATEGORIES)[number];
 
-function jokerEffectCategory(effectKind: string): JokerEffectCategory {
+export function jokerEffectCategory(effectKind: string): JokerEffectCategory {
   if (effectKind.includes("x-mult") || effectKind.includes("xmult") || effectKind === "stencil") {
     return "x-mult";
   }

@@ -36,6 +36,7 @@ describe("shopAdviceItem", () => {
     const joker = createPlusFourMultJoker();
     expect(shopAdviceItem(jokerOffer(), 4)).toEqual({
       itemType: "joker",
+      category: "joker-mult",
       id: joker.id,
       name: joker.name,
       description: joker.description,
@@ -92,6 +93,7 @@ describe("voucherAdviceItem", () => {
     );
     expect(item).toEqual({
       itemType: "voucher",
+      category: "other",
       id: "overstock",
       name: "Overstock",
       description: "+1 card slot in shop",
@@ -105,6 +107,7 @@ describe("packAdviceOption", () => {
     const joker = createPlusFourMultJoker();
     expect(packAdviceOption({ kind: "joker", joker })).toEqual({
       optionType: "joker",
+      category: "joker-mult",
       id: joker.id,
       name: joker.name,
       description: joker.description,

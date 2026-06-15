@@ -21,6 +21,7 @@ export interface NamedRef {
 
 export interface ShopAdviceItem {
   readonly itemType: string;
+  readonly category: string;
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -50,6 +51,7 @@ export interface ShopAdviceRequest {
 
 export interface PackAdviceOption {
   readonly optionType: string;
+  readonly category: string;
   readonly id: string;
   readonly name: string;
   readonly description: string;

@@ -31,7 +31,7 @@ function shopViewFixture(overrides: Partial<ShopView> = {}): ShopView {
 function buyCandidate(id: string, name: string, cost: number): ShopAdviceCandidate {
   return {
     action: "buy",
-    item: { itemType: "joker", id, name, description: "", cost },
+    item: { itemType: "joker", category: "joker-mult", id, name, description: "", cost },
   };
 }
 

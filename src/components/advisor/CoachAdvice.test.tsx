@@ -21,6 +21,7 @@ function candidates(): ReadonlyArray<ContextAdviceCandidate> {
       action: "buy",
       item: {
         itemType: "joker",
+        category: "joker-mult",
         id: "jolly-joker",
         name: "Jolly Joker",
         description: "+8 Mult if played hand contains a Pair",
