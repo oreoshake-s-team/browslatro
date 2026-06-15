@@ -1,14 +1,55 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import type { Consumable } from "../items/consumables";
 import { createJokerCatalog } from "../items/jokers/catalog";
+import { createPlanetCatalog } from "../items/planets";
+import { createTarotCatalog } from "../items/tarots";
+import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
 import {
+  applyConsumable,
   applySpectralEffectToDeck,
   applyTarotEffectToDeck,
+  type ConsumableApplyState,
   type ConsumableContext,
+  type ConsumableDeps,
 } from "./headlessConsumables";
 import { card } from "./test-helpers";
 
 const NON_LEGENDARY_JOKERS = createJokerCatalog().filter((j) => j.rarity !== "legendary");
+const TAROTS = createTarotCatalog();
+const PLANETS = createPlanetCatalog();
+
+function tarotConsumable(id: string): Consumable {
+  const found = TAROTS.find((t) => t.id === id);
+  if (found === undefined) throw new Error(`unknown tarot ${id}`);
+  return { kind: "tarot", card: found };
+}
+
+function deps(overrides: Partial<ConsumableDeps> = {}): ConsumableDeps {
+  return {
+    jokers: [],
+    jokerCatalog: NON_LEGENDARY_JOKERS,
+    jokerCapacity: 5,
+    tarotCatalog: TAROTS,
+    planetCatalog: PLANETS,
+    ...overrides,
+  };
+}
+
+function applyState(overrides: Partial<ConsumableApplyState> = {}): ConsumableApplyState {
+  return {
+    deck: [card("2", "clubs"), card("9", "hearts"), card("K", "spades")],
+    money: 10,
+    handStats: createDefaultHandStats(),
+    lastConsumable: null,
+    createdJokers: [],
+    ...overrides,
+  };
+}
+
+const totalLevels = (s: HandStats): number =>
+  Object.values(s).reduce((sum, entry) => sum + entry.level, 0);
+const BASELINE_LEVELS = totalLevels(createDefaultHandStats());
 
 function ctx(overrides: Partial<ConsumableContext> = {}): ConsumableContext {
   return {
@@ -105,10 +146,20 @@ describe("applyTarotEffectToDeck", () => {
     expect(r.createdJoker?.id).not.toBe(owned[0].id);
   });
 
-  test("an unmodeled tarot effect leaves the deck and money unchanged (negative)", () => {
+  test("create-consumables reports the requested consumable intent", () => {
+    const r = applyTarotEffectToDeck(ctx(), { kind: "create-consumables", consumableKind: "planet", count: 2 }, () => 0);
+    expect(r.createConsumables).toEqual({ consumableKind: "planet", count: 2 });
+  });
+
+  test("create-consumables leaves the deck and money unchanged (negative)", () => {
     const base = ctx();
-    const r = applyTarotEffectToDeck(base, { kind: "copy-last-consumable" }, () => 0);
+    const r = applyTarotEffectToDeck(base, { kind: "create-consumables", consumableKind: "tarot", count: 2 }, () => 0);
     expect(r.deck).toBe(base.deck);
+  });
+
+  test("copy-last-consumable reports the copy intent", () => {
+    const r = applyTarotEffectToDeck(ctx(), { kind: "copy-last-consumable" }, () => 0);
+    expect(r.copyLastConsumable).toBe(true);
   });
 });
 
@@ -166,6 +217,53 @@ describe("applySpectralEffectToDeck", () => {
   test("an unmodeled spectral effect leaves the deck unchanged (negative)", () => {
     const base = ctx();
     const r = applySpectralEffectToDeck(base, { kind: "black-hole" }, () => 0);
+    expect(r.deck).toBe(base.deck);
+  });
+});
+
+describe("applyConsumable", () => {
+  test("a planet consumable upgrades hand levels", () => {
+    const r = applyConsumable(applyState(), { kind: "planet", card: PLANETS[0] }, deps(), () => 0);
+    expect(totalLevels(r.handStats)).toBeGreaterThan(BASELINE_LEVELS);
+  });
+
+  test("an applied consumable is recorded as the last consumable", () => {
+    const consumable: Consumable = { kind: "planet", card: PLANETS[0] };
+    const r = applyConsumable(applyState(), consumable, deps(), () => 0);
+    expect(r.lastConsumable).toBe(consumable);
+  });
+
+  test("The High Priestess creates and applies planets, upgrading hand levels", () => {
+    const r = applyConsumable(applyState(), tarotConsumable("the-high-priestess"), deps(), () => 0);
+    expect(totalLevels(r.handStats)).toBeGreaterThanOrEqual(BASELINE_LEVELS + 2);
+  });
+
+  test("The Emperor creates and applies tarots, mutating the deck", () => {
+    const base = applyState();
+    const r = applyConsumable(base, tarotConsumable("the-emperor"), deps(), () => 0);
+    expect(r.deck).not.toEqual(base.deck);
+  });
+
+  test("Judgement creates a joker", () => {
+    const r = applyConsumable(applyState(), tarotConsumable("judgement"), deps(), () => 0);
+    expect(r.createdJokers.length).toBe(1);
+  });
+
+  test("The Fool re-applies the last-used consumable", () => {
+    const previous: Consumable = { kind: "planet", card: PLANETS[0] };
+    const r = applyConsumable(applyState({ lastConsumable: previous }), tarotConsumable("the-fool"), deps(), () => 0);
+    expect(totalLevels(r.handStats)).toBeGreaterThan(BASELINE_LEVELS);
+  });
+
+  test("The Fool does nothing when there is no prior consumable (negative)", () => {
+    const r = applyConsumable(applyState(), tarotConsumable("the-fool"), deps(), () => 0);
+    expect(totalLevels(r.handStats)).toBe(BASELINE_LEVELS);
+  });
+
+  test("The Fool does not copy another Fool (negative)", () => {
+    const previous = tarotConsumable("the-fool");
+    const base = applyState({ lastConsumable: previous });
+    const r = applyConsumable(base, tarotConsumable("the-fool"), deps(), () => 0);
     expect(r.deck).toBe(base.deck);
   });
 });

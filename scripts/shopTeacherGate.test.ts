@@ -13,6 +13,7 @@ function shopViewFixture(): ShopView {
     handStats: createDefaultHandStats(),
     deck: [],
     ownedVoucherIds: new Set(),
+    lastConsumable: null,
     rng: seededRng(0),
   };
 }
