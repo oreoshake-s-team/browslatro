@@ -108,26 +108,31 @@ function Options({
             aria-labelledby={titleId}
             onClick={handleClose}
           >
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div
+              className="modal options-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 id={titleId}>{t("sidebar.options")}</h3>
-              <button
-                className="options-button options-button--toggle"
-                aria-pressed={muted}
-                onClick={handleToggleMute}
-              >
-                {muted
-                  ? t("options.unmuteSounds")
-                  : t("options.muteSounds")}
-              </button>
-              <button
-                className="options-button options-button--toggle"
-                aria-pressed={highVisibility}
-                onClick={handleToggleHighVisibility}
-              >
-                {highVisibility
-                  ? t("options.disableHighVisibility")
-                  : t("options.enableHighVisibility")}
-              </button>
+              <div className="options-toggle-row">
+                <button
+                  className="btn btn--toggle"
+                  aria-pressed={muted}
+                  onClick={handleToggleMute}
+                >
+                  {muted
+                    ? t("options.unmuteSounds")
+                    : t("options.muteSounds")}
+                </button>
+                <button
+                  className="btn btn--toggle"
+                  aria-pressed={highVisibility}
+                  onClick={handleToggleHighVisibility}
+                >
+                  {highVisibility
+                    ? t("options.disableHighVisibility")
+                    : t("options.enableHighVisibility")}
+                </button>
+              </div>
               <label
                 className="options-field"
                 htmlFor={animationSpeedSelectId}
@@ -176,13 +181,13 @@ function Options({
                       {maskPlayerKey(storedKey)}
                     </code>
                     <button
-                      className="options-button"
+                      className="btn btn--secondary"
                       onClick={() => setReplacingKey(true)}
                     >
                       {t("options.advisorKeyReplace")}
                     </button>
                     <button
-                      className="options-button options-button--destructive"
+                      className="btn btn--danger"
                       onClick={() => {
                         const confirmed = window.confirm(
                           t("options.advisorKeyRemoveConfirm"),
@@ -218,7 +223,7 @@ function Options({
                       data-testid="options-advisor-key-input"
                     />
                     <button
-                      className="options-button"
+                      className="btn btn--secondary"
                       type="submit"
                       disabled={keyDraft.trim() === ""}
                     >
@@ -236,22 +241,24 @@ function Options({
                 </a>
                 <KeyStorageDisclosure />
               </div>
-              <button
-                className="options-button options-button--destructive"
-                onClick={() => {
-                  const confirmed = window.confirm(
-                    t("options.newGameConfirm"),
-                  );
-                  if (!confirmed) return;
-                  onNewGame();
-                  handleClose();
-                }}
-              >
-                {t("options.newGame")}
-              </button>
-              <button className="options-button" onClick={handleClose}>
-                {t("options.close")}
-              </button>
+              <div className="options-footer">
+                <button
+                  className="btn btn--danger"
+                  onClick={() => {
+                    const confirmed = window.confirm(
+                      t("options.newGameConfirm"),
+                    );
+                    if (!confirmed) return;
+                    onNewGame();
+                    handleClose();
+                  }}
+                >
+                  {t("options.newGame")}
+                </button>
+                <button className="btn btn--secondary" onClick={handleClose}>
+                  {t("options.close")}
+                </button>
+              </div>
             </div>
           </div>,
           document.body

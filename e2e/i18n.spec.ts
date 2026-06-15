@@ -16,10 +16,7 @@ async function startRound(page: Page): Promise<void> {
 async function switchLanguage(page: Page, locale: string): Promise<void> {
   await page.getByRole("button", { name: /Options|Nā koho/ }).click();
   await page.getByTestId("options-language").selectOption(locale);
-  await page
-    .locator(".modal .options-button")
-    .last()
-    .click();
+  await page.locator(".options-footer .btn--secondary").click();
 }
 
 test("switching to Hawaiian translates the sidebar", async ({
