@@ -28,16 +28,20 @@
     opacity: 0;
     transform: scale(0.4) rotate(-12deg);
   }
+
   25% {
     opacity: 1;
     transform: scale(1.15) rotate(6deg);
   }
+
   45% {
     transform: scale(0.95) rotate(-4deg);
   }
+
   60% {
     transform: scale(1.02) rotate(0deg);
   }
+
   100% {
     opacity: 0;
     transform: scale(1) rotate(0deg);

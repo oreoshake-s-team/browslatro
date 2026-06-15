@@ -1,5 +1,6 @@
 .game {
   --game-row-width: 90rem;
+
   flex: 1;
   min-height: 0;
   display: flex;
@@ -92,7 +93,7 @@
   font-size: 1.4rem;
 }
 
-@media (max-width: 1024px) {
+@media (width <= 1024px) {
   .game {
     gap: 1rem;
   }

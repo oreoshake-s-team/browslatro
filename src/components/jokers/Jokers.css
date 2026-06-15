@@ -84,12 +84,15 @@
   0% {
     transform: scale(1) rotate(0deg);
   }
+
   30% {
     transform: scale(1.18) rotate(-4deg);
   }
+
   60% {
     transform: scale(0.96) rotate(2deg);
   }
+
   100% {
     transform: scale(1) rotate(0deg);
   }
@@ -132,9 +135,11 @@
   0% {
     transform: rotateY(0deg);
   }
+
   50% {
     transform: rotateY(90deg);
   }
+
   100% {
     transform: rotateY(0deg);
   }
@@ -150,14 +155,14 @@
   font-weight: 700;
   font-size: 0.85rem;
   line-height: 1.15;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .joker-tile-description {
   font-size: 0.7rem;
   line-height: 1.2;
   margin-top: 0.3rem;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .castle-suit-spades {

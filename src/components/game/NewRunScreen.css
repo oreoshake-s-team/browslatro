@@ -140,11 +140,13 @@
 .new-run-deck-tile-yellow-deck { box-shadow: inset 0 -3px 0 var(--accent-money); }
 .new-run-deck-tile-blue-deck { box-shadow: inset 0 -3px 0 var(--accent-chips); }
 .new-run-deck-tile-green-deck { box-shadow: inset 0 -3px 0 var(--accent-success); }
+
 .new-run-deck-tile-black-deck {
   box-shadow:
     inset 0 -3px 0 var(--surface-near-black),
     inset 0 -4px 0 var(--text-muted);
 }
+
 .new-run-deck-tile-checkered-deck {
   background-image: repeating-linear-gradient(
     90deg,
@@ -155,6 +157,7 @@
   background-repeat: no-repeat;
   background-size: 100% 3px;
 }
+
 .new-run-deck-tile-abandoned-deck {
   background-image: repeating-linear-gradient(
     90deg,

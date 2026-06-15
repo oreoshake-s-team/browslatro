@@ -1,5 +1,6 @@
 .hand {
   width: 100%;
+
   /* Generous max-width so 8 cards (var(--card-width) each) + 9 gaps
    * (2.5rem at rest, ~3rem during drag with one active at
    * var(--card-width)) + the deck pile column (var(--card-width) + 1.2rem
@@ -84,6 +85,7 @@
 .hand-cards {
   display: flex;
   flex-wrap: nowrap;
+
   /* `overflow-x: clip` (not `auto`) so over-cap hands never show a
    * horizontal scrollbar; cards squish via flex-shrink instead. `clip`
    * is preferred over `hidden` because it keeps `overflow-y: visible`,
@@ -94,6 +96,7 @@
   align-items: end;
   min-height: calc(var(--card-height) + 1.6rem);
   padding-top: 1.6rem;
+
   /* No `gap` here: spacing is provided by interleaved .hand-card-gap drop
    * zones so the row can visibly open when a card is dragged over a gap. */
   gap: 0;
@@ -150,6 +153,7 @@
     opacity calc(80ms * var(--animation-speed, 1)) linear;
   outline: 2px dashed transparent;
   outline-offset: 4px;
+
   /* Slot shrinks once gaps are fully collapsed. The card inside keeps
    * `width: var(--card-width)` and visually overlaps neighbouring slots
    * — that's the squish-instead-of-scroll behaviour for over-cap hands. */

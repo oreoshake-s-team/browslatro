@@ -10,7 +10,7 @@
   cursor: pointer;
   display: grid;
   grid-template-rows: auto 1fr;
-  font-family: "Georgia", serif;
+  font-family: Georgia, serif;
   transition: transform calc(120ms * var(--animation-speed, 1)) ease,
     box-shadow calc(120ms * var(--animation-speed, 1)) ease;
 }
@@ -48,6 +48,7 @@
     opacity: 0;
     transform: translateY(1.2rem) scale(0.9);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -61,12 +62,14 @@
       0 0 18px var(--focus-ring),
       0 2px 4px var(--shadow-sm);
   }
+
   75% {
     box-shadow:
       0 0 0 3px var(--focus-ring),
       0 0 14px var(--focus-ring),
       0 2px 4px var(--shadow-sm);
   }
+
   100% {
     box-shadow:
       0 0 0 0 transparent,
@@ -95,6 +98,7 @@
     transform: translate(0, 0) rotate(0) scale(1);
     opacity: 1;
   }
+
   100% {
     transform: translate(-12rem, 4rem) rotate(-15deg) scale(0.7);
     opacity: 0;
@@ -117,9 +121,11 @@
   0% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-0.6rem) scale(1.08);
   }
+
   100% {
     transform: translateY(-1.4rem) scale(1);
   }
@@ -129,9 +135,11 @@
   0% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-0.6rem) scale(1.08);
   }
+
   100% {
     transform: translateY(-1.4rem) scale(1);
   }
@@ -224,8 +232,7 @@
 }
 
 .card-center {
-  align-self: center;
-  justify-self: center;
+  place-self: center center;
   font-size: 2.6rem;
 }
 
@@ -240,8 +247,7 @@
 
 /* Stacked decoration: large rank-specific glyph, monogram letter, suit. */
 .card-face-decoration {
-  align-self: center;
-  justify-self: center;
+  place-self: center center;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -256,7 +262,7 @@
 }
 
 .card-face-monogram {
-  font-family: "Georgia", serif;
+  font-family: Georgia, serif;
   font-weight: 700;
   font-size: 1.6rem;
   letter-spacing: 0.02em;
@@ -341,12 +347,15 @@
   0% {
     transform: translateY(0) scale(1) rotate(0deg);
   }
+
   35% {
     transform: translateY(-0.7rem) scale(1.14) rotate(-3deg);
   }
+
   60% {
     transform: translateY(-0.2rem) scale(1.05) rotate(2deg);
   }
+
   100% {
     transform: translateY(0) scale(1) rotate(0deg);
   }
@@ -357,9 +366,11 @@
     background-position: 130% 0;
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   100% {
     background-position: -30% 0;
     opacity: 0;
@@ -371,18 +382,22 @@
     opacity: 0;
     transform: translate(-50%, 0.4rem) scale(0.7);
   }
+
   15% {
     opacity: 1;
     transform: translate(-50%, -0.2rem) scale(1.18);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -0.4rem) scale(1);
   }
+
   80% {
     opacity: 1;
     transform: translate(-50%, -1rem) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -1.6rem) scale(1);
@@ -450,12 +465,15 @@
   0% {
     transform: translateY(0) scale(1) rotate(0deg);
   }
+
   35% {
     transform: translateY(-0.6rem) scale(1.12) rotate(2deg);
   }
+
   60% {
     transform: translateY(-0.2rem) scale(1.04) rotate(-1deg);
   }
+
   100% {
     transform: translateY(0) scale(1) rotate(0deg);
   }
@@ -466,9 +484,11 @@
     background-position: 130% 0;
     opacity: 0;
   }
+
   20% {
     opacity: 1;
   }
+
   100% {
     background-position: -30% 0;
     opacity: 0;
@@ -480,18 +500,22 @@
     opacity: 0;
     transform: translate(-50%, 0.4rem) scale(0.7);
   }
+
   15% {
     opacity: 1;
     transform: translate(-50%, -0.2rem) scale(1.18);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -0.4rem) scale(1);
   }
+
   80% {
     opacity: 1;
     transform: translate(-50%, -1rem) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -1.6rem) scale(1);
@@ -557,12 +581,15 @@
   0% {
     transform: translateY(0) scale(1) rotate(0deg);
   }
+
   35% {
     transform: translateY(-0.55rem) scale(1.12) rotate(-2deg);
   }
+
   60% {
     transform: translateY(-0.18rem) scale(1.04) rotate(2deg);
   }
+
   100% {
     transform: translateY(0) scale(1) rotate(0deg);
   }
@@ -573,18 +600,22 @@
     opacity: 0;
     transform: translate(-50%, 0.4rem) scale(0.7);
   }
+
   15% {
     opacity: 1;
     transform: translate(-50%, -0.2rem) scale(1.2);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -0.4rem) scale(1);
   }
+
   85% {
     opacity: 1;
     transform: translate(-50%, -0.6rem) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -1.2rem) scale(1);
@@ -596,18 +627,22 @@
     opacity: 0;
     transform: translate(-50%, 0.4rem) scale(0.7);
   }
+
   15% {
     opacity: 1;
     transform: translate(-50%, -0.2rem) scale(1.2);
   }
+
   30% {
     opacity: 1;
     transform: translate(-50%, -0.4rem) scale(1);
   }
+
   85% {
     opacity: 1;
     transform: translate(-50%, -0.6rem) scale(1);
   }
+
   100% {
     opacity: 0;
     transform: translate(-50%, -1.2rem) scale(1);
@@ -719,8 +754,7 @@
 }
 
 .card-stone-face {
-  align-self: stretch;
-  justify-self: stretch;
+  place-self: stretch stretch;
   grid-row: 1 / -1;
   grid-column: 1 / -1;
   border-radius: 4px;
@@ -831,8 +865,7 @@
 }
 
 .card-back-face {
-  align-self: stretch;
-  justify-self: stretch;
+  place-self: stretch stretch;
   grid-row: 1 / -1;
   grid-column: 1 / -1;
   border: 2px solid color-mix(in srgb, var(--white) 35%, transparent);

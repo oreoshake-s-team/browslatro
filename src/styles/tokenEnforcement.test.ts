@@ -52,9 +52,35 @@ describe("design-token enforcement", () => {
 
   it("allows raw color literals inside tokens.css", async () => {
     const rules = await firedRules(
-      ":root { --accent-mult: #fa5252; --shadow-sm: rgba(0, 0, 0, 0.15); }",
+      ":root {\n  --accent-mult: #fa5252;\n  --shadow-sm: rgb(0 0 0 / 15%);\n}\n",
       tokensFile,
     );
     expect(rules).toEqual([]);
+  });
+});
+
+describe("stylelint-config-standard adoption", () => {
+  it("flags a deprecated property in component CSS", async () => {
+    const rules = await firedRules(
+      ".probe { clip: rect(0, 0, 0, 0); }",
+      componentFile,
+    );
+    expect(rules).toContain("property-no-deprecated");
+  });
+
+  it("flags legacy max-width media query notation", async () => {
+    const rules = await firedRules(
+      "@media (max-width: 768px) { .probe { color: var(--text-primary); } }",
+      componentFile,
+    );
+    expect(rules).toContain("media-feature-range-notation");
+  });
+
+  it("allows BEM and PascalCase class selectors", async () => {
+    const rules = await firedRules(
+      ".btn--primary { color: var(--text-primary); }\n.App { color: var(--text-primary); }",
+      componentFile,
+    );
+    expect(rules).not.toContain("selector-class-pattern");
   });
 });

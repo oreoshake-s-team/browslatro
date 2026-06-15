@@ -45,7 +45,7 @@ describe("ScoringTrace layout — fills remaining vertical space", () => {
 describe("ScoringTrace layout — portrait strip preserved", () => {
   const portraitBlock = blockBody(
     scoringTraceCss,
-    /@media\s*\(orientation:\s*portrait\)\s*and\s*\(max-width:\s*768px\)\s*{/,
+    /@media\s*\(orientation:\s*portrait\)\s*and\s*\(width\s*<=\s*768px\)\s*{/,
   );
 
   test("portrait resets the trace so it does not grow inside the horizontal strip", () => {

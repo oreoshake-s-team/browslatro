@@ -55,7 +55,7 @@
   align-items: stretch;
 }
 
-@media (max-width: 720px) {
+@media (width <= 720px) {
   .shop-extras-row {
     grid-template-columns: 1fr;
   }

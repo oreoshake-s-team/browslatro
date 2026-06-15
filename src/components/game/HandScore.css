@@ -71,12 +71,14 @@
     transform: scale(1);
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-money) 0%, transparent);
   }
+
   25% {
     transform: scale(1.18);
     box-shadow:
       0 0 0 4px var(--accent-money),
       0 0 24px 8px color-mix(in srgb, var(--accent-money) 85%, transparent);
   }
+
   100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-money) 0%, transparent);
@@ -111,7 +113,7 @@
   padding: 0;
   margin: -1px;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }

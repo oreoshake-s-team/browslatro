@@ -63,7 +63,7 @@ describe("Hand layout — no wrap, scroll instead", () => {
 describe("Sidebar layout — landscape mobile", () => {
   const landscapeBlock = blockBody(
     sidebarCss,
-    /@media\s*\(orientation:\s*landscape\)\s*and\s*\(max-width:\s*1024px\)\s*{/,
+    /@media\s*\(orientation:\s*landscape\)\s*and\s*\(width\s*<=\s*1024px\)\s*{/,
   );
 
   test("landscape narrow viewports shrink the sidebar width", () => {
@@ -80,7 +80,7 @@ describe("Sidebar layout — landscape mobile", () => {
 describe("Sidebar layout — portrait mobile", () => {
   const portraitBlock = blockBody(
     sidebarCss,
-    /@media\s*\(orientation:\s*portrait\)\s*and\s*\(max-width:\s*768px\)\s*{/,
+    /@media\s*\(orientation:\s*portrait\)\s*and\s*\(width\s*<=\s*768px\)\s*{/,
   );
 
   test("portrait narrow viewports lay the sidebar out as a horizontal strip", () => {
@@ -98,7 +98,7 @@ describe("App layout — portrait mobile", () => {
   test("portrait narrow viewports stack the App as a column so the sidebar sits above the game", () => {
     const block = blockBody(
       appCss,
-      /@media\s*\(orientation:\s*portrait\)\s*and\s*\(max-width:\s*768px\)\s*{/,
+      /@media\s*\(orientation:\s*portrait\)\s*and\s*\(width\s*<=\s*768px\)\s*{/,
     );
     const inner = blockBody(block, /\.App\s*{/);
     expect(inner).toMatch(/flex-direction\s*:\s*column/);
@@ -114,7 +114,7 @@ describe("Game layout — mobile spacing", () => {
   test("narrow viewports reduce --game-padding-x to free up room for the hand", () => {
     const block = blockBody(
       indexCss,
-      /@media\s*\(max-width:\s*1024px\)\s*{/,
+      /@media\s*\(width\s*<=\s*1024px\)\s*{/,
     );
     const inner = blockBody(block, /:root\s*{/);
     expect(inner).toMatch(/--game-padding-x\s*:\s*1rem/);
