@@ -3,7 +3,11 @@ import { beforeEach, describe, expect, test } from "vitest";
 import type { Card } from "../../cards/types";
 import { useGame } from "../../store/game";
 import type { CandidateRanker } from "../policy";
-import { autopilotIdle, chooseAutopilotAction } from "./autopilot";
+import {
+  autopilotIdle,
+  chooseAutopilotAction,
+  decideAutopilotAction,
+} from "./autopilot";
 
 function pairHand(): Card[] {
   return [
@@ -110,6 +114,45 @@ describe("chooseAutopilotAction", () => {
     useGame.getState().setDealt({ hand, remaining: [] });
     expect(
       await chooseAutopilotAction(useGame.getState(), passthroughRanker),
+    ).toBeNull();
+  });
+});
+
+describe("decideAutopilotAction", () => {
+  test("exposes the scored candidate list", async () => {
+    const decision = await decideAutopilotAction(
+      useGame.getState(),
+      passthroughRanker,
+    );
+    expect(decision !== null && decision.candidates.length).toBeGreaterThan(0);
+  });
+
+  test("reports the ranker's chosen index", async () => {
+    const lastRanker: CandidateRanker = {
+      load: async () => {},
+      rank: async (_state, candidates) =>
+        candidates.map((_, index) => index).reverse(),
+    };
+    const decision = await decideAutopilotAction(useGame.getState(), lastRanker);
+    expect(decision?.recommendationIndex).toBe(
+      (decision?.candidates.length ?? 1) - 1,
+    );
+  });
+
+  test("the chosen action matches the recommendation index", async () => {
+    const decision = await decideAutopilotAction(
+      useGame.getState(),
+      passthroughRanker,
+    );
+    expect(decision?.action).toBe(
+      decision?.candidates[decision.recommendationIndex],
+    );
+  });
+
+  test("returns null when the hand is empty (negative)", async () => {
+    useGame.getState().setDealt({ hand: [], remaining: [] });
+    expect(
+      await decideAutopilotAction(useGame.getState(), passthroughRanker),
     ).toBeNull();
   });
 });

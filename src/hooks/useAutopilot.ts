@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   autopilotIdle,
-  chooseAutopilotAction,
+  decideAutopilotAction,
+  type AutopilotDecision,
 } from "../ai/advisor/autopilot";
 import { sharedAdvisorRanker } from "../ai/advisor/advisorRanker";
 import { setHumanPlayRecordingSuppressed } from "../ai/humanPlayWiring";
@@ -25,10 +26,12 @@ export interface AutopilotDeps {
 
 export interface AutopilotControls {
   readonly pendingProposal: HandOption | null;
+  readonly pendingDecision: AutopilotDecision | null;
   readonly modelProgress: DownloadProgress | null;
   readonly proposalUnavailable: boolean;
   readonly approve: () => void;
   readonly stop: () => void;
+  readonly dismissProposal: () => void;
   readonly setProposal: (option: HandOption) => void;
 }
 
@@ -48,6 +51,8 @@ export function useAutopilot(
   deps?: AutopilotDeps,
 ): AutopilotControls {
   const [pendingProposal, setPendingProposal] = useState<HandOption | null>(null);
+  const [pendingDecision, setPendingDecision] =
+    useState<AutopilotDecision | null>(null);
   const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
     null,
   );
@@ -79,6 +84,7 @@ export function useAutopilot(
   useEffect(() => {
     if (!enabled) {
       setPendingProposal(null);
+      setPendingDecision(null);
       setModelProgress(null);
       setProposalUnavailable(false);
       return;
@@ -101,15 +107,16 @@ export function useAutopilot(
         }
         const fresh = getState();
         if (cancelled || !autopilotIdle(fresh)) return;
-        const action = await chooseAutopilotAction(fresh, ranker);
+        const decision = await decideAutopilotAction(fresh, ranker);
         if (cancelled) return;
-        if (action === null) {
+        if (decision === null) {
           setProposalUnavailable(true);
           return;
         }
         setProposalUnavailable(false);
-        fresh.selectCards(action.cardIds);
-        setPendingProposal(action);
+        fresh.selectCards(decision.action.cardIds);
+        setPendingDecision(decision);
+        setPendingProposal(decision.action);
       })();
     }, stepMs);
     return () => {
@@ -137,6 +144,7 @@ export function useAutopilot(
       proposed.every((id) => selectedIds.has(id));
     if (selectionMatches) return;
     setPendingProposal(null);
+    setPendingDecision(null);
     setModelProgress(null);
     onStopRef.current();
   }, [selectedIds, pendingProposal]);
@@ -147,6 +155,7 @@ export function useAutopilot(
     const { getState } = depsRef.current ?? defaultDeps();
     getState().selectCards(proposal.cardIds);
     setPendingProposal(null);
+    setPendingDecision(null);
     setModelProgress(null);
     if (proposal.action === "play") executorRef.current.play();
     else executorRef.current.discard();
@@ -155,8 +164,15 @@ export function useAutopilot(
 
   const stop = useCallback((): void => {
     setPendingProposal(null);
+    setPendingDecision(null);
     setModelProgress(null);
     onStopRef.current();
+  }, []);
+
+  const dismissProposal = useCallback((): void => {
+    setPendingProposal(null);
+    setPendingDecision(null);
+    setModelProgress(null);
   }, []);
 
   const setProposal = useCallback((option: HandOption): void => {
@@ -167,10 +183,12 @@ export function useAutopilot(
 
   return {
     pendingProposal,
+    pendingDecision,
     modelProgress,
     proposalUnavailable,
     approve,
     stop,
+    dismissProposal,
     setProposal,
   };
 }

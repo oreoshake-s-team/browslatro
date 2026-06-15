@@ -2,6 +2,8 @@ import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAutopilot } from "./hooks/useAutopilot";
 import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
+import { captureAdviceFeedback } from "./ai/humanPlayWiring";
+import { buildHandPolicyFeedbackEvent } from "./ai/advisor/adviceFeedback";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -220,6 +222,25 @@ function App() {
         autopilot.setProposal(picked);
       }
     });
+  };
+  const policyDecision =
+    autopilot.pendingDecision !== null &&
+    autopilot.pendingProposal === autopilot.pendingDecision.action
+      ? autopilot.pendingDecision
+      : null;
+  const [autopilotFeedbackRecorded, setAutopilotFeedbackRecorded] =
+    useState(false);
+  useEffect(() => {
+    if (autopilotProposal !== null) setAutopilotFeedbackRecorded(false);
+  }, [autopilotProposal]);
+  const handleAutopilotFeedback = (correctedIndex: number | null): void => {
+    if (policyDecision === null) return;
+    captureAdviceFeedback(
+      useGame.getState(),
+      buildHandPolicyFeedbackEvent(policyDecision, correctedIndex),
+    );
+    setAutopilotFeedbackRecorded(true);
+    autopilot.dismissProposal();
   };
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
@@ -464,10 +485,12 @@ function App() {
         autopilotModelProgress={autopilot.modelProgress}
         autopilotProposalUnavailable={autopilot.proposalUnavailable}
         autopilotExplanation={autopilotExplanation.state}
+        autopilotFeedbackCandidates={policyDecision?.candidates ?? null}
+        autopilotFeedbackRecorded={autopilotFeedbackRecorded}
         onApproveAutopilot={autopilot.approve}
-        onStopAutopilot={autopilot.stop}
         onAskAiAutopilot={askAiForMove}
         onRetryAutopilot={askAiForMove}
+        onAutopilotFeedback={handleAutopilotFeedback}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

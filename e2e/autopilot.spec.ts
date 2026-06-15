@@ -39,7 +39,7 @@ test("autopilot proposes a move and plays it after approval", async ({
   await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
 });
 
-test("autopilot stops without executing the proposed move", async ({
+test("toggling autopilot off does not execute the proposed move", async ({
   page,
 }) => {
   await startRound(page);
@@ -48,16 +48,47 @@ test("autopilot stops without executing the proposed move", async ({
   const handsBefore = await hands.textContent();
   const discardsBefore = await discards.textContent();
 
-  const toggle = page.getByRole("button", { name: "Suggest" });
+  const toggle = page.getByRole("button", { name: "Suggest", exact: true });
   await toggle.click();
-
-  const stop = page.getByRole("button", { name: /Stop suggesting/ });
-  await expect(stop).toBeVisible({ timeout: 10_000 });
-  await stop.click();
+  await expect(page.getByRole("button", { name: /Approve move/ })).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(
+    page.getByRole("button", { name: /Stop suggesting/ }),
+  ).toHaveCount(0);
+  await toggle.click();
 
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   expect(await hands.textContent()).toBe(handsBefore);
   expect(await discards.textContent()).toBe(discardsBefore);
+});
+
+test("downvoting the policy proposal records policy advice feedback", async ({
+  page,
+}) => {
+  await startRound(page);
+  const toggle = page.getByRole("button", { name: "Suggest" });
+  await toggle.click();
+  await expect(page.getByRole("button", { name: /Approve move/ })).toBeVisible({
+    timeout: 10_000,
+  });
+
+  await page.getByTestId("advice-feedback-open").click();
+  await page.getByTestId("advice-feedback-option-1").click();
+  await page.getByTestId("advice-feedback-submit").click();
+
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+      ),
+    )
+    .toContain('"advisorKind":"policy"');
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).toContain('"kind":"advice-feedback"');
+  expect(log).toContain('"correctedIndex":1');
 });
 
 test("autopilot can be switched off", async ({ page }) => {

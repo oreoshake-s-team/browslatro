@@ -10,6 +10,7 @@ import { cardLabel } from "../../scoring/scoringTrace";
 import { useGame } from "../../store/game";
 import { useModelLoadProgress } from "./useModelLoadProgress";
 import PlayerKeyForm from "./PlayerKeyForm";
+import AdviceFeedbackControl from "../advisor/AdviceFeedbackControl";
 import "./AutopilotControls.css";
 
 export interface AutopilotControlsProps {
@@ -17,10 +18,12 @@ export interface AutopilotControlsProps {
   readonly modelProgress: DownloadProgress | null;
   readonly proposalUnavailable?: boolean;
   readonly explanation: MoveExplanationState;
+  readonly feedbackCandidates?: ReadonlyArray<HandOption> | null;
+  readonly feedbackRecorded?: boolean;
   readonly onApprove: () => void;
-  readonly onStop: () => void;
   readonly onAskAi: () => void;
   readonly onRetry: () => void;
+  readonly onFeedback?: (correctedIndex: number | null) => void;
 }
 
 function describeProposal(t: TFunction, proposal: HandOption): string {
@@ -144,14 +147,21 @@ export default function AutopilotControls({
   modelProgress,
   proposalUnavailable = false,
   explanation,
+  feedbackCandidates = null,
+  feedbackRecorded = false,
   onApprove,
-  onStop,
   onAskAi,
   onRetry,
+  onFeedback,
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const loadProgress = useModelLoadProgress(modelProgress);
+  const canGiveFeedback =
+    proposal !== null &&
+    onFeedback !== undefined &&
+    feedbackCandidates !== null &&
+    feedbackCandidates.length > 0;
   return (
     <div
       className="autopilot-controls"
@@ -162,6 +172,11 @@ export default function AutopilotControls({
         <span aria-hidden="true">💡 </span>
         {t("advisor.suggestTitle")}
       </p>
+      {feedbackRecorded && proposal === null && (
+        <p className="autopilot-feedback-recorded" role="status">
+          {t("advisor.feedbackRecorded")}
+        </p>
+      )}
       {proposal !== null ? (
         <p className="autopilot-proposal" role="status">
           {describeProposal(t, proposal)}
@@ -202,10 +217,14 @@ export default function AutopilotControls({
             {t("advisor.autopilotAskAi")}
           </button>
         )}
-        <button className="btn autopilot-stop-button" onClick={onStop}>
-          <span aria-hidden="true">🛑 </span>
-          {t("advisor.autopilotStop")}
-        </button>
+        {canGiveFeedback && (
+          <AdviceFeedbackControl
+            candidateLabels={feedbackCandidates.map((c) =>
+              describeCandidate(t, c, hand),
+            )}
+            onSubmit={onFeedback}
+          />
+        )}
       </div>
       {renderExplanation(t, explanation, hand, onRetry)}
     </div>

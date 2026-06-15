@@ -4,9 +4,16 @@ import {
   getHandOptions,
   type HandOption,
 } from "../getHandOptions";
-import { toModelState } from "../modelState";
+import { toModelState, type ModelState } from "../modelState";
 import type { CandidateRanker } from "../policy";
 import { toModelStateInput, toSimulatePlayInput } from "./snapshot";
+
+export interface AutopilotDecision {
+  readonly action: HandOption;
+  readonly candidates: ReadonlyArray<HandOption>;
+  readonly recommendationIndex: number;
+  readonly modelState: ModelState;
+}
 
 export function autopilotIdle(state: GameState): boolean {
   return (
@@ -23,18 +30,27 @@ export function autopilotIdle(state: GameState): boolean {
   );
 }
 
-export async function chooseAutopilotAction(
+export async function decideAutopilotAction(
   state: GameState,
   ranker: CandidateRanker,
-): Promise<HandOption | null> {
+): Promise<AutopilotDecision | null> {
   const candidates = excludeFaceDownCandidates(
     getHandOptions(toSimulatePlayInput(state)),
     state.dealt.hand,
   );
   if (candidates.length === 0) return null;
-  const ranking = await ranker.rank(
-    toModelState(toModelStateInput(state)),
-    candidates,
-  );
-  return candidates[ranking[0]] ?? null;
+  const modelState = toModelState(toModelStateInput(state));
+  const ranking = await ranker.rank(modelState, candidates);
+  const recommendationIndex = ranking[0] ?? 0;
+  const action = candidates[recommendationIndex];
+  if (action === undefined) return null;
+  return { action, candidates, recommendationIndex, modelState };
+}
+
+export async function chooseAutopilotAction(
+  state: GameState,
+  ranker: CandidateRanker,
+): Promise<HandOption | null> {
+  const decision = await decideAutopilotAction(state, ranker);
+  return decision?.action ?? null;
 }

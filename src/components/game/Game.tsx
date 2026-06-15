@@ -46,10 +46,12 @@ interface GameProps {
   autopilotModelProgress?: DownloadProgress | null;
   autopilotProposalUnavailable?: boolean;
   autopilotExplanation?: MoveExplanationState;
+  autopilotFeedbackCandidates?: ReadonlyArray<HandOption> | null;
+  autopilotFeedbackRecorded?: boolean;
   onApproveAutopilot?: () => void;
-  onStopAutopilot?: () => void;
   onAskAiAutopilot?: () => void;
   onRetryAutopilot?: () => void;
+  onAutopilotFeedback?: (correctedIndex: number | null) => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -69,10 +71,12 @@ export default function Game({
   autopilotModelProgress = null,
   autopilotProposalUnavailable = false,
   autopilotExplanation = { phase: "idle" },
+  autopilotFeedbackCandidates = null,
+  autopilotFeedbackRecorded = false,
   onApproveAutopilot,
-  onStopAutopilot,
   onAskAiAutopilot,
   onRetryAutopilot,
+  onAutopilotFeedback,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -353,18 +357,20 @@ export default function Game({
           </div>
           {(autopilotProposal ||
             autopilotModelProgress ||
-            autopilotProposalUnavailable) &&
-            onApproveAutopilot &&
-            onStopAutopilot && (
+            autopilotProposalUnavailable ||
+            autopilotFeedbackRecorded) &&
+            onApproveAutopilot && (
               <AutopilotControls
                 proposal={autopilotProposal}
                 modelProgress={autopilotModelProgress}
                 proposalUnavailable={autopilotProposalUnavailable}
                 explanation={autopilotExplanation}
+                feedbackCandidates={autopilotFeedbackCandidates}
+                feedbackRecorded={autopilotFeedbackRecorded}
                 onApprove={onApproveAutopilot}
-                onStop={onStopAutopilot}
                 onAskAi={onAskAiAutopilot ?? (() => {})}
                 onRetry={onRetryAutopilot ?? (() => {})}
+                onFeedback={onAutopilotFeedback}
               />
             )}
         </div>

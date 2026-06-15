@@ -74,14 +74,10 @@
   background-color: var(--accent-success-mid);
 }
 
-.autopilot-stop-button {
-  background-color: var(--accent-mult-lighter);
-  border-color: var(--accent-mult-strong);
-  color: var(--text-near-black);
-}
-
-.autopilot-stop-button:hover:not(:disabled) {
-  background-color: var(--edition-poly);
+.autopilot-feedback-recorded {
+  margin: 0;
+  font-weight: 700;
+  color: var(--accent-success);
 }
 
 .autopilot-explanation {
