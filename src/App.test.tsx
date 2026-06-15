@@ -1288,14 +1288,14 @@ describe("App animation speed CSS variable", () => {
 
   test("does not set the inline --animation-speed style when preference is normal", () => {
     const { container } = render(<App />);
-    const style = container.querySelector(".App")?.getAttribute("style") ?? "";
+    const style = container.querySelector(".app")?.getAttribute("style") ?? "";
     expect(style).not.toContain("--animation-speed");
   });
 
   test("sets the inline --animation-speed style to 0 when preference is instant", () => {
     setAnimationSpeed("instant");
     const { container } = render(<App />);
-    expect(container.querySelector(".App")?.getAttribute("style")).toContain(
+    expect(container.querySelector(".app")?.getAttribute("style")).toContain(
       "--animation-speed: 0",
     );
   });
@@ -1303,7 +1303,7 @@ describe("App animation speed CSS variable", () => {
   test("sets the inline --animation-speed style to 0.5 when preference is fast", () => {
     setAnimationSpeed("fast");
     const { container } = render(<App />);
-    expect(container.querySelector(".App")?.getAttribute("style")).toContain(
+    expect(container.querySelector(".app")?.getAttribute("style")).toContain(
       "--animation-speed: 0.5",
     );
   });
@@ -1311,7 +1311,7 @@ describe("App animation speed CSS variable", () => {
   test("sets the inline --animation-speed style to 2 when preference is slow", () => {
     setAnimationSpeed("slow");
     const { container } = render(<App />);
-    expect(container.querySelector(".App")?.getAttribute("style")).toContain(
+    expect(container.querySelector(".app")?.getAttribute("style")).toContain(
       "--animation-speed: 2",
     );
   });
@@ -1322,7 +1322,7 @@ describe("App animation speed CSS variable", () => {
     const { container } = render(<App />);
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Animation speed"), "normal");
-    const style = container.querySelector(".App")?.getAttribute("style") ?? "";
+    const style = container.querySelector(".app")?.getAttribute("style") ?? "";
     expect(style).not.toContain("--animation-speed");
   });
 });
@@ -2919,7 +2919,7 @@ describe("Apply Modifiers — Force Probabilities toggle", () => {
 
 describe("Per-run stat counters", () => {
   const appRoot = (container: HTMLElement): HTMLElement =>
-    container.querySelector(".App") as HTMLElement;
+    container.querySelector(".app") as HTMLElement;
 
   test("the hands-played counter starts at zero before any hand is played (negative)", () => {
     const { container } = render(<App />);

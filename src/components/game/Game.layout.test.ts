@@ -13,8 +13,8 @@ function gameRuleBody(): string {
 }
 
 function appRuleBody(): string {
-  const match = appCss.match(/\.App\s*{([^}]*)}/);
-  if (!match) throw new Error(".App rule not found in App.css");
+  const match = appCss.match(/\.app\s*{([^}]*)}/);
+  if (!match) throw new Error(".app rule not found in App.css");
   return match[1];
 }
 
@@ -31,11 +31,11 @@ describe("Game layout — landscape mobile regression", () => {
     expect(gameRuleBody()).toMatch(/min-height\s*:\s*0/);
   });
 
-  test(".App uses the dynamic viewport unit (dvh) for its height", () => {
+  test(".app uses the dynamic viewport unit (dvh) for its height", () => {
     expect(appRuleBody()).toMatch(/height\s*:\s*100dvh/);
   });
 
-  test(".App still ships a 100vh fallback for browsers without dvh support", () => {
+  test(".app still ships a 100vh fallback for browsers without dvh support", () => {
     expect(appRuleBody()).toMatch(/height\s*:\s*100vh/);
   });
 

@@ -15,7 +15,7 @@ export function withGame(seed?: (state: GameState) => void): Decorator {
 export function withFullscreen(): Decorator {
   return function FullscreenDecorator(Story) {
     return (
-      <div className="App" style={{ minHeight: "100vh", width: "100vw" }}>
+      <div className="app" style={{ minHeight: "100vh", width: "100vw" }}>
         <Story />
       </div>
     );
