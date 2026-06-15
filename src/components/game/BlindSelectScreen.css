@@ -94,7 +94,7 @@
   flex-direction: column;
   gap: 0.8rem;
   padding: 1.6rem 1.8rem;
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   border: 2px solid var(--shop-muted-on-light);
   background-color: color-mix(in srgb, var(--shop-muted-on-light) 25%, transparent);
 }

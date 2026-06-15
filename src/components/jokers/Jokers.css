@@ -211,7 +211,7 @@
 
 .joker-move-button:focus-visible {
   outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .joker-sell-button {
@@ -247,7 +247,7 @@
 
 .joker-sell-button:focus-visible {
   outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .joker-tile-empty {

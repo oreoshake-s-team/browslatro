@@ -35,16 +35,6 @@
   gap: 0.4rem;
 }
 
-.round-lost-stat {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 0.4rem 0.6rem;
-  background-color: var(--white);
-  border: 1px solid var(--border-on-light);
-  border-radius: 6px;
-}
-
 .round-lost-stat dt {
   font-size: 0.9rem;
   color: var(--shop-muted-on-light);

@@ -42,19 +42,19 @@ export default function GameWonScreen({
           {t("gameWon.subtitle", { ante: finalAnte })}
         </p>
         <dl className="game-won-stats">
-          <div className="game-won-stat">
+          <div className="stat-pill game-won-stat">
             <dt>{t("gameWon.finalAnte")}</dt>
             <dd data-testid="game-won-final-ante">{finalAnte}</dd>
           </div>
-          <div className="game-won-stat">
+          <div className="stat-pill game-won-stat">
             <dt>{t("gameWon.finalMoney")}</dt>
             <dd data-testid="game-won-final-money">${finalMoney}</dd>
           </div>
-          <div className="game-won-stat">
+          <div className="stat-pill game-won-stat">
             <dt>{t("gameWon.handsPlayed")}</dt>
             <dd data-testid="game-won-hands-played">{handsPlayed}</dd>
           </div>
-          <div className="game-won-stat">
+          <div className="stat-pill game-won-stat">
             <dt>{t("gameWon.blindsSkipped")}</dt>
             <dd data-testid="game-won-blinds-skipped">{blindsSkipped}</dd>
           </div>

@@ -6,7 +6,7 @@
   z-index: 60;
   max-width: min(90vw, 30rem);
   padding: 0.7rem 1.2rem;
-  border-radius: 10px;
+  border-radius: var(--radius-xl);
   background-color: color-mix(in srgb, var(--accent-danger) 22%, var(--surface-raised));
   border: 1px solid var(--accent-danger);
   color: var(--text-primary);

@@ -17,7 +17,7 @@ async function ensureModifierPanelOpen(page: Page): Promise<void> {
 
 async function clickWin(page: Page): Promise<void> {
   await ensureModifierPanelOpen(page);
-  await page.locator("button.win-button").click();
+  await page.getByRole("button", { name: "Win", exact: true }).click();
 }
 
 // Single-screen stake math (payouts, required chips, the live New Run

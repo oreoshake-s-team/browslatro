@@ -57,7 +57,7 @@
 
 .scoring-trace__expand:focus-visible {
   outline: 2px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
 .scoring-trace__scroll {

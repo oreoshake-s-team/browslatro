@@ -92,7 +92,7 @@ export default function ModifierPanel() {
         >
           <span aria-hidden="true">✖️ </span>Multiply Multiplier
         </button>
-        <button className="win-button" onClick={() => handleWin()}>
+        <button className="btn btn--secondary" onClick={() => handleWin()}>
           <span aria-hidden="true">🏆 </span>Win
         </button>
         <button className="add-money-button" onClick={() => adjustMoney(10)}>
