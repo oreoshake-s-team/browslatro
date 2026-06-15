@@ -110,6 +110,7 @@ export function shopCandidatesFixture(): ReadonlyArray<ShopAdviceCandidate> {
       action: "buy",
       item: {
         itemType: "joker",
+        category: "joker-mult",
         id: "jolly-joker",
         name: "Jolly Joker",
         description: "+8 Mult if played hand contains a Pair",
@@ -149,6 +150,7 @@ export function packCandidatesFixture(): ReadonlyArray<PackAdviceCandidate> {
       action: "pick",
       option: {
         optionType: "joker",
+        category: "joker-mult",
         id: "jolly-joker",
         name: "Jolly Joker",
         description: "+8 Mult if played hand contains a Pair",
@@ -158,6 +160,7 @@ export function packCandidatesFixture(): ReadonlyArray<PackAdviceCandidate> {
       action: "pick",
       option: {
         optionType: "joker",
+        category: "joker-mult",
         id: "supernova",
         name: "Supernova",
         description: "Adds the number of times this hand was played to Mult",

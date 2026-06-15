@@ -21,31 +21,34 @@ import {
 } from "./advisor/shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./advisor/types";
 import type { HeadlessShopAgent, ShopResult, ShopView } from "./headlessRun";
+import { categorizePackOption, categorizeShopItem } from "./advisor/shopCategory";
 import { applyConsumable } from "./headlessConsumables";
 
 const MAX_REROLLS = 2;
 
 function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
-  if (opt.kind === "joker") return { action: "pick", option: { optionType: "joker", id: opt.joker.id, name: opt.joker.name, description: "" } };
-  if (opt.kind === "planet") return { action: "pick", option: { optionType: "planet", id: opt.planet.id, name: opt.planet.name, description: "" } };
-  if (opt.kind === "tarot") return { action: "pick", option: { optionType: "tarot", id: opt.tarot.id, name: opt.tarot.name, description: "" } };
-  if (opt.kind === "spectral") return { action: "pick", option: { optionType: "spectral", id: opt.spectral.id, name: opt.spectral.name, description: "" } };
-  return { action: "pick", option: { optionType: "playing-card", id: "card", name: "Card", description: "" } };
+  const category = categorizePackOption(opt);
+  if (opt.kind === "joker") return { action: "pick", option: { optionType: "joker", category, id: opt.joker.id, name: opt.joker.name, description: "" } };
+  if (opt.kind === "planet") return { action: "pick", option: { optionType: "planet", category, id: opt.planet.id, name: opt.planet.name, description: "" } };
+  if (opt.kind === "tarot") return { action: "pick", option: { optionType: "tarot", category, id: opt.tarot.id, name: opt.tarot.name, description: "" } };
+  if (opt.kind === "spectral") return { action: "pick", option: { optionType: "spectral", category, id: opt.spectral.id, name: opt.spectral.name, description: "" } };
+  return { action: "pick", option: { optionType: "playing-card", category, id: "card", name: "Card", description: "" } };
 }
 
 function shopItemCandidate(item: ShopItem): ShopAdviceCandidate {
-  if (item.kind === "joker") return { action: "buy", item: { itemType: "joker", id: item.joker.id, name: item.joker.name, description: "", cost: item.price } };
-  if (item.kind === "planet") return { action: "buy", item: { itemType: "planet", id: item.planet.id, name: item.planet.name, description: "", cost: item.price } };
-  if (item.kind === "tarot") return { action: "buy", item: { itemType: "tarot", id: item.tarot.id, name: item.tarot.name, description: "", cost: item.price } };
-  if (item.kind === "spectral") return { action: "buy", item: { itemType: "spectral", id: item.spectral.id, name: item.spectral.name, description: "", cost: item.price } };
-  if (item.kind === "pack") return { action: "buy", item: { itemType: "pack", id: item.pack.pool, name: item.pack.pool, description: "", cost: item.price } };
-  return { action: "buy", item: { itemType: "playing-card", id: "card", name: "Card", description: "", cost: item.price } };
+  const category = categorizeShopItem(item);
+  if (item.kind === "joker") return { action: "buy", item: { itemType: "joker", category, id: item.joker.id, name: item.joker.name, description: "", cost: item.price } };
+  if (item.kind === "planet") return { action: "buy", item: { itemType: "planet", category, id: item.planet.id, name: item.planet.name, description: "", cost: item.price } };
+  if (item.kind === "tarot") return { action: "buy", item: { itemType: "tarot", category, id: item.tarot.id, name: item.tarot.name, description: "", cost: item.price } };
+  if (item.kind === "spectral") return { action: "buy", item: { itemType: "spectral", category, id: item.spectral.id, name: item.spectral.name, description: "", cost: item.price } };
+  if (item.kind === "pack") return { action: "buy", item: { itemType: "pack", category, id: item.pack.pool, name: item.pack.pool, description: "", cost: item.price } };
+  return { action: "buy", item: { itemType: "playing-card", category, id: "card", name: "Card", description: "", cost: item.price } };
 }
 
 export function voucherCandidate(voucher: Voucher): ShopAdviceCandidate {
   return {
     action: "buy",
-    item: { itemType: "voucher", id: voucher.id, name: voucher.name, description: "", cost: voucher.cost },
+    item: { itemType: "voucher", category: "other", id: voucher.id, name: voucher.name, description: "", cost: voucher.cost },
   };
 }
 

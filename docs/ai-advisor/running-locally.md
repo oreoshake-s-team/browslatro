@@ -106,7 +106,7 @@ yarn dlx tsx scripts/benchmarkPolicy.ts public/models/advisor-policy-v9.onnx pub
 
 # Agreement with real human play (Python; needs onnxruntime)
 python3 ml/evaluate_real_play.py public/models/advisor-policy-v8.onnx
-python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v2.onnx
+python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v3.onnx
 ```
 
 **Ship only on a clear `avgBlinds` win** over the incumbent across disjoint seeds — never on validation accuracy alone (see the [validation-accuracy trap](./ml-pipeline.md#mldatasetpy--ingestion--weighting)). When you ship, commit the new `public/models/advisor-policy-v{N}.onnx` and point `ADVISOR_MODEL_URL` (in [`advisorRanker.ts`](../../src/ai/advisor/advisorRanker.ts)) — or `SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts) — at it.

@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import unittest
@@ -344,6 +345,23 @@ class EncodeShopDecisionTests(unittest.TestCase):
         candidates, _ = encode_shop_decision(record)
         can_afford_idx = SHOP_CONTEXT_FEATURES + len(SHOP_ITEM_TYPES) + 1
         self.assertEqual(candidates[0][can_afford_idx], 0.0)
+
+
+SHOP_GOLDEN = os.path.join(os.path.dirname(__file__), "fixtures", "shop-golden.json")
+
+
+class ShopGoldenCrossLanguageTests(unittest.TestCase):
+    def test_python_encoder_matches_typescript_golden_vectors(self):
+        with open(SHOP_GOLDEN) as handle:
+            cases = json.load(handle)
+        for case in cases:
+            candidates, _ = encode_shop_decision(case["record"])
+            expected = case["candidates"]
+            self.assertEqual(len(candidates), len(expected))
+            for got_row, want_row in zip(candidates, expected):
+                self.assertEqual(len(got_row), len(want_row))
+                for got, want in zip(got_row, want_row):
+                    self.assertAlmostEqual(got, want, places=5)
 
 
 if __name__ == "__main__":

@@ -60,5 +60,6 @@ __pycache__/
 # Local ML training artifacts (datasets and candidate models are regenerated
 # locally; only the selected model under public/models is committed)
 /ml/dataset*.jsonl
+/ml/shop-dataset*.jsonl
 /ml/candidate*.onnx
 /ml/teacher*.jsonl

@@ -5,6 +5,7 @@ import { join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { createGreedyAgent } from "../src/ai/agents";
+import { categorizeShopItem } from "../src/ai/advisor/shopCategory";
 import type { ShopAdviceCandidate, ShopAdviceItem } from "../src/ai/advisor/types";
 import {
   playHeadlessRun,
@@ -50,19 +51,23 @@ const DEFAULT_MARGIN = 0.15;
 
 function shopItemSnapshot(item: BuyableOffer): {
   readonly itemType: string;
+  readonly category: string;
   readonly id: string;
   readonly name: string;
   readonly cost: number;
 } {
+  const category = categorizeShopItem(item);
   return item.kind === "joker"
-    ? { itemType: "joker", id: item.joker.id, name: item.joker.name, cost: item.price }
-    : { itemType: "planet", id: item.planet.id, name: item.planet.name, cost: item.price };
+    ? { itemType: "joker", category, id: item.joker.id, name: item.joker.name, cost: item.price }
+    : { itemType: "planet", category, id: item.planet.id, name: item.planet.name, cost: item.price };
 }
 
 function shopAdviceItem(item: BuyableOffer): ShopAdviceItem {
+  const category = categorizeShopItem(item);
   return item.kind === "joker"
     ? {
         itemType: "joker",
+        category,
         id: item.joker.id,
         name: item.joker.name,
         description: item.joker.description,
@@ -70,6 +75,7 @@ function shopAdviceItem(item: BuyableOffer): ShopAdviceItem {
       }
     : {
         itemType: "planet",
+        category,
         id: item.planet.id,
         name: item.planet.name,
         description: item.planet.description,

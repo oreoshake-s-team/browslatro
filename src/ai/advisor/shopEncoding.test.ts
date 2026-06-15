@@ -17,6 +17,7 @@ function buyCandidate(): ShopAdviceCandidate {
       id: "j_jolly",
       name: "Jolly Joker",
       itemType: "joker",
+      category: "joker-mult",
       cost: 4,
       description: "test",
     },
@@ -34,7 +35,7 @@ function leaveCandidate(): ShopAdviceCandidate {
 function pickCandidate(): PackAdviceCandidate {
   return {
     action: "pick",
-    option: { id: "c_star", name: "The Star", optionType: "tarot", description: "test" },
+    option: { id: "c_star", name: "The Star", optionType: "tarot", category: "tarot-deck", description: "test" },
   };
 }
 
@@ -43,8 +44,8 @@ function skipCandidate(): PackAdviceCandidate {
 }
 
 describe("SHOP_INPUT_FEATURES", () => {
-  test("equals 16", () => {
-    expect(SHOP_INPUT_FEATURES).toBe(16);
+  test("equals 28", () => {
+    expect(SHOP_INPUT_FEATURES).toBe(28);
   });
 });
 
@@ -77,7 +78,7 @@ describe("encodeShopCandidates", () => {
   test("sets can_afford=1 when money >= cost", () => {
     const candidate: ShopAdviceCandidate = {
       action: "buy",
-      item: { id: "j", name: "J", itemType: "joker", cost: 4, description: "d" },
+      item: { id: "j", name: "J", itemType: "joker", category: "joker-mult", cost: 4, description: "d" },
     };
     const input: ShopRankInput = { money: 10, ante: 1, round: 0, candidates: [candidate] };
     const encoded = encodeShopCandidates(input);
@@ -88,7 +89,7 @@ describe("encodeShopCandidates", () => {
   test("sets can_afford=0 when money < cost", () => {
     const candidate: ShopAdviceCandidate = {
       action: "buy",
-      item: { id: "j", name: "J", itemType: "joker", cost: 20, description: "d" },
+      item: { id: "j", name: "J", itemType: "joker", category: "joker-mult", cost: 20, description: "d" },
     };
     const input: ShopRankInput = { money: 5, ante: 1, round: 0, candidates: [candidate] };
     const encoded = encodeShopCandidates(input);
@@ -169,6 +170,7 @@ const FIXTURES = join(__dirname, "..", "..", "..", "ml", "tests", "fixtures");
 
 interface GoldenOffer {
   readonly itemType: string;
+  readonly category: string;
   readonly id: string;
   readonly name: string;
   readonly cost: number;
@@ -176,6 +178,7 @@ interface GoldenOffer {
 
 interface GoldenOption {
   readonly optionType: string;
+  readonly category: string;
   readonly id: string;
   readonly name: string;
 }
@@ -203,7 +206,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "purchase") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "leave" });
     return { money, ante, round, candidates };
@@ -212,7 +215,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "reroll") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
     candidates.push({ action: "leave" });
@@ -221,7 +224,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
 
   const packCandidates: PackAdviceCandidate[] = (rec.options ?? []).map((o) => ({
     action: "pick" as const,
-    option: { id: o.id, name: o.name, optionType: o.optionType, description: "" },
+    option: { id: o.id, name: o.name, optionType: o.optionType, category: o.category, description: "" },
   }));
   packCandidates.push({ action: "skip" });
   return { money, ante, round, picksRemaining: rec.picksRemaining ?? 0, candidates: packCandidates };

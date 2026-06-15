@@ -22,6 +22,7 @@ import {
   type RolloutOptions,
   type PostShopState,
 } from "../src/ai/shopRolloutExpert";
+import { categorizePackOption, categorizeShopItem } from "../src/ai/advisor/shopCategory";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
 import { createJokerCatalog } from "../src/items/jokers";
 import { createPlanetCatalog, applyPlanetUpgrade } from "../src/items/planets";
@@ -41,21 +42,23 @@ function stringFlag(name: string, fallback: string): string {
   return process.argv[index + 1];
 }
 
-function shopItemSnapshot(item: ShopItem): { itemType: string; id: string; name: string; cost: number } {
-  if (item.kind === "joker") return { itemType: "joker", id: item.joker.id, name: item.joker.name, cost: item.price };
-  if (item.kind === "planet") return { itemType: "planet", id: item.planet.id, name: item.planet.name, cost: item.price };
-  if (item.kind === "tarot") return { itemType: "tarot", id: item.tarot.id, name: item.tarot.name, cost: item.price };
-  if (item.kind === "spectral") return { itemType: "spectral", id: item.spectral.id, name: item.spectral.name, cost: item.price };
-  if (item.kind === "pack") return { itemType: "pack", id: item.pack.pool, name: item.pack.pool, cost: item.price };
-  return { itemType: "playing-card", id: "card", name: "Card", cost: item.price };
+function shopItemSnapshot(item: ShopItem): { itemType: string; category: string; id: string; name: string; cost: number } {
+  const category = categorizeShopItem(item);
+  if (item.kind === "joker") return { itemType: "joker", category, id: item.joker.id, name: item.joker.name, cost: item.price };
+  if (item.kind === "planet") return { itemType: "planet", category, id: item.planet.id, name: item.planet.name, cost: item.price };
+  if (item.kind === "tarot") return { itemType: "tarot", category, id: item.tarot.id, name: item.tarot.name, cost: item.price };
+  if (item.kind === "spectral") return { itemType: "spectral", category, id: item.spectral.id, name: item.spectral.name, cost: item.price };
+  if (item.kind === "pack") return { itemType: "pack", category, id: item.pack.pool, name: item.pack.pool, cost: item.price };
+  return { itemType: "playing-card", category, id: "card", name: "Card", cost: item.price };
 }
 
-function packOptionSnapshot(opt: PackOption): { optionType: string; id: string; name: string } {
-  if (opt.kind === "joker") return { optionType: "joker", id: opt.joker.id, name: opt.joker.name };
-  if (opt.kind === "planet") return { optionType: "planet", id: opt.planet.id, name: opt.planet.name };
-  if (opt.kind === "tarot") return { optionType: "tarot", id: opt.tarot.id, name: opt.tarot.name };
-  if (opt.kind === "spectral") return { optionType: "spectral", id: opt.spectral.id, name: opt.spectral.name };
-  return { optionType: "playing-card", id: `${opt.card.rank}${opt.card.suit}`, name: `${opt.card.rank} of ${opt.card.suit}` };
+function packOptionSnapshot(opt: PackOption): { optionType: string; category: string; id: string; name: string } {
+  const category = categorizePackOption(opt);
+  if (opt.kind === "joker") return { optionType: "joker", category, id: opt.joker.id, name: opt.joker.name };
+  if (opt.kind === "planet") return { optionType: "planet", category, id: opt.planet.id, name: opt.planet.name };
+  if (opt.kind === "tarot") return { optionType: "tarot", category, id: opt.tarot.id, name: opt.tarot.name };
+  if (opt.kind === "spectral") return { optionType: "spectral", category, id: opt.spectral.id, name: opt.spectral.name };
+  return { optionType: "playing-card", category, id: `${opt.card.rank}${opt.card.suit}`, name: `${opt.card.rank} of ${opt.card.suit}` };
 }
 
 function applyPackOption(opt: PackOption, state: PostShopState): PostShopState | null {
