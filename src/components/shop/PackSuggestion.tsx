@@ -1,6 +1,4 @@
-import { useCallback, useState } from "react";
-import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
+import { useCallback, useEffect, useState } from "react";
 import {
   buildPackAdvicePlan,
   type PackSuggestionAction,
@@ -23,7 +21,7 @@ import {
   extraJokerSlots,
 } from "../../items/vouchers";
 import { useGame } from "../../store/game";
-import SuggestionAdvice from "../advisor/SuggestionAdvice";
+import CoachAdvice from "../advisor/CoachAdvice";
 import "./PackSuggestion.css";
 
 export interface PackSuggestionProps {
@@ -35,13 +33,11 @@ export interface PackSuggestionProps {
   readonly onPick: (optionIdx: number) => void;
   readonly onClose: () => void;
   readonly suggestionDeps?: SuggestionDeps;
-  readonly triggerContainer?: HTMLElement | null;
 }
 
 export default function PackSuggestion(
   props: PackSuggestionProps,
-): React.JSX.Element {
-  const { t } = useTranslation();
+): React.JSX.Element | null {
   const money = useGame((s) => s.money);
   const ante = useGame((s) => s.ante);
   const jokers = useGame((s) => s.jokers);
@@ -54,6 +50,7 @@ export default function PackSuggestion(
   const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
     null,
   );
+  const [dismissed, setDismissed] = useState(false);
   const preRank = useCallback(
     (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
       setModelProgress({ loaded: 0, total: null });
@@ -72,7 +69,7 @@ export default function PackSuggestion(
     },
     [shopRanker, money, ante, props.picksRemaining],
   );
-  const { state, suggest, reset } = useSuggestion<PackSuggestionAction>(
+  const { state, coach, askAi, reset } = useSuggestion<PackSuggestionAction>(
     () =>
       buildPackAdvicePlan({
         pack: props.pack,
@@ -99,13 +96,19 @@ export default function PackSuggestion(
     preRank,
   );
 
+  const packSignature =
+    `${props.pack.pool}:${props.pack.variant}|${props.picksRemaining}|${money}|${ante}|` +
+    [...props.pickedIndices].sort((a, b) => a - b).join(",");
+
+  useEffect(() => {
+    if (dismissed) return;
+    void coach();
+  }, [coach, packSignature, dismissed]);
+
   function apply(): void {
-    let action: PackSuggestionAction | undefined;
-    if (state.phase === "ready") {
-      action = state.actions[state.advice.recommendationIndex];
-    } else if (state.phase === "loading" && state.onnxIndex !== null) {
-      action = state.actions[state.onnxIndex];
-    }
+    if (state.phase === "idle") return;
+    const action =
+      state.onnxIndex !== null ? state.actions[state.onnxIndex] : undefined;
     if (action === undefined) return;
     setHumanPlayRecordingSuppressed(true);
     try {
@@ -117,31 +120,19 @@ export default function PackSuggestion(
     reset();
   }
 
-  const trigger = (
-    <button
-      type="button"
-      className="btn btn--advisor pack-suggest-button"
-      data-testid="pack-suggest"
-      disabled={state.phase === "loading"}
-      aria-label={t("advisor.suggestPackButton")}
-      onClick={() => void suggest()}
-    >
-      <span aria-hidden="true">🤖 </span>
-      {t("advisor.suggestPackButton")}
-    </button>
-  );
+  if (dismissed) return null;
 
   return (
     <div className="pack-suggestion">
-      {props.triggerContainer
-        ? createPortal(trigger, props.triggerContainer)
-        : trigger}
-      <SuggestionAdvice
+      <CoachAdvice
         state={state}
         modelProgress={modelProgress}
         onApply={apply}
-        onDismiss={reset}
-        onRetry={() => void suggest()}
+        onAskAi={() => void askAi()}
+        onDismiss={() => {
+          reset();
+          setDismissed(true);
+        }}
       />
     </div>
   );

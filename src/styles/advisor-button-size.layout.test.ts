@@ -23,8 +23,6 @@ function declaration(body: string, property: string): string | null {
 
 const blindSuggestCss = readCss("game", "BlindSuggestion.css");
 const blindScreenCss = readCss("game", "BlindSelectScreen.css");
-const packSuggestCss = readCss("shop", "PackSuggestion.css");
-const packModalCss = readCss("shop", "PackOpenModal.css");
 
 describe("advisor suggest button sizing matches sibling actions", () => {
   test("blind suggest padding matches the Skip button", () => {
@@ -36,12 +34,6 @@ describe("advisor suggest button sizing matches sibling actions", () => {
   test("blind suggest font-size matches the Skip button", () => {
     expect(declaration(ruleBody(blindSuggestCss, ".blind-suggest-button"), "font-size")).toBe(
       declaration(ruleBody(blindScreenCss, ".blind-select-skip"), "font-size"),
-    );
-  });
-
-  test("pack suggest padding matches the close button", () => {
-    expect(declaration(ruleBody(packSuggestCss, ".pack-suggest-button"), "padding")).toBe(
-      declaration(ruleBody(packModalCss, ".pack-open-close"), "padding"),
     );
   });
 
