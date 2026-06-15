@@ -4,6 +4,7 @@ import { createRngConfig } from "../dev/rngConfig";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandStatsEntry } from "../scoring/handStats";
 import { createPlanetCatalog, mostPlayedHand } from "./planets";
+import { pickRandomNonEmpty } from "./random";
 
 const FACE_RANKS: ReadonlySet<Rank> = new Set(["J", "Q", "K"]);
 
@@ -344,7 +345,7 @@ export function pickBossForAnte(args: PickBossArgs): BossBlind {
   const recent = args.recentIds ?? new Set<string>();
   const fresh = eligible.filter((b) => !recent.has(b.id));
   const pool = fresh.length > 0 ? fresh : eligible;
-  return pool[Math.floor(rng() * pool.length)];
+  return pickRandomNonEmpty(pool, rng);
 }
 
 export const DEFAULT_STARTING_HANDS = 4;

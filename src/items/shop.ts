@@ -16,6 +16,7 @@ import {
 import type { PlanetCard } from "./planets";
 import type { SpectralCard } from "./spectrals";
 import { hiddenSpectralForRoll } from "./spectrals";
+import { pickRandom } from "./random";
 import type { TarotCard } from "./tarots";
 import type { OfferKindWeights } from "./vouchers";
 import { JOKER_BASE_PRICE } from "../constants";
@@ -312,15 +313,14 @@ export function rerollCostFor(
   return Math.max(0, BASE_REROLL_COST + safe - Math.max(0, reduction));
 }
 
-function pickRandom<T extends { readonly id: string }>(
+function pickRandomExcluding<T extends { readonly id: string }>(
   catalog: ReadonlyArray<T>,
   excludedIds: ReadonlyArray<string>,
   rng: RandomSource,
 ): T | null {
   const excluded = new Set<string>(excludedIds);
   const pool = catalog.filter((item) => !excluded.has(item.id));
-  if (pool.length === 0) return null;
-  return pool[Math.floor(rng() * pool.length)];
+  return pickRandom(pool, rng) ?? null;
 }
 
 export function pickRandomJoker(
@@ -328,7 +328,7 @@ export function pickRandomJoker(
   excludedIds: ReadonlyArray<string>,
   rng: RandomSource = Math.random,
 ): Joker | null {
-  return pickRandom(catalog, excludedIds, rng);
+  return pickRandomExcluding(catalog, excludedIds, rng);
 }
 
 export function pickRandomPlanet(
@@ -336,7 +336,7 @@ export function pickRandomPlanet(
   excludedIds: ReadonlyArray<string>,
   rng: RandomSource = Math.random,
 ): PlanetCard | null {
-  return pickRandom(catalog, excludedIds, rng);
+  return pickRandomExcluding(catalog, excludedIds, rng);
 }
 
 export function pickRandomTarot(
@@ -344,7 +344,7 @@ export function pickRandomTarot(
   excludedIds: ReadonlyArray<string>,
   rng: RandomSource = Math.random,
 ): TarotCard | null {
-  return pickRandom(catalog, excludedIds, rng);
+  return pickRandomExcluding(catalog, excludedIds, rng);
 }
 
 function jokerOffer(joker: Joker): ShopItem {
@@ -417,7 +417,7 @@ function pickOfferByKind(
   switch (kind) {
     case "joker": {
       const excluded = [...args.excludedJokerIds, ...picked.joker];
-      const next = pickRandom(args.jokerCatalog, excluded, rng);
+      const next = pickRandomExcluding(args.jokerCatalog, excluded, rng);
       if (!next) return null;
       const multiplier = args.editionRateMultiplier ?? 1;
       if (multiplier <= 1) return jokerOffer(next);
@@ -425,7 +425,7 @@ function pickOfferByKind(
       return jokerOffer(edition ? withEdition(next, edition) : next);
     }
     case "planet": {
-      const next = pickRandom(args.planetCatalog, [...picked.planet], rng);
+      const next = pickRandomExcluding(args.planetCatalog, [...picked.planet], rng);
       return next ? planetOffer(next) : null;
     }
     case "tarot": {
@@ -434,7 +434,7 @@ function pickOfferByKind(
         const spectral = pickOfferByKind("spectral", args, rng, picked);
         if (spectral) return spectral;
       }
-      const next = pickRandom(args.tarotCatalog, [...picked.tarot], rng);
+      const next = pickRandomExcluding(args.tarotCatalog, [...picked.tarot], rng);
       return next ? tarotOffer(next) : null;
     }
     case "spectral": {

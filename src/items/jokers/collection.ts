@@ -3,6 +3,7 @@ import { cloneJoker, withEdition } from "./editions";
 import { canDestroyJoker, hasSticker, isJokerActive } from "./stickers";
 import { resolveJokerEffect } from "./scoring/copy";
 import { rollChance } from "../../dev/chanceOverride";
+import { pickRandom, pickRandomNonEmpty } from "../random";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
@@ -307,8 +308,7 @@ export function pickRandomEquipped(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
 ): Joker | null {
-  if (jokers.length === 0) return null;
-  return jokers[Math.floor(rng() * jokers.length)];
+  return pickRandom(jokers, rng) ?? null;
 }
 
 export function pickRandomFromCatalog(
@@ -316,9 +316,7 @@ export function pickRandomFromCatalog(
   filter: (j: Joker) => boolean,
   rng: RandomSource = Math.random,
 ): Joker | null {
-  const pool = catalog.filter(filter);
-  if (pool.length === 0) return null;
-  return pool[Math.floor(rng() * pool.length)];
+  return pickRandom(catalog.filter(filter), rng) ?? null;
 }
 
 export function availableJokers(
@@ -383,24 +381,34 @@ function partitionByDestroyable(
   return { destroyable, kept };
 }
 
-export function polychromeRandomJokerDestroyOthers(
+function applyToRandomDestroyableJoker(
   jokers: ReadonlyArray<Joker>,
-  rng: RandomSource = Math.random,
+  rng: RandomSource,
+  transform: (chosen: Joker, kept: ReadonlyArray<Joker>) => Joker[],
 ): Joker[] {
   if (jokers.length === 0) return [];
   const { destroyable, kept } = partitionByDestroyable(jokers);
   if (destroyable.length === 0) return [...jokers];
-  const chosen = destroyable[Math.floor(rng() * destroyable.length)];
-  return [withEdition(chosen, "polychrome"), ...kept];
+  return transform(pickRandomNonEmpty(destroyable, rng), kept);
+}
+
+export function polychromeRandomJokerDestroyOthers(
+  jokers: ReadonlyArray<Joker>,
+  rng: RandomSource = Math.random,
+): Joker[] {
+  return applyToRandomDestroyableJoker(jokers, rng, (chosen, kept) => [
+    withEdition(chosen, "polychrome"),
+    ...kept,
+  ]);
 }
 
 export function copyRandomJokerDestroyOthers(
   jokers: ReadonlyArray<Joker>,
   rng: RandomSource = Math.random,
 ): Joker[] {
-  if (jokers.length === 0) return [];
-  const { destroyable, kept } = partitionByDestroyable(jokers);
-  if (destroyable.length === 0) return [...jokers];
-  const chosen = destroyable[Math.floor(rng() * destroyable.length)];
-  return [chosen, cloneJoker(chosen), ...kept];
+  return applyToRandomDestroyableJoker(jokers, rng, (chosen, kept) => [
+    chosen,
+    cloneJoker(chosen),
+    ...kept,
+  ]);
 }
