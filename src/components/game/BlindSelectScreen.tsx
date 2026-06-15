@@ -1,7 +1,6 @@
 import "./BlindSelectScreen.css";
-import { Suspense, lazy, useEffect, useId, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createPortal } from "react-dom";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
 import { requiredChipsForBlind } from "../../scoring/anteScaling";
@@ -14,7 +13,7 @@ import {
 } from "../../items/tags";
 import { hasStakeModifier, type Stake } from "../../items/stakes";
 import TagTooltip, { type TagTooltipSpec } from "./TagTooltip";
-import { useFocusTrap } from "../system/useFocusTrap";
+import Modal from "../system/Modal";
 
 const BlindSuggestion = lazy(() => import("./BlindSuggestion"));
 
@@ -84,8 +83,6 @@ export default function BlindSelectScreen({
     bossRerollsRemaining > 0;
 
   const tooltipIdBase = useId();
-  const overlayRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(overlayRef);
   const [suggestSlot, setSuggestSlot] = useState<HTMLDivElement | null>(null);
   const currentSkipOffer = skipOfferForBlind(currentBlind);
   const showSuggest = canSkip && currentSkipOffer !== undefined;
@@ -112,15 +109,17 @@ export default function BlindSelectScreen({
     setTooltip((prev) => (prev?.key === key ? null : prev));
   }
 
-  return createPortal(
-    <div
-      ref={overlayRef}
-      className="blind-select-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="blind-select-title"
+  return (
+    <Modal
+      onClose={() => {}}
+      labelledBy="blind-select-title"
+      accent="boss-blind"
+      size="lg"
+      level="elevated"
+      closeOnEscape={false}
+      closeOnBackdrop={false}
+      className="blind-select-modal"
     >
-      <div className="blind-select-modal" onClick={(e) => e.stopPropagation()}>
         <h2 id="blind-select-title" className="blind-select-title">
           {t("blinds.anteHeading", { ante })}
         </h2>
@@ -310,8 +309,6 @@ export default function BlindSelectScreen({
             />
           </Suspense>
         )}
-      </div>
-    </div>,
-    document.body,
+    </Modal>
   );
 }
