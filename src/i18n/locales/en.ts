@@ -276,6 +276,8 @@ export const en = {
     pickCandidate: "Pick {{name}}",
     skipCandidate: "Skip the remaining picks",
     suggestApply: "Do it",
+    playApply: "Play the blind",
+    skipApply: "Skip for the tag",
     suggestDismiss: "Dismiss",
     suggestRetry: "Try again",
     suggestError: "The coach couldn't make a suggestion right now.",
