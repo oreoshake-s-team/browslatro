@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Route } from "@playwright/test";
+import { test, expect, type Locator, type Page, type Route } from "@playwright/test";
 
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
@@ -25,7 +25,11 @@ async function fulfillWithFirstPick(route: Route): Promise<void> {
   });
 }
 
-async function openPackFromShop(page: Page): Promise<void> {
+function packModal(page: Page): Locator {
+  return page.locator(".pack-open-modal");
+}
+
+async function openPackFromShop(page: Page): Promise<Locator> {
   await page.goto("/");
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
@@ -36,33 +40,40 @@ async function openPackFromShop(page: Page): Promise<void> {
     .locator('[data-pack-pool="celestial"] .shop-offer-buy:not([disabled])')
     .first()
     .click();
-  await expect(page.getByTestId("pack-suggest")).toBeVisible();
+  const modal = packModal(page);
+  await expect(modal.getByTestId("coach-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+  return modal;
 }
 
-test("the suggest button sits in the Skip action row", async ({ page }) => {
-  await openPackFromShop(page);
-  const row = page.locator(".pack-open-actions");
-  await expect(row.getByTestId("pack-suggest")).toBeVisible();
-  await expect(row.getByTestId("pack-open-close")).toBeVisible();
+test("the local coach auto-recommends a move when a pack opens", async ({
+  page,
+}) => {
+  const modal = await openPackFromShop(page);
+  await expect(modal.getByTestId("coach-recommendation")).not.toBeEmpty();
 });
 
-test("suggesting a pack pick and applying it takes the option without logging human play", async ({
+test("a keyless player sees the rate-limited Ask AI affordance", async ({
+  page,
+}) => {
+  const modal = await openPackFromShop(page);
+  await expect(modal.getByTestId("coach-ask-ai")).toContainText("rate-limited");
+});
+
+test("asking the AI annotates the coach pick with a verdict", async ({
   page,
 }) => {
   await page.route("**/api/advice", fulfillWithFirstPick);
-  await openPackFromShop(page);
-  const optionsBefore = await page.locator(".pack-open-option").count();
-  await page.getByTestId("pack-suggest").click();
-  await expect(page.getByTestId("suggestion-recommendation")).toContainText(
-    "Pick",
-  );
-  await page.getByTestId("suggestion-apply").click();
-  await expect(page.locator(".pack-open-option")).not.toHaveCount(
-    optionsBefore,
-    { timeout: 10_000 },
-  );
-  const log = await page.evaluate(
-    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
-  );
-  expect(log).not.toContain('"kind":"pack-pick"');
+  const modal = await openPackFromShop(page);
+  await modal.getByTestId("coach-ask-ai").click();
+  await expect(modal.getByTestId("coach-ai-verdict")).toBeVisible({
+    timeout: 10_000,
+  });
+});
+
+test("dismissing hides the coach panel", async ({ page }) => {
+  const modal = await openPackFromShop(page);
+  await modal.getByTestId("coach-dismiss").click();
+  await expect(modal.getByTestId("coach-advice")).toHaveCount(0);
 });

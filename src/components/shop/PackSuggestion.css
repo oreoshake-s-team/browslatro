@@ -4,11 +4,3 @@
   gap: 0.6rem;
   width: 100%;
 }
-
-.pack-suggestion > .pack-suggest-button {
-  align-self: flex-start;
-}
-
-.pack-suggest-button {
-  padding: 0.5rem 1.2rem;
-}

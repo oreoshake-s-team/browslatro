@@ -71,10 +71,6 @@
   align-self: flex-end;
 }
 
-.pack-suggest-slot {
-  display: contents;
-}
-
 .pack-open-close {
   padding: 0.5rem 1.2rem;
 }
