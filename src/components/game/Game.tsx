@@ -281,7 +281,7 @@ export default function Game({
                 <div className="game-top-row">
                   {jokersNode}
                   {consumablesNode}
-                  {previewActive && overlayDeckNode}
+                  {!showPackHand && overlayDeckNode}
                 </div>
                 {showPackHand && handNode}
               </>

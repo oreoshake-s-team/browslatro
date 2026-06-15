@@ -147,6 +147,12 @@ describe("Game", () => {
     },
   );
 
+  test("shows the deck drop target during a standard pack pick when no usable consumable is held", async () => {
+    renderGame({ packOpen: packOpenProps(standardPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.getByTestId("deck-pile")).toBeInTheDocument();
+  });
+
   test("hides the player hand during a standard pack pick when only a planet is held", async () => {
     useGame.getState().setConsumables([planetConsumable]);
     renderGame({ packOpen: packOpenProps(standardPack) });
