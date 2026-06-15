@@ -28,30 +28,65 @@ async function openBlindSelect(page: Page): Promise<void> {
   await expect(page.getByTestId("blind-select-play")).toBeVisible();
 }
 
-test("asking whether the skip is worth it and applying the skip grants the tag without logging human play", async ({
+test("the blind offers a Coach tip trigger and no panel by default", async ({
+  page,
+}) => {
+  await openBlindSelect(page);
+  await expect(page.getByTestId("coach-trigger")).toBeVisible();
+  await expect(page.getByTestId("coach-advice")).toHaveCount(0);
+});
+
+test("clicking the Coach tip trigger reveals the local coach recommendation", async ({
+  page,
+}) => {
+  await openBlindSelect(page);
+  await page.getByTestId("coach-trigger").click();
+  await expect(page.getByTestId("coach-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+  await expect(page.getByTestId("coach-recommendation")).not.toBeEmpty();
+});
+
+test("a keyless player sees the rate-limited Ask AI affordance", async ({
+  page,
+}) => {
+  await openBlindSelect(page);
+  await page.getByTestId("coach-trigger").click();
+  await expect(page.getByTestId("coach-ask-ai")).toContainText("rate-limited");
+});
+
+test("asking the AI annotates the coach pick with a verdict", async ({
   page,
 }) => {
   await page.route("**/api/advice", fulfillWithSkip);
   await openBlindSelect(page);
-  await page.getByTestId("blind-suggest").click();
-  await expect(page.getByTestId("suggestion-recommendation")).toContainText(
-    "Skip it for the",
-  );
-  await page.getByTestId("suggestion-apply").click();
-  await expect(
-    page.locator('[data-tag-id="investment"]').first(),
-  ).toBeVisible();
-  const log = await page.evaluate(
-    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
-  );
-  expect(log).not.toContain('"kind":"blind-skip"');
+  await page.getByTestId("coach-trigger").click();
+  await expect(page.getByTestId("coach-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+  await page.getByTestId("coach-ask-ai").click();
+  await expect(page.getByTestId("coach-ai-verdict")).toBeVisible({
+    timeout: 10_000,
+  });
 });
 
-test("the suggest button is absent on the boss blind", async ({ page }) => {
-  await page.route("**/api/advice", fulfillWithSkip);
+test("dismissing collapses the panel back to the Coach tip trigger", async ({
+  page,
+}) => {
+  await openBlindSelect(page);
+  await page.getByTestId("coach-trigger").click();
+  await expect(page.getByTestId("coach-recommendation")).toBeVisible({
+    timeout: 10_000,
+  });
+  await page.getByTestId("coach-dismiss").click();
+  await expect(page.getByTestId("coach-advice")).toHaveCount(0);
+  await expect(page.getByTestId("coach-trigger")).toBeVisible();
+});
+
+test("the Coach tip trigger is absent on the boss blind", async ({ page }) => {
   await openBlindSelect(page);
   await page.getByTestId("blind-select-skip").click();
   await page.getByTestId("blind-select-skip").click();
   await expect(page.getByTestId("blind-select-play")).toBeVisible();
-  await expect(page.getByTestId("blind-suggest")).toHaveCount(0);
+  await expect(page.getByTestId("coach-trigger")).toHaveCount(0);
 });
