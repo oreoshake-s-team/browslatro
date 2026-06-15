@@ -1,4 +1,4 @@
-import type { AdviceFeedbackEvent } from "../runEvents";
+import type { AdviceFeedbackEvent, AdviceFeedbackSource } from "../runEvents";
 import type { AutopilotDecision } from "./autopilot";
 import { ADVISOR_POLICY_MODEL_ID } from "./advisorRanker";
 import { SHOP_POLICY_MODEL_ID } from "./shopRanker";
@@ -9,6 +9,7 @@ export function buildShopPolicyFeedbackEvent(
   candidates: ReadonlyArray<ShopAdviceCandidate>,
   recommendationIndex: number,
   correctedIndex: number | null,
+  source: AdviceFeedbackSource = "explicit",
 ): AdviceFeedbackEvent {
   return {
     kind: "advice-feedback",
@@ -18,7 +19,7 @@ export function buildShopPolicyFeedbackEvent(
     alternativeIndex: null,
     verdict: "bad",
     correctedIndex,
-    source: "explicit",
+    source,
     decision: {
       context: "shop",
       state: shop,
