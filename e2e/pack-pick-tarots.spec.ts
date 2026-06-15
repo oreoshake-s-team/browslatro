@@ -130,3 +130,37 @@ test.describe("Pack-pick wiring", () => {
     await expect(page.getByTestId("pack-open-subtitle")).toBeHidden();
   });
 });
+
+test.describe("Owned consumables stay usable during a preview pack", () => {
+  async function setup(page: Page): Promise<void> {
+    await setDeterministic(page);
+    await page.addInitScript(() => {
+      window.localStorage.setItem("browslatro:seedTarotIds", "the-magician");
+    });
+    await forcePackTarots(page, ["the-sun", "the-hermit"]);
+    await forcePackVariant(page, "normal");
+    await forcePackPool(page, "arcana");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+  }
+
+  test("an owned tarot reaches the preview hand from inside the open pack modal", async ({
+    page,
+  }) => {
+    await setup(page);
+    const tile = page.getByTestId("consumable-tile-filled-0");
+    await expect(tile).toBeVisible();
+    await page
+      .getByTestId("pack-open-preview-hand")
+      .locator(".card")
+      .first()
+      .click();
+    await tile.click();
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(
+      page
+        .getByTestId("pack-open-preview-hand")
+        .locator(".card-enhancement-lucky"),
+    ).toHaveCount(1);
+  });
+});

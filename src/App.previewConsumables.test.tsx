@@ -115,6 +115,14 @@ describe("Applying owned enhancement tarots to the preview hand", () => {
     );
   });
 
+  test("the owned consumable tray renders inside the pack dialog so it stays reachable", async () => {
+    await reachArcanaPreviewWithTarot();
+    const dialog = document.querySelector("[aria-labelledby='pack-open-title']");
+    expect(
+      dialog?.contains(screen.getByTestId("consumable-tile-filled-0")),
+    ).toBe(true);
+  });
+
   test("selecting a preview card then clicking the tarot empties the slot", async () => {
     const { user } = await reachArcanaPreviewWithTarot();
     await user.click(firstPreviewCard());
