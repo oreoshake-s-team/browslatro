@@ -68,3 +68,20 @@
 .btn--advisor:hover:not(:disabled) {
   background-color: color-mix(in srgb, var(--enhance-wild-border) 34%, transparent);
 }
+
+.btn--toggle {
+  background-color: var(--surface-raised);
+  color: var(--text-secondary);
+  border-color: var(--border-strong);
+}
+
+.btn--toggle:hover:not(:disabled) {
+  background-color: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.btn--toggle[aria-pressed="true"] {
+  background-color: var(--accent-chips-strong);
+  color: var(--white);
+  border-color: transparent;
+}

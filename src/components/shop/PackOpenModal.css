@@ -95,26 +95,7 @@
 
 .pack-open-preview-sort-button {
   padding: 0.3rem 0.8rem;
-  border-radius: 6px;
-  border: 1px solid var(--accent-pack);
-  background-color: color-mix(in srgb, var(--accent-pack) 12%, transparent);
-  color: var(--text-primary);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.pack-open-preview-sort-button:hover {
-  background-color: color-mix(in srgb, var(--accent-pack) 25%, transparent);
-}
-
-.pack-open-preview-sort-button:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-
-.pack-open-preview-sort-button-active {
-  background-color: var(--accent-pack);
-  color: var(--white);
+  font-size: 0.9rem;
 }
 
 .pack-open-preview-hand {
