@@ -190,6 +190,10 @@ export default function Game({
   const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
   const handVisible = !shop && !packOpen;
+  const holdsHandConsumable = consumables.some(
+    (c) => c.kind === "tarot" || c.kind === "spectral",
+  );
+  const showPackHand = !!packOpen && !previewActive && holdsHandConsumable;
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
@@ -273,21 +277,14 @@ export default function Game({
             {...packOpen}
             foolCopyTarget={foolCopyTarget}
             playArea={
-              previewActive ? (
+              <>
                 <div className="game-top-row">
                   {jokersNode}
                   {consumablesNode}
-                  {overlayDeckNode}
+                  {previewActive && overlayDeckNode}
                 </div>
-              ) : (
-                <>
-                  <div className="game-top-row">
-                    {jokersNode}
-                    {consumablesNode}
-                  </div>
-                  {handNode}
-                </>
-              )
+                {showPackHand && handNode}
+              </>
             }
           />
         </Suspense>

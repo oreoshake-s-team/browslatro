@@ -79,6 +79,16 @@ test.describe("Pack opening flow", () => {
     await expect(page.getByTestId("pack-open-subtitle")).not.toBeVisible();
   });
 
+  test("Standard pack: the player hand is hidden when no usable consumable is held", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.getByTestId("hand-cards")).toHaveCount(0);
+  });
+
   test("Standard pack: an enhanced card surfaces a modifier badge on its pick tile", async ({
     page,
   }) => {
