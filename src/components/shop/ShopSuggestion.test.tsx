@@ -76,22 +76,39 @@ function renderSuggestion(
   return props;
 }
 
-describe("ShopSuggestion coach-first", () => {
-  test("auto-shows the local coach recommendation without any click", async () => {
+async function revealCoachPick(): Promise<void> {
+  await userEvent.click(screen.getByTestId("coach-trigger"));
+}
+
+describe("ShopSuggestion click-to-reveal", () => {
+  test("shows a Coach tip trigger, not the panel, by default", () => {
     renderSuggestion();
+    expect(screen.getByTestId("coach-trigger")).toBeInTheDocument();
+  });
+
+  test("the coach panel is not shown until the trigger is clicked", () => {
+    renderSuggestion();
+    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+  });
+
+  test("clicking the trigger reveals the local coach recommendation", async () => {
+    renderSuggestion();
+    await revealCoachPick();
     await expect(
       screen.findByTestId("coach-recommendation"),
     ).resolves.toHaveTextContent("Buy +4 Mult for $5");
   });
 
-  test("does not call the LLM when the coach auto-runs", async () => {
+  test("revealing the coach does not call the LLM", async () => {
     const props = renderSuggestion();
+    await revealCoachPick();
     await screen.findByTestId("coach-recommendation");
     expect(props.suggestionDeps?.fetchAdviceFn).not.toHaveBeenCalled();
   });
 
   test("applying the coach pick buys the mapped offer", async () => {
     const props = renderSuggestion();
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onBuy).toHaveBeenCalledWith(0);
   });
@@ -99,6 +116,7 @@ describe("ShopSuggestion coach-first", () => {
   test("applying a reroll coach pick uses the shop reroll path", async () => {
     rankState.value = [1];
     const props = renderSuggestion();
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onApplyReroll).toHaveBeenCalledOnce();
   });
@@ -106,12 +124,14 @@ describe("ShopSuggestion coach-first", () => {
   test("applying a leave coach pick closes the shop", async () => {
     rankState.value = [2];
     const props = renderSuggestion();
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onNext).toHaveBeenCalledOnce();
   });
 
   test("the Ask AI button reads rate-limited without a stored key", async () => {
     renderSuggestion();
+    await revealCoachPick();
     await expect(screen.findByTestId("coach-ask-ai")).resolves.toHaveTextContent(
       "rate-limited",
     );
@@ -120,12 +140,14 @@ describe("ShopSuggestion coach-first", () => {
   test("the Ask AI button drops the rate-limited note when a key is stored", async () => {
     storePlayerKey("sk-ant-test-1234");
     renderSuggestion();
+    await revealCoachPick();
     const button = await screen.findByTestId("coach-ask-ai");
     expect(button).not.toHaveTextContent("rate-limited");
   });
 
   test("asking the AI calls the LLM and annotates agreement with the coach", async () => {
     const props = renderSuggestion();
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-ask-ai"));
     const verdict = await screen.findByTestId("coach-ai-verdict");
     expect(props.suggestionDeps?.fetchAdviceFn).toHaveBeenCalledOnce();
@@ -134,6 +156,7 @@ describe("ShopSuggestion coach-first", () => {
 
   test("the AI annotation flags disagreement with the coach pick", async () => {
     renderSuggestion({}, adviceFixture({ recommendationIndex: 1 }));
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-ask-ai"));
     await expect(
       screen.findByTestId("coach-ai-verdict"),
@@ -148,20 +171,23 @@ describe("ShopSuggestion coach-first", () => {
           .mockResolvedValue({ ok: false, code: "model_error" }),
       },
     });
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-ask-ai"));
     await screen.findByTestId("coach-ai-error");
     expect(screen.getByTestId("coach-recommendation")).toBeInTheDocument();
   });
 
-  test("dismissing hides the coach panel for the current shop", async () => {
+  test("dismissing collapses the panel back to the trigger", async () => {
     renderSuggestion();
-    await userEvent.click(await screen.findByTestId("coach-dismiss"));
+    await revealCoachPick();
+    await userEvent.click(screen.getByTestId("coach-dismiss"));
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+    expect(screen.getByTestId("coach-trigger")).toBeInTheDocument();
   });
 
-  test("the coach does not run while the shop is locked", () => {
+  test("the trigger is disabled while the shop is locked", () => {
     renderSuggestion({ disabled: true });
-    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+    expect(screen.getByTestId("coach-trigger")).toBeDisabled();
   });
 
   test("an applied coach purchase is not recorded as human play, while a manual one after it is", async () => {
@@ -170,6 +196,7 @@ describe("ShopSuggestion coach-first", () => {
     renderSuggestion({
       onBuy: (offerIdx) => useGame.getState().buyShopOffer(offerIdx),
     });
+    await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(humanPlayLog().count()).toBe(0);
     useGame.getState().buyShopOffer(1);

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { createPortal } from "react-dom";
+import { useTranslation } from "react-i18next";
 import {
   buildPackAdvicePlan,
   type PackSuggestionAction,
@@ -33,11 +35,13 @@ export interface PackSuggestionProps {
   readonly onPick: (optionIdx: number) => void;
   readonly onClose: () => void;
   readonly suggestionDeps?: SuggestionDeps;
+  readonly triggerContainer?: HTMLElement | null;
 }
 
 export default function PackSuggestion(
   props: PackSuggestionProps,
-): React.JSX.Element | null {
+): React.JSX.Element {
+  const { t } = useTranslation();
   const money = useGame((s) => s.money);
   const ante = useGame((s) => s.ante);
   const jokers = useGame((s) => s.jokers);
@@ -50,7 +54,7 @@ export default function PackSuggestion(
   const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
     null,
   );
-  const [dismissed, setDismissed] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const preRank = useCallback(
     (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
       setModelProgress({ loaded: 0, total: null });
@@ -96,15 +100,6 @@ export default function PackSuggestion(
     preRank,
   );
 
-  const packSignature =
-    `${props.pack.pool}:${props.pack.variant}|${props.picksRemaining}|${money}|${ante}|` +
-    [...props.pickedIndices].sort((a, b) => a - b).join(",");
-
-  useEffect(() => {
-    if (dismissed) return;
-    void coach();
-  }, [coach, packSignature, dismissed]);
-
   function apply(): void {
     if (state.phase === "idle") return;
     const action =
@@ -120,20 +115,39 @@ export default function PackSuggestion(
     reset();
   }
 
-  if (dismissed) return null;
+  const trigger = (
+    <button
+      type="button"
+      className="btn btn--advisor pack-suggest-button"
+      data-testid="coach-trigger"
+      onClick={() => {
+        setRevealed(true);
+        void coach();
+      }}
+    >
+      <span aria-hidden="true">⚡ </span>
+      {t("advisor.coachTip")}
+    </button>
+  );
 
   return (
     <div className="pack-suggestion">
-      <CoachAdvice
-        state={state}
-        modelProgress={modelProgress}
-        onApply={apply}
-        onAskAi={() => void askAi()}
-        onDismiss={() => {
-          reset();
-          setDismissed(true);
-        }}
-      />
+      {!revealed &&
+        (props.triggerContainer
+          ? createPortal(trigger, props.triggerContainer)
+          : trigger)}
+      {revealed && (
+        <CoachAdvice
+          state={state}
+          modelProgress={modelProgress}
+          onApply={apply}
+          onAskAi={() => void askAi()}
+          onDismiss={() => {
+            reset();
+            setRevealed(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1061,8 +1061,16 @@ describe("Shop — coach suggestion placement", () => {
     await i18n.changeLanguage("en");
   });
 
-  test("the local coach auto-mounts inside its host and outside the action row", async () => {
+  test("the Coach tip trigger sits in the action row, with no panel until clicked", async () => {
     renderShop();
+    const trigger = await screen.findByTestId("coach-trigger");
+    expect(trigger.closest(".shop-actions")).not.toBeNull();
+    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+  });
+
+  test("clicking the Coach tip trigger reveals the panel in its host, outside the action row", async () => {
+    renderShop();
+    await userEvent.click(await screen.findByTestId("coach-trigger"));
     const panel = await screen.findByTestId("coach-advice");
     expect(panel.closest(".shop-suggestion")).not.toBeNull();
     expect(panel.closest(".shop-actions")).toBeNull();

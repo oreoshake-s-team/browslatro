@@ -288,6 +288,7 @@ export const haw: LocaleMessages = {
     suggestRetry: "Try again",
     suggestError: "The coach couldn't make a suggestion right now.",
     coachLabel: "Coach · local · instant",
+    coachTip: "Coach tip",
     coachComputing: "Coaching…",
     coachHide: "Hide coach",
     askAiButton: "Ask AI (rate-limited)",

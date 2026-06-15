@@ -230,6 +230,7 @@ export default function PackOpenModal({
     null,
   );
   const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [suggestSlot, setSuggestSlot] = useState<HTMLDivElement | null>(null);
   const displayedPreviewHand = useMemo(
     () =>
       manualOrder
@@ -525,9 +526,11 @@ export default function PackOpenModal({
             consumableSlotsFull={consumableSlotsFull}
             onPick={onPick}
             onClose={onClose}
+            triggerContainer={suggestSlot}
           />
         </Suspense>
         <div className="pack-open-actions">
+          <div className="pack-suggest-slot" ref={setSuggestSlot} />
           <button
             type="button"
             className="btn btn--secondary pack-open-close"
