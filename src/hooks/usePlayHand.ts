@@ -618,6 +618,7 @@ export function usePlayHand({
       playedHandLabel: label,
       playedCardCount: playedCards.length,
       scoredCards: scoring,
+      handPlayCounts,
     });
     if (scoring.length === 0) {
       const noCardsHandJokerResult = applyHandLevelJokers(

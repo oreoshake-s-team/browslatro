@@ -174,6 +174,7 @@ export function simulatePlay(
     playedHandLabel: label,
     playedCardCount: playedCards.length,
     scoredCards: scoring,
+    handPlayCounts: input.handPlayCounts,
   });
   const handJokerResult = applyHandLevelJokers(scoringJokers, {
     playedHandLabel: label,

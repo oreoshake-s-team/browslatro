@@ -1,6 +1,7 @@
 // @vitest-environment node
 import {
   OBELISK_X_MULT_PER_CONSECUTIVE_HAND,
+  advanceStackGainsForScoring,
   applyHandLevelJokers,
   applyHandPlayedToJokerStates,
   createJokerCatalog,
@@ -74,6 +75,32 @@ describe("Obelisk", () => {
     const result = applyHandLevelJokers([createObeliskJoker()], {
       playedHandLabel: "Pair",
     });
+    expect(result.xMult).toBe(1);
+  });
+
+  test("a fresh Obelisk's first off-meta hand already scores its bonus (same-hand pipeline)", () => {
+    const counts = { ...emptyHandCounts(), Flush: 5, Pair: 1 };
+    const scoringJokers = advanceStackGainsForScoring([createObeliskJoker()], {
+      ...baseCtx,
+      playedHandLabel: "Pair",
+      handPlayCounts: counts,
+    });
+    const result = applyHandLevelJokers(scoringJokers, { playedHandLabel: "Pair" });
+    expect(result.xMult).toBe(1 + OBELISK_X_MULT_PER_CONSECUTIVE_HAND);
+  });
+
+  test("scores X1 on a most-played hand even at a high counter (reset same-hand)", () => {
+    const grown = {
+      ...createObeliskJoker(),
+      state: { kind: "counter" as const, value: 5 },
+    };
+    const counts = { ...emptyHandCounts(), Flush: 5, Pair: 1 };
+    const scoringJokers = advanceStackGainsForScoring([grown], {
+      ...baseCtx,
+      playedHandLabel: "Flush",
+      handPlayCounts: counts,
+    });
+    const result = applyHandLevelJokers(scoringJokers, { playedHandLabel: "Flush" });
     expect(result.xMult).toBe(1);
   });
 
