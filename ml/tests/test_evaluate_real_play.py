@@ -9,8 +9,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from evaluate_real_play import (
     agreement,
     chance_agreement,
+    load_hand_eval_decisions,
     load_shop_eval_decisions,
 )
+
+FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
 
 
 def top0(inputs):
@@ -81,6 +84,20 @@ class LoadShopEvalDecisionsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path = write_jsonl(directory, "human.jsonl", [non_shop])
             self.assertEqual(load_shop_eval_decisions([path]), [])
+
+
+class LoadHandEvalDecisionsTest(unittest.TestCase):
+    def test_loads_at_least_one_decision(self):
+        self.assertGreater(len(load_hand_eval_decisions([FIXTURE])), 0)
+
+    def test_tags_decisions_by_play_or_discard(self):
+        kinds = {kind for _, _, kind in load_hand_eval_decisions([FIXTURE])}
+        self.assertTrue(kinds <= {"play", "discard"})
+
+    def test_skips_shop_run_events(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "shop.jsonl", [shop_record()])
+            self.assertEqual(load_hand_eval_decisions([path]), [])
 
 
 if __name__ == "__main__":

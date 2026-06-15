@@ -19,11 +19,12 @@ Default --data: ml/data/human-play/*.jsonl
 import argparse
 import glob
 import os
+import json
 import sys
 from collections import defaultdict
 
-from dataset import _iter_shop_records
-from encoding import encode_shop_decision
+from dataset import DATASET_SCHEMA_VERSION, _iter_shop_records
+from encoding import HAND_SLOTS, encode_decision, encode_shop_decision
 
 
 def load_shop_eval_decisions(paths):
@@ -35,6 +36,33 @@ def load_shop_eval_decisions(paths):
             if chosen < 0 or not inputs:
                 continue
             decisions.append((inputs, chosen, record["kind"]))
+    return decisions
+
+
+def load_hand_eval_decisions(paths):
+    """Returns [(candidate_vectors, chosen_index, kind)] for hand decisions.
+
+    Kind is the chosen candidate's action (play / discard). Skips shop run
+    events, non-v1 records, and hands too wide for the fixed-size encoding.
+    """
+    decisions = []
+    for path in paths:
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                record = json.loads(line)
+                if record.get("kind") is not None:
+                    continue
+                if record.get("schemaVersion") != DATASET_SCHEMA_VERSION:
+                    continue
+                if len(record["state"]["hand"]) > HAND_SLOTS:
+                    continue
+                inputs, chosen = encode_decision(record)
+                if chosen < 0 or not inputs:
+                    continue
+                decisions.append((inputs, chosen, record["candidates"][chosen]["action"]))
     return decisions
 
 
@@ -95,25 +123,24 @@ def main():
     parser.add_argument("--data", action="append", default=[])
     args = parser.parse_args()
 
-    if not args.shop:
-        sys.exit("only --shop real-play evaluation is implemented")
-
     data = args.data or sorted(
         glob.glob(os.path.join(os.path.dirname(__file__), "data", "human-play", "*.jsonl"))
     )
-    decisions = load_shop_eval_decisions(data)
+    label = "shop" if args.shop else "hand"
+    decisions = (
+        load_shop_eval_decisions(data) if args.shop else load_hand_eval_decisions(data)
+    )
     if not decisions:
-        sys.exit("no shop decisions found in the human-play data")
+        sys.exit(f"no {label} decisions found in the human-play data")
 
-    print(f"{len(decisions)} human shop decisions from {len(data)} file(s)")
+    kinds = sorted({kind for _, _, kind in decisions})
+    print(f"{len(decisions)} human {label} decisions from {len(data)} file(s)")
     print(f"random-chance agreement baseline: {chance_agreement(decisions):.3f}")
-    print(f"{'model':32} {'agree':>14} {'purchase':>16} {'pack-pick':>16}")
+    print(f"{'model':32} {'agree':>14} " + " ".join(f"{k:>16}" for k in kinds))
     for model in args.models:
         r = agreement(decisions, onnx_score_fn(model))
-        print(
-            f"{os.path.basename(model):32} {r['overall']:.3f} (n={r['n']:>4}) "
-            f"{_kind_cell(r['by_kind'], 'purchase'):>16} {_kind_cell(r['by_kind'], 'pack-pick'):>16}"
-        )
+        cells = " ".join(f"{_kind_cell(r['by_kind'], k):>16}" for k in kinds)
+        print(f"{os.path.basename(model):32} {r['overall']:.3f} (n={r['n']:>4}) {cells}")
 
 
 if __name__ == "__main__":
