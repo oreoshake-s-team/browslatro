@@ -40,14 +40,14 @@ test.describe("Dialog focus trap + inert background", () => {
     for (let i = 0; i < 6; i += 1) {
       await page.keyboard.press("Tab");
       const insideDialog = await page.evaluate(() =>
-        Boolean(document.activeElement?.closest(".blind-select-overlay")),
+        Boolean(document.activeElement?.closest(".modal-overlay")),
       );
       expect(insideDialog).toBe(true);
     }
     for (let i = 0; i < 6; i += 1) {
       await page.keyboard.press("Shift+Tab");
       const insideDialog = await page.evaluate(() =>
-        Boolean(document.activeElement?.closest(".blind-select-overlay")),
+        Boolean(document.activeElement?.closest(".modal-overlay")),
       );
       expect(insideDialog).toBe(true);
     }
