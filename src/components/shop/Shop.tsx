@@ -298,7 +298,6 @@ export default function Shop({
     voucherOptions.length > 0 &&
     Boolean(onSetVoucher);
   const [rerollCount, setRerollCount] = useState(0);
-  const [suggestSlot, setSuggestSlot] = useState<HTMLDivElement | null>(null);
   const baseRerollCost = rerollCostFor(
     rerollCount,
     rerollCostReduction(ownedVoucherIds) + extraRerollReduction,
@@ -559,11 +558,9 @@ export default function Shop({
             onBuyVoucher={onBuyVoucher}
             onApplyReroll={handleReroll}
             onNext={onNext}
-            triggerContainer={suggestSlot}
           />
         </Suspense>
         <div className="shop-actions">
-          <div className="shop-suggest-slot" ref={setSuggestSlot} />
           <button
             type="button"
             className="btn btn--secondary shop-next"

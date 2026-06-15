@@ -1,6 +1,4 @@
-import { useCallback, useState } from "react";
-import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
+import { useCallback, useEffect, useState } from "react";
 import {
   buildShopAdvicePlan,
   type ShopSuggestionAction,
@@ -17,7 +15,7 @@ import { setHumanPlayRecordingSuppressed } from "../../ai/humanPlayWiring";
 import type { ShopItem } from "../../items/shop";
 import type { Voucher, VoucherId } from "../../items/vouchers";
 import { useGame } from "../../store/game";
-import SuggestionAdvice from "../advisor/SuggestionAdvice";
+import CoachAdvice from "../advisor/CoachAdvice";
 import "./ShopSuggestion.css";
 
 export interface ShopSuggestionProps {
@@ -37,13 +35,11 @@ export interface ShopSuggestionProps {
   readonly onApplyReroll: () => void;
   readonly onNext: () => void;
   readonly suggestionDeps?: SuggestionDeps;
-  readonly triggerContainer?: HTMLElement | null;
 }
 
 export default function ShopSuggestion(
   props: ShopSuggestionProps,
-): React.JSX.Element {
-  const { t } = useTranslation();
+): React.JSX.Element | null {
   const ante = useGame((s) => s.ante);
   const jokers = useGame((s) => s.jokers);
   const consumables = useGame((s) => s.consumables);
@@ -51,6 +47,7 @@ export default function ShopSuggestion(
   const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
     null,
   );
+  const [dismissed, setDismissed] = useState(false);
   const preRank = useCallback(
     (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
       setModelProgress({ loaded: 0, total: null });
@@ -68,7 +65,7 @@ export default function ShopSuggestion(
     },
     [shopRanker, props.money, ante],
   );
-  const { state, suggest, reset } = useSuggestion<ShopSuggestionAction>(
+  const { state, coach, askAi, reset } = useSuggestion<ShopSuggestionAction>(
     () =>
       buildShopAdvicePlan({
         money: props.money,
@@ -89,13 +86,21 @@ export default function ShopSuggestion(
     preRank,
   );
 
+  const shopSignature =
+    `${props.money}|${ante}|${props.rerollCost}|${props.disabled}|` +
+    props.offers.map((o) => `${o.kind}:${o.price}:${o.sold}`).join(",") +
+    "|" +
+    props.vouchers.map((v) => v.id).join(",");
+
+  useEffect(() => {
+    if (dismissed || props.disabled) return;
+    void coach();
+  }, [coach, shopSignature, dismissed, props.disabled]);
+
   function apply(): void {
-    let action: ShopSuggestionAction | undefined;
-    if (state.phase === "ready") {
-      action = state.actions[state.advice.recommendationIndex];
-    } else if (state.phase === "loading" && state.onnxIndex !== null) {
-      action = state.actions[state.onnxIndex];
-    }
+    if (state.phase === "idle") return;
+    const action =
+      state.onnxIndex !== null ? state.actions[state.onnxIndex] : undefined;
     if (action === undefined) return;
     setHumanPlayRecordingSuppressed(true);
     try {
@@ -109,31 +114,19 @@ export default function ShopSuggestion(
     reset();
   }
 
-  const trigger = (
-    <button
-      type="button"
-      className="btn btn--advisor shop-suggest-button"
-      data-testid="shop-suggest"
-      disabled={props.disabled || state.phase === "loading"}
-      aria-label={t("advisor.suggestShopButton")}
-      onClick={() => void suggest()}
-    >
-      <span aria-hidden="true">🤖 </span>
-      {t("advisor.suggestShopButton")}
-    </button>
-  );
+  if (dismissed) return null;
 
   return (
     <div className="shop-suggestion">
-      {props.triggerContainer
-        ? createPortal(trigger, props.triggerContainer)
-        : trigger}
-      <SuggestionAdvice
+      <CoachAdvice
         state={state}
         modelProgress={modelProgress}
         onApply={apply}
-        onDismiss={reset}
-        onRetry={() => void suggest()}
+        onAskAi={() => void askAi()}
+        onDismiss={() => {
+          reset();
+          setDismissed(true);
+        }}
       />
     </div>
   );

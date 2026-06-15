@@ -2,15 +2,29 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Advice } from "../../ai/advisor/advice";
+import { storePlayerKey } from "../../ai/advisor/playerKey";
 import { humanPlayLog } from "../../ai/humanPlayWiring";
 import { createPlusFourMultJoker } from "../../items/jokers/factories";
 import type { ShopItem } from "../../items/shop";
 import { useGame } from "../../store/game";
 import ShopSuggestion, { type ShopSuggestionProps } from "./ShopSuggestion";
 
+const { rankState } = vi.hoisted(() => ({
+  rankState: { value: [0] as ReadonlyArray<number> },
+}));
+
+vi.mock("../../ai/advisor/shopRanker", () => ({
+  sharedShopRanker: () => ({
+    load: () => Promise.resolve(),
+    rankShop: () => Promise.resolve(rankState.value),
+    rankPack: () => Promise.resolve([0]),
+  }),
+}));
+
 beforeEach(() => {
   window.localStorage.clear();
   useGame.getState().resetGame();
+  rankState.value = [0];
 });
 
 function adviceFixture(advice?: Partial<Advice>): Advice {
@@ -62,70 +76,71 @@ function renderSuggestion(
   return props;
 }
 
-async function suggestAndApply(): Promise<void> {
-  await userEvent.click(screen.getByTestId("shop-suggest"));
-  await userEvent.click(await screen.findByTestId("suggestion-apply"));
-}
-
-describe("ShopSuggestion", () => {
-  test("the suggest trigger leads with the robot AI glyph", () => {
+describe("ShopSuggestion coach-first", () => {
+  test("auto-shows the local coach recommendation without any click", async () => {
     renderSuggestion();
-    const decoration = screen
-      .getByTestId("shop-suggest")
-      .querySelector("span[aria-hidden='true']");
-    expect(decoration).toHaveTextContent("🤖");
-  });
-
-  test("shows the recommendation after asking for a suggestion", async () => {
-    renderSuggestion();
-    await userEvent.click(screen.getByTestId("shop-suggest"));
     await expect(
-      screen.findByTestId("suggestion-recommendation"),
+      screen.findByTestId("coach-recommendation"),
     ).resolves.toHaveTextContent("Buy +4 Mult for $5");
   });
 
-  test("applying a buy recommendation buys the mapped offer", async () => {
+  test("does not call the LLM when the coach auto-runs", async () => {
     const props = renderSuggestion();
-    await suggestAndApply();
+    await screen.findByTestId("coach-recommendation");
+    expect(props.suggestionDeps?.fetchAdviceFn).not.toHaveBeenCalled();
+  });
+
+  test("applying the coach pick buys the mapped offer", async () => {
+    const props = renderSuggestion();
+    await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onBuy).toHaveBeenCalledWith(0);
   });
 
-  test("applying a leave recommendation closes the shop", async () => {
-    const props = renderSuggestion({}, adviceFixture({ recommendationIndex: 2, alternativeIndex: 0 }));
-    await suggestAndApply();
-    expect(props.onNext).toHaveBeenCalledOnce();
-  });
-
-  test("applying a reroll recommendation uses the shop reroll path", async () => {
-    const props = renderSuggestion({}, adviceFixture({ recommendationIndex: 1, alternativeIndex: 0 }));
-    await suggestAndApply();
+  test("applying a reroll coach pick uses the shop reroll path", async () => {
+    rankState.value = [1];
+    const props = renderSuggestion();
+    await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onApplyReroll).toHaveBeenCalledOnce();
   });
 
-  test("applying clears the advice panel", async () => {
+  test("applying a leave coach pick closes the shop", async () => {
+    rankState.value = [2];
+    const props = renderSuggestion();
+    await userEvent.click(await screen.findByTestId("coach-apply"));
+    expect(props.onNext).toHaveBeenCalledOnce();
+  });
+
+  test("the Ask AI button reads rate-limited without a stored key", async () => {
     renderSuggestion();
-    await suggestAndApply();
-    expect(screen.queryByTestId("suggestion-advice")).not.toBeInTheDocument();
+    await expect(screen.findByTestId("coach-ask-ai")).resolves.toHaveTextContent(
+      "rate-limited",
+    );
   });
 
-  test("an applied purchase is not recorded as human play, while a manual one after it is", async () => {
-    useGame.getState().setMoney(20);
-    useGame.getState().setShopOffers([jokerOffer(), jokerOffer()]);
-    renderSuggestion({
-      onBuy: (offerIdx) => useGame.getState().buyShopOffer(offerIdx),
-    });
-    await suggestAndApply();
-    expect(humanPlayLog().count()).toBe(0);
-    useGame.getState().buyShopOffer(1);
-    expect(humanPlayLog().counts()).toEqual({ purchase: 1 });
+  test("the Ask AI button drops the rate-limited note when a key is stored", async () => {
+    storePlayerKey("sk-ant-test-1234");
+    renderSuggestion();
+    const button = await screen.findByTestId("coach-ask-ai");
+    expect(button).not.toHaveTextContent("rate-limited");
   });
 
-  test("the suggest button is disabled while the shop is locked", () => {
-    renderSuggestion({ disabled: true });
-    expect(screen.getByTestId("shop-suggest")).toBeDisabled();
+  test("asking the AI calls the LLM and annotates agreement with the coach", async () => {
+    const props = renderSuggestion();
+    await userEvent.click(await screen.findByTestId("coach-ask-ai"));
+    const verdict = await screen.findByTestId("coach-ai-verdict");
+    expect(props.suggestionDeps?.fetchAdviceFn).toHaveBeenCalledOnce();
+    expect(verdict).toHaveTextContent("AI agrees");
   });
 
-  test("a failed request shows the error state", async () => {
+  test("the AI annotation flags disagreement with the coach pick", async () => {
+    renderSuggestion({}, adviceFixture({ recommendationIndex: 1 }));
+    await userEvent.click(await screen.findByTestId("coach-ask-ai"));
+    await expect(
+      screen.findByTestId("coach-ai-verdict"),
+    ).resolves.toHaveTextContent("AI suggests Reroll the shop for $5 instead");
+  });
+
+  test("a failed AI request shows the error while keeping the coach pick", async () => {
     renderSuggestion({
       suggestionDeps: {
         fetchAdviceFn: vi
@@ -133,33 +148,31 @@ describe("ShopSuggestion", () => {
           .mockResolvedValue({ ok: false, code: "model_error" }),
       },
     });
-    await userEvent.click(screen.getByTestId("shop-suggest"));
-    await expect(
-      screen.findByTestId("suggestion-error"),
-    ).resolves.toBeInTheDocument();
+    await userEvent.click(await screen.findByTestId("coach-ask-ai"));
+    await screen.findByTestId("coach-ai-error");
+    expect(screen.getByTestId("coach-recommendation")).toBeInTheDocument();
   });
 
-  test("the trigger renders into the provided container instead of inline", () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    renderSuggestion({ triggerContainer: container });
-    expect(container.contains(screen.getByTestId("shop-suggest"))).toBe(true);
-    container.remove();
-  });
-
-  test("the advice panel stays in the inline host when the trigger is portaled", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    renderSuggestion({ triggerContainer: container });
-    await userEvent.click(screen.getByTestId("shop-suggest"));
-    const panel = await screen.findByTestId("suggestion-advice");
-    expect(container.contains(panel)).toBe(false);
-    container.remove();
-  });
-
-  test("negative: the trigger renders inline when no container is provided", () => {
+  test("dismissing hides the coach panel for the current shop", async () => {
     renderSuggestion();
-    const suggest = screen.getByTestId("shop-suggest");
-    expect(suggest.closest(".shop-suggestion")).not.toBeNull();
+    await userEvent.click(await screen.findByTestId("coach-dismiss"));
+    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+  });
+
+  test("the coach does not run while the shop is locked", () => {
+    renderSuggestion({ disabled: true });
+    expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
+  });
+
+  test("an applied coach purchase is not recorded as human play, while a manual one after it is", async () => {
+    useGame.getState().setMoney(20);
+    useGame.getState().setShopOffers([jokerOffer(), jokerOffer()]);
+    renderSuggestion({
+      onBuy: (offerIdx) => useGame.getState().buyShopOffer(offerIdx),
+    });
+    await userEvent.click(await screen.findByTestId("coach-apply"));
+    expect(humanPlayLog().count()).toBe(0);
+    useGame.getState().buyShopOffer(1);
+    expect(humanPlayLog().counts()).toEqual({ purchase: 1 });
   });
 });

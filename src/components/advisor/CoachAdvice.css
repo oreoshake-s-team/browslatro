@@ -1,0 +1,117 @@
+.coach-advice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1rem;
+  border: 1px solid var(--accent-chips-mid);
+  border-radius: 12px;
+  background-color: color-mix(in srgb, var(--accent-chips) 12%, transparent);
+}
+
+.coach-advice p {
+  margin: 0;
+}
+
+.coach-advice-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.coach-advice-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-success);
+}
+
+.coach-advice-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.coach-advice-dismiss:hover,
+.coach-advice-dismiss:focus-visible {
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.coach-advice-status {
+  color: var(--text-muted);
+}
+
+.coach-advice-move {
+  font-weight: 700;
+  color: var(--edition-foil-tint);
+}
+
+.coach-advice-apply {
+  align-self: flex-start;
+}
+
+.coach-advice-ask {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  opacity: 0.92;
+}
+
+.coach-advice-ai-status {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.coach-advice-ai {
+  border-left: 3px solid var(--edition-foil);
+  padding-left: 0.7rem;
+}
+
+.coach-advice-ai--error {
+  border-left-color: var(--accent-red-deep);
+}
+
+.coach-advice-ai-label {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.coach-advice-ai-explanation {
+  color: var(--accent-chips-text);
+}
+
+.coach-advice-progress {
+  width: 100%;
+  height: 0.5rem;
+  appearance: none;
+  border: none;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
+}
+
+.coach-advice-progress::-webkit-progress-bar {
+  background-color: color-mix(in srgb, var(--white) 15%, transparent);
+  border-radius: 999px;
+}
+
+.coach-advice-progress::-webkit-progress-value {
+  background-color: var(--accent-success);
+  border-radius: 999px;
+}
+
+.coach-advice-progress::-moz-progress-bar {
+  background-color: var(--accent-success);
+  border-radius: 999px;
+}

@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type { AdviceClientErrorCode } from "../../ai/advisor/client";
 import type {
   ContextAdviceCandidate,
   SuggestionState,
@@ -48,8 +49,23 @@ function readyState(
       concept: "Buy engine pieces early.",
       ...advice,
     },
+    onnxIndex: null,
     candidates: candidates(),
     actions: [{ kind: "buy" }, { kind: "reroll" }, { kind: "leave" }],
+  };
+}
+
+function errorState(
+  code: AdviceClientErrorCode,
+  retryAfterSeconds?: number,
+): SuggestionState<TestAction> {
+  return {
+    phase: "error",
+    code,
+    retryAfterSeconds,
+    onnxIndex: null,
+    candidates: candidates(),
+    actions: [],
   };
 }
 
@@ -173,34 +189,30 @@ describe("SuggestionAdvice", () => {
 
   test("shows a retry button on a generic error", async () => {
     const onRetry = vi.fn();
-    renderAdvice({ phase: "error", code: "model_error" }, { onRetry });
+    renderAdvice(errorState("model_error"), { onRetry });
     await userEvent.click(screen.getByTestId("suggestion-retry"));
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
   test("shows the wait time when rate limited", () => {
-    renderAdvice({
-      phase: "error",
-      code: "rate_limited",
-      retryAfterSeconds: 600,
-    });
+    renderAdvice(errorState("rate_limited", 600));
     expect(screen.getByRole("status")).toHaveTextContent("10 min");
   });
 
   test("offers the key form to keyless players when rate limited", () => {
-    renderAdvice({ phase: "error", code: "rate_limited" });
+    renderAdvice(errorState("rate_limited"));
     expect(screen.getByLabelText("Your Anthropic API key")).toBeInTheDocument();
   });
 
   test("keeps the retry button instead of the key form for keyed players when rate limited", () => {
     storePlayerKey("sk-ant-test-1234");
-    renderAdvice({ phase: "error", code: "rate_limited" });
+    renderAdvice(errorState("rate_limited"));
     expect(screen.getByTestId("suggestion-retry")).toBeInTheDocument();
   });
 
   test("offers the key form when the player key is rejected", () => {
     storePlayerKey("sk-ant-test-1234");
-    renderAdvice({ phase: "error", code: "invalid_player_key" });
+    renderAdvice(errorState("invalid_player_key"));
     expect(screen.getByLabelText("Your Anthropic API key")).toBeInTheDocument();
   });
 });
