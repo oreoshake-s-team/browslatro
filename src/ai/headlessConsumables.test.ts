@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import { createJokerCatalog } from "../items/jokers/catalog";
 import {
   applySpectralEffectToDeck,
   applyTarotEffectToDeck,
@@ -7,21 +8,22 @@ import {
 } from "./headlessConsumables";
 import { card } from "./test-helpers";
 
-function ctx(): ConsumableContext {
+const NON_LEGENDARY_JOKERS = createJokerCatalog().filter((j) => j.rarity !== "legendary");
+
+function ctx(overrides: Partial<ConsumableContext> = {}): ConsumableContext {
   return {
     deck: [card("2", "clubs"), card("9", "hearts"), card("K", "spades")],
     money: 10,
     jokers: [],
+    jokerCatalog: NON_LEGENDARY_JOKERS,
+    jokerCapacity: 5,
+    ...overrides,
   };
 }
 
 function bigCtx(): ConsumableContext {
   const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"] as const;
-  return {
-    deck: ranks.map((r) => card(r, "clubs")),
-    money: 10,
-    jokers: [],
-  };
+  return ctx({ deck: ranks.map((r) => card(r, "clubs")) });
 }
 
 describe("applyTarotEffectToDeck", () => {
@@ -87,9 +89,25 @@ describe("applyTarotEffectToDeck", () => {
     expect(r.deck.length).toBe(12);
   });
 
+  test("create-joker returns a created joker when there is capacity", () => {
+    const r = applyTarotEffectToDeck(ctx(), { kind: "create-joker" }, () => 0);
+    expect(r.createdJoker).not.toBeUndefined();
+  });
+
+  test("create-joker returns no joker when the joker slots are full (negative)", () => {
+    const r = applyTarotEffectToDeck(ctx({ jokerCapacity: 0 }), { kind: "create-joker" }, () => 0);
+    expect(r.createdJoker).toBeUndefined();
+  });
+
+  test("create-joker excludes already-owned jokers", () => {
+    const owned = [NON_LEGENDARY_JOKERS[0]];
+    const r = applyTarotEffectToDeck(ctx({ jokers: owned }), { kind: "create-joker" }, () => 0);
+    expect(r.createdJoker?.id).not.toBe(owned[0].id);
+  });
+
   test("an unmodeled tarot effect leaves the deck and money unchanged (negative)", () => {
     const base = ctx();
-    const r = applyTarotEffectToDeck(base, { kind: "create-joker" }, () => 0);
+    const r = applyTarotEffectToDeck(base, { kind: "copy-last-consumable" }, () => 0);
     expect(r.deck).toBe(base.deck);
   });
 });
