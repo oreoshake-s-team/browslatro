@@ -1,5 +1,12 @@
 import "./PackOpenModal.css";
-import { Suspense, lazy, useEffect, useMemo, useState } from "react";
+import {
+  Suspense,
+  lazy,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
@@ -35,7 +42,7 @@ import CardModifierBadges, {
 } from "../cards/CardModifierBadges";
 import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { announce } from "../system/LiveAnnouncer";
-import { useEscapeToClose } from "../system/useEscapeToClose";
+import Modal from "../system/Modal";
 import { cardName } from "../../i18n/strings";
 
 const PackSuggestion = lazy(() => import("./PackSuggestion"));
@@ -73,6 +80,7 @@ export interface PackOpenModalProps {
   onPick: (optionIdx: number) => void;
   onClose: () => void;
   foolCopyTarget?: string;
+  playArea?: ReactNode;
 }
 
 interface OptionView {
@@ -214,9 +222,9 @@ export default function PackOpenModal({
   onPick,
   onClose,
   foolCopyTarget,
+  playArea,
 }: PackOpenModalProps) {
   const { t, i18n } = useTranslation();
-  useEscapeToClose(onClose, true);
   const [previewSortMode, setPreviewSortMode] = useState<SortMode>("rank");
   const [manualOrder, setManualOrder] = useState<ReadonlyArray<number> | null>(
     null,
@@ -297,12 +305,14 @@ export default function PackOpenModal({
     picksRemaining < totalPicks ? t("pack.done") : t("pack.skip");
 
   return (
-    <section
-      className="pack-open-panel"
-      role="region"
-      aria-labelledby="pack-open-title"
+    <Modal
+      onClose={onClose}
+      labelledBy="pack-open-title"
+      accent="pack"
+      size="lg"
+      className="pack-open-modal"
     >
-      <div className="pack-open-inner">
+        {playArea && <div className="pack-open-play-area">{playArea}</div>}
         <h2 id="pack-open-title" className="pack-open-title">
           <span aria-hidden="true">🎁 </span>
           {title}
@@ -538,7 +548,6 @@ export default function PackOpenModal({
             {closeLabel}
           </button>
         </div>
-      </div>
-    </section>
+    </Modal>
   );
 }
