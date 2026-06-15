@@ -72,7 +72,6 @@ function renderSuggestion(
 
 async function revealCoachPick(): Promise<void> {
   await userEvent.click(screen.getByTestId("coach-trigger"));
-  await userEvent.click(screen.getByTestId("coach-get-pick"));
 }
 
 describe("PackSuggestion click-to-reveal", () => {

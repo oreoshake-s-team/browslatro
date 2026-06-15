@@ -78,7 +78,6 @@ function renderSuggestion(
 
 async function revealCoachPick(): Promise<void> {
   await userEvent.click(screen.getByTestId("coach-trigger"));
-  await userEvent.click(screen.getByTestId("coach-get-pick"));
 }
 
 describe("ShopSuggestion click-to-reveal", () => {
@@ -92,13 +91,7 @@ describe("ShopSuggestion click-to-reveal", () => {
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
   });
 
-  test("clicking the trigger reveals the panel with a Get coach pick prompt", async () => {
-    renderSuggestion();
-    await userEvent.click(screen.getByTestId("coach-trigger"));
-    expect(screen.getByTestId("coach-get-pick")).toBeInTheDocument();
-  });
-
-  test("getting the coach pick shows the local recommendation", async () => {
+  test("clicking the trigger reveals the local coach recommendation", async () => {
     renderSuggestion();
     await revealCoachPick();
     await expect(
@@ -106,7 +99,7 @@ describe("ShopSuggestion click-to-reveal", () => {
     ).resolves.toHaveTextContent("Buy +4 Mult for $5");
   });
 
-  test("getting the coach pick does not call the LLM", async () => {
+  test("revealing the coach does not call the LLM", async () => {
     const props = renderSuggestion();
     await revealCoachPick();
     await screen.findByTestId("coach-recommendation");

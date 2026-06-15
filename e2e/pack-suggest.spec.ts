@@ -47,7 +47,6 @@ async function openPackFromShop(page: Page): Promise<Locator> {
 
 async function revealCoachPick(modal: Locator): Promise<void> {
   await modal.getByTestId("coach-trigger").click();
-  await modal.getByTestId("coach-get-pick").click();
   await expect(modal.getByTestId("coach-recommendation")).toBeVisible({
     timeout: 10_000,
   });

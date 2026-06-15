@@ -9,7 +9,6 @@ import "./CoachAdvice.css";
 
 export interface CoachAdviceProps<TAction> {
   readonly state: SuggestionState<TAction>;
-  readonly onCoach: () => void;
   readonly onApply: () => void;
   readonly onAskAi: () => void;
   readonly onDismiss: () => void;
@@ -18,14 +17,17 @@ export interface CoachAdviceProps<TAction> {
 
 export default function CoachAdvice<TAction>({
   state,
-  onCoach,
   onApply,
   onAskAi,
   onDismiss,
   modelProgress = null,
-}: CoachAdviceProps<TAction>): React.JSX.Element {
+}: CoachAdviceProps<TAction>): React.JSX.Element | null {
   const { t } = useTranslation();
   const loadProgress = useModelLoadProgress(modelProgress);
+  if (state.phase === "idle") return null;
+
+  const coachCandidate =
+    state.onnxIndex !== null ? state.candidates[state.onnxIndex] : undefined;
   const downloading = modelProgress !== null;
 
   return (
@@ -46,51 +48,38 @@ export default function CoachAdvice<TAction>({
         </button>
       </div>
 
-      {state.phase === "idle" ? (
-        <button
-          type="button"
-          className="btn coach-advice-get"
-          data-testid="coach-get-pick"
-          onClick={onCoach}
-        >
-          {t("advisor.coachGetPick")}
-        </button>
+      {coachCandidate === undefined ? (
+        <p className="coach-advice-status" role="status">
+          {downloading ? t("advisor.downloadingModel") : t("advisor.coachComputing")}
+        </p>
       ) : (
         <>
-          {state.onnxIndex === null ? (
-            <p className="coach-advice-status" role="status">
-              {downloading ? t("advisor.downloadingModel") : t("advisor.coachComputing")}
-            </p>
-          ) : (
-            <>
-              <p className="coach-advice-move" data-testid="coach-recommendation">
-                {describeContextCandidate(t, state.candidates[state.onnxIndex])}
-              </p>
-              <button
-                type="button"
-                className="btn coach-advice-apply"
-                data-testid="coach-apply"
-                onClick={onApply}
-              >
-                <span aria-hidden="true">✅ </span>
-                {t("advisor.suggestApply")}
-              </button>
-            </>
-          )}
-
-          {downloading && (
-            <progress
-              className="coach-advice-progress"
-              data-testid="coach-model-progress"
-              aria-label={t("advisor.downloadingModel")}
-              value={loadProgress}
-              max={1}
-            />
-          )}
-
-          <AiSection state={state} onAskAi={onAskAi} />
+          <p className="coach-advice-move" data-testid="coach-recommendation">
+            {describeContextCandidate(t, coachCandidate)}
+          </p>
+          <button
+            type="button"
+            className="btn coach-advice-apply"
+            data-testid="coach-apply"
+            onClick={onApply}
+          >
+            <span aria-hidden="true">✅ </span>
+            {t("advisor.suggestApply")}
+          </button>
         </>
       )}
+
+      {downloading && (
+        <progress
+          className="coach-advice-progress"
+          data-testid="coach-model-progress"
+          aria-label={t("advisor.downloadingModel")}
+          value={loadProgress}
+          max={1}
+        />
+      )}
+
+      <AiSection state={state} onAskAi={onAskAi} />
     </div>
   );
 }

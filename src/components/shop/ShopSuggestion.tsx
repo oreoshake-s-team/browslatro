@@ -113,7 +113,10 @@ export default function ShopSuggestion(
       className="btn btn--advisor shop-suggest-button"
       data-testid="coach-trigger"
       disabled={props.disabled}
-      onClick={() => setRevealed(true)}
+      onClick={() => {
+        setRevealed(true);
+        void coach();
+      }}
     >
       <span aria-hidden="true">⚡ </span>
       {t("advisor.coachTip")}
@@ -130,7 +133,6 @@ export default function ShopSuggestion(
         <CoachAdvice
           state={state}
           modelProgress={modelProgress}
-          onCoach={() => void coach()}
           onApply={apply}
           onAskAi={() => void askAi()}
           onDismiss={() => {

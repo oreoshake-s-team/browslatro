@@ -120,7 +120,10 @@ export default function PackSuggestion(
       type="button"
       className="btn btn--advisor pack-suggest-button"
       data-testid="coach-trigger"
-      onClick={() => setRevealed(true)}
+      onClick={() => {
+        setRevealed(true);
+        void coach();
+      }}
     >
       <span aria-hidden="true">⚡ </span>
       {t("advisor.coachTip")}
@@ -137,7 +140,6 @@ export default function PackSuggestion(
         <CoachAdvice
           state={state}
           modelProgress={modelProgress}
-          onCoach={() => void coach()}
           onApply={apply}
           onAskAi={() => void askAi()}
           onDismiss={() => {

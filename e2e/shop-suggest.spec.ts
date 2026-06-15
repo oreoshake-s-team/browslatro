@@ -49,7 +49,6 @@ async function openShop(page: Page): Promise<void> {
 
 async function revealCoachPick(page: Page): Promise<void> {
   await page.getByTestId("coach-trigger").click();
-  await page.getByTestId("coach-get-pick").click();
   await expect(page.getByTestId("coach-recommendation")).toBeVisible({
     timeout: 10_000,
   });
