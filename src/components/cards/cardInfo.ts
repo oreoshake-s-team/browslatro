@@ -90,6 +90,7 @@ export interface CardInfo {
 
 export interface GetCardInfoOptions {
   readonly probabilityMultiplier?: number;
+  readonly suitLabel?: (suit: Suit) => string;
 }
 
 export function getCardInfo(
@@ -104,7 +105,7 @@ export function getCardInfo(
       : DEFAULT_ENHANCEMENT_INFO;
   return {
     rank: card.rank,
-    suitLabel: SUIT_LABELS[card.suit],
+    suitLabel: (options.suitLabel ?? ((suit) => SUIT_LABELS[suit]))(card.suit),
     suitGlyph: SUIT_GLYPHS[card.suit],
     suitClass: card.suit,
     chips: isStone ? 0 : getRankChips(card.rank),

@@ -213,7 +213,7 @@ function Options({
                       type="password"
                       value={keyDraft}
                       onChange={(event) => setKeyDraft(event.target.value)}
-                      placeholder="sk-ant-…"
+                      placeholder={t("advisor.keyPlaceholder")}
                       aria-label={t("advisor.keyLabel")}
                       data-testid="options-advisor-key-input"
                     />

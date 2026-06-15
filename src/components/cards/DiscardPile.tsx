@@ -36,7 +36,7 @@ export default function DiscardPile({ discarded }: DiscardPileProps) {
         {topCard ? (
           <Card card={topCard} decorative />
         ) : (
-          <span className="discard-pile-empty">Discard</span>
+          <span className="discard-pile-empty">{t("cardPiles.discardLabel")}</span>
         )}
         <span className="discard-pile-count">{discarded.length}</span>
       </button>
@@ -54,7 +54,7 @@ export default function DiscardPile({ discarded }: DiscardPileProps) {
               className="modal discard-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 id={titleId}>Discarded Cards</h3>
+              <h3 id={titleId}>{t("cardPiles.discardedTitle")}</h3>
               <div className="discard-modal-groups">
                 {SUITS.map((suit) => (
                   <section key={suit} className="discard-modal-group">
@@ -70,7 +70,7 @@ export default function DiscardPile({ discarded }: DiscardPileProps) {
                 ))}
               </div>
               <button className="btn btn--secondary modal-close" onClick={handleClose}>
-                Close
+                {t("cardPiles.close")}
               </button>
             </div>
           </div>,

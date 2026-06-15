@@ -69,8 +69,28 @@ export const haw: LocaleMessages = {
     sealPurple: "Purple Seal",
   },
   scoringTrace: {
+    title: "Scoring Trace",
+    expand: "Expand",
+    close: "Pani",
     handHeading: "Hand {{number}}: {{hand}} (Lv {{level}})",
     handTotal: "{{chips}} Chips × {{mult}} Mult = {{total}}",
+  },
+  cardPiles: {
+    discardLabel: "Discard",
+    discardedTitle: "Discarded Cards",
+    remainingTitle: "Remaining Cards",
+    sell: "Sell",
+    bySuit: "By suit",
+    byRank: "By rank",
+    close: "Pani",
+  },
+  newRun: {
+    title: "Start New Run",
+    deck: "Deck",
+    stake: "Stake",
+    startingHands: "starting hands",
+    startingDiscards: "starting discards",
+    startRun: "Start Run →",
   },
   handScore: {
     preview: "{{chips}} chips × {{mult}} mult",
@@ -248,6 +268,7 @@ export const haw: LocaleMessages = {
     clearLog: "Clear log",
   },
   advisor: {
+    keyPlaceholder: "sk-ant-…",
     autopilot: "Kūkākūkā",
     suggestTitle: "Neʻe i koho ʻia",
     recommendation: "Neʻe i ʻōlelo ʻia",
