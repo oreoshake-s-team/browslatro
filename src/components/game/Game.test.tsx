@@ -102,6 +102,16 @@ describe("Game", () => {
     expect(screen.getByText(/Discard/)).not.toBeDisabled();
   });
 
+  test("Discard button uses the neutral secondary variant", () => {
+    renderGame({ canDiscard: true });
+    expect(screen.getByText(/Discard/)).toHaveClass("btn--secondary");
+  });
+
+  test("Discard button does not use the destructive danger variant", () => {
+    renderGame({ canDiscard: true });
+    expect(screen.getByText(/Discard/)).not.toHaveClass("btn--danger");
+  });
+
   test("the modifier disclosure is closed on first render", () => {
     renderGame();
     expect(screen.getByText(/Apply modifiers/).closest("details")).not.toHaveAttribute(

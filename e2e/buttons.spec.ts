@@ -24,7 +24,7 @@ test("Submit Hand renders as the primary (green) variant", async ({
   expect(bg).toBe("rgb(81, 207, 102)");
 });
 
-test("Discard renders as the danger (red) variant", async ({
+test("Discard renders as the neutral secondary variant", async ({
   page,
 }) => {
   await startRound(page);
@@ -33,8 +33,9 @@ test("Discard renders as the danger (red) variant", async ({
   await page.mouse.move(0, 0);
   const discard = page.getByRole("button", { name: /Discard/ });
   await expect(discard).toBeEnabled();
+  await expect(discard).toHaveClass(/btn--secondary/);
   const bg = await discard.evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).toBe("rgb(224, 49, 49)");
+  expect(bg).toBe("rgb(35, 43, 63)");
 });
 
 test("the blind-select Play button uses the shared focus ring token", async ({
