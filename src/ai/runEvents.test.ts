@@ -39,7 +39,7 @@ const shopDecision: AdviceDecision = {
   candidates: [
     {
       action: "buy",
-      item: { itemType: "joker", id: "j", name: "J", description: "", cost: 5 },
+      item: { itemType: "joker", category: "joker-mult", id: "j", name: "J", description: "", cost: 5 },
     },
     { action: "leave" },
   ],
@@ -61,7 +61,7 @@ const packDecision: AdviceDecision = {
   candidates: [
     {
       action: "pick",
-      option: { optionType: "tarot", id: "the-fool", name: "The Fool", description: "" },
+      option: { optionType: "tarot", category: "tarot-create", id: "the-fool", name: "The Fool", description: "" },
     },
     { action: "skip" },
   ],
