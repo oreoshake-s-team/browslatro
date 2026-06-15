@@ -185,7 +185,6 @@ export default function Game({
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
-  const packPlayArea = !!packOpen && !previewActive;
   const handVisible = !shop && !packOpen;
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
@@ -245,23 +244,24 @@ export default function Game({
       onJokerSellDrop={dragController.onJokerDropOnDeck}
     />
   );
+  const overlayDeckNode = (
+    <div className="game-overlay-deck">
+      <DeckPile
+        remaining={overlayDeckRemaining}
+        consumableDropEnabled={dragging}
+        onConsumableDrop={dragController.onConsumableDropOnDeck}
+        jokerDropEnabled={draggingJoker}
+        onJokerDrop={dragController.onJokerDropOnDeck}
+      />
+    </div>
+  );
 
   return (
     <main className="game" aria-label={t("a11y.game")}>
       <div className="game-top-row">
-        {!packPlayArea && jokersNode}
-        {!packPlayArea && consumablesNode}
-        {(shop || packOpen) && !handVisible && !packPlayArea && (
-          <div className="game-overlay-deck">
-            <DeckPile
-              remaining={overlayDeckRemaining}
-              consumableDropEnabled={dragging}
-              onConsumableDrop={dragController.onConsumableDropOnDeck}
-              jokerDropEnabled={draggingJoker}
-              onJokerDrop={dragController.onJokerDropOnDeck}
-            />
-          </div>
-        )}
+        {!packOpen && jokersNode}
+        {!packOpen && consumablesNode}
+        {shop && !packOpen && overlayDeckNode}
       </div>
       {packOpen && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
@@ -269,15 +269,21 @@ export default function Game({
             {...packOpen}
             foolCopyTarget={foolCopyTarget}
             playArea={
-              packPlayArea ? (
-                <div className="pack-open-play-area">
+              previewActive ? (
+                <div className="game-top-row">
+                  {jokersNode}
+                  {consumablesNode}
+                  {overlayDeckNode}
+                </div>
+              ) : (
+                <>
                   <div className="game-top-row">
                     {jokersNode}
                     {consumablesNode}
                   </div>
                   {handNode}
-                </div>
-              ) : undefined
+                </>
+              )
             }
           />
         </Suspense>
