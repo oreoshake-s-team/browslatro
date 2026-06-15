@@ -185,40 +185,73 @@ export default function Game({
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
-  const handVisible = (!shop && !packOpen) || (!!packOpen && !previewActive);
+  const packPlayArea = !!packOpen && !previewActive;
+  const handVisible = !shop && !packOpen;
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
 
+  const jokersNode = (
+    <Jokers
+      jokers={jokers}
+      capacity={jokerCapacity}
+      faceDown={blind === 3 && bossHidesJokers(currentBoss)}
+      pulseCounters={jokerPulseCounters}
+      onReorder={reorderJokers}
+      onSell={sellJoker}
+      onDragStart={dragController.onJokerDragStart}
+      onDragEnd={dragController.onJokerDragEnd}
+      consumableDropEnabled={
+        dragging && dragController.canDropDraggedConsumableOnJokers
+      }
+      onConsumableDrop={dragController.onConsumableDropOnJokers}
+    />
+  );
+  const consumablesNode = (
+    <Consumables
+      consumables={consumables}
+      foolCopyTarget={foolCopyTarget}
+      selectedCount={consumableSelectedCount}
+      previewMode={previewActive}
+      capacity={consumableCapacity}
+      onUse={useConsumable}
+      onSell={sellConsumable}
+      onDragStart={dragController.onConsumableDragStart}
+      onDragEnd={dragController.onConsumableDragEnd}
+    />
+  );
+  const handNode = (
+    <HandComponent
+      hand={hand}
+      remaining={inHandRemaining}
+      selectedIds={selectedIds}
+      forcedCardId={forcesCard ? forcedCardId : null}
+      discardingIds={discardingIds}
+      newlyDrawnIds={newlyDrawnIds}
+      debuffedIds={debuffedIds}
+      scoringId={scoringId}
+      scoringPulseTick={scoringPulseTick}
+      goldScoringId={goldScoringId}
+      steelScoringId={steelScoringId}
+      luckyMultProcIds={luckyMultProcIds}
+      luckyMoneyProcIds={luckyMoneyProcIds}
+      handPlaySignal={handPlaySignal}
+      onToggleCard={handleToggleCard}
+      onCardDiscardEnd={onCardDiscardEnd}
+      onDisplayOrderChange={setHandDisplayOrder}
+      consumableDropEnabled={dragging}
+      onConsumableSellDrop={dragController.onConsumableDropOnDeck}
+      jokerDropEnabled={draggingJoker}
+      onJokerSellDrop={dragController.onJokerDropOnDeck}
+    />
+  );
+
   return (
     <main className="game" aria-label={t("a11y.game")}>
       <div className="game-top-row">
-        <Jokers
-          jokers={jokers}
-          capacity={jokerCapacity}
-          faceDown={blind === 3 && bossHidesJokers(currentBoss)}
-          pulseCounters={jokerPulseCounters}
-          onReorder={reorderJokers}
-          onSell={sellJoker}
-          onDragStart={dragController.onJokerDragStart}
-          onDragEnd={dragController.onJokerDragEnd}
-          consumableDropEnabled={
-            dragging && dragController.canDropDraggedConsumableOnJokers
-          }
-          onConsumableDrop={dragController.onConsumableDropOnJokers}
-        />
-        <Consumables
-          consumables={consumables}
-          foolCopyTarget={foolCopyTarget}
-          selectedCount={consumableSelectedCount}
-          previewMode={previewActive}
-          capacity={consumableCapacity}
-          onUse={useConsumable}
-          onSell={sellConsumable}
-          onDragStart={dragController.onConsumableDragStart}
-          onDragEnd={dragController.onConsumableDragEnd}
-        />
-        {(shop || packOpen) && !handVisible && (
+        {!packPlayArea && jokersNode}
+        {!packPlayArea && consumablesNode}
+        {(shop || packOpen) && !handVisible && !packPlayArea && (
           <div className="game-overlay-deck">
             <DeckPile
               remaining={overlayDeckRemaining}
@@ -232,7 +265,21 @@ export default function Game({
       </div>
       {packOpen && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
-          <PackOpenModal {...packOpen} foolCopyTarget={foolCopyTarget} />
+          <PackOpenModal
+            {...packOpen}
+            foolCopyTarget={foolCopyTarget}
+            playArea={
+              packPlayArea ? (
+                <div className="pack-open-play-area">
+                  <div className="game-top-row">
+                    {jokersNode}
+                    {consumablesNode}
+                  </div>
+                  {handNode}
+                </div>
+              ) : undefined
+            }
+          />
         </Suspense>
       )}
       {shop && (
@@ -240,31 +287,7 @@ export default function Game({
           <Shop {...shop} disabled={!!packOpen} foolCopyTarget={foolCopyTarget} />
         </Suspense>
       )}
-      {handVisible && (
-        <HandComponent
-          hand={hand}
-          remaining={inHandRemaining}
-          selectedIds={selectedIds}
-          forcedCardId={forcesCard ? forcedCardId : null}
-          discardingIds={discardingIds}
-          newlyDrawnIds={newlyDrawnIds}
-          debuffedIds={debuffedIds}
-          scoringId={scoringId}
-          scoringPulseTick={scoringPulseTick}
-          goldScoringId={goldScoringId}
-          steelScoringId={steelScoringId}
-          luckyMultProcIds={luckyMultProcIds}
-          luckyMoneyProcIds={luckyMoneyProcIds}
-          handPlaySignal={handPlaySignal}
-          onToggleCard={handleToggleCard}
-          onCardDiscardEnd={onCardDiscardEnd}
-          onDisplayOrderChange={setHandDisplayOrder}
-          consumableDropEnabled={dragging}
-          onConsumableSellDrop={dragController.onConsumableDropOnDeck}
-          jokerDropEnabled={draggingJoker}
-          onJokerSellDrop={dragController.onJokerDropOnDeck}
-        />
-      )}
+      {handVisible && handNode}
       {!shop && !packOpen && (
         <div className="submit-hand">
           <div className="play-actions">

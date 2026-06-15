@@ -2833,12 +2833,11 @@ describe("Pack-pick is rendered inline (Phase 2)", () => {
     return Array.from(all).filter((b) => !/Open/i.test(b.textContent ?? ""));
   }
 
-  test("pack-pick renders inline (no overlay, no aria-modal) and locks the rest of the shop while open", async () => {
+  test("pack-pick renders as a modal overlay (aria-modal) and locks the rest of the shop while open", async () => {
     await openShopThenPack();
-    expect(document.querySelector(".pack-open-overlay")).toBeNull();
-    const region = document
+    const dialog = document
       .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
-    expect(region).not.toHaveAttribute("aria-modal");
+    expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(screen.getByTestId("jokers-tray")).toBeInTheDocument();
     expect(screen.getByTestId("consumables-tray")).toBeInTheDocument();
     expect(nonPackBuyButtons().every((b) => b.disabled)).toBe(true);

@@ -1,21 +1,13 @@
-.pack-open-panel {
-  display: flex;
-  justify-content: flex-start;
-  width: 100%;
+.modal-panel.pack-open-modal {
   max-width: var(--game-row-width, 90rem);
 }
 
-.pack-open-inner {
-  background-color: var(--surface);
-  color: var(--text-primary);
-  border: 2px solid var(--accent-pack);
-  border-radius: var(--radius-xl);
-  padding: 1.4rem 1.8rem;
-  width: 100%;
-  box-shadow: 0 4px 14px var(--shadow-md);
+.pack-open-play-area {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-bottom: 1.2rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .pack-open-title {

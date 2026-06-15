@@ -148,6 +148,25 @@ describe("PackOpenModal", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  test("renders the play-area slot above the pack title when provided", () => {
+    renderModal({
+      playArea: <div data-testid="pack-play-area">play area</div>,
+    });
+    const playArea = screen.getByTestId("pack-play-area");
+    const title = screen.getByRole("heading", { name: /Celestial Pack/ });
+    expect(
+      Boolean(
+        playArea.compareDocumentPosition(title) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ),
+    ).toBe(true);
+  });
+
+  test("does not render a play-area wrapper when no slot is provided (negative)", () => {
+    renderModal();
+    expect(document.querySelector(".pack-open-play-area")).toBeNull();
+  });
+
   test("an option at a picked index is removed from the list", () => {
     renderModal({
       pack: celestialPack("mega", 5),
@@ -1440,9 +1459,9 @@ describe("PackOpenModal — suggest trigger placement", () => {
   });
 
   test("the suggestion panel host stays outside the action row", async () => {
-    const { container } = renderModal();
+    renderModal();
     await screen.findByTestId("pack-suggest");
-    const panelHost = container.querySelector(".pack-suggestion");
+    const panelHost = document.querySelector(".pack-suggestion");
     expect(panelHost?.closest(".pack-open-actions")).toBeNull();
   });
 });
