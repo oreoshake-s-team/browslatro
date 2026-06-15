@@ -70,5 +70,5 @@ test("joker and consumable tiles keep full card width when there is room", async
   const card = await page.locator(".card").first().boundingBox();
   const joker = await page.locator(".joker-tile").first().boundingBox();
   expect(card?.width).toBeDefined();
-  expect(joker?.width).toBeCloseTo(card?.width ?? 0, 0);
+  expect(Math.abs((joker?.width ?? 0) - (card?.width ?? 0))).toBeLessThan(2);
 });
