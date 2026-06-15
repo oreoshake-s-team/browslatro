@@ -53,6 +53,12 @@
   --shadow-lg: rgba(0, 0, 0, 0.5);
   --shadow-xl: rgba(0, 0, 0, 0.6);
 
+  --overlay-backdrop: color-mix(in srgb, var(--black) 60%, transparent);
+
+  --z-modal: 100;
+  --z-modal-elevated: 120;
+  --z-modal-top: 130;
+
   --accent-money-light: #ffe066;
   --accent-money-pale: #fff9db;
   --accent-money-muted: #fff3bf;

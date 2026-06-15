@@ -1,11 +1,11 @@
 .round-lost-overlay {
   position: fixed;
   inset: 0;
-  background-color: color-mix(in srgb, var(--black) 55%, transparent);
+  background-color: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: var(--z-modal);
 }
 
 .round-lost-modal {

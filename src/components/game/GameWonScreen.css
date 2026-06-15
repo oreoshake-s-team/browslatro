@@ -1,11 +1,11 @@
 .game-won-overlay {
   position: fixed;
   inset: 0;
-  background-color: var(--shadow-xl);
+  background-color: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: var(--z-modal);
 }
 
 .game-won-modal {

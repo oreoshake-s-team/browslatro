@@ -1,7 +1,7 @@
 .joker-grant-overlay {
   position: fixed;
   inset: 0;
-  background-color: color-mix(in srgb, var(--black) 65%, transparent);
+  background-color: var(--overlay-backdrop);
   display: flex;
   align-items: center;
   justify-content: center;
