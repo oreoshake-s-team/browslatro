@@ -54,4 +54,20 @@ describe("generateShopTeacherDecisions", () => {
     },
     TIMEOUT_MS,
   );
+
+  test(
+    "reports progress once per completed game",
+    async () => {
+      const teacher = vi.fn<ShopTeacherLabeler>(async () => 0);
+      const progress: number[] = [];
+      await generateShopTeacherDecisions(
+        { games: 3, seedOffset: 0, margin: -1 },
+        teacher,
+        undefined,
+        (n) => progress.push(n),
+      );
+      expect(progress).toEqual([1, 2, 3]);
+    },
+    TIMEOUT_MS,
+  );
 });
