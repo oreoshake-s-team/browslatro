@@ -116,6 +116,32 @@ test("dismissing collapses the panel back to the Coach tip trigger", async ({
   await expect(page.getByTestId("coach-trigger")).toBeVisible();
 });
 
+test("committing a different shop action than the coach records auto-disagreement", async ({
+  page,
+}) => {
+  await openShop(page);
+  await revealCoachPick(page);
+
+  const rec = (await page.getByTestId("coach-recommendation").textContent()) ?? "";
+  if (rec.includes("Leave")) {
+    await page.locator(".shop-reroll").click();
+  } else {
+    await page.getByRole("button", { name: /Next Round/ }).click();
+  }
+
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+      ),
+    )
+    .toContain('"source":"auto-disagreement"');
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).toContain('"context":"shop"');
+});
+
 test("downvoting the coach pick records policy advice feedback", async ({
   page,
 }) => {

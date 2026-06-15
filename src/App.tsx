@@ -4,6 +4,7 @@ import { useAutopilot } from "./hooks/useAutopilot";
 import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
 import { captureAdviceFeedback } from "./ai/humanPlayWiring";
 import { buildHandPolicyFeedbackEvent } from "./ai/advisor/adviceFeedback";
+import { recordShopDisagreement } from "./ai/advisor/shownShopAdvice";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -374,18 +375,25 @@ function App() {
 
   const buyShopOfferAction = useGame((s) => s.buyShopOffer);
   const buyShopOffer = (idx: number) => {
-    if (buyShopOfferAction(idx)) play("pop");
+    const pre = useGame.getState();
+    if (buyShopOfferAction(idx)) {
+      play("pop");
+      recordShopDisagreement({ kind: "buy", offerIdx: idx }, pre);
+    }
   };
 
   const rerollShopOffersAction = useGame((s) => s.rerollShopOffers);
   const rerollShopOffers = (cost: number) => {
     if (!shopOffers) return;
     if (money < cost) return;
+    const pre = useGame.getState();
     play("pop");
     rerollShopOffersAction(cost);
+    recordShopDisagreement({ kind: "reroll", cost }, pre);
   };
 
   function closeShopAndStartNextRound() {
+    recordShopDisagreement({ kind: "leave" }, useGame.getState());
     const copies = shopExitConsumableCopies(
       jokers,
       useGame.getState().consumables,
@@ -413,8 +421,10 @@ function App() {
     const price = applyShopDiscount(voucher.cost, ownedVoucherIds);
     if (money < price) return;
     if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
+    const pre = useGame.getState();
     play("pop");
     buyAnteVoucherAction(voucherIdx);
+    recordShopDisagreement({ kind: "buy-voucher", voucherIdx }, pre);
   };
 
   function dismissRoundWonModal() {

@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -6,6 +6,10 @@ import {
   type ShopSuggestionAction,
 } from "../../ai/advisor/shopAdvicePlan";
 import { buildShopPolicyFeedbackEvent } from "../../ai/advisor/adviceFeedback";
+import {
+  clearShopAdvice,
+  rememberShopAdvice,
+} from "../../ai/advisor/shownShopAdvice";
 import { sharedShopRanker } from "../../ai/advisor/shopRanker";
 import type { DownloadProgress } from "../../ai/policy";
 import type { ShopAdviceCandidate } from "../../ai/advisor/types";
@@ -95,6 +99,21 @@ export default function ShopSuggestion(
     preRank,
   );
 
+  const onnxIndex = state.phase === "idle" ? null : state.onnxIndex;
+  useEffect(() => {
+    if (onnxIndex === null) return;
+    const plan = buildShopAdvicePlan(planInput);
+    if (plan === null) return;
+    rememberShopAdvice({
+      shop: plan.request.shop,
+      candidates: plan.request.candidates,
+      actions: plan.actions,
+      recommendationIndex: onnxIndex,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onnxIndex]);
+  useEffect(() => () => clearShopAdvice(), []);
+
   function handleFeedback(correctedIndex: number | null): void {
     if (state.phase === "idle" || state.onnxIndex === null) return;
     const plan = buildShopAdvicePlan(planInput);
@@ -108,6 +127,7 @@ export default function ShopSuggestion(
         correctedIndex,
       ),
     );
+    clearShopAdvice();
     setFeedbackRecorded(true);
     reset();
     setRevealed(false);

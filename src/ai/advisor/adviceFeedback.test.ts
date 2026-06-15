@@ -159,4 +159,22 @@ describe("buildShopPolicyFeedbackEvent", () => {
         .length,
     ).toBe(3);
   });
+
+  test("defaults the source to an explicit click", () => {
+    expect(buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).source).toBe(
+      "explicit",
+    );
+  });
+
+  test("records an auto-disagreement source when given", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(
+        shopState,
+        shopCandidates,
+        0,
+        1,
+        "auto-disagreement",
+      ).source,
+    ).toBe("auto-disagreement");
+  });
 });

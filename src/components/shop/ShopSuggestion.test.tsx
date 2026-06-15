@@ -4,6 +4,10 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Advice } from "../../ai/advisor/advice";
 import { storePlayerKey } from "../../ai/advisor/playerKey";
 import { humanPlayLog } from "../../ai/humanPlayWiring";
+import {
+  clearShopAdvice,
+  matchedShopDisagreement,
+} from "../../ai/advisor/shownShopAdvice";
 import { createPlusFourMultJoker } from "../../items/jokers/factories";
 import type { ShopItem } from "../../items/shop";
 import { useGame } from "../../store/game";
@@ -26,6 +30,7 @@ beforeEach(() => {
   window.localStorage.clear();
   useGame.getState().resetGame();
   rankState.value = [0];
+  clearShopAdvice();
 });
 
 function adviceFixture(advice?: Partial<Advice>): Advice {
@@ -215,6 +220,21 @@ describe("ShopSuggestion click-to-reveal", () => {
     await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
     expect(screen.getByTestId("coach-feedback-recorded")).toBeInTheDocument();
+  });
+
+  test("revealing the coach remembers the pick for auto-disagreement", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await screen.findByTestId("coach-recommendation");
+    expect(matchedShopDisagreement({ kind: "reroll", cost: 5 })).not.toBeNull();
+  });
+
+  test("an explicit downvote clears the remembered pick (dedup)", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
+    expect(matchedShopDisagreement({ kind: "reroll", cost: 5 })).toBeNull();
   });
 
   test("an applied coach purchase is not recorded as human play, while a manual one after it is", async () => {
