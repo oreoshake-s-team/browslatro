@@ -445,7 +445,7 @@ function App() {
 
   return (
     <div
-      className="App"
+      className="app"
       data-app-shell=""
       data-deck={selectedDeck}
       style={appStyle}

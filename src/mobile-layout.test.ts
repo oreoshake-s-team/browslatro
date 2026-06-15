@@ -100,7 +100,7 @@ describe("App layout — portrait mobile", () => {
       appCss,
       /@media\s*\(orientation:\s*portrait\)\s*and\s*\(width\s*<=\s*768px\)\s*{/,
     );
-    const inner = blockBody(block, /\.App\s*{/);
+    const inner = blockBody(block, /\.app\s*{/);
     expect(inner).toMatch(/flex-direction\s*:\s*column/);
   });
 });

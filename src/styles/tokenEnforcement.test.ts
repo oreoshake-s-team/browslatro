@@ -76,11 +76,19 @@ describe("stylelint-config-standard adoption", () => {
     expect(rules).toContain("media-feature-range-notation");
   });
 
-  it("allows BEM and PascalCase class selectors", async () => {
+  it("allows kebab-case BEM class selectors", async () => {
     const rules = await firedRules(
-      ".btn--primary { color: var(--text-primary); }\n.App { color: var(--text-primary); }",
+      ".scoring-trace__list--money { color: var(--text-primary); }",
       componentFile,
     );
     expect(rules).not.toContain("selector-class-pattern");
+  });
+
+  it("flags a PascalCase class selector", async () => {
+    const rules = await firedRules(
+      ".App { color: var(--text-primary); }",
+      componentFile,
+    );
+    expect(rules).toContain("selector-class-pattern");
   });
 });
