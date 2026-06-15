@@ -64,7 +64,7 @@ function applyAction(
   };
 }
 
-function greedyAction(view: HeadlessRoundView): AgentAction | null {
+export function greedyAction(view: HeadlessRoundView): AgentAction | null {
   if (view.dealt.hand.length === 0) return null;
   const best = getHandOptions(view, 1).find((o) => o.action === "play");
   if (best !== undefined) return { kind: "play", cardIds: best.cardIds };
@@ -106,6 +106,24 @@ function withShuffledUnseen(
       remaining: shuffle(position.pile.remaining, rng),
     },
   };
+}
+
+export function estimateWinnable(
+  view: HeadlessRoundView,
+  rng: RandomSource,
+  rollouts: number = DEFAULT_ROLLOUTS,
+): boolean {
+  const start: RoundPosition = {
+    pile: view.dealt,
+    remainingHands: view.remainingHands,
+    remainingDiscards: view.remainingDiscards,
+    roundScore: view.roundScore,
+  };
+  let clears = 0;
+  for (let i = 0; i < rollouts; i += 1) {
+    if (rolloutValue(view, withShuffledUnseen(start, rng)) >= 1) clears += 1;
+  }
+  return clears * 2 >= rollouts;
 }
 
 export function createSearchAgent(config: SearchAgentConfig): HeadlessAgent {

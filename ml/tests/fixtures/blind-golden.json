@@ -1,0 +1,206 @@
+[
+ {
+  "record": {
+   "runSeed": 1,
+   "ante": 1,
+   "kind": "small",
+   "scoreTarget": 300,
+   "payout": 3,
+   "money": 4,
+   "jokerCount": 0,
+   "consumableCount": 0,
+   "chosenIndex": 0,
+   "schemaVersion": 1,
+   "candidates": [
+    {
+     "action": "play"
+    },
+    {
+     "action": "skip"
+    }
+   ]
+  },
+  "candidates": [
+   [
+    0.2,
+    0.125,
+    1.0,
+    0.0,
+    0.0,
+    0.47559252206240626,
+    0.15,
+    0.0,
+    0.0,
+    1.0,
+    0.0
+   ],
+   [
+    0.2,
+    0.125,
+    1.0,
+    0.0,
+    0.0,
+    0.47559252206240626,
+    0.15,
+    0.0,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "chosenIndex": 0
+ },
+ {
+  "record": {
+   "runSeed": 2,
+   "ante": 5,
+   "kind": "big",
+   "scoreTarget": 9000,
+   "payout": 5,
+   "money": 15,
+   "jokerCount": 2,
+   "consumableCount": 1,
+   "chosenIndex": 1,
+   "schemaVersion": 1,
+   "candidates": [
+    {
+     "action": "play"
+    },
+    {
+     "action": "skip"
+    }
+   ]
+  },
+  "candidates": [
+   [
+    0.75,
+    0.625,
+    0.0,
+    1.0,
+    0.0,
+    0.7587575801047571,
+    0.25,
+    0.4,
+    0.5,
+    1.0,
+    0.0
+   ],
+   [
+    0.75,
+    0.625,
+    0.0,
+    1.0,
+    0.0,
+    0.7587575801047571,
+    0.25,
+    0.4,
+    0.5,
+    0.0,
+    1.0
+   ]
+  ],
+  "chosenIndex": 1
+ },
+ {
+  "record": {
+   "runSeed": 3,
+   "ante": 8,
+   "kind": "small",
+   "scoreTarget": 25000,
+   "payout": 4,
+   "money": 30,
+   "jokerCount": 4,
+   "consumableCount": 2,
+   "chosenIndex": 1,
+   "schemaVersion": 1,
+   "candidates": [
+    {
+     "action": "play"
+    },
+    {
+     "action": "skip"
+    }
+   ]
+  },
+  "candidates": [
+   [
+    1.5,
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.84388925858753,
+    0.2,
+    0.8,
+    1.0,
+    1.0,
+    0.0
+   ],
+   [
+    1.5,
+    1.0,
+    1.0,
+    0.0,
+    0.0,
+    0.84388925858753,
+    0.2,
+    0.8,
+    1.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "chosenIndex": 1
+ },
+ {
+  "record": {
+   "runSeed": 4,
+   "ante": 3,
+   "kind": "boss",
+   "scoreTarget": 2000,
+   "payout": 5,
+   "money": 8,
+   "jokerCount": 1,
+   "consumableCount": 0,
+   "chosenIndex": 0,
+   "schemaVersion": 1,
+   "candidates": [
+    {
+     "action": "play"
+    },
+    {
+     "action": "skip"
+    }
+   ]
+  },
+  "candidates": [
+   [
+    0.4,
+    0.375,
+    0.0,
+    0.0,
+    1.0,
+    0.6334501945486445,
+    0.25,
+    0.2,
+    0.0,
+    1.0,
+    0.0
+   ],
+   [
+    0.4,
+    0.375,
+    0.0,
+    0.0,
+    1.0,
+    0.6334501945486445,
+    0.25,
+    0.2,
+    0.0,
+    0.0,
+    1.0
+   ]
+  ],
+  "chosenIndex": 0
+ }
+]
