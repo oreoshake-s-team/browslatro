@@ -460,4 +460,49 @@ describe("Options — coach API key", () => {
       "forwards it to Anthropic",
     );
   });
+
+  test("the modal panel carries the options-modal scope class", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByRole("dialog").querySelector(".modal")).toHaveClass(
+      "options-modal",
+    );
+  });
+
+  test("toggle buttons use the shared game button style", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByText(/Mute sounds/)).toHaveClass("btn", "btn--toggle");
+  });
+
+  test("New game button uses the shared danger button variant", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByText("New game")).toHaveClass("btn", "btn--danger");
+  });
+
+  test("Close button uses the shared secondary button variant", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(screen.getByText("Close")).toHaveClass("btn", "btn--secondary");
+  });
+
+  test("negative: no legacy options-button elements remain", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(document.querySelector(".options-button")).toBeNull();
+  });
+
+  test("New game and Close share the footer action row", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    const footer = screen.getByText("New game").closest(".options-footer");
+    expect(footer).toContainElement(screen.getByText("Close"));
+  });
 });
