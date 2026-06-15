@@ -6,6 +6,8 @@ Mirrors the TypeScript `ModelState` / `HandOption` JSON shapes produced by
 on any change.
 """
 
+import math
+
 ENCODING_VERSION = 4
 
 HAND_SLOTS = 16
@@ -275,3 +277,38 @@ def encode_shop_decision(record):
         return candidates, chosen
 
     return [], -1
+
+
+BLIND_ENCODING_VERSION = 1
+BLIND_KINDS = ["small", "big", "boss"]
+BLIND_INPUT_FEATURES = 11
+
+
+def _encode_blind_row(record, *, is_play, is_skip):
+    return (
+        [record["money"] / 20.0, record["ante"] / 8.0]
+        + _one_hot(record["kind"], BLIND_KINDS)
+        + [
+            math.log1p(record["scoreTarget"]) / 12.0,
+            record["payout"] / 20.0,
+            record["jokerCount"] / 5.0,
+            record["consumableCount"] / 2.0,
+            1.0 if is_play else 0.0,
+            1.0 if is_skip else 0.0,
+        ]
+    )
+
+
+def encode_blind_decision(record):
+    """Returns (per-candidate input vectors, chosen_index) for a blind decision.
+
+    candidates is [{action: "play"}, {action: "skip"}]; chosenIndex is 0 (play)
+    or 1 (skip). Mirrors src/ai/advisor/blindEncoding.ts.
+    """
+    candidates = []
+    for candidate in record["candidates"]:
+        if candidate["action"] == "play":
+            candidates.append(_encode_blind_row(record, is_play=True, is_skip=False))
+        else:
+            candidates.append(_encode_blind_row(record, is_play=False, is_skip=True))
+    return candidates, record["chosenIndex"]

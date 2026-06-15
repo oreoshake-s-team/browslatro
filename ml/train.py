@@ -20,10 +20,18 @@ from torch import nn
 from dataset import (
     build_training_set,
     load_all,
+    load_blind_all,
     load_shop_decisions_split,
     split_by_seed,
 )
-from encoding import ENCODING_VERSION, INPUT_FEATURES, SHOP_ENCODING_VERSION, SHOP_INPUT_FEATURES
+from encoding import (
+    BLIND_ENCODING_VERSION,
+    BLIND_INPUT_FEATURES,
+    ENCODING_VERSION,
+    INPUT_FEATURES,
+    SHOP_ENCODING_VERSION,
+    SHOP_INPUT_FEATURES,
+)
 
 
 class CandidateScorer(nn.Module):
@@ -78,16 +86,27 @@ def main():
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--shop", action="store_true", help="train on shop/pack decisions")
+    parser.add_argument("--blind", action="store_true", help="train on blind play-vs-skip decisions")
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
 
     if args.out is None:
-        args.out = "advisor-shop-policy-v1.onnx" if args.shop else "advisor-policy.onnx"
+        if args.blind:
+            args.out = "advisor-blind-policy-v1.onnx"
+        elif args.shop:
+            args.out = "advisor-shop-policy-v1.onnx"
+        else:
+            args.out = "advisor-policy.onnx"
 
     torch.manual_seed(args.seed)
     random.seed(args.seed)
 
-    if args.shop:
+    if args.blind:
+        features = BLIND_INPUT_FEATURES
+        generated_train, validation = split_by_seed(load_blind_all(args.datasets))
+        train = build_training_set(generated_train)
+        enc_label = f"blind encoding v{BLIND_ENCODING_VERSION}"
+    elif args.shop:
         features = SHOP_INPUT_FEATURES
         rollout, teacher = load_shop_decisions_split(args.datasets, args.teacher_weight)
         generated_train, validation = split_by_seed(rollout)

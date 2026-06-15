@@ -9,12 +9,31 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from dataset import (
     build_training_set,
     load_all,
+    load_blind_decisions,
     load_decisions,
     load_shop_decisions,
     load_shop_decisions_split,
     split_by_seed,
 )
 from encoding import HAND_SLOTS
+
+
+def blind_record(**overrides):
+    record = {
+        "kind": "small",
+        "schemaVersion": 1,
+        "runSeed": 1,
+        "ante": 1,
+        "scoreTarget": 300,
+        "payout": 3,
+        "money": 4,
+        "jokerCount": 0,
+        "consumableCount": 0,
+        "candidates": [{"action": "play"}, {"action": "skip"}],
+        "chosenIndex": 0,
+    }
+    record.update(overrides)
+    return record
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
 
@@ -323,6 +342,33 @@ class LoadShopDecisionsSplitTest(unittest.TestCase):
             path = write_jsonl(directory, "shop.jsonl", [shop_record()])
             rollout, _ = load_shop_decisions_split([path], teacher_weight=7.0)
             self.assertEqual(rollout[0][3], 1.0)
+
+
+class LoadBlindDecisionsTests(unittest.TestCase):
+    def test_loads_blind_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "blind.jsonl", [blind_record(), blind_record(kind="big", chosenIndex=1)])
+            self.assertEqual(len(load_blind_decisions(path)), 2)
+
+    def test_preserves_the_chosen_index(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "blind.jsonl", [blind_record(chosenIndex=1)])
+            self.assertEqual(load_blind_decisions(path)[0][1], 1)
+
+    def test_skips_hand_and_shop_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(
+                directory,
+                "mixed.jsonl",
+                [fixture_record(), {"kind": "reroll", "schemaVersion": 3}, blind_record()],
+            )
+            self.assertEqual(len(load_blind_decisions(path)), 1)
+
+    def test_rejects_unexpected_schema_version(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "blind.jsonl", [blind_record(schemaVersion=99)])
+            with self.assertRaises(ValueError):
+                load_blind_decisions(path)
 
 
 if __name__ == "__main__":
