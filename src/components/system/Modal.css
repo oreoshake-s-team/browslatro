@@ -1,0 +1,74 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: var(--overlay-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  z-index: var(--z-modal);
+}
+
+.modal-overlay--elevated {
+  z-index: var(--z-modal-elevated);
+}
+
+.modal-overlay--top {
+  z-index: var(--z-modal-top);
+}
+
+.modal-panel {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border: 2px solid var(--modal-accent, var(--border-strong));
+  border-radius: var(--radius-xl);
+  box-shadow: 0 12px 32px var(--shadow-xl);
+  padding: 2rem 2.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.modal-panel--pack {
+  --modal-accent: var(--accent-pack);
+}
+
+.modal-panel--boss-blind {
+  --modal-accent: var(--accent-boss-blind);
+}
+
+.modal-panel--success {
+  --modal-accent: var(--accent-success);
+}
+
+.modal-panel--danger {
+  --modal-accent: var(--accent-danger);
+}
+
+.modal-panel--neutral {
+  --modal-accent: var(--border-strong);
+}
+
+.modal-panel--sm {
+  width: 100%;
+  max-width: 32rem;
+}
+
+.modal-panel--md {
+  width: 100%;
+  max-width: 48rem;
+}
+
+.modal-panel--lg {
+  width: 100%;
+  max-width: 70rem;
+}
+
+.modal-panel .stat-pill {
+  background-color: var(--surface-raised);
+  border-color: var(--border);
+}

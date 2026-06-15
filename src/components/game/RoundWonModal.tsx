@@ -1,15 +1,12 @@
 import "./RoundWonModal.css";
-import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { createPortal } from "react-dom";
 import {
   GOLD_HELD_BONUS_PER_CARD,
   INTEREST_CAP,
   INTEREST_RATE_PER,
   REMAINING_HAND_BONUS,
 } from "../../scoring/payout";
-import { useEscapeToClose } from "../system/useEscapeToClose";
-import { useFocusTrap } from "../system/useFocusTrap";
+import Modal from "../system/Modal";
 import { formatNumber } from "../../utils/formatNumber";
 
 export interface RoundWonJokerPayoutStep {
@@ -85,22 +82,13 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         units: bonusUnits,
         per: remainingHandsBonusPerUnit,
       });
-  useEscapeToClose(onContinue, true);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  useFocusTrap(overlayRef);
-
-  return createPortal(
-    <div
-      ref={overlayRef}
-      className="round-won-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="round-won-title"
+  return (
+    <Modal
+      onClose={onContinue}
+      labelledBy="round-won-title"
+      accent="success"
+      className="round-won-modal"
     >
-      <div
-        className="round-won-modal"
-        onClick={(e) => e.stopPropagation()}
-      >
         <h2 id="round-won-title" className="round-won-title">
           <span aria-hidden="true">🏆 </span>
           {t("roundEnd.wonTitle")}
@@ -178,8 +166,6 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
         >
           {t("roundEnd.continue")}
         </button>
-      </div>
-    </div>,
-    document.body,
+    </Modal>
   );
 }
