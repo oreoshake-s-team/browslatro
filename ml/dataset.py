@@ -6,7 +6,8 @@ import sys
 from encoding import HAND_SLOTS, encode_decision, encode_shop_decision
 
 DATASET_SCHEMA_VERSION = 1
-SHOP_SCHEMA_VERSION = 2
+SHOP_SCHEMA_VERSION = 3
+SUPPORTED_SHOP_SCHEMA_VERSIONS = frozenset({2, 3})
 
 _SHOP_KINDS = frozenset({"purchase", "reroll", "pack-pick"})
 
@@ -78,10 +79,10 @@ def _iter_shop_records(path):
             if record.get("kind") not in _SHOP_KINDS:
                 continue
             version = record["schemaVersion"]
-            if version != SHOP_SCHEMA_VERSION:
+            if version not in SUPPORTED_SHOP_SCHEMA_VERSIONS:
                 raise ValueError(
                     f"{path}:{line_number}: schemaVersion {version}, "
-                    f"expected {SHOP_SCHEMA_VERSION}"
+                    f"expected one of {sorted(SUPPORTED_SHOP_SCHEMA_VERSIONS)}"
                 )
             yield record
 

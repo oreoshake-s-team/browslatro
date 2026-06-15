@@ -173,11 +173,23 @@ class LoadShopDecisionsTest(unittest.TestCase):
             self.assertEqual(load_shop_decisions(path), [])
 
     def test_rejects_unexpected_schema_version(self):
-        record = dict(shop_record(), schemaVersion=3)
+        record = dict(shop_record(), schemaVersion=99)
         with tempfile.TemporaryDirectory() as directory:
             path = write_jsonl(directory, "future.jsonl", [record])
             with self.assertRaises(ValueError):
                 load_shop_decisions(path)
+
+    def test_loads_v3_shop_record(self):
+        record = dict(shop_record(), schemaVersion=3)
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "v3.jsonl", [record])
+            self.assertEqual(len(load_shop_decisions(path)), 1)
+
+    def test_skips_advice_feedback_run_event(self):
+        feedback = {"schemaVersion": 3, "kind": "advice-feedback", "runSeed": 7}
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "feedback.jsonl", [feedback])
+            self.assertEqual(load_shop_decisions(path), [])
 
     def test_applies_weight(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -1,9 +1,10 @@
 import type { PackOption } from "../items/packs";
 import type { ShopItem } from "../items/shop";
 import type { GameState } from "../store/game";
+import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
 
-export const RUN_EVENT_SCHEMA_VERSION = 2;
+export const RUN_EVENT_SCHEMA_VERSION = 3;
 
 export type RunEventKind =
   | "purchase"
@@ -11,7 +12,8 @@ export type RunEventKind =
   | "pack-pick"
   | "consumable-use"
   | "joker-sell"
-  | "blind-skip";
+  | "blind-skip"
+  | "advice-feedback";
 
 export interface RunEventEnvelope {
   readonly schemaVersion: typeof RUN_EVENT_SCHEMA_VERSION;
@@ -83,13 +85,38 @@ export interface BlindSkipEvent {
   readonly tag: { readonly id: string; readonly name: string } | null;
 }
 
+export type AdvisorKind = "llm" | "policy";
+export type AdviceVerdict = "bad";
+export type AdviceFeedbackSource = "explicit" | "auto-disagreement";
+
+export interface HandAdviceDecision {
+  readonly context: "hand";
+  readonly state: ModelState;
+  readonly candidates: ReadonlyArray<HandOption>;
+}
+
+export type AdviceDecision = HandAdviceDecision;
+
+export interface AdviceFeedbackEvent {
+  readonly kind: "advice-feedback";
+  readonly advisorKind: AdvisorKind;
+  readonly model: string;
+  readonly recommendationIndex: number;
+  readonly alternativeIndex: number | null;
+  readonly verdict: AdviceVerdict;
+  readonly correctedIndex: number | null;
+  readonly source: AdviceFeedbackSource;
+  readonly decision: AdviceDecision;
+}
+
 export type RunEvent =
   | PurchaseEvent
   | RerollEvent
   | PackPickEvent
   | ConsumableUseEvent
   | JokerSellEvent
-  | BlindSkipEvent;
+  | BlindSkipEvent
+  | AdviceFeedbackEvent;
 
 export type RunEventRecord = RunEventEnvelope & RunEvent;
 

@@ -3,10 +3,34 @@ import type { Card } from "../cards/types";
 import { useGame } from "../store/game";
 import { createHumanPlayLog, type HumanPlayLog, type LogStorage } from "./humanPlayLog";
 import {
+  captureAdviceFeedback,
   captureHumanDecision,
   captureRunEvent,
   setHumanPlayRecordingSuppressed,
 } from "./humanPlayWiring";
+import type { AdviceFeedbackEvent } from "./runEvents";
+import { candidatesFixture, modelStateFixture } from "./advisor/test-helpers";
+
+function feedbackEvent(
+  overrides?: Partial<AdviceFeedbackEvent>,
+): AdviceFeedbackEvent {
+  return {
+    kind: "advice-feedback",
+    advisorKind: "policy",
+    model: "advisor-policy-v8",
+    recommendationIndex: 0,
+    alternativeIndex: null,
+    verdict: "bad",
+    correctedIndex: 1,
+    source: "explicit",
+    decision: {
+      context: "hand",
+      state: modelStateFixture(),
+      candidates: candidatesFixture(),
+    },
+    ...overrides,
+  };
+}
 
 function memoryStorage(): LogStorage {
   const data = new Map<string, string>();
@@ -159,6 +183,44 @@ describe("captureHumanDecision", () => {
       { kind: "play", cardIds: [1, 2] },
       { log: throwingLog, seed: 7 },
     );
+    expect(recorded).toBe(false);
+  });
+});
+
+describe("captureAdviceFeedback", () => {
+  test("records an explicit downvote with a corrective pick", () => {
+    const log = makeLog();
+    const recorded = captureAdviceFeedback(useGame.getState(), feedbackEvent(), {
+      log,
+      seed: 7,
+    });
+    expect(recorded).toBe(true);
+  });
+
+  test("appends the record under the advice-feedback kind", () => {
+    const log = makeLog();
+    captureAdviceFeedback(useGame.getState(), feedbackEvent(), { log, seed: 7 });
+    expect(log.counts()["advice-feedback"]).toBe(1);
+  });
+
+  test("records a bare downvote with no correction (eval-only)", () => {
+    const log = makeLog();
+    const recorded = captureAdviceFeedback(
+      useGame.getState(),
+      feedbackEvent({ correctedIndex: null }),
+      { log, seed: 7 },
+    );
+    expect(recorded).toBe(true);
+  });
+
+  test("does not record advice feedback while recording is suppressed", () => {
+    const log = makeLog();
+    setHumanPlayRecordingSuppressed(true);
+    const recorded = captureAdviceFeedback(useGame.getState(), feedbackEvent(), {
+      log,
+      seed: 7,
+    });
+    setHumanPlayRecordingSuppressed(false);
     expect(recorded).toBe(false);
   });
 });
