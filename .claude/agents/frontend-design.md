@@ -14,7 +14,7 @@ Four focus areas, in priority order when reviewing:
    - Every interactive element must be a real button/link/input (never a `div` with `onClick`).
    - `aria-label` / `aria-pressed` / `aria-disabled` where applicable; live regions for dynamic score/round updates.
    - Keyboard reachability and visible focus styles (`:focus-visible` outline, not `outline: none`).
-   - Color contrast meets WCAG AA (4.5:1 for body text, 3:1 for large/UI).
+   - Color contrast meets WCAG AA (4.5:1 for body text, 3:1 for large/UI). The app is dark-themed; for text/UI on light surfaces use the audited `--*-on-light` contrast tokens rather than the default dark-theme text tokens.
    - Motion: respect `prefers-reduced-motion` for any animation (e.g. `card-discarding`).
    - Avoid color-only encoding (e.g. red vs. black suits) — pair color with shape/glyph or text. This is the explicit motivation for the four-color-suits preference already in the codebase.
 
@@ -33,15 +33,18 @@ Four focus areas, in priority order when reviewing:
    - Names describe what the component renders, not where it's used (`CardCorner`, not `TopLeftBit`).
 
 4. **Design system / tokens**
-   - The codebase does not yet have a `tokens.css`. When recommending one, propose CSS custom properties on `:root` in `src/index.css`: `--color-text`, `--color-border`, `--color-bg`, `--space-1` … `--space-5`, `--radius-sm`, `--radius-md`, `--font-size-base`, etc.
-   - Existing values to harvest as tokens: text `#495057`, border `#dee2e6`, background `#f8f9fa`. Suit colors (red/black/four-color variants) belong in tokens too.
-   - Don't introduce a token unless at least two places use the value — single-use values stay inline.
+   - The codebase has a full token file at `src/styles/tokens.css` — CSS custom properties declared on `:root`, imported in `src/index.tsx` **before** `src/index.css`. Read it first; it's the source of truth for color.
+   - **Hard rule (test-enforced):** `tokens.css` is the *only* file allowed to contain raw color literals. Every other `.css` file must reference colors via `var(--token)` or `color-mix(in srgb, var(--token) …)` — never a hex, `rgb()/rgba()`, `hsl()/hsla()`, or the named colors `white`/`black`. `src/styles/tokens.layout.test.ts` fails the build on any violation, so flag/fix raw literals as `must-fix`.
+   - Token families already defined (don't reinvent — reuse): surfaces (`--surface`, `--surface-raised`, `--surface-sunken`, `--surface-hover`), text (`--text-primary/-secondary/-muted`), borders (`--border`, `--border-strong`), accents (`--accent-chips/-mult/-money/-success/-danger`), focus (`--focus-ring`), radii (`--radius-sm/-md/-lg/-xl/-pill`), shadows (`--shadow-sm…-xl`), z-index (`--z-modal*`), light-surface contrast tokens (`--*-on-light`), and the per-domain palettes for card editions, enhancements, seals, rarities, jokers, and shop offers.
+   - When you genuinely need a new color, add it to `tokens.css` (give it a semantic name, check it isn't a duplicate — the test forbids duplicate token names) and reference it from the component CSS. Don't inline it.
+   - **Spacing is NOT tokenized** — there are no `--space-*` variables. Spacing stays inline using the `0.4rem`-multiple scale (see area 2). Only color/radius/shadow/z-index live as tokens today.
 
 ## Project conventions (must follow)
 
 - **Plain CSS only**. No SCSS, no Tailwind, no CSS-in-JS, no utility frameworks.
 - **Per-component CSS**: `src/components/Foo.tsx` imports `./Foo.css`.
 - **Shared classes** live in `src/index.css` (`.win-button`, `.stat`, `.stat-value`, `.stat-label`). Don't duplicate them.
+- **Global tokens** live in `src/styles/tokens.css`. Component CSS consumes them via `var(--token)`; it never redefines them.
 - **Strict TypeScript** — no `any`, no JS.
 - **i18n-ready**: don't hardcode user-facing strings into design helpers; if you propose a label, point out it should route through whatever string layer exists (today: inline strings — flag for future i18n).
 - **Test coverage is mandatory** for new functionality. When you suggest behavior changes (not just styling), call out which tests should be added.
@@ -71,7 +74,8 @@ Prefer applying small fixes via `Edit` over writing prose, but always summarize 
 - Don't introduce build tooling changes.
 - Don't rewrite working components for stylistic reasons alone.
 - Don't add comments to CSS explaining obvious selectors.
-- Don't propose dark mode, theming, or responsive breakpoints unless the user asks — the app is a learning project for the author, not a production product.
+- Don't inline raw color literals in component CSS — the build test rejects them. New colors go in `tokens.css`.
+- The app is already dark-themed and has a responsive font-size scale (62.5% base, stepping up at width breakpoints) plus a landscape-first layout preference. Don't propose a light/dark mode toggle or a separate theming system, but responsive/layout work is in-scope when the task calls for it.
 - Don't touch test files except to flag missing coverage for behavior changes you propose.
 
 ## Output shape
