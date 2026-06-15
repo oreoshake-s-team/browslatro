@@ -5,7 +5,14 @@ import { beforeEach } from "vitest";
 import Game from "./Game";
 import { useGame } from "../../store/game";
 import type { ShopProps } from "../shop/Shop";
+import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import type { Card } from "../../cards/types";
+import type { PackOffer } from "../../items/packs";
+import type { Consumable } from "../../items/consumables";
+import { createJokerCatalog } from "../../items/jokers";
+import { createPlanetCatalog } from "../../items/planets";
+import { createTarotCatalog } from "../../items/tarots";
+import { createSpectralCatalog } from "../../items/spectrals";
 
 function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   return render(
@@ -45,6 +52,49 @@ function makeCards(start: number, count: number): Card[] {
   }));
 }
 
+const JOKERS = createJokerCatalog();
+const PLANETS = createPlanetCatalog();
+const TAROTS = createTarotCatalog();
+const SPECTRALS = createSpectralCatalog();
+
+const tarotConsumable: Consumable = { kind: "tarot", card: TAROTS[0] };
+const spectralConsumable: Consumable = { kind: "spectral", card: SPECTRALS[0] };
+const planetConsumable: Consumable = { kind: "planet", card: PLANETS[0] };
+
+const standardPack: PackOffer = {
+  pool: "standard",
+  variant: "normal",
+  options: [{ kind: "playing-card", card: { id: 9001, rank: "A", suit: "spades" } }],
+};
+const buffoonPack: PackOffer = {
+  pool: "buffoon",
+  variant: "normal",
+  options: [{ kind: "joker", joker: JOKERS[0] }],
+};
+const celestialPack: PackOffer = {
+  pool: "celestial",
+  variant: "normal",
+  options: [{ kind: "planet", planet: PLANETS[0] }],
+};
+const arcanaPack: PackOffer = {
+  pool: "arcana",
+  variant: "normal",
+  options: [{ kind: "tarot", tarot: TAROTS[0] }],
+};
+
+function packOpenProps(
+  pack: PackOffer,
+  previewHand: Card[] = [],
+): PackOpenModalProps {
+  return {
+    pack,
+    picksRemaining: 1,
+    previewHand,
+    onPick: vi.fn(),
+    onClose: vi.fn(),
+  };
+}
+
 function deckPileCount(): number {
   const button = screen.getByLabelText(/^Deck \(\d+ cards remaining\)$/);
   const match = button.getAttribute("aria-label")?.match(/Deck \((\d+) cards remaining\)/);
@@ -82,6 +132,60 @@ describe("Game", () => {
   test("renders the player's hand of cards", () => {
     renderGame();
     expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
+  });
+
+  test.each([
+    ["standard", standardPack],
+    ["buffoon", buffoonPack],
+    ["celestial", celestialPack],
+  ] as const)(
+    "hides the player hand during a %s pack pick when no usable consumable is held",
+    async (_pool, pack) => {
+      renderGame({ packOpen: packOpenProps(pack) });
+      await screen.findByTestId("pack-open-subtitle");
+      expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
+    },
+  );
+
+  test("shows the deck drop target during a standard pack pick when no usable consumable is held", async () => {
+    renderGame({ packOpen: packOpenProps(standardPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.getByTestId("deck-pile")).toBeInTheDocument();
+  });
+
+  test("hides the player hand during a standard pack pick when only a planet is held", async () => {
+    useGame.getState().setConsumables([planetConsumable]);
+    renderGame({ packOpen: packOpenProps(standardPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
+  });
+
+  test("shows the player hand during a standard pack pick when a tarot is held", async () => {
+    useGame.getState().setConsumables([tarotConsumable]);
+    renderGame({ packOpen: packOpenProps(standardPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
+  });
+
+  test("shows the player hand during a buffoon pack pick when a spectral is held", async () => {
+    useGame.getState().setConsumables([spectralConsumable]);
+    renderGame({ packOpen: packOpenProps(buffoonPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
+  });
+
+  test("renders the preview hand during an arcana pack pick", async () => {
+    renderGame({ packOpen: packOpenProps(arcanaPack, makeCards(1, 3)) });
+    expect(
+      await screen.findByTestId("pack-open-preview-hand"),
+    ).toBeInTheDocument();
+  });
+
+  test("does not render the live player hand during an arcana pack pick even when a tarot is held", async () => {
+    useGame.getState().setConsumables([tarotConsumable]);
+    renderGame({ packOpen: packOpenProps(arcanaPack, makeCards(1, 3)) });
+    await screen.findByTestId("pack-open-preview-hand");
+    expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("Discard button calls onDiscard when enabled", async () => {
