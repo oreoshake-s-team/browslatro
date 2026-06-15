@@ -69,6 +69,11 @@ function sameHandStackAdvance(
         state: counterState(anyFace ? 0 : prevCount(joker) + effect.amount),
       };
     }
+    case "on-hand-stack-on-discard-shrink-mult":
+      return {
+        ...joker,
+        state: counterState(prevCount(joker) + effect.growAmount),
+      };
     default:
       return joker;
   }
