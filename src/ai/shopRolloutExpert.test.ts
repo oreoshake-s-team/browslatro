@@ -3,13 +3,18 @@ import { describe, expect, test } from "vitest";
 import {
   applyOfferToState,
   bestShopChoice,
+  type ConsumableLabelDeps,
   type PostShopState,
   type RolloutOptions,
 } from "./shopRolloutExpert";
 import { createGreedyAgent } from "./agents";
+import { buildHeadlessDeck } from "./headlessRun";
 import { joker } from "./test-helpers";
-import { createDefaultHandStats } from "../scoring/handStats";
+import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
+import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
+import { createPlanetCatalog } from "../items/planets";
+import { createTarotCatalog, type TarotCard } from "../items/tarots";
 import type { ShopItem } from "../items/shop";
 import type { Joker } from "../items/jokers/types";
 
@@ -18,9 +23,31 @@ const powerJoker: Joker = joker({
   effect: { kind: "additive-mult", amount: 100000 },
 });
 
+const TAROTS = createTarotCatalog();
+const CONSUMABLE_DEPS: ConsumableLabelDeps = {
+  jokerCatalog: createJokerCatalog().filter((j) => j.rarity !== "legendary"),
+  planetCatalog: createPlanetCatalog(),
+  tarotCatalog: TAROTS,
+  deck: buildHeadlessDeck(),
+};
+
+function tarotCard(id: string): TarotCard {
+  const found = TAROTS.find((t) => t.id === id);
+  if (found === undefined) throw new Error(`unknown tarot ${id}`);
+  return found;
+}
+
 function jokerOffer(j: Joker, price: number): ShopItem {
   return { kind: "joker", joker: j, price, sold: false };
 }
+
+function tarotOffer(id: string, price: number): ShopItem {
+  return { kind: "tarot", tarot: tarotCard(id), price, sold: false };
+}
+
+const totalLevels = (s: HandStats): number =>
+  Object.values(s).reduce((sum, entry) => sum + entry.level, 0);
+const BASELINE_LEVELS = totalLevels(createDefaultHandStats());
 
 function baseState(overrides?: Partial<PostShopState>): PostShopState {
   return {
@@ -52,6 +79,24 @@ describe("applyOfferToState", () => {
       money: 4,
       handStats: createDefaultHandStats(),
     });
+  });
+
+  test("a tarot offer is skipped when no consumable deps are provided (negative)", () => {
+    expect(applyOfferToState(tarotOffer("the-high-priestess", 4), baseState())).toBeNull();
+  });
+
+  test("The High Priestess upgrades hand levels via its created planets", () => {
+    const next = applyOfferToState(tarotOffer("the-high-priestess", 4), baseState(), CONSUMABLE_DEPS, () => 0);
+    expect(totalLevels(next?.handStats ?? createDefaultHandStats())).toBeGreaterThan(BASELINE_LEVELS);
+  });
+
+  test("Judgement adds a created joker", () => {
+    const next = applyOfferToState(tarotOffer("judgement", 4), baseState(), CONSUMABLE_DEPS, () => 0);
+    expect(next?.jokers.length).toBe(1);
+  });
+
+  test("an unaffordable tarot returns null (negative)", () => {
+    expect(applyOfferToState(tarotOffer("judgement", 99), baseState({ money: 5 }), CONSUMABLE_DEPS, () => 0)).toBeNull();
   });
 });
 

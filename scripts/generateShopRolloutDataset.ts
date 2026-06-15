@@ -7,7 +7,9 @@ import { fileURLToPath } from "node:url";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 import { loadPolicyRanker } from "../src/ai/policy";
 import {
+  buildHeadlessDeck,
   playHeadlessRun,
+  seededRng,
   type HeadlessShopAgent,
   type ShopResult,
   type ShopView,
@@ -16,6 +18,7 @@ import {
   bestShopChoice,
   applyOfferToState,
   rolloutValue,
+  type ConsumableLabelDeps,
   type RolloutOptions,
   type PostShopState,
 } from "../src/ai/shopRolloutExpert";
@@ -81,6 +84,12 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
   const planetCatalog = createPlanetCatalog();
   const tarotCatalog = createTarotCatalog();
   const spectralCatalog = createSpectralCatalog();
+  const consumableDeps: ConsumableLabelDeps = {
+    jokerCatalog,
+    planetCatalog,
+    tarotCatalog,
+    deck: buildHeadlessDeck(),
+  };
   let records = 0;
 
   for (let g = 0; g < config.games; g += 1) {
@@ -90,6 +99,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
       horizonAntes: config.horizon,
       rollouts: config.rollouts,
       maxAnte: 8,
+      consumableDeps,
     };
 
     const shopAgent: HeadlessShopAgent = {
@@ -144,10 +154,11 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
             kind: "purchase", item: shopItemSnapshot(chosen), offers: offers.map(shopItemSnapshot),
           }));
           records += 1;
-          const post = applyOfferToState(chosen, state);
+          const chosenRng = seededRng(rollBase + step * 991 + (choice.index + 1) * 92821);
+          const post = applyOfferToState(chosen, state, consumableDeps, chosenRng);
           if (post === null) break;
           jokers = [...post.jokers]; money = post.money; handStats = post.handStats;
-          if (chosen.kind === "joker") ownedIds.add(chosen.joker.id);
+          for (const j of jokers) ownedIds.add(j.id);
           offers = offers.filter((_, i) => i !== choice.index);
         }
 
@@ -169,7 +180,7 @@ if (isMain) {
   const config: GenConfig = {
     games: intFlag("--games", 50),
     seedOffset: intFlag("--seed-offset", 0),
-    handModel: stringFlag("--hand-model", "public/models/advisor-policy-v6.onnx"),
+    handModel: stringFlag("--hand-model", "public/models/advisor-policy-v8.onnx"),
     horizon: intFlag("--horizon", 3),
     rollouts: intFlag("--rollouts", 2),
   };

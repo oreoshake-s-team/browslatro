@@ -1,15 +1,27 @@
+import type { Card } from "../cards/types";
+import type { Consumable } from "../items/consumables";
 import { MAX_JOKERS } from "../items/jokers/constants";
 import type { Joker } from "../items/jokers/types";
-import { applyPlanetUpgrade } from "../items/planets";
+import { applyPlanetUpgrade, type PlanetCard } from "../items/planets";
 import type { ShopItem } from "../items/shop";
+import type { TarotCard } from "../items/tarots";
 import type { HandStats } from "../scoring/handStats";
-import { playHeadlessRun, type HeadlessAgent } from "./headlessRun";
+import { applyConsumable } from "./headlessConsumables";
+import { playHeadlessRun, seededRng, type HeadlessAgent } from "./headlessRun";
+
+export interface ConsumableLabelDeps {
+  readonly jokerCatalog: ReadonlyArray<Joker>;
+  readonly planetCatalog: ReadonlyArray<PlanetCard>;
+  readonly tarotCatalog: ReadonlyArray<TarotCard>;
+  readonly deck: ReadonlyArray<Card>;
+}
 
 export interface RolloutOptions {
   readonly agent: HeadlessAgent;
   readonly horizonAntes: number;
   readonly rollouts: number;
   readonly maxAnte: number;
+  readonly consumableDeps?: ConsumableLabelDeps;
 }
 
 export interface PostShopState {
@@ -43,6 +55,8 @@ export async function rolloutValue(
 export function applyOfferToState(
   offer: ShopItem,
   state: PostShopState,
+  deps?: ConsumableLabelDeps,
+  rng: () => number = Math.random,
 ): PostShopState | null {
   if (offer.price > state.money) return null;
   if (offer.kind === "joker") {
@@ -58,6 +72,36 @@ export function applyOfferToState(
       jokers: state.jokers,
       money: state.money - offer.price,
       handStats: applyPlanetUpgrade(state.handStats, offer.planet),
+    };
+  }
+  if ((offer.kind === "tarot" || offer.kind === "spectral") && deps !== undefined) {
+    const consumable: Consumable =
+      offer.kind === "tarot"
+        ? { kind: "tarot", card: offer.tarot }
+        : { kind: "spectral", card: offer.spectral };
+    const result = applyConsumable(
+      {
+        deck: deps.deck,
+        money: state.money - offer.price,
+        handStats: state.handStats,
+        lastConsumable: null,
+        createdJokers: [],
+      },
+      consumable,
+      {
+        jokers: state.jokers,
+        jokerCatalog: deps.jokerCatalog,
+        jokerCapacity: MAX_JOKERS,
+        tarotCatalog: deps.tarotCatalog,
+        planetCatalog: deps.planetCatalog,
+      },
+      rng,
+    );
+    if (state.jokers.length + result.createdJokers.length > MAX_JOKERS) return null;
+    return {
+      jokers: [...state.jokers, ...result.createdJokers],
+      money: result.money,
+      handStats: result.handStats,
     };
   }
   return null;
@@ -80,7 +124,8 @@ export async function bestShopChoice(
   let index = offers.length;
   let bestValue = leaveValue;
   for (let i = 0; i < offers.length; i += 1) {
-    const post = applyOfferToState(offers[i], state);
+    const offerRng = seededRng(seedBase + (i + 1) * 92821);
+    const post = applyOfferToState(offers[i], state, opts.consumableDeps, offerRng);
     if (post === null) continue;
     const value = await rolloutValue(ante, post, opts, seedBase + (i + 1) * 104729);
     if (value > bestValue) {
