@@ -24,6 +24,8 @@ export const haw: LocaleMessages = {
     scoreAtLeast: "E loaʻa ka helu: {{score}}",
     toEarn: "e loaʻa ai {{award}}",
     lockedTo: "Locked to:",
+    viewOnGithub: "View on GitHub",
+    githubAriaLabel: "View browslatro source code on GitHub (opens in new tab)",
   },
   hands: {
     highCard: "High Card",

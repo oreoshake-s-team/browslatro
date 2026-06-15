@@ -16,6 +16,8 @@ export const en = {
     scoreAtLeast: "Score at least: {{score}}",
     toEarn: "to earn {{award}}",
     lockedTo: "Locked to:",
+    viewOnGithub: "View on GitHub",
+    githubAriaLabel: "View browslatro source code on GitHub (opens in new tab)",
   },
   hands: {
     highCard: "High Card",
