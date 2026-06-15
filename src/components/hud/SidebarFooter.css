@@ -3,6 +3,8 @@
   width: 100%;
   display: flex;
   justify-content: center;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .sidebar-footer__link {
@@ -14,7 +16,7 @@
   text-decoration: none;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  transition: color calc(0.15s * var(--animation-speed, 1)) ease, background-color calc(0.15s * var(--animation-speed, 1)) ease;
 }
 
 .sidebar-footer__link:hover,
@@ -30,4 +32,10 @@
   height: 1rem;
   fill: currentColor;
   flex-shrink: 0;
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .sidebar-footer {
+    display: none;
+  }
 }
