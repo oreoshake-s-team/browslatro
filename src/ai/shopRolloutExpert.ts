@@ -13,7 +13,6 @@ export interface ConsumableLabelDeps {
   readonly jokerCatalog: ReadonlyArray<Joker>;
   readonly planetCatalog: ReadonlyArray<PlanetCard>;
   readonly tarotCatalog: ReadonlyArray<TarotCard>;
-  readonly deck: ReadonlyArray<Card>;
 }
 
 export interface RolloutOptions {
@@ -28,6 +27,7 @@ export interface PostShopState {
   readonly jokers: ReadonlyArray<Joker>;
   readonly money: number;
   readonly handStats: HandStats;
+  readonly deck: ReadonlyArray<Card>;
 }
 
 export async function rolloutValue(
@@ -45,6 +45,7 @@ export async function rolloutValue(
       startMoney: state.money,
       startHandStats: state.handStats,
       jokers: state.jokers,
+      startDeck: state.deck,
       maxAnte: horizon,
     });
     total += result.blindsCleared;
@@ -65,6 +66,7 @@ export function applyOfferToState(
       jokers: [...state.jokers, offer.joker],
       money: state.money - offer.price,
       handStats: state.handStats,
+      deck: state.deck,
     };
   }
   if (offer.kind === "planet") {
@@ -72,6 +74,7 @@ export function applyOfferToState(
       jokers: state.jokers,
       money: state.money - offer.price,
       handStats: applyPlanetUpgrade(state.handStats, offer.planet),
+      deck: state.deck,
     };
   }
   if ((offer.kind === "tarot" || offer.kind === "spectral") && deps !== undefined) {
@@ -81,7 +84,7 @@ export function applyOfferToState(
         : { kind: "spectral", card: offer.spectral };
     const result = applyConsumable(
       {
-        deck: deps.deck,
+        deck: state.deck,
         money: state.money - offer.price,
         handStats: state.handStats,
         lastConsumable: null,
@@ -102,6 +105,7 @@ export function applyOfferToState(
       jokers: [...state.jokers, ...result.createdJokers],
       money: result.money,
       handStats: result.handStats,
+      deck: result.deck,
     };
   }
   return null;

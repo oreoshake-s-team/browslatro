@@ -64,6 +64,20 @@ describe("playHeadlessRun", () => {
     expect(result.handsPlayed).toBeGreaterThan(0);
   });
 
+  test("startDeck overrides the default deck dealt during the run", async () => {
+    const customDeck = buildHeadlessDeck().slice(0, 12);
+    let seenDeckSize = -1;
+    const capturing: HeadlessAgent = {
+      name: "capturing",
+      chooseAction(view: HeadlessRoundView) {
+        if (seenDeckSize < 0) seenDeckSize = view.baseDeckCards.length;
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(capturing, { seed: 1, startDeck: customDeck, maxAnte: 1 });
+    expect(seenDeckSize).toBe(12);
+  });
+
   test("blinds cleared is consistent with the ante reached", async () => {
     const result = await playHeadlessRun(greedy, { seed: 5 });
     const fullAntesCleared = result.won

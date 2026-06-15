@@ -28,7 +28,6 @@ const CONSUMABLE_DEPS: ConsumableLabelDeps = {
   jokerCatalog: createJokerCatalog().filter((j) => j.rarity !== "legendary"),
   planetCatalog: createPlanetCatalog(),
   tarotCatalog: TAROTS,
-  deck: buildHeadlessDeck(),
 };
 
 function tarotCard(id: string): TarotCard {
@@ -54,6 +53,7 @@ function baseState(overrides?: Partial<PostShopState>): PostShopState {
     jokers: [],
     money: 20,
     handStats: createDefaultHandStats(),
+    deck: buildHeadlessDeck(),
     ...overrides,
   };
 }
@@ -78,7 +78,19 @@ describe("applyOfferToState", () => {
       jokers: [powerJoker],
       money: 4,
       handStats: createDefaultHandStats(),
+      deck: buildHeadlessDeck(),
     });
+  });
+
+  test("a joker purchase leaves the deck unchanged (negative)", () => {
+    const base = baseState({ money: 10 });
+    const next = applyOfferToState(jokerOffer(powerJoker, 6), base);
+    expect(next?.deck).toBe(base.deck);
+  });
+
+  test("The Magician applies its enhancement to the rolled-out deck", () => {
+    const next = applyOfferToState(tarotOffer("the-magician", 4), baseState(), CONSUMABLE_DEPS, () => 0);
+    expect(next?.deck.some((c) => c.enhancement === "lucky")).toBe(true);
   });
 
   test("a tarot offer is skipped when no consumable deps are provided (negative)", () => {
