@@ -74,10 +74,12 @@ function renderControls(
     modelProgress?: { loaded: number; total: number | null } | null;
     proposalUnavailable?: boolean;
     explanation?: MoveExplanationState;
+    feedbackCandidates?: ReadonlyArray<HandOption> | null;
+    feedbackRecorded?: boolean;
     onApprove?: () => void;
-    onStop?: () => void;
     onAskAi?: () => void;
     onRetry?: () => void;
+    onFeedback?: (correctedIndex: number | null) => void;
   } = {},
 ) {
   return render(
@@ -86,10 +88,12 @@ function renderControls(
       modelProgress={overrides.modelProgress ?? null}
       proposalUnavailable={overrides.proposalUnavailable ?? false}
       explanation={overrides.explanation ?? { phase: "idle" }}
+      feedbackCandidates={overrides.feedbackCandidates ?? null}
+      feedbackRecorded={overrides.feedbackRecorded ?? false}
       onApprove={overrides.onApprove ?? vi.fn()}
-      onStop={overrides.onStop ?? vi.fn()}
       onAskAi={overrides.onAskAi ?? vi.fn()}
       onRetry={overrides.onRetry ?? vi.fn()}
+      onFeedback={overrides.onFeedback}
     />,
   );
 }
@@ -132,12 +136,11 @@ describe("AutopilotControls", () => {
     expect(onApprove).toHaveBeenCalledTimes(1);
   });
 
-  test("the stop button invokes onStop", async () => {
-    const onStop = vi.fn();
-    const user = userEvent.setup();
-    renderControls({ onStop });
-    await user.click(screen.getByRole("button", { name: /Stop suggesting/ }));
-    expect(onStop).toHaveBeenCalledTimes(1);
+  test("no longer renders a stop button (removed from the flow)", () => {
+    renderControls({ proposal: playProposal() });
+    expect(
+      screen.queryByRole("button", { name: /Stop suggesting/ }),
+    ).not.toBeInTheDocument();
   });
 
   test("shows a determinate download progress bar while the model loads", () => {
@@ -169,16 +172,50 @@ describe("AutopilotControls", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("stop is available while the model is downloading", async () => {
-    const onStop = vi.fn();
+  test("shows the bad-pick affordance when policy feedback candidates are provided", () => {
+    renderControls({
+      proposal: playProposal(),
+      feedbackCandidates: [playProposal(), discardProposal()],
+      onFeedback: vi.fn(),
+    });
+    expect(screen.getByTestId("advice-feedback-open")).toBeInTheDocument();
+  });
+
+  test("omits the bad-pick affordance without feedback candidates (negative)", () => {
+    renderControls({ proposal: playProposal(), onFeedback: vi.fn() });
+    expect(screen.queryByTestId("advice-feedback-open")).not.toBeInTheDocument();
+  });
+
+  test("a corrective pick reports the chosen candidate index", async () => {
+    const onFeedback = vi.fn();
     const user = userEvent.setup();
     renderControls({
-      proposal: null,
-      modelProgress: { loaded: 0, total: null },
-      onStop,
+      proposal: playProposal(),
+      feedbackCandidates: [playProposal(), discardProposal()],
+      onFeedback,
     });
-    await user.click(screen.getByRole("button", { name: /Stop suggesting/ }));
-    expect(onStop).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    await user.click(screen.getByTestId("advice-feedback-option-1"));
+    await user.click(screen.getByTestId("advice-feedback-submit"));
+    expect(onFeedback).toHaveBeenCalledWith(1);
+  });
+
+  test("a bare downvote reports a null corrected index", async () => {
+    const onFeedback = vi.fn();
+    const user = userEvent.setup();
+    renderControls({
+      proposal: playProposal(),
+      feedbackCandidates: [playProposal(), discardProposal()],
+      onFeedback,
+    });
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    await user.click(screen.getByTestId("advice-feedback-just-bad"));
+    expect(onFeedback).toHaveBeenCalledWith(null);
+  });
+
+  test("announces the recorded confirmation after feedback (proposal dismissed)", () => {
+    renderControls({ proposal: null, feedbackRecorded: true });
+    expect(screen.getByText(/your feedback was recorded/i)).toBeInTheDocument();
   });
 
 
