@@ -3,17 +3,11 @@ import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "./DiscardPile.css";
 import Card from "./Card";
-import type { Card as CardType, Suit } from "../../cards/types";
+import type { Card as CardType } from "../../cards/types";
 import { SUITS, groupBySuit } from "../../cards/deck";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
 
-const SUIT_LABELS: Record<Suit, string> = {
-  spades: "Spades",
-  hearts: "Hearts",
-  diamonds: "Diamonds",
-  clubs: "Clubs",
-};
 
 interface DiscardPileProps {
   discarded: ReadonlyArray<CardType>;
@@ -65,7 +59,7 @@ export default function DiscardPile({ discarded }: DiscardPileProps) {
                 {SUITS.map((suit) => (
                   <section key={suit} className="discard-modal-group">
                     <h4>
-                      {SUIT_LABELS[suit]} ({grouped[suit].length})
+                      {t(`suits.${suit}`)} ({grouped[suit].length})
                     </h4>
                     <div className="discard-modal-cards">
                       {grouped[suit].map((card) => (

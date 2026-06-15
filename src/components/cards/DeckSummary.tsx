@@ -3,13 +3,6 @@ import "./DeckSummary.css";
 import type { Card, Suit } from "../../cards/types";
 import { RANKS, SUITS, summarizeDeck } from "../../cards/deck";
 
-const SUIT_LABELS: Record<Suit, string> = {
-  spades: "Spades",
-  hearts: "Hearts",
-  diamonds: "Diamonds",
-  clubs: "Clubs",
-};
-
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
   hearts: "♥",
@@ -49,7 +42,7 @@ export default function DeckSummary({ remaining }: DeckSummaryProps) {
                 >
                   {SUIT_GLYPHS[suit]}
                 </span>
-                <span className="deck-summary-label">{SUIT_LABELS[suit]}</span>
+                <span className="deck-summary-label">{t(`suits.${suit}`)}</span>
               </span>
             </li>
           ))}
