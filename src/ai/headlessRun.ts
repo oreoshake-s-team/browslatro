@@ -127,6 +127,7 @@ export interface HeadlessRunConfig {
   readonly startCardSeals?: ReadonlyMap<number, Seal>;
   readonly startCardBonusChips?: ReadonlyMap<number, number>;
   readonly startCardEditions?: ReadonlyMap<number, CardEdition>;
+  readonly startDeck?: ReadonlyArray<Card>;
 }
 
 export interface HeadlessRunResult {
@@ -221,7 +222,7 @@ export async function playHeadlessRun(
   let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
   const stake = config.stake ?? DEFAULT_STAKE;
   const deckId = config.deck ?? DEFAULT_DECK;
-  let deck: ReadonlyArray<Card> = applyCardModifiers(buildHeadlessDeck(), {
+  let deck: ReadonlyArray<Card> = applyCardModifiers(config.startDeck ?? buildHeadlessDeck(), {
     enhancements: config.startCardEnhancements,
     seals: config.startCardSeals,
     editions: config.startCardEditions,

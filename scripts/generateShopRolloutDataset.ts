@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 import { loadPolicyRanker } from "../src/ai/policy";
 import {
-  buildHeadlessDeck,
   playHeadlessRun,
   seededRng,
   type HeadlessShopAgent,
@@ -91,7 +90,6 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
     jokerCatalog,
     planetCatalog,
     tarotCatalog,
-    deck: buildHeadlessDeck(),
   };
   let records = 0;
 
@@ -110,12 +108,13 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
         let jokers = [...view.jokers];
         let { money } = view;
         let { handStats } = view;
+        let deck = view.deck;
         const ownedIds = new Set(jokers.map((j) => j.id));
         const rollBase = runSeed * 1_000_003 + view.ante * 7919 + view.round * 31;
         let offers = [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, rng: view.rng })];
 
         for (let step = 0; step < 4; step += 1) {
-          const state: PostShopState = { jokers, money, handStats };
+          const state: PostShopState = { jokers, money, handStats, deck };
           const pack = offers.find(
             (o) =>
               o.kind === "pack" &&
@@ -143,7 +142,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
             money -= pack.price;
             if (bestIdx >= 0) {
               const applied = applyPackOption(options[bestIdx], state);
-              if (applied !== null) { jokers = [...applied.jokers]; handStats = applied.handStats; if (options[bestIdx].kind === "joker") ownedIds.add((options[bestIdx] as { joker: { id: string } }).joker.id); }
+              if (applied !== null) { jokers = [...applied.jokers]; handStats = applied.handStats; deck = applied.deck; if (options[bestIdx].kind === "joker") ownedIds.add((options[bestIdx] as { joker: { id: string } }).joker.id); }
             }
             offers = offers.filter((o) => o !== pack);
             continue;
@@ -160,12 +159,12 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
           const chosenRng = seededRng(rollBase + step * 991 + (choice.index + 1) * 92821);
           const post = applyOfferToState(chosen, state, consumableDeps, chosenRng);
           if (post === null) break;
-          jokers = [...post.jokers]; money = post.money; handStats = post.handStats;
+          jokers = [...post.jokers]; money = post.money; handStats = post.handStats; deck = post.deck;
           for (const j of jokers) ownedIds.add(j.id);
           offers = offers.filter((_, i) => i !== choice.index);
         }
 
-        return { jokers, money, handStats, ownedVoucherIds: view.ownedVoucherIds };
+        return { jokers, money, handStats, deck, ownedVoucherIds: view.ownedVoucherIds };
       },
     };
 
