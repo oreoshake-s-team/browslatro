@@ -83,6 +83,7 @@ import {
   type VoucherId,
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
+import { pickRandomNonEmpty } from "../items/random";
 import { nextCardId, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
 import { detectHandLabel } from "../scoring/handEvaluator";
 import { MAX_SELECTED } from "../components/cards/Hand";
@@ -349,7 +350,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         prev.filter((_, i) => i !== jokerIdx),
       );
       if (!duplicatesOnSell || remaining.length === 0) return remaining;
-      const pick = remaining[Math.floor(Math.random() * remaining.length)];
+      const pick = pickRandomNonEmpty(remaining);
       return [...remaining, cloneJoker(pick)];
     });
   },
@@ -814,12 +815,12 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "sigil": {
-        const suit = SUITS[Math.floor(Math.random() * SUITS.length)];
+        const suit = pickRandomNonEmpty(SUITS);
         applyHandConversion(s, convertHandToSuit(s.dealt.hand, suit));
         return;
       }
       case "ouija": {
-        const rank = RANKS[Math.floor(Math.random() * RANKS.length)];
+        const rank = pickRandomNonEmpty(RANKS);
         applyHandConversion(s, convertHandToRank(s.dealt.hand, rank));
         s.setHandSizeModifier((prev) => prev + effect.handSizeDelta);
         return;

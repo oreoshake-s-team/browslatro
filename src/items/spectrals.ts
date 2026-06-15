@@ -1,6 +1,7 @@
 import type { Card, CardEdition, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import { SUITS, nextCardId } from "../cards/deck";
 import { pickRandomCardEdition } from "../cards/editions";
+import { pickRandomNonEmpty } from "./random";
 import type { JokerRarity } from "./jokers";
 
 export const SPECTRAL_BASE_PRICE = 4;
@@ -99,17 +100,13 @@ function ranksForFilter(filter: TransmuteRankFilter): ReadonlyArray<Rank> {
   return NUMBERED_RANKS;
 }
 
-function pickFrom<T>(items: ReadonlyArray<T>, rng: SpectralRandomSource): T {
-  return items[Math.floor(rng() * items.length)];
-}
-
 export function makeEnhancedCard(
   filter: TransmuteRankFilter,
   rng: SpectralRandomSource,
 ): Card {
-  const rank = pickFrom(ranksForFilter(filter), rng);
-  const suit: Suit = pickFrom(SUITS, rng);
-  const enhancement = pickFrom(RANDOM_ENHANCEMENTS, rng);
+  const rank = pickRandomNonEmpty(ranksForFilter(filter), rng);
+  const suit: Suit = pickRandomNonEmpty(SUITS, rng);
+  const enhancement = pickRandomNonEmpty(RANDOM_ENHANCEMENTS, rng);
   return { id: nextCardId(), rank, suit, enhancement };
 }
 
