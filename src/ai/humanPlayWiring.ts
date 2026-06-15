@@ -2,7 +2,11 @@ import type { GameState } from "../store/game";
 import { toModelStateInput, toSimulatePlayInput } from "./advisor/snapshot";
 import type { AgentAction } from "./headlessRun";
 import { recordHumanDecision } from "./humanPlay";
-import { buildRunEventRecord, type RunEvent } from "./runEvents";
+import {
+  buildRunEventRecord,
+  type AdviceFeedbackEvent,
+  type RunEvent,
+} from "./runEvents";
 import { createHumanPlayLog, type HumanPlayLog } from "./humanPlayLog";
 
 let sharedLog: HumanPlayLog | null = null;
@@ -65,4 +69,12 @@ export function captureRunEvent(
   } catch {
     return false;
   }
+}
+
+export function captureAdviceFeedback(
+  state: GameState,
+  feedback: AdviceFeedbackEvent,
+  deps?: CaptureDeps,
+): boolean {
+  return captureRunEvent(state, feedback, deps);
 }
