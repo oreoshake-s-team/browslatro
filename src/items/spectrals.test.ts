@@ -13,7 +13,7 @@ import {
   createPoolSpectralCatalog,
   createSpectralCatalog,
   duplicateSelectedInHand,
-  makeEnhancedCard,
+  createEnhancedCard,
   rollHiddenSpectralReplacement,
   spectralNeedsTarget,
   transmuteHand,
@@ -139,26 +139,26 @@ describe("Spectral descriptions", () => {
   });
 });
 
-describe("makeEnhancedCard", () => {
+describe("createEnhancedCard", () => {
   beforeEach(() => resetCardIds());
 
   test("produces a face card when filter is 'face'", () => {
-    const card = makeEnhancedCard("face", sequenceRng([0]));
+    const card = createEnhancedCard("face", sequenceRng([0]));
     expect(["J", "Q", "K"]).toContain(card.rank);
   });
 
   test("produces an Ace when filter is 'ace'", () => {
-    const card = makeEnhancedCard("ace", sequenceRng([0]));
+    const card = createEnhancedCard("ace", sequenceRng([0]));
     expect(card.rank).toBe("A");
   });
 
   test("produces a numbered card when filter is 'numbered'", () => {
-    const card = makeEnhancedCard("numbered", sequenceRng([0]));
+    const card = createEnhancedCard("numbered", sequenceRng([0]));
     expect(["2","3","4","5","6","7","8","9","10"]).toContain(card.rank);
   });
 
   test("attaches an enhancement", () => {
-    const card = makeEnhancedCard("face", sequenceRng([0]));
+    const card = createEnhancedCard("face", sequenceRng([0]));
     expect(card.enhancement).toBeDefined();
   });
 });

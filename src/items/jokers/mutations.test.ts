@@ -444,6 +444,16 @@ describe("Eternal-joker preservation in destroy paths", () => {
       expect(result.every((j) => j.edition === undefined)).toBe(true);
     });
 
+    test("returns a fresh copy, not the input array, on a no-op slate (negative)", () => {
+      const jokers = [
+        withEternal(createPlusFourMultJoker()),
+        withEternal(createBusinessCardJoker()),
+      ];
+      expect(polychromeRandomJokerDestroyOthers(jokers, fixedRng([0]))).not.toBe(
+        jokers,
+      );
+    });
+
     test("with a single non-Eternal among Eternals, only that one gets Polychrome", () => {
       const jokers = [
         withEternal(createPlusFourMultJoker()),

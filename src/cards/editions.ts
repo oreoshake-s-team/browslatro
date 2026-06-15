@@ -40,7 +40,7 @@ export function withCardEdition<T extends { edition?: CardEdition | null }>(
   return { ...card, edition };
 }
 
-export function pickRandomCardEdition(rng: () => number): CardEdition {
+export function rollCardEdition(rng: () => number): CardEdition {
   return CARD_EDITION_KINDS[Math.floor(rng() * CARD_EDITION_KINDS.length)];
 }
 

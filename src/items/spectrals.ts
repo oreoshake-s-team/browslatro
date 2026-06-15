@@ -1,6 +1,6 @@
 import type { Card, CardEdition, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import { SUITS, nextCardId } from "../cards/deck";
-import { pickRandomCardEdition } from "../cards/editions";
+import { rollCardEdition } from "../cards/editions";
 import { pickRandomNonEmpty } from "./random";
 import type { JokerRarity } from "./jokers";
 
@@ -100,7 +100,7 @@ function ranksForFilter(filter: TransmuteRankFilter): ReadonlyArray<Rank> {
   return NUMBERED_RANKS;
 }
 
-export function makeEnhancedCard(
+export function createEnhancedCard(
   filter: TransmuteRankFilter,
   rng: SpectralRandomSource,
 ): Card {
@@ -124,14 +124,14 @@ export function transmuteHand(
 ): TransmuteResult {
   if (hand.length === 0) {
     const additions: Card[] = [];
-    for (let i = 0; i < addCount; i += 1) additions.push(makeEnhancedCard(filter, rng));
+    for (let i = 0; i < addCount; i += 1) additions.push(createEnhancedCard(filter, rng));
     return { hand: additions, destroyedIds: [], additions };
   }
   const destroyIdx = Math.floor(rng() * hand.length);
   const destroyedIds = [hand[destroyIdx].id];
   const kept = hand.filter((_, i) => i !== destroyIdx);
   const additions: Card[] = [];
-  for (let i = 0; i < addCount; i += 1) additions.push(makeEnhancedCard(filter, rng));
+  for (let i = 0; i < addCount; i += 1) additions.push(createEnhancedCard(filter, rng));
   return { hand: [...kept, ...additions], destroyedIds, additions };
 }
 
@@ -152,7 +152,7 @@ export function applyAuraToSelectedInHand(
   if (!hand.some((c) => c.id === targetId)) {
     return { hand, targetId: null, edition: null };
   }
-  const edition = pickRandomCardEdition(rng);
+  const edition = rollCardEdition(rng);
   return {
     hand: hand.map((c) => (c.id === targetId ? { ...c, edition } : c)),
     targetId,

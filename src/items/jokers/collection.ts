@@ -386,7 +386,6 @@ function applyToRandomDestroyableJoker(
   rng: RandomSource,
   transform: (chosen: Joker, kept: ReadonlyArray<Joker>) => Joker[],
 ): Joker[] {
-  if (jokers.length === 0) return [];
   const { destroyable, kept } = partitionByDestroyable(jokers);
   if (destroyable.length === 0) return [...jokers];
   return transform(pickRandomNonEmpty(destroyable, rng), kept);
