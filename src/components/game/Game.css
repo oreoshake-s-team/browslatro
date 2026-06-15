@@ -97,9 +97,3 @@
     gap: 1rem;
   }
 }
-
-.autopilot-toggle-button[aria-pressed="true"] {
-  background-color: var(--accent-chips);
-  border-color: var(--accent-chips-mid);
-  color: var(--white);
-}

@@ -336,11 +336,11 @@ export default function Game({
             </button>
             {onToggleAutopilot && (
               <button
-                className="btn autopilot-toggle-button"
+                className="btn btn--advisor autopilot-toggle-button"
                 onClick={onToggleAutopilot}
                 aria-pressed={autopilotEnabled}
               >
-                <span aria-hidden="true">💡 </span>
+                <span aria-hidden="true">🤖 </span>
                 {t("advisor.autopilot")}
               </button>
             )}

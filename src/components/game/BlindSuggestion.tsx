@@ -74,7 +74,7 @@ export default function BlindSuggestion(
       aria-label={t("advisor.suggestBlindButton")}
       onClick={() => void suggest()}
     >
-      <span aria-hidden="true">💡 </span>
+      <span aria-hidden="true">🤖 </span>
       {t("advisor.suggestBlindButton")}
     </button>
   );

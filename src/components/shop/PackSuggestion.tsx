@@ -126,6 +126,7 @@ export default function PackSuggestion(
       aria-label={t("advisor.suggestPackButton")}
       onClick={() => void suggest()}
     >
+      <span aria-hidden="true">🤖 </span>
       {t("advisor.suggestPackButton")}
     </button>
   );
