@@ -8,21 +8,9 @@ import { createBossCatalog } from "../../items/bosses";
 import { useGame } from "../../store/game";
 import BlindSuggestion, { type BlindSuggestionProps } from "./BlindSuggestion";
 
-const { rankState } = vi.hoisted(() => ({
-  rankState: { value: [1] as ReadonlyArray<number> },
-}));
-
-vi.mock("../../ai/advisor/blindRanker", () => ({
-  sharedBlindRanker: () => ({
-    load: () => Promise.resolve(),
-    rankBlind: () => Promise.resolve(rankState.value),
-  }),
-}));
-
 beforeEach(() => {
   window.localStorage.clear();
   useGame.getState().resetGame();
-  rankState.value = [1];
 });
 
 function adviceFixture(advice?: Partial<Advice>): Advice {
@@ -36,16 +24,17 @@ function adviceFixture(advice?: Partial<Advice>): Advice {
   };
 }
 
+// Early ante + a strong tag → the coach recommends Skip (you can coast).
 function renderSuggestion(
   overrides: Partial<BlindSuggestionProps> = {},
   advice: Advice = adviceFixture(),
 ) {
   const props: BlindSuggestionProps = {
-    ante: 2,
+    ante: 1,
     currentBlind: 1,
     boss: createBossCatalog()[0],
     stake: "white",
-    skipRewards: { small: { id: "charm" }, big: { id: "investment" } },
+    skipRewards: { small: { id: "rare" }, big: { id: "rare" } },
     onPlay: vi.fn(),
     onSkip: vi.fn(),
     suggestionDeps: {
@@ -55,6 +44,11 @@ function renderSuggestion(
   };
   render(<BlindSuggestion {...props} />);
   return props;
+}
+
+// A late ante with no build can't coast → the coach recommends Play.
+function renderPlayCase(overrides: Partial<BlindSuggestionProps> = {}) {
+  return renderSuggestion({ ante: 6, ...overrides });
 }
 
 async function revealCoachPick(): Promise<void> {
@@ -72,7 +66,7 @@ describe("BlindSuggestion click-to-reveal", () => {
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
   });
 
-  test("clicking the trigger reveals a skip recommendation with the tag name", async () => {
+  test("recommends skipping a winnable early blind for a strong tag", async () => {
     renderSuggestion();
     await revealCoachPick();
     await expect(
@@ -80,9 +74,16 @@ describe("BlindSuggestion click-to-reveal", () => {
     ).resolves.toHaveTextContent(/^Skip it for the /);
   });
 
-  test("a play coach pick reads as playing the blind", async () => {
-    rankState.value = [0];
-    renderSuggestion();
+  test("recommends playing when the build cannot coast", async () => {
+    renderPlayCase();
+    await revealCoachPick();
+    await expect(
+      screen.findByTestId("coach-recommendation"),
+    ).resolves.toHaveTextContent(/^Play the blind /);
+  });
+
+  test("recommends playing a strong tag is not enough without a build", async () => {
+    renderSuggestion({ ante: 4, skipRewards: { small: { id: "handy" } } });
     await revealCoachPick();
     await expect(
       screen.findByTestId("coach-recommendation"),
@@ -96,16 +97,15 @@ describe("BlindSuggestion click-to-reveal", () => {
     expect(props.suggestionDeps?.fetchAdviceFn).not.toHaveBeenCalled();
   });
 
-  test("applying a skip coach pick skips the blind", async () => {
+  test("applying a skip recommendation skips the blind", async () => {
     const props = renderSuggestion();
     await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onSkip).toHaveBeenCalledOnce();
   });
 
-  test("applying a play coach pick plays the blind", async () => {
-    rankState.value = [0];
-    const props = renderSuggestion();
+  test("applying a play recommendation plays the blind", async () => {
+    const props = renderPlayCase();
     await revealCoachPick();
     await userEvent.click(await screen.findByTestId("coach-apply"));
     expect(props.onPlay).toHaveBeenCalledOnce();
@@ -120,8 +120,7 @@ describe("BlindSuggestion click-to-reveal", () => {
   });
 
   test("the apply button reads Play the blind on a play pick", async () => {
-    rankState.value = [0];
-    renderSuggestion();
+    renderPlayCase();
     await revealCoachPick();
     await expect(screen.findByTestId("coach-apply")).resolves.toHaveTextContent(
       "Play the blind",

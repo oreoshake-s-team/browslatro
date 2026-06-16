@@ -7,8 +7,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from dataset import load_decisions, split_by_seed
 from encoding import (
-    BLIND_INPUT_FEATURES,
-    BLIND_KINDS,
     CANDIDATE_FEATURES,
     CARD_FEATURES,
     INPUT_FEATURES,
@@ -18,7 +16,6 @@ from encoding import (
     SHOP_INPUT_FEATURES,
     SHOP_ITEM_TYPES,
     STATE_FEATURES,
-    encode_blind_decision,
     encode_candidate,
     encode_decision,
     encode_shop_decision,
@@ -26,25 +23,6 @@ from encoding import (
 )
 
 FIXTURE = os.path.join(os.path.dirname(__file__), "fixtures", "sample.jsonl")
-BLIND_GOLDEN = os.path.join(os.path.dirname(__file__), "fixtures", "blind-golden.json")
-
-
-def blind_record(**overrides):
-    record = {
-        "schemaVersion": 1,
-        "runSeed": 1,
-        "ante": 1,
-        "kind": "small",
-        "scoreTarget": 300,
-        "payout": 3,
-        "money": 4,
-        "jokerCount": 0,
-        "consumableCount": 0,
-        "candidates": [{"action": "play"}, {"action": "skip"}],
-        "chosenIndex": 0,
-    }
-    record.update(overrides)
-    return record
 
 
 def card(card_id, rank, suit, **extra):
@@ -384,43 +362,6 @@ class ShopGoldenCrossLanguageTests(unittest.TestCase):
                 self.assertEqual(len(got_row), len(want_row))
                 for got, want in zip(got_row, want_row):
                     self.assertAlmostEqual(got, want, places=5)
-
-
-class EncodeBlindDecisionTests(unittest.TestCase):
-    def test_emits_one_row_per_candidate(self):
-        candidates, _ = encode_blind_decision(blind_record())
-        self.assertEqual(len(candidates), 2)
-
-    def test_each_row_has_blind_input_features(self):
-        candidates, _ = encode_blind_decision(blind_record())
-        self.assertTrue(all(len(row) == BLIND_INPUT_FEATURES for row in candidates))
-
-    def test_play_row_sets_the_play_flag(self):
-        candidates, _ = encode_blind_decision(blind_record())
-        self.assertEqual(candidates[0][BLIND_INPUT_FEATURES - 2], 1.0)
-
-    def test_skip_row_sets_the_skip_flag(self):
-        candidates, _ = encode_blind_decision(blind_record())
-        self.assertEqual(candidates[1][BLIND_INPUT_FEATURES - 1], 1.0)
-
-    def test_one_hot_encodes_the_blind_kind(self):
-        candidates, _ = encode_blind_decision(blind_record(kind="big"))
-        big_idx = 2 + BLIND_KINDS.index("big")
-        self.assertEqual(candidates[0][big_idx], 1.0)
-
-    def test_returns_the_chosen_index(self):
-        _, chosen = encode_blind_decision(blind_record(chosenIndex=1))
-        self.assertEqual(chosen, 1)
-
-    def test_golden_fixture_round_trips(self):
-        with open(BLIND_GOLDEN, encoding="utf-8") as handle:
-            cases = json.load(handle)
-        for case in cases:
-            candidates, chosen = encode_blind_decision(case["record"])
-            self.assertEqual(chosen, case["chosenIndex"])
-            for row, expected in zip(candidates, case["candidates"]):
-                for value, want in zip(row, expected):
-                    self.assertAlmostEqual(value, want, places=6)
 
 
 if __name__ == "__main__":
