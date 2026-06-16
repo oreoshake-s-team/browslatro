@@ -311,7 +311,7 @@ export default function Hand({
       fromIdx >= 0 && (gapIdx === fromIdx || gapIdx === fromIdx + 1);
     const isActive =
       draggingId !== null && dragOverGap === gapIdx && !isSelfAdjacent;
-    const gapClass = ["hand-card-gap", isActive ? "hand-card-gap-active" : ""]
+    const gapClass = ["hand-card-gap", isActive ? "hand-card-gap--active" : ""]
       .filter(Boolean)
       .join(" ");
     return (
@@ -339,7 +339,7 @@ export default function Hand({
             type="button"
             className={`hand-sort-button ${
               !manualOrder && sortMode === "rank"
-                ? "hand-sort-button-active"
+                ? "hand-sort-button--active"
                 : ""
             }`.trim()}
             aria-pressed={!manualOrder && sortMode === "rank"}
@@ -351,7 +351,7 @@ export default function Hand({
             type="button"
             className={`hand-sort-button ${
               !manualOrder && sortMode === "suit"
-                ? "hand-sort-button-active"
+                ? "hand-sort-button--active"
                 : ""
             }`.trim()}
             aria-pressed={!manualOrder && sortMode === "suit"}
@@ -362,7 +362,7 @@ export default function Hand({
           <button
             type="button"
             className={`hand-sort-button ${
-              manualOrder ? "hand-sort-button-active" : ""
+              manualOrder ? "hand-sort-button--active" : ""
             }`.trim()}
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
@@ -377,7 +377,7 @@ export default function Hand({
         <div
           ref={handCardsRef}
           className={`hand-cards${
-            draggingId !== null ? " hand-cards-dragging" : ""
+            draggingId !== null ? " hand-cards--dragging" : ""
           }`}
           aria-label={t("a11y.yourHand")}
           data-testid="hand-cards"
@@ -388,7 +388,7 @@ export default function Hand({
             const isDragging = draggingId === card.id;
             const slotClass = [
               "hand-card-slot",
-              isDragging ? "hand-card-slot-dragging" : "",
+              isDragging ? "hand-card-slot--dragging" : "",
             ]
               .filter(Boolean)
               .join(" ");

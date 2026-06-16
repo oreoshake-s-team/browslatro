@@ -336,16 +336,16 @@ describe("Hand drag-and-drop reordering", () => {
     renderHand({ hand: fourCards, remaining: [] });
     const source = getSlot(4);
     fireEvent.dragStart(source);
-    expect(source).toHaveClass("hand-card-slot-dragging");
+    expect(source).toHaveClass("hand-card-slot--dragging");
     fireEvent.dragEnd(source);
   });
 
   test("the hand row widens its drop hitboxes while a drag is in flight", () => {
     renderHand({ hand: fourCards, remaining: [] });
     const handRow = screen.getByTestId("hand-cards");
-    expect(handRow).not.toHaveClass("hand-cards-dragging");
+    expect(handRow).not.toHaveClass("hand-cards--dragging");
     fireEvent.dragStart(getSlot(4));
-    expect(handRow).toHaveClass("hand-cards-dragging");
+    expect(handRow).toHaveClass("hand-cards--dragging");
   });
 
   test("the hand row stops widening its drop hitboxes once the drag ends", () => {
@@ -354,7 +354,7 @@ describe("Hand drag-and-drop reordering", () => {
     const handRow = screen.getByTestId("hand-cards");
     fireEvent.dragStart(source);
     fireEvent.dragEnd(source);
-    expect(handRow).not.toHaveClass("hand-cards-dragging");
+    expect(handRow).not.toHaveClass("hand-cards--dragging");
   });
 
   test("the hovered gap is marked active while dragging over it", () => {
@@ -363,7 +363,7 @@ describe("Hand drag-and-drop reordering", () => {
     const target = getGap(3);
     fireEvent.dragStart(source);
     fireEvent.dragOver(target);
-    expect(target).toHaveClass("hand-card-gap-active");
+    expect(target).toHaveClass("hand-card-gap--active");
     fireEvent.dragEnd(source);
   });
 
@@ -372,7 +372,7 @@ describe("Hand drag-and-drop reordering", () => {
     const source = getSlot(4);
     fireEvent.dragStart(source);
     fireEvent.dragOver(getGap(3));
-    expect(getGap(0)).not.toHaveClass("hand-card-gap-active");
+    expect(getGap(0)).not.toHaveClass("hand-card-gap--active");
     fireEvent.dragEnd(source);
   });
 
@@ -382,7 +382,7 @@ describe("Hand drag-and-drop reordering", () => {
     // Post-drop, no gap should still be highlighted.
     const activeGaps = screen
       .getAllByTestId(/^hand-gap-/)
-      .filter((g) => g.classList.contains("hand-card-gap-active"));
+      .filter((g) => g.classList.contains("hand-card-gap--active"));
     expect(activeGaps).toHaveLength(0);
   });
 
@@ -393,7 +393,7 @@ describe("Hand drag-and-drop reordering", () => {
     const source = getSlot(1);
     fireEvent.dragStart(source);
     fireEvent.dragOver(getGap(1));
-    expect(getGap(1)).not.toHaveClass("hand-card-gap-active");
+    expect(getGap(1)).not.toHaveClass("hand-card-gap--active");
     fireEvent.dragEnd(source);
   });
 
