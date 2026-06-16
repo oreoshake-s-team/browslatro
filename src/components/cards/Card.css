@@ -280,7 +280,7 @@
   font-size: 2.4rem;
 }
 
-.card-enhancement-gold {
+.card--enhancement-gold {
   border-color: var(--accent-money-strong);
   border-width: 3px;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-money-strong) 45%, transparent),
@@ -658,7 +658,7 @@
   }
 }
 
-.card-enhancement-steel {
+.card--enhancement-steel {
   border-color: var(--shop-muted-on-light);
   border-width: 3px;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--shop-muted-on-light) 40%, transparent),
@@ -672,7 +672,7 @@
   );
 }
 
-.card-enhancement-bonus {
+.card--enhancement-bonus {
   border-color: var(--accent-chips-strong);
   border-width: 3px;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-chips-strong) 40%, transparent),
@@ -686,7 +686,7 @@
   );
 }
 
-.card-enhancement-mult {
+.card--enhancement-mult {
   border-color: var(--accent-red-deep);
   border-width: 3px;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-red-deep) 40%, transparent),
@@ -700,7 +700,7 @@
   );
 }
 
-.card-enhancement-wild {
+.card--enhancement-wild {
   border-color: var(--enhance-wild-border);
   border-width: 3px;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--enhance-wild-border) 40%, transparent),
@@ -717,7 +717,7 @@
   );
 }
 
-.card-enhancement-glass {
+.card--enhancement-glass {
   border-color: color-mix(in srgb, var(--accent-chips-text) 85%, transparent);
   border-width: 3px;
   background-color: color-mix(in srgb, var(--white) 55%, transparent);
@@ -733,7 +733,7 @@
   );
 }
 
-.card-enhancement-stone {
+.card--enhancement-stone {
   border-color: var(--shop-muted-on-light);
   border-width: 3px;
   background-color: var(--text-muted);
@@ -775,7 +775,7 @@
     );
 }
 
-.card-enhancement-lucky {
+.card--enhancement-lucky {
   border-color: var(--enhance-lucky-border);
   border-width: 3px;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--enhance-lucky-border) 40%, transparent),

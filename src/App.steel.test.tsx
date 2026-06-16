@@ -135,7 +135,7 @@ describe("Steel highlight prop", () => {
     const seenButNonSteel = Array.from(seenIds).filter((id) => {
       const cardIdStr = id.replace("steel-scoring-", "");
       const cardEl = document.querySelector(`[data-testid="hand-slot-${cardIdStr}"]`);
-      return cardEl && !cardEl.querySelector(".card-enhancement-steel");
+      return cardEl && !cardEl.querySelector(".card--enhancement-steel");
     });
     expect(seenButNonSteel).toEqual([]);
   });

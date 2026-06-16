@@ -146,7 +146,7 @@ describe("Applying owned enhancement tarots to the preview hand", () => {
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     const enhanced = screen
       .getByTestId("pack-open-preview-hand")
-      .querySelector(".card-enhancement-lucky");
+      .querySelector(".card--enhancement-lucky");
     expect(enhanced).not.toBeNull();
   });
 

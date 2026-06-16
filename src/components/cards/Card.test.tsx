@@ -176,12 +176,12 @@ describe("Card", () => {
   test("applies the gold enhancement class when the card is gold", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-gold");
+    expect(screen.getByRole("button")).toHaveClass("card--enhancement-gold");
   });
 
   test("does not apply any enhancement class to a vanilla card", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button").className).not.toMatch(/card-enhancement-/);
+    expect(screen.getByRole("button").className).not.toMatch(/card--enhancement-/);
   });
 
   test("appends the enhancement to the accessible label when gold", () => {
@@ -240,7 +240,7 @@ describe("Card", () => {
     { enhancement: "lucky", card: { id: 16, rank: "3", suit: "hearts", enhancement: "lucky" } },
   ])("applies the $enhancement enhancement class when the card is $enhancement", ({ enhancement, card }) => {
     render(<Card card={card} />);
-    expect(screen.getByRole("button")).toHaveClass(`card-enhancement-${enhancement}`);
+    expect(screen.getByRole("button")).toHaveClass(`card--enhancement-${enhancement}`);
   });
 
   test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
@@ -360,7 +360,7 @@ describe("Card", () => {
   test("applies the stone enhancement class when the card is stone", () => {
     const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
     render(<Card card={stone} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-stone");
+    expect(screen.getByRole("button")).toHaveClass("card--enhancement-stone");
   });
 
   test("uses 'Stone card' as the accessible name (rank/suit are invisible)", () => {
@@ -474,7 +474,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={lucky} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-enhancement-lucky");
+    expect(screen.getByRole("button")).not.toHaveClass("card--enhancement-lucky");
   });
 
   test("a face-down blue-seal card does not apply the seal class", () => {
@@ -522,7 +522,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: false,
     };
     render(<Card card={lucky} />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
+    expect(screen.getByRole("button")).toHaveClass("card--enhancement-lucky");
   });
 
   test("a face-down card flipped face-up restores its seal badge (regression)", () => {
@@ -546,7 +546,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={lucky} scoring />);
-    expect(screen.getByRole("button")).toHaveClass("card-enhancement-lucky");
+    expect(screen.getByRole("button")).toHaveClass("card--enhancement-lucky");
   });
 });
 
