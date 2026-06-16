@@ -22,6 +22,7 @@ import {
   type PostShopState,
 } from "../src/ai/shopRolloutExpert";
 import { categorizePackOption, categorizeShopItem } from "../src/ai/advisor/shopCategory";
+import { createJokerStackingShopAgent } from "../src/ai/rolloutShopAgent";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
 import { createJokerCatalog } from "../src/items/jokers";
 import { createPlanetCatalog, applyPlanetUpgrade } from "../src/items/planets";
@@ -91,6 +92,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
     planetCatalog,
     tarotCatalog,
   };
+  const rolloutShopAgent = createJokerStackingShopAgent();
   let records = 0;
 
   for (let g = 0; g < config.games; g += 1) {
@@ -101,6 +103,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
       rollouts: config.rollouts,
       maxAnte: 8,
       consumableDeps,
+      rolloutShopAgent,
     };
 
     const shopAgent: HeadlessShopAgent = {

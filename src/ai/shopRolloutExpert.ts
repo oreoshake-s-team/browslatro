@@ -7,7 +7,7 @@ import type { ShopItem } from "../items/shop";
 import type { TarotCard } from "../items/tarots";
 import type { HandStats } from "../scoring/handStats";
 import { applyConsumable } from "./headlessConsumables";
-import { playHeadlessRun, seededRng, type HeadlessAgent } from "./headlessRun";
+import { playHeadlessRun, seededRng, type HeadlessAgent, type HeadlessShopAgent } from "./headlessRun";
 
 export interface ConsumableLabelDeps {
   readonly jokerCatalog: ReadonlyArray<Joker>;
@@ -21,6 +21,7 @@ export interface RolloutOptions {
   readonly rollouts: number;
   readonly maxAnte: number;
   readonly consumableDeps?: ConsumableLabelDeps;
+  readonly rolloutShopAgent?: HeadlessShopAgent;
 }
 
 export interface PostShopState {
@@ -47,6 +48,7 @@ export async function rolloutValue(
       jokers: state.jokers,
       startDeck: state.deck,
       maxAnte: horizon,
+      shopAgent: opts.rolloutShopAgent,
     });
     total += result.blindsCleared;
   }

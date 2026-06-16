@@ -84,7 +84,7 @@ yarn dlx tsx scripts/generateShopRolloutDataset.ts shop.jsonl --games 200 --hand
 python3 ml/train.py dataset.jsonl --human ml/data/human-play/*.jsonl --out public/models/advisor-policy-v9.onnx
 
 # 3b. Or train the shop policy
-python3 ml/train.py shop.jsonl --shop --out public/models/advisor-shop-policy-v4.onnx
+python3 ml/train.py shop.jsonl --shop --out public/models/advisor-shop-policy-v5.onnx
 ```
 
 For LLM teacher labeling (costs money, needs `ANTHROPIC_API_KEY`):
@@ -106,7 +106,7 @@ yarn dlx tsx scripts/benchmarkPolicy.ts public/models/advisor-policy-v9.onnx pub
 
 # Agreement with real human play (Python; needs onnxruntime)
 python3 ml/evaluate_real_play.py public/models/advisor-policy-v8.onnx
-python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v4.onnx
+python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v5.onnx
 ```
 
 **Ship only on a clear `avgBlinds` win** over the incumbent across disjoint seeds — never on validation accuracy alone (see the [validation-accuracy trap](./ml-pipeline.md#mldatasetpy--ingestion--weighting)). When you ship, commit the new `public/models/advisor-policy-v{N}.onnx` and point `ADVISOR_MODEL_URL` (in [`advisorRanker.ts`](../../src/ai/advisor/advisorRanker.ts)) — or `SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts) — at it.
