@@ -44,8 +44,8 @@ function skipCandidate(): PackAdviceCandidate {
 }
 
 describe("SHOP_INPUT_FEATURES", () => {
-  test("equals 28", () => {
-    expect(SHOP_INPUT_FEATURES).toBe(28);
+  test("equals 46", () => {
+    expect(SHOP_INPUT_FEATURES).toBe(46);
   });
 });
 
@@ -171,6 +171,7 @@ const FIXTURES = join(__dirname, "..", "..", "..", "ml", "tests", "fixtures");
 interface GoldenOffer {
   readonly itemType: string;
   readonly category: string;
+  readonly attributes?: ReadonlyArray<number>;
   readonly id: string;
   readonly name: string;
   readonly cost: number;
@@ -179,6 +180,7 @@ interface GoldenOffer {
 interface GoldenOption {
   readonly optionType: string;
   readonly category: string;
+  readonly attributes?: ReadonlyArray<number>;
   readonly id: string;
   readonly name: string;
 }
@@ -206,7 +208,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "purchase") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "leave" });
     return { money, ante, round, candidates };
@@ -215,7 +217,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "reroll") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
     candidates.push({ action: "leave" });
@@ -224,7 +226,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
 
   const packCandidates: PackAdviceCandidate[] = (rec.options ?? []).map((o) => ({
     action: "pick" as const,
-    option: { id: o.id, name: o.name, optionType: o.optionType, category: o.category, description: "" },
+    option: { id: o.id, name: o.name, optionType: o.optionType, category: o.category, attributes: o.attributes, description: "" },
   }));
   packCandidates.push({ action: "skip" });
   return { money, ante, round, picksRemaining: rec.picksRemaining ?? 0, candidates: packCandidates };

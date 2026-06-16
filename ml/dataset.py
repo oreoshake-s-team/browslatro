@@ -170,6 +170,7 @@ def _encode_shop_correction(record):
                     item["cost"],
                     money,
                     category=item.get("category", "other"),
+                    attributes=item.get("attributes"),
                 )
             )
         elif action == "reroll":
