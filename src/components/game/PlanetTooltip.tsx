@@ -22,7 +22,7 @@ export default function PlanetTooltip({
   const { i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
   return createPortal(
-    <div id={id} ref={ref} role="tooltip" className="planet-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="tooltip planet-tooltip" style={style}>
       <p className="planet-tooltip-heading">
         {localizedConsumableName(i18n.language, card.id, card.name)}
       </p>

@@ -55,7 +55,7 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
   const effectiveOdds = useEffectiveOdds(joker);
   const currentValue = useCurrentValue(joker);
   return createPortal(
-    <div id={id} ref={ref} role="tooltip" className="joker-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="tooltip joker-tooltip" style={style}>
       <p className="joker-tooltip-heading">
         {localizedJokerName(i18n.language, joker.id, joker.name)}
       </p>

@@ -22,7 +22,7 @@ export default function TarotTooltip({
   const { i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
   return createPortal(
-    <div id={id} ref={ref} role="tooltip" className="tarot-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="tooltip tarot-tooltip" style={style}>
       <p className="tarot-tooltip-heading">
         {localizedConsumableName(i18n.language, card.id, card.name)}
       </p>

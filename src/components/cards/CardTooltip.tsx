@@ -22,7 +22,7 @@ export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) 
       });
   const suitColorClass = `card-tooltip-suit-${info.suitClass}`;
   return createPortal(
-    <div id={id} ref={ref} role="tooltip" className="card-tooltip" style={style}>
+    <div id={id} ref={ref} role="tooltip" className="tooltip card-tooltip" style={style}>
       <p className="card-tooltip-heading">
         <span className="card-tooltip-rank">{info.rank}</span>
         <span className={`card-tooltip-suit ${suitColorClass}`} aria-hidden="true">
