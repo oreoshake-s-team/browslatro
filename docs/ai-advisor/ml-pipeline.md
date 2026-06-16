@@ -173,7 +173,7 @@ The node names `candidates`/`logits` and the dynamic batch axis are **exactly wh
 | `--teacher-weight` | `5.0` | weight on teacher decisions |
 | `--corrections` (repeatable) | — | human-play JSONL; quality-gated `advice-feedback` corrections train as weighted labels |
 | `--corrections-weight` | `5.0` | weight on corrections |
-| `--min-score-fraction` | `0.25` | quality gate: a corrected hand play must score at least this fraction of the best play (shop corrections have no per-candidate score, so the gate does not apply) |
+| `--min-score-fraction` | `0.25` | quality gate: a corrected hand play must score at least this fraction of the best play. Shop corrections have no per-candidate score, so they are gated separately by [`scripts/gateShopCorrections.ts`](../../scripts/gateShopCorrections.ts) (rollout-based) before `--shop --corrections`. |
 | `--shop` | off | train the 28-feature shop policy instead of the hand policy |
 | `--epochs` | `30` | training epochs |
 | `--hidden` | `128` | hidden width |
@@ -252,6 +252,7 @@ All under [`scripts/`](../../scripts/), run with `yarn dlx tsx scripts/<name>.ts
 | `scripts/generateDataset.ts` | Run the search expert through N headless games → hand-decision JSONL. Flags: `--games`, `--seed-offset`, `--rollouts`, `--top-n`, `--max-ante`, `--joker-loadout-fraction`, `--deck`, `--stake`, `--shop-policy`, `--parallel-jobs`. |
 | `scripts/generateShopRolloutDataset.ts` | Rollout-labeled shop/pack decisions → `RunEventRecord` JSONL. Flags: `--games`, `--hand-model`, `--horizon`, `--rollouts`, `--parallel-jobs`. |
 | `scripts/labelDisagreements.ts` | Relabel policy-vs-expert disagreements via the LLM teacher (needs `ANTHROPIC_API_KEY`). Flags: `--model`, `--min-score-fraction`, `--limit`, `--concurrency`. |
+| `scripts/gateShopCorrections.ts` | Rollout-gate shop `advice-feedback` corrections (drops picks well below the best rolled-out choice) before `--shop --corrections`. Flags: `--hand-model`, `--horizon`, `--rollouts`, `--min-score-fraction`. |
 | `scripts/benchmarkPolicy.ts` | Benchmark one+ `.onnx` vs. a greedy baseline. Flags: `--games`, `--seed-offset`, `--deck`, `--stake`, `--shop-policy`, `--no-shop`, `--skip`. |
 | `scripts/distillPolicy.ts` | Orchestrate the full distillation cycle + ship verdict. |
 | `ml/train.py` | Train + export the ONNX policy (hand or `--shop`). |
