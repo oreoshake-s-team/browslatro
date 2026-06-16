@@ -11,6 +11,7 @@ import {
   pickHookDiscardIds,
 } from "../items/bosses";
 import { drawCountForRefill, HAND_SIZE } from "../cards/deck";
+import { deckHandSizeDelta } from "../items/decks";
 import {
   extraConsumableSlots,
   extraHandSize,
@@ -58,6 +59,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const selectedIds = useGame((s) => s.selectedIds);
   const remainingDiscards = useGame((s) => s.remainingDiscards);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const jokers = useGame((s) => s.jokers);
   const discardsUsedThisRound = useGame((s) => s.discardsUsedThisRound);
@@ -79,6 +81,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     1,
     HAND_SIZE +
       handSizeModifier +
+      deckHandSizeDelta(selectedDeck) +
       extraHandSize(ownedVoucherIds) +
       extraStartingHandSizeFromJokers(jokers),
   );

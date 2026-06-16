@@ -4,6 +4,7 @@ import {
   createDeckCatalog,
   deckCompositionTransforms,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckHandSizeDelta,
   deckJokerSlotsDelta,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
@@ -34,7 +35,7 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red, Yellow, Blue, Green, Black, Abandoned, and Checkered Decks are implemented", () => {
+  test("Red, Yellow, Blue, Green, Black, Abandoned, Checkered, and Painted Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
@@ -46,6 +47,7 @@ describe("DeckSpec.implemented", () => {
       "black-deck",
       "abandoned-deck",
       "checkered-deck",
+      "painted-deck",
     ]);
   });
 
@@ -53,7 +55,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(8);
+    expect(unimplementedCount).toBe(7);
   });
 });
 
@@ -63,6 +65,33 @@ describe("Black Deck spec", () => {
       { kind: "joker-slots-delta", amount: 1 },
       { kind: "starting-hands-delta", amount: -1 },
     ]);
+  });
+});
+
+describe("Painted Deck spec", () => {
+  test("declares the +2 hand size and -1 joker slot modifiers", () => {
+    expect(getDeckSpec("painted-deck").modifiers).toEqual([
+      { kind: "hand-size-delta", amount: 2 },
+      { kind: "joker-slots-delta", amount: -1 },
+    ]);
+  });
+
+  test("is marked as implemented", () => {
+    expect(getDeckSpec("painted-deck").implemented).toBe(true);
+  });
+});
+
+describe("deckHandSizeDelta", () => {
+  test("Painted Deck adds 2 to hand size", () => {
+    expect(deckHandSizeDelta("painted-deck")).toBe(2);
+  });
+
+  test("Painted Deck reduces joker slots by 1", () => {
+    expect(deckJokerSlotsDelta("painted-deck")).toBe(-1);
+  });
+
+  test("a deck without a hand-size modifier yields 0 (negative)", () => {
+    expect(deckHandSizeDelta("red-deck")).toBe(0);
   });
 });
 

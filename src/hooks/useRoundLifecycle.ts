@@ -71,6 +71,7 @@ import {
 } from "../items/tags";
 import {
   deckCompositionTransforms,
+  deckHandSizeDelta,
   deckStartingMoneyDelta,
   type Deck,
   deckJokerSlotsDelta,
@@ -191,6 +192,7 @@ export function useRoundLifecycle({
     1,
     HAND_SIZE +
       handSizeModifier +
+      deckHandSizeDelta(selectedDeck) +
       extraHandSize(ownedVoucherIds) +
       extraStartingHandSizeFromJokers(equippedJokers),
   );

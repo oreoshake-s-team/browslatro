@@ -25,6 +25,7 @@ export type DeckModifier =
   | { readonly kind: "starting-money-delta"; readonly amount: number }
   | { readonly kind: "starting-discards-delta"; readonly amount: number }
   | { readonly kind: "starting-hands-delta"; readonly amount: number }
+  | { readonly kind: "hand-size-delta"; readonly amount: number }
   | { readonly kind: "joker-slots-delta"; readonly amount: number }
   | {
       readonly kind: "end-of-round-bonus-per-remaining-hand-and-discard";
@@ -107,7 +108,16 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     ],
   },
   { id: "zodiac-deck", name: "Zodiac Deck", description: "Start with Tarot Merchant, Planet Merchant, and Overstock vouchers.", implemented: false, modifiers: [] },
-  { id: "painted-deck", name: "Painted Deck", description: "+2 hand size, -1 joker slot.", implemented: false, modifiers: [] },
+  {
+    id: "painted-deck",
+    name: "Painted Deck",
+    description: "+2 hand size, -1 joker slot.",
+    implemented: true,
+    modifiers: [
+      { kind: "hand-size-delta", amount: 2 },
+      { kind: "joker-slots-delta", amount: -1 },
+    ],
+  },
   { id: "anaglyph-deck", name: "Anaglyph Deck", description: "Gain a Double Tag after each Boss Blind defeat.", implemented: false, modifiers: [] },
   { id: "plasma-deck", name: "Plasma Deck", description: "Balance Chips and Mult before scoring; 2x Big Blind size.", implemented: false, modifiers: [] },
   { id: "erratic-deck", name: "Erratic Deck", description: "Starting deck has random ranks and suits.", implemented: false, modifiers: [] },
@@ -148,6 +158,9 @@ export const deckStartingDiscardsDelta = (deck: Deck): number =>
 
 export const deckStartingHandsDelta = (deck: Deck): number =>
   sumDeckModifier(deck, "starting-hands-delta");
+
+export const deckHandSizeDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "hand-size-delta");
 
 export const deckJokerSlotsDelta = (deck: Deck): number =>
   sumDeckModifier(deck, "joker-slots-delta");

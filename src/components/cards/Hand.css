@@ -101,6 +101,48 @@
    * zones so the row can visibly open when a card is dragged over a gap. */
   gap: 0;
   row-gap: 1.6rem;
+
+  /* `min-width: 0` lets this 1fr grid column shrink below its card content so
+   * an over-cap hand clips/scales inside the column instead of pushing the
+   * deck-pile column off-screen. `container-type` then lets descendant card
+   * sizing react to the column's real width (100cqw) and the live count. */
+  min-width: 0;
+  container-type: inline-size;
+}
+
+/* `100cqw` is the width of the nearest ancestor query container (.hand-cards),
+ * so this responsive token must live on the descendants, not on .hand-cards
+ * itself. Cards are sized to the per-card share of the row (100cqw / count)
+ * scaled up by --hand-fan so neighbours overlap into a fan; the value is
+ * capped at the full card size (roomy hands stay full and lightly fanned) and
+ * floored for readability (cramped hands scale down but stay legible). One
+ * formula covers every width and count — wide desktop, tablet, and phone. */
+.hand-cards :where(.hand-card-slot, .hand-card-gap) {
+  --hand-fan: 1.12;
+  --card-width: clamp(
+    3.6rem,
+    calc(100cqw / var(--hand-count, 8) * var(--hand-fan)),
+    6.5rem
+  );
+  --card-height: calc(var(--card-width) * 1.4);
+}
+
+/* Stacking order normally follows the DOM (right card on top), so in a fanned
+ * hand a hovered, focused, or selected card would be partly covered by its
+ * right neighbour — lift it forward instead. */
+.hand-card-slot,
+.hand-card-slot:active {
+  position: relative;
+  z-index: 1;
+}
+
+.hand-card-slot--selected {
+  z-index: 2;
+}
+
+.hand-card-slot:hover,
+.hand-card-slot:focus-within {
+  z-index: 3;
 }
 
 /* Drop-zone spacers interleaved between (and around) every card slot.

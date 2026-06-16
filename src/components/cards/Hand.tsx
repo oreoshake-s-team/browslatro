@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useMemo, useReducer, useRef } from "react";
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  type CSSProperties,
+} from "react";
 import "./Hand.css";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
@@ -379,6 +386,7 @@ export default function Hand({
           className={`hand-cards${
             draggingId !== null ? " hand-cards--dragging" : ""
           }`}
+          style={{ "--hand-count": displayedHand.length } as CSSProperties}
           aria-label={t("a11y.yourHand")}
           data-testid="hand-cards"
           onDragOver={handleHandDragOver}
@@ -389,6 +397,7 @@ export default function Hand({
             const slotClass = [
               "hand-card-slot",
               isDragging ? "hand-card-slot--dragging" : "",
+              selectedIds.has(card.id) ? "hand-card-slot--selected" : "",
             ]
               .filter(Boolean)
               .join(" ");

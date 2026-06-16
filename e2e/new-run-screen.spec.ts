@@ -37,6 +37,33 @@ test.describe("New-run screen — deck selection", () => {
   });
 });
 
+test.describe("New-run screen — Painted Deck", () => {
+  test("Painted Deck deals a 10-card hand (+2) and offers 4 joker slots (-1)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByTestId("new-run-deck-painted-deck").click();
+    await page.getByTestId("new-run-confirm").click();
+    await page.getByTestId("blind-select-play").click();
+    await expect(page.locator('[data-testid="hand-cards"] .card')).toHaveCount(
+      10,
+    );
+    await expect(page.getByTestId("joker-tile-empty")).toHaveCount(4);
+  });
+
+  test("Red Deck (default) deals 8 cards and 5 joker slots (negative)", async ({
+    page,
+  }) => {
+    await page.goto("/");
+    await page.getByTestId("new-run-confirm").click();
+    await page.getByTestId("blind-select-play").click();
+    await expect(page.locator('[data-testid="hand-cards"] .card')).toHaveCount(
+      8,
+    );
+    await expect(page.getByTestId("joker-tile-empty")).toHaveCount(5);
+  });
+});
+
 test.describe("New-run screen — Green Deck", () => {
   const HAND_CARDS = '[data-testid="hand-cards"] .card';
   const SUBMIT_BUTTON = /^Submit Hand/;

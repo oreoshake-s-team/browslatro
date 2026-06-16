@@ -94,7 +94,11 @@ import {
   fullDeckPile,
   initialDeal,
 } from "../cards/deckBuild";
-import { deckJokerSlotsDelta, deckSuppressesInterest } from "../items/decks";
+import {
+  deckHandSizeDelta,
+  deckJokerSlotsDelta,
+  deckSuppressesInterest,
+} from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -518,6 +522,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       1,
       HAND_SIZE +
         s.handSizeModifier +
+        deckHandSizeDelta(s.selectedDeck) +
         extraHandSize(s.ownedVoucherIds) +
         extraStartingHandSizeFromJokers(s.jokers),
     );
