@@ -6,6 +6,7 @@ import {
   type ShopSuggestionAction,
 } from "../../ai/advisor/shopAdvicePlan";
 import { buildShopPolicyFeedbackEvent } from "../../ai/advisor/adviceFeedback";
+import { buildShopRolloutState } from "../../ai/advisor/shopRolloutCapture";
 import {
   clearShopAdvice,
   rememberShopAdvice,
@@ -109,6 +110,7 @@ export default function ShopSuggestion(
       candidates: plan.request.candidates,
       actions: plan.actions,
       recommendationIndex: onnxIndex,
+      rollout: buildShopRolloutState(useGame.getState(), props.offers),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onnxIndex]);
@@ -125,6 +127,8 @@ export default function ShopSuggestion(
         plan.request.candidates,
         state.onnxIndex,
         correctedIndex,
+        "explicit",
+        buildShopRolloutState(useGame.getState(), props.offers),
       ),
     );
     clearShopAdvice();

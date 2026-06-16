@@ -8,6 +8,7 @@ import type {
   PackAdviceState,
   ShopAdviceCandidate,
   ShopAdviceState,
+  ShopRolloutState,
 } from "./advisor/types";
 
 export const RUN_EVENT_SCHEMA_VERSION = 3;
@@ -105,6 +106,7 @@ export interface ShopAdviceDecision {
   readonly context: "shop";
   readonly state: ShopAdviceState;
   readonly candidates: ReadonlyArray<ShopAdviceCandidate>;
+  readonly rollout?: ShopRolloutState;
 }
 
 export interface PackAdviceDecision {

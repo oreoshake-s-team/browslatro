@@ -10,7 +10,12 @@ import {
 } from "./adviceFeedback";
 import { ADVISOR_POLICY_MODEL_ID } from "./advisorRanker";
 import { SHOP_POLICY_MODEL_ID } from "./shopRanker";
-import type { ShopAdviceCandidate, ShopAdviceState } from "./types";
+import { createDefaultHandStats } from "../../scoring/handStats";
+import type {
+  ShopAdviceCandidate,
+  ShopAdviceState,
+  ShopRolloutState,
+} from "./types";
 
 const ranker: CandidateRanker = {
   load: async () => {},
@@ -182,5 +187,32 @@ describe("buildShopPolicyFeedbackEvent", () => {
         "auto-disagreement",
       ).source,
     ).toBe("auto-disagreement");
+  });
+
+  test("omits the rollout state when none is given", () => {
+    const event = buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1);
+    expect(
+      event.decision.context === "shop" && "rollout" in event.decision,
+    ).toBe(false);
+  });
+
+  test("embeds the rollout state when given", () => {
+    const rollout: ShopRolloutState = {
+      jokers: [],
+      handStats: createDefaultHandStats(),
+      deck: [],
+      offers: [],
+    };
+    const event = buildShopPolicyFeedbackEvent(
+      shopState,
+      shopCandidates,
+      0,
+      1,
+      "explicit",
+      rollout,
+    );
+    expect(
+      event.decision.context === "shop" && event.decision.rollout !== undefined,
+    ).toBe(true);
   });
 });

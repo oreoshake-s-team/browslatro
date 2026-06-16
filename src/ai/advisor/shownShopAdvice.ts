@@ -2,13 +2,18 @@ import type { GameState } from "../../store/game";
 import { captureAdviceFeedback } from "../humanPlayWiring";
 import { buildShopPolicyFeedbackEvent } from "./adviceFeedback";
 import type { ShopSuggestionAction } from "./shopAdvicePlan";
-import type { ShopAdviceCandidate, ShopAdviceState } from "./types";
+import type {
+  ShopAdviceCandidate,
+  ShopAdviceState,
+  ShopRolloutState,
+} from "./types";
 
 export interface ShownShopAdvice {
   readonly shop: ShopAdviceState;
   readonly candidates: ReadonlyArray<ShopAdviceCandidate>;
   readonly actions: ReadonlyArray<ShopSuggestionAction>;
   readonly recommendationIndex: number;
+  readonly rollout: ShopRolloutState;
 }
 
 let shown: ShownShopAdvice | null = null;
@@ -54,6 +59,7 @@ export function recordShopDisagreement(
       match.advice.recommendationIndex,
       match.correctedIndex,
       "auto-disagreement",
+      match.advice.rollout,
     ),
   );
 }

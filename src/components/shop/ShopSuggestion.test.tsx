@@ -213,6 +213,15 @@ describe("ShopSuggestion click-to-reveal", () => {
     expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
   });
 
+  test("the recorded feedback carries the rollout state for gating", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
+    const record = JSON.parse(humanPlayLog().toJsonl().trim());
+    expect(record.decision.rollout).toBeDefined();
+  });
+
   test("submitting feedback dismisses the panel and confirms", async () => {
     renderSuggestion();
     await revealCoachPick();

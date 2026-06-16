@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, test } from "vitest";
 import { useGame } from "../../store/game";
 import { humanPlayLog } from "../humanPlayWiring";
+import { createDefaultHandStats } from "../../scoring/handStats";
 import {
   clearShopAdvice,
   matchedShopDisagreement,
@@ -42,6 +43,12 @@ function advice(): ShownShopAdvice {
       { kind: "leave" },
     ],
     recommendationIndex: 0,
+    rollout: {
+      jokers: [],
+      handStats: createDefaultHandStats(),
+      deck: [],
+      offers: [],
+    },
   };
 }
 
@@ -106,5 +113,12 @@ describe("recordShopDisagreement", () => {
     rememberShopAdvice(advice());
     recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
     expect(matchedShopDisagreement({ kind: "leave" })).toBeNull();
+  });
+
+  test("carries the remembered rollout state into the recorded event", () => {
+    rememberShopAdvice(advice());
+    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
+    const record = JSON.parse(humanPlayLog().toJsonl().trim());
+    expect(record.decision.rollout).toBeDefined();
   });
 });
