@@ -19,13 +19,13 @@
   transform: translateY(-4px);
 }
 
-.card-selected {
+.card--selected {
   transform: translateY(-1.4rem);
   box-shadow: 0 10px 18px color-mix(in srgb, var(--black) 45%, transparent);
   border-color: var(--accent-chips);
 }
 
-.card-selected:hover {
+.card--selected:hover {
   transform: translateY(-1.6rem);
 }
 
@@ -35,7 +35,7 @@
   }
 }
 
-.card-newly-drawn {
+.card--newly-drawn {
   animation:
     card-newly-drawn-enter calc(500ms * var(--animation-speed, 1)) ease-out
       backwards,
@@ -79,7 +79,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-newly-drawn {
+  .card--newly-drawn {
     animation: none;
     box-shadow:
       0 0 0 2px var(--focus-ring),
@@ -87,7 +87,7 @@
   }
 }
 
-.card-discarding {
+.card--discarding {
   animation: card-discard calc(400ms * var(--animation-speed, 1)) ease-in forwards
     !important;
   pointer-events: none;
@@ -105,15 +105,15 @@
   }
 }
 
-.card-scoring {
+.card--scoring {
   box-shadow: 0 0 18px color-mix(in srgb, var(--accent-chips) 70%, transparent);
 }
 
-.card-scoring-tick-0 {
+.card--scoring-tick-0 {
   animation: card-scoring-pulse calc(200ms * var(--animation-speed, 1)) ease-out;
 }
 
-.card-scoring-tick-1 {
+.card--scoring-tick-1 {
   animation: card-scoring-pulse-alt calc(200ms * var(--animation-speed, 1)) ease-out;
 }
 
@@ -146,9 +146,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-scoring,
-  .card-scoring-tick-0,
-  .card-scoring-tick-1 {
+  .card--scoring,
+  .card--scoring-tick-0,
+  .card--scoring-tick-1 {
     animation: none;
   }
 }
@@ -294,7 +294,7 @@
   );
 }
 
-.card-gold-scoring {
+.card--gold-scoring {
   position: relative;
   animation: card-gold-pulse calc(380ms * var(--animation-speed, 1)) ease-out;
   box-shadow: 0 0 32px color-mix(in srgb, var(--accent-money-strong) 95%, transparent),
@@ -304,7 +304,7 @@
   overflow: hidden;
 }
 
-.card-gold-scoring::before {
+.card--gold-scoring::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -322,7 +322,7 @@
   animation: card-gold-sheen calc(450ms * var(--animation-speed, 1)) ease-out;
 }
 
-.card-gold-scoring::after {
+.card--gold-scoring::after {
   content: attr(data-gold-bonus-label);
   position: absolute;
   top: -1.4rem;
@@ -405,14 +405,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-gold-scoring,
-  .card-gold-scoring::before,
-  .card-gold-scoring::after {
+  .card--gold-scoring,
+  .card--gold-scoring::before,
+  .card--gold-scoring::after {
     animation: none;
   }
 }
 
-.card-steel-scoring {
+.card--steel-scoring {
   position: relative;
   animation: card-steel-pulse calc(380ms * var(--animation-speed, 1)) ease-out;
   box-shadow: 0 0 28px color-mix(in srgb, var(--text-muted) 95%, transparent),
@@ -422,7 +422,7 @@
   overflow: hidden;
 }
 
-.card-steel-scoring::before {
+.card--steel-scoring::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -440,7 +440,7 @@
   animation: card-steel-sheen calc(450ms * var(--animation-speed, 1)) ease-out;
 }
 
-.card-steel-scoring::after {
+.card--steel-scoring::after {
   content: "×1.5";
   position: absolute;
   top: -1.4rem;
@@ -523,15 +523,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-steel-scoring,
-  .card-steel-scoring::before,
-  .card-steel-scoring::after {
+  .card--steel-scoring,
+  .card--steel-scoring::before,
+  .card--steel-scoring::after {
     animation: none;
   }
 }
 
-.card-lucky-mult-scoring,
-.card-lucky-money-scoring {
+.card--lucky-mult-scoring,
+.card--lucky-money-scoring {
   position: relative;
   z-index: 2;
   box-shadow: 0 0 24px color-mix(in srgb, var(--enhance-lucky-border) 85%, transparent),
@@ -573,7 +573,7 @@
   animation: card-lucky-money-float calc(520ms * var(--animation-speed, 1)) ease-out;
 }
 
-.card-lucky-mult-scoring .card-lucky-money-badge {
+.card--lucky-mult-scoring .card-lucky-money-badge {
   top: -2.65rem;
 }
 
@@ -650,8 +650,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-lucky-mult-scoring,
-  .card-lucky-money-scoring,
+  .card--lucky-mult-scoring,
+  .card--lucky-money-scoring,
   .card-lucky-mult-badge,
   .card-lucky-money-badge {
     animation: none;
@@ -825,12 +825,12 @@
   border-color: var(--type-tarot-accent);
 }
 
-.card-debuffed {
+.card--debuffed {
   filter: grayscale(0.85) brightness(0.7);
   opacity: 0.75;
 }
 
-.card-debuffed::after {
+.card--debuffed::after {
   content: "✕";
   position: absolute;
   top: 50%;
@@ -844,7 +844,7 @@
   z-index: 4;
 }
 
-.card-face-down {
+.card--face-down {
   background-color: var(--deck-back, var(--edition-foil-deep));
   background-image: repeating-linear-gradient(
       45deg,
@@ -884,14 +884,14 @@
     outline-offset: 2px;
   }
 
-  .card-selected {
+  .card--selected {
     border-color: CanvasText;
     outline: 2px solid CanvasText;
     outline-offset: 2px;
   }
 }
 
-.card-forced {
+.card--forced {
   outline: 2px solid var(--accent-chips);
   outline-offset: 2px;
 }

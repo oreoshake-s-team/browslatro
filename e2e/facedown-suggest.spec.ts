@@ -32,7 +32,7 @@ test("a fully face-down hand shows the no-suggestion state instead of a proposal
 }) => {
   await reachBossBlindSelect(page);
   await page.getByTestId("blind-select-play").click();
-  await expect(page.locator(".card.card-face-down").first()).toBeVisible();
+  await expect(page.locator(".card.card--face-down").first()).toBeVisible();
   await page.getByRole("button", { name: "Suggest" }).click();
   await expect(page.getByTestId("autopilot-no-suggestion")).toBeVisible({
     timeout: 30_000,

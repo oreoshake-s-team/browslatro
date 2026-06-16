@@ -45,7 +45,7 @@ test("The Mouth submits a non-matching hand, scores it 0, and shows a void toast
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
   await expect(page.locator(".round-score-value")).toHaveText("7");
   await expect(
-    page.locator('[data-testid="hand-cards"] .card-discarding'),
+    page.locator('[data-testid="hand-cards"] .card--discarding'),
   ).toHaveCount(0);
 
   for (let i = 0; i < 5; i += 1) await page.locator(HAND_CARDS).nth(i).click();

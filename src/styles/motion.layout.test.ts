@@ -72,7 +72,7 @@ describe("forced colors", () => {
       cardCss.indexOf("@media (forced-colors: active)"),
     );
     expect(forcedColorsBlock).toMatch(
-      /\.card-selected \{[^}]*outline: 2px solid CanvasText;/,
+      /\.card--selected \{[^}]*outline: 2px solid CanvasText;/,
     );
   });
 

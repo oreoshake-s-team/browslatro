@@ -24,7 +24,7 @@ test("selecting a hand card lifts it out of the row", async ({
   const card = page.locator('[data-testid="hand-cards"] .card').first();
   const before = await card.boundingBox();
   await card.click();
-  await expect(card).toHaveClass(/card-selected/);
+  await expect(card).toHaveClass(/card--selected/);
   await page.mouse.move(0, 0);
   await expect
     .poll(async () => {
@@ -41,9 +41,9 @@ test("deselecting a card returns it to the row", async ({
   const card = page.locator('[data-testid="hand-cards"] .card').first();
   const before = await card.boundingBox();
   await card.click();
-  await expect(card).toHaveClass(/card-selected/);
+  await expect(card).toHaveClass(/card--selected/);
   await card.click();
-  await expect(card).not.toHaveClass(/card-selected/);
+  await expect(card).not.toHaveClass(/card--selected/);
   await page.mouse.move(0, 0);
   await expect
     .poll(async () => {

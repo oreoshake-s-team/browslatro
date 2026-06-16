@@ -152,17 +152,17 @@ export default function Card({
       ? "card-red"
       : "card-black";
   const suitClass = `card-suit-${card.suit}`;
-  const selectedClass = selected ? "card-selected" : "";
-  const discardingClass = discarding ? "card-discarding" : "";
-  const newlyDrawnClass = newlyDrawn ? "card-newly-drawn" : "";
+  const selectedClass = selected ? "card--selected" : "";
+  const discardingClass = discarding ? "card--discarding" : "";
+  const newlyDrawnClass = newlyDrawn ? "card--newly-drawn" : "";
   const scoringClass = scoring
-    ? `card-scoring card-scoring-tick-${scoringPulseTick % 2}`
+    ? `card--scoring card--scoring-tick-${scoringPulseTick % 2}`
     : "";
-  const goldScoringClass = goldScoring ? "card-gold-scoring" : "";
-  const steelScoringClass = steelScoring ? "card-steel-scoring" : "";
-  const luckyMultScoringClass = luckyMultScoring ? "card-lucky-mult-scoring" : "";
+  const goldScoringClass = goldScoring ? "card--gold-scoring" : "";
+  const steelScoringClass = steelScoring ? "card--steel-scoring" : "";
+  const luckyMultScoringClass = luckyMultScoring ? "card--lucky-mult-scoring" : "";
   const luckyMoneyScoringClass = luckyMoneyScoring
-    ? "card-lucky-money-scoring"
+    ? "card--lucky-money-scoring"
     : "";
   const showBack = card.faceDown === true && !scoring;
   const enhancementClass = !showBack && card.enhancement
@@ -172,7 +172,7 @@ export default function Card({
   const editionClass = !showBack && card.edition
     ? `card-edition-${card.edition}`
     : "";
-  const debuffedClass = debuffed ? "card-debuffed" : "";
+  const debuffedClass = debuffed ? "card--debuffed" : "";
   const displayValue = card.enhancement
     ? enhancementDisplayValue(card.enhancement)
     : null;
@@ -239,8 +239,8 @@ export default function Card({
   const faceClass = !isStone && isFaceRank(card.rank)
     ? `card-face ${FACE_RANK_CLASS[card.rank]}`
     : "";
-  const faceDownClass = showBack ? "card-face-down" : "";
-  const forcedClass = forced ? "card-forced" : "";
+  const faceDownClass = showBack ? "card--face-down" : "";
+  const forcedClass = forced ? "card--forced" : "";
 
   const cardClassName =
     `card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass} ${forcedClass}`

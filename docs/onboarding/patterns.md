@@ -105,9 +105,12 @@ spec (`e2e/save-restore.spec.ts`) covering the round-trip.
   `.hand-sort-button--active` (not `…-active`), a sold offer is `.shop-offer--sold`, a
   size variant is `.modal-panel--sm`. Exemplars to copy: `.btn--primary`,
   `.modal-panel--lg`, `.suggestion-section--recommendation`, `.coach-advice-ai--error`.
-  Flat element names (`.coach-advice-head`, `.new-run-deck-grid`) stay flat — only
-  state/variant suffixes use `--`. Migration to this convention is incremental
-  (tracked under the CSS-consistency epic); not every file conforms yet.
+  Flat element names (`.coach-advice-head`, `.new-run-deck-grid`) stay flat — only the
+  modifier suffix uses `--`. Modifiers cover **both** transient UI states (`.card--selected`,
+  `.card--scoring`, `.card--face-down`) **and** intrinsic variants (a card's
+  suit/enhancement/edition, e.g. `.card--suit-hearts`). Migration to this convention is
+  incremental (tracked under the CSS-consistency epic); transient states are being
+  converted first, then intrinsic variants — so not every file conforms yet.
 - **Layout tests** (`*.layout.test.ts` in `src/styles/` and next to components) are unit
   tests that parse CSS and assert conventions — token usage, focus-visible rules, motion
   rules. If you add CSS that breaks one, the test names the convention you missed.

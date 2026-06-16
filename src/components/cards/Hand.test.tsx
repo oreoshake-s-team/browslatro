@@ -565,7 +565,7 @@ describe("Hand newly drawn markers", () => {
       newlyDrawnIds: new Set([deck[0].id, deck[1].id]),
     });
     const marked = getCardButtons().filter((btn) =>
-      btn.classList.contains("card-newly-drawn")
+      btn.classList.contains("card--newly-drawn")
     );
     expect(marked).toHaveLength(0);
   });
@@ -586,7 +586,7 @@ describe("Hand newly drawn markers", () => {
       <Hand {...props} newlyDrawnIds={new Set([deck[0].id, deck[1].id])} />
     );
     const marked = getCardButtons().filter((btn) =>
-      btn.classList.contains("card-newly-drawn")
+      btn.classList.contains("card--newly-drawn")
     );
     expect(marked).toHaveLength(2);
   });
