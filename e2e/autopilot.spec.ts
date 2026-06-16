@@ -39,6 +39,25 @@ test("autopilot proposes a move and plays it after approval", async ({
   await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
 });
 
+test("approving the autopilot proposal records no auto-disagreement", async ({
+  page,
+}) => {
+  await startRound(page);
+  const roundScore = page.locator(".round-score-value");
+
+  const toggle = page.getByRole("button", { name: "Suggest", exact: true });
+  await toggle.click();
+  const approve = page.getByRole("button", { name: /Approve move/ });
+  await expect(approve).toBeVisible({ timeout: 10_000 });
+  await approve.click();
+  await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
+
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).not.toContain('"source":"auto-disagreement"');
+});
+
 test("toggling autopilot off does not execute the proposed move", async ({
   page,
 }) => {

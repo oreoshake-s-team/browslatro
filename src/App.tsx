@@ -5,6 +5,11 @@ import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
 import { captureAdviceFeedback } from "./ai/humanPlayWiring";
 import { buildHandPolicyFeedbackEvent } from "./ai/advisor/adviceFeedback";
 import { recordShopDisagreement } from "./ai/advisor/shownShopAdvice";
+import {
+  clearHandAdvice,
+  recordHandDisagreement,
+  rememberHandAdvice,
+} from "./ai/advisor/shownHandAdvice";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -173,7 +178,7 @@ function App() {
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
     handleCardDiscardEnd,
-    discardSelected,
+    discardSelected: discardSelectedRaw,
     resetForNewRound: resetDiscardPipeline,
   } = useDiscardPipeline();
   const scoringEvents = useGame((state) => state.scoringEvents);
@@ -186,7 +191,7 @@ function App() {
     (info: { roundScore: number; requiredScore: number }) => void
   >(() => {});
   const {
-    submitHand,
+    submitHand: submitHandRaw,
     isScoring,
     currentScoringId,
     currentGoldScoringId,
@@ -199,6 +204,20 @@ function App() {
     pendingHandPlayResetRef,
     skipDrawAfterDiscardRef,
   });
+  const submitHand = () => {
+    recordHandDisagreement(
+      { action: "play", cardIds: [...useGame.getState().selectedIds] },
+      useGame.getState(),
+    );
+    submitHandRaw();
+  };
+  const discardSelected = () => {
+    recordHandDisagreement(
+      { action: "discard", cardIds: [...useGame.getState().selectedIds] },
+      useGame.getState(),
+    );
+    discardSelectedRaw();
+  };
   const [autopilotEnabled, setAutopilotEnabled] = useState(false);
   const autopilot = useAutopilot(
     autopilotEnabled,
@@ -229,6 +248,11 @@ function App() {
     autopilot.pendingProposal === autopilot.pendingDecision.action
       ? autopilot.pendingDecision
       : null;
+  const pendingDecision = autopilot.pendingDecision;
+  useEffect(() => {
+    if (pendingDecision !== null) rememberHandAdvice(pendingDecision);
+  }, [pendingDecision]);
+  useEffect(() => () => clearHandAdvice(), []);
   const [autopilotFeedbackRecorded, setAutopilotFeedbackRecorded] =
     useState(false);
   useEffect(() => {
@@ -240,6 +264,7 @@ function App() {
       useGame.getState(),
       buildHandPolicyFeedbackEvent(policyDecision, correctedIndex),
     );
+    clearHandAdvice();
     setAutopilotFeedbackRecorded(true);
     autopilot.dismissProposal();
   };

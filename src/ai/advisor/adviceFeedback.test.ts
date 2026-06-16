@@ -83,6 +83,12 @@ describe("buildHandPolicyFeedbackEvent", () => {
     );
   });
 
+  test("records an auto-disagreement source when given", async () => {
+    expect(
+      buildHandPolicyFeedbackEvent(await decision(), 1, "auto-disagreement").source,
+    ).toBe("auto-disagreement");
+  });
+
   test("embeds the hand decision context", async () => {
     expect(buildHandPolicyFeedbackEvent(await decision(), 1).decision.context).toBe(
       "hand",
