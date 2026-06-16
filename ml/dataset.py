@@ -181,7 +181,29 @@ def _encode_shop_correction(record):
     return inputs, record["correctedIndex"]
 
 
-def load_feedback_corrections(paths, context, weight=5.0):
+DEFAULT_MIN_SCORE_FRACTION = 0.25
+
+
+def _hand_correction_justified(candidates, chosen_index, min_score_fraction):
+    """Mirrors isLabelJustified in scripts/labelDisagreements.ts.
+
+    A human downvote is an opinion, not truth. A corrected play is trusted only
+    if it scores at least min_score_fraction of the best available play; discards
+    (no score to compare) always pass, as does a state with no scoring play.
+    """
+    if not 0 <= chosen_index < len(candidates):
+        return False
+    chosen = candidates[chosen_index]
+    if chosen.get("action") != "play":
+        return True
+    play_scores = [c["score"] for c in candidates if c.get("action") == "play"]
+    best = max(play_scores) if play_scores else 0
+    if best <= 0:
+        return True
+    return chosen["score"] >= best * min_score_fraction
+
+
+def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=None):
     """Re-encodes advice-feedback corrections into weighted training labels.
 
     Only corrections carrying a correctedIndex (the candidate the human would
@@ -189,7 +211,12 @@ def load_feedback_corrections(paths, context, weight=5.0):
     eval-only and skipped. context selects "hand" or "shop" decisions, which
     encode to different-length vectors for their respective policies. Re-encoding
     reuses the same encoders the live decisions train on, so a correction is just
-    another label. Quality gating happens upstream (a later step).
+    another label.
+
+    When min_score_fraction is set, hand corrections pass through the quality
+    gate (_hand_correction_justified) so a human's mistake is not distilled into
+    the policy. Shop corrections carry no per-candidate score, so the score gate
+    does not apply to them (a rollout-based shop gate is a separate step).
     """
     decisions = []
     for path in paths:
@@ -201,6 +228,10 @@ def load_feedback_corrections(paths, context, weight=5.0):
                 continue
             if context == "hand":
                 if len(decision["state"]["hand"]) > HAND_SLOTS:
+                    continue
+                if min_score_fraction is not None and not _hand_correction_justified(
+                    decision["candidates"], record["correctedIndex"], min_score_fraction
+                ):
                     continue
                 inputs, chosen = _encode_hand_correction(record)
             elif context == "shop":
