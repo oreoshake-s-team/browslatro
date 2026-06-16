@@ -280,7 +280,7 @@
   font-size: 0.85rem;
 }
 
-.jokers-list-dragging .joker-gap {
+.jokers-list--dragging .joker-gap {
   flex-basis: 3rem;
 }
 
@@ -292,7 +292,7 @@
   cursor: grabbing;
 }
 
-.joker-tile-dragging {
+.joker-tile--dragging {
   opacity: 0.4;
   cursor: grabbing;
 }
@@ -307,7 +307,7 @@
     background-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
-.joker-gap-active {
+.joker-gap--active {
   flex-basis: var(--card-width);
   background-color: color-mix(in srgb, var(--accent-money-strong) 25%, transparent);
   outline: 2px dashed var(--accent-money-strong);

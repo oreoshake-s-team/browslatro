@@ -133,7 +133,7 @@
   transition: opacity calc(120ms * var(--animation-speed, 1)) linear;
 }
 
-.shop-voucher-sold {
+.shop-voucher--sold {
   opacity: 0.45;
 }
 
@@ -237,7 +237,7 @@
   background-color: var(--accent-money-pale);
 }
 
-.shop-offer-sold {
+.shop-offer--sold {
   opacity: 0.6;
   filter: grayscale(0.5);
 }

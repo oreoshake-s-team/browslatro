@@ -342,7 +342,7 @@ export default function Shop({
     );
     const isFree = !offer.sold && effectivePrice === 0;
     const modifierClasses = [
-      offer.sold && "shop-offer-sold",
+      offer.sold && "shop-offer--sold",
       edition && "shop-offer-editioned",
       playingCardEnhanced && "shop-offer-playing-card-enhanced",
       isFree && "shop-offer-free",
@@ -504,7 +504,7 @@ export default function Shop({
                   return (
                     <li
                       key={voucher.id}
-                      className={`shop-voucher-card${sold ? " shop-voucher-sold" : ""}`}
+                      className={`shop-voucher-card${sold ? " shop-voucher--sold" : ""}`}
                       data-voucher-id={voucher.id}
                       data-testid={`shop-voucher-${idx}`}
                     >
