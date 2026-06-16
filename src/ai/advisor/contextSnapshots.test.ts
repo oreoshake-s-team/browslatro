@@ -37,6 +37,7 @@ describe("shopAdviceItem", () => {
     expect(shopAdviceItem(jokerOffer(), 4)).toEqual({
       itemType: "joker",
       category: "joker-mult",
+      attributes: expect.any(Array),
       id: joker.id,
       name: joker.name,
       description: joker.description,
@@ -94,6 +95,7 @@ describe("voucherAdviceItem", () => {
     expect(item).toEqual({
       itemType: "voucher",
       category: "other",
+      attributes: expect.any(Array),
       id: "overstock",
       name: "Overstock",
       description: "+1 card slot in shop",
@@ -108,6 +110,7 @@ describe("packAdviceOption", () => {
     expect(packAdviceOption({ kind: "joker", joker })).toEqual({
       optionType: "joker",
       category: "joker-mult",
+      attributes: expect.any(Array),
       id: joker.id,
       name: joker.name,
       description: joker.description,

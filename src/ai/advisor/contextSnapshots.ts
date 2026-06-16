@@ -3,6 +3,11 @@ import type { Joker } from "../../items/jokers";
 import { packPickLimit, type PackOption } from "../../items/packs";
 import type { ShopItem } from "../../items/shop";
 import { categorizePackOption, categorizeShopItem } from "./shopCategory";
+import {
+  packOptionAttributes,
+  shopItemAttributes,
+  ZERO_SHOP_ATTRIBUTES,
+} from "./shopCandidateAttributes";
 import type {
   NamedRef,
   PackAdviceOption,
@@ -67,6 +72,7 @@ export function shopAdviceItem(offer: ShopItem, cost: number): ShopAdviceItem {
   return {
     itemType,
     category: categorizeShopItem(offer),
+    attributes: shopItemAttributes(offer),
     id: item.id,
     name: item.name,
     description: item.description,
@@ -81,6 +87,7 @@ export function voucherAdviceItem(
   return {
     itemType: "voucher",
     category: "other",
+    attributes: ZERO_SHOP_ATTRIBUTES,
     id: voucher.id,
     name: voucher.name,
     description: voucher.description,
@@ -114,6 +121,7 @@ export function packAdviceOption(option: PackOption): PackAdviceOption {
   return {
     optionType,
     category: categorizePackOption(option),
+    attributes: packOptionAttributes(option),
     id: item.id,
     name: item.name,
     description: item.description,
