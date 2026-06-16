@@ -40,7 +40,7 @@ Browslatro has **two independent advisors** that both answer the same question �
 | Surface in the UI | The **Suggest** buttons (shop / pack / blind) and the autopilot **move explanation** — produces a recommendation **plus a plain-language explanation, a tempting alternative, and a transferable concept**. | Ranks candidates for **autopilot** and pre-ranks the LLM's candidate list while Claude is still thinking. Fast, local, free, but explanation-free. |
 | Cost / latency | Slow (25 s server timeout), [BYOK](https://en.wikipedia.org/wiki/Bring_your_own_device)-capable, rate-limited, costs money. | Instant, offline, free. |
 | How it's built | Zero-shot — Claude already "knows" Balatro, grounded with retrieved wiki notes. | [Imitation learning](https://en.wikipedia.org/wiki/Imitation_learning): trained offline to copy a Monte-Carlo search expert + weighted human play. |
-| Production model | `claude-opus-4-8` (overridable via `ADVISOR_MODEL`). | Hand: [`advisor-policy-v8.onnx`](../../public/models/advisor-policy-v8.onnx). Shop: [`advisor-shop-policy-v6.onnx`](../../public/models/advisor-shop-policy-v6.onnx). |
+| Production model | `claude-opus-4-8` (overridable via `ADVISOR_MODEL`). | Hand: [`advisor-policy-v8.onnx`](../../public/models/advisor-policy-v8.onnx). Shop: [`advisor-shop-policy-v7.onnx`](../../public/models/advisor-shop-policy-v7.onnx). |
 
 The two paths share the **same candidate enumeration** ([`getHandOptions`](../../src/ai/getHandOptions.ts)) and the **same state projection** ([`ModelState`](../../src/ai/modelState.ts)). That shared spine is what makes them interchangeable and comparable. See [engine-plumbing.md](./engine-plumbing.md).
 
@@ -137,7 +137,7 @@ Step by step, with the modules that own each step:
 These are **research/roadmap items, not shipped behavior.** Some have machinery already merged (scripts, training flags) but no production model selected.
 
 - **LLM teacher distillation into the ONNX policy (`#1153`).** The offline machinery is merged — [`scripts/labelDisagreements.ts`](../../scripts/labelDisagreements.ts) relabels states where the policy disagrees with the search expert by calling `requestAdvice`, and [`ml/train.py`](../../ml/train.py) accepts `--teacher`/`--teacher-weight`. The *shipped* hand policy (`advisor-policy-v8`) is still imitation-learned from the search expert + human play; selecting and shipping a teacher-distilled hand model remains open.
-- **LLM teacher for the shop policy (`#1338`).** Same idea for shop decisions, with a Claude Sonnet 4.6 teacher. The shipped `advisor-shop-policy-v6` is rollout-labeled (with descriptive per-item attribute encoding), not teacher-distilled.
+- **LLM teacher for the shop policy (`#1338`).** Same idea for shop decisions, with a Claude Sonnet 4.6 teacher. The shipped `advisor-shop-policy-v7` is rollout-labeled (with descriptive per-item attribute encoding) plus rollout-gated `advice-feedback` corrections, not teacher-distilled.
 - **Value-guided search → single-agent self-play RL (`#1331`).** An [AlphaZero](https://en.wikipedia.org/wiki/AlphaZero)-adapted direction (single-player, stochastic, [chance nodes](https://en.wikipedia.org/wiki/Expectiminimax)). A Phase-1 experiment found the marginal value signal weak; not green-lit.
 - **Wiki coverage expansion (`#1077`).** The exact-key wiki covers a curated subset of jokers/bosses; unknown keys degrade gracefully (no entry injected).
 
