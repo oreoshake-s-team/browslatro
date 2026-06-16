@@ -9,6 +9,7 @@ import {
 } from "./shopRolloutExpert";
 import { createGreedyAgent } from "./agents";
 import { buildHeadlessDeck } from "./headlessRun";
+import { createJokerStackingShopAgent } from "./rolloutShopAgent";
 import { joker } from "./test-helpers";
 import { createDefaultHandStats, type HandStats } from "../scoring/handStats";
 import { createJokerCatalog } from "../items/jokers/catalog";
@@ -130,5 +131,12 @@ describe("bestShopChoice", () => {
     const offers = [jokerOffer(powerJoker, 999)];
     const choice = await bestShopChoice(1, offers, baseState({ money: 3 }), opts, 200);
     expect(choice.index).toBe(offers.length);
+  });
+
+  test("still prefers a strong joker when the rollout keeps shopping", async () => {
+    const shoppingOpts: RolloutOptions = { ...opts, rolloutShopAgent: createJokerStackingShopAgent() };
+    const offers = [jokerOffer(powerJoker, 4)];
+    const choice = await bestShopChoice(1, offers, baseState(), shoppingOpts, 300);
+    expect(choice.index).toBe(0);
   });
 });
