@@ -31,6 +31,7 @@ export function buildShopPolicyFeedbackEvent(
 export function buildHandPolicyFeedbackEvent(
   decision: AutopilotDecision,
   correctedIndex: number | null,
+  source: AdviceFeedbackSource = "explicit",
 ): AdviceFeedbackEvent {
   return {
     kind: "advice-feedback",
@@ -40,7 +41,7 @@ export function buildHandPolicyFeedbackEvent(
     alternativeIndex: null,
     verdict: "bad",
     correctedIndex,
-    source: "explicit",
+    source,
     decision: {
       context: "hand",
       state: decision.modelState,
