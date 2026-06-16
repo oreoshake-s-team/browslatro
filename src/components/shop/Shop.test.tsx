@@ -149,9 +149,9 @@ describe("Shop", () => {
     expect(offer).toHaveClass("shop-offer-joker");
   });
 
-  test("a sold offer still carries the shop-offer-sold modifier", () => {
+  test("a sold offer still carries the shop-offer--sold modifier", () => {
     renderShop({ offers: [jokerOffer("plus", true)] });
-    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-sold");
+    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer--sold");
   });
 
   test("an editioned joker offer exposes the edition via data-edition", () => {

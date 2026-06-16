@@ -173,7 +173,7 @@ export default function Jokers({
     const active = draggingId !== null && activeGapIndex === gapIdx && !selfAdj;
     return (
       <div
-        className={`joker-gap${active ? " joker-gap-active" : ""}`}
+        className={`joker-gap${active ? " joker-gap--active" : ""}`}
         data-testid={`joker-gap-${gapIdx}`}
         onDragOver={(e) => {
           if (draggingId === null) return;
@@ -232,7 +232,7 @@ export default function Jokers({
       <span className="jokers-label">{t("trays.jokers")}</span>
       <ul
         ref={listRef}
-        className={`jokers-list${draggingId !== null ? " jokers-list-dragging" : ""}`}
+        className={`jokers-list${draggingId !== null ? " jokers-list--dragging" : ""}`}
         onDragOver={reorderable ? handleListDragOver : undefined}
         onDrop={reorderable ? handleListDrop : undefined}
       >
@@ -281,7 +281,7 @@ export default function Jokers({
               {reorderable && renderGap(idx)}
               <li
                 className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
-                  isDragging ? " joker-tile-dragging" : ""
+                  isDragging ? " joker-tile--dragging" : ""
                 }${editionClass}${debuffedClass}`}
                 title={dynamicJokerDescriptionText({
                   language: i18n.language,

@@ -265,21 +265,21 @@ describe("Jokers drag-and-drop reordering", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
     const source = getTile("plus-four-mult");
     fireEvent.dragStart(source);
-    expect(source).toHaveClass("joker-tile-dragging");
+    expect(source).toHaveClass("joker-tile--dragging");
   });
 
   test("the hovered gap is marked active while dragging over it", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
     fireEvent.dragStart(getTile("plus-four-mult"));
     fireEvent.dragOver(getGap(3));
-    expect(getGap(3)).toHaveClass("joker-gap-active");
+    expect(getGap(3)).toHaveClass("joker-gap--active");
   });
 
   test("the source's self-adjacent gap does not become active during drag", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
     fireEvent.dragStart(getTile("business-card"));
     fireEvent.dragOver(getGap(1));
-    expect(getGap(1)).not.toHaveClass("joker-gap-active");
+    expect(getGap(1)).not.toHaveClass("joker-gap--active");
   });
 
   test("the active gap is cleared after the drop completes", () => {
@@ -287,7 +287,7 @@ describe("Jokers drag-and-drop reordering", () => {
     dragTileToGap("plus-four-mult", 3);
     const actives = screen
       .getAllByTestId(/^joker-gap-/)
-      .filter((g) => g.classList.contains("joker-gap-active"));
+      .filter((g) => g.classList.contains("joker-gap--active"));
     expect(actives).toHaveLength(0);
   });
 
@@ -318,7 +318,7 @@ describe("Jokers drag-and-drop reordering", () => {
         clientX: 205,
       }),
     );
-    expect(getGap(2)).toHaveClass("joker-gap-active");
+    expect(getGap(2)).toHaveClass("joker-gap--active");
   });
 
 });
