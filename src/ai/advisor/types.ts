@@ -1,5 +1,16 @@
+import type { Card } from "../../cards/types";
+import type { ShopItem } from "../../items/shop";
+import type { Joker } from "../../items/jokers/types";
+import type { HandStats } from "../../scoring/handStats";
 import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
+
+export interface ShopRolloutState {
+  readonly jokers: ReadonlyArray<Joker>;
+  readonly handStats: HandStats;
+  readonly deck: ReadonlyArray<Card>;
+  readonly offers: ReadonlyArray<ShopItem>;
+}
 
 export const MAX_CANDIDATES = 12;
 export const MAX_HAND_CARDS = 16;

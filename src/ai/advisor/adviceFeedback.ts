@@ -2,7 +2,11 @@ import type { AdviceFeedbackEvent, AdviceFeedbackSource } from "../runEvents";
 import type { AutopilotDecision } from "./autopilot";
 import { ADVISOR_POLICY_MODEL_ID } from "./advisorRanker";
 import { SHOP_POLICY_MODEL_ID } from "./shopRanker";
-import type { ShopAdviceCandidate, ShopAdviceState } from "./types";
+import type {
+  ShopAdviceCandidate,
+  ShopAdviceState,
+  ShopRolloutState,
+} from "./types";
 
 export function buildShopPolicyFeedbackEvent(
   shop: ShopAdviceState,
@@ -10,6 +14,7 @@ export function buildShopPolicyFeedbackEvent(
   recommendationIndex: number,
   correctedIndex: number | null,
   source: AdviceFeedbackSource = "explicit",
+  rollout?: ShopRolloutState,
 ): AdviceFeedbackEvent {
   return {
     kind: "advice-feedback",
@@ -24,6 +29,7 @@ export function buildShopPolicyFeedbackEvent(
       context: "shop",
       state: shop,
       candidates,
+      ...(rollout !== undefined ? { rollout } : {}),
     },
   };
 }
