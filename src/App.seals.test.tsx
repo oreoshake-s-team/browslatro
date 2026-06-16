@@ -83,7 +83,7 @@ function flushAllTimers(): void {
     });
   }
   getHandCardButtons()
-    .filter((btn) => btn.classList.contains("card-discarding"))
+    .filter((btn) => btn.classList.contains("card--discarding"))
     .forEach((btn) => {
       act(() => {
         btn.dispatchEvent(new Event("animationend", { bubbles: true }));

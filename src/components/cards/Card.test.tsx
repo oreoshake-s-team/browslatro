@@ -86,7 +86,7 @@ describe("Card", () => {
 
   test("applies the selected class when raised", () => {
     render(<Card card={aceOfSpades} selected />);
-    expect(screen.getByRole("button")).toHaveClass("card-selected");
+    expect(screen.getByRole("button")).toHaveClass("card--selected");
   });
 
   test("invokes onToggle with the card when clicked", async () => {
@@ -107,12 +107,12 @@ describe("Card", () => {
 
   test("applies the discarding class when the discarding prop is set", () => {
     render(<Card card={aceOfSpades} discarding />);
-    expect(screen.getByRole("button")).toHaveClass("card-discarding");
+    expect(screen.getByRole("button")).toHaveClass("card--discarding");
   });
 
   test("applies the newly-drawn class when the newlyDrawn prop is set", () => {
     render(<Card card={aceOfSpades} newlyDrawn />);
-    expect(screen.getByRole("button")).toHaveClass("card-newly-drawn");
+    expect(screen.getByRole("button")).toHaveClass("card--newly-drawn");
   });
 
   test("marks the aria-label as newly drawn when the newlyDrawn prop is set", () => {
@@ -124,7 +124,7 @@ describe("Card", () => {
 
   test("does not apply the newly-drawn class by default (negative)", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-newly-drawn");
+    expect(screen.getByRole("button")).not.toHaveClass("card--newly-drawn");
   });
 
   test("invokes onDiscardEnd with the card when the discard animation ends", () => {
@@ -198,25 +198,25 @@ describe("Card", () => {
   test("applies the gold scoring class when goldScoring is true", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} goldScoring />);
-    expect(screen.getByRole("button")).toHaveClass("card-gold-scoring");
+    expect(screen.getByRole("button")).toHaveClass("card--gold-scoring");
   });
 
   test("does not apply the gold scoring class when goldScoring is omitted", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-gold-scoring");
+    expect(screen.getByRole("button")).not.toHaveClass("card--gold-scoring");
   });
 
   test("applies the steel scoring class when steelScoring is true", () => {
     const steel: CardType = { id: 20, rank: "A", suit: "spades", enhancement: "steel" };
     render(<Card card={steel} steelScoring />);
-    expect(screen.getByRole("button")).toHaveClass("card-steel-scoring");
+    expect(screen.getByRole("button")).toHaveClass("card--steel-scoring");
   });
 
   test("does not apply the steel scoring class when steelScoring is omitted", () => {
     const steel: CardType = { id: 21, rank: "A", suit: "spades", enhancement: "steel" };
     render(<Card card={steel} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-steel-scoring");
+    expect(screen.getByRole("button")).not.toHaveClass("card--steel-scoring");
   });
 
   test("exposes a steel-scoring-<id> testid while steelScoring is true", () => {
@@ -428,39 +428,39 @@ describe("Card", () => {
 });
 
 describe("Card scoring pulse animation", () => {
-  test("does not apply card-scoring when scoring is false", () => {
+  test("does not apply card--scoring when scoring is false", () => {
     render(<Card card={aceOfSpades} scoring={false} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-scoring");
+    expect(screen.getByRole("button")).not.toHaveClass("card--scoring");
   });
 
-  test("applies card-scoring when scoring is true", () => {
+  test("applies card--scoring when scoring is true", () => {
     render(<Card card={aceOfSpades} scoring />);
-    expect(screen.getByRole("button")).toHaveClass("card-scoring");
+    expect(screen.getByRole("button")).toHaveClass("card--scoring");
   });
 
-  test("applies card-scoring-tick-0 when the pulse tick is even", () => {
+  test("applies card--scoring-tick-0 when the pulse tick is even", () => {
     render(<Card card={aceOfSpades} scoring scoringPulseTick={0} />);
-    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-0");
+    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-0");
   });
 
-  test("applies card-scoring-tick-1 when the pulse tick is odd", () => {
+  test("applies card--scoring-tick-1 when the pulse tick is odd", () => {
     render(<Card card={aceOfSpades} scoring scoringPulseTick={1} />);
-    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-1");
+    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-1");
   });
 
   test("alternates tick classes across consecutive ticks (so a Red Seal retrigger restarts the animation)", () => {
     const { rerender } = render(
       <Card card={aceOfSpades} scoring scoringPulseTick={3} />,
     );
-    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-1");
+    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-1");
     rerender(<Card card={aceOfSpades} scoring scoringPulseTick={4} />);
-    expect(screen.getByRole("button")).toHaveClass("card-scoring-tick-0");
+    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-0");
   });
 
   test("a non-scoring card does not carry either tick class", () => {
     render(<Card card={aceOfSpades} scoring={false} scoringPulseTick={5} />);
     const button = screen.getByRole("button");
-    expect(button).not.toHaveClass("card-scoring-tick-0");
+    expect(button).not.toHaveClass("card--scoring-tick-0");
   });
 });
 
@@ -566,7 +566,7 @@ describe("Card accessible-name vs visible-text", () => {
 describe("Card — forced (Cerulean Bell)", () => {
   test("applies the forced class when forced", () => {
     render(<Card card={aceOfSpades} forced />);
-    expect(screen.getByRole("button")).toHaveClass("card-forced");
+    expect(screen.getByRole("button")).toHaveClass("card--forced");
   });
 
   test("renders the forced lock badge when forced", () => {

@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
 const HAND_CARDS = '[data-testid="hand-cards"] .card';
-const NEW_CARDS = '[data-testid="hand-cards"] .card.card-newly-drawn';
+const NEW_CARDS = '[data-testid="hand-cards"] .card.card--newly-drawn';
 const SUBMIT_BUTTON = /^Submit Hand/;
 
 test.beforeEach(async ({ context }) => {

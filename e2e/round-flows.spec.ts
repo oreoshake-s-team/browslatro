@@ -37,7 +37,7 @@ async function submitSingleLosingHand(
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
   await expect(statValue(page, "Hands")).toHaveText(String(expectedHandsAfter));
   await expect(
-    page.locator('[data-testid="hand-cards"] .card-discarding'),
+    page.locator('[data-testid="hand-cards"] .card--discarding'),
   ).toHaveCount(0);
 }
 

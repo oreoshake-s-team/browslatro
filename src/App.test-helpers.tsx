@@ -96,7 +96,7 @@ export function flushScoringSequence(): void {
 export function flushDiscardAnimation(): void {
   flushScoringSequence();
   getHandCardButtons()
-    .filter((btn) => btn.classList.contains("card-discarding"))
+    .filter((btn) => btn.classList.contains("card--discarding"))
     .forEach((btn) => fireEvent.animationEnd(btn));
 }
 

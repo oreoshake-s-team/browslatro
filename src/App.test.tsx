@@ -441,7 +441,7 @@ describe("Discard animation", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
     const discardingCount = getHandCardButtons().filter((btn) =>
-      btn.classList.contains("card-discarding")
+      btn.classList.contains("card--discarding")
     ).length;
     expect(discardingCount).toBe(2);
   });
@@ -1787,7 +1787,7 @@ describe("Tarot purchase integration", () => {
     expect(moneyOf()).toBe(before - 3);
   });
 
-  test("enhancement-tarot full lifecycle: buy → tile disabled → card-selected enables tile → use empties slot, clears selection, never opens a TarotPicker modal", async () => {
+  test("enhancement-tarot full lifecycle: buy → tile disabled → card--selected enables tile → use empties slot, clears selection, never opens a TarotPicker modal", async () => {
     const user = await openShop();
     const slotId = tarotSlotTestId();
     const tarotName = screen

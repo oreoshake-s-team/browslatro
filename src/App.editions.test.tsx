@@ -63,7 +63,7 @@ function flushDiscardAnimation(): void {
     });
   }
   getHandCardButtons()
-    .filter((btn) => btn.classList.contains("card-discarding"))
+    .filter((btn) => btn.classList.contains("card--discarding"))
     .forEach((btn) => fireEvent.animationEnd(btn));
   for (let i = 0; i < 5; i += 1) {
     if (vi.getTimerCount() === 0) break;

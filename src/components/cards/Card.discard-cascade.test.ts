@@ -17,14 +17,14 @@ function ruleFor(selector: string): string {
   return m[1];
 }
 
-describe("Card .card-discarding animation cascade", () => {
+describe("Card .card--discarding animation cascade", () => {
   test("the card-discard animation declaration is !important so later scoring classes cannot override it", () => {
-    const body = ruleFor(".card-discarding");
+    const body = ruleFor(".card--discarding");
     expect(body).toMatch(/animation:\s*card-discard[^;]*!important/);
   });
 
   test("the lucky scoring classes still set their own animation (negative — we keep the pulse, just don't let it win over discard)", () => {
-    const body = ruleFor(".card-lucky-mult-scoring,\\s*\\.card-lucky-money-scoring");
+    const body = ruleFor(".card--lucky-mult-scoring,\\s*\\.card--lucky-money-scoring");
     expect(body).toMatch(/animation:\s*card-lucky-pulse/);
   });
 });
