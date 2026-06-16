@@ -1,13 +1,21 @@
 """Trains the advisor candidate scorer and exports it to ONNX.
 
 Usage:
-    python train.py <dataset.jsonl> [more.jsonl ...] [--human play.jsonl] [--human-weight 5] [--teacher labels.jsonl] [--teacher-weight 5] [--epochs 30] [--out advisor-policy.onnx]
+    python train.py <dataset.jsonl> [more.jsonl ...] [--human play.jsonl] [--human-weight 5] [--teacher labels.jsonl] [--teacher-weight 5] [--corrections human-play.jsonl] [--corrections-weight 5] [--min-score-fraction 0.25] [--epochs 30] [--out advisor-policy.onnx]
 
 The model scores one (state, candidate) vector at a time; a decision is
 made by running every candidate through the net and taking the argmax.
 The ONNX export has input "candidates" of shape [N, INPUT_FEATURES] and
-output "logits" of shape [N], so the browser runtime (issue #1055) feeds
-all candidates of a decision in one call.
+output "logits" of shape [N], so the browser runtime feeds all candidates
+of a decision in one call.
+
+--corrections ingests advice-feedback corrections from the human-play
+exports as high-weight labels. Hand corrections pass the quality gate
+(--min-score-fraction); shop corrections have no per-candidate score so the
+gate does not apply (add --shop to train the shop policy). The full loop is
+collect corrections -> train with --corrections -> benchmark
+(scripts/benchmarkPolicy.ts) -> replace the model file only on a clear
+avgBlinds win, the same bar as every policy release.
 """
 
 import argparse
@@ -18,8 +26,10 @@ import torch
 from torch import nn
 
 from dataset import (
+    DEFAULT_MIN_SCORE_FRACTION,
     build_training_set,
     load_all,
+    load_feedback_corrections,
     load_shop_decisions_split,
     split_by_seed,
 )
@@ -78,6 +88,19 @@ def main():
         help="JSONL of LLM teacher labels (e.g. from labelDisagreements); trains, never held out",
     )
     parser.add_argument("--teacher-weight", type=float, default=5.0)
+    parser.add_argument(
+        "--corrections",
+        action="append",
+        default=[],
+        help="JSONL of human-play exports; quality-gated advice-feedback corrections train as weighted labels",
+    )
+    parser.add_argument("--corrections-weight", type=float, default=5.0)
+    parser.add_argument(
+        "--min-score-fraction",
+        type=float,
+        default=DEFAULT_MIN_SCORE_FRACTION,
+        help="quality gate for hand corrections: a corrected play must score at least this fraction of the best play",
+    )
     parser.add_argument("--epochs", type=int, default=30)
     parser.add_argument("--hidden", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
@@ -96,18 +119,25 @@ def main():
         features = SHOP_INPUT_FEATURES
         rollout, teacher = load_shop_decisions_split(args.datasets, args.teacher_weight)
         generated_train, validation = split_by_seed(rollout)
-        train = build_training_set(generated_train, teacher)
+        corrections = load_feedback_corrections(
+            args.corrections, "shop", args.corrections_weight
+        )
+        train = build_training_set(generated_train, teacher, corrections)
         enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}"
     else:
         features = INPUT_FEATURES
         generated_train, validation = split_by_seed(load_all(args.datasets))
         human = load_all(args.human, args.human_weight)
         teacher = load_all(args.teacher, args.teacher_weight)
-        train = build_training_set(generated_train, human, teacher)
+        corrections = load_feedback_corrections(
+            args.corrections, "hand", args.corrections_weight, args.min_score_fraction
+        )
+        train = build_training_set(generated_train, human, teacher, corrections)
         print(
             f"{len(train)} train decisions ({len(human)} human at "
             f"weight {args.human_weight}, {len(teacher)} teacher at "
-            f"weight {args.teacher_weight}), {len(validation)} validation decisions"
+            f"weight {args.teacher_weight}, {len(corrections)} corrections at "
+            f"weight {args.corrections_weight}), {len(validation)} validation decisions"
         )
         enc_label = f"encoding v{ENCODING_VERSION}"
 
@@ -117,7 +147,8 @@ def main():
     if args.shop:
         print(
             f"{len(train)} train ({len(teacher)} teacher at weight "
-            f"{args.teacher_weight}) / {len(validation)} validation shop decisions"
+            f"{args.teacher_weight}, {len(corrections)} corrections at weight "
+            f"{args.corrections_weight}) / {len(validation)} validation shop decisions"
         )
 
     model = CandidateScorer(features, args.hidden)

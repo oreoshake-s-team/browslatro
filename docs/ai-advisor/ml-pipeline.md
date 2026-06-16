@@ -171,6 +171,9 @@ The node names `candidates`/`logits` and the dynamic batch axis are **exactly wh
 | `--human-weight` | `5.0` | weight on human decisions |
 | `--teacher` (repeatable) | — | LLM-teacher JSONL (trained, never held out) — see [distillation](#teacher-distillation-offline-machinery) |
 | `--teacher-weight` | `5.0` | weight on teacher decisions |
+| `--corrections` (repeatable) | — | human-play JSONL; quality-gated `advice-feedback` corrections train as weighted labels |
+| `--corrections-weight` | `5.0` | weight on corrections |
+| `--min-score-fraction` | `0.25` | quality gate: a corrected hand play must score at least this fraction of the best play (shop corrections have no per-candidate score, so the gate does not apply) |
 | `--shop` | off | train the 28-feature shop policy instead of the hand policy |
 | `--epochs` | `30` | training epochs |
 | `--hidden` | `128` | hidden width |
