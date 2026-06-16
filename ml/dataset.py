@@ -4,9 +4,7 @@ import json
 import sys
 
 from encoding import (
-    BLIND_KINDS,
     HAND_SLOTS,
-    encode_blind_decision,
     encode_decision,
     encode_shop_decision,
 )
@@ -14,10 +12,8 @@ from encoding import (
 DATASET_SCHEMA_VERSION = 1
 SHOP_SCHEMA_VERSION = 3
 SUPPORTED_SHOP_SCHEMA_VERSIONS = frozenset({2, 3})
-BLIND_SCHEMA_VERSION = 1
 
 _SHOP_KINDS = frozenset({"purchase", "reroll", "pack-pick"})
-_BLIND_KINDS = frozenset(BLIND_KINDS)
 
 
 def load_decisions(path, weight=1.0):
@@ -132,43 +128,6 @@ def load_shop_decisions_split(paths, teacher_weight=5.0):
             else:
                 rollout.append((inputs, chosen, record["runSeed"], 1.0))
     return rollout, teacher
-
-
-def load_blind_decisions(path, weight=1.0):
-    """Loads blind play-vs-skip decisions from a JSONL file of schema-v1 records.
-
-    Each record's kind is the blind kind (small/big/boss), which uniquely marks
-    blind records: hand records have no kind, shop records use purchase/reroll/
-    pack-pick. Each carries a two-candidate [play, skip] list with chosenIndex 0
-    or 1.
-    """
-    decisions = []
-    with open(path, encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            record = json.loads(line)
-            if record.get("kind") not in _BLIND_KINDS:
-                continue
-            version = record["schemaVersion"]
-            if version != BLIND_SCHEMA_VERSION:
-                raise ValueError(
-                    f"{path}:{line_number}: schemaVersion {version}, "
-                    f"expected {BLIND_SCHEMA_VERSION}"
-                )
-            inputs, chosen = encode_blind_decision(record)
-            if chosen < 0 or not inputs:
-                continue
-            decisions.append((inputs, chosen, record["runSeed"], weight))
-    return decisions
-
-
-def load_blind_all(paths, weight=1.0):
-    """Concatenates blind decisions from several JSONL files."""
-    return [
-        decision for path in paths for decision in load_blind_decisions(path, weight)
-    ]
 
 
 def build_training_set(train, *extra_sources):

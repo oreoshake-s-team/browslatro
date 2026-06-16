@@ -5,9 +5,7 @@ import {
   buildBlindAdvicePlan,
   type BlindSuggestionAction,
 } from "../../ai/advisor/blindAdvicePlan";
-import { sharedBlindRanker } from "../../ai/advisor/blindRanker";
-import type { BlindRankInput } from "../../ai/advisor/blindEncoding";
-import type { DownloadProgress } from "../../ai/policy";
+import { rankBlind } from "../../ai/advisor/blindCoach";
 import type { BlindAdviceCandidate } from "../../ai/advisor/types";
 import {
   type ContextAdviceCandidate,
@@ -35,12 +33,6 @@ export interface BlindSuggestionProps {
   readonly suggestionDeps?: SuggestionDeps;
 }
 
-function blindKind(blind: Blind): string {
-  if (blind === 1) return "small";
-  if (blind === 2) return "big";
-  return "boss";
-}
-
 export default function BlindSuggestion(
   props: BlindSuggestionProps,
 ): React.JSX.Element {
@@ -48,31 +40,17 @@ export default function BlindSuggestion(
   const money = useGame((s) => s.money);
   const jokers = useGame((s) => s.jokers);
   const consumables = useGame((s) => s.consumables);
-  const blindRanker = sharedBlindRanker();
-  const [modelProgress, setModelProgress] = useState<DownloadProgress | null>(
-    null,
-  );
   const [revealed, setRevealed] = useState(false);
   const preRank = useCallback(
-    (candidates: ReadonlyArray<ContextAdviceCandidate>) => {
-      setModelProgress({ loaded: 0, total: null });
-      void blindRanker
-        .load((progress) => setModelProgress(progress))
-        .finally(() => setModelProgress(null));
-      const play = candidates.find((c) => c.action === "play");
-      const input: BlindRankInput = {
-        kind: blindKind(props.currentBlind),
-        ante: props.ante,
-        scoreTarget: play?.action === "play" ? play.scoreTarget : 0,
-        payout: play?.action === "play" ? play.payout : 0,
-        money,
-        jokerCount: jokers.length,
-        consumableCount: consumables.length,
-        candidates: candidates as ReadonlyArray<BlindAdviceCandidate>,
-      };
-      return blindRanker.rankBlind(input).then((ranked) => ranked[0] ?? null);
-    },
-    [blindRanker, props.currentBlind, props.ante, money, jokers, consumables],
+    (candidates: ReadonlyArray<ContextAdviceCandidate>) =>
+      Promise.resolve(
+        rankBlind({
+          ante: props.ante,
+          jokerCount: jokers.length,
+          candidates: candidates as ReadonlyArray<BlindAdviceCandidate>,
+        })[0] ?? null,
+      ),
+    [props.ante, jokers],
   );
   const { state, coach, askAi, reset } = useSuggestion<BlindSuggestionAction>(
     () =>
@@ -129,7 +107,6 @@ export default function BlindSuggestion(
       {revealed && (
         <CoachAdvice
           state={state}
-          modelProgress={modelProgress}
           onApply={apply}
           onAskAi={() => void askAi()}
           onDismiss={() => {
