@@ -334,7 +334,7 @@ describe("Game", () => {
       renderGame({ shop: makeShopProps() });
       await user.click(screen.getByLabelText(/^Deck \(1 cards remaining\)$/));
       expect(
-        document.querySelector(".deck-modal .card-enhancement-gold"),
+        document.querySelector(".deck-modal .card--enhancement-gold"),
       ).not.toBeNull();
     });
 

@@ -166,7 +166,7 @@ export default function Card({
     : "";
   const showBack = card.faceDown === true && !scoring;
   const enhancementClass = !showBack && card.enhancement
-    ? `card-enhancement-${card.enhancement}`
+    ? `card--enhancement-${card.enhancement}`
     : "";
   const sealClass = !showBack && card.seal ? `card-seal-${card.seal}` : "";
   const editionClass = !showBack && card.edition

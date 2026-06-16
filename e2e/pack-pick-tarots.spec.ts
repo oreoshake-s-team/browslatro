@@ -160,7 +160,7 @@ test.describe("Owned consumables stay usable during a preview pack", () => {
     await expect(
       page
         .getByTestId("pack-open-preview-hand")
-        .locator(".card-enhancement-lucky"),
+        .locator(".card--enhancement-lucky"),
     ).toHaveCount(1);
   });
 });
