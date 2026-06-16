@@ -10,7 +10,7 @@ import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 
-const DEFAULT_SHOP_POLICY = "public/models/advisor-shop-policy-v3.onnx";
+const DEFAULT_SHOP_POLICY = "public/models/advisor-shop-policy-v4.onnx";
 
 function deckFlag(): Deck {
   const raw = stringFlag("--deck", DEFAULT_DECK);
