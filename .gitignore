@@ -63,3 +63,5 @@ __pycache__/
 /ml/shop-dataset*.jsonl
 /ml/candidate*.onnx
 /ml/teacher*.jsonl
+/ml/.venv/
+/ml/gen/

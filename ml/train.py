@@ -9,6 +9,12 @@ The ONNX export has input "candidates" of shape [N, INPUT_FEATURES] and
 output "logits" of shape [N], so the browser runtime feeds all candidates
 of a decision in one call.
 
+Training runs on CUDA when available (override with --device) and steps the
+optimizer once per minibatch of --batch-size decisions: every candidate of
+the batch is scored in one forward pass, the logits are split back per
+decision, and the listwise softmax cross-entropy is summed across the batch.
+This is the same objective as a per-decision step, batched for the GPU.
+
 --corrections ingests advice-feedback corrections from the human-play
 exports as high-weight labels. Hand corrections pass the quality gate
 (--min-score-fraction); shop corrections have no per-candidate score so the
@@ -56,23 +62,48 @@ class CandidateScorer(nn.Module):
         return self.layers(candidates).squeeze(-1)
 
 
-def decision_loss(model, decision):
-    inputs, chosen, weight = decision
-    logits = model(torch.tensor(inputs, dtype=torch.float32))
-    return weight * nn.functional.cross_entropy(
-        logits.unsqueeze(0), torch.tensor([chosen])
-    )
+def resolve_device(choice):
+    if choice == "cpu":
+        return torch.device("cpu")
+    if choice == "cuda":
+        return torch.device("cuda")
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def accuracy(model, decisions):
+def prepare_decisions(decisions, device):
+    prepared = []
+    for inputs, chosen, weight in decisions:
+        candidates = torch.tensor(inputs, dtype=torch.float32, device=device)
+        prepared.append((candidates, chosen, weight))
+    return prepared
+
+
+def minibatch_loss(model, batch, device):
+    candidates = torch.cat([c for c, _, _ in batch], dim=0)
+    segments = torch.split(model(candidates), [c.shape[0] for c, _, _ in batch])
+    total = torch.zeros((), device=device)
+    for segment, (_, chosen, weight) in zip(segments, batch):
+        target = torch.tensor([chosen], device=device)
+        total = total + weight * nn.functional.cross_entropy(
+            segment.unsqueeze(0), target
+        )
+    return total
+
+
+def accuracy(model, decisions, batch_size):
     if not decisions:
         return 0.0
     correct = 0
     with torch.no_grad():
-        for inputs, chosen, _ in decisions:
-            logits = model(torch.tensor(inputs, dtype=torch.float32))
-            if int(torch.argmax(logits)) == chosen:
-                correct += 1
+        for i in range(0, len(decisions), batch_size):
+            batch = decisions[i : i + batch_size]
+            candidates = torch.cat([c for c, _, _ in batch], dim=0)
+            segments = torch.split(
+                model(candidates), [c.shape[0] for c, _, _ in batch]
+            )
+            for segment, (_, chosen, _) in zip(segments, batch):
+                if int(torch.argmax(segment)) == chosen:
+                    correct += 1
     return correct / len(decisions)
 
 
@@ -105,6 +136,18 @@ def main():
     parser.add_argument("--hidden", type=int, default=128)
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--device",
+        choices=["auto", "cpu", "cuda"],
+        default="auto",
+        help="training device; auto uses cuda when available",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=256,
+        help="decisions per optimizer step",
+    )
     parser.add_argument("--shop", action="store_true", help="train on shop/pack decisions")
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
@@ -151,25 +194,35 @@ def main():
             f"{args.corrections_weight}) / {len(validation)} validation shop decisions"
         )
 
-    model = CandidateScorer(features, args.hidden)
+    device = resolve_device(args.device)
+    print(f"device={device}")
+
+    model = CandidateScorer(features, args.hidden).to(device)
+    train = prepare_decisions(train, device)
+    validation = prepare_decisions(validation, device)
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     for epoch in range(args.epochs):
         random.shuffle(train)
         total = 0.0
-        for decision in train:
+        for i in range(0, len(train), args.batch_size):
+            batch = train[i : i + args.batch_size]
             optimizer.zero_grad()
-            loss = decision_loss(model, decision)
-            loss.backward()
+            loss = minibatch_loss(model, batch, device)
+            (loss / len(batch)).backward()
             optimizer.step()
             total += float(loss)
         print(
             f"epoch {epoch + 1}: loss={total / len(train):.4f} "
-            f"val_acc={accuracy(model, validation):.3f}"
+            f"val_acc={accuracy(model, validation, args.batch_size):.3f}"
         )
 
-    print(f"final: train_acc={accuracy(model, train):.3f} val_acc={accuracy(model, validation):.3f}")
+    print(
+        f"final: train_acc={accuracy(model, train, args.batch_size):.3f} "
+        f"val_acc={accuracy(model, validation, args.batch_size):.3f}"
+    )
 
     model.eval()
+    model.to("cpu")
     example = torch.zeros((2, features), dtype=torch.float32)
     torch.onnx.export(
         model,
