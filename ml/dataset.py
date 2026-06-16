@@ -5,6 +5,8 @@ import sys
 
 from encoding import (
     HAND_SLOTS,
+    _encode_shop_candidate,
+    _encode_shop_context,
     encode_decision,
     encode_shop_decision,
 )
@@ -128,6 +130,87 @@ def load_shop_decisions_split(paths, teacher_weight=5.0):
             else:
                 rollout.append((inputs, chosen, record["runSeed"], 1.0))
     return rollout, teacher
+
+
+def _iter_feedback_records(path):
+    """Yields advice-feedback RunEventRecords from a JSONL file, skipping others."""
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            record = json.loads(line)
+            if record.get("kind") == "advice-feedback":
+                yield record
+
+
+def _encode_hand_correction(record):
+    decision = record["decision"]
+    return encode_decision(
+        {
+            "state": decision["state"],
+            "candidates": decision["candidates"],
+            "chosenIndex": record["correctedIndex"],
+        }
+    )
+
+
+def _encode_shop_correction(record):
+    ctx = _encode_shop_context(record)
+    money = record["money"]
+    inputs = []
+    for candidate in record["decision"]["candidates"]:
+        action = candidate["action"]
+        if action == "buy":
+            item = candidate["item"]
+            inputs.append(
+                ctx
+                + _encode_shop_candidate(
+                    item["itemType"],
+                    item["cost"],
+                    money,
+                    category=item.get("category", "other"),
+                )
+            )
+        elif action == "reroll":
+            inputs.append(
+                ctx + _encode_shop_candidate(None, candidate["cost"], money, is_reroll=True)
+            )
+        else:
+            inputs.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
+    return inputs, record["correctedIndex"]
+
+
+def load_feedback_corrections(paths, context, weight=5.0):
+    """Re-encodes advice-feedback corrections into weighted training labels.
+
+    Only corrections carrying a correctedIndex (the candidate the human would
+    pick instead) are trainable; bare downvotes (correctedIndex is None) are
+    eval-only and skipped. context selects "hand" or "shop" decisions, which
+    encode to different-length vectors for their respective policies. Re-encoding
+    reuses the same encoders the live decisions train on, so a correction is just
+    another label. Quality gating happens upstream (a later step).
+    """
+    decisions = []
+    for path in paths:
+        for record in _iter_feedback_records(path):
+            if record.get("correctedIndex") is None:
+                continue
+            decision = record.get("decision", {})
+            if decision.get("context") != context:
+                continue
+            if context == "hand":
+                if len(decision["state"]["hand"]) > HAND_SLOTS:
+                    continue
+                inputs, chosen = _encode_hand_correction(record)
+            elif context == "shop":
+                inputs, chosen = _encode_shop_correction(record)
+            else:
+                continue
+            if not inputs or chosen < 0 or chosen >= len(inputs):
+                continue
+            decisions.append((inputs, chosen, record["runSeed"], weight))
+    return decisions
 
 
 def build_training_set(train, *extra_sources):
