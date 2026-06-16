@@ -11,6 +11,7 @@ import { rollChance } from "../dev/chanceOverride";
 
 const FORCE_PACK_TAROT_IDS_KEY = "browslatro:forcePackTarotIds";
 const FORCE_PACK_SPECTRAL_IDS_KEY = "browslatro:forcePackSpectralIds";
+const FORCE_PACK_PLANET_IDS_KEY = "browslatro:forcePackPlanetIds";
 const FORCE_PACK_VARIANT_KEY = "browslatro:forcePackVariant";
 const FORCE_PACK_POOL_KEY = "browslatro:forcePackPool";
 const FORCE_PACK_STANDARD_ENHANCEMENT_KEY =
@@ -73,6 +74,19 @@ function readForcedPackSpectralIds(
   for (const id of ids) {
     const spectral = catalog.find((s) => s.id === id);
     if (spectral) out.push(spectral);
+  }
+  return out;
+}
+
+function readForcedPackPlanetIds(
+  catalog: ReadonlyArray<PlanetCard>,
+): ReadonlyArray<PlanetCard> {
+  const ids = readForcedIdsFromStorage(FORCE_PACK_PLANET_IDS_KEY);
+  if (ids.length === 0) return [];
+  const out: PlanetCard[] = [];
+  for (const id of ids) {
+    const planet = catalog.find((p) => p.id === id);
+    if (planet) out.push(planet);
   }
   return out;
 }
@@ -214,6 +228,20 @@ export function rollPackOptions(args: RollPackOptionsArgs): ReadonlyArray<PackOp
     }
   }
   if (args.pool === "celestial") {
+    const forced = readForcedPackPlanetIds(args.planetCatalog);
+    if (forced.length > 0) {
+      const forcedSliced = forced.slice(0, want);
+      const forcedIds = new Set(forcedSliced.map((p) => p.id));
+      const rest = drawWithoutReplacement(
+        args.planetCatalog.filter((p) => !forcedIds.has(p.id)),
+        want - forcedSliced.length,
+        args.rng,
+      );
+      return [...forcedSliced, ...rest].map((planet) => ({
+        kind: "planet" as const,
+        planet,
+      }));
+    }
     const guaranteed = args.guaranteedPlanetId
       ? args.planetCatalog.find((p) => p.id === args.guaranteedPlanetId) ?? null
       : null;

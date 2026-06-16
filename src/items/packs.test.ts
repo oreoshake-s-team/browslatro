@@ -165,6 +165,62 @@ describe("rollPackOptions for Celestial", () => {
   });
 });
 
+describe("forcePackPlanetIds dev seam", () => {
+  function stubForcedPlanetIds(value: string | null) {
+    vi.stubGlobal("window", {
+      localStorage: {
+        getItem: (key: string) =>
+          key === "browslatro:forcePackPlanetIds" ? value : null,
+      },
+    });
+  }
+
+  function rollCelestial(seed: number) {
+    return rollPackOptions({
+      pool: "celestial",
+      variant: "normal",
+      planetCatalog: createPlanetCatalog(),
+      tarotCatalog: createTarotCatalog(),
+      jokerCatalog: createJokerCatalog(),
+      spectralCatalog: createSpectralCatalog(),
+      rng: seededRng(seed),
+    });
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("forces the listed planet into the Celestial roll", () => {
+    stubForcedPlanetIds("mercury");
+    const ids = rollCelestial(11).flatMap((o) =>
+      o.kind === "planet" ? [o.planet.id] : [],
+    );
+    expect(ids).toContain("mercury");
+  });
+
+  test("does not duplicate the forced planet", () => {
+    stubForcedPlanetIds("mercury");
+    const ids = rollCelestial(12).flatMap((o) =>
+      o.kind === "planet" ? [o.planet.id] : [],
+    );
+    expect(ids.filter((id) => id === "mercury")).toHaveLength(1);
+  });
+
+  test("fills the remaining slots up to the option count", () => {
+    stubForcedPlanetIds("mercury");
+    expect(rollCelestial(13)).toHaveLength(3);
+  });
+
+  test("an unknown forced planet id falls back to a normal roll (negative)", () => {
+    stubForcedPlanetIds("nonexistent-planet");
+    const ids = rollCelestial(14).flatMap((o) =>
+      o.kind === "planet" ? [o.planet.id] : [],
+    );
+    expect(ids).not.toContain("nonexistent-planet");
+  });
+});
+
 describe("rollPackVariant", () => {
   test("Normal is the most common variant under uniform RNG", () => {
     const counts = { normal: 0, jumbo: 0, mega: 0 };
