@@ -79,53 +79,10 @@ export interface PackAdviceRequest {
   readonly candidates: ReadonlyArray<PackAdviceCandidate>;
 }
 
-export interface BlindAdviceTag {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-}
-
-export type BlindAdviceCandidate =
-  | {
-      readonly action: "play";
-      readonly scoreTarget: number;
-      readonly payout: number;
-    }
-  | { readonly action: "skip"; readonly tag: BlindAdviceTag };
-
-export interface BlindAdviceBoss {
-  readonly id: string;
-  readonly name: string;
-  readonly description: string;
-  readonly scoreTarget: number;
-}
-
-export interface BlindAdviceState {
-  readonly kind: string;
-  readonly ante: number;
-  readonly scoreTarget: number;
-  readonly payout: number;
-  readonly money: number;
-  readonly jokers: ReadonlyArray<NamedRef>;
-  readonly consumables: ReadonlyArray<NamedRef>;
-  readonly boss: BlindAdviceBoss;
-  readonly otherSkipOffer: {
-    readonly kind: string;
-    readonly tag: BlindAdviceTag;
-  } | null;
-}
-
-export interface BlindAdviceRequest {
-  readonly context: "blind";
-  readonly blind: BlindAdviceState;
-  readonly candidates: ReadonlyArray<BlindAdviceCandidate>;
-}
-
 export type AdviceRequest =
   | HandAdviceRequest
   | ShopAdviceRequest
-  | PackAdviceRequest
-  | BlindAdviceRequest;
+  | PackAdviceRequest;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -298,66 +255,10 @@ function parsePackAdviceRequest(
   return body as unknown as PackAdviceRequest;
 }
 
-function isBlindTag(value: unknown): boolean {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    typeof value.name === "string" &&
-    typeof value.description === "string"
-  );
-}
-
-function isBlindCandidate(value: unknown): boolean {
-  if (!isRecord(value)) return false;
-  if (value.action === "play") {
-    return isFiniteNumber(value.scoreTarget) && isFiniteNumber(value.payout);
-  }
-  if (value.action === "skip") return isBlindTag(value.tag);
-  return false;
-}
-
-function isBlindBoss(value: unknown): boolean {
-  return isBlindTag(value) && isFiniteNumber((value as Record<string, unknown>).scoreTarget);
-}
-
-function isOtherSkipOffer(value: unknown): boolean {
-  return (
-    isRecord(value) &&
-    typeof value.kind === "string" &&
-    isBlindTag(value.tag)
-  );
-}
-
-function isBlindState(value: unknown): boolean {
-  if (!isRecord(value)) return false;
-  if (typeof value.kind !== "string") return false;
-  if (!isNamedRefArray(value.jokers, MAX_JOKERS)) return false;
-  if (!isNamedRefArray(value.consumables, MAX_JOKERS)) return false;
-  if (!isBlindBoss(value.boss)) return false;
-  if (value.otherSkipOffer !== null && !isOtherSkipOffer(value.otherSkipOffer)) {
-    return false;
-  }
-  return (
-    isFiniteNumber(value.ante) &&
-    isFiniteNumber(value.scoreTarget) &&
-    isFiniteNumber(value.payout) &&
-    isFiniteNumber(value.money)
-  );
-}
-
-function parseBlindAdviceRequest(
-  body: Record<string, unknown>,
-): BlindAdviceRequest | null {
-  if (!isBlindState(body.blind)) return null;
-  if (!isContextCandidates(body.candidates, isBlindCandidate)) return null;
-  return body as unknown as BlindAdviceRequest;
-}
-
 export function parseAdviceRequest(body: unknown): AdviceRequest | null {
   if (!isRecord(body)) return null;
   if (body.context === "shop") return parseShopAdviceRequest(body);
   if (body.context === "pack") return parsePackAdviceRequest(body);
-  if (body.context === "blind") return parseBlindAdviceRequest(body);
   if (body.context !== undefined) return null;
   if (!isModelState(body.state)) return null;
   if (!Array.isArray(body.candidates)) return null;

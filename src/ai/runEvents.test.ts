@@ -67,25 +67,6 @@ const packDecision: AdviceDecision = {
   ],
 };
 
-const blindDecision: AdviceDecision = {
-  context: "blind",
-  state: {
-    kind: "small",
-    ante: 2,
-    scoreTarget: 300,
-    payout: 3,
-    money: 9,
-    jokers: [],
-    consumables: [],
-    boss: { id: "the-hook", name: "The Hook", description: "", scoreTarget: 600 },
-    otherSkipOffer: null,
-  },
-  candidates: [
-    { action: "play", scoreTarget: 300, payout: 3 },
-    { action: "skip", tag: { id: "investment", name: "Investment", description: "" } },
-  ],
-};
-
 describe("AdviceDecision contexts", () => {
   test("accepts a shop decision context", () => {
     expect(feedback(shopDecision).decision.context).toBe("shop");
@@ -93,10 +74,6 @@ describe("AdviceDecision contexts", () => {
 
   test("accepts a pack decision context", () => {
     expect(feedback(packDecision).decision.context).toBe("pack");
-  });
-
-  test("accepts a blind decision context", () => {
-    expect(feedback(blindDecision).decision.context).toBe("blind");
   });
 
   test("preserves the shop candidate list through buildRunEventRecord", () => {

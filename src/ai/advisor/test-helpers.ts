@@ -1,9 +1,6 @@
 import type { HandOption } from "../getHandOptions";
 import type { ModelState } from "../modelState";
 import type {
-  BlindAdviceCandidate,
-  BlindAdviceRequest,
-  BlindAdviceState,
   HandAdviceRequest,
   PackAdviceCandidate,
   PackAdviceRequest,
@@ -175,54 +172,6 @@ export function packAdviceRequestFixture(): PackAdviceRequest {
     context: "pack",
     pack: packStateFixture(),
     candidates: packCandidatesFixture(),
-  };
-}
-
-export function blindStateFixture(): BlindAdviceState {
-  return {
-    kind: "small",
-    ante: 2,
-    scoreTarget: 800,
-    payout: 3,
-    money: 14,
-    jokers: [{ id: "blueprint", name: "Blueprint" }],
-    consumables: [],
-    boss: {
-      id: "the-wall",
-      name: "The Wall",
-      description: "Extra large blind",
-      scoreTarget: 3200,
-    },
-    otherSkipOffer: {
-      kind: "big",
-      tag: {
-        id: "investment",
-        name: "Investment Tag",
-        description: "After defeating the Boss Blind, gain $25.",
-      },
-    },
-  };
-}
-
-export function blindCandidatesFixture(): ReadonlyArray<BlindAdviceCandidate> {
-  return [
-    { action: "play", scoreTarget: 800, payout: 3 },
-    {
-      action: "skip",
-      tag: {
-        id: "charm",
-        name: "Charm Tag",
-        description: "Gives a free Mega Arcana Pack.",
-      },
-    },
-  ];
-}
-
-export function blindAdviceRequestFixture(): BlindAdviceRequest {
-  return {
-    context: "blind",
-    blind: blindStateFixture(),
-    candidates: blindCandidatesFixture(),
   };
 }
 

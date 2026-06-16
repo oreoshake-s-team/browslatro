@@ -5,11 +5,10 @@ import type { AdviceRequest } from "./types";
 import { buildUserMessage, mapModelError, parseAdvice, type Advice } from "./model";
 import {
   adviceRequestFixture,
-  blindAdviceRequestFixture,
   packAdviceRequestFixture,
   shopAdviceRequestFixture,
 } from "./test-helpers";
-import { BOSS_WIKI, ECONOMY_WIKI, JOKER_WIKI } from "./wiki";
+import { ECONOMY_WIKI, JOKER_WIKI } from "./wiki";
 
 function withBlueprintJoker(): AdviceRequest {
   const base = adviceRequestFixture();
@@ -225,44 +224,3 @@ describe("mapModelError", () => {
   });
 });
 
-describe("buildUserMessage blind context", () => {
-  test("includes the serialized blind state", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain('"scoreTarget":800');
-  });
-
-  test("includes the other blind's skip offer for planning", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain('"Investment Tag"');
-  });
-
-  test("labels the candidates as blind actions", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain("Candidate blind actions (choose by index):");
-  });
-
-  test("annotates every blind candidate with its index", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain('"index":1');
-  });
-
-  test("injects the wiki entry for the upcoming boss", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain(`- The Wall: ${BOSS_WIKI["the-wall"]}`);
-  });
-
-  test("injects the wiki entry for a held joker", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain(`- Blueprint: ${JOKER_WIKI.blueprint}`);
-  });
-
-  test("includes the economy note", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain(`- Economy: ${ECONOMY_WIKI}`);
-  });
-
-  test("notes that skipping forfeits the payout", () => {
-    const message = buildUserMessage(blindAdviceRequestFixture());
-    expect(message).toContain("forfeits the blind's cash payout");
-  });
-});

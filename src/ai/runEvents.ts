@@ -4,8 +4,6 @@ import type { GameState } from "../store/game";
 import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
 import type {
-  BlindAdviceCandidate,
-  BlindAdviceState,
   PackAdviceCandidate,
   PackAdviceState,
   ShopAdviceCandidate,
@@ -115,17 +113,10 @@ export interface PackAdviceDecision {
   readonly candidates: ReadonlyArray<PackAdviceCandidate>;
 }
 
-export interface BlindAdviceDecision {
-  readonly context: "blind";
-  readonly state: BlindAdviceState;
-  readonly candidates: ReadonlyArray<BlindAdviceCandidate>;
-}
-
 export type AdviceDecision =
   | HandAdviceDecision
   | ShopAdviceDecision
-  | PackAdviceDecision
-  | BlindAdviceDecision;
+  | PackAdviceDecision;
 
 export interface AdviceFeedbackEvent {
   readonly kind: "advice-feedback";
