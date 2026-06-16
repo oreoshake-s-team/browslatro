@@ -79,6 +79,7 @@ test("a Celestial pack under the haw locale shows Hawaiian planet names", async 
     window.localStorage.setItem("browslatro:bootShop", "1");
     window.localStorage.setItem("browslatro:deterministicShuffle", "1");
     window.localStorage.setItem("browslatro:forcePackPool", "celestial");
+    window.localStorage.setItem("browslatro:forcePackPlanetIds", "mercury");
   });
   await page.goto("/");
   const packOffer = page
@@ -89,7 +90,7 @@ test("a Celestial pack under the haw locale shows Hawaiian planet names", async 
   await expect(
     page
       .locator(".pack-open-option-name")
-      .filter({ hasText: /ʻUkali|Hōkūloa|Hōkūʻula|Kaʻāwela|Makulu|Honua/ })
+      .filter({ hasText: /ʻUkali/ })
       .first(),
   ).toBeVisible();
 });
