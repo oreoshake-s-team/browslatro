@@ -12,17 +12,17 @@ const sevenOfHearts: CardType = { id: 5, rank: "7", suit: "hearts" };
 describe("Card", () => {
   test("applies the foil edition class when the card has the foil edition", () => {
     render(<Card card={{ ...aceOfSpades, edition: "foil" }} />);
-    expect(screen.getByRole("button")).toHaveClass("card-edition-foil");
+    expect(screen.getByRole("button")).toHaveClass("card--edition-foil");
   });
 
   test("applies the polychrome edition class when the card has the polychrome edition", () => {
     render(<Card card={{ ...aceOfSpades, edition: "polychrome" }} />);
-    expect(screen.getByRole("button")).toHaveClass("card-edition-polychrome");
+    expect(screen.getByRole("button")).toHaveClass("card--edition-polychrome");
   });
 
   test("does not apply any edition class when the card has no edition (negative)", () => {
     const button = render(<Card card={aceOfSpades} />).getByRole("button");
-    expect(button.className).not.toMatch(/card-edition-/);
+    expect(button.className).not.toMatch(/card--edition-/);
   });
 
   test("exposes the edition via the data-edition attribute when present", () => {
@@ -510,7 +510,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={editioned} />);
-    expect(screen.getByRole("button").className).not.toMatch(/card-edition-/);
+    expect(screen.getByRole("button").className).not.toMatch(/card--edition-/);
   });
 
   test("a face-down card flipped face-up restores its enhancement class (regression)", () => {

@@ -170,7 +170,7 @@ export default function Card({
     : "";
   const sealClass = !showBack && card.seal ? `card-seal-${card.seal}` : "";
   const editionClass = !showBack && card.edition
-    ? `card-edition-${card.edition}`
+    ? `card--edition-${card.edition}`
     : "";
   const debuffedClass = debuffed ? "card--debuffed" : "";
   const displayValue = card.enhancement

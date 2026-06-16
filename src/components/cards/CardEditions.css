@@ -1,4 +1,4 @@
-.card-edition-foil {
+.card--edition-foil {
   border-color: var(--edition-foil);
   border-width: 3px;
   background-image: linear-gradient(
@@ -12,7 +12,7 @@
     inset 0 0 12px color-mix(in srgb, var(--enhance-glass-tint) 55%, transparent);
 }
 
-.card-edition-holographic {
+.card--edition-holographic {
   border-color: var(--edition-holo);
   border-width: 3px;
   background-image: linear-gradient(
@@ -26,7 +26,7 @@
     inset 0 0 14px color-mix(in srgb, var(--enhance-glass-tint) 55%, transparent);
 }
 
-.card-edition-polychrome {
+.card--edition-polychrome {
   border-color: var(--edition-poly);
   border-width: 3px;
   background-image: linear-gradient(
@@ -55,7 +55,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card-edition-polychrome {
+  .card--edition-polychrome {
     animation: none;
   }
 }
