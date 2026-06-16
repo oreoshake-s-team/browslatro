@@ -5,8 +5,6 @@ import {
   type AdviceClientErrorCode,
 } from "./client";
 import type {
-  BlindAdviceCandidate,
-  BlindAdviceRequest,
   PackAdviceCandidate,
   PackAdviceRequest,
   ShopAdviceCandidate,
@@ -15,11 +13,10 @@ import type {
 
 export type ContextAdviceCandidate =
   | ShopAdviceCandidate
-  | PackAdviceCandidate
-  | BlindAdviceCandidate;
+  | PackAdviceCandidate;
 
 export interface SuggestionPlan<TAction> {
-  readonly request: ShopAdviceRequest | PackAdviceRequest | BlindAdviceRequest;
+  readonly request: ShopAdviceRequest | PackAdviceRequest;
   readonly actions: ReadonlyArray<TAction>;
 }
 

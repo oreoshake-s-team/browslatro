@@ -1,5 +1,5 @@
 import "./BlindSelectScreen.css";
-import { Suspense, lazy, useEffect, useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
@@ -14,8 +14,6 @@ import {
 import { hasStakeModifier, type Stake } from "../../items/stakes";
 import TagTooltip, { type TagTooltipSpec } from "./TagTooltip";
 import Modal from "../system/Modal";
-
-const BlindSuggestion = lazy(() => import("./BlindSuggestion"));
 
 interface BlindSelectScreenProps {
   ante: number;
@@ -83,9 +81,6 @@ export default function BlindSelectScreen({
     bossRerollsRemaining > 0;
 
   const tooltipIdBase = useId();
-  const [suggestSlot, setSuggestSlot] = useState<HTMLDivElement | null>(null);
-  const currentSkipOffer = skipOfferForBlind(currentBlind);
-  const showSuggest = canSkip && currentSkipOffer !== undefined;
   const [tooltip, setTooltip] = useState<{
     readonly key: string;
     readonly spec: TagTooltipSpec;
@@ -291,24 +286,7 @@ export default function BlindSelectScreen({
               {t("blinds.skip")}
             </button>
           )}
-          {showSuggest && (
-            <div className="blind-suggest-slot" ref={setSuggestSlot} />
-          )}
         </div>
-        {showSuggest && onSkip && (
-          <Suspense fallback={null}>
-            <BlindSuggestion
-              ante={ante}
-              currentBlind={currentBlind}
-              boss={boss}
-              stake={stake}
-              skipRewards={skipRewards}
-              onPlay={onPlay}
-              onSkip={onSkip}
-              triggerContainer={suggestSlot}
-            />
-          </Suspense>
-        )}
     </Modal>
   );
 }

@@ -1,27 +1,12 @@
-import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { readStoredPlayerKey } from "../../ai/advisor/playerKey";
-import type {
-  ContextAdviceCandidate,
-  SuggestionState,
-} from "../../ai/advisor/useSuggestion";
+import type { SuggestionState } from "../../ai/advisor/useSuggestion";
 import type { DownloadProgress } from "../../ai/policy";
 import PlayerKeyForm from "../game/PlayerKeyForm";
 import { useModelLoadProgress } from "../game/useModelLoadProgress";
 import AdviceFeedbackControl from "./AdviceFeedbackControl";
 import { describeContextCandidate, errorMessage } from "./SuggestionAdvice";
 import "./CoachAdvice.css";
-
-function applyActionLabel(
-  t: TFunction,
-  candidate: ContextAdviceCandidate,
-): string {
-  if (candidate.action === "play") return t("advisor.playApply");
-  if (candidate.action === "skip" && "tag" in candidate) {
-    return t("advisor.skipApply");
-  }
-  return t("advisor.suggestApply");
-}
 
 export interface CoachAdviceProps<TAction> {
   readonly state: SuggestionState<TAction>;
@@ -83,7 +68,7 @@ export default function CoachAdvice<TAction>({
               onClick={onApply}
             >
               <span aria-hidden="true">✅ </span>
-              {applyActionLabel(t, coachCandidate)}
+              {t("advisor.suggestApply")}
             </button>
             {onFeedback !== undefined && (
               <AdviceFeedbackControl
