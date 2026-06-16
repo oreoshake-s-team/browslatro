@@ -61,12 +61,12 @@
   outline-offset: -2px;
 }
 
-.hand-sort-button-active {
+.hand-sort-button--active {
   background-color: var(--accent-chips-strong);
   color: var(--white);
 }
 
-.hand-sort-button-active:hover {
+.hand-sort-button--active:hover {
   background-color: var(--edition-foil-deep);
 }
 
@@ -119,7 +119,7 @@
     background-color calc(120ms * var(--animation-speed, 1)) ease;
 }
 
-.hand-cards-dragging .hand-card-gap {
+.hand-cards--dragging .hand-card-gap {
   /* During drag the resting 2.5rem gaps widen further so the cursor
    * has a generous landing area between cards. Math at max-width
    * 90rem (inner ~79rem after the deck column and row gap):
@@ -134,7 +134,7 @@
   flex-basis: 3rem;
 }
 
-.hand-card-gap-active {
+.hand-card-gap--active {
   flex-basis: var(--card-width);
   background-color: color-mix(in srgb, var(--accent-chips) 18%, transparent);
   outline: 2px dashed var(--accent-chips);
@@ -165,7 +165,7 @@
   cursor: grabbing;
 }
 
-.hand-card-slot-dragging {
+.hand-card-slot--dragging {
   /* Hide the source visually (opacity:0) but keep its var(--card-width)
    * slot in layout. `visibility:hidden` or `width:0` here cancels the
    * drag in Chrome — the source element must remain trackable for the

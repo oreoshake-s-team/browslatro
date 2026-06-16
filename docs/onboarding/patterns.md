@@ -93,9 +93,21 @@ spec (`e2e/save-restore.spec.ts`) covering the round-trip.
   `--surface*`, `--border*`, `--text*`, `--accent-*`, `--focus-ring`). Component CSS
   consumes tokens — avoid raw hex values.
 - `src/styles/buttons.css` provides shared `.btn` / `.btn--primary` / `--secondary` /
-  `--danger` classes; use them instead of restyling buttons per component.
+  `--danger` classes; use them instead of restyling buttons per component. Shared modal
+  chrome lives in `components/system/Modal.css` (`.modal-overlay`, `.modal-panel--sm/md/lg`)
+  and shared tooltip chrome in `components/system/Tooltip.css` (`.tooltip`).
 - Component CSS is co-located (`Foo.tsx` + `Foo.css`) and scoped by a component-specific
   class prefix (`CLAUDE.md`: compartmentalize, no comments in CSS).
+- **Class naming — kebab-case BEM with `--` for state/variant.** A class is
+  `block`, `block-element` (flat kebab for structure), or `block[-element]--modifier`
+  for a **state or variant**. The single dash is for structure; the double dash means
+  "this same element, in a variant state." So a toggled button is
+  `.hand-sort-button--active` (not `…-active`), a sold offer is `.shop-offer--sold`, a
+  size variant is `.modal-panel--sm`. Exemplars to copy: `.btn--primary`,
+  `.modal-panel--lg`, `.suggestion-section--recommendation`, `.coach-advice-ai--error`.
+  Flat element names (`.coach-advice-head`, `.new-run-deck-grid`) stay flat — only
+  state/variant suffixes use `--`. Migration to this convention is incremental
+  (tracked under the CSS-consistency epic); not every file conforms yet.
 - **Layout tests** (`*.layout.test.ts` in `src/styles/` and next to components) are unit
   tests that parse CSS and assert conventions — token usage, focus-visible rules, motion
   rules. If you add CSS that breaks one, the test names the convention you missed.
