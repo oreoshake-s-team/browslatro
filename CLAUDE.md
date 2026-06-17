@@ -1,6 +1,6 @@
-# Browlatro
+# Browslatro
 
-Browlatro is an educational journey meant to help the author brush up on their frontend skills. The author is still learning react and struggles with CSS.
+Browslatro is an educational journey meant to help the author brush up on their frontend skills. The author is still learning react and struggles with CSS.
 
 ## Game Domain Context
 
