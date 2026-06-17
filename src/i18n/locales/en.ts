@@ -99,6 +99,8 @@ export const en = {
     unmuteSounds: "Unmute sounds",
     enableHighVisibility: "Enable high visibility suits",
     disableHighVisibility: "Disable high visibility suits",
+    enableDyslexicFont: "Use OpenDyslexic font",
+    disableDyslexicFont: "Use default font",
     animationSpeed: "Animation speed",
     speedSlow: "Slow",
     speedNormal: "Normal",

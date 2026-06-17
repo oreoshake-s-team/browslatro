@@ -11,9 +11,11 @@ import {
 import {
   ANIMATION_SPEED_VALUES,
   getAnimationSpeed,
+  isDyslexicFont,
   isHighVisibility,
   isMuted,
   setAnimationSpeed,
+  toggleDyslexicFont,
   toggleHighVisibility,
   toggleMute,
   type AnimationSpeed,
@@ -54,6 +56,7 @@ function Options({
   const [keyDraft, setKeyDraft] = useState("");
   const [muted, setMuted] = useState(isMuted);
   const [highVisibility, setHighVisibility] = useState(isHighVisibility);
+  const [dyslexicFont, setDyslexicFont] = useState(isDyslexicFont);
   const [animationSpeed, setAnimationSpeedState] = useState<AnimationSpeed>(
     getAnimationSpeed,
   );
@@ -75,6 +78,11 @@ function Options({
     const next = isHighVisibility();
     setHighVisibility(next);
     onHighVisibilityChange?.(next);
+  }
+
+  function handleToggleDyslexicFont() {
+    toggleDyslexicFont();
+    setDyslexicFont(isDyslexicFont());
   }
 
   function handleAnimationSpeedChange(
@@ -131,6 +139,15 @@ function Options({
                   {highVisibility
                     ? t("options.disableHighVisibility")
                     : t("options.enableHighVisibility")}
+                </button>
+                <button
+                  className="btn btn--toggle"
+                  aria-pressed={dyslexicFont}
+                  onClick={handleToggleDyslexicFont}
+                >
+                  {dyslexicFont
+                    ? t("options.disableDyslexicFont")
+                    : t("options.enableDyslexicFont")}
                 </button>
               </div>
               <label

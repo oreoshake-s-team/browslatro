@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 const HIGH_VISIBILITY_KEY = "browslatro:highVisibility";
+const DYSLEXIC_FONT_KEY = "browslatro:dyslexicFont";
 const MUTED_KEY = "browslatro:muted";
 const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
 
@@ -64,12 +65,14 @@ function writeAnimationSpeed(value: AnimationSpeed): void {
 
 interface PreferencesState {
   highVisibility: boolean;
+  dyslexicFont: boolean;
   muted: boolean;
   animationSpeed: AnimationSpeed;
 }
 
 export const usePreferences = create<PreferencesState>()(() => ({
   highVisibility: readBoolean(HIGH_VISIBILITY_KEY, true),
+  dyslexicFont: readBoolean(DYSLEXIC_FONT_KEY, false),
   muted: readBoolean(MUTED_KEY, true),
   animationSpeed: readAnimationSpeed(),
 }));
@@ -82,6 +85,16 @@ export function toggleHighVisibility(): void {
   const next = !usePreferences.getState().highVisibility;
   usePreferences.setState({ highVisibility: next });
   writeBoolean(HIGH_VISIBILITY_KEY, next);
+}
+
+export function isDyslexicFont(): boolean {
+  return usePreferences.getState().dyslexicFont;
+}
+
+export function toggleDyslexicFont(): void {
+  const next = !usePreferences.getState().dyslexicFont;
+  usePreferences.setState({ dyslexicFont: next });
+  writeBoolean(DYSLEXIC_FONT_KEY, next);
 }
 
 export function isMuted(): boolean {
