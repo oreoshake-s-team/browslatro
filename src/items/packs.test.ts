@@ -6,6 +6,7 @@ import {
   PACK_VARIANT_WEIGHTS,
   packDisplayName,
   packOptionsCount,
+  packShowsHandArea,
   packPickLimit,
   packPrice,
   readForcedPackPools,
@@ -974,5 +975,27 @@ describe("Hidden-spectral replacement in packs", () => {
       rng,
     });
     expect(calls).toBe(3);
+  });
+});
+
+describe("packShowsHandArea", () => {
+  test("Buffoon packs hide the hand area", () => {
+    expect(packShowsHandArea("buffoon")).toBe(false);
+  });
+
+  test("Celestial packs hide the hand area", () => {
+    expect(packShowsHandArea("celestial")).toBe(false);
+  });
+
+  test("Arcana packs keep the hand area", () => {
+    expect(packShowsHandArea("arcana")).toBe(true);
+  });
+
+  test("Spectral packs keep the hand area", () => {
+    expect(packShowsHandArea("spectral")).toBe(true);
+  });
+
+  test("Standard packs keep the hand area", () => {
+    expect(packShowsHandArea("standard")).toBe(true);
   });
 });

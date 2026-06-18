@@ -10,6 +10,7 @@ import Consumables from "../consumables/Consumables";
 import { foolCopyTargetText } from "../../i18n/foolCopyTarget";
 import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
+import { packShowsHandArea } from "../../items/packs";
 import ModifierPanel from "./ModifierPanel";
 import AutopilotControls from "./AutopilotControls";
 import type { HandOption } from "../../ai/getHandOptions";
@@ -193,7 +194,9 @@ export default function Game({
   const holdsHandConsumable = consumables.some(
     (c) => c.kind === "tarot" || c.kind === "spectral",
   );
-  const showPackHand = !!packOpen && !previewActive && holdsHandConsumable;
+  const packShowsHand = packOpen ? packShowsHandArea(packOpen.pack.pool) : false;
+  const showPackHand =
+    !!packOpen && packShowsHand && !previewActive && holdsHandConsumable;
   const consumableSelectedCount = previewActive
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
@@ -281,7 +284,7 @@ export default function Game({
                 <div className="game-top-row">
                   {jokersNode}
                   {consumablesNode}
-                  {!showPackHand && overlayDeckNode}
+                  {packShowsHand && !showPackHand && overlayDeckNode}
                 </div>
                 {showPackHand && handNode}
               </>

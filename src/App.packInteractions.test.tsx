@@ -85,6 +85,7 @@ describe("Selling and using during a pack-pick", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
+    window.localStorage.setItem("browslatro:forcePackPool", "standard");
     initialJokersConfig.factory = () => [
       createPlusFourMultJoker(),
       createBusinessCardJoker(),
@@ -92,6 +93,7 @@ describe("Selling and using during a pack-pick", () => {
   });
 
   afterEach(() => {
+    window.localStorage.removeItem("browslatro:forcePackPool");
     initialJokersConfig.factory = originalFactory;
   });
 

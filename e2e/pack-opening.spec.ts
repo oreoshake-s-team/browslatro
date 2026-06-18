@@ -89,6 +89,38 @@ test.describe("Pack opening flow", () => {
     await expect(page.getByTestId("hand-cards")).toHaveCount(0);
   });
 
+  test("Buffoon pack: the hand and deck pile stay hidden even when a tarot is held", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "buffoon");
+    await addTarotToTray(page, "strength");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.getByTestId("hand-cards")).toHaveCount(0);
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+  });
+
+  test("Celestial pack: the deck pile stays hidden during the pick", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "celestial");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+  });
+
+  test("Arcana pack: the deck pile remains visible during the pick (contrast)", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "arcana");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toBeVisible();
+  });
+
   test("Standard pack: an enhanced card surfaces a modifier badge on its pick tile", async ({
     page,
   }) => {
