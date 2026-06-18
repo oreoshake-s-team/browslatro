@@ -70,8 +70,12 @@ export function benchmarkArgs(config: DistillConfig): ReadonlyArray<string> {
 export function parseAvgBlinds(stdout: string, label: string): number | null {
   for (const line of stdout.split("\n")) {
     if (!line.includes(label)) continue;
-    const numbers = line.trim().split(/\s+/).slice(-4).map(Number);
-    if (numbers.length === 4 && numbers.every((value) => !Number.isNaN(value))) {
+    const numbers = line
+      .trim()
+      .split(/\s+/)
+      .map(Number)
+      .filter((value) => !Number.isNaN(value));
+    if (numbers.length >= 3) {
       return numbers[2];
     }
   }
