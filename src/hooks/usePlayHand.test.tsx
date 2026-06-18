@@ -61,6 +61,48 @@ describe("usePlayHand — empty hand guard", () => {
   });
 });
 
+describe("usePlayHand — hand counter decrements at play time", () => {
+  function setupPlayablePair(remainingHands: number): void {
+    useGame.getState().setBlind(1);
+    useGame.getState().setDealt({
+      hand: [card(1, "5", "clubs"), card(2, "5", "hearts")],
+      remaining: [card(3, "9", "spades")],
+    });
+    useGame.getState().setHandDisplayOrder([1, 2]);
+    useGame.getState().setSelectedIds(new Set([1, 2]));
+    useGame.getState().setRemainingHands(remainingHands);
+    useGame.getState().setRoundScore(0);
+  }
+
+  test("a played hand decrements remainingHands the moment it is submitted", () => {
+    setupPlayablePair(4);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().remainingHands).toBe(3);
+  });
+
+  test("a hand that will win the round still decrements the counter at submit", () => {
+    setupPlayablePair(4);
+    useGame.getState().setRoundScore(1_000_000);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().remainingHands).toBe(3);
+  });
+
+  test("the final hand drops the counter to 0 as soon as it is submitted", () => {
+    setupPlayablePair(1);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    expect(useGame.getState().remainingHands).toBe(0);
+  });
+});
+
 describe("usePlayHand — The Mouth voids a non-matching hand", () => {
   const mouth = createBossCatalog().find((b) => b.id === "the-mouth")!;
 
