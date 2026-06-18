@@ -93,6 +93,16 @@ function readForcedPackPlanetIds(
 
 export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral" | "standard";
 
+const HAND_AREA_HIDDEN_POOLS: ReadonlySet<PackPool> = new Set([
+  "buffoon",
+  "celestial",
+  "standard",
+]);
+
+export function packShowsHandArea(pool: PackPool): boolean {
+  return !HAND_AREA_HIDDEN_POOLS.has(pool);
+}
+
 export const STANDARD_ENHANCEMENT_CHANCE = 0.4;
 export const STANDARD_SEAL_CHANCE = 0.2;
 

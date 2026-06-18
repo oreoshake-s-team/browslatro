@@ -1,6 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
 const SHOP_HEADING = /Shop/;
 
 async function setDeterministic(page: Page): Promise<void> {
@@ -87,6 +86,50 @@ test.describe("Pack opening flow", () => {
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
     await expect(page.getByTestId("hand-cards")).toHaveCount(0);
+  });
+
+  test("Buffoon pack: the hand and deck pile stay hidden even when a tarot is held", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "buffoon");
+    await addTarotToTray(page, "strength");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.getByTestId("hand-cards")).toHaveCount(0);
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+  });
+
+  test("Celestial pack: the deck pile stays hidden during the pick", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "celestial");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+  });
+
+  test("Standard pack: the hand and deck pile stay hidden even when a tarot is held", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "standard");
+    await addTarotToTray(page, "strength");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.getByTestId("hand-cards")).toHaveCount(0);
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+  });
+
+  test("Arcana pack: the deck pile remains visible during the pick (contrast)", async ({
+    page,
+  }) => {
+    await forcePackPool(page, "arcana");
+    await winRound1AndOpenShop(page);
+    await buyFirstPackOffer(page);
+    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.locator(".game-overlay-deck .deck-pile")).toBeVisible();
   });
 
   test("Standard pack: an enhanced card surfaces a modifier badge on its pick tile", async ({
@@ -177,26 +220,19 @@ test.describe("Pack opening flow", () => {
   });
 });
 
-test.describe("Consumables usable while a Standard pack is open", () => {
+test.describe("Hand-free consumables usable while a Standard pack is open", () => {
   test.beforeEach(async ({ page }) => {
     await setDeterministic(page);
   });
 
-  test("Strength tarot on a hand card, then Black Hole spectral, each consumed mid-Standard-pack with the modal staying open", async ({
+  test("a Black Hole spectral is consumed from the tray mid-Standard-pack with the hand hidden and the modal staying open", async ({
     page,
   }) => {
     await forcePackPool(page, "standard");
-    await addTarotToTray(page, "strength");
     await addSpectralToTray(page, "black-hole");
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
-    await expect(page.locator(HAND_CARDS).first()).toBeVisible();
-    await page.locator(HAND_CARDS).first().click();
-    await page.locator('[data-consumable-kind="tarot"]').first().click();
-    await expect(
-      page.locator('[data-consumable-kind="tarot"]'),
-    ).toHaveCount(0);
-    await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
+    await expect(page.getByTestId("hand-cards")).toHaveCount(0);
     await page.locator('[data-consumable-kind="spectral"]').first().click();
     await expect(
       page.locator('[data-consumable-kind="spectral"]'),
