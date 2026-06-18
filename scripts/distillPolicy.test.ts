@@ -31,10 +31,10 @@ function config(overrides: Partial<DistillConfig> = {}): DistillConfig {
 
 const SAMPLE_BENCHMARK = [
   "200 games per agent, seeds 5000..5199",
-  "model                        winRate  avgAnte  avgBlinds   avgHands",
-  "greedy (baseline)              0.010     2.40       2.90      18.20",
-  "advisor-policy-v5.onnx         0.030     3.10       3.06      19.10",
-  "candidate.onnx                 0.040     3.20       3.18      19.40",
+  "model                        winRate  avgAnte  avgBlinds   avgHands avgSkipped",
+  "greedy (baseline)              0.010     2.40       2.90      18.20       0.00",
+  "advisor-policy-v5.onnx         0.030     3.10       3.06      19.10       0.00",
+  "candidate.onnx                 0.040     3.20       3.18      19.40       0.00",
   "done in 42.0s",
 ].join("\n");
 
