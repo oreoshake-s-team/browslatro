@@ -93,7 +93,11 @@ function readForcedPackPlanetIds(
 
 export type PackPool = "celestial" | "arcana" | "buffoon" | "spectral" | "standard";
 
-const HAND_AREA_HIDDEN_POOLS: ReadonlySet<PackPool> = new Set(["buffoon", "celestial"]);
+const HAND_AREA_HIDDEN_POOLS: ReadonlySet<PackPool> = new Set([
+  "buffoon",
+  "celestial",
+  "standard",
+]);
 
 export function packShowsHandArea(pool: PackPool): boolean {
   return !HAND_AREA_HIDDEN_POOLS.has(pool);

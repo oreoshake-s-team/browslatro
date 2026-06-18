@@ -987,15 +987,15 @@ describe("packShowsHandArea", () => {
     expect(packShowsHandArea("celestial")).toBe(false);
   });
 
+  test("Standard packs hide the hand area", () => {
+    expect(packShowsHandArea("standard")).toBe(false);
+  });
+
   test("Arcana packs keep the hand area", () => {
     expect(packShowsHandArea("arcana")).toBe(true);
   });
 
   test("Spectral packs keep the hand area", () => {
     expect(packShowsHandArea("spectral")).toBe(true);
-  });
-
-  test("Standard packs keep the hand area", () => {
-    expect(packShowsHandArea("standard")).toBe(true);
   });
 });

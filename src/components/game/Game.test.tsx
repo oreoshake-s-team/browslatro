@@ -147,10 +147,10 @@ describe("Game", () => {
     },
   );
 
-  test("shows the deck drop target during a standard pack pick when no usable consumable is held", async () => {
+  test("hides the deck drop target during a standard pack pick when no usable consumable is held", async () => {
     renderGame({ packOpen: packOpenProps(standardPack) });
     await screen.findByTestId("pack-open-subtitle");
-    expect(screen.getByTestId("deck-pile")).toBeInTheDocument();
+    expect(screen.queryByTestId("deck-pile")).not.toBeInTheDocument();
   });
 
   test("hides the player hand during a standard pack pick when only a planet is held", async () => {
@@ -160,11 +160,11 @@ describe("Game", () => {
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
-  test("shows the player hand during a standard pack pick when a tarot is held", async () => {
+  test("hides the player hand during a standard pack pick even when a tarot is held", async () => {
     useGame.getState().setConsumables([tarotConsumable]);
     renderGame({ packOpen: packOpenProps(standardPack) });
     await screen.findByTestId("pack-open-subtitle");
-    expect(screen.getByTestId("hand-cards")).toBeInTheDocument();
+    expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("hides the player hand during a buffoon pack pick even when a spectral is held", async () => {
@@ -184,6 +184,7 @@ describe("Game", () => {
   test.each([
     ["buffoon", buffoonPack],
     ["celestial", celestialPack],
+    ["standard", standardPack],
   ] as const)(
     "hides the deck pile during a %s pack pick even when a tarot is held",
     async (_pool, pack) => {

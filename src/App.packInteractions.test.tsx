@@ -7,7 +7,6 @@ import {
   createPlusFourMultJoker,
   initialJokersConfig,
 } from "./items/jokers";
-import { createTarotCatalog } from "./items/tarots";
 import { createSpectralCatalog } from "./items/spectrals";
 import type { Consumable } from "./items/consumables";
 import type { PackOffer } from "./items/packs";
@@ -85,7 +84,7 @@ describe("Selling and using during a pack-pick", () => {
   const originalFactory = initialJokersConfig.factory;
 
   beforeEach(() => {
-    window.localStorage.setItem("browslatro:forcePackPool", "standard");
+    window.localStorage.setItem("browslatro:forcePackPool", "arcana");
     initialJokersConfig.factory = () => [
       createPlusFourMultJoker(),
       createBusinessCardJoker(),
@@ -297,19 +296,7 @@ describe("No overlay deck target during normal play", () => {
   });
 });
 
-describe("Tarot/Spectral usage while a Standard pack is open", () => {
-  function strengthConsumable(): Consumable {
-    const tarot = createTarotCatalog().find((t) => t.id === "strength");
-    if (!tarot) throw new Error("Strength tarot missing from catalog");
-    return { kind: "tarot", card: tarot };
-  }
-
-  function auraConsumable(): Consumable {
-    const spectral = createSpectralCatalog().find((s) => s.id === "aura");
-    if (!spectral) throw new Error("Aura spectral missing from catalog");
-    return { kind: "spectral", card: spectral };
-  }
-
+describe("Consumable usage while a Standard pack is open", () => {
   function blackHoleConsumable(): Consumable {
     const spectral = createSpectralCatalog().find((s) => s.id === "black-hole");
     if (!spectral) throw new Error("Black Hole spectral missing from catalog");
@@ -341,42 +328,6 @@ describe("Tarot/Spectral usage while a Standard pack is open", () => {
     await screen.findByTestId("shop-money");
     return user;
   }
-
-  test("Strength applied mid-Standard-pack bumps rank, consumes the tarot, and keeps the modal open", async () => {
-    const user = await reachShop();
-    act(() => useGame.getState().setConsumables([strengthConsumable()]));
-    act(() => useGame.getState().openPackOffer(standardPack()));
-    await screen.findByTestId("pack-open-close");
-    const handCards = getHandCardButtons();
-    expect(handCards.length).toBeGreaterThan(0);
-    const beforeAdded = useGame.getState().addedCards.length;
-    await user.click(handCards[0]);
-    const targetId = Array.from(useGame.getState().selectedIds)[0] ?? -1;
-    expect(targetId).not.toBe(-1);
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    expect(useGame.getState().destroyedCardIds.has(targetId)).toBe(true);
-    expect(useGame.getState().addedCards.length).toBe(beforeAdded + 1);
-    expect(useGame.getState().consumables).toHaveLength(0);
-    expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
-  });
-
-  test("Aura applied mid-Standard-pack applies an edition, consumes the spectral, and keeps the modal open", async () => {
-    const user = await reachShop();
-    act(() => useGame.getState().setConsumables([auraConsumable()]));
-    act(() => useGame.getState().openPackOffer(standardPack()));
-    await screen.findByTestId("pack-open-close");
-    const handCards = getHandCardButtons();
-    await user.click(handCards[0]);
-    const targetId = Array.from(useGame.getState().selectedIds)[0] ?? -1;
-    expect(targetId).not.toBe(-1);
-    await user.click(screen.getByTestId("consumable-tile-filled-0"));
-    const card = useGame
-      .getState()
-      .dealt.hand.find((c) => c.id === targetId);
-    expect(card?.edition).toBeDefined();
-    expect(useGame.getState().consumables).toHaveLength(0);
-    expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
-  });
 
   test("Black Hole applied mid-Standard-pack upgrades every poker hand level and consumes the spectral", async () => {
     const user = await reachShop();
