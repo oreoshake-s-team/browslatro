@@ -3,14 +3,17 @@ import userEvent from "@testing-library/user-event";
 import Options from "./Options";
 import {
   getAnimationSpeed,
+  isDyslexicFont,
   isHighVisibility,
   isMuted,
   setAnimationSpeed,
+  toggleDyslexicFont,
   toggleHighVisibility,
   toggleMute,
 } from "../system/preferences";
 
 const STORAGE_KEY = "browslatro:highVisibility";
+const DYSLEXIC_KEY = "browslatro:dyslexicFont";
 const MUTED_KEY = "browslatro:muted";
 const ANIMATION_SPEED_KEY = "browslatro:animationSpeed";
 const LOCALE_KEY = "browslatro:locale";
@@ -19,6 +22,9 @@ function resetPreferences(): void {
   if (isHighVisibility()) {
     toggleHighVisibility();
   }
+  if (isDyslexicFont()) {
+    toggleDyslexicFont();
+  }
   if (isMuted()) {
     toggleMute();
   }
@@ -26,6 +32,7 @@ function resetPreferences(): void {
     setAnimationSpeed("normal");
   }
   window.localStorage.removeItem(STORAGE_KEY);
+  window.localStorage.removeItem(DYSLEXIC_KEY);
   window.localStorage.removeItem(MUTED_KEY);
   window.localStorage.removeItem(ANIMATION_SPEED_KEY);
 }
@@ -205,6 +212,33 @@ describe("Options — high visibility toggle", () => {
     await user.click(screen.getByText(/Enable high visibility suits/));
     await user.click(screen.getByText(/Disable high visibility suits/));
     expect(onChange).toHaveBeenLastCalledWith(false);
+  });
+
+  test("dyslexic-font toggle starts off with aria-pressed=false", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    expect(
+      screen.getByRole("button", { name: "Use OpenDyslexic font" })
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  test("enabling the dyslexic font flips the label and persists true", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("Use OpenDyslexic font"));
+    expect(screen.getByText("Use default font")).toBeInTheDocument();
+    expect(window.localStorage.getItem(DYSLEXIC_KEY)).toBe("true");
+  });
+
+  test("toggling the dyslexic font back off persists false (negative)", async () => {
+    const user = userEvent.setup();
+    render(<Options onNewGame={() => {}} />);
+    await user.click(screen.getByText("Options"));
+    await user.click(screen.getByText("Use OpenDyslexic font"));
+    await user.click(screen.getByText("Use default font"));
+    expect(window.localStorage.getItem(DYSLEXIC_KEY)).toBe("false");
   });
 });
 

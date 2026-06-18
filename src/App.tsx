@@ -155,6 +155,13 @@ function App() {
       document.body.classList.remove("high-visibility");
     };
   }, [highVisibility]);
+  const dyslexicFont = usePreferences((state) => state.dyslexicFont);
+  useEffect(() => {
+    document.body.classList.toggle("dyslexic-font", dyslexicFont);
+    return () => {
+      document.body.classList.remove("dyslexic-font");
+    };
+  }, [dyslexicFont]);
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
