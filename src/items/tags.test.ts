@@ -10,6 +10,9 @@ import {
   totalDeferredBossPayout,
   type TagEffect,
 } from "./tags";
+import { availablePlanets, createPlanetCatalog } from "./planets";
+
+const SECRET_HANDS = ["Five of a Kind", "Flush House", "Flush Five"] as const;
 
 const KNOWN_CATEGORIES: ReadonlyArray<TagEffect["category"]> = [
   "deferred-boss-payout",
@@ -307,6 +310,25 @@ describe("rollAnteSkipOffers", () => {
     const investmentFrac = (ids.indexOf("investment") + 0.5) / ids.length;
     const offer = rollAnteSkipOffers(() => investmentFrac).small;
     expect(offer.orbitalHand).toBeUndefined();
+  });
+
+  test("default Orbital pre-roll never targets an undiscovered secret hand", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
+    let call = 0;
+    const rng = () => (call++ % 2 === 0 ? orbitalFrac : 0.999);
+    const offer = rollAnteSkipOffers(rng).small;
+    expect(SECRET_HANDS).not.toContain(offer.orbitalHand);
+  });
+
+  test("Orbital pre-roll targets a secret hand once it has been discovered", () => {
+    const ids = createTagCatalog().map((t) => t.id);
+    const orbitalFrac = (ids.indexOf("orbital") + 0.5) / ids.length;
+    const catalog = availablePlanets(createPlanetCatalog(), { "Five of a Kind": 1 });
+    let call = 0;
+    const rng = () => (call++ % 2 === 0 ? orbitalFrac : 0.999);
+    const offer = rollAnteSkipOffers(rng, catalog).small;
+    expect(offer.orbitalHand).toBe("Five of a Kind");
   });
 });
 

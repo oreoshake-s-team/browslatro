@@ -2,7 +2,7 @@ import { createRngConfig } from "../dev/rngConfig";
 import type { ImmediateAction } from "../run/immediateActions";
 import type { NextShopModifier } from "../run/nextShopMods";
 import type { HandLabel } from "../scoring/handEvaluator";
-import { createPlanetCatalog, type PlanetCard } from "./planets";
+import { availablePlanets, createPlanetCatalog, type PlanetCard } from "./planets";
 
 export type TagId =
   | "investment"
@@ -339,7 +339,7 @@ function rollOrbitalHand(
 
 export function rollSkipOffer(
   rng: () => number = Math.random,
-  planetCatalog: ReadonlyArray<PlanetCard> = createPlanetCatalog(),
+  planetCatalog: ReadonlyArray<PlanetCard> = availablePlanets(createPlanetCatalog(), {}),
 ): AnteSkipOffer {
   const id = rollSkipTag(rng);
   if (id !== "orbital") return { id };
@@ -348,7 +348,7 @@ export function rollSkipOffer(
 
 export function rollAnteSkipOffers(
   rng: () => number = Math.random,
-  planetCatalog: ReadonlyArray<PlanetCard> = createPlanetCatalog(),
+  planetCatalog: ReadonlyArray<PlanetCard> = availablePlanets(createPlanetCatalog(), {}),
 ): AnteSkipOffers {
   return {
     small: rollSkipOffer(rng, planetCatalog),

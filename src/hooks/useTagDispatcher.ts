@@ -121,7 +121,7 @@ export function useTagDispatcher(): UseTagDispatcherResult {
         );
       } else if (action.kind === "upgrade-hand") {
         play("pop");
-        const planets = createPlanetCatalog();
+        const planets = availablePlanets(createPlanetCatalog(), handPlayCounts);
         const planet = orbitalHand
           ? planets.find((p) => p.hands.includes(orbitalHand)) ??
             planets[Math.floor(shopPickerRngConfig.rng() * planets.length)]
