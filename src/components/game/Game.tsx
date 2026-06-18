@@ -268,7 +268,7 @@ export default function Game({
   );
 
   return (
-    <main className="game" aria-label={t("a11y.game")}>
+    <main className="game" aria-label={t("a11y.game")} aria-busy={isScoring}>
       <div className="game-top-row">
         {!packOpen && jokersNode}
         {!packOpen && consumablesNode}

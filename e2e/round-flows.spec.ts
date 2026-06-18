@@ -39,6 +39,7 @@ async function submitSingleLosingHand(
   await expect(
     page.locator('[data-testid="hand-cards"] .card--discarding'),
   ).toHaveCount(0);
+  await expect(page.locator("main.game")).toHaveAttribute("aria-busy", "false");
 }
 
 async function dismissBlindSelect(page: Page): Promise<void> {

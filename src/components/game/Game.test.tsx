@@ -129,6 +129,16 @@ describe("Game", () => {
     ).not.toBeDisabled();
   });
 
+  test("marks the game region busy while a hand is scoring", () => {
+    renderGame({ isScoring: true });
+    expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
+  });
+
+  test("the game region is not busy when no hand is scoring (negative)", () => {
+    renderGame({ isScoring: false });
+    expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "false");
+  });
+
   test("renders the player's hand of cards", () => {
     renderGame();
     expect(screen.getByTestId("hand-cards")).toBeInTheDocument();

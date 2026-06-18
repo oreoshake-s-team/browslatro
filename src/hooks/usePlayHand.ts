@@ -339,7 +339,6 @@ export function usePlayHand({
     }
 
     if (remainingHands > 1) {
-      setRemainingHands((prev) => prev - 1);
       if (
         blind === 3 &&
         bossDisablesRandomJoker(currentBoss) &&
@@ -360,6 +359,8 @@ export function usePlayHand({
     if (discardingIds.size > 0) return;
     if (pipeline.isScoring) return;
     if (selectedIds.size === 0) return;
+
+    setRemainingHands((prev) => Math.max(0, prev - 1));
 
     const handById = new Map(dealt.hand.map((c) => [c.id, c]));
     const playedCards = handDisplayOrder
