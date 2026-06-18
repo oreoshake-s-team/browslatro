@@ -163,7 +163,12 @@ function advanceToNextAnte(s: GameState): void {
     ),
   );
   s.setSoldVoucherIds(new Set());
-  s.setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
+  s.setSkipTagOffers(
+    rollAnteSkipOffers(
+      tagOfferRngConfig.rng,
+      availablePlanets(createPlanetCatalog(), s.handPlayCounts),
+    ),
+  );
   const nextRecent = new Set(s.recentBossIds);
   nextRecent.add(s.currentBoss.id);
   s.setRecentBossIds(nextRecent);

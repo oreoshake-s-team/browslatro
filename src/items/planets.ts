@@ -66,7 +66,7 @@ export function createPlanetCatalog(): PlanetCard[] {
 
 export function availablePlanets(
   catalog: ReadonlyArray<PlanetCard>,
-  handPlayCounts: Readonly<Record<HandLabel, number>>,
+  handPlayCounts: Readonly<Partial<Record<HandLabel, number>>>,
 ): PlanetCard[] {
   return catalog.filter((planet) => {
     if (planet.hiddenUntilPlayed === undefined) return true;
