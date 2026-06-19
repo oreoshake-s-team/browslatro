@@ -7,17 +7,33 @@ the Monte-Carlo search expert (`src/ai/searchAgent.ts`).
 This directory is plain Python and is not part of the yarn build. The
 dependency-free encoding tests run in CI; training itself runs locally.
 
+## Required data framework — real everything, never greedy
+
+**Hard requirement for every dataset, teacher-labeling, and evaluation run.**
+Generate from realistic shop-purchase-driven play (`--shop-policy`); **never**
+use random joker loadouts (`--joker-loadout-fraction`) or greedy-agent-driven
+generation. Random loadouts fabricate off-distribution states that depress the
+outcome metric (`avgBlinds`); the greedy agent is only the benchmark floor,
+never a data source or training target. LLM-teacher labels must be regenerated
+on the **same** realistic dataset they train against — an off-distribution
+teacher hurts. The production hand policy `advisor-policy-v9` was trained this
+way (≈20k realistic shop-driven games + weighted human play + a
+distribution-matched teacher). Full rationale:
+[docs/ai-advisor/ml-pipeline.md](../docs/ai-advisor/ml-pipeline.md#required-data-framework--real-everything-never-greedy).
+
 ## Pipeline
 
 1. **Generate a dataset** (TypeScript, from the repo root):
 
    ```sh
-   yarn dlx tsx scripts/generateDataset.ts dataset.jsonl --games 500
+   yarn dlx tsx scripts/generateDataset.ts dataset.jsonl --games 2000 \
+     --shop-policy public/models/advisor-shop-policy-v7.onnx
    ```
 
-   One JSON line per expert decision: the serialized `ModelState`, the
-   candidate list from `getHandOptions`, and which candidate the search
-   expert chose (`schemaVersion: 1`).
+   Realistic shop-driven generation (no `--joker-loadout-fraction`). One JSON
+   line per expert decision: the serialized `ModelState`, the candidate list
+   from `getHandOptions`, and which candidate the search expert chose
+   (`schemaVersion: 1`).
 
    **Optionally add your own play.** The game records every play/discard
    decision you make (same schema). In the game, open *Apply modifiers* →

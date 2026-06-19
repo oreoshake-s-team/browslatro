@@ -73,15 +73,17 @@ You don't need the real Anthropic API to test the *handler* — `handler.test.ts
 
 The headless engine needs no model or network — it's pure TS. Scripts run with [`tsx`](https://github.com/privatenumber/tsx) via `yarn dlx`. (Full step-by-step lives in [`ml/README.md`](../../ml/README.md).)
 
+> **Required data framework — real everything, never greedy.** Generate datasets from realistic shop-purchase-driven play (`--shop-policy`), **never** random joker loadouts (`--joker-loadout-fraction`) or greedy-agent-driven generation. Random loadouts fabricate off-distribution states that depress the outcome metric; the greedy agent is only the benchmark floor, never a data source or training target. Teacher labels must be regenerated on the same realistic dataset they train against. See [ml-pipeline.md](./ml-pipeline.md#required-data-framework--real-everything-never-greedy).
+
 ```bash
-# 1. Generate a search-expert dataset (JSONL of hand decisions)
-yarn dlx tsx scripts/generateDataset.ts dataset.jsonl --games 500 --joker-loadout-fraction 0.5
+# 1. Generate a realistic search-expert dataset (shop-driven; NO --joker-loadout-fraction)
+yarn dlx tsx scripts/generateDataset.ts dataset.jsonl --games 2000 --shop-policy public/models/advisor-shop-policy-v7.onnx
 
 # 2. (optional) Generate rollout-labeled shop decisions
-yarn dlx tsx scripts/generateShopRolloutDataset.ts shop.jsonl --games 200 --hand-model public/models/advisor-policy-v8.onnx
+yarn dlx tsx scripts/generateShopRolloutDataset.ts shop.jsonl --games 200 --hand-model public/models/advisor-policy-v9.onnx
 
 # 3. Train + export a new hand policy (Python; see ml/requirements.txt)
-python3 ml/train.py dataset.jsonl --human ml/data/human-play/*.jsonl --out public/models/advisor-policy-v9.onnx
+python3 ml/train.py dataset.jsonl --human ml/data/human-play/*.jsonl --out public/models/advisor-policy-v10.onnx
 
 # 3b. Or train the shop policy (optionally folding in rollout-gated advice-feedback corrections)
 yarn dlx tsx scripts/gateShopCorrections.ts ml/data/human-play/2026-06-15.jsonl gated.jsonl
@@ -91,11 +93,11 @@ python3 ml/train.py shop.jsonl --shop --corrections gated.jsonl --out public/mod
 For LLM teacher labeling (costs money, needs `ANTHROPIC_API_KEY`):
 
 ```bash
-yarn dlx tsx scripts/labelDisagreements.ts dataset.jsonl teacher.jsonl --model public/models/advisor-policy-v8.onnx --concurrency 2
-python3 ml/train.py dataset.jsonl --teacher teacher.jsonl --teacher-weight 5 --out public/models/advisor-policy-v9.onnx
+yarn dlx tsx scripts/labelDisagreements.ts dataset.jsonl teacher.jsonl --model public/models/advisor-policy-v9.onnx --concurrency 2
+python3 ml/train.py dataset.jsonl --teacher teacher.jsonl --teacher-weight 5 --out public/models/advisor-policy-v10.onnx
 ```
 
-> Selecting/shipping a teacher-distilled model is open work (`#1153`/`#1338`) — see [ml-pipeline.md](./ml-pipeline.md#teacher-distillation-offline-machinery). The scripts and flags exist; the shipped models don't use teacher labels yet.
+> The production hand policy `advisor-policy-v9` **is** teacher-distilled — trained on realistic shop-driven data with a distribution-matched LLM teacher (the teacher labels must come from the same realistic dataset, or they hurt). See [ml-pipeline.md](./ml-pipeline.md#teacher-distillation-offline-machinery).
 
 ---
 
@@ -103,10 +105,10 @@ python3 ml/train.py dataset.jsonl --teacher teacher.jsonl --teacher-weight 5 --o
 
 ```bash
 # Outcome benchmark: candidate model(s) vs. greedy baseline, by avgBlinds
-yarn dlx tsx scripts/benchmarkPolicy.ts public/models/advisor-policy-v9.onnx public/models/advisor-policy-v8.onnx --games 200
+yarn dlx tsx scripts/benchmarkPolicy.ts candidate.onnx public/models/advisor-policy-v9.onnx --games 200
 
 # Agreement with real human play (Python; needs onnxruntime)
-python3 ml/evaluate_real_play.py public/models/advisor-policy-v8.onnx
+python3 ml/evaluate_real_play.py public/models/advisor-policy-v9.onnx
 python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v7.onnx
 ```
 

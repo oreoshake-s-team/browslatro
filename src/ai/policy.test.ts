@@ -18,7 +18,7 @@ const MODEL_PATH = join(
   "..",
   "public",
   "models",
-  "advisor-policy-v8.onnx",
+  "advisor-policy-v9.onnx",
 );
 const FIXTURE_PATH = join(
   __dirname,

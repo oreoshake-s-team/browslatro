@@ -14,7 +14,7 @@ const MODEL_PATH = join(
   "..",
   "public",
   "models",
-  "advisor-policy-v8.onnx",
+  "advisor-policy-v9.onnx",
 );
 
 let ranker: CandidateRanker;

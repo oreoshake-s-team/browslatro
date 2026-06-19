@@ -191,7 +191,7 @@ if (isMain) {
   const config: GenConfig = {
     games: intFlag("--games", 50),
     seedOffset: intFlag("--seed-offset", 0),
-    handModel: stringFlag("--hand-model", "public/models/advisor-policy-v8.onnx"),
+    handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
     horizon: intFlag("--horizon", 3),
     rollouts: intFlag("--rollouts", 2),
   };

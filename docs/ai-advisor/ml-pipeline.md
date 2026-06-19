@@ -1,6 +1,6 @@
 # The ML Pipeline — Headless Play, Datasets, Training, Evaluation
 
-This is the **offline** half of the system: how the [ONNX policy](./engine-plumbing.md#how-the-policy-ranks-the-onnx-side) that powers autopilot and candidate pre-ranking gets *made*. The shipped policy is an [imitation-learning](https://en.wikipedia.org/wiki/Imitation_learning) student: it's trained to copy a [Monte-Carlo](https://en.wikipedia.org/wiki/Monte_Carlo_method) search expert (plus weighted human play), then exported to [ONNX](https://onnx.ai/) for fast in-browser inference.
+This is the **offline** half of the system: how the [ONNX policy](./engine-plumbing.md#how-the-policy-ranks-the-onnx-side) that powers autopilot and candidate pre-ranking gets *made*. The shipped hand policy is an [imitation-learning](https://en.wikipedia.org/wiki/Imitation_learning) student: it's trained to copy a [Monte-Carlo](https://en.wikipedia.org/wiki/Monte_Carlo_method) search expert (plus weighted human play and a distribution-matched [LLM teacher](#teacher-distillation-offline-machinery)), then exported to [ONNX](https://onnx.ai/) for fast in-browser inference. All of this rides on the [required data framework](#required-data-framework--real-everything-never-greedy): real (shop-driven) data everywhere, never greedy or random-loadout shortcuts.
 
 The loop:
 
@@ -26,6 +26,20 @@ headless self-play (search expert)            human play (UI capture)
 - [The shop policy](#the-shop-policy)
 - [Teacher distillation (offline machinery)](#teacher-distillation-offline-machinery)
 - [Scripts reference](#scripts-reference)
+
+---
+
+## Required data framework — real everything, never greedy
+
+**This is a hard requirement for every advisor-policy dataset, teacher-labeling, and evaluation run.** Train and evaluate on the distribution the advisor actually faces in play; never substitute synthetic shortcuts.
+
+- **Datasets come from realistic shop-purchase-driven play.** Generate with `generateDataset.ts --shop-policy <shop.onnx>` so jokers, money, and hand-levels grow only through real shop purchases between rounds (the search expert plays; the shop agent buys). The joint distribution of jokers + economy + hand-levels then matches real games.
+- **Never use random joker loadouts.** `--joker-loadout-fraction` fabricates incoherent positions (joker combos / economies that never co-occur in play). A policy trained on them wastes capacity ranking states it will never see, and the outcome metric (`avgBlinds`) suffers even while validation accuracy looks fine. Empirically, switching from random loadouts to shop-driven data lifted the no-teacher baseline by ~+0.5 `avgBlinds`, and scaling random-loadout data did **not** help.
+- **Never train on greedy-driven data, and never treat greedy as a target.** The [greedy agent](#policyagentts) exists **only** as the benchmark floor. It is not a data source, not a label source, and not a training target.
+- **Teacher labels must match the training distribution.** Regenerate LLM-teacher labels (`scripts/labelDisagreements.ts`) on the *same realistic dataset* they will train against. A teacher distilled from off-distribution states (e.g. random loadouts) actively **hurts** a realistically-trained model; a distribution-matched teacher adds a consistent ~+0.2 `avgBlinds`.
+- **Human play (`--human`) is realistic by construction** — it's captured from real games — so it always belongs in the mix.
+
+The production hand policy [`advisor-policy-v9`](../../public/models/advisor-policy-v9.onnx) was produced exactly this way: ~20k realistic shop-driven games + weighted human play + a distribution-matched LLM teacher. It benchmarks on par with the prior `advisor-policy-v8` (within noise on `avgBlinds`) while being trained on the correct distribution.
 
 ---
 
@@ -231,7 +245,7 @@ Shop and pack decisions are a separate model with a separate [46-feature encodin
 
 ## Teacher distillation (offline machinery)
 
-> **Status:** the labeling + training machinery is **merged**; selecting and shipping a teacher-distilled production model is **open** (`#1153` hand, `#1338` shop). The shipped models are imitation/rollout-trained, not teacher-distilled.
+> **Status:** the shipped **hand** policy ([`advisor-policy-v9`](../../public/models/advisor-policy-v9.onnx)) **is** teacher-distilled — trained on realistic shop-driven data with a distribution-matched LLM teacher (`#1153`). The teacher must be regenerated on the same realistic dataset it trains against (see the [required data framework](#required-data-framework--real-everything-never-greedy)); an off-distribution teacher hurts. Applying the same to the **shop** policy is still open (`#1338`); `advisor-shop-policy-v7` is rollout-labeled, not teacher-distilled.
 
 The idea is [knowledge distillation](https://en.wikipedia.org/wiki/Knowledge_distillation): spend expensive [LLM](./llm-advisor.md) calls **offline** to relabel exactly the states where the cheap student is weak, then bake that judgment into the student.
 
