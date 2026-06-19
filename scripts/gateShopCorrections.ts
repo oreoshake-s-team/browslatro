@@ -63,7 +63,7 @@ async function main(): Promise<void> {
   }
 
   const ranker = await loadPolicyRanker(
-    readFileSync(stringFlag("--hand-model", "public/models/advisor-policy-v8.onnx")),
+    readFileSync(stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx")),
   );
   const consumableDeps: ConsumableLabelDeps = {
     jokerCatalog: createJokerCatalog().filter((j) => j.rarity !== "legendary"),

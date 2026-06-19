@@ -132,11 +132,11 @@ The result is a discriminated union — `{ ok: true, advice } | { ok: false, cod
 
 ## Serving the ONNX models
 
-The [ONNX policy models](./ml-pipeline.md#onnx-export) are static assets in [`public/models/`](../../public/models/), fetched by the browser at `"/models/advisor-policy-v8.onnx"` etc. [`vercel.json`](../../vercel.json) gives them (and hashed `/assets/`) a one-year immutable cache:
+The [ONNX policy models](./ml-pipeline.md#onnx-export) are static assets in [`public/models/`](../../public/models/), fetched by the browser at `"/models/advisor-policy-v9.onnx"` etc. [`vercel.json`](../../vercel.json) gives them (and hashed `/assets/`) a one-year immutable cache:
 
 ```json
 { "source": "/models/(.*)", "headers": [
   { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" } ] }
 ```
 
-Model files are content-versioned in their names (`advisor-policy-v{N}.onnx`), so `immutable` caching is safe — a new model is a new URL. `index.html` and `sw.js` are served `max-age=0, must-revalidate` so app updates land immediately. There is no special build step copying the models; they're committed under `public/` and served as-is. The current production files are `advisor-policy-v8.onnx` (hand, ~400 KB) and `advisor-shop-policy-v7.onnx` (shop, ~57 KB).
+Model files are content-versioned in their names (`advisor-policy-v{N}.onnx`), so `immutable` caching is safe — a new model is a new URL. `index.html` and `sw.js` are served `max-age=0, must-revalidate` so app updates land immediately. There is no special build step copying the models; they're committed under `public/` and served as-is. The current production files are `advisor-policy-v9.onnx` (hand, ~400 KB) and `advisor-shop-policy-v7.onnx` (shop, ~57 KB).

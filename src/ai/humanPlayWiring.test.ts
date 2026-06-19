@@ -17,7 +17,7 @@ function feedbackEvent(
   return {
     kind: "advice-feedback",
     advisorKind: "policy",
-    model: "advisor-policy-v8",
+    model: "advisor-policy-v9",
     recommendationIndex: 0,
     alternativeIndex: null,
     verdict: "bad",
