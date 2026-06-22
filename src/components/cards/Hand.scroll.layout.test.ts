@@ -29,4 +29,14 @@ describe("Hand layout — portrait scroll", () => {
       /\.hand-card-slot\s*{[^}]*flex\s*:\s*0\s+0\s+var\(--card-width\)/,
     );
   });
+
+  test("the scroll row shows a thin scrollbar so the overflow is discoverable", () => {
+    const block = portraitBlock(handCss);
+    expect(block).toMatch(/\.hand-cards\s*{[^}]*scrollbar-width\s*:\s*thin/);
+  });
+
+  test("the scroll row fades its edges to hint at off-screen cards", () => {
+    const block = portraitBlock(handCss);
+    expect(block).toMatch(/\.hand-cards\s*{[^}]*mask-image\s*:\s*linear-gradient/);
+  });
 });
