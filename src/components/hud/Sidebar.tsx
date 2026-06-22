@@ -9,6 +9,7 @@ import Help from "./Help";
 import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import ScoringTrace from "./ScoringTrace";
+import ScoringTraceButton from "./ScoringTraceButton";
 import SidebarFooter from "./SidebarFooter";
 import HandScore from "../game/HandScore";
 import type { Hand } from "../../cards/types";
@@ -98,6 +99,12 @@ export default function Sidebar({
             onAnimationSpeedChange={onAnimationSpeedChange}
           />
           <Help />
+          <ScoringTraceButton
+            events={scoringEvents}
+            className="btn btn--ghost sub-info__scoring-log"
+          >
+            {t("scoringTrace.open")}
+          </ScoringTraceButton>
         </div>
         <div className="progress">
           <RoundProgress remainingHands={remainingHands} remainingDiscards={remainingDiscards} />

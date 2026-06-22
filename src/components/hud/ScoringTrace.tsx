@@ -1,11 +1,9 @@
-import { Suspense, lazy, useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
-import LazyChunkSpinner from "../system/LazyChunkSpinner";
+import ScoringTraceButton from "./ScoringTraceButton";
 import "./ScoringTrace.css";
-
-const ScoringTraceModal = lazy(() => import("./ScoringTraceModal"));
 
 interface ScoringTraceProps {
   readonly events: ReadonlyArray<ScoringEvent>;
@@ -13,9 +11,6 @@ interface ScoringTraceProps {
 
 export default function ScoringTrace({ events }: ScoringTraceProps) {
   const { t } = useTranslation();
-  const [isExpanded, setIsExpanded] = useState(false);
-  const open = useCallback(() => setIsExpanded(true), []);
-  const close = useCallback(() => setIsExpanded(false), []);
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = scrollRef.current;
@@ -25,15 +20,9 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
     <section className="scoring-trace">
       <div className="scoring-trace__header">
         <h2 className="scoring-trace__title">{t("scoringTrace.title")}</h2>
-        <button
-          type="button"
-          className="scoring-trace__expand"
-          onClick={open}
-          aria-haspopup="dialog"
-          title={t("a11y.expandScoringTrace")}
-        >
+        <ScoringTraceButton events={events} className="scoring-trace__expand">
           <span aria-hidden="true">⤢ </span>{t("scoringTrace.expand")}
-        </button>
+        </ScoringTraceButton>
       </div>
       <div
         ref={scrollRef}
@@ -45,11 +34,6 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
       >
         <ScoringTraceContent events={events} />
       </div>
-      {isExpanded ? (
-        <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
-          <ScoringTraceModal events={events} onClose={close} />
-        </Suspense>
-      ) : null}
     </section>
   );
 }

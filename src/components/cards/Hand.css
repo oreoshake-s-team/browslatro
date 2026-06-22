@@ -214,3 +214,14 @@
   outline: 2px solid var(--accent-chips-strong, var(--accent-chips));
   outline-offset: 2px;
 }
+
+@media (orientation: portrait) and (width <= 768px) {
+  .hand-cards {
+    overflow-x: auto;
+    justify-content: safe center;
+  }
+
+  .hand-card-slot {
+    flex: 0 0 var(--card-width);
+  }
+}

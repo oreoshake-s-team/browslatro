@@ -33,7 +33,7 @@ test("portrait: blind, round score, and chips×mult stack in one column", async 
   expect(handScore!.y).toBeGreaterThan(roundScore!.y);
 });
 
-test("portrait: Run info and Options are compact and sit above the stacked stats", async ({
+test("portrait: the action buttons form a compact 2x2 grid above the stacked stats", async ({
   page,
 }) => {
   await startRound(page);
@@ -46,21 +46,53 @@ test("portrait: Run info and Options are compact and sit above the stacked stats
   const help = await page
     .getByRole("button", { name: "Help" })
     .boundingBox();
+  const scoringLog = await page
+    .getByRole("button", { name: "Scoring Log" })
+    .boundingBox();
   const stats = await page.locator(".progress").boundingBox();
   const handsStat = await page.locator(".round-progress > .stat").first().boundingBox();
   expect(runInfo).not.toBeNull();
   expect(options).not.toBeNull();
   expect(help).not.toBeNull();
+  expect(scoringLog).not.toBeNull();
   expect(stats).not.toBeNull();
   expect(handsStat).not.toBeNull();
   expect(runInfo!.height).toBeLessThan(40);
   expect(Math.round(options!.y)).toBe(Math.round(runInfo!.y));
-  expect(stats!.y).toBeGreaterThan(runInfo!.y + runInfo!.height);
+  expect(stats!.y).toBeGreaterThan(scoringLog!.y + scoringLog!.height);
   expect(Math.abs(runInfo!.width - handsStat!.width)).toBeLessThanOrEqual(2);
   expect(Math.abs(options!.width - handsStat!.width)).toBeLessThanOrEqual(2);
   expect(help!.y).toBeGreaterThan(runInfo!.y);
   expect(Math.round(help!.x)).toBe(Math.round(runInfo!.x));
-  expect(help!.width).toBeGreaterThan(runInfo!.width * 1.5);
+  expect(Math.round(scoringLog!.y)).toBe(Math.round(help!.y));
+  expect(Math.round(scoringLog!.x)).toBe(Math.round(options!.x));
+});
+
+test("portrait: the scoring log lives behind a button that opens the full-screen dialog", async ({
+  page,
+}) => {
+  await startRound(page);
+  await expect(page.locator(".scoring-trace")).toBeHidden();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.getByRole("button", { name: "Scoring Log" }).click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+});
+
+test("negative: landscape keeps the inline scoring trace and hides the scoring-log button", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+  });
+  await context.addInitScript(() => {
+    window.localStorage.setItem("browslatro:deterministicShuffle", "1");
+    window.localStorage.setItem("browslatro:muted", "true");
+  });
+  const page = await context.newPage();
+  await startRound(page);
+  await expect(page.locator(".scoring-trace")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Scoring Log" })).toBeHidden();
+  await context.close();
 });
 
 test("portrait: the sidebar strip fits the viewport without a horizontal scrollbar", async ({
@@ -71,6 +103,21 @@ test("portrait: the sidebar strip fits the viewport without a horizontal scrollb
     .locator(".sidebar")
     .evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
+});
+
+test("portrait: an over-capacity dealt hand scrolls horizontally", async ({
+  page,
+}) => {
+  await startRound(page);
+  const overflow = await page
+    .locator('[data-testid="hand-cards"]')
+    .evaluate((el) => ({
+      scrollWidth: el.scrollWidth,
+      clientWidth: el.clientWidth,
+      overflowX: getComputedStyle(el).overflowX,
+    }));
+  expect(overflow.overflowX).toBe("auto");
+  expect(overflow.scrollWidth).toBeGreaterThanOrEqual(overflow.clientWidth);
 });
 
 test("negative: landscape keeps the vertical sidebar column", async ({

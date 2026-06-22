@@ -52,6 +52,10 @@
   font-size: 0.95rem;
 }
 
+.sub-info__scoring-log {
+  display: none;
+}
+
 .progress {
   display: flex;
   flex-direction: column;
@@ -93,47 +97,54 @@
     border-right: none;
     border-bottom: 1px solid var(--border);
     display: grid;
-    grid-auto-flow: column;
-    grid-template-rows: repeat(3, minmax(0, auto));
-    grid-template-columns: max-content max-content minmax(16rem, 1fr);
-    grid-auto-columns: max-content;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     align-items: start;
-    overflow: auto hidden;
+    overflow: visible;
     gap: 0.6rem 1rem;
   }
 
   .sidebar > * {
-    padding-bottom: 0;
-    padding-right: 1rem;
-    border-bottom: none;
-    border-right: 1px solid var(--border);
+    padding: 0;
+    border: none;
   }
 
   .sidebar > * + * {
     padding-top: 0;
   }
 
-  .sidebar > .sub-info-progress,
-  .sidebar > .scoring-trace {
-    grid-row: 1 / -1;
+  .sidebar > .round-info {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .sidebar > .round-score {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .sidebar > .hand-score {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  .sidebar > .sub-info-progress {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    align-self: stretch;
     height: 100%;
     box-sizing: border-box;
+    padding-left: 1rem;
+    border-left: 1px solid var(--border);
   }
 
   .sidebar > .scoring-trace {
-    width: 100%;
-    min-width: 0;
-  }
-
-  .sidebar > *:last-child {
-    border-right: none;
-    padding-right: 0;
+    display: none;
   }
 
   .sub-info-progress {
     flex-direction: column;
     gap: 0.6rem;
-    width: 15rem;
+    width: 100%;
   }
 
   .sub-info {
@@ -151,8 +162,10 @@
     font-size: 0.85rem;
   }
 
-  .sub-info > button:last-child {
-    grid-column: 1 / -1;
+  .sub-info__scoring-log {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .progress {

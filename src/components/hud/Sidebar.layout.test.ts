@@ -87,34 +87,47 @@ describe("Portrait sidebar grid", () => {
     return source.slice(idx);
   }
 
-  test("the portrait sidebar uses a column-flow grid so sections stack vertically", () => {
-    const block = portraitBlock(sidebarCss);
-    expect(block).toMatch(/grid-auto-flow\s*:\s*column/);
-  });
-
-  test("the portrait grid has three rows for the blind/score/chips stack", () => {
-    const block = portraitBlock(sidebarCss);
-    expect(block).toMatch(/grid-template-rows\s*:\s*repeat\(3,/);
-  });
-
-  test("controls and scoring trace each span the full strip height", () => {
+  test("the portrait sidebar splits into two equal-width columns", () => {
     const block = portraitBlock(sidebarCss);
     expect(block).toMatch(
-      /\.sidebar > \.sub-info-progress,\s*\.sidebar > \.scoring-trace\s*{[^}]*grid-row\s*:\s*1 \/ -1/,
+      /\.sidebar\s*{[^}]*grid-template-columns\s*:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/,
     );
   });
 
-  test("portrait sub-info is a two-column grid so Run info and Options split the row evenly", () => {
+  test("the scores stack in the first column", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(/\.sidebar > \.round-info\s*{[^}]*grid-column\s*:\s*1/);
+    expect(block).toMatch(/\.sidebar > \.hand-score\s*{[^}]*grid-column\s*:\s*1/);
+  });
+
+  test("the controls fill the second column and span all three score rows", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(
+      /\.sidebar > \.sub-info-progress\s*{[^}]*grid-column\s*:\s*2[^}]*grid-row\s*:\s*1 \/ 4/,
+    );
+  });
+
+  test("the inline scoring trace is hidden in portrait so the log moves behind a button", () => {
+    const block = portraitBlock(sidebarCss);
+    expect(block).toMatch(/\.sidebar > \.scoring-trace\s*{[^}]*display\s*:\s*none/);
+  });
+
+  test("portrait sub-info is a two-column grid so the action buttons split the row evenly", () => {
     const block = portraitBlock(sidebarCss);
     expect(block).toMatch(
       /\.sub-info\s*{[^}]*grid-template-columns\s*:\s*1fr 1fr/,
     );
   });
 
-  test("the portrait Help button spans the full sub-info width on its own row", () => {
+  test("the scoring-log button is revealed in portrait", () => {
     const block = portraitBlock(sidebarCss);
     expect(block).toMatch(
-      /\.sub-info > button:last-child\s*{[^}]*grid-column\s*:\s*1 \/ -1/,
+      /\.sub-info__scoring-log\s*{[^}]*display\s*:\s*inline-flex/,
     );
+  });
+
+  test("the scoring-log button is hidden outside portrait (negative)", () => {
+    const body = topLevelRuleBody(sidebarCss, ".sub-info__scoring-log");
+    expect(body).toMatch(/display\s*:\s*none/);
   });
 });

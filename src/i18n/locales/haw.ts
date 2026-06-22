@@ -72,6 +72,7 @@ export const haw: LocaleMessages = {
   },
   scoringTrace: {
     title: "Scoring Trace",
+    open: "Moʻo Helu",
     expand: "Expand",
     close: "Pani",
     handHeading: "Hand {{number}}: {{hand}} (Lv {{level}})",
