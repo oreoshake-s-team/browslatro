@@ -83,9 +83,11 @@ describe("Sidebar layout — portrait mobile", () => {
     /@media\s*\(orientation:\s*portrait\)\s*and\s*\(width\s*<=\s*768px\)\s*{/,
   );
 
-  test("portrait narrow viewports lay the sidebar out as a horizontal strip", () => {
+  test("portrait narrow viewports lay the sidebar out as two equal columns", () => {
     const inner = blockBody(portraitBlock, /\.sidebar\s*{/);
-    expect(inner).toMatch(/grid-auto-flow\s*:\s*column/);
+    expect(inner).toMatch(
+      /grid-template-columns\s*:\s*minmax\(0, 1fr\) minmax\(0, 1fr\)/,
+    );
   });
 
   test("portrait narrow viewports widen the sidebar to span the full width", () => {

@@ -64,6 +64,7 @@ export const en = {
   },
   scoringTrace: {
     title: "Scoring Trace",
+    open: "Scoring Log",
     expand: "Expand",
     close: "Close",
     handHeading: "Hand {{number}}: {{hand}} (Lv {{level}})",

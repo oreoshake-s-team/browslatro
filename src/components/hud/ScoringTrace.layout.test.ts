@@ -40,21 +40,8 @@ describe("ScoringTrace layout — fills remaining vertical space", () => {
   test(".scoring-trace__scroll no longer caps its height at a fixed max-height (negative)", () => {
     expect(scrollBody).not.toMatch(/max-height/);
   });
-});
 
-describe("ScoringTrace layout — portrait strip preserved", () => {
-  const portraitBlock = blockBody(
-    scoringTraceCss,
-    /@media\s*\(orientation:\s*portrait\)\s*and\s*\(width\s*<=\s*768px\)\s*{/,
-  );
-
-  test("portrait resets the trace so it does not grow inside the horizontal strip", () => {
-    const inner = blockBody(portraitBlock, /\.scoring-trace\s*{/);
-    expect(inner).toMatch(/flex\s*:\s*0\s+0\s+auto/);
-  });
-
-  test("portrait restores the scroll height cap so the strip does not balloon", () => {
-    const inner = blockBody(portraitBlock, /\.scoring-trace__scroll\s*{/);
-    expect(inner).toMatch(/max-height\s*:\s*22rem/);
+  test("the inline trace no longer carries a portrait override (negative)", () => {
+    expect(scoringTraceCss).not.toMatch(/@media\s*\(orientation:\s*portrait\)/);
   });
 });

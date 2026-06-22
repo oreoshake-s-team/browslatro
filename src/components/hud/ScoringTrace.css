@@ -143,13 +143,3 @@
   color: var(--accent-money);
   overflow-wrap: break-word;
 }
-
-@media (orientation: portrait) and (width <= 768px) {
-  .scoring-trace {
-    flex: 0 0 auto;
-  }
-
-  .scoring-trace__scroll {
-    max-height: 22rem;
-  }
-}
