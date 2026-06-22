@@ -219,6 +219,16 @@
   .hand-cards {
     overflow-x: auto;
     justify-content: safe center;
+    padding-bottom: 0.4rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      var(--white) 1.5rem,
+      var(--white) calc(100% - 1.5rem),
+      transparent 100%
+    );
   }
 
   .hand-card-slot {
