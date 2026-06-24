@@ -21,6 +21,17 @@
   font-size: 1rem;
 }
 
+.pack-open-sell-hint {
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--accent-money-text);
+  border-radius: 0.5rem;
+  background-color: var(--accent-money-muted);
+  color: var(--shop-pack-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .pack-open-options {
   list-style: none;
   margin: 0;

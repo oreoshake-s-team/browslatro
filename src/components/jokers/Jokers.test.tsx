@@ -445,6 +445,25 @@ describe("Jokers sell", () => {
     expect(sellChips()).toHaveLength(0);
   });
 
+  test("adds the sell-visible modifier when sellAlwaysVisible is set", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} sellAlwaysVisible />);
+    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers--sell-visible");
+  });
+
+  test("omits the sell-visible modifier without sellAlwaysVisible (negative)", () => {
+    render(<Jokers jokers={filled} onSell={() => {}} />);
+    expect(screen.getByTestId("jokers-tray")).not.toHaveClass(
+      "jokers--sell-visible",
+    );
+  });
+
+  test("omits the sell-visible modifier when there is no onSell (negative)", () => {
+    render(<Jokers jokers={filled} sellAlwaysVisible />);
+    expect(screen.getByTestId("jokers-tray")).not.toHaveClass(
+      "jokers--sell-visible",
+    );
+  });
+
   test("shift-clicking a tile invokes onSell with its index", () => {
     const onSell = vi.fn();
     render(<Jokers jokers={filled} onSell={onSell} />);

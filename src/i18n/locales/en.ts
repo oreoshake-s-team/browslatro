@@ -231,6 +231,7 @@ export const en = {
     noPicksRemaining: "No picks remaining",
     consumableSlotsFull: "Consumable slots are full",
     jokerSlotsFull: "Joker slots are full",
+    jokerSlotsFullSellHint: "Joker slots full — sell a joker to make room.",
     selectOneFirst: "Select 1 card in the preview hand first",
     tooManySelectedMaxOne: "Too many cards selected (max 1)",
     selectRangeFirst: "Select 1–{{max}} cards in the preview hand first",

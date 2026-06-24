@@ -346,6 +346,44 @@ describe("PackOpenModal — Buffoon pack rendering", () => {
     for (const btn of picks) expect(btn).toBeDisabled();
   });
 
+  test("shows the sell-to-make-room hint when joker slots are full", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.getByTestId("pack-open-sell-hint")).toBeInTheDocument();
+  });
+
+  test("omits the sell hint when joker slots are not full (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={buffoonPack("normal", 2)}
+        picksRemaining={1}
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("pack-open-sell-hint")).not.toBeInTheDocument();
+  });
+
+  test("omits the sell hint for a non-joker pack even when joker slots are full (negative)", () => {
+    render(
+      <PackOpenModal
+        pack={celestialPack("normal", 3)}
+        picksRemaining={1}
+        jokerSlotsFull
+        onPick={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(screen.queryByTestId("pack-open-sell-hint")).not.toBeInTheDocument();
+  });
+
   test("a Negative joker Pick button stays enabled when joker slots are full", () => {
     const negativePack: PackOffer = {
       pool: "buffoon",

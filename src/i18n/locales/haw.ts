@@ -239,6 +239,7 @@ export const haw: LocaleMessages = {
     noPicksRemaining: "No picks remaining",
     consumableSlotsFull: "Consumable slots are full",
     jokerSlotsFull: "Joker slots are full",
+    jokerSlotsFullSellHint: "Piha nā wahi pākiki — kūʻai aku i kahi pākiki no ka hoʻokaʻawale ʻana.",
     selectOneFirst: "Select 1 card in the preview hand first",
     tooManySelectedMaxOne: "Too many cards selected (max 1)",
     selectRangeFirst: "Select 1–{{max}} cards in the preview hand first",
