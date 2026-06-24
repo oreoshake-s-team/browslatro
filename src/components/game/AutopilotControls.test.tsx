@@ -186,6 +186,19 @@ describe("AutopilotControls", () => {
     expect(screen.queryByTestId("advice-feedback-open")).not.toBeInTheDocument();
   });
 
+  test("the corrective submit reads 'Play this instead'", async () => {
+    const user = userEvent.setup();
+    renderControls({
+      proposal: playProposal(),
+      feedbackCandidates: [playProposal(), discardProposal()],
+      onFeedback: vi.fn(),
+    });
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    expect(screen.getByTestId("advice-feedback-submit")).toHaveTextContent(
+      "Play this instead",
+    );
+  });
+
   test("a corrective pick reports the chosen candidate index", async () => {
     const onFeedback = vi.fn();
     const user = userEvent.setup();

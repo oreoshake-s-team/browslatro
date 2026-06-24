@@ -30,6 +30,7 @@ export interface AutopilotControls {
   readonly modelProgress: DownloadProgress | null;
   readonly proposalUnavailable: boolean;
   readonly approve: () => void;
+  readonly approveOption: (option: HandOption) => void;
   readonly stop: () => void;
   readonly dismissProposal: () => void;
   readonly setProposal: (option: HandOption) => void;
@@ -149,18 +150,22 @@ export function useAutopilot(
     onStopRef.current();
   }, [selectedIds, pendingProposal]);
 
-  const approve = useCallback((): void => {
-    const proposal = proposalRef.current;
-    if (proposal === null) return;
+  const approveOption = useCallback((option: HandOption): void => {
     const { getState } = depsRef.current ?? defaultDeps();
-    getState().selectCards(proposal.cardIds);
+    getState().selectCards(option.cardIds);
     setPendingProposal(null);
     setPendingDecision(null);
     setModelProgress(null);
-    if (proposal.action === "play") executorRef.current.play();
+    if (option.action === "play") executorRef.current.play();
     else executorRef.current.discard();
     onStopRef.current();
   }, []);
+
+  const approve = useCallback((): void => {
+    const proposal = proposalRef.current;
+    if (proposal === null) return;
+    approveOption(proposal);
+  }, [approveOption]);
 
   const stop = useCallback((): void => {
     setPendingProposal(null);
@@ -187,6 +192,7 @@ export function useAutopilot(
     modelProgress,
     proposalUnavailable,
     approve,
+    approveOption,
     stop,
     dismissProposal,
     setProposal,

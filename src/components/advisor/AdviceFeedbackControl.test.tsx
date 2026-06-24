@@ -65,6 +65,30 @@ describe("AdviceFeedbackControl", () => {
     expect(onSubmit).toHaveBeenCalledWith(2);
   });
 
+  test("uses a custom submit label when provided", async () => {
+    const user = userEvent.setup();
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        submitLabel="Play this instead"
+      />,
+    );
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    expect(screen.getByTestId("advice-feedback-submit")).toHaveTextContent(
+      "Play this instead",
+    );
+  });
+
+  test("defaults the submit label to Submit (negative)", async () => {
+    const user = userEvent.setup();
+    renderControl();
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    expect(screen.getByTestId("advice-feedback-submit")).toHaveTextContent(
+      "Submit",
+    );
+  });
+
   test("a bare downvote reports a null corrected index", async () => {
     const onSubmit = vi.fn();
     const user = userEvent.setup();

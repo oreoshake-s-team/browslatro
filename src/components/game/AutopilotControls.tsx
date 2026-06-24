@@ -223,6 +223,7 @@ export default function AutopilotControls({
               describeCandidate(t, c, hand),
             )}
             onSubmit={onFeedback}
+            submitLabel={t("advisor.feedbackPlayInstead")}
           />
         )}
       </div>

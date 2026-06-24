@@ -273,7 +273,15 @@ function App() {
     );
     clearHandAdvice();
     setAutopilotFeedbackRecorded(true);
-    autopilot.dismissProposal();
+    const corrected =
+      correctedIndex !== null
+        ? policyDecision.candidates[correctedIndex]
+        : undefined;
+    if (corrected !== undefined) {
+      autopilot.approveOption(corrected);
+    } else {
+      autopilot.dismissProposal();
+    }
   };
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({

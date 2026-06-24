@@ -83,6 +83,19 @@ async function waitForProposal(result: {
   await waitFor(() => expect(result.current.pendingProposal).not.toBeNull());
 }
 
+function requireCandidate(
+  result: { current: AutopilotControls },
+  action: "play" | "discard",
+) {
+  const candidate = result.current.pendingDecision?.candidates.find(
+    (option) => option.action === action,
+  );
+  if (candidate === undefined) {
+    throw new Error(`no ${action} candidate in the pending decision`);
+  }
+  return candidate;
+}
+
 beforeEach(() => {
   useGame.getState().resetGame();
   useGame.getState().setDealt({ hand: pairHand(), remaining: [] });
@@ -203,6 +216,55 @@ describe("useAutopilot", () => {
     const proposed = new Set(result.current.pendingProposal?.cardIds);
     act(() => result.current.approve());
     expect(useGame.getState().selectedIds).toEqual(proposed);
+  });
+
+  test("approveOption plays a supplied play candidate", async () => {
+    const executor = makeExecutor();
+    const { result } = renderAutopilot({ executor, ranker: playFirstRanker });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "play");
+    act(() => result.current.approveOption(candidate));
+    expect(executor.play).toHaveBeenCalledTimes(1);
+  });
+
+  test("approveOption discards a supplied discard candidate", async () => {
+    const executor = makeExecutor();
+    const { result } = renderAutopilot({ executor, ranker: discardFirstRanker });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "discard");
+    act(() => result.current.approveOption(candidate));
+    expect(executor.discard).toHaveBeenCalledTimes(1);
+  });
+
+  test("approveOption selects the supplied candidate's cards", async () => {
+    const executor = makeExecutor();
+    const { result } = renderAutopilot({ executor, ranker: playFirstRanker });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "play");
+    act(() => result.current.approveOption(candidate));
+    expect(useGame.getState().selectedIds).toEqual(new Set(candidate.cardIds));
+  });
+
+  test("approveOption clears the pending proposal", async () => {
+    const executor = makeExecutor();
+    const { result } = renderAutopilot({ executor, ranker: playFirstRanker });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "play");
+    act(() => result.current.approveOption(candidate));
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
+  test("approveOption closes suggest mode by calling onStop", async () => {
+    const onStop = vi.fn();
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+      onStop,
+    });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "play");
+    act(() => result.current.approveOption(candidate));
+    expect(onStop).toHaveBeenCalledTimes(1);
   });
 
   test("proposes a discard when the ranker prefers a discard", async () => {

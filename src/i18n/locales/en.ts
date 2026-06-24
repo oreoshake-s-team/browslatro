@@ -300,6 +300,7 @@ export const en = {
     feedbackOpenLabel: "Flag this suggestion as a bad pick",
     feedbackPrompt: "Which would you pick instead?",
     feedbackSubmit: "Submit",
+    feedbackPlayInstead: "Play this instead",
     feedbackJustBad: "Just bad, skip",
     feedbackCancel: "Cancel",
     feedbackRecorded: "Thanks — your feedback was recorded.",
