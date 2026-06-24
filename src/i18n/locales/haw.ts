@@ -309,6 +309,7 @@ export const haw: LocaleMessages = {
     feedbackPrompt: "Which would you pick instead?",
     feedbackSubmit: "Submit",
     feedbackPlayInstead: "E pāʻani i kēia",
+    feedbackDoInstead: "E hana i kēia",
     feedbackJustBad: "Just bad, skip",
     feedbackCancel: "Cancel",
     feedbackRecorded: "Thanks — your feedback was recorded.",

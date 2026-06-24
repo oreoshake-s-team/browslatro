@@ -301,6 +301,7 @@ export const en = {
     feedbackPrompt: "Which would you pick instead?",
     feedbackSubmit: "Submit",
     feedbackPlayInstead: "Play this instead",
+    feedbackDoInstead: "Do this instead",
     feedbackJustBad: "Just bad, skip",
     feedbackCancel: "Cancel",
     feedbackRecorded: "Thanks — your feedback was recorded.",
