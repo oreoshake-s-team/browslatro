@@ -308,6 +308,7 @@ export const haw: LocaleMessages = {
     feedbackOpenLabel: "Flag this suggestion as a bad pick",
     feedbackPrompt: "Which would you pick instead?",
     feedbackSubmit: "Submit",
+    feedbackPlayInstead: "E pāʻani i kēia",
     feedbackJustBad: "Just bad, skip",
     feedbackCancel: "Cancel",
     feedbackRecorded: "Thanks — your feedback was recorded.",

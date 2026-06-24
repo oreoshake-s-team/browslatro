@@ -5,12 +5,14 @@ import "./AdviceFeedbackControl.css";
 export interface AdviceFeedbackControlProps {
   readonly candidateLabels: ReadonlyArray<string>;
   readonly onSubmit: (correctedIndex: number | null) => void;
+  readonly submitLabel?: string;
   readonly testIdPrefix?: string;
 }
 
 export default function AdviceFeedbackControl({
   candidateLabels,
   onSubmit,
+  submitLabel,
   testIdPrefix = "advice-feedback",
 }: AdviceFeedbackControlProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -101,7 +103,7 @@ export default function AdviceFeedbackControl({
                 if (selected !== null) record(selected);
               }}
             >
-              {t("advisor.feedbackSubmit")}
+              {submitLabel ?? t("advisor.feedbackSubmit")}
             </button>
             <button
               type="button"
