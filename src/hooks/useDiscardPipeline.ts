@@ -55,7 +55,6 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const blind = useGame((s) => s.blind);
   const currentBoss = useGame((s) => s.currentBoss);
   const discardingIds = useGame((s) => s.discardingIds);
-  const selectedIds = useGame((s) => s.selectedIds);
   const remainingDiscards = useGame((s) => s.remainingDiscards);
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
@@ -254,16 +253,17 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   }
 
   function discardSelected(): void {
+    const liveSelectedIds = useGame.getState().selectedIds;
     if (discardingIds.size > 0) return;
-    if (selectedIds.size === 0) return;
+    if (liveSelectedIds.size === 0) return;
     if (remainingDiscards <= 0) return;
 
     captureHumanDecision(useGame.getState(), {
       kind: "discard",
-      cardIds: [...selectedIds],
+      cardIds: [...liveSelectedIds],
     });
 
-    runDiscard(selectedIds);
+    runDiscard(liveSelectedIds);
     setRemainingDiscards((prev) => prev - 1);
     setDiscardsUsedThisRound((prev) => prev + 1);
   }
