@@ -139,8 +139,8 @@ export default function ShopSuggestion(
       applyAction(corrected);
     } else {
       reset();
+      setRevealed(false);
     }
-    setRevealed(false);
   }
 
   function applyAction(action: ShopSuggestionAction): void {
@@ -154,6 +154,7 @@ export default function ShopSuggestion(
       setHumanPlayRecordingSuppressed(false);
     }
     reset();
+    setRevealed(false);
   }
 
   function apply(): void {
