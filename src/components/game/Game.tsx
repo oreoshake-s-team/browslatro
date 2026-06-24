@@ -53,6 +53,7 @@ interface GameProps {
   onAskAiAutopilot?: () => void;
   onRetryAutopilot?: () => void;
   onAutopilotFeedback?: (correctedIndex: number | null) => void;
+  onAutopilotPreviewFeedback?: (option: HandOption) => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -78,6 +79,7 @@ export default function Game({
   onAskAiAutopilot,
   onRetryAutopilot,
   onAutopilotFeedback,
+  onAutopilotPreviewFeedback,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -375,6 +377,7 @@ export default function Game({
                 onAskAi={onAskAiAutopilot ?? (() => {})}
                 onRetry={onRetryAutopilot ?? (() => {})}
                 onFeedback={onAutopilotFeedback}
+                onPreviewFeedback={onAutopilotPreviewFeedback}
               />
             )}
         </div>

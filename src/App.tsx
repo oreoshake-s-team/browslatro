@@ -541,6 +541,7 @@ function App() {
         onAskAiAutopilot={askAiForMove}
         onRetryAutopilot={askAiForMove}
         onAutopilotFeedback={handleAutopilotFeedback}
+        onAutopilotPreviewFeedback={autopilot.previewOption}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&

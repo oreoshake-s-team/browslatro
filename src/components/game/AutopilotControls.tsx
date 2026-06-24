@@ -24,6 +24,7 @@ export interface AutopilotControlsProps {
   readonly onAskAi: () => void;
   readonly onRetry: () => void;
   readonly onFeedback?: (correctedIndex: number | null) => void;
+  readonly onPreviewFeedback?: (option: HandOption) => void;
 }
 
 function describeProposal(t: TFunction, proposal: HandOption): string {
@@ -153,6 +154,7 @@ export default function AutopilotControls({
   onAskAi,
   onRetry,
   onFeedback,
+  onPreviewFeedback,
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
@@ -223,6 +225,14 @@ export default function AutopilotControls({
               describeCandidate(t, c, hand),
             )}
             onSubmit={onFeedback}
+            onPreview={
+              onPreviewFeedback === undefined
+                ? undefined
+                : (index) => {
+                    const option = feedbackCandidates[index];
+                    if (option !== undefined) onPreviewFeedback(option);
+                  }
+            }
             submitLabel={t("advisor.feedbackPlayInstead")}
           />
         )}

@@ -133,4 +133,33 @@ describe("AdviceFeedbackControl", () => {
     await user.click(screen.getByTestId("advice-feedback-cancel"));
     expect(screen.getByTestId("advice-feedback-open")).toBeInTheDocument();
   });
+
+  test("choosing a candidate previews its index before submitting", async () => {
+    const onPreview = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onPreview={onPreview}
+      />,
+    );
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    await user.click(screen.getByTestId("advice-feedback-option-1"));
+    expect(onPreview).toHaveBeenCalledWith(1);
+  });
+
+  test("does not preview before a candidate is chosen (negative)", async () => {
+    const onPreview = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onPreview={onPreview}
+      />,
+    );
+    await user.click(screen.getByTestId("advice-feedback-open"));
+    expect(onPreview).not.toHaveBeenCalled();
+  });
 });
