@@ -288,6 +288,9 @@ export default function PackOpenModal({
   }
 
   const totalPicks = packPickLimit(pack.variant);
+  const packOffersJoker = pack.options.some(
+    (option) => option.kind === "joker",
+  );
   const title = packDisplayName(pack);
   const selectedCount = previewSelectedIds?.size ?? 0;
   const subtitle =
@@ -320,6 +323,16 @@ export default function PackOpenModal({
         <p className="pack-open-subtitle" data-testid="pack-open-subtitle">
           {subtitle}
         </p>
+        {jokerSlotsFull && packOffersJoker && (
+          <p
+            className="pack-open-sell-hint"
+            role="status"
+            data-testid="pack-open-sell-hint"
+          >
+            <span aria-hidden="true">💰 </span>
+            {t("pack.jokerSlotsFullSellHint")}
+          </p>
+        )}
         <ul className="pack-open-options" aria-label={t("a11y.packOptions")}>
           {pack.options.map((option, idx) => {
             if (pickedIndices?.has(idx)) return null;

@@ -191,6 +191,22 @@ describe("Game", () => {
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
+  test("keeps joker sell buttons visible during a buffoon pack pick", async () => {
+    useGame.getState().setJokers([createJokerCatalog()[0]]);
+    renderGame({ packOpen: packOpenProps(buffoonPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers--sell-visible");
+  });
+
+  test("does not force joker sell buttons visible during a celestial pack pick (negative)", async () => {
+    useGame.getState().setJokers([createJokerCatalog()[0]]);
+    renderGame({ packOpen: packOpenProps(celestialPack) });
+    await screen.findByTestId("pack-open-subtitle");
+    expect(screen.getByTestId("jokers-tray")).not.toHaveClass(
+      "jokers--sell-visible",
+    );
+  });
+
   test.each([
     ["buffoon", buffoonPack],
     ["celestial", celestialPack],

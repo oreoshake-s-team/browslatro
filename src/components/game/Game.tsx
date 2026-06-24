@@ -201,6 +201,9 @@ export default function Game({
     ? packOpen?.previewSelectedIds?.size ?? 0
     : selectedIds.size;
 
+  const packOffersJoker = packOpen
+    ? packOpen.pack.options.some((option) => option.kind === "joker")
+    : false;
   const jokersNode = (
     <Jokers
       jokers={jokers}
@@ -209,6 +212,7 @@ export default function Game({
       pulseCounters={jokerPulseCounters}
       onReorder={reorderJokers}
       onSell={sellJoker}
+      sellAlwaysVisible={packOffersJoker}
       onDragStart={dragController.onJokerDragStart}
       onDragEnd={dragController.onJokerDragEnd}
       consumableDropEnabled={

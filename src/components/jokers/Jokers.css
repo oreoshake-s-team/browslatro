@@ -257,7 +257,8 @@
 }
 
 .joker-tile:hover .joker-sell-button,
-.joker-tile:focus-within .joker-sell-button {
+.joker-tile:focus-within .joker-sell-button,
+.jokers--sell-visible .joker-sell-button {
   opacity: 1;
   pointer-events: auto;
 }

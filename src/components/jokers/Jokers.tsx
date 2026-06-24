@@ -35,6 +35,7 @@ interface JokersProps {
   pulseCounters?: Readonly<Record<string, number>>;
   onReorder?: (orderedIds: ReadonlyArray<string>) => void;
   onSell?: (index: number) => void;
+  sellAlwaysVisible?: boolean;
   onDragStart?: (index: number) => void;
   onDragEnd?: () => void;
   consumableDropEnabled?: boolean;
@@ -48,6 +49,7 @@ export default function Jokers({
   pulseCounters,
   onReorder,
   onSell,
+  sellAlwaysVisible = false,
   onDragStart,
   onDragEnd,
   consumableDropEnabled = false,
@@ -211,7 +213,9 @@ export default function Jokers({
     <section
       className={`jokers${jokers.length === 0 ? " jokers-tray-empty" : ""}${
         showDropZone ? " jokers-consumable-target" : ""
-      }${dropZone.hover ? " jokers-consumable-hover" : ""}`}
+      }${dropZone.hover ? " jokers-consumable-hover" : ""}${
+        sellAlwaysVisible && sellable ? " jokers--sell-visible" : ""
+      }`}
       style={{ "--joker-capacity": capacity } as React.CSSProperties}
       aria-label={t("a11y.equippedJokers")}
       data-testid="jokers-tray"
