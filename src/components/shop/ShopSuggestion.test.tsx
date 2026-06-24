@@ -135,6 +135,23 @@ describe("ShopSuggestion click-to-reveal", () => {
     expect(props.onNext).toHaveBeenCalledOnce();
   });
 
+  test("the coach trigger returns after applying a pick so you can ask again", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("coach-apply"));
+    expect(screen.getByTestId("coach-trigger")).toBeInTheDocument();
+  });
+
+  test("re-opening the coach after acting shows a fresh recommendation", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(screen.getByTestId("coach-trigger"));
+    expect(
+      await screen.findByTestId("coach-recommendation"),
+    ).toBeInTheDocument();
+  });
+
   test("the Ask AI button reads rate-limited without a stored key", async () => {
     renderSuggestion();
     await revealCoachPick();
