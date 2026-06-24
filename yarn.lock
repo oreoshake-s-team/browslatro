@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.104.1":
-  version: 0.104.1
-  resolution: "@anthropic-ai/sdk@npm:0.104.1"
+"@anthropic-ai/sdk@npm:^0.105.0":
+  version: 0.105.0
+  resolution: "@anthropic-ai/sdk@npm:0.105.0"
   dependencies:
     json-schema-to-ts: "npm:^3.1.1"
     standardwebhooks: "npm:^1.0.0"
@@ -25,7 +25,7 @@ __metadata:
       optional: true
   bin:
     anthropic-ai-sdk: bin/cli
-  checksum: 10c0/6c7320b6a8cda1d0338e641d47e9ecf7fe385e14b3805a5a506feb4d995bc6727b61104ae6358a98fb72eb7be8229f62b0fd131471a6ed63c516bf25c5eb4e65
+  checksum: 10c0/4adb63fe0627e59379b087d4a284b9df97ae6dad902913d121ea244db428b8ecc3fa46c37f30bd994e75a1626524e43b262bb5035785bc4d8fedc058d2f3901d
   languageName: node
   linkType: hard
 
@@ -2012,7 +2012,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "browslatro@workspace:."
   dependencies:
-    "@anthropic-ai/sdk": "npm:^0.104.1"
+    "@anthropic-ai/sdk": "npm:^0.105.0"
     "@axe-core/playwright": "npm:^4.11.3"
     "@dragdroptouch/drag-drop-touch": "npm:^2.0.3"
     "@playwright/test": "npm:^1.55.0"
