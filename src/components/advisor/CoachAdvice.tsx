@@ -14,6 +14,7 @@ export interface CoachAdviceProps<TAction> {
   readonly onAskAi: () => void;
   readonly onDismiss: () => void;
   readonly onFeedback?: (correctedIndex: number | null) => void;
+  readonly feedbackSubmitLabel?: string;
   readonly modelProgress?: DownloadProgress | null;
 }
 
@@ -23,6 +24,7 @@ export default function CoachAdvice<TAction>({
   onAskAi,
   onDismiss,
   onFeedback,
+  feedbackSubmitLabel,
   modelProgress = null,
 }: CoachAdviceProps<TAction>): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -76,6 +78,7 @@ export default function CoachAdvice<TAction>({
                   describeContextCandidate(t, c),
                 )}
                 onSubmit={onFeedback}
+                submitLabel={feedbackSubmitLabel}
               />
             )}
           </div>

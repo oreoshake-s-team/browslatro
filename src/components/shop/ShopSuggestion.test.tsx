@@ -213,6 +213,51 @@ describe("ShopSuggestion click-to-reveal", () => {
     expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
   });
 
+  test("a corrected buy pick auto-buys the chosen offer", async () => {
+    rankState.value = [1];
+    const props = renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-option-0"));
+    await userEvent.click(screen.getByTestId("advice-feedback-submit"));
+    expect(props.onBuy).toHaveBeenCalledWith(0);
+  });
+
+  test("a corrected reroll pick auto-rerolls", async () => {
+    const props = renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-option-1"));
+    await userEvent.click(screen.getByTestId("advice-feedback-submit"));
+    expect(props.onApplyReroll).toHaveBeenCalledOnce();
+  });
+
+  test("a corrected leave pick exits the shop", async () => {
+    const props = renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-option-2"));
+    await userEvent.click(screen.getByTestId("advice-feedback-submit"));
+    expect(props.onNext).toHaveBeenCalledOnce();
+  });
+
+  test("a bare downvote executes no shop action (negative)", async () => {
+    const props = renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
+    expect(props.onBuy).not.toHaveBeenCalled();
+  });
+
+  test("the corrective submit reads 'Do this instead'", async () => {
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("advice-feedback-open"));
+    expect(screen.getByTestId("advice-feedback-submit")).toHaveTextContent(
+      "Do this instead",
+    );
+  });
+
   test("the recorded feedback carries the rollout state for gating", async () => {
     renderSuggestion();
     await revealCoachPick();

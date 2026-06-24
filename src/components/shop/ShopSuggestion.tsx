@@ -133,15 +133,17 @@ export default function ShopSuggestion(
     );
     clearShopAdvice();
     setFeedbackRecorded(true);
-    reset();
+    const corrected =
+      correctedIndex !== null ? state.actions[correctedIndex] : undefined;
+    if (corrected !== undefined) {
+      applyAction(corrected);
+    } else {
+      reset();
+    }
     setRevealed(false);
   }
 
-  function apply(): void {
-    if (state.phase === "idle") return;
-    const action =
-      state.onnxIndex !== null ? state.actions[state.onnxIndex] : undefined;
-    if (action === undefined) return;
+  function applyAction(action: ShopSuggestionAction): void {
     setHumanPlayRecordingSuppressed(true);
     try {
       if (action.kind === "buy") props.onBuy(action.offerIdx);
@@ -152,6 +154,14 @@ export default function ShopSuggestion(
       setHumanPlayRecordingSuppressed(false);
     }
     reset();
+  }
+
+  function apply(): void {
+    if (state.phase === "idle") return;
+    const action =
+      state.onnxIndex !== null ? state.actions[state.onnxIndex] : undefined;
+    if (action === undefined) return;
+    applyAction(action);
   }
 
   const trigger = (
@@ -190,6 +200,7 @@ export default function ShopSuggestion(
         <CoachAdvice
           state={state}
           onFeedback={handleFeedback}
+          feedbackSubmitLabel={t("advisor.feedbackDoInstead")}
           modelProgress={modelProgress}
           onApply={apply}
           onAskAi={() => void askAi()}
