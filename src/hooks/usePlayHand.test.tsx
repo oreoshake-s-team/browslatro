@@ -222,3 +222,24 @@ describe("usePlayHand — The Arm lowers the played hand level", () => {
     ).toBe(true);
   });
 });
+
+describe("usePlayHand — plays the live store selection", () => {
+  test("submitHand plays the current store selection when it changed after render", () => {
+    useGame.getState().setBlind(1);
+    useGame.getState().setDealt({
+      hand: [card(1, "5"), card(2, "5"), card(3, "K")],
+      remaining: [],
+    });
+    useGame.getState().setHandDisplayOrder([1, 2, 3]);
+    useGame.getState().setSelectedIds(new Set([3]));
+    useGame.getState().setRemainingHands(4);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => {
+      useGame.getState().setSelectedIds(new Set([1, 2]));
+      result.current.submitHand();
+    });
+
+    expect(useGame.getState().handPlayCounts.Pair).toBe(1);
+  });
+});

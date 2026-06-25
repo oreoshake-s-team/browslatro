@@ -31,6 +31,7 @@ export interface AutopilotControls {
   readonly proposalUnavailable: boolean;
   readonly approve: () => void;
   readonly approveOption: (option: HandOption) => void;
+  readonly previewOption: (option: HandOption) => void;
   readonly stop: () => void;
   readonly dismissProposal: () => void;
   readonly setProposal: (option: HandOption) => void;
@@ -65,6 +66,7 @@ export function useAutopilot(
   executorRef.current = executor;
   const onStopRef = useRef(onStop);
   onStopRef.current = onStop;
+  const suppressNextSelectionStopRef = useRef(false);
   const depsRef = useRef(deps);
   depsRef.current = deps;
   const selectedIds = useGame((s) => s.selectedIds);
@@ -138,12 +140,15 @@ export function useAutopilot(
   ]);
 
   useEffect(() => {
+    const suppressed = suppressNextSelectionStopRef.current;
+    suppressNextSelectionStopRef.current = false;
     if (pendingProposal === null) return;
     const proposed = pendingProposal.cardIds;
     const selectionMatches =
       selectedIds.size === proposed.length &&
       proposed.every((id) => selectedIds.has(id));
     if (selectionMatches) return;
+    if (suppressed) return;
     setPendingProposal(null);
     setPendingDecision(null);
     setModelProgress(null);
@@ -166,6 +171,12 @@ export function useAutopilot(
     if (proposal === null) return;
     approveOption(proposal);
   }, [approveOption]);
+
+  const previewOption = useCallback((option: HandOption): void => {
+    const { getState } = depsRef.current ?? defaultDeps();
+    suppressNextSelectionStopRef.current = true;
+    getState().selectCards(option.cardIds);
+  }, []);
 
   const stop = useCallback((): void => {
     setPendingProposal(null);
@@ -193,6 +204,7 @@ export function useAutopilot(
     proposalUnavailable,
     approve,
     approveOption,
+    previewOption,
     stop,
     dismissProposal,
     setProposal,

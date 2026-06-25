@@ -513,3 +513,20 @@ describe("newly drawn ids", () => {
     expect(useGame.getState().newlyDrawnIds.size).toBe(0);
   });
 });
+
+describe("useDiscardPipeline — discards the live store selection", () => {
+  test("discardSelected discards the current store selection when it changed after render", () => {
+    useGame.getState().setJokers([]);
+    useGame.getState().setRemainingDiscards(3);
+    seed([card(1), card(2), card(3)], []);
+    useGame.getState().setSelectedIds(new Set([3]));
+    const { result } = renderHook(() => useDiscardPipeline());
+
+    act(() => {
+      useGame.getState().setSelectedIds(new Set([1, 2]));
+      result.current.discardSelected();
+    });
+
+    expect(useGame.getState().discardingIds).toEqual(new Set([1, 2]));
+  });
+});

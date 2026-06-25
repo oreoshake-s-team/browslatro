@@ -123,7 +123,6 @@ export function usePlayHand({
   const discardingIds = useGame((s) => s.discardingIds);
   const dealt = useGame((s) => s.dealt);
   const handDisplayOrder = useGame((s) => s.handDisplayOrder);
-  const selectedIds = useGame((s) => s.selectedIds);
   const blind = useGame((s) => s.blind);
   const ante = useGame((s) => s.ante);
   const money = useGame((s) => s.money);
@@ -356,17 +355,18 @@ export function usePlayHand({
   }
 
   function submitHand(): void {
+    const liveSelectedIds = useGame.getState().selectedIds;
     if (discardingIds.size > 0) return;
     if (pipeline.isScoring) return;
-    if (selectedIds.size === 0) return;
+    if (liveSelectedIds.size === 0) return;
 
     setRemainingHands((prev) => Math.max(0, prev - 1));
 
     const handById = new Map(dealt.hand.map((c) => [c.id, c]));
     const playedCards = handDisplayOrder
       .map((id) => handById.get(id))
-      .filter((c): c is Card => c !== undefined && selectedIds.has(c.id));
-    const submittedSelection = selectedIds;
+      .filter((c): c is Card => c !== undefined && liveSelectedIds.has(c.id));
+    const submittedSelection = liveSelectedIds;
 
     if (playedCards.length === 0) {
       finalizeHandSubmission(0, submittedSelection);

@@ -267,6 +267,37 @@ describe("useAutopilot", () => {
     expect(onStop).toHaveBeenCalledTimes(1);
   });
 
+  test("previewOption selects the supplied candidate's cards", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "discard");
+    act(() => result.current.previewOption(candidate));
+    expect(useGame.getState().selectedIds).toEqual(new Set(candidate.cardIds));
+  });
+
+  test("previewOption keeps the proposal active when previewing a different option", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: playFirstRanker,
+    });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "discard");
+    act(() => result.current.previewOption(candidate));
+    expect(result.current.pendingProposal).not.toBeNull();
+  });
+
+  test("previewOption does not execute the move", async () => {
+    const executor = makeExecutor();
+    const { result } = renderAutopilot({ executor, ranker: playFirstRanker });
+    await waitForProposal(result);
+    const candidate = requireCandidate(result, "discard");
+    act(() => result.current.previewOption(candidate));
+    expect(executor.play).not.toHaveBeenCalled();
+  });
+
   test("proposes a discard when the ranker prefers a discard", async () => {
     const { result } = renderAutopilot({
       executor: makeExecutor(),

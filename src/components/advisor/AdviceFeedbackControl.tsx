@@ -5,6 +5,7 @@ import "./AdviceFeedbackControl.css";
 export interface AdviceFeedbackControlProps {
   readonly candidateLabels: ReadonlyArray<string>;
   readonly onSubmit: (correctedIndex: number | null) => void;
+  readonly onPreview?: (correctedIndex: number) => void;
   readonly submitLabel?: string;
   readonly testIdPrefix?: string;
 }
@@ -12,6 +13,7 @@ export interface AdviceFeedbackControlProps {
 export default function AdviceFeedbackControl({
   candidateLabels,
   onSubmit,
+  onPreview,
   submitLabel,
   testIdPrefix = "advice-feedback",
 }: AdviceFeedbackControlProps): React.JSX.Element {
@@ -86,7 +88,10 @@ export default function AdviceFeedbackControl({
                     name={groupName}
                     data-testid={`${testIdPrefix}-option-${index}`}
                     checked={selected === index}
-                    onChange={() => setSelected(index)}
+                    onChange={() => {
+                      setSelected(index);
+                      onPreview?.(index);
+                    }}
                   />
                   <span>{label}</span>
                 </label>
