@@ -20,6 +20,12 @@ function tarotOption(id: string): PackOption {
   return { kind: "tarot", tarot: findTarot(id) };
 }
 
+function findPlanet(id: string) {
+  const planet = createPlanetCatalog().find((p) => p.id === id);
+  if (!planet) throw new Error(`${id} missing from catalog`);
+  return planet;
+}
+
 function arcanaPack(options: ReadonlyArray<PackOption>): PackOffer {
   return { pool: "arcana", variant: "normal", options };
 }
@@ -480,5 +486,64 @@ describe("pickFromOpenedPack — decision recording", () => {
     const { result } = renderHook(() => useOpenedPackPicker());
     act(() => result.current.pickFromOpenedPack(0));
     expect(humanPlayLog().count()).toBe(0);
+  });
+});
+
+describe("pickFromOpenedPack — updates The Fool's last-used consumable", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("using a planet from a pack records it as the last-used consumable", () => {
+    const planet = findPlanet("mercury");
+    openPack([{ kind: "planet", planet }]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual({
+      kind: "planet",
+      card: planet,
+    });
+  });
+
+  test("using a non-Fool tarot from a pack records it as the last-used consumable", () => {
+    openPack([tarotOption("the-hermit")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual({
+      kind: "tarot",
+      card: findTarot("the-hermit"),
+    });
+  });
+
+  test("using The Fool from a pack does not overwrite the last-used consumable", () => {
+    const hangedMan = findTarot("the-hanged-man");
+    useGame.getState().setLastUsedConsumable({ kind: "tarot", card: hangedMan });
+    openPack([tarotOption("the-fool")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().lastUsedConsumable).toEqual({
+      kind: "tarot",
+      card: hangedMan,
+    });
+  });
+
+  test("using two planets updates the last-used consumable to the second", () => {
+    const pluto = findPlanet("pluto");
+    const mercury = findPlanet("mercury");
+    openPack(
+      [
+        { kind: "planet", planet: pluto },
+        { kind: "planet", planet: mercury },
+      ],
+      [],
+      2,
+    );
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    act(() => result.current.pickFromOpenedPack(1));
+    expect(useGame.getState().lastUsedConsumable).toEqual({
+      kind: "planet",
+      card: mercury,
+    });
   });
 });

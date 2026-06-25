@@ -69,6 +69,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
     (s) => s.rankUpSelectedPreviewCards,
   );
   const lastUsedConsumable = useGame((s) => s.lastUsedConsumable);
+  const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const decrementPackPicks = useGame((s) => s.decrementPackPicks);
   const setPickedPackOptionIndices = useGame(
@@ -84,6 +85,11 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
     if (!option) return;
     function markUsed(kind: "tarot" | "planet"): void {
       setJokers((prev) => applyConsumableUsedToJokerStates(prev, kind));
+      if (option.kind === "planet") {
+        setLastUsedConsumable({ kind: "planet", card: option.planet });
+      } else if (option.kind === "tarot" && option.tarot.id !== "the-fool") {
+        setLastUsedConsumable({ kind: "tarot", card: option.tarot });
+      }
     }
     if (option.kind === "planet") {
       play("pop");
