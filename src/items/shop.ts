@@ -18,7 +18,7 @@ import type { SpectralCard } from "./spectrals";
 import { hiddenSpectralForRoll } from "./spectrals";
 import { pickRandom } from "./random";
 import type { TarotCard } from "./tarots";
-import type { OfferKindWeights } from "./vouchers";
+import type { OfferKindWeights, VoucherId } from "./vouchers";
 import { JOKER_BASE_PRICE } from "../constants";
 import type { Card } from "../cards/types";
 import { RANKS, SUITS, nextCardId } from "../cards/deck";
@@ -311,6 +311,20 @@ export function rerollCostFor(
 ): number {
   const safe = rerollCount < 0 ? 0 : Math.floor(rerollCount);
   return Math.max(0, BASE_REROLL_COST + safe - Math.max(0, reduction));
+}
+
+export const REROLL_MONEY_THRESHOLD = 30;
+
+export function rerollAllowed(
+  money: number,
+  ownedVoucherIds: ReadonlySet<VoucherId>,
+  ownedJokerIds: ReadonlySet<string>,
+): boolean {
+  if (money >= REROLL_MONEY_THRESHOLD) return true;
+  if (ownedVoucherIds.has("reroll-surplus") || ownedVoucherIds.has("reroll-glut")) {
+    return true;
+  }
+  return ownedJokerIds.has("flash-card");
 }
 
 function pickRandomExcluding<T extends { readonly id: string }>(

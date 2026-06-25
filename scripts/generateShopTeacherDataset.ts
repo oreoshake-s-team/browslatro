@@ -7,18 +7,21 @@ import { fileURLToPath } from "node:url";
 import { createGreedyAgent } from "../src/ai/agents";
 import { categorizeShopItem } from "../src/ai/advisor/shopCategory";
 import { shopItemAttributes } from "../src/ai/advisor/shopCandidateAttributes";
+import { shopBuildSummary } from "../src/ai/advisor/shopEncoding";
 import type { ShopAdviceCandidate, ShopAdviceItem } from "../src/ai/advisor/types";
+import { loadPolicyRanker } from "../src/ai/policy";
+import { createPolicyAgent } from "../src/ai/policyAgent";
 import {
   playHeadlessRun,
   seededRng,
+  type HeadlessAgent,
   type HeadlessShopAgent,
   type ShopResult,
   type ShopView,
 } from "../src/ai/headlessRun";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
-import type { PackOptionSnapshot } from "../src/ai/runEvents";
 import type { PackOption } from "../src/items/packs";
-import { rollPackOptions, packPickLimit } from "../src/items/packs";
+import { rollPackOptions } from "../src/items/packs";
 import { createJokerCatalog } from "../src/items/jokers";
 import { applyPlanetUpgrade, createPlanetCatalog } from "../src/items/planets";
 import { pickShopItemOffers, type ShopItem } from "../src/items/shop";
@@ -102,29 +105,11 @@ async function scoreCandidates(
   return scores;
 }
 
-function packOptionSnapshot(opt: PackOption): PackOptionSnapshot {
-  switch (opt.kind) {
-    case "planet":
-      return { optionType: "planet", id: opt.planet.id, name: opt.planet.name };
-    case "tarot":
-      return { optionType: "tarot", id: opt.tarot.id, name: opt.tarot.name };
-    case "joker":
-      return { optionType: "joker", id: opt.joker.id, name: opt.joker.name };
-    case "spectral":
-      return { optionType: "spectral", id: opt.spectral.id, name: opt.spectral.name };
-    case "playing-card":
-      return {
-        optionType: "playing-card",
-        id: `${opt.card.rank}${opt.card.suit}`,
-        name: `${opt.card.rank} of ${opt.card.suit}`,
-      };
-  }
-}
-
 export interface ShopTeacherGeneratorConfig {
   readonly games: number;
   readonly seedOffset: number;
   readonly margin: number;
+  readonly limit?: number;
 }
 
 export interface ShopTeacherGeneratorStats {
@@ -136,18 +121,21 @@ export async function generateShopTeacherDecisions(
   teacher: ShopTeacherLabeler,
   stats?: ShopTeacherGeneratorStats,
   onProgress?: (gamesDone: number) => void,
+  handAgent?: HeadlessAgent,
 ): Promise<string> {
   const jokerCatalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
   const planetCatalog = createPlanetCatalog();
-  const hand = createGreedyAgent();
+  const hand = handAgent ?? createGreedyAgent();
+  const limit = config.limit ?? 0;
   const lines: string[] = [];
-  const gatedTeacher: ShopTeacherLabeler =
-    stats === undefined
-      ? teacher
-      : async (view, candidates) => {
-          stats.teacherCalls += 1;
-          return teacher(view, candidates);
-        };
+  const countingTeacher: ShopTeacherLabeler = async (view, candidates) => {
+    if (stats !== undefined) stats.teacherCalls += 1;
+    return teacher(view, candidates);
+  };
+  const gatedTeacher: ShopTeacherLabeler = async (view, candidates) => {
+    if (limit > 0 && stats !== undefined && stats.teacherCalls >= limit) return null;
+    return countingTeacher(view, candidates);
+  };
 
   for (let g = 0; g < config.games; g += 1) {
     const seed = config.seedOffset + g;
@@ -168,6 +156,20 @@ export async function generateShopTeacherDecisions(
           jokers: view.jokers,
           handStats: view.handStats,
           money: view.money,
+        };
+        const buildFields = () => {
+          const build = shopBuildSummary({
+            jokers: result.jokers,
+            handStats: result.handStats,
+            deck: view.deck,
+            consumablesHeld: 0,
+          });
+          return {
+            handLevels: build.handLevels,
+            jokers: build.jokers,
+            deckEnhancements: build.deckEnhancements,
+            consumablesHeld: build.consumablesHeld,
+          };
         };
 
         const offers = pickShopItemOffers({
@@ -203,19 +205,33 @@ export async function generateShopTeacherDecisions(
             teacher: gatedTeacher,
             margin: config.margin,
           });
+          const snapshots = offers.map(shopItemSnapshot);
           if (chosen < affordable.length) {
             const offerIdx = affordable[chosen].i;
-            const snapshots = offers.map(shopItemSnapshot);
+            if (source === "teacher") {
+              recorder.push(
+                JSON.stringify({
+                  ...envelope,
+                  ...buildFields(),
+                  kind: "purchase",
+                  item: snapshots[offerIdx],
+                  offers: snapshots,
+                  teacherLabeled: true,
+                }),
+              );
+            }
+            result = applyShopBuy(result, offers[offerIdx]);
+          } else if (source === "teacher") {
             recorder.push(
               JSON.stringify({
                 ...envelope,
+                ...buildFields(),
                 kind: "purchase",
-                item: snapshots[offerIdx],
+                item: null,
                 offers: snapshots,
-                teacherLabeled: source === "teacher",
+                teacherLabeled: true,
               }),
             );
-            result = applyShopBuy(result, offers[offerIdx]);
           }
         }
 
@@ -239,17 +255,6 @@ export async function generateShopTeacherDecisions(
           ];
           const chosen = await labelByRollout(candidates, ROLLOUT);
           const pickedIndex = chosen < options.length ? chosen : null;
-          recorder.push(
-            JSON.stringify({
-              ...envelope,
-              kind: "pack-pick",
-              pool: "celestial",
-              variant: "normal",
-              options: options.map(packOptionSnapshot),
-              pickedIndex,
-              picksRemaining: packPickLimit("normal"),
-            }),
-          );
           if (pickedIndex !== null) {
             result = {
               ...result,
@@ -291,7 +296,14 @@ if (isMain) {
     games: intFlag("--games", 100),
     seedOffset: intFlag("--seed-offset", 0),
     margin: floatFlag("--margin", DEFAULT_MARGIN),
+    limit: intFlag("--limit", 0),
   };
+  const handModelIdx = process.argv.indexOf("--hand-model");
+  const handModel = handModelIdx >= 0 ? process.argv[handModelIdx + 1] : "";
+  const loadHandAgent = async (): Promise<HeadlessAgent | undefined> =>
+    handModel === ""
+      ? undefined
+      : createPolicyAgent(await loadPolicyRanker(readFileSync(handModel)));
   const parallelJobs = intFlag("--parallel-jobs", 1);
 
   if (parallelJobs > 1) {
@@ -317,6 +329,9 @@ if (isMain) {
             String(slice.seedOffset),
             "--margin",
             String(config.margin),
+            "--limit",
+            String(config.limit ?? 0),
+            ...(handModel === "" ? [] : ["--hand-model", handModel]),
           ];
           const proc = spawn(process.execPath, [...loaderArgs, ...args], {
             stdio: ["ignore", "ignore", "inherit"],
@@ -365,7 +380,8 @@ if (isMain) {
           `${stats.teacherCalls} teacher calls\n`,
       );
     };
-    const content = await generateShopTeacherDecisions(config, teacher, stats, onProgress);
+    const handAgent = await loadHandAgent();
+    const content = await generateShopTeacherDecisions(config, teacher, stats, onProgress, handAgent);
     writeFileSync(outPath, content.length > 0 ? `${content}\n` : "");
     const count = content.split("\n").filter(Boolean).length;
     console.log(
