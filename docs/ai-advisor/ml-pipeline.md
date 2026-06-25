@@ -188,7 +188,7 @@ The node names `candidates`/`logits` and the dynamic batch axis are **exactly wh
 | `--corrections` (repeatable) | — | human-play JSONL; quality-gated `advice-feedback` corrections train as weighted labels |
 | `--corrections-weight` | `5.0` | weight on corrections |
 | `--min-score-fraction` | `0.25` | quality gate: a corrected hand play must score at least this fraction of the best play. Shop corrections have no per-candidate score, so they are gated separately by [`scripts/gateShopCorrections.ts`](../../scripts/gateShopCorrections.ts) (rollout-based) before `--shop --corrections`. |
-| `--shop` | off | train the 46-feature shop policy instead of the hand policy |
+| `--shop` | off | train the build-aware (78-feature) shop policy instead of the hand policy |
 | `--epochs` | `30` | training epochs |
 | `--hidden` | `128` | hidden width |
 | `--lr` | `1e-3` | Adam learning rate |
@@ -235,7 +235,7 @@ The baseline agents it's measured against live in [`src/ai/agents.ts`](../../src
 
 ## The shop policy
 
-Shop and pack decisions are a separate model with a separate [46-feature encoding](./engine-plumbing.md#shop-encoding-shopencodingts), separate labels, and a separate file (`advisor-shop-policy-v7.onnx`).
+Shop and pack decisions are a separate model with a separate [build-aware 78-feature encoding](./engine-plumbing.md#shop-encoding-shopencodingts), separate labels, and a separate file (`advisor-shop-policy-v7.onnx`).
 
 - **`headlessShopAgent.ts` ([`src/ai/headlessShopAgent.ts`](../../src/ai/headlessShopAgent.ts))** — `createHeadlessShopAgent(modelPath)` loads the shop ONNX and implements `buyAfterRound`: it encodes the shop offers + voucher + reroll + leave as candidates, runs inference, and acts on the top-ranked option (buying jokers/planets/tarots/spectrals, rerolling, opening packs with a nested pick loop, or leaving). This is the *inference-time* shop agent.
 - **`shopRolloutExpert.ts` ([`src/ai/shopRolloutExpert.ts`](../../src/ai/shopRolloutExpert.ts))** — the *labeling* expert: `bestShopChoice(...)` scores each offer by [resuming a headless run](#resumable-seams-why-this-enables-search--rollouts) from after the purchase and measuring average `blindsCleared` over a few rollouts (`rolloutValue`), compared against the value of just leaving. The best-value offer is the label. This is "judge a purchase by simulated forward play" — shallow, which is exactly why an [LLM teacher](#teacher-distillation-offline-machinery) (`#1338`) is the proposed next lever.

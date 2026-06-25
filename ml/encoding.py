@@ -190,7 +190,7 @@ def encode_decision(record):
     return inputs, record["chosenIndex"]
 
 
-SHOP_ENCODING_VERSION = 3
+SHOP_ENCODING_VERSION = 4
 SHOP_ITEM_TYPES = ["joker", "planet", "tarot", "spectral", "playing-card", "pack", "voucher"]
 SHOP_CANDIDATE_CATEGORIES = [
     "joker-mult",
@@ -207,7 +207,15 @@ SHOP_CANDIDATE_CATEGORIES = [
     "other",
 ]
 SHOP_ATTRIBUTE_FEATURES = 18
-SHOP_CONTEXT_FEATURES = 4
+SHOP_BUILD_FEATURES = (
+    len(HAND_LABELS)
+    + 1
+    + len(JOKER_RARITIES)
+    + len(JOKER_EFFECT_CATEGORIES)
+    + 1
+    + len(ENHANCEMENTS)
+)
+SHOP_CONTEXT_FEATURES = 4 + SHOP_BUILD_FEATURES
 SHOP_CANDIDATE_FEATURES = (
     len(SHOP_ITEM_TYPES) + 5 + len(SHOP_CANDIDATE_CATEGORIES) + SHOP_ATTRIBUTE_FEATURES
 )
@@ -223,13 +231,34 @@ def _shop_attributes(attrs):
     return vals
 
 
+def _encode_shop_build(record):
+    levels = record.get("handLevels") or {}
+    jokers = record.get("jokers") or []
+    rarity_counts = {r: 0 for r in JOKER_RARITIES}
+    category_counts = {c: 0 for c in JOKER_EFFECT_CATEGORIES}
+    for joker in jokers:
+        rarity = joker.get("rarity")
+        if rarity in rarity_counts:
+            rarity_counts[rarity] += 1
+        category_counts[_joker_effect_category(joker.get("effectKind", ""))] += 1
+    enhancements = record.get("deckEnhancements") or {}
+    return (
+        [levels.get(label, 1) / 20.0 for label in HAND_LABELS]
+        + [len(jokers) / 5.0]
+        + [rarity_counts[r] / 5.0 for r in JOKER_RARITIES]
+        + [category_counts[c] / 5.0 for c in JOKER_EFFECT_CATEGORIES]
+        + [record.get("consumablesHeld", 0) / 2.0]
+        + [enhancements.get(e, 0) / 52.0 for e in ENHANCEMENTS]
+    )
+
+
 def _encode_shop_context(record):
     return [
         record["money"] / 20.0,
         record["ante"] / 8.0,
         record["round"] / 24.0,
         record.get("picksRemaining", 0) / 5.0,
-    ]
+    ] + _encode_shop_build(record)
 
 
 def _encode_shop_candidate(
@@ -270,8 +299,11 @@ def encode_shop_decision(record):
             for o in offers
         ]
         candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
-        item = record["item"]
-        chosen = next((i for i, o in enumerate(offers) if o["id"] == item["id"]), -1)
+        item = record.get("item")
+        if item is None:
+            chosen = len(offers)
+        else:
+            chosen = next((i for i, o in enumerate(offers) if o["id"] == item["id"]), -1)
         return candidates, chosen
 
     if kind == "reroll":

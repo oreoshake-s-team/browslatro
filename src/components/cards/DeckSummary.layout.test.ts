@@ -3,7 +3,10 @@
 import { readFileSync } from "fs";
 import { join } from "path";
 
-const summaryCss = readFileSync(join(__dirname, "DeckSummary.css"), "utf8");
+const summaryCss = readFileSync(join(__dirname, "DeckSummary.css"), "utf8").replace(
+  /\r\n/g,
+  "\n",
+);
 
 function topLevelRuleBody(source: string, selector: string): string {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

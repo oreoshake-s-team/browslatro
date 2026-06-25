@@ -18,6 +18,7 @@ import {
   SHOP_INPUT_FEATURES,
   encodePackCandidates,
   encodeShopCandidates,
+  shopBuildSummary,
 } from "./advisor/shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./advisor/types";
 import type { HeadlessShopAgent, ShopResult, ShopView } from "./headlessRun";
@@ -125,7 +126,8 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
           ...(rerollsDone < MAX_REROLLS && rerollCost <= money ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
-        const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.round, candidates }), candidates.length);
+        const build = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
+        const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length);
         const choice = candidates[topIdx];
         if (choice === undefined || choice.action === "leave") break;
 
@@ -162,7 +164,8 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
           let picksLeft = packPickLimit(offer.pack.variant);
           while (picksLeft > 0 && packOptions.length > 0) {
             const packCandidates: PackAdviceCandidate[] = [...packOptions.map(packOptionToCandidate), { action: "skip" }];
-            const pickIdx = await topRanked(encodePackCandidates({ money, ante: view.ante, round: view.round, picksRemaining: picksLeft, candidates: packCandidates }), packCandidates.length);
+            const packBuild = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
+            const pickIdx = await topRanked(encodePackCandidates({ money, ante: view.ante, round: view.round, picksRemaining: picksLeft, build: packBuild, candidates: packCandidates }), packCandidates.length);
             const picked = packOptions[pickIdx];
             if (picked === undefined) break;
             packOptions = packOptions.filter((_, i) => i !== pickIdx);
