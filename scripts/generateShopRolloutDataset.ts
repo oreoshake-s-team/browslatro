@@ -36,7 +36,7 @@ import { createJokerCatalog } from "../src/items/jokers";
 import { createPlanetCatalog, applyPlanetUpgrade } from "../src/items/planets";
 import { createTarotCatalog } from "../src/items/tarots";
 import { createSpectralCatalog } from "../src/items/spectrals";
-import { pickShopOffers, rerollCostFor, type ShopItem } from "../src/items/shop";
+import { pickShopOffers, rerollAllowed, rerollCostFor, type ShopItem } from "../src/items/shop";
 import { packPickLimit, type PackOption } from "../src/items/packs";
 import { MAX_JOKERS } from "../src/items/jokers/constants";
 import { intFlag, sliceJobs } from "./generateDataset";
@@ -187,7 +187,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
           const choice = await bestShopChoice(view.ante, offers, state, opts, rollBase + step * 991);
 
           const rerollCost = rerollCostFor(rerollsDone);
-          if (rerollsDone < MAX_REROLLS && rerollCost <= money && offers.length > 0) {
+          if (rerollsDone < MAX_REROLLS && rerollCost <= money && offers.length > 0 && rerollAllowed(money, view.ownedVoucherIds, ownedIds)) {
             const rerolledOffers = [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, rng: view.rng })];
             const rerolledState: PostShopState = { jokers, money: money - rerollCost, handStats, deck };
             const rerolledChoice = await bestShopChoice(view.ante, rerolledOffers, rerolledState, opts, rollBase + step * 991 + 7);

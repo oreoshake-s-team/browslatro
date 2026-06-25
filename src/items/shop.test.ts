@@ -32,6 +32,7 @@ import {
   pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
+  rerollAllowed,
   rerollCostFor,
   rerollShopOffer,
   rollPlayingCardOffer,
@@ -79,6 +80,24 @@ describe("rerollCostFor", () => {
 
   test("ignores negative reduction values (clamps with Math.max(0, reduction))", () => {
     expect(rerollCostFor(2, -5)).toBe(7);
+  });
+});
+
+describe("rerollAllowed", () => {
+  test("blocks rerolls below $30 with no voucher or flash card", () => {
+    expect(rerollAllowed(29, new Set(), new Set())).toBe(false);
+  });
+
+  test("allows rerolls at $30 or more", () => {
+    expect(rerollAllowed(30, new Set(), new Set())).toBe(true);
+  });
+
+  test("allows rerolls below $30 with a reroll voucher", () => {
+    expect(rerollAllowed(10, new Set(["reroll-surplus"]), new Set())).toBe(true);
+  });
+
+  test("allows rerolls below $30 with the flash-card joker", () => {
+    expect(rerollAllowed(10, new Set(), new Set(["flash-card"]))).toBe(true);
   });
 });
 

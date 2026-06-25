@@ -77,7 +77,7 @@ The headless engine needs no model or network — it's pure TS. Scripts run with
 
 ```bash
 # 1. Generate a realistic search-expert dataset (shop-driven; NO --joker-loadout-fraction)
-yarn dlx tsx scripts/generateDataset.ts dataset.jsonl --games 2000 --shop-policy public/models/advisor-shop-policy-v7.onnx
+yarn dlx tsx scripts/generateDataset.ts dataset.jsonl --games 2000 --shop-policy public/models/advisor-shop-policy-v8.onnx
 
 # 2. (optional) Generate rollout-labeled shop decisions
 yarn dlx tsx scripts/generateShopRolloutDataset.ts shop.jsonl --games 200 --hand-model public/models/advisor-policy-v9.onnx
@@ -87,7 +87,7 @@ python3 ml/train.py dataset.jsonl --human ml/data/human-play/*.jsonl --out publi
 
 # 3b. Or train the shop policy (optionally folding in rollout-gated advice-feedback corrections)
 yarn dlx tsx scripts/gateShopCorrections.ts ml/data/human-play/2026-06-15.jsonl gated.jsonl
-python3 ml/train.py shop.jsonl --shop --corrections gated.jsonl --out public/models/advisor-shop-policy-v7.onnx
+python3 ml/train.py shop.jsonl --shop --corrections gated.jsonl --out public/models/advisor-shop-policy-v8.onnx
 ```
 
 For LLM teacher labeling (costs money, needs `ANTHROPIC_API_KEY`):
@@ -109,7 +109,7 @@ yarn dlx tsx scripts/benchmarkPolicy.ts candidate.onnx public/models/advisor-pol
 
 # Agreement with real human play (Python; needs onnxruntime)
 python3 ml/evaluate_real_play.py public/models/advisor-policy-v9.onnx
-python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v7.onnx
+python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v8.onnx
 ```
 
 **Ship only on a clear `avgBlinds` win** over the incumbent across disjoint seeds — never on validation accuracy alone (see the [validation-accuracy trap](./ml-pipeline.md#mldatasetpy--ingestion--weighting)). When you ship, commit the new `public/models/advisor-policy-v{N}.onnx` and point `ADVISOR_MODEL_URL` (in [`advisorRanker.ts`](../../src/ai/advisor/advisorRanker.ts)) — or `SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts) — at it.

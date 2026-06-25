@@ -4,7 +4,7 @@ import { createPlanetCatalog } from "../items/planets";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
 import { packPickLimit, type PackOption } from "../items/packs";
-import { pickShopOffers, rerollCostFor, type ShopItem } from "../items/shop";
+import { pickShopOffers, rerollAllowed, rerollCostFor, type ShopItem } from "../items/shop";
 import { createSpectralCatalog } from "../items/spectrals";
 import { createTarotCatalog } from "../items/tarots";
 import {
@@ -123,7 +123,7 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
         const candidates: ShopAdviceCandidate[] = [
           ...offers.map(shopItemCandidate),
           ...(voucher !== null && voucher.cost <= money ? [voucherCandidate(voucher)] : []),
-          ...(rerollsDone < MAX_REROLLS && rerollCost <= money ? [{ action: "reroll" as const, cost: rerollCost }] : []),
+          ...(rerollsDone < MAX_REROLLS && rerollCost <= money && rerollAllowed(money, ownedVoucherIds, ownedIds) ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
         const build = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
