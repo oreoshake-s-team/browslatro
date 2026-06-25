@@ -267,6 +267,30 @@ class EncodeShopDecisionTests(unittest.TestCase):
         candidates, _ = encode_shop_decision(record)
         self.assertEqual(len(candidates), 2)
 
+    def test_purchase_leave_chosen_index_is_leave_candidate(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=None,
+            offers=[offer("joker", "jolly", 5), offer("planet", "mercury", 3)],
+        )
+        _, chosen = encode_shop_decision(record)
+        self.assertEqual(chosen, 2)
+
+    def test_owned_jokers_change_context_encoding(self):
+        offers = [offer("joker", "jolly", 5)]
+        bare, _ = encode_shop_decision(
+            shop_envelope(kind="purchase", item=offers[0], offers=offers)
+        )
+        built, _ = encode_shop_decision(
+            shop_envelope(
+                kind="purchase",
+                item=offers[0],
+                offers=offers,
+                jokers=[{"effectKind": "additive-mult", "rarity": "common"}],
+            )
+        )
+        self.assertNotEqual(bare[0], built[0])
+
     def test_reroll_chosen_index_is_reroll_candidate(self):
         record = shop_envelope(
             kind="reroll",

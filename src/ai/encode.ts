@@ -29,7 +29,7 @@ const RANKS: ReadonlyArray<Rank> = [
   "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A",
 ];
 const SUITS: ReadonlyArray<Suit> = ["spades", "hearts", "diamonds", "clubs"];
-const ENHANCEMENTS: ReadonlyArray<Enhancement> = [
+export const ENHANCEMENTS: ReadonlyArray<Enhancement> = [
   "bonus", "mult", "wild", "glass", "steel", "stone", "gold", "lucky",
 ];
 const SEALS: ReadonlyArray<Seal> = ["gold", "red", "blue", "purple"];
@@ -37,7 +37,7 @@ const EDITIONS: ReadonlyArray<CardEdition> = [
   "foil", "holographic", "polychrome",
 ];
 export const JOKER_EFFECT_CATEGORIES = ["mult", "x-mult", "retrigger", "money", "passive"] as const;
-const JOKER_RARITIES: ReadonlyArray<JokerRarity> = [
+export const JOKER_RARITIES: ReadonlyArray<JokerRarity> = [
   "common", "uncommon", "rare", "legendary",
 ];
 const JOKER_EDITIONS: ReadonlyArray<JokerEdition> = [
@@ -56,7 +56,7 @@ const DECK_DERIVED_FEATURES = 5;
 const STAKE_DERIVED_FEATURES = 1;
 
 const BLIND_KINDS = ["small", "big", "boss"] as const;
-const HAND_LABELS: ReadonlyArray<HandLabel> = [
+export const HAND_LABELS: ReadonlyArray<HandLabel> = [
   "High Card", "Pair", "Two Pair", "Three of a Kind", "Straight", "Flush",
   "Full House", "Four of a Kind", "Straight Flush", "Royal Flush",
   "Five of a Kind", "Flush House", "Flush Five",

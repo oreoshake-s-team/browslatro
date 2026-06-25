@@ -168,12 +168,12 @@ The TypeScript encoder ([`src/ai/encode.ts`](../../src/ai/encode.ts)) runs **at 
 
 ## Shop encoding (`shopEncoding.ts`)
 
-**File:** [`src/ai/advisor/shopEncoding.ts`](../../src/ai/advisor/shopEncoding.ts) · mirrored by `ml/encoding.py` shop section (`SHOP_ENCODING_VERSION = 3`)
+**File:** [`src/ai/advisor/shopEncoding.ts`](../../src/ai/advisor/shopEncoding.ts) · mirrored by `ml/encoding.py` shop section (`SHOP_ENCODING_VERSION = 4`)
 
 Shop and pack decisions use a **separate, much smaller encoder** because the action space is different (buy item / reroll / leave / pick / skip rather than play/discard subsets).
 
-- `SHOP_INPUT_FEATURES = 46` = 4 context + 42 candidate.
-- **Context (4):** `money/20, ante/8, round/24, picks/5`.
+- `SHOP_INPUT_FEATURES = 78` = 36 context + 42 candidate.
+- **Context (36):** `money/20, ante/8, round/24, picks/5`, then a **build-state block (32)** so the policy can rank an offer *against the engine it already owns*: per-hand-type levels (13), owned-joker count (1), a joker rarity histogram (4), a joker effect-category histogram (`mult/x-mult/retrigger/money/passive`, 5), consumables held (1), and a per-enhancement-type deck-enhancement histogram (`bonus/mult/wild/glass/steel/stone/gold/lucky`, 8). The build summary is computed by `shopBuildSummary` from the live `ShopView` at inference and carried on the record snapshots at training time (`handLevels` / `jokers` / `deckEnhancements` / `consumablesHeld`), read back verbatim in `encoding.py`.
 - **Candidate (42):** a 7-way one-hot over item types `[joker, planet, tarot, spectral, playing-card, pack, voucher]`, plus `cost/20`, an affordability flag (`cost ≤ money`), `is-reroll`/`is-leave`/`is-skip` flags, a 12-way one-hot over **effect categories** (`joker-mult/x-mult/retrigger/money/passive`, `planet`, `tarot-enhance/economy/create/deck`, `spectral`, `other`), and an 18-value **descriptive attribute vector** (normalized effect magnitudes, target/retrigger counts, planet chip/mult deltas, rarity, and scaling/create/destroy family flags) so the policy can rank cards *within* a category by their mechanics. Category and attributes are computed from the catalogs by [`shopCategory.ts`](../../src/ai/advisor/shopCategory.ts) and [`shopCandidateAttributes.ts`](../../src/ai/advisor/shopCandidateAttributes.ts), carried on the record snapshots, and read back verbatim in `encoding.py` (no Python catalog lookup).
 
 `encodeShopCandidates` / `encodePackCandidates` flatten the candidates into a `Float32Array` for the [shop ONNX policy](./ml-pipeline.md#the-shop-policy). The shipped shop model is [`advisor-shop-policy-v7.onnx`](../../public/models/advisor-shop-policy-v7.onnx) (`SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts)).

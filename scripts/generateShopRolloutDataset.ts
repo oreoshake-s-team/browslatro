@@ -26,19 +26,25 @@ import {
   packOptionAttributes,
   shopItemAttributes,
 } from "../src/ai/advisor/shopCandidateAttributes";
+import { shopBuildSummary } from "../src/ai/advisor/shopEncoding";
+import type { Joker } from "../src/items/jokers/types";
+import type { HandStats } from "../src/scoring/handStats";
+import type { Card } from "../src/cards/types";
 import { createJokerStackingShopAgent } from "../src/ai/rolloutShopAgent";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
 import { createJokerCatalog } from "../src/items/jokers";
 import { createPlanetCatalog, applyPlanetUpgrade } from "../src/items/planets";
 import { createTarotCatalog } from "../src/items/tarots";
 import { createSpectralCatalog } from "../src/items/spectrals";
-import { pickShopOffers, type ShopItem } from "../src/items/shop";
+import { pickShopOffers, rerollCostFor, type ShopItem } from "../src/items/shop";
 import { packPickLimit, type PackOption } from "../src/items/packs";
 import { MAX_JOKERS } from "../src/items/jokers/constants";
 import { intFlag, sliceJobs } from "./generateDataset";
 
 const __filename = fileURLToPath(import.meta.url);
 const isMain = !!process.argv[1] && resolvePath(process.argv[1]) === __filename;
+
+const MAX_REROLLS = 2;
 
 function stringFlag(name: string, fallback: string): string {
   const index = process.argv.indexOf(name);
@@ -65,6 +71,25 @@ function packOptionSnapshot(opt: PackOption): { optionType: string; category: st
   if (opt.kind === "tarot") return { optionType: "tarot", category, attributes, id: opt.tarot.id, name: opt.tarot.name };
   if (opt.kind === "spectral") return { optionType: "spectral", category, attributes, id: opt.spectral.id, name: opt.spectral.name };
   return { optionType: "playing-card", category, attributes, id: `${opt.card.rank}${opt.card.suit}`, name: `${opt.card.rank} of ${opt.card.suit}` };
+}
+
+function buildFields(
+  jokers: ReadonlyArray<Joker>,
+  handStats: HandStats,
+  deck: ReadonlyArray<Card>,
+): {
+  handLevels: Readonly<Record<string, number>>;
+  jokers: ReadonlyArray<{ effectKind: string; rarity: string }>;
+  deckEnhancements: Readonly<Record<string, number>>;
+  consumablesHeld: number;
+} {
+  const build = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: 0 });
+  return {
+    handLevels: build.handLevels,
+    jokers: build.jokers,
+    deckEnhancements: build.deckEnhancements,
+    consumablesHeld: build.consumablesHeld,
+  };
 }
 
 function applyPackOption(opt: PackOption, state: PostShopState): PostShopState | null {
@@ -121,6 +146,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
         const ownedIds = new Set(jokers.map((j) => j.id));
         const rollBase = runSeed * 1_000_003 + view.ante * 7919 + view.round * 31;
         let offers = [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, rng: view.rng })];
+        let rerollsDone = 0;
 
         for (let step = 0; step < 4; step += 1) {
           const state: PostShopState = { jokers, money, handStats, deck };
@@ -144,6 +170,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
             }
             sink(JSON.stringify({
               schemaVersion: RUN_EVENT_SCHEMA_VERSION, runSeed, ante: view.ante, round: view.round, blind: 0, money,
+              ...buildFields(state.jokers, state.handStats, state.deck),
               kind: "pack-pick", pool: pack.pack.pool, variant: pack.pack.variant,
               options: options.map(packOptionSnapshot), pickedIndex: bestIdx < 0 ? null : bestIdx, picksRemaining: limit,
             }));
@@ -158,10 +185,41 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
           }
 
           const choice = await bestShopChoice(view.ante, offers, state, opts, rollBase + step * 991);
-          if (choice.index >= offers.length) break;
+
+          const rerollCost = rerollCostFor(rerollsDone);
+          if (rerollsDone < MAX_REROLLS && rerollCost <= money && offers.length > 0) {
+            const rerolledOffers = [...pickShopOffers({ jokerCatalog, excludedJokerIds: [...ownedIds], planetCatalog, tarotCatalog, spectralCatalog, rng: view.rng })];
+            const rerolledState: PostShopState = { jokers, money: money - rerollCost, handStats, deck };
+            const rerolledChoice = await bestShopChoice(view.ante, rerolledOffers, rerolledState, opts, rollBase + step * 991 + 7);
+            if (rerolledChoice.bestValue > choice.bestValue) {
+              sink(JSON.stringify({
+                schemaVersion: RUN_EVENT_SCHEMA_VERSION, runSeed, ante: view.ante, round: view.round, blind: 0, money,
+                ...buildFields(state.jokers, state.handStats, state.deck),
+                kind: "reroll", cost: rerollCost, offers: offers.map(shopItemSnapshot),
+              }));
+              records += 1;
+              money -= rerollCost;
+              offers = rerolledOffers;
+              rerollsDone += 1;
+              continue;
+            }
+          }
+
+          if (choice.index >= offers.length) {
+            if (offers.some((o) => o.price <= money)) {
+              sink(JSON.stringify({
+                schemaVersion: RUN_EVENT_SCHEMA_VERSION, runSeed, ante: view.ante, round: view.round, blind: 0, money,
+                ...buildFields(state.jokers, state.handStats, state.deck),
+                kind: "purchase", item: null, offers: offers.map(shopItemSnapshot),
+              }));
+              records += 1;
+            }
+            break;
+          }
           const chosen = offers[choice.index];
           sink(JSON.stringify({
             schemaVersion: RUN_EVENT_SCHEMA_VERSION, runSeed, ante: view.ante, round: view.round, blind: 0, money,
+            ...buildFields(state.jokers, state.handStats, state.deck),
             kind: "purchase", item: shopItemSnapshot(chosen), offers: offers.map(shopItemSnapshot),
           }));
           records += 1;

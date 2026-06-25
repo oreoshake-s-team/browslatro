@@ -5,10 +5,15 @@ import { describe, expect, test } from "vitest";
 import {
   encodePackCandidates,
   encodeShopCandidates,
+  shopBuildSummary,
+  SHOP_BUILD_FEATURES,
   SHOP_INPUT_FEATURES,
 } from "./shopEncoding";
-import type { PackRankInput, ShopRankInput } from "./shopEncoding";
+import type { PackRankInput, ShopBuild, ShopRankInput } from "./shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
+import type { Card } from "../../cards/types";
+import { createDefaultHandStats } from "../../scoring/handStats";
+import { createJokerCatalog } from "../../items/jokers";
 
 function buyCandidate(): ShopAdviceCandidate {
   return {
@@ -44,8 +49,26 @@ function skipCandidate(): PackAdviceCandidate {
 }
 
 describe("SHOP_INPUT_FEATURES", () => {
-  test("equals 46", () => {
-    expect(SHOP_INPUT_FEATURES).toBe(46);
+  test("equals 78", () => {
+    expect(SHOP_INPUT_FEATURES).toBe(78);
+  });
+});
+
+describe("shopBuildSummary", () => {
+  test("counts deck enhancements by type", () => {
+    const deck: Card[] = [
+      { id: 1, rank: "A", suit: "hearts", enhancement: "glass" },
+      { id: 2, rank: "K", suit: "spades", enhancement: "glass" },
+      { id: 3, rank: "Q", suit: "clubs" },
+    ];
+    const summary = shopBuildSummary({ jokers: [], handStats: createDefaultHandStats(), deck, consumablesHeld: 0 });
+    expect(summary.deckEnhancements.glass).toBe(2);
+  });
+
+  test("summarizes an owned joker by effect kind and rarity", () => {
+    const joker = createJokerCatalog()[0];
+    const summary = shopBuildSummary({ jokers: [joker], handStats: createDefaultHandStats(), deck: [], consumablesHeld: 0 });
+    expect(summary.jokers[0]).toEqual({ effectKind: joker.effect.kind, rarity: joker.rarity });
   });
 });
 
@@ -82,7 +105,7 @@ describe("encodeShopCandidates", () => {
     };
     const input: ShopRankInput = { money: 10, ante: 1, round: 0, candidates: [candidate] };
     const encoded = encodeShopCandidates(input);
-    const canAffordIndex = 4 + 7 + 1;
+    const canAffordIndex = 4 + SHOP_BUILD_FEATURES + 7 + 1;
     expect(encoded[canAffordIndex]).toBe(1);
   });
 
@@ -93,7 +116,7 @@ describe("encodeShopCandidates", () => {
     };
     const input: ShopRankInput = { money: 5, ante: 1, round: 0, candidates: [candidate] };
     const encoded = encodeShopCandidates(input);
-    const canAffordIndex = 4 + 7 + 1;
+    const canAffordIndex = 4 + SHOP_BUILD_FEATURES + 7 + 1;
     expect(encoded[canAffordIndex]).toBe(0);
   });
 
@@ -105,7 +128,7 @@ describe("encodeShopCandidates", () => {
       candidates: [rerollCandidate()],
     };
     const encoded = encodeShopCandidates(input);
-    const isRerollIndex = 4 + 7 + 1 + 1;
+    const isRerollIndex = 4 + SHOP_BUILD_FEATURES + 7 + 1 + 1;
     expect(encoded[isRerollIndex]).toBe(1);
   });
 
@@ -117,7 +140,7 @@ describe("encodeShopCandidates", () => {
       candidates: [leaveCandidate()],
     };
     const encoded = encodeShopCandidates(input);
-    const isLeaveIndex = 4 + 7 + 1 + 1 + 1;
+    const isLeaveIndex = 4 + SHOP_BUILD_FEATURES + 7 + 1 + 1 + 1;
     expect(encoded[isLeaveIndex]).toBe(1);
   });
 
@@ -161,7 +184,7 @@ describe("encodePackCandidates", () => {
       candidates: [skipCandidate()],
     };
     const encoded = encodePackCandidates(input);
-    const isSkipIndex = 4 + 7 + 1 + 1 + 1 + 1;
+    const isSkipIndex = 4 + SHOP_BUILD_FEATURES + 7 + 1 + 1 + 1 + 1;
     expect(encoded[isSkipIndex]).toBe(1);
   });
 });
@@ -194,6 +217,19 @@ interface GoldenRecord {
   readonly offers?: ReadonlyArray<GoldenOffer>;
   readonly options?: ReadonlyArray<GoldenOption>;
   readonly cost?: number;
+  readonly handLevels?: Readonly<Record<string, number>>;
+  readonly jokers?: ReadonlyArray<{ effectKind: string; rarity: string }>;
+  readonly deckEnhancements?: Readonly<Record<string, number>>;
+  readonly consumablesHeld?: number;
+}
+
+function buildFromGolden(rec: GoldenRecord): ShopBuild {
+  return {
+    handLevels: rec.handLevels ?? {},
+    jokers: rec.jokers ?? [],
+    deckEnhancements: rec.deckEnhancements ?? {},
+    consumablesHeld: rec.consumablesHeld ?? 0,
+  };
 }
 
 interface GoldenCase {
@@ -211,7 +247,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
       item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "leave" });
-    return { money, ante, round, candidates };
+    return { money, ante, round, build: buildFromGolden(rec), candidates };
   }
 
   if (rec.kind === "reroll") {
@@ -221,7 +257,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
     }));
     candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
     candidates.push({ action: "leave" });
-    return { money, ante, round, candidates };
+    return { money, ante, round, build: buildFromGolden(rec), candidates };
   }
 
   const packCandidates: PackAdviceCandidate[] = (rec.options ?? []).map((o) => ({
@@ -229,7 +265,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
     option: { id: o.id, name: o.name, optionType: o.optionType, category: o.category, attributes: o.attributes, description: "" },
   }));
   packCandidates.push({ action: "skip" });
-  return { money, ante, round, picksRemaining: rec.picksRemaining ?? 0, candidates: packCandidates };
+  return { money, ante, round, picksRemaining: rec.picksRemaining ?? 0, build: buildFromGolden(rec), candidates: packCandidates };
 }
 
 describe("encodeShopCandidates / encodePackCandidates — cross-language golden vectors", () => {

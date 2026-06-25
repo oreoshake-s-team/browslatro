@@ -27,7 +27,7 @@ describe("greedy algorithm usage is fenced", () => {
   test("the greedy ranker/agent is only referenced from the baseline/fallback/seam allowlist", () => {
     const offenders = sourceFiles(SRC)
       .filter((file) => GREEDY_SYMBOLS.test(readFileSync(file, "utf8")))
-      .map((file) => relative(SRC, file))
+      .map((file) => relative(SRC, file).replace(/\\/g, "/"))
       .filter((rel) => !ALLOWLIST.has(rel))
       .sort();
     expect(
