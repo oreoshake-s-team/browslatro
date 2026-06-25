@@ -14,7 +14,9 @@ Generate from realistic shop-purchase-driven play (`--shop-policy`); **never**
 use random joker loadouts (`--joker-loadout-fraction`) or greedy-agent-driven
 generation. Random loadouts fabricate off-distribution states that depress the
 outcome metric (`avgBlinds`); the greedy agent is only the benchmark floor,
-never a data source or training target. LLM-teacher labels must be regenerated
+never a data source or training target. This reflects the project-wide rule
+that [greedy algorithms are an anti-pattern](../CLAUDE.md#greedy-algorithms-are-an-anti-pattern) —
+never a decision path, fallback, or training target. LLM-teacher labels must be regenerated
 on the **same** realistic dataset they train against — an off-distribution
 teacher hurts. The production hand policy `advisor-policy-v9` was trained this
 way (≈20k realistic shop-driven games + weighted human play + a

@@ -133,6 +133,18 @@ a11y is a `CLAUDE.md` hard requirement with dedicated machinery:
   `focus-trap.spec.ts`, `dialog-semantics.spec.ts`, …).
 - `src/App.a11y.test.tsx` covers app-level semantics in unit tests.
 
+## No greedy algorithms (fail fast, never fall back)
+
+Greedy algorithms are a `CLAUDE.md` hard requirement to **avoid** — they're always an
+anti-pattern here, never to be introduced in new code and never as a fallback. Anything
+that commits to the locally-best step without modeling the outcome quietly degrades
+quality. When the preferred mechanism is unavailable (model won't load, service down, data
+missing), **fail fast** with a clear error instead of silently serving a greedy result that
+looks correct. The lone sanctioned use is the AI advisor's `greedyRanker` / `createGreedyAgent`
+as a *benchmark floor only* — fenced by `src/ai/greedyUsage.guard.test.ts`. Don't widen that
+allowlist or copy the pattern. See [`ml-pipeline.md`](../ai-advisor/ml-pipeline.md) and
+[`engine-plumbing.md`](../ai-advisor/engine-plumbing.md).
+
 ## Storybook
 
 `yarn storybook` (port 6006). Every component under `src/components/` has a co-located
