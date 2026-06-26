@@ -114,9 +114,57 @@ of them to finish and upload, downloads the shards, and writes the concatenated
 | `BROWSLATRO_DATASET_BUCKET` | Bucket holding shard objects. |
 | `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | S3 credentials. |
 
+## Running a remote training job
+
+Generation ships a `dataset.jsonl` back; training takes one back to an ONNX
+policy. Training is single-threaded PyTorch (one machine, no sharding): the
+orchestrator uploads the dataset to S3, launches one machine that downloads it,
+runs `ml/train.py` on CPU, uploads the `.onnx`, and the orchestrator downloads
+the model.
+
+```
+runRemoteTraining.ts (orchestrator, runs locally)
+  │  putObject(dataset) → training/<runId>/dataset.jsonl
+  │  FlyMachinesClient.run() ── one machine
+  │  poll get() until terminal
+  └  getObject(training/<runId>/model.onnx) → local <out.onnx>
+
+the Fly machine (ml/remote/Dockerfile.train + train-entrypoint.sh)
+  │  getObjectCli.ts  → /tmp/dataset.jsonl
+  │  python3 ml/train.py … --device cpu --out /tmp/model.onnx
+  └  putShard.ts → training/<runId>/model.onnx
+```
+
+As with generation, the S3 object is the source of truth: if the machine stops
+without exporting a non-empty model the orchestrator fails fast.
+
+Build and push the training image (it adds Python + the `ml/requirements.txt`
+deps on top of the worker image):
+
+```bash
+fly deploy --config ml/remote/fly.toml --dockerfile ml/remote/Dockerfile.train \
+  --build-only --push --image-label train-latest .
+export TRAIN_IMAGE=registry.fly.io/browslatro-dataset:train-latest
+```
+
+Then train a dataset (the same S3 env vars as generation apply):
+
+```bash
+yarn dlx tsx scripts/remote/runRemoteTraining.ts advisor-policy-v10.onnx \
+  --dataset dataset.jsonl \
+  --run-id 2026-06-26a \
+  --epochs 30
+```
+
+Add `--shop` to train a shop policy. Benchmark the result before shipping with
+`scripts/benchmarkPolicy.ts` exactly as for a locally-trained model.
+
 ## Deferred / follow-up work
 
-- Remote **training + benchmarking** (ship an ONNX artifact back, not just a dataset).
+- Remote **benchmarking** (run `benchmarkPolicy.ts` on a machine and return the
+  outcome metrics that gate shipping).
+- Merging **human-play data** (`--human`) into remote training (needs the data
+  uploaded or baked into the training image).
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.
