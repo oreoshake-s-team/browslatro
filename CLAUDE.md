@@ -17,6 +17,12 @@ The author is still learning frontend and relies on Claude to surface design dec
 - Prefer a single batched round of questions (up to 4 per `AskUserQuestion` call) over a slow back-and-forth, but never skip the round entirely to "just start coding."
 - This raises the baseline permanently: err toward asking when in doubt rather than guessing on the author's behalf.
 
+# Status updates awaiting a response
+
+- Whenever a status update is waiting on the author's response — a blocking question, a decision the author must make, a fork where you need a pick before continuing — always deliver it with the `AskUserQuestion` tool, not plain prose. Surface the options as selectable choices so the author can answer with a click.
+- This applies to every such pause, not just UI work: clarifying an ambiguous request, choosing between approaches, confirming a destructive or hard-to-reverse action, or reporting a blocker that needs the author's input to unblock.
+- Only fall back to plain text when there is genuinely nothing to decide — a pure progress note that does not need a reply.
+
 # Hard requirements
 
 - Squash all PRs into a single commit instead of merging/rebasing.
