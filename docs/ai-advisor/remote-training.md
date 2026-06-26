@@ -234,11 +234,46 @@ The preflight marker objects (and any shard/model objects) accumulate in the
 bucket; set a lifecycle TTL on the `preflight/`, `datasets/`, `training/`, and
 `benchmark/` prefixes (tracked below).
 
+## Running a remote self-play collection (shop policy)
+
+The **shop** policy is trained from self-play returns (`scripts/collectSelfPlayShop.ts`
+→ `ml/train_rl.py`), not from the search-expert labels above. Collection is the same
+embarrassingly-parallel shape as generation — independent games, sharded by seed — so
+`runRemoteSelfPlay.ts` fans it out the same way, writing shards under `selfplay/<runId>/`
+and concatenating them into one `.jsonl`.
+
+The worker is pure TypeScript, so (like the benchmark) it **reuses the dataset image**
+with a command override (`ml/remote/selfplay-entrypoint.sh`) — no third image. Rebuild
+`dataset-latest` once so the image contains the entrypoint, then:
+
+```bash
+yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts selfplay.jsonl \
+  --run-id 2026-06-26a \
+  --games 1000 --machines 8 --cpus 2 --memory-mb 2048 \
+  --shop-model public/models/advisor-shop-policy-v9.onnx \
+  --hand-model public/models/advisor-policy-v9.onnx \
+  --temperature 1.0
+```
+
+Each machine samples its seed slice from the given shop policy (softmax at `--temperature`)
+under the given hand policy, tagging each shop decision with the game's realized return.
+Train the result with the REINFORCE/PPO trainer (locally for now):
+
+```bash
+python ml/train_rl.py selfplay.jsonl \
+  --init public/models/advisor-shop-policy-v9.onnx --ppo-clip 0.2 --out candidate-shop.onnx
+```
+
+For an on-policy iteration, re-collect from the *new* policy each round (warm-started from
+it) — see `ml/on_policy_track_b.sh`. Benchmark before shipping as usual.
+
 ## Deferred / follow-up work
 
+- A remote **`train_rl.py`** runner (PPO shop training on a machine), and chaining the full
+  **on-policy loop** (collect → warm-start-train → repeat) on Fly.
 - Chaining **generate → train → benchmark** into a single orchestrated run.
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.
-- Wiring the bucket lifecycle (TTL on the `preflight/`, `datasets/`,
+- Wiring the bucket lifecycle (TTL on the `preflight/`, `datasets/`, `selfplay/`,
   `training/`, and `benchmark/` prefixes).
