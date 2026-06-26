@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   };
   const opts: RolloutOptions = {
     agent: createPolicyAgent(ranker),
-    horizonAntes: intFlag("--horizon", 3),
+    horizonAntes: intFlag("--horizon", 8),
     rollouts: intFlag("--rollouts", 2),
     maxAnte: 8,
     consumableDeps,

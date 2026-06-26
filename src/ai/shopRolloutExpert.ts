@@ -22,6 +22,7 @@ export interface RolloutOptions {
   readonly maxAnte: number;
   readonly consumableDeps?: ConsumableLabelDeps;
   readonly rolloutShopAgent?: HeadlessShopAgent;
+  readonly winBonus?: number;
 }
 
 export interface PostShopState {
@@ -50,7 +51,7 @@ export async function rolloutValue(
       maxAnte: horizon,
       shopAgent: opts.rolloutShopAgent,
     });
-    total += result.blindsCleared;
+    total += result.blindsCleared + (result.won ? (opts.winBonus ?? 0) : 0);
   }
   return total / opts.rollouts;
 }

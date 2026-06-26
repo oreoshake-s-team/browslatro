@@ -31,6 +31,7 @@ import type { Joker } from "../src/items/jokers/types";
 import type { HandStats } from "../src/scoring/handStats";
 import type { Card } from "../src/cards/types";
 import { createJokerStackingShopAgent } from "../src/ai/rolloutShopAgent";
+import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
 import { createJokerCatalog } from "../src/items/jokers";
 import { createPlanetCatalog, applyPlanetUpgrade } from "../src/items/planets";
@@ -109,6 +110,8 @@ interface GenConfig {
   readonly handModel: string;
   readonly horizon: number;
   readonly rollouts: number;
+  readonly rolloutShopModel: string;
+  readonly winBonus: number;
 }
 
 async function generate(config: GenConfig, sink: (line: string) => void): Promise<number> {
@@ -123,7 +126,10 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
     planetCatalog,
     tarotCatalog,
   };
-  const rolloutShopAgent = createJokerStackingShopAgent();
+  const rolloutShopAgent =
+    config.rolloutShopModel === ""
+      ? createJokerStackingShopAgent()
+      : await createHeadlessShopAgent(config.rolloutShopModel);
   let records = 0;
 
   for (let g = 0; g < config.games; g += 1) {
@@ -135,6 +141,7 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
       maxAnte: 8,
       consumableDeps,
       rolloutShopAgent,
+      winBonus: config.winBonus,
     };
 
     const shopAgent: HeadlessShopAgent = {
@@ -250,8 +257,10 @@ if (isMain) {
     games: intFlag("--games", 50),
     seedOffset: intFlag("--seed-offset", 0),
     handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
-    horizon: intFlag("--horizon", 3),
+    horizon: intFlag("--horizon", 8),
     rollouts: intFlag("--rollouts", 2),
+    rolloutShopModel: stringFlag("--rollout-shop-model", ""),
+    winBonus: intFlag("--win-bonus", 0),
   };
   const parallelJobs = intFlag("--parallel-jobs", 1);
 
@@ -267,7 +276,9 @@ if (isMain) {
       const tmpOut = join(tmpDir, `chunk-${i}.jsonl`);
       return new Promise<void>((res, rej) => {
         const args = [__filename, tmpOut, "--games", String(slice.games), "--seed-offset", String(slice.seedOffset),
-          "--hand-model", config.handModel, "--horizon", String(config.horizon), "--rollouts", String(config.rollouts)];
+          "--hand-model", config.handModel, "--horizon", String(config.horizon), "--rollouts", String(config.rollouts),
+          "--win-bonus", String(config.winBonus),
+          ...(config.rolloutShopModel === "" ? [] : ["--rollout-shop-model", config.rolloutShopModel])];
         const proc = spawn(process.execPath, [...loaderArgs, ...args], { stdio: ["ignore", "ignore", "inherit"] });
         proc.on("close", (code) => { if (code === 0) { done += 1; process.stderr.write(`  ${done}/${slices.length} jobs done\n`); res(); } else rej(new Error(`job ${i} exited ${String(code)}`)); });
       });
