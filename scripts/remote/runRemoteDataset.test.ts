@@ -12,7 +12,7 @@ const GENERATE: GenerateArgs = {
   rollouts: 4,
   topN: 3,
   maxAnte: 8,
-  deck: "red",
+  deck: "red-deck",
   stake: "white",
   jokerLoadoutFraction: 0,
 };
@@ -72,7 +72,7 @@ describe("shardEnv", () => {
       OUTPUT_KEY: "datasets/run1/shard-1.jsonl",
       GAMES: "7",
       SEED_OFFSET: "12",
-      DECK: "red",
+      DECK: "red-deck",
     });
   });
 

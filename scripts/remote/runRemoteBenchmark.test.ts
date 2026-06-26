@@ -12,7 +12,7 @@ import type { MachineHandle, MachineLauncher, MachineRunSpec } from "./flyMachin
 const BENCHMARK: BenchmarkArgs = {
   games: 200,
   seedOffset: 5000,
-  deck: "red",
+  deck: "red-deck",
   stake: "white",
   shop: true,
 };
@@ -20,7 +20,7 @@ const BENCHMARK: BenchmarkArgs = {
 const SUMMARY_JSON = JSON.stringify({
   games: 200,
   seedOffset: 5000,
-  deck: "red",
+  deck: "red-deck",
   stake: "white",
   agents: [
     { label: "greedy (baseline)", result: { winRate: 0.1, averageBlindsCleared: 12.5, games: 200, wins: 20 } },
@@ -113,7 +113,7 @@ describe("parseBenchmark", () => {
     const bad = JSON.stringify({
       games: 1,
       seedOffset: 0,
-      deck: "red",
+      deck: "red-deck",
       stake: "white",
       agents: [{ label: "x", result: { averageBlindsCleared: 1, games: 1, wins: 0 } }],
     });

@@ -2,6 +2,8 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
+import { DEFAULT_DECK } from "../../src/items/decks";
+import { DEFAULT_STAKE } from "../../src/items/stakes";
 import { planShards, type RemoteShard } from "./shardPlan";
 import {
   FlyMachinesClient,
@@ -175,8 +177,8 @@ if (isMain) {
       rollouts: intFlag("--rollouts", 4),
       topN: intFlag("--top-n", 3),
       maxAnte: intFlag("--max-ante", 8),
-      deck: stringFlag("--deck", "red"),
-      stake: stringFlag("--stake", "white"),
+      deck: stringFlag("--deck", DEFAULT_DECK),
+      stake: stringFlag("--stake", DEFAULT_STAKE),
       jokerLoadoutFraction: 0,
       shopPolicy: stringFlag("--shop-policy", ""),
     },

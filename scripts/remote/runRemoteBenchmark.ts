@@ -2,6 +2,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
+import { DEFAULT_DECK } from "../../src/items/decks";
+import { DEFAULT_STAKE } from "../../src/items/stakes";
 import {
   FlyMachinesClient,
   type MachineGuest,
@@ -199,8 +201,8 @@ if (isMain) {
     benchmark: {
       games: intFlag("--games", 200),
       seedOffset: intFlag("--seed-offset", 5000),
-      deck: stringFlag("--deck", "red"),
-      stake: stringFlag("--stake", "white"),
+      deck: stringFlag("--deck", DEFAULT_DECK),
+      stake: stringFlag("--stake", DEFAULT_STAKE),
       shop: !process.argv.includes("--no-shop"),
       baseline: stringFlag("--baseline", ""),
     },

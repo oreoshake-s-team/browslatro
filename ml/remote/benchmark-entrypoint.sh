@@ -10,7 +10,7 @@ set -euo pipefail
 
 GAMES="${GAMES:-200}"
 SEED_OFFSET="${SEED_OFFSET:-5000}"
-DECK="${DECK:-red}"
+DECK="${DECK:-red-deck}"
 STAKE="${STAKE:-white}"
 SHOP="${SHOP:-1}"
 
