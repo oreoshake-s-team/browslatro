@@ -39,6 +39,11 @@ import {
   computeStartingHands,
 } from "../run/roundSetup";
 import { simulatePlay, type SimulatePlayInput } from "./simulatePlay";
+import {
+  emptyShopActivity,
+  mergeShopActivity,
+  type ShopActivity,
+} from "./shopActivity";
 
 export function seededRng(seed: number): RandomSource {
   let a = seed >>> 0;
@@ -106,6 +111,7 @@ export interface ShopResult {
   readonly deck?: ReadonlyArray<Card>;
   readonly ownedVoucherIds?: ReadonlySet<VoucherId>;
   readonly lastConsumable?: Consumable | null;
+  readonly activity?: ShopActivity;
 }
 
 export interface HeadlessShopAgent {
@@ -136,6 +142,8 @@ export interface HeadlessRunResult {
   readonly blindsCleared: number;
   readonly handsPlayed: number;
   readonly blindsSkipped: number;
+  readonly finalMoney: number;
+  readonly shopActivity: ShopActivity;
 }
 
 const STARTING_MONEY = 4;
@@ -239,6 +247,17 @@ export async function playHeadlessRun(
   let handsPlayed = 0;
   let runStats: RunStats = initialRunStats();
   let handPlayCounts = emptyHandCounts();
+  let shopActivity: ShopActivity = emptyShopActivity();
+
+  const finish = (won: boolean, anteReached: number): HeadlessRunResult => ({
+    won,
+    anteReached,
+    blindsCleared,
+    handsPlayed,
+    blindsSkipped: runStats.blindsSkipped,
+    finalMoney: money,
+    shopActivity,
+  });
 
   for (let ante = startAnte; ante <= maxAnte; ante += 1) {
     const boss = pickBossForAnte({ ante, rng, recentIds: recentBossIds });
@@ -357,12 +376,12 @@ export async function playHeadlessRun(
         runStats = recordBlindSkipped(runStats);
         money += grantTagMoney(offeredTag, runStats, money);
         if (blindsCleared >= roundBudget) {
-          return { won: false, anteReached: ante, blindsCleared, handsPlayed, blindsSkipped: runStats.blindsSkipped };
+          return finish(false, ante);
         }
         continue;
       }
       if (unusedHands < 0) {
-        return { won: false, anteReached: ante, blindsCleared, handsPlayed, blindsSkipped: runStats.blindsSkipped };
+        return finish(false, ante);
       }
       blindsCleared += 1;
       const interest =
@@ -374,7 +393,7 @@ export async function playHeadlessRun(
         interest +
         REMAINING_HAND_BONUS * unusedHands;
       if (blindsCleared >= roundBudget) {
-        return { won: false, anteReached: ante, blindsCleared, handsPlayed, blindsSkipped: runStats.blindsSkipped };
+        return finish(false, ante);
       }
       if (config.shopAgent !== undefined) {
         const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, deck, ownedVoucherIds, lastConsumable, rng });
@@ -384,8 +403,11 @@ export async function playHeadlessRun(
         deck = result.deck ?? deck;
         ownedVoucherIds = result.ownedVoucherIds ?? ownedVoucherIds;
         lastConsumable = result.lastConsumable ?? lastConsumable;
+        if (result.activity !== undefined) {
+          shopActivity = mergeShopActivity(shopActivity, result.activity);
+        }
       }
     }
   }
-  return { won: true, anteReached: maxAnte, blindsCleared, handsPlayed, blindsSkipped: runStats.blindsSkipped };
+  return finish(true, maxAnte);
 }
