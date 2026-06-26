@@ -139,10 +139,13 @@ As with generation, the S3 object is the source of truth: if the machine stops
 without exporting a non-empty model the orchestrator fails fast.
 
 Build and push the training image (it adds Python + the `ml/requirements.txt`
-deps on top of the worker image):
+deps on top of the worker image). It uses a dedicated config, `fly.train.toml`,
+that pins `dockerfile = "Dockerfile.train"` — `fly deploy`'s `--dockerfile` flag
+is overridden by a config's `[build] dockerfile`, so the Dockerfile must be set
+in the config, not on the command line:
 
 ```bash
-fly deploy --config ml/remote/fly.toml --dockerfile ml/remote/Dockerfile.train \
+fly deploy --config ml/remote/fly.train.toml \
   --build-only --push --image-label train-latest .
 export TRAIN_IMAGE=registry.fly.io/browslatro-dataset:train-latest
 ```
