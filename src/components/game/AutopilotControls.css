@@ -26,6 +26,10 @@
   color: var(--edition-foil-tint);
 }
 
+.autopilot-error {
+  color: var(--accent-danger);
+}
+
 .autopilot-loading {
   display: flex;
   flex-direction: column;

@@ -73,6 +73,7 @@ function renderControls(
     proposal?: HandOption | null;
     modelProgress?: { loaded: number; total: number | null } | null;
     proposalUnavailable?: boolean;
+    advisorUnavailable?: boolean;
     explanation?: MoveExplanationState;
     feedbackCandidates?: ReadonlyArray<HandOption> | null;
     feedbackRecorded?: boolean;
@@ -87,6 +88,7 @@ function renderControls(
       proposal={"proposal" in overrides ? (overrides.proposal ?? null) : playProposal()}
       modelProgress={overrides.modelProgress ?? null}
       proposalUnavailable={overrides.proposalUnavailable ?? false}
+      advisorUnavailable={overrides.advisorUnavailable ?? false}
       explanation={overrides.explanation ?? { phase: "idle" }}
       feedbackCandidates={overrides.feedbackCandidates ?? null}
       feedbackRecorded={overrides.feedbackRecorded ?? false}
@@ -114,6 +116,28 @@ describe("AutopilotControls", () => {
   test("does not announce unavailability while a proposal exists", () => {
     renderControls({ proposal: playProposal(), proposalUnavailable: true });
     expect(screen.queryByTestId("autopilot-no-suggestion")).not.toBeInTheDocument();
+  });
+
+  test("surfaces a distinct error when the advisor model is unavailable", () => {
+    renderControls({ proposal: null, advisorUnavailable: true });
+    expect(screen.getByTestId("autopilot-advisor-unavailable")).toHaveTextContent(
+      "Coach unavailable",
+    );
+  });
+
+  test("announces the advisor-unavailable error assertively via role=alert", () => {
+    renderControls({ proposal: null, advisorUnavailable: true });
+    expect(screen.getByTestId("autopilot-advisor-unavailable")).toHaveAttribute(
+      "role",
+      "alert",
+    );
+  });
+
+  test("does not surface the advisor-unavailable error while a proposal exists (negative)", () => {
+    renderControls({ proposal: playProposal(), advisorUnavailable: true });
+    expect(
+      screen.queryByTestId("autopilot-advisor-unavailable"),
+    ).not.toBeInTheDocument();
   });
 
   test("describes a play proposal with its hand label", () => {

@@ -443,7 +443,7 @@ describe("useAutopilot with face-down cards", () => {
     await waitFor(() => expect(result.current.proposalUnavailable).toBe(true));
   });
 
-  test("a proposal from visible cards clears the unavailable flag", async () => {
+  test("a proposal from visible cards clears the proposal-unavailable flag", async () => {
     const { result } = renderAutopilot({
       executor: makeExecutor(),
       ranker: playFirstRanker,
@@ -465,5 +465,67 @@ describe("useAutopilot with face-down cards", () => {
     });
     await waitForProposal(result);
     expect(result.current.pendingProposal?.cardIds).not.toContain(1);
+  });
+});
+
+describe("useAutopilot when the policy model is unavailable", () => {
+  const failingLoadRanker: CandidateRanker = {
+    load: async () => {
+      throw new Error("model 404");
+    },
+    rank: playFirstRanker.rank,
+  };
+
+  const failingRankRanker: CandidateRanker = {
+    load: async () => {},
+    rank: async () => {
+      throw new Error("inference failed");
+    },
+  };
+
+  test("surfaces the advisor-unavailable state when the model fails to load", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: failingLoadRanker,
+    });
+    await waitFor(() =>
+      expect(result.current.advisorUnavailable).toBe(true),
+    );
+  });
+
+  test("auto-disables autopilot via onStop when the model fails to load", async () => {
+    const onStop = vi.fn();
+    renderAutopilot({
+      executor: makeExecutor(),
+      ranker: failingLoadRanker,
+      onStop,
+    });
+    await waitFor(() => expect(onStop).toHaveBeenCalledTimes(1));
+  });
+
+  test("does not serve a greedy proposal when the model fails to load (negative)", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: failingLoadRanker,
+    });
+    await waitFor(() => expect(result.current.advisorUnavailable).toBe(true));
+    expect(result.current.pendingProposal).toBeNull();
+  });
+
+  test("surfaces the advisor-unavailable state when ranking throws", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: failingRankRanker,
+    });
+    await waitFor(() => expect(result.current.advisorUnavailable).toBe(true));
+  });
+
+  test("clears the model download progress when the model fails to load", async () => {
+    const { result } = renderAutopilot({
+      executor: makeExecutor(),
+      ranker: failingLoadRanker,
+    });
+    await waitFor(() => expect(result.current.advisorUnavailable).toBe(true));
+    expect(result.current.modelProgress).toBeNull();
   });
 });
