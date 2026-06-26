@@ -15,6 +15,11 @@ advantages drive the chosen log-prob to -inf and collapse the policy):
   * value baseline + standardized, tail-clamped advantages (``--adv-clip``);
   * a log-prob floor (``--logp-floor``) bounding the per-decision update;
   * an entropy bonus (``--entropy-coef``) keeping the policy stochastic.
+
+``--init <onnx>`` warm-starts the scorer from an existing shop policy (its ONNX
+initializers are named like the torch state_dict, so the load is by-name). This
+is what makes *on-policy* iteration possible: warm-start from the policy that
+generated the self-play data so the gradient improves that policy in place.
 """
 
 import argparse
@@ -43,6 +48,40 @@ def load_selfplay(paths):
     return decisions
 
 
+def warm_start(model, onnx_path, device, torch):
+    """Load named initializers from an onnx shop policy into ``model``.
+
+    The exported scorer's ONNX initializers are named like the torch state_dict
+    (``layers.0.weight`` ...), so the load is by-name. Raises if any parameter is
+    missing or shape-mismatched so a stale/incompatible checkpoint fails loudly
+    rather than silently warm-starting from a random init.
+    """
+    import onnx
+    from onnx import numpy_helper
+
+    state = model.state_dict()
+    loaded = 0
+    for tensor in onnx.load(onnx_path).graph.initializer:
+        if tensor.name not in state:
+            continue
+        weights = torch.tensor(
+            numpy_helper.to_array(tensor), dtype=torch.float32, device=device
+        )
+        if weights.shape != state[tensor.name].shape:
+            raise SystemExit(
+                f"--init shape mismatch for {tensor.name}: "
+                f"{tuple(weights.shape)} vs {tuple(state[tensor.name].shape)}"
+            )
+        state[tensor.name] = weights
+        loaded += 1
+    if loaded != len(state):
+        raise SystemExit(
+            f"--init only matched {loaded}/{len(state)} parameters in {onnx_path}"
+        )
+    model.load_state_dict(state)
+    return loaded
+
+
 def normalized_advantages(returns, clip):
     """Standardize returns against the mean baseline, then clamp the tails.
 
@@ -69,6 +108,11 @@ def main():
     parser.add_argument("--entropy-coef", type=float, default=0.01)
     parser.add_argument("--adv-clip", type=float, default=3.0)
     parser.add_argument("--logp-floor", type=float, default=10.0)
+    parser.add_argument(
+        "--init",
+        default=None,
+        help="warm-start CandidateScorer from an existing shop-policy onnx",
+    )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
     args = parser.parse_args()
 
@@ -87,6 +131,9 @@ def main():
 
     device = resolve_device(args.device)
     model = CandidateScorer(SHOP_INPUT_FEATURES, args.hidden).to(device)
+    if args.init:
+        loaded = warm_start(model, args.init, device, torch)
+        print(f"warm-started {loaded} tensors from {args.init}")
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     print(f"{len(samples)} self-play decisions on {device}")
 

@@ -3,6 +3,31 @@
 Status snapshot for resuming on another machine. Branch: `feat/outcome-teacher-experiments`
 (based on `main` at `23819ef`, the v8 ship). This doc + the branch code are the transfer.
 
+## On-policy iteration — 2026-06-26 (Track B, issue #1545) — BREAKS THE CEILING
+
+The single off-policy REINFORCE step (training a fresh model on v8-sampled data) only
+reached avgBlinds 3.60. The fix was **on-policy iteration**: warm-start the scorer from
+the policy that generated the self-play, step on its own returns, repeat. Enablers shipped:
+`ml/train_rl.py --init <onnx>` (by-name warm-start, verified to reproduce v8 at 0.0 diff)
+and the driver `ml/on_policy_track_b.sh` (sample → warm-start-train → benchmark, looped).
+
+| run | best iterate | avgBlinds (hand v9, 4 seeds × 500) | vs v8 (5.078) |
+|---|---|---|---|
+| baseline (lr 1e-3, 20 epochs/round, 5 iters) | iter-2 / iter-4 | 5.038 / 5.022 | ≈ parity |
+| **damped (lr 3e-4, 6 epochs/round, 8 iters)** | **iter-6** | **5.473** | **+0.40, beats v8 on all 4 seeds (5.30–5.60)** |
+
+- On-policy iteration recovers to v8 parity (vs 3.60 off-policy) and the damped run's best
+  iterate **exceeds v8 on every seed** — the first policy to beat the incumbent, not just match it.
+- **It oscillates** in a 2-cycle between a "build/buy" mode (~5.x) and a "pack-heavy/broke" mode
+  (~3.x); damping the step (lower lr, fewer epochs/round) did NOT remove the oscillation, so it is
+  structural — single-step updates overshoot. **You must select the best iterate by validation**,
+  not take the last. A proper trust region (KL penalty / PPO-style clip toward the sampling policy)
+  is the next lever to stabilize and push further.
+- Selection caveat: iter-6 was picked from its single-seed (5000) peak, then confirmed on 4 seeds;
+  3/4 are out-of-sample and all beat v8, so the win is not a seed artifact. A fully clean protocol
+  would select on a held-out seed disjoint from the final eval.
+- The winning artifact is `ml/outcome/onpolicy-damped/iter-6.onnx` (gitignored scratch).
+
 ## Resume run — 2026-06-25 (CPU box, both planned experiments executed)
 
 `main` merged into this branch (clean; `headlessShopAgent.ts` kept both the shop-activity

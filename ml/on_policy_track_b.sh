@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# On-policy self-play iteration for the shop advisor (Track B).
+#
+# Each round samples self-play from the *current* policy, then warm-starts the
+# REINFORCE trainer from that same policy and steps it on the freshly-sampled
+# (on-policy) returns. Bootstrapped from a base policy (v8 by default) so the
+# first round improves a competent policy rather than a random init.
+#
+# Override the TS runner for offline/sandboxed boxes, e.g.:
+#   TSX_RUN="node --import file:///path/to/tsx/dist/loader.mjs" ml/on_policy_track_b.sh
+set -euo pipefail
+
+BASE="${BASE:-public/models/advisor-shop-policy-v8.onnx}"
+HAND="${HAND:-public/models/advisor-policy-v9.onnx}"
+ITERS="${ITERS:-5}"
+GAMES="${GAMES:-1000}"
+TEMPERATURE="${TEMPERATURE:-1.0}"
+BENCH_GAMES="${BENCH_GAMES:-500}"
+BENCH_SEED="${BENCH_SEED:-5000}"
+DEVICE="${DEVICE:-cpu}"
+EPOCHS="${EPOCHS:-20}"
+LR="${LR:-1e-3}"
+OUTDIR="${OUTDIR:-ml/outcome/onpolicy}"
+TSX_RUN="${TSX_RUN:-node .yarn/releases/yarn-4.15.0.cjs dlx tsx}"
+PYTHON="${PYTHON:-python3}"
+
+mkdir -p "$OUTDIR"
+current="$BASE"
+echo "iter 0 (base): $current"
+
+for k in $(seq 1 "$ITERS"); do
+  data="$OUTDIR/sp-$k.jsonl"
+  next="$OUTDIR/iter-$k.onnx"
+  echo "=== iteration $k: sampling $GAMES games from $(basename "$current") ==="
+  $TSX_RUN scripts/collectSelfPlayShop.ts "$data" \
+    --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE"
+  $PYTHON ml/train_rl.py "$data" --device "$DEVICE" --init "$current" \
+    --epochs "$EPOCHS" --lr "$LR" --out "$next"
+  echo "--- benchmark iter $k ($BENCH_GAMES games, seed $BENCH_SEED) ---"
+  $TSX_RUN scripts/benchmarkPolicy.ts "$HAND" \
+    --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" \
+    | grep -E "advisor-policy|shop "
+  current="$next"
+done
+echo "done; final model: $current"
