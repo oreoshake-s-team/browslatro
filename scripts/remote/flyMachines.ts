@@ -61,6 +61,18 @@ export class FlyMachinesClient implements MachineLauncher {
     };
   }
 
+  async assertReachable(): Promise<void> {
+    const res = await this.fetchImpl(`${this.baseUrl}/apps/${this.app}`, {
+      method: "GET",
+      headers: this.headers(),
+    });
+    if (!res.ok) {
+      throw new Error(
+        `Fly app "${this.app}" is not reachable (${res.status}); check FLY_APP and FLY_API_TOKEN`,
+      );
+    }
+  }
+
   async run(spec: MachineRunSpec): Promise<MachineHandle> {
     const body = {
       name: spec.name,

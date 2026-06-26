@@ -198,6 +198,32 @@ The orchestrator prints `winRate` / `avgBlinds` per agent and (with `--out`)
 writes the full `BenchmarkSummary`. Ship only if the candidate beats the
 baseline on `averageBlindsCleared`, per `ml-pipeline.md`.
 
+## Preflight and teardown
+
+Every orchestrator runs a **preflight** before launching (or uploading) anything:
+it confirms the Fly app is reachable (`FLY_APP`/`FLY_API_TOKEN`) and that the S3
+bucket is writable (a tiny `preflight/<runId>.marker` object). A
+misconfigured token, app, or bucket fails immediately with one aggregated error
+— *before* any machine is started — instead of after a machine has run for a
+minute and failed to upload.
+
+Machines are launched with `auto_destroy: true` and `restart: { policy: "no" }`,
+so a worker tears itself down when its process exits. After any run — especially
+a failed or interrupted one — verify nothing is left billing:
+
+```bash
+fly machine list -a "$FLY_APP"
+
+# If a run was interrupted and stragglers remain, destroy them:
+fly machine list -a "$FLY_APP" --json \
+  | jq -r '.[].id' \
+  | xargs -r -n1 fly machine destroy --force -a "$FLY_APP"
+```
+
+The preflight marker objects (and any shard/model objects) accumulate in the
+bucket; set a lifecycle TTL on the `preflight/`, `datasets/`, `training/`, and
+`benchmark/` prefixes (tracked below).
+
 ## Deferred / follow-up work
 
 - Merging **human-play data** (`--human`) into remote training (needs the data
@@ -206,4 +232,5 @@ baseline on `averageBlindsCleared`, per `ml-pipeline.md`.
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.
-- Wiring the bucket lifecycle (TTL on `datasets/<runId>/` prefixes).
+- Wiring the bucket lifecycle (TTL on the `preflight/`, `datasets/`,
+  `training/`, and `benchmark/` prefixes).

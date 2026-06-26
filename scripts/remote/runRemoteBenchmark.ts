@@ -2,12 +2,15 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
+import { DEFAULT_DECK } from "../../src/items/decks";
+import { DEFAULT_STAKE } from "../../src/items/stakes";
 import {
   FlyMachinesClient,
   type MachineGuest,
   type MachineLauncher,
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
+import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 const BENCHMARK_EXEC = ["bash", "ml/remote/benchmark-entrypoint.sh"] as const;
@@ -176,6 +179,12 @@ if (isMain) {
   const modelKey = `benchmark/${runId}/candidate.onnx`;
   const outputKey = `benchmark/${runId}/summary.json`;
 
+  await runPreflight(runId, {
+    putMarker: (key, body) => putObject(s3Config, key, body),
+    checkFly: () => launcher.assertReachable(),
+    log: (message) => console.log(message),
+  });
+
   console.log(`uploading candidate -> ${modelKey}`);
   await putObject(s3Config, modelKey, readFileSync(modelPath));
 
@@ -192,8 +201,8 @@ if (isMain) {
     benchmark: {
       games: intFlag("--games", 200),
       seedOffset: intFlag("--seed-offset", 5000),
-      deck: stringFlag("--deck", "red"),
-      stake: stringFlag("--stake", "white"),
+      deck: stringFlag("--deck", DEFAULT_DECK),
+      stake: stringFlag("--stake", DEFAULT_STAKE),
       shop: !process.argv.includes("--no-shop"),
       baseline: stringFlag("--baseline", ""),
     },

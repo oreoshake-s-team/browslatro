@@ -2,6 +2,8 @@ import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
+import { DEFAULT_DECK } from "../../src/items/decks";
+import { DEFAULT_STAKE } from "../../src/items/stakes";
 import { planShards, type RemoteShard } from "./shardPlan";
 import {
   FlyMachinesClient,
@@ -9,7 +11,8 @@ import {
   type MachineLauncher,
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
-import { getObject, s3ConfigFromEnv } from "./s3";
+import { runPreflight } from "./preflight";
+import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 export interface GenerateArgs {
   readonly rollouts: number;
@@ -174,8 +177,8 @@ if (isMain) {
       rollouts: intFlag("--rollouts", 4),
       topN: intFlag("--top-n", 3),
       maxAnte: intFlag("--max-ante", 8),
-      deck: stringFlag("--deck", "red"),
-      stake: stringFlag("--stake", "white"),
+      deck: stringFlag("--deck", DEFAULT_DECK),
+      stake: stringFlag("--stake", DEFAULT_STAKE),
       jokerLoadoutFraction: 0,
       shopPolicy: stringFlag("--shop-policy", ""),
     },
@@ -187,6 +190,12 @@ if (isMain) {
       AWS_SECRET_ACCESS_KEY: s3Config.secretAccessKey,
     },
   };
+
+  await runPreflight(options.runId, {
+    putMarker: (key, body) => putObject(s3Config, key, body),
+    checkFly: () => launcher.assertReachable(),
+    log: (message) => console.log(message),
+  });
 
   const started = Date.now();
   const result = await runRemoteDataset(options, {
