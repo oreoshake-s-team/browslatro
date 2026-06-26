@@ -42,6 +42,7 @@ export interface ShopAdviceItem {
 
 export type ShopAdviceCandidate =
   | { readonly action: "buy"; readonly item: ShopAdviceItem }
+  | { readonly action: "sell"; readonly item: ShopAdviceItem }
   | { readonly action: "reroll"; readonly cost: number }
   | { readonly action: "leave" };
 

@@ -3,13 +3,19 @@ import type { Consumable } from "../items/consumables";
 import { createPlanetCatalog } from "../items/planets";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
+import { canSellJoker } from "../items/jokers/stickers";
+import { jokerSellValue } from "../items/jokers/scoring/utils";
+import type { Joker } from "../items/jokers/types";
 import { packPickLimit, type PackOption } from "../items/packs";
 import { pickShopOffers, rerollAllowed, rerollCostFor, type ShopItem } from "../items/shop";
 import { createSpectralCatalog } from "../items/spectrals";
 import { createTarotCatalog } from "../items/tarots";
 import {
+  applyShopDiscount,
+  extraJokerSlots,
   extraShopOfferSlots,
   pickVoucherForAnte,
+  rerollCostReduction,
   type Voucher,
   type VoucherId,
 } from "../items/vouchers";
@@ -83,6 +89,14 @@ export function voucherCandidate(voucher: Voucher): ShopAdviceCandidate {
   };
 }
 
+function jokerSellCandidate(joker: Joker, index: number): ShopAdviceCandidate {
+  const item = { kind: "joker", joker, price: 0, sold: false } as const;
+  return {
+    action: "sell",
+    item: { itemType: "joker", category: categorizeShopItem(item), attributes: shopItemAttributes(item), id: `sell:${joker.id}:${index}`, name: joker.name, description: "", cost: -jokerSellValue(joker) },
+  };
+}
+
 export function buildShopDecisionLog(
   offers: ReadonlyArray<ShopItem>,
   build: ShopBuild,
@@ -151,7 +165,10 @@ export async function createHeadlessShopAgent(
       let deck = view.deck;
       let ownedVoucherIds: ReadonlySet<VoucherId> = view.ownedVoucherIds;
       const ownedIds = new Set(jokers.map((j) => j.id));
-      let offers = rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds));
+      const discount = (items: ShopItem[]): ShopItem[] =>
+        items.map((o) => ({ ...o, price: applyShopDiscount(o.price, ownedVoucherIds) }));
+      const jokerCapacity = (): number => MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+      let offers = discount(rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds)));
       let voucher = pickVoucherForAnte({ ante: view.ante, ownedIds: ownedVoucherIds, rng: view.rng });
       let lastConsumable: Consumable | null = view.lastConsumable;
       let rerollsDone = 0;
@@ -164,7 +181,7 @@ export async function createHeadlessShopAgent(
         const result = applyConsumable(
           { deck, money, handStats, lastConsumable, createdJokers: [] },
           consumable,
-          { jokers, jokerCatalog, jokerCapacity: MAX_JOKERS, tarotCatalog, planetCatalog },
+          { jokers, jokerCatalog, jokerCapacity: jokerCapacity(), tarotCatalog, planetCatalog },
           view.rng,
         );
         deck = result.deck;
@@ -178,9 +195,13 @@ export async function createHeadlessShopAgent(
       };
 
       for (;;) {
-        const rerollCost = rerollCostFor(rerollsDone);
+        const rerollCost = Math.max(0, rerollCostFor(rerollsDone) - rerollCostReduction(ownedVoucherIds));
+        const sellList = jokers
+          .map((joker, index) => ({ joker, index }))
+          .filter(({ joker }) => canSellJoker(joker));
         const candidates: ShopAdviceCandidate[] = [
           ...offers.map(shopItemCandidate),
+          ...sellList.map(({ joker, index }) => jokerSellCandidate(joker, index)),
           ...(voucher !== null && voucher.cost <= money ? [voucherCandidate(voucher)] : []),
           ...(rerollsDone < MAX_REROLLS && rerollCost <= money && rerollAllowed(money, ownedVoucherIds, ownedIds) ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
@@ -199,7 +220,17 @@ export async function createHeadlessShopAgent(
           spend(rerollCost);
           activity = { ...activity, rerolls: activity.rerolls + 1 };
           rerollsDone += 1;
-          offers = rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds));
+          offers = discount(rollOffers(ownedIds, view.rng, extraShopOfferSlots(ownedVoucherIds)));
+          continue;
+        }
+
+        if (choice.action === "sell") {
+          const target = sellList[topIdx - offers.length];
+          if (target === undefined) break;
+          money += jokerSellValue(target.joker);
+          jokers.splice(target.index, 1);
+          ownedIds.delete(target.joker.id);
+          activity = { ...activity, jokersSold: activity.jokersSold + 1 };
           continue;
         }
 
@@ -218,7 +249,7 @@ export async function createHeadlessShopAgent(
         spend(offer.price);
         offers = offers.filter((_, i) => i !== topIdx);
 
-        if (offer.kind === "joker" && jokers.length < MAX_JOKERS) {
+        if (offer.kind === "joker" && jokers.length < jokerCapacity()) {
           jokers.push(offer.joker);
           ownedIds.add(offer.joker.id);
           activity = { ...activity, jokersBought: activity.jokersBought + 1 };
@@ -244,7 +275,7 @@ export async function createHeadlessShopAgent(
             packOptions = packOptions.filter((_, i) => i !== pickIdx);
             picksLeft -= 1;
             activity = { ...activity, packPicks: activity.packPicks + 1 };
-            if (picked.kind === "joker" && jokers.length < MAX_JOKERS) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
+            if (picked.kind === "joker" && jokers.length < jokerCapacity()) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
             else if (picked.kind === "planet") { useConsumable({ kind: "planet", card: picked.planet }); }
             else if (picked.kind === "tarot") { useConsumable({ kind: "tarot", card: picked.tarot }); }
             else if (picked.kind === "spectral") { useConsumable({ kind: "spectral", card: picked.spectral }); }

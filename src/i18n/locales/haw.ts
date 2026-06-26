@@ -287,6 +287,7 @@ export const haw: LocaleMessages = {
     playCandidate: "Pāʻani {{hand}} ({{cards}}) — {{score}} helu",
     discardCandidate: "Kiola {{cards}}",
     buyCandidate: "Buy {{name}} for ${{cost}}",
+    sellCandidate: "Kūʻai aku iā {{name}} no ${{value}}",
     rerollCandidate: "Reroll the shop for ${{cost}}",
     leaveCandidate: "Leave the shop and bank your money",
     pickCandidate: "Pick {{name}}",

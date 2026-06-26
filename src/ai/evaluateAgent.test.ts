@@ -113,6 +113,7 @@ describe("evaluateAgent", () => {
             jokersBought: 1,
             consumablesBought: 0,
             vouchersBought: 0,
+            jokersSold: 0,
             packsOpened: 0,
             packPicks: 0,
             moneySpent: 0,

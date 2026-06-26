@@ -279,6 +279,7 @@ export const en = {
     playCandidate: "Play {{hand}} ({{cards}}) — {{score}} points",
     discardCandidate: "Discard {{cards}}",
     buyCandidate: "Buy {{name}} for ${{cost}}",
+    sellCandidate: "Sell {{name}} for ${{value}}",
     rerollCandidate: "Reroll the shop for ${{cost}}",
     leaveCandidate: "Leave the shop and bank your money",
     pickCandidate: "Pick {{name}}",
