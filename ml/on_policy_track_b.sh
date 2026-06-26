@@ -3,14 +3,14 @@
 #
 # Each round samples self-play from the *current* policy, then warm-starts the
 # REINFORCE trainer from that same policy and steps it on the freshly-sampled
-# (on-policy) returns. Bootstrapped from a base policy (v8 by default) so the
+# (on-policy) returns. Bootstrapped from a base policy (v10 by default) so the
 # first round improves a competent policy rather than a random init.
 #
 # Override the TS runner for offline/sandboxed boxes, e.g.:
 #   TSX_RUN="node --import file:///path/to/tsx/dist/loader.mjs" ml/on_policy_track_b.sh
 set -euo pipefail
 
-BASE="${BASE:-public/models/advisor-shop-policy-v8.onnx}"
+BASE="${BASE:-public/models/advisor-shop-policy-v10.onnx}"
 HAND="${HAND:-public/models/advisor-policy-v9.onnx}"
 ITERS="${ITERS:-5}"
 GAMES="${GAMES:-1000}"

@@ -239,7 +239,7 @@ The baseline agents it's measured against live in [`src/ai/agents.ts`](../../src
 
 ## The shop policy
 
-Shop and pack decisions are a separate model with a separate [build-aware 78-feature encoding](./engine-plumbing.md#shop-encoding-shopencodingts), separate labels, and a separate file (`advisor-shop-policy-v9.onnx`).
+Shop and pack decisions are a separate model with a separate [build-aware 78-feature encoding](./engine-plumbing.md#shop-encoding-shopencodingts), separate labels, and a separate file (`advisor-shop-policy-v10.onnx`).
 
 - **`headlessShopAgent.ts` ([`src/ai/headlessShopAgent.ts`](../../src/ai/headlessShopAgent.ts))** — `createHeadlessShopAgent(modelPath)` loads the shop ONNX and implements `buyAfterRound`: it encodes the shop offers + voucher + reroll + leave as candidates, runs inference, and acts on the top-ranked option (buying jokers/planets/tarots/spectrals, rerolling, opening packs with a nested pick loop, or leaving). This is the *inference-time* shop agent.
 - **`shopRolloutExpert.ts` ([`src/ai/shopRolloutExpert.ts`](../../src/ai/shopRolloutExpert.ts))** — the *labeling* expert: `bestShopChoice(...)` scores each offer by [resuming a headless run](#resumable-seams-why-this-enables-search--rollouts) from after the purchase and measuring average `blindsCleared` over a few rollouts (`rolloutValue`), compared against the value of just leaving. The best-value offer is the label. This is "judge a purchase by simulated forward play" — shallow, which is exactly why an [LLM teacher](#teacher-distillation-offline-machinery) (`#1338`) is the proposed next lever.
@@ -249,7 +249,7 @@ Shop and pack decisions are a separate model with a separate [build-aware 78-fea
 
 ## Teacher distillation (offline machinery)
 
-> **Status:** the shipped **hand** policy ([`advisor-policy-v9`](../../public/models/advisor-policy-v9.onnx)) **is** teacher-distilled — trained on realistic shop-driven data with a distribution-matched LLM teacher (`#1153`). The teacher must be regenerated on the same realistic dataset it trains against (see the [required data framework](#required-data-framework--real-everything-never-greedy)); an off-distribution teacher hurts. Applying the same to the **shop** policy is still open (`#1338`); the shipped `advisor-shop-policy-v9` is trained by on-policy self-play with a PPO trust region (`#1552`, warm-started from the rollout-labeled `advisor-shop-policy-v8`), not teacher-distilled.
+> **Status:** the shipped **hand** policy ([`advisor-policy-v9`](../../public/models/advisor-policy-v9.onnx)) **is** teacher-distilled — trained on realistic shop-driven data with a distribution-matched LLM teacher (`#1153`). The teacher must be regenerated on the same realistic dataset it trains against (see the [required data framework](#required-data-framework--real-everything-never-greedy)); an off-distribution teacher hurts. Applying the same to the **shop** policy is still open (`#1338`); the shipped `advisor-shop-policy-v10` is trained by on-policy self-play with a PPO trust region (`#1552`), warm-started from `advisor-shop-policy-v9` and iterated on the voucher-aware, sell-capable headless sim, not teacher-distilled.
 
 The idea is [knowledge distillation](https://en.wikipedia.org/wiki/Knowledge_distillation): spend expensive [LLM](./llm-advisor.md) calls **offline** to relabel exactly the states where the cheap student is weak, then bake that judgment into the student.
 
