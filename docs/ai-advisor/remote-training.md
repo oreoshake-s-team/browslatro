@@ -169,6 +169,12 @@ subtree the build context keeps), and a `--human` run fails fast if the image
 somehow has none. Benchmark the result before shipping with
 `scripts/benchmarkPolicy.ts` exactly as for a locally-trained model.
 
+To mix in a **freshly-uploaded** play-log that isn't baked into the image, pass
+`--human-file <local.jsonl>`: the orchestrator uploads it to
+`training/<runId>/human.jsonl` and the worker downloads it and adds it as a
+`--human` source (sharing `--human-weight`). It composes with `--human` (baked)
+and is the path the one-shot upload→regen→train→bench pipeline uses.
+
 Training is a sustained single-machine CPU grind, so Fly's default **shared**
 CPUs get throttled and it drags. Pass `--cpu-kind performance` for dedicated
 cores (no throttle) — for this tiny MLP that's far better value than a GPU
