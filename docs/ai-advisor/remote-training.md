@@ -153,10 +153,17 @@ Then train a dataset (the same S3 env vars as generation apply):
 yarn dlx tsx scripts/remote/runRemoteTraining.ts advisor-policy-v10.onnx \
   --dataset dataset.jsonl \
   --run-id 2026-06-26a \
-  --epochs 30
+  --epochs 30 \
+  --human
 ```
 
-Add `--shop` to train a shop policy. Benchmark the result before shipping with
+Add `--shop` to train a shop policy. Pass `--human` (optionally with
+`--human-weight N`, default 5) to mix in the checked-in human-play exports the
+same way local training does — the entrypoint adds one `--human` per
+`ml/data/human-play/*.jsonl` file, so each gets the human weighting. Those files
+are baked into the training image (`ml/data/human-play` is the one `ml/data`
+subtree the build context keeps), and a `--human` run fails fast if the image
+somehow has none. Benchmark the result before shipping with
 `scripts/benchmarkPolicy.ts` exactly as for a locally-trained model.
 
 ## Running a remote benchmark job
@@ -226,8 +233,6 @@ bucket; set a lifecycle TTL on the `preflight/`, `datasets/`, `training/`, and
 
 ## Deferred / follow-up work
 
-- Merging **human-play data** (`--human`) into remote training (needs the data
-  uploaded or baked into the training image).
 - Chaining **generate → train → benchmark** into a single orchestrated run.
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
