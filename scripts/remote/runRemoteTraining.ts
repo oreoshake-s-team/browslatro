@@ -15,6 +15,8 @@ export interface TrainArgs {
   readonly epochs: number;
   readonly shop: boolean;
   readonly device: string;
+  readonly human: boolean;
+  readonly humanWeight: number;
 }
 
 export interface RemoteTrainingOptions {
@@ -52,6 +54,8 @@ export function trainingEnv(
     EPOCHS: String(train.epochs),
     DEVICE: train.device,
     SHOP: train.shop ? "1" : "0",
+    HUMAN: train.human ? "1" : "0",
+    HUMAN_WEIGHT: String(train.humanWeight),
   };
 }
 
@@ -115,7 +119,7 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--human] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N]",
     );
     process.exit(1);
   }
@@ -153,6 +157,8 @@ if (isMain) {
       epochs: intFlag("--epochs", 30),
       shop: hasFlag("--shop"),
       device: "cpu",
+      human: hasFlag("--human"),
+      humanWeight: intFlag("--human-weight", 5),
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,

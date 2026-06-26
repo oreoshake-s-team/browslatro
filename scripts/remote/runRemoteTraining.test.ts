@@ -8,7 +8,7 @@ import {
 } from "./runRemoteTraining";
 import type { MachineHandle, MachineLauncher, MachineRunSpec } from "./flyMachines";
 
-const TRAIN: TrainArgs = { epochs: 30, shop: false, device: "cpu" };
+const TRAIN: TrainArgs = { epochs: 30, shop: false, device: "cpu", human: false, humanWeight: 5 };
 
 class FakeLauncher implements MachineLauncher {
   readonly launched: MachineRunSpec[] = [];
@@ -53,11 +53,21 @@ describe("trainingEnv", () => {
       EPOCHS: "30",
       DEVICE: "cpu",
       SHOP: "0",
+      HUMAN: "0",
+      HUMAN_WEIGHT: "5",
     });
   });
 
   test("flags shop training", () => {
     expect(trainingEnv("d", "m", { ...TRAIN, shop: true }).SHOP).toBe("1");
+  });
+
+  test("flags human-play merging", () => {
+    expect(trainingEnv("d", "m", { ...TRAIN, human: true }).HUMAN).toBe("1");
+  });
+
+  test("maps the human weight", () => {
+    expect(trainingEnv("d", "m", { ...TRAIN, human: true, humanWeight: 8 }).HUMAN_WEIGHT).toBe("8");
   });
 });
 

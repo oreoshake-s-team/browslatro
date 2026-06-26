@@ -11,6 +11,8 @@ set -euo pipefail
 EPOCHS="${EPOCHS:-30}"
 DEVICE="${DEVICE:-cpu}"
 SHOP="${SHOP:-0}"
+HUMAN="${HUMAN:-0}"
+HUMAN_WEIGHT="${HUMAN_WEIGHT:-5}"
 
 DATASET="$(mktemp /tmp/dataset-XXXXXX.jsonl)"
 MODEL="$(mktemp /tmp/model-XXXXXX.onnx)"
@@ -23,7 +25,22 @@ if [[ "$SHOP" == "1" ]]; then
   train_args+=(--shop)
 fi
 
-echo "training: epochs=$EPOCHS device=$DEVICE shop=$SHOP"
+if [[ "$HUMAN" == "1" ]]; then
+  shopt -s nullglob
+  human_files=(ml/data/human-play/*.jsonl)
+  shopt -u nullglob
+  if [[ ${#human_files[@]} -eq 0 ]]; then
+    echo "HUMAN=1 but no human-play files baked into the image (ml/data/human-play/*.jsonl)" >&2
+    exit 1
+  fi
+  for f in "${human_files[@]}"; do
+    train_args+=(--human "$f")
+  done
+  train_args+=(--human-weight "$HUMAN_WEIGHT")
+  echo "merging ${#human_files[@]} human-play files at weight $HUMAN_WEIGHT"
+fi
+
+echo "training: epochs=$EPOCHS device=$DEVICE shop=$SHOP human=$HUMAN"
 python3 ml/train.py "${train_args[@]}"
 
 echo "uploading model -> $OUTPUT_KEY"

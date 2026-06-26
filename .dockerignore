@@ -10,3 +10,4 @@ storybook-static
 *.log
 ml/.venv
 ml/data
+!ml/data/human-play
