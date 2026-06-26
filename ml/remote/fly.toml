@@ -1,0 +1,9 @@
+app = "browslatro-dataset"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+  ignorefile = ".dockerignore"
+
+[experimental]
+  auto_rollback = false
