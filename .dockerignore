@@ -1,0 +1,12 @@
+.git
+node_modules
+.yarn/cache
+.yarn/install-state.gz
+dist
+coverage
+playwright-report
+test-results
+storybook-static
+*.log
+ml/.venv
+ml/data

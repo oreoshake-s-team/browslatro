@@ -17,6 +17,7 @@ If a term is unfamiliar — whether it is a [Balatro](https://balatrowiki.org/) 
 | [api-layer.md](./api-layer.md) | The [`/api/advice`](../../api/advice.ts) Vercel function, request validation, rate limiting (in-memory + durable Redis), the full error-code → HTTP-status table, secrets, and the client contract. |
 | [ml-pipeline.md](./ml-pipeline.md) | The headless game loop, the Monte-Carlo search expert, dataset generation, human-play capture, the Python training pipeline, ONNX export/inference, evaluation, and the (offline) teacher-distillation machinery. |
 | [running-locally.md](./running-locally.md) | Environment variables & secrets, and how to exercise every piece locally: unit tests, the headless loop, dataset generation, training, evaluation, and the API route in dev. |
+| [remote-training.md](./remote-training.md) | Running CPU-bound dataset generation across rented Fly.io machines: the shard planner, the Fly Machines client, S3/Tigris shard transport, the worker image, and the orchestrator. |
 | [glossary.md](./glossary.md) | Every domain term (game + ML + infra) linked to a spec or explainer. |
 
 This doc set is **complementary** to the existing onboarding material — it does not repeat it:
