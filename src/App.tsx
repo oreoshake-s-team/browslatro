@@ -52,6 +52,7 @@ import {
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
+import AdminModeController from "./components/system/AdminModeController";
 import BossEffectToast from "./components/system/BossEffectToast";
 import {
   getAnimationSpeed,
@@ -692,6 +693,7 @@ function App() {
           </LazyChunkErrorBoundary>
         )}
       <LiveAnnouncer />
+      <AdminModeController />
       <BossEffectToast />
     </div>
   );

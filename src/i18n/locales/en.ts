@@ -251,6 +251,10 @@ export const en = {
     bossVoidedEye: "{{hand}} scored 0 — The Eye blocks repeat hand types",
     bossArmLowered: "The Arm lowered {{hand}} to level {{level}}",
   },
+  admin: {
+    enabled: "Admin mode on",
+    disabled: "Admin mode off",
+  },
   devMenu: {
     humanPlayLog: "Human play log",
     recordedDecisions_one: "{{count}} recorded decision",

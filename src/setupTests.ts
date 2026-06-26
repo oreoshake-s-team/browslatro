@@ -12,6 +12,10 @@ if (typeof HTMLMediaElement !== "undefined") {
 beforeEach(async () => {
   const { useGame } = await import("./store/game");
   useGame.getState().resetGame();
+  const { usePreferences } = await import("./components/system/preferences");
+  if (typeof usePreferences.setState === "function") {
+    usePreferences.setState({ adminMode: true });
+  }
   if (i18n.language !== "en") {
     await i18n.changeLanguage("en");
   }

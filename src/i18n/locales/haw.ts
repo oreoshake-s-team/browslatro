@@ -259,6 +259,10 @@ export const haw: LocaleMessages = {
     bossVoidedEye: "{{hand}} scored 0 — The Eye blocks repeat hand types",
     bossArmLowered: "The Arm lowered {{hand}} to level {{level}}",
   },
+  admin: {
+    enabled: "Hoʻohana luna",
+    disabled: "Ua pau ka hoʻohana luna",
+  },
   devMenu: {
     humanPlayLog: "Human play log",
     recordedDecisions_one: "{{count}} recorded decision",

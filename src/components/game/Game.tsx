@@ -26,6 +26,7 @@ import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { useCeruleanForcedCard } from "../../hooks/useCeruleanForcedCard";
 import { play } from "../system/sounds";
 import { announce } from "../system/LiveAnnouncer";
+import { usePreferences } from "../system/preferences";
 import {
   bossForcesCardSelection,
   bossHidesJokers,
@@ -119,6 +120,7 @@ export default function Game({
   const devChipsBonus = useGame((s) => s.devChipsBonus);
   const devMultBonus = useGame((s) => s.devMultBonus);
   const devMultFactor = useGame((s) => s.devMultFactor);
+  const adminMode = usePreferences((s) => s.adminMode);
   const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
@@ -382,7 +384,7 @@ export default function Game({
             )}
         </div>
       )}
-      <ModifierPanel />
+      {adminMode && <ModifierPanel />}
       <Suspense fallback={<LazyChunkSpinner />}>
         <NopeAnimation triggerKey={nopeTriggerKey} />
       </Suspense>

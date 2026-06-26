@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { beforeEach } from "vitest";
 import Game from "./Game";
 import { useGame } from "../../store/game";
+import { usePreferences } from "../system/preferences";
 import type { ShopProps } from "../shop/Shop";
 import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import type { Card } from "../../cards/types";
@@ -301,6 +302,12 @@ describe("Game", () => {
     const modifiers = screen.getByText(/Apply modifiers/);
     const position = submit.compareDocumentPosition(modifiers);
     expect(position & Node.DOCUMENT_POSITION_FOLLOWING).not.toBe(0);
+  });
+
+  test("hides the modifier panel when admin mode is off (negative)", () => {
+    usePreferences.setState({ adminMode: false });
+    renderGame();
+    expect(screen.queryByText(/Apply modifiers/)).not.toBeInTheDocument();
   });
 
   describe("shop overlay deck pile", () => {
