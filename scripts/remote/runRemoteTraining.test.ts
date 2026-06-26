@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
+  parseCpuKind,
   runRemoteTraining,
   trainingEnv,
   type RemoteTrainingOptions,
@@ -44,6 +45,20 @@ function options(overrides: Partial<RemoteTrainingOptions> = {}): RemoteTraining
     ...overrides,
   };
 }
+
+describe("parseCpuKind", () => {
+  test("accepts shared", () => {
+    expect(parseCpuKind("shared")).toBe("shared");
+  });
+
+  test("accepts performance", () => {
+    expect(parseCpuKind("performance")).toBe("performance");
+  });
+
+  test("rejects an unknown cpu kind", () => {
+    expect(() => parseCpuKind("turbo")).toThrow(/shared.*performance/);
+  });
+});
 
 describe("trainingEnv", () => {
   test("maps dataset, output, and train args to env vars", () => {

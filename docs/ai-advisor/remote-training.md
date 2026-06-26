@@ -169,6 +169,13 @@ subtree the build context keeps), and a `--human` run fails fast if the image
 somehow has none. Benchmark the result before shipping with
 `scripts/benchmarkPolicy.ts` exactly as for a locally-trained model.
 
+Training is a sustained single-machine CPU grind, so Fly's default **shared**
+CPUs get throttled and it drags. Pass `--cpu-kind performance` for dedicated
+cores (no throttle) — for this tiny MLP that's far better value than a GPU
+(the bottleneck is the host-side Python loss loop, not FLOPs). Only the training
+step takes this flag; dataset-gen / self-play / benchmark stay on shared
+(fanned-out or short, so throttling doesn't matter and shared is cheaper).
+
 ## Running a remote benchmark job
 
 The last step of the loop scores a candidate model on the outcome metrics that

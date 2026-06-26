@@ -112,6 +112,11 @@ function requireEnv(name: string): string {
   return value;
 }
 
+export function parseCpuKind(raw: string): "shared" | "performance" {
+  if (raw === "shared" || raw === "performance") return raw;
+  throw new Error(`--cpu-kind must be "shared" or "performance", got "${raw}"`);
+}
+
 const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
 if (isMain) {
@@ -119,7 +124,7 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--human] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--human] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
     );
     process.exit(1);
   }
@@ -151,7 +156,7 @@ if (isMain) {
     guest: {
       cpus: intFlag("--cpus", 4),
       memoryMb: intFlag("--memory-mb", 4096),
-      cpuKind: "shared",
+      cpuKind: parseCpuKind(stringFlag("--cpu-kind", "shared")),
     },
     train: {
       epochs: intFlag("--epochs", 30),
