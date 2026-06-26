@@ -52,6 +52,7 @@ import {
 import Sidebar from "./components/hud/Sidebar";
 import { play } from "./components/system/sounds";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
+import AdminModeController from "./components/system/AdminModeController";
 import BossEffectToast from "./components/system/BossEffectToast";
 import {
   getAnimationSpeed,
@@ -534,6 +535,7 @@ function App() {
         autopilotProposal={autopilot.pendingProposal}
         autopilotModelProgress={autopilot.modelProgress}
         autopilotProposalUnavailable={autopilot.proposalUnavailable}
+        autopilotAdvisorUnavailable={autopilot.advisorUnavailable}
         autopilotExplanation={autopilotExplanation.state}
         autopilotFeedbackCandidates={policyDecision?.candidates ?? null}
         autopilotFeedbackRecorded={autopilotFeedbackRecorded}
@@ -692,6 +694,7 @@ function App() {
           </LazyChunkErrorBoundary>
         )}
       <LiveAnnouncer />
+      <AdminModeController />
       <BossEffectToast />
     </div>
   );

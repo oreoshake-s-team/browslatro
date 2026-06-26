@@ -24,7 +24,7 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe("greedy algorithm usage is fenced", () => {
-  test("the greedy ranker/agent is only referenced from the baseline/fallback/seam allowlist", () => {
+  test("the greedy ranker/agent is only referenced from the baseline/seam allowlist", () => {
     const offenders = sourceFiles(SRC)
       .filter((file) => GREEDY_SYMBOLS.test(readFileSync(file, "utf8")))
       .map((file) => relative(SRC, file).replace(/\\/g, "/"))
@@ -32,7 +32,7 @@ describe("greedy algorithm usage is fenced", () => {
       .sort();
     expect(
       offenders,
-      "greedy is a baseline/fallback/rollout primitive — do not wire it into new decision paths; use the trained policy (sharedAdvisorRanker). If this is intentional, add the file to ALLOWLIST in greedyUsage.guard.test.ts.",
+      "greedy is a benchmark/rollout/test-seam primitive — never a decision path or fallback; use the trained policy (sharedAdvisorRanker), which fails fast when unavailable. If this is intentional, add the file to ALLOWLIST in greedyUsage.guard.test.ts.",
     ).toEqual([]);
   });
 });

@@ -1,8 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, test, vi } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 import ModifierPanel from "./ModifierPanel";
-import { humanPlayLog } from "../../ai/humanPlayWiring";
 import { useGame } from "../../store/game";
 
 async function openModifiers(
@@ -166,97 +165,4 @@ describe("ModifierPanel", () => {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     },
   );
-});
-
-describe("ModifierPanel human play log", () => {
-  beforeEach(() => {
-    window.localStorage.clear();
-    useGame.getState().resetGame();
-  });
-
-  function seedOneRecord(): void {
-    window.localStorage.setItem(
-      "browslatro.human-play-log.v1",
-      '{"schema":1}',
-    );
-  }
-
-  test("shows the recorded decision count", async () => {
-    seedOneRecord();
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    expect(screen.getByTestId("human-play-log-count")).toHaveTextContent(
-      "1 recorded decision",
-    );
-  });
-
-  test("disables export and clear when the log is empty", async () => {
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    expect(
-      screen.getByRole("button", { name: /Export log/ }),
-    ).toBeDisabled();
-  });
-
-  test("clear empties the log", async () => {
-    seedOneRecord();
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    await user.click(screen.getByRole("button", { name: /Clear log/ }));
-    expect(humanPlayLog().count()).toBe(0);
-  });
-
-  test("clear resets the visible count", async () => {
-    seedOneRecord();
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    await user.click(screen.getByRole("button", { name: /Clear log/ }));
-    expect(screen.getByTestId("human-play-log-count")).toHaveTextContent(
-      "0 recorded decisions",
-    );
-  });
-
-
-  test("shows a per-kind breakdown when records exist", async () => {
-    window.localStorage.setItem(
-      "browslatro.human-play-log.v1",
-      '{"schema":1}\n{"schemaVersion":2,"kind":"purchase"}',
-    );
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    expect(
-      screen.getByTestId("human-play-log-breakdown"),
-    ).toHaveTextContent("hands 1 · purchases 1");
-  });
-
-  test("hides the breakdown when the log is empty", async () => {
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    expect(
-      screen.queryByTestId("human-play-log-breakdown"),
-    ).not.toBeInTheDocument();
-  });
-
-  test("export downloads the JSONL via an object URL", async () => {
-    seedOneRecord();
-    const createObjectURL = vi.fn(() => "blob:test");
-    const revokeObjectURL = vi.fn();
-    vi.stubGlobal("URL", {
-      ...URL,
-      createObjectURL,
-      revokeObjectURL,
-    });
-    const user = userEvent.setup();
-    render(<ModifierPanel />);
-    await openModifiers(user);
-    await user.click(screen.getByRole("button", { name: /Export log/ }));
-    vi.unstubAllGlobals();
-    expect(createObjectURL).toHaveBeenCalledTimes(1);
-  });
 });

@@ -125,6 +125,13 @@
   outline-offset: 2px;
 }
 
+.shop-voucher-current {
+  align-self: flex-start;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--type-tarot-accent);
+}
+
 .shop-voucher-card {
   display: grid;
   grid-template-columns: 1fr auto auto;

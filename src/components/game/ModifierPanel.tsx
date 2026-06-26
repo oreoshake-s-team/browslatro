@@ -1,7 +1,4 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
 import "./ModifierPanel.css";
-import { humanPlayLog } from "../../ai/humanPlayWiring";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import { FINAL_ANTE } from "../../constants";
@@ -11,25 +8,7 @@ import ModifierPlanetPicker from "./ModifierPlanetPicker";
 import ModifierPackPicker from "./ModifierPackPicker";
 import ModifierJokerPicker from "./ModifierJokerPicker";
 
-const HUMAN_PLAY_KIND_LABELS = {
-  hand: "devMenu.kind_hand",
-  purchase: "devMenu.kind_purchase",
-  reroll: "devMenu.kind_reroll",
-  "pack-pick": "devMenu.kind_pack-pick",
-  "consumable-use": "devMenu.kind_consumable-use",
-  "joker-sell": "devMenu.kind_joker-sell",
-  "blind-skip": "devMenu.kind_blind-skip",
-} as const;
-
-function isKnownKind(
-  kind: string,
-): kind is keyof typeof HUMAN_PLAY_KIND_LABELS {
-  return kind in HUMAN_PLAY_KIND_LABELS;
-}
-
 export default function ModifierPanel() {
-  const { t } = useTranslation();
-  const [, setLogVersion] = useState(0);
   const setDevChipsBonus = useGame((s) => s.setDevChipsBonus);
   const setDevMultBonus = useGame((s) => s.setDevMultBonus);
   const setDevMultFactor = useGame((s) => s.setDevMultFactor);
@@ -57,22 +36,6 @@ export default function ModifierPanel() {
   function adjustMoney(delta: number) {
     setMoney(money + delta);
   }
-  function exportHumanPlayLog() {
-    const blob = new Blob([humanPlayLog().toJsonl()], {
-      type: "application/jsonl",
-    });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "browslatro-human-play.jsonl";
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
-  function clearHumanPlayLog() {
-    humanPlayLog().clear();
-    setLogVersion((version) => version + 1);
-  }
-  const humanPlayCount = humanPlayLog().count();
   return (
     <details className="modifier-selection">
       <summary className="modifier-disclosure">Apply modifiers</summary>
@@ -148,48 +111,6 @@ export default function ModifierPanel() {
         <ModifierPackPicker />
         <ModifierJokerPicker />
       </div>
-      <section
-        className="human-play-log"
-        aria-label={t("devMenu.humanPlayLog")}
-      >
-        <span
-          className="human-play-log-count"
-          data-testid="human-play-log-count"
-        >
-          {t("devMenu.recordedDecisions", { count: humanPlayCount })}
-        </span>
-        {humanPlayCount > 0 && (
-          <span
-            className="human-play-log-breakdown"
-            data-testid="human-play-log-breakdown"
-          >
-            {Object.entries(humanPlayLog().counts())
-              .map(
-                ([kind, kindCount]) =>
-                  `${isKnownKind(kind) ? t(HUMAN_PLAY_KIND_LABELS[kind]) : kind} ${kindCount}`,
-              )
-              .join(" \u00b7 ")}
-          </span>
-        )}
-        <button
-          type="button"
-          className="human-play-log-export-button"
-          onClick={exportHumanPlayLog}
-          disabled={humanPlayCount === 0}
-        >
-          <span aria-hidden="true">📤 </span>
-          {t("devMenu.exportLog")}
-        </button>
-        <button
-          type="button"
-          className="human-play-log-clear-button"
-          onClick={clearHumanPlayLog}
-          disabled={humanPlayCount === 0}
-        >
-          <span aria-hidden="true">🧹 </span>
-          {t("devMenu.clearLog")}
-        </button>
-      </section>
     </details>
   );
 }

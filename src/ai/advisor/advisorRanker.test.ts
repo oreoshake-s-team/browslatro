@@ -1,9 +1,5 @@
-import { describe, expect, test, vi } from "vitest";
-import {
-  ADVISOR_MODEL_URL,
-  reportAdvisorFallback,
-  sharedAdvisorRanker,
-} from "./advisorRanker";
+import { describe, expect, test } from "vitest";
+import { ADVISOR_MODEL_URL, sharedAdvisorRanker } from "./advisorRanker";
 
 describe("sharedAdvisorRanker", () => {
   test("points at the committed model asset", () => {
@@ -19,12 +15,5 @@ describe("sharedAdvisorRanker", () => {
 
   test("memoizes the shared ranker across calls", () => {
     expect(sharedAdvisorRanker()).toBe(sharedAdvisorRanker());
-  });
-
-  test("reportAdvisorFallback warns that it is degrading to greedy suggestions", () => {
-    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    reportAdvisorFallback(new Error("model 404"));
-    expect(warn.mock.calls[0]?.[0]).toMatch(/greedy/i);
-    warn.mockRestore();
   });
 });

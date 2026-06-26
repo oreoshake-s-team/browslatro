@@ -22,6 +22,7 @@ import {
 import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import CardModifierBadges from "../cards/CardModifierBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { usePreferences } from "../system/preferences";
 
 const ShopSuggestion = lazy(() => import("./ShopSuggestion"));
 
@@ -293,7 +294,9 @@ export default function Shop({
   const { t, i18n } = useTranslation();
   const lockTooltip = t("shop.finishPickingFirst");
   useEscapeToClose(onNext, !disabled);
+  const adminMode = usePreferences((s) => s.adminMode);
   const canOverrideVoucher =
+    adminMode &&
     voucherOptions !== undefined &&
     voucherOptions.length > 0 &&
     Boolean(onSetVoucher);
@@ -478,6 +481,14 @@ export default function Shop({
                   </option>
                 ))}
               </select>
+            )}
+            {!adminMode && vouchers.length > 0 && (
+              <span
+                className="shop-voucher-current"
+                data-testid="shop-voucher-current"
+              >
+                {vouchers[0].name}
+              </span>
             )}
             {vouchers.length === 0 ? (
               <p

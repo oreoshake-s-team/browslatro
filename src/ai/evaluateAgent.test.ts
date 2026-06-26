@@ -74,6 +74,76 @@ describe("evaluateAgent", () => {
     expect(yellow - red).toBe(12);
   });
 
+  test("reports a final-money distribution", async () => {
+    const result = await evaluateAgent(() => createGreedyAgent(), {
+      games: 3,
+      maxAnte: 1,
+      jokers: [powerJoker],
+    });
+    expect(result.finalMoney.mean).toBeGreaterThan(0);
+  });
+
+  test("counts runs that reached the final ante", async () => {
+    const result = await evaluateAgent(() => createGreedyAgent(), {
+      games: 3,
+      maxAnte: 1,
+      jokers: [powerJoker],
+    });
+    expect(result.reachedFinalAnte).toBe(3);
+  });
+
+  test("reports the win-rate standard error", async () => {
+    const result = await evaluateAgent(() => createGreedyAgent(), {
+      games: 3,
+      maxAnte: 1,
+      jokers: [powerJoker],
+    });
+    expect(result.winRateStdErr).toBe(0);
+  });
+
+  test("aggregates shop activity reported by the shop agent", async () => {
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        return {
+          jokers: view.jokers,
+          money: view.money,
+          handStats: view.handStats,
+          activity: {
+            rerolls: 0,
+            jokersBought: 1,
+            consumablesBought: 0,
+            vouchersBought: 0,
+            packsOpened: 0,
+            packPicks: 0,
+            moneySpent: 0,
+          },
+        };
+      },
+    };
+    const result = await evaluateAgent(() => createGreedyAgent(), {
+      games: 2,
+      maxAnte: 1,
+      jokers: [powerJoker],
+      shopAgent,
+    });
+    expect(result.shopActivity.jokersBought).toBe(3);
+  });
+
+  test("defaults shop activity to zero when the shop agent omits it", async () => {
+    const shopAgent: HeadlessShopAgent = {
+      async buyAfterRound(view: ShopView): Promise<ShopResult> {
+        return { jokers: view.jokers, money: view.money, handStats: view.handStats };
+      },
+    };
+    const result = await evaluateAgent(() => createGreedyAgent(), {
+      games: 2,
+      maxAnte: 1,
+      jokers: [powerJoker],
+      shopAgent,
+    });
+    expect(result.shopActivity.jokersBought).toBe(0);
+  });
+
   test("leaves the shop agent untouched when it is not configured (negative)", async () => {
     let calls = 0;
     const shopAgent: HeadlessShopAgent = {

@@ -17,6 +17,12 @@ The author is still learning frontend and relies on Claude to surface design dec
 - Prefer a single batched round of questions (up to 4 per `AskUserQuestion` call) over a slow back-and-forth, but never skip the round entirely to "just start coding."
 - This raises the baseline permanently: err toward asking when in doubt rather than guessing on the author's behalf.
 
+# Status updates awaiting a response
+
+- Whenever a status update is waiting on the author's response — a blocking question, a decision the author must make, a fork where you need a pick before continuing — always deliver it with the `AskUserQuestion` tool, not plain prose. Surface the options as selectable choices so the author can answer with a click.
+- This applies to every such pause, not just UI work: clarifying an ambiguous request, choosing between approaches, confirming a destructive or hard-to-reverse action, or reporting a blocker that needs the author's input to unblock.
+- Only fall back to plain text when there is genuinely nothing to decide — a pure progress note that does not need a reply.
+
 # Hard requirements
 
 - Squash all PRs into a single commit instead of merging/rebasing.
@@ -26,10 +32,20 @@ The author is still learning frontend and relies on Claude to surface design dec
 - Code should be as compartmenatalized as possible, including CSS.
 - Code should be written in strict typescript, no use of any types.
 - Only use strict typescript. No use of JS or "any" types.
+- Greedy algorithms are always an anti-pattern — never introduce one in new code, not even as a fallback. See [Greedy algorithms are an anti-pattern](#greedy-algorithms-are-an-anti-pattern).
 - Prioritize accessibility and i18n.
 - When developing new branches, work in worktrees.
 - Always use the issue template at `.github/ISSUE_TEMPLATE/issue.yml` when creating issues.
 - Use yarn for all package management and script execution (e.g. `yarn install`, `yarn test`, `yarn build`). Do not use npm.
+
+# Greedy algorithms are an anti-pattern
+
+Greedy algorithms — anything that commits to the locally-best choice at each step without modeling consequences — are **always** an anti-pattern here. They look reasonable in isolation and quietly degrade quality everywhere they touch: they optimize the immediate step, never the outcome.
+
+- **Never write a greedy algorithm in new code.** Refuse the pattern outright. If a task seems to call for "just take the best one right now," that is the signal to reach for a real approach (search, rollout, the trained policy, an exact/optimal method, or asking the user), not a greedy shortcut.
+- **Never use greedy as a fallback.** A greedy "graceful degradation" path is still greedy. Do not add one. When the preferred mechanism is unavailable (a model fails to load, a service is down, data is missing), **fail fast** — surface a clear error and stop — rather than silently serving greedy results that masquerade as correct.
+- **Prefer failing loudly over a quiet wrong answer.** A visible failure is debuggable and honest; a greedy fallback hides the breakage and ships a worse experience that no one notices.
+- **The one sanctioned exception is the AI advisor's `greedyRanker`/`createGreedyAgent`**, which exists *only* as a benchmark floor to measure the trained policy against — never as a decision path, data source, or training target. Its usage is fenced by `src/ai/greedyUsage.guard.test.ts` (an allowlist of three legacy files). Do **not** widen that allowlist, and do **not** model new code on it. See [`docs/ai-advisor/ml-pipeline.md`](docs/ai-advisor/ml-pipeline.md) and [`docs/ai-advisor/engine-plumbing.md`](docs/ai-advisor/engine-plumbing.md).
 
 # Testing
 

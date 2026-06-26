@@ -10,6 +10,7 @@ import RoundProgress from "./RoundProgress";
 import RunProgress from "./RunProgress";
 import ScoringTrace from "./ScoringTrace";
 import ScoringTraceButton from "./ScoringTraceButton";
+import HumanPlayLog from "./HumanPlayLog";
 import SidebarFooter from "./SidebarFooter";
 import HandScore from "../game/HandScore";
 import type { Hand } from "../../cards/types";
@@ -112,6 +113,7 @@ export default function Sidebar({
         </div>
       </div>
       <ScoringTrace events={scoringEvents} />
+      <HumanPlayLog />
       <SidebarFooter />
     </aside>
   );
