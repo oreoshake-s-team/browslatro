@@ -71,16 +71,21 @@ Different mechanism: learn from *actual game returns* of trajectories the policy
 
 `yarn typecheck` was clean at last edit; new unit tests pass.
 
-## OPEN ISSUE — full-horizon strong-build regen keeps dying
+## OPEN ISSUE — full-horizon strong-build regen needs fewer parallel jobs (NOT a bug)
 
-`generateShopRolloutDataset` at `--horizon 8` with the stronger heuristic fails partway
-(last run reached `3/6 jobs done` then a worker died **silently** — no stack trace). Suspected
-**memory pressure**: the stronger build makes playouts survive deeper, so full-horizon
-rollouts become near-full-length games → big memory × 6 parallel jobs on 16 GB.
-A single-job diagnostic (`--parallel-jobs 1 --games 30`, `NODE_OPTIONS=--max-old-space-size=4096`)
-was running at handoff to confirm OOM-vs-bug — check `…/outcome/logs/sb-diag.log`.
-**If OOM:** drop to `--parallel-jobs 4` (+ `NODE_OPTIONS` heap) or reduce games.
-**If it crashes single-job at a seed:** real bug in the stronger heuristic — get the stack trace.
+`generateShopRolloutDataset` at `--horizon 8` with the stronger heuristic died partway with
+`--parallel-jobs 6` (silently — no stack trace), because the stronger build makes playouts
+survive deeper, so full-horizon rollouts become near-full-length games → big memory × 6 jobs
+on 16 GB.
+
+**DIAGNOSED — it's memory pressure, not a code bug.** A single-job run
+(`--parallel-jobs 1 --games 30`, `NODE_OPTIONS=--max-old-space-size=4096`) ran cleanly and
+produced **191 valid records spanning antes 1–5** (deep games work) before the session was torn
+down — no crash, no error. So the stronger heuristic at full horizon is correct.
+
+**FIX (do this on the new machine):** run the regen with **`--parallel-jobs 4`** (and
+`export NODE_OPTIONS=--max-old-space-size=4096`). If 4 still presses memory on a 16 GB box,
+drop to 3 or lower `--games` per run and concatenate. A bigger-RAM machine can go back to 6.
 
 ## How to resume (commands)
 
