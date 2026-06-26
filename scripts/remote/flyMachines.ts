@@ -9,6 +9,7 @@ export interface MachineRunSpec {
   readonly image: string;
   readonly env: Record<string, string>;
   readonly guest: MachineGuest;
+  readonly exec?: readonly string[];
 }
 
 export interface MachineHandle {
@@ -73,6 +74,7 @@ export class FlyMachinesClient implements MachineLauncher {
           memory_mb: spec.guest.memoryMb,
           cpu_kind: spec.guest.cpuKind ?? "shared",
         },
+        ...(spec.exec !== undefined ? { init: { exec: spec.exec } } : {}),
       },
     };
     const res = await this.fetchImpl(this.url(""), {

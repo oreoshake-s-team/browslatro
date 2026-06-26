@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { createGreedyAgent, createSkipAgent } from "../src/ai/agents";
 import { evaluateAgent, type EvaluationResult } from "../src/ai/evaluateAgent";
@@ -156,4 +156,14 @@ for (const { label, result } of agents) {
   console.log(formatDetail(label, result));
   console.log("");
 }
+
+const jsonPath = stringFlag("--json", "");
+if (jsonPath !== "") {
+  writeFileSync(
+    jsonPath,
+    `${JSON.stringify({ games, seedOffset, deck, stake, skip: useSkip, agents })}\n`,
+  );
+  console.log(`wrote ${jsonPath}`);
+}
+
 console.log(`done in ${((Date.now() - started) / 1000).toFixed(1)}s`);

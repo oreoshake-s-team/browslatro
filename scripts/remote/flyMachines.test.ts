@@ -45,6 +45,25 @@ describe("FlyMachinesClient.run", () => {
     expect(handle).toEqual({ id: "m1", state: "created" });
   });
 
+  test("overrides the image command when exec is supplied", async () => {
+    const { client, calls } = clientWith({ id: "m1", state: "created" });
+    await client.run({
+      image: "img",
+      env: {},
+      guest: { cpus: 1, memoryMb: 256 },
+      exec: ["bash", "run.sh"],
+    });
+    const body = JSON.parse(String(calls[0].init?.body));
+    expect(body.config.init).toEqual({ exec: ["bash", "run.sh"] });
+  });
+
+  test("omits init when no exec is supplied", async () => {
+    const { client, calls } = clientWith({ id: "m1", state: "created" });
+    await client.run({ image: "img", env: {}, guest: { cpus: 1, memoryMb: 256 } });
+    const body = JSON.parse(String(calls[0].init?.body));
+    expect(body.config.init).toBeUndefined();
+  });
+
   test("throws on a non-ok response", async () => {
     const { client } = clientWith({ error: "nope" }, 422);
     await expect(
