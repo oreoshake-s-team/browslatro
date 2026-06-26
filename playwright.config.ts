@@ -17,8 +17,10 @@ export default defineConfig({
     ? [["github"], ["list"], ["html", { open: "never", outputFolder: "playwright-report" }]]
     : "list",
   expect: { timeout: 5_000 },
+  globalSetup: "./e2e/global-setup.ts",
   use: {
     baseURL: BASE_URL,
+    storageState: "./e2e/.admin-state.json",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     actionTimeout: 5_000,

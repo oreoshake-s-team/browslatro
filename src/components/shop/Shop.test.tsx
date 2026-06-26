@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Shop from "./Shop";
+import { usePreferences } from "../system/preferences";
 import { BASE_REROLL_COST, type ShopItem } from "../../items/shop";
 import {
   MAX_JOKERS,
@@ -842,6 +843,24 @@ describe("Shop voucher override picker (dev)", () => {
       "overstock-plus",
     );
     expect(onSetVoucher).toHaveBeenCalledWith("overstock-plus");
+  });
+
+  test("hides the override select when admin mode is off (negative)", () => {
+    usePreferences.setState({ adminMode: false });
+    renderShop({ voucherOptions, onSetVoucher: vi.fn() });
+    expect(screen.queryByTestId("shop-voucher-override")).toBeNull();
+  });
+
+  test("shows a read-only voucher name badge when admin mode is off", () => {
+    usePreferences.setState({ adminMode: false });
+    renderShop({
+      voucherOptions,
+      onSetVoucher: vi.fn(),
+      vouchers: [OVERSTOCK_PLUS_VOUCHER],
+    });
+    expect(screen.getByTestId("shop-voucher-current")).toHaveTextContent(
+      OVERSTOCK_PLUS_VOUCHER.name,
+    );
   });
 });
 
