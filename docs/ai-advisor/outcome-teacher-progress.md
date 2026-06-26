@@ -3,6 +3,43 @@
 Status snapshot for resuming on another machine. Branch: `feat/outcome-teacher-experiments`
 (based on `main` at `23819ef`, the v8 ship). This doc + the branch code are the transfer.
 
+## On-policy iteration — 2026-06-26 (Track B, issue #1545) — BREAKS THE CEILING
+
+The single off-policy REINFORCE step (training a fresh model on v8-sampled data) only
+reached avgBlinds 3.60. The fix was **on-policy iteration**: warm-start the scorer from
+the policy that generated the self-play, step on its own returns, repeat. Enablers shipped:
+`ml/train_rl.py --init <onnx>` (by-name warm-start, verified to reproduce v8 at 0.0 diff)
+and the driver `ml/on_policy_track_b.sh` (sample → warm-start-train → benchmark, looped).
+
+| run | best iterate | avgBlinds (hand v9, 4 seeds × 500) | vs v8 (5.078) |
+|---|---|---|---|
+| baseline (lr 1e-3, 20 epochs/round, 5 iters) | iter-2 / iter-4 | 5.038 / 5.022 | ≈ parity |
+| **damped (lr 3e-4, 6 epochs/round, 8 iters)** | **iter-6** | **5.473** | **+0.40, beats v8 on all 4 seeds (5.30–5.60)** |
+
+- On-policy iteration recovers to v8 parity (vs 3.60 off-policy) and the damped run's best
+  iterate **exceeds v8 on every seed** — the first policy to beat the incumbent, not just match it.
+- The raw update **oscillated** in a 2-cycle between a "build/buy" mode (~5.x) and a "pack-heavy/
+  broke" mode (~3.x); damping the step (lower lr, fewer epochs/round) did NOT remove it — it was
+  structural overshoot. The fix was a **PPO trust region** (below).
+
+### PPO trust region (the fix) — stable, and clearly beats v8
+
+`--ppo-clip` (active whenever `--init` is set; the warm-started model is also the behaviour
+policy, so each decision's old action-probability is known). Clipping the new/old ratio keeps
+each round inside a trust region around the sampling policy.
+
+| run | trajectory (seed 5000, iters 1→8) | best iterate, 4-seed avgBlinds | vs v8 (5.078) |
+|---|---|---|---|
+| damped, no trust region | 5.35 ↔ 2.93 oscillating | iter-6 5.473 | +0.40 (fragile peak-pick) |
+| **PPO clip 0.2** | 5.30→5.75→…→5.53 (no crashes) | **iter-7 5.580** (5.26–5.86), avgAnte 2.453 | **+0.50 / +9.9%, all 4 seeds** |
+
+- PPO **removes the oscillation**: every iterate beats v8, so selection is robust (a late stable
+  iterate works — no fragile peak-picking). Self-play return climbs monotonically (4.70→5.34) then
+  plateaus.
+- Ship candidate: `ml/outcome/onpolicy-ppo/iter-7.onnx` (gitignored scratch) — avgBlinds 5.580,
+  avgAnte 2.453, beats v8 on all four eval seeds. Recipe: `ml/on_policy_track_b.sh` with
+  `EPOCHS=10 LR=1e-3 PPO_CLIP=0.2 ITERS=8`, bootstrapped from v8.
+
 ## Resume run — 2026-06-25 (CPU box, both planned experiments executed)
 
 `main` merged into this branch (clean; `headlessShopAgent.ts` kept both the shop-activity
