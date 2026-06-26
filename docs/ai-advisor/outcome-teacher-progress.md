@@ -17,17 +17,23 @@ negatives** vs the v8 incumbent (hand v9, 4 seeds × 500 games, full statistical
 |---|---|---|---|---|
 | **v8** (incumbent, reproduced) | 5.078 | 2.31 | — | baseline (matches doc's 5.082) |
 | **strong-build pivot** (`--games 1000 --horizon 8 --rollouts 1`) | 4.875 | 2.25 | −0.20 | below v8, uniform across all 4 seeds |
-| **Track B self-play REINFORCE** | 3.06 | 1.69 | −2.02 | policy **collapsed** (buys nothing, only opens packs) |
+| **Track B self-play REINFORCE** (original) | 3.06 | 1.69 | −2.02 | policy **collapsed** (buys nothing, only opens packs) |
+| **Track B REINFORCE (stabilized)** | 3.60 | 1.86 | −1.47 | trainer fixed (converges, stays stochastic); off-policy single step still < v8 |
 
 - **Strong-build pivot:** the richer build labels (planets/tarots/spectrals + x-mult priority)
   made the policy buy *more* aggressively (vouchers 0.29 vs v8 0.00, more rerolls) but it ends
   poorer (money 16.1 vs 19.1) and dies marginally shallower (tail to ante 6 vs v8's ante 7).
   Richer build prior did not break the imitation ceiling — consistent with the Track A finding.
-- **Track B REINFORCE:** `ml/train_rl.py` loss diverges monotonically to −5449 over 20 epochs
-  (signed-advantage cross-entropy with no entropy term / no advantage clamp / no learned
-  baseline → logits blow up). Resulting ONNX is degenerate: 0 jokers/consumables/vouchers/rerolls,
-  avgBlinds 3.06. **The trainer needs stabilization before Track B is a fair test** —
-  add entropy regularization, clamp/standardize advantages, and a value baseline.
+- **Track B REINFORCE:** the original `ml/train_rl.py` loss diverged monotonically to −5449
+  (signed-advantage cross-entropy is unbounded below: negative advantages drive the chosen
+  log-prob to −∞ → degenerate policy, 0 jokers/consumables/vouchers, avgBlinds 3.06).
+  **Stabilized** (committed): standardized + tail-clamped advantages (`--adv-clip`), a log-prob
+  floor (`--logp-floor`) bounding each update, and an entropy bonus (`--entropy-coef`). Loss now
+  converges (~−2.70) and entropy holds ~0.67 (stochastic, not collapsed). The stabilized policy
+  reaches avgBlinds 3.60 — no longer degenerate, but still below v8. Diagnosis: this is a **single
+  off-policy REINFORCE step** (data sampled from v8, fresh model, no importance weighting / no v8
+  init), which lands a weak pack-heavy policy. Making Track B competitive needs **on-policy
+  iteration**: initialize from v8 and re-sample self-play from the *current* policy each round.
 - **v7 shop policy is no longer benchmarkable** on this code: it predates encoding v4 and the
   current `headlessShopAgent` feeds 78 features → onnxruntime shape error. The doc's v7 baseline
   (5.578) was measured on the old encoding and is not apples-to-apples with v8/candidate today.
@@ -103,7 +109,9 @@ Different mechanism: learn from *actual game returns* of trajectories the policy
 - `src/ai/headlessShopAgent.test.ts` — `buildShopDecisionLog` tests (purchase/leave/reroll/voucher-skip).
 - `scripts/collectSelfPlayShop.ts` — **self-play collector**: plays games sampling from the
   policy (softmax/temperature), tags each shop decision with the game's realized return.
-- `ml/train_rl.py` — **REINFORCE trainer**: normalized advantages, signed-advantage cross-entropy.
+- `ml/train_rl.py` — **REINFORCE trainer**: standardized + tail-clamped advantages, a log-prob
+  floor, and an entropy bonus (stabilized 2026-06-25; the bare signed-advantage CE collapsed).
+  Torch imports are deferred into `main()` so the pure helpers stay importable for `ml/tests`.
 
 `yarn typecheck` was clean at last edit; new unit tests pass.
 
