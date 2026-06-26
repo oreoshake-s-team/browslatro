@@ -159,12 +159,50 @@ yarn dlx tsx scripts/remote/runRemoteTraining.ts advisor-policy-v10.onnx \
 Add `--shop` to train a shop policy. Benchmark the result before shipping with
 `scripts/benchmarkPolicy.ts` exactly as for a locally-trained model.
 
+## Running a remote benchmark job
+
+The last step of the loop scores a candidate model on the outcome metrics that
+gate shipping (`winRate`, `averageBlindsCleared`). The orchestrator uploads the
+candidate, launches one machine that benchmarks it against the built-in greedy
+floor (and an optional shipped baseline already in the image), and downloads a
+structured JSON summary.
+
+```
+runRemoteBenchmark.ts (orchestrator, runs locally)
+  │  putObject(candidate) → benchmark/<runId>/candidate.onnx
+  │  FlyMachinesClient.run({ exec: benchmark-entrypoint.sh })
+  │  poll get() until terminal
+  └  getObject(benchmark/<runId>/summary.json) → typed BenchmarkSummary
+
+the Fly machine (ml/remote/Dockerfile worker image + command override)
+  │  getObjectCli.ts → /tmp/candidate.onnx
+  │  benchmarkPolicy.ts /tmp/candidate.onnx [baseline] … --json /tmp/summary.json
+  └  putShard.ts → benchmark/<runId>/summary.json
+```
+
+The benchmark worker is pure TypeScript, so it reuses the **dataset worker
+image** (`ml/remote/Dockerfile`) — the orchestrator just overrides the launch
+command (`MachineRunSpec.exec`) instead of shipping a third image. The
+machine-readable summary comes from `benchmarkPolicy.ts --json <path>`.
+
+```bash
+yarn dlx tsx scripts/remote/runRemoteBenchmark.ts \
+  --model advisor-policy-v10.onnx \
+  --run-id 2026-06-26a \
+  --baseline public/models/advisor-policy-v9.onnx \
+  --games 500 \
+  --out summary.json
+```
+
+The orchestrator prints `winRate` / `avgBlinds` per agent and (with `--out`)
+writes the full `BenchmarkSummary`. Ship only if the candidate beats the
+baseline on `averageBlindsCleared`, per `ml-pipeline.md`.
+
 ## Deferred / follow-up work
 
-- Remote **benchmarking** (run `benchmarkPolicy.ts` on a machine and return the
-  outcome metrics that gate shipping).
 - Merging **human-play data** (`--human`) into remote training (needs the data
   uploaded or baked into the training image).
+- Chaining **generate → train → benchmark** into a single orchestrated run.
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.
