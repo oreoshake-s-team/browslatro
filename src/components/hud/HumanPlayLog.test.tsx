@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import HumanPlayLog from "./HumanPlayLog";
 import { humanPlayLog } from "../../ai/humanPlayWiring";
 import { useGame } from "../../store/game";
-import { usePreferences } from "../system/preferences";
 
 async function openLog(
   user: ReturnType<typeof userEvent.setup>,
@@ -21,12 +20,6 @@ describe("HumanPlayLog", () => {
   function seedOneRecord(): void {
     window.localStorage.setItem("browslatro.human-play-log.v1", '{"schema":1}');
   }
-
-  test("renders nothing when admin mode is off (negative)", () => {
-    usePreferences.setState({ adminMode: false });
-    const { container } = render(<HumanPlayLog />);
-    expect(container).toBeEmptyDOMElement();
-  });
 
   test("shows the recorded decision count", async () => {
     seedOneRecord();

@@ -2,11 +2,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./HumanPlayLog.css";
 import { humanPlayLog } from "../../ai/humanPlayWiring";
-import { usePreferences } from "../system/preferences";
 
 export default function HumanPlayLog() {
   const { t } = useTranslation();
-  const adminMode = usePreferences((s) => s.adminMode);
   const [, setLogVersion] = useState(0);
 
   function exportHumanPlayLog() {
@@ -25,8 +23,6 @@ export default function HumanPlayLog() {
     humanPlayLog().clear();
     setLogVersion((version) => version + 1);
   }
-
-  if (!adminMode) return null;
 
   const humanPlayCount = humanPlayLog().count();
 
