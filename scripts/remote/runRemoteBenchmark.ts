@@ -8,6 +8,7 @@ import {
   type MachineLauncher,
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
+import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 const BENCHMARK_EXEC = ["bash", "ml/remote/benchmark-entrypoint.sh"] as const;
@@ -175,6 +176,12 @@ if (isMain) {
 
   const modelKey = `benchmark/${runId}/candidate.onnx`;
   const outputKey = `benchmark/${runId}/summary.json`;
+
+  await runPreflight(runId, {
+    putMarker: (key, body) => putObject(s3Config, key, body),
+    checkFly: () => launcher.assertReachable(),
+    log: (message) => console.log(message),
+  });
 
   console.log(`uploading candidate -> ${modelKey}`);
   await putObject(s3Config, modelKey, readFileSync(modelPath));

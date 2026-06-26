@@ -72,6 +72,19 @@ describe("FlyMachinesClient.run", () => {
   });
 });
 
+describe("FlyMachinesClient.assertReachable", () => {
+  test("resolves when the app endpoint returns ok", async () => {
+    const { client, calls } = clientWith({ name: "browslatro-dataset" });
+    await client.assertReachable();
+    expect(calls[0].url).toBe("https://api.machines.dev/v1/apps/browslatro-dataset");
+  });
+
+  test("throws a guiding error when the app is unreachable", async () => {
+    const { client } = clientWith({ error: "not found" }, 404);
+    await expect(client.assertReachable()).rejects.toThrow(/not reachable \(404\).*FLY_APP/s);
+  });
+});
+
 describe("FlyMachinesClient.get", () => {
   test("reads machine state by id", async () => {
     const { client } = clientWith({ id: "m1", state: "stopped" });

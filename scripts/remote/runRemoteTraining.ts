@@ -8,6 +8,7 @@ import {
   type MachineLauncher,
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
+import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 export interface TrainArgs {
@@ -128,6 +129,12 @@ if (isMain) {
 
   const datasetKey = `training/${runId}/dataset.jsonl`;
   const outputKey = `training/${runId}/model.onnx`;
+
+  await runPreflight(runId, {
+    putMarker: (key, body) => putObject(s3Config, key, body),
+    checkFly: () => launcher.assertReachable(),
+    log: (message) => console.log(message),
+  });
 
   console.log(`uploading dataset -> ${datasetKey}`);
   await putObject(s3Config, datasetKey, readFileSync(datasetPath));

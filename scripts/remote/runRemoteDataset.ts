@@ -9,7 +9,8 @@ import {
   type MachineLauncher,
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
-import { getObject, s3ConfigFromEnv } from "./s3";
+import { runPreflight } from "./preflight";
+import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 export interface GenerateArgs {
   readonly rollouts: number;
@@ -187,6 +188,12 @@ if (isMain) {
       AWS_SECRET_ACCESS_KEY: s3Config.secretAccessKey,
     },
   };
+
+  await runPreflight(options.runId, {
+    putMarker: (key, body) => putObject(s3Config, key, body),
+    checkFly: () => launcher.assertReachable(),
+    log: (message) => console.log(message),
+  });
 
   const started = Date.now();
   const result = await runRemoteDataset(options, {
