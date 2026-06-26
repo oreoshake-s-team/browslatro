@@ -6,9 +6,9 @@ import { planShards, type RemoteShard } from "./shardPlan";
 import {
   FlyMachinesClient,
   type MachineGuest,
-  type MachineHandle,
   type MachineLauncher,
 } from "./flyMachines";
+import { waitForMachineTerminal } from "./machineWait";
 import { getObject, s3ConfigFromEnv } from "./s3";
 
 export interface GenerateArgs {
@@ -48,8 +48,6 @@ export interface RemoteDatasetResult {
   readonly records: number;
 }
 
-const TERMINAL_STATES = new Set(["stopped", "destroyed"]);
-
 export function shardEnv(shard: RemoteShard, generate: GenerateArgs): Record<string, string> {
   const env: Record<string, string> = {
     OUTPUT_KEY: shard.outputKey,
@@ -68,28 +66,6 @@ export function shardEnv(shard: RemoteShard, generate: GenerateArgs): Record<str
   return env;
 }
 
-async function waitForTerminal(
-  shard: RemoteShard,
-  handle: MachineHandle,
-  options: RemoteDatasetOptions,
-  deps: RemoteDatasetDeps,
-): Promise<void> {
-  const pollIntervalMs = options.pollIntervalMs ?? 5_000;
-  const maxWaitMs = options.maxWaitMs ?? 30 * 60_000;
-  let waited = 0;
-  let state = handle.state;
-  while (!TERMINAL_STATES.has(state)) {
-    if (waited >= maxWaitMs) {
-      throw new Error(
-        `machine ${handle.id} for shard ${shard.index} did not finish within ${maxWaitMs}ms (last state "${state}")`,
-      );
-    }
-    await deps.sleep(pollIntervalMs);
-    waited += pollIntervalMs;
-    state = (await deps.launcher.get(handle.id)).state;
-  }
-}
-
 async function runShard(
   shard: RemoteShard,
   options: RemoteDatasetOptions,
@@ -105,7 +81,12 @@ async function runShard(
   log(`shard ${shard.index}: launched machine ${handle.id} (${shard.games} games)`);
 
   try {
-    await waitForTerminal(shard, handle, options, deps);
+    await waitForMachineTerminal(handle.id, handle.state, `shard ${shard.index}`, {
+      pollIntervalMs: options.pollIntervalMs ?? 5_000,
+      maxWaitMs: options.maxWaitMs ?? 30 * 60_000,
+      sleep: deps.sleep,
+      get: deps.launcher.get.bind(deps.launcher),
+    });
   } finally {
     await deps.launcher.destroy(handle.id);
   }
