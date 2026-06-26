@@ -5,7 +5,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from train_rl import normalized_advantages, warm_start
+from train_rl import clipped_surrogate, normalized_advantages, warm_start
 
 try:
     import onnx  # noqa: F401
@@ -34,6 +34,17 @@ class NormalizedAdvantagesTest(unittest.TestCase):
     def test_constant_returns_yield_zero_advantage_without_dividing_by_zero(self):
         advantages = normalized_advantages([5.0, 5.0, 5.0], clip=3.0)
         self.assertEqual(advantages, [0.0, 0.0, 0.0])
+
+
+class ClippedSurrogateTest(unittest.TestCase):
+    def test_caps_good_action_gain_at_the_upper_clip(self):
+        self.assertAlmostEqual(clipped_surrogate(2.0, 1.0, 0.2), 1.2)
+
+    def test_leaves_bad_action_ratio_unclipped_below(self):
+        self.assertAlmostEqual(clipped_surrogate(2.0, -1.0, 0.2), -2.0)
+
+    def test_unit_ratio_passes_advantage_through(self):
+        self.assertAlmostEqual(clipped_surrogate(1.0, 0.75, 0.2), 0.75)
 
 
 @unittest.skipUnless(HAS_TORCH_ONNX, "warm_start needs torch + onnx")

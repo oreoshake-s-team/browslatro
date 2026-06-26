@@ -20,6 +20,12 @@ advantages drive the chosen log-prob to -inf and collapse the policy):
 initializers are named like the torch state_dict, so the load is by-name). This
 is what makes *on-policy* iteration possible: warm-start from the policy that
 generated the self-play data so the gradient improves that policy in place.
+
+With ``--init`` set, ``--ppo-clip`` adds a PPO trust region: the warm-started
+model is also the behaviour policy, so each decision's old action-probability is
+known, and clipping the new/old ratio keeps every round's update close to the
+sampling policy. This is what stops on-policy iteration from overshooting and
+oscillating between behaviour modes; ``--ppo-clip 0`` falls back to REINFORCE.
 """
 
 import argparse
@@ -96,6 +102,19 @@ def normalized_advantages(returns, clip):
     return [max(-clip, min(clip, (r - mean) / std)) for r in returns]
 
 
+def clipped_surrogate(ratio, advantage, clip):
+    """PPO surrogate for one decision: ``min(r*A, clamp(r, 1±clip)*A)``.
+
+    ``ratio`` is the new/old action-probability ratio. Clipping the ratio keeps
+    each round's update inside a trust region around the policy that generated
+    the self-play, which is what stops the on-policy iteration from overshooting
+    and oscillating between behaviour modes. The reference for the torch loop;
+    kept pure so it is unit-testable without torch.
+    """
+    clamped = max(1.0 - clip, min(1.0 + clip, ratio))
+    return min(ratio * advantage, clamped * advantage)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("datasets", nargs="+")
@@ -113,8 +132,16 @@ def main():
         default=None,
         help="warm-start CandidateScorer from an existing shop-policy onnx",
     )
+    parser.add_argument(
+        "--ppo-clip",
+        type=float,
+        default=0.2,
+        help="PPO trust-region clip; needs --init (the old policy). 0 disables (plain REINFORCE)",
+    )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
     args = parser.parse_args()
+
+    import copy
 
     import torch
 
@@ -134,24 +161,49 @@ def main():
     if args.init:
         loaded = warm_start(model, args.init, device, torch)
         print(f"warm-started {loaded} tensors from {args.init}")
+
+    use_ppo = bool(args.init) and args.ppo_clip > 0
+    old_logps = None
+    if use_ppo:
+        old_model = copy.deepcopy(model).to(device)
+        old_model.eval()
+        old_logps = []
+        with torch.no_grad():
+            for inputs, chosen, _ in samples:
+                logits = old_model(torch.tensor(inputs, dtype=torch.float32, device=device))
+                old_logps.append(float(torch.nn.functional.log_softmax(logits, dim=0)[chosen]))
+        print(f"PPO trust region clip={args.ppo_clip} (old policy = {args.init})")
+    else:
+        print("plain REINFORCE (no --init / --ppo-clip 0)")
+
+    indexed = list(range(len(samples)))
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     print(f"{len(samples)} self-play decisions on {device}")
 
     for epoch in range(args.epochs):
-        random.shuffle(samples)
+        random.shuffle(indexed)
         total = 0.0
         total_entropy = 0.0
-        for i in range(0, len(samples), args.batch_size):
-            batch = samples[i : i + args.batch_size]
+        for i in range(0, len(indexed), args.batch_size):
+            batch = indexed[i : i + args.batch_size]
             optimizer.zero_grad()
             loss = torch.zeros((), device=device)
             batch_entropy = torch.zeros((), device=device)
-            for inputs, chosen, adv in batch:
+            for j in batch:
+                inputs, chosen, adv = samples[j]
                 logits = model(torch.tensor(inputs, dtype=torch.float32, device=device))
                 log_probs = torch.nn.functional.log_softmax(logits, dim=0)
-                chosen_logp = log_probs[chosen].clamp(min=-args.logp_floor)
                 entropy = -(log_probs.exp() * log_probs).sum()
-                loss = loss - adv * chosen_logp - args.entropy_coef * entropy
+                if use_ppo:
+                    ratio = torch.exp(log_probs[chosen] - old_logps[j])
+                    surrogate = torch.min(
+                        ratio * adv,
+                        torch.clamp(ratio, 1.0 - args.ppo_clip, 1.0 + args.ppo_clip) * adv,
+                    )
+                    loss = loss - surrogate - args.entropy_coef * entropy
+                else:
+                    chosen_logp = log_probs[chosen].clamp(min=-args.logp_floor)
+                    loss = loss - adv * chosen_logp - args.entropy_coef * entropy
                 batch_entropy = batch_entropy + entropy.detach()
             (loss / len(batch)).backward()
             optimizer.step()

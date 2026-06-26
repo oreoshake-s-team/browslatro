@@ -20,6 +20,7 @@ BENCH_SEED="${BENCH_SEED:-5000}"
 DEVICE="${DEVICE:-cpu}"
 EPOCHS="${EPOCHS:-20}"
 LR="${LR:-1e-3}"
+PPO_CLIP="${PPO_CLIP:-0.2}"
 OUTDIR="${OUTDIR:-ml/outcome/onpolicy}"
 TSX_RUN="${TSX_RUN:-node .yarn/releases/yarn-4.15.0.cjs dlx tsx}"
 PYTHON="${PYTHON:-python3}"
@@ -35,7 +36,7 @@ for k in $(seq 1 "$ITERS"); do
   $TSX_RUN scripts/collectSelfPlayShop.ts "$data" \
     --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE"
   $PYTHON ml/train_rl.py "$data" --device "$DEVICE" --init "$current" \
-    --epochs "$EPOCHS" --lr "$LR" --out "$next"
+    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next"
   echo "--- benchmark iter $k ($BENCH_GAMES games, seed $BENCH_SEED) ---"
   $TSX_RUN scripts/benchmarkPolicy.ts "$HAND" \
     --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" \

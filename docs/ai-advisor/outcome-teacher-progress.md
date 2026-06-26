@@ -18,15 +18,27 @@ and the driver `ml/on_policy_track_b.sh` (sample → warm-start-train → benchm
 
 - On-policy iteration recovers to v8 parity (vs 3.60 off-policy) and the damped run's best
   iterate **exceeds v8 on every seed** — the first policy to beat the incumbent, not just match it.
-- **It oscillates** in a 2-cycle between a "build/buy" mode (~5.x) and a "pack-heavy/broke" mode
-  (~3.x); damping the step (lower lr, fewer epochs/round) did NOT remove the oscillation, so it is
-  structural — single-step updates overshoot. **You must select the best iterate by validation**,
-  not take the last. A proper trust region (KL penalty / PPO-style clip toward the sampling policy)
-  is the next lever to stabilize and push further.
-- Selection caveat: iter-6 was picked from its single-seed (5000) peak, then confirmed on 4 seeds;
-  3/4 are out-of-sample and all beat v8, so the win is not a seed artifact. A fully clean protocol
-  would select on a held-out seed disjoint from the final eval.
-- The winning artifact is `ml/outcome/onpolicy-damped/iter-6.onnx` (gitignored scratch).
+- The raw update **oscillated** in a 2-cycle between a "build/buy" mode (~5.x) and a "pack-heavy/
+  broke" mode (~3.x); damping the step (lower lr, fewer epochs/round) did NOT remove it — it was
+  structural overshoot. The fix was a **PPO trust region** (below).
+
+### PPO trust region (the fix) — stable, and clearly beats v8
+
+`--ppo-clip` (active whenever `--init` is set; the warm-started model is also the behaviour
+policy, so each decision's old action-probability is known). Clipping the new/old ratio keeps
+each round inside a trust region around the sampling policy.
+
+| run | trajectory (seed 5000, iters 1→8) | best iterate, 4-seed avgBlinds | vs v8 (5.078) |
+|---|---|---|---|
+| damped, no trust region | 5.35 ↔ 2.93 oscillating | iter-6 5.473 | +0.40 (fragile peak-pick) |
+| **PPO clip 0.2** | 5.30→5.75→…→5.53 (no crashes) | **iter-7 5.580** (5.26–5.86), avgAnte 2.453 | **+0.50 / +9.9%, all 4 seeds** |
+
+- PPO **removes the oscillation**: every iterate beats v8, so selection is robust (a late stable
+  iterate works — no fragile peak-picking). Self-play return climbs monotonically (4.70→5.34) then
+  plateaus.
+- Ship candidate: `ml/outcome/onpolicy-ppo/iter-7.onnx` (gitignored scratch) — avgBlinds 5.580,
+  avgAnte 2.453, beats v8 on all four eval seeds. Recipe: `ml/on_policy_track_b.sh` with
+  `EPOCHS=10 LR=1e-3 PPO_CLIP=0.2 ITERS=8`, bootstrapped from v8.
 
 ## Resume run — 2026-06-25 (CPU box, both planned experiments executed)
 
