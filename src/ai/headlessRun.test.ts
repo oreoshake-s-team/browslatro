@@ -108,6 +108,30 @@ describe("playHeadlessRun", () => {
     expect(seen.every((total) => total <= 52)).toBe(true);
   });
 
+  test("honors config.ownedVoucherIds, applying a hand-size voucher to the deal", async () => {
+    const firstHandSize = async (
+      ownedVoucherIds: ReadonlySet<VoucherId>,
+    ): Promise<number> => {
+      let size = 0;
+      let captured = false;
+      const obs: HeadlessAgent = {
+        name: "obs",
+        chooseAction(view) {
+          if (!captured) {
+            size = view.dealt.hand.length;
+            captured = true;
+          }
+          return greedy.chooseAction(view);
+        },
+      };
+      await playHeadlessRun(obs, { seed: 7, maxAnte: 1, ownedVoucherIds });
+      return size;
+    };
+    const withVoucher = await firstHandSize(new Set<VoucherId>(["paint-brush"]));
+    const without = await firstHandSize(new Set<VoucherId>());
+    expect(withVoucher).toBe(without + 1);
+  });
+
   test("throws when an agent discards with none remaining", async () => {
     const stubborn: HeadlessAgent = {
       name: "stubborn",

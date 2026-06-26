@@ -168,7 +168,7 @@ export function encodeShopCandidates(input: ShopRankInput): Float32Array {
   const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
   return new Float32Array(
     input.candidates.flatMap((c) => {
-      if (c.action === "buy")
+      if (c.action === "buy" || c.action === "sell")
         return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.cost, false, false, false);
       if (c.action === "reroll")
         return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, c.cost, true, false, false);

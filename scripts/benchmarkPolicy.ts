@@ -116,8 +116,8 @@ function formatDetail(label: string, result: EvaluationResult): string {
     formatDistribution("money", result.finalMoney),
     `  shop      rerolls ${a.rerolls.toFixed(2)}  jokers ${a.jokersBought.toFixed(2)}  ` +
       `consumables ${a.consumablesBought.toFixed(2)}  vouchers ${a.vouchersBought.toFixed(2)}  ` +
-      `packsOpened ${a.packsOpened.toFixed(2)}  packPicks ${a.packPicks.toFixed(2)}  ` +
-      `spent ${a.moneySpent.toFixed(2)}`,
+      `sold ${a.jokersSold.toFixed(2)}  packsOpened ${a.packsOpened.toFixed(2)}  ` +
+      `packPicks ${a.packPicks.toFixed(2)}  spent ${a.moneySpent.toFixed(2)}`,
     `  lossesByAnte  ${histogram}`,
   ].join("\n");
 }

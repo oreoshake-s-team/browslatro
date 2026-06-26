@@ -20,6 +20,11 @@ export function describeContextCandidate(
         name: candidate.item.name,
         cost: candidate.item.cost,
       });
+    case "sell":
+      return t("advisor.sellCandidate", {
+        name: candidate.item.name,
+        value: -candidate.item.cost,
+      });
     case "reroll":
       return t("advisor.rerollCandidate", { cost: candidate.cost });
     case "leave":

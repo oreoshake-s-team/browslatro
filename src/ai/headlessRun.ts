@@ -20,7 +20,7 @@ import {
   rollSkipTag,
   type TagId,
 } from "../items/tags";
-import { interestCapFor, type VoucherId } from "../items/vouchers";
+import { extraHandSize, interestCapFor, type VoucherId } from "../items/vouchers";
 import { immediateMoneyGain } from "../run/immediateActions";
 import {
   initialRunStats,
@@ -128,6 +128,7 @@ export interface HeadlessRunConfig {
   readonly startAnte?: number;
   readonly startHandStats?: HandStats;
   readonly startMoney?: number;
+  readonly ownedVoucherIds?: ReadonlySet<VoucherId>;
   readonly maxRounds?: number;
   readonly startCardEnhancements?: ReadonlyMap<number, Enhancement | null>;
   readonly startCardSeals?: ReadonlyMap<number, Seal>;
@@ -237,7 +238,7 @@ export async function playHeadlessRun(
     bonusChips: config.startCardBonusChips,
   });
   let handStats = config.startHandStats ?? createDefaultHandStats();
-  let ownedVoucherIds: ReadonlySet<VoucherId> = new Set();
+  let ownedVoucherIds: ReadonlySet<VoucherId> = config.ownedVoucherIds ?? new Set();
   let lastConsumable: Consumable | null = null;
   const recentBossIds = new Set<string>();
 
@@ -279,7 +280,10 @@ export async function playHeadlessRun(
       let remainingHands = computeStartingHands(startCtx);
       let remainingDiscards = computeStartingDiscards(startCtx);
       const scoreTarget = requiredChipsForBlind({ ante, blind, boss, stake });
-      let pile: Pile = deal(shuffle(deck, rng), HAND_SIZE);
+      let pile: Pile = deal(
+        shuffle(deck, rng),
+        HAND_SIZE + extraHandSize(ownedVoucherIds),
+      );
       let roundScore = 0;
       let firstAction = true;
       const handHistoryThisRound: HandLabel[] = [];
