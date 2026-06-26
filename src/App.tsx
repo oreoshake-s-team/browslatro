@@ -535,6 +535,7 @@ function App() {
         autopilotProposal={autopilot.pendingProposal}
         autopilotModelProgress={autopilot.modelProgress}
         autopilotProposalUnavailable={autopilot.proposalUnavailable}
+        autopilotAdvisorUnavailable={autopilot.advisorUnavailable}
         autopilotExplanation={autopilotExplanation.state}
         autopilotFeedbackCandidates={policyDecision?.candidates ?? null}
         autopilotFeedbackRecorded={autopilotFeedbackRecorded}

@@ -47,6 +47,7 @@ interface GameProps {
   autopilotProposal?: HandOption | null;
   autopilotModelProgress?: DownloadProgress | null;
   autopilotProposalUnavailable?: boolean;
+  autopilotAdvisorUnavailable?: boolean;
   autopilotExplanation?: MoveExplanationState;
   autopilotFeedbackCandidates?: ReadonlyArray<HandOption> | null;
   autopilotFeedbackRecorded?: boolean;
@@ -73,6 +74,7 @@ export default function Game({
   autopilotProposal = null,
   autopilotModelProgress = null,
   autopilotProposalUnavailable = false,
+  autopilotAdvisorUnavailable = false,
   autopilotExplanation = { phase: "idle" },
   autopilotFeedbackCandidates = null,
   autopilotFeedbackRecorded = false,
@@ -366,12 +368,14 @@ export default function Game({
           {(autopilotProposal ||
             autopilotModelProgress ||
             autopilotProposalUnavailable ||
+            autopilotAdvisorUnavailable ||
             autopilotFeedbackRecorded) &&
             onApproveAutopilot && (
               <AutopilotControls
                 proposal={autopilotProposal}
                 modelProgress={autopilotModelProgress}
                 proposalUnavailable={autopilotProposalUnavailable}
+                advisorUnavailable={autopilotAdvisorUnavailable}
                 explanation={autopilotExplanation}
                 feedbackCandidates={autopilotFeedbackCandidates}
                 feedbackRecorded={autopilotFeedbackRecorded}

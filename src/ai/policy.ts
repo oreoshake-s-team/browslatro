@@ -71,44 +71,26 @@ export async function loadPolicyRanker(
 
 export function createAdvisorRanker(
   model: string | Uint8Array,
-  onFallback?: (error: unknown) => void,
 ): CandidateRanker {
   let policy: Promise<CandidateRanker> | null = null;
-  let degraded = false;
-  const ensure = (
+  const ensure = async (
     onProgress?: DownloadProgressListener,
   ): Promise<CandidateRanker> => {
-    policy = policy ?? loadPolicyRanker(model, onProgress);
-    return policy;
+    if (policy === null) policy = loadPolicyRanker(model, onProgress);
+    try {
+      return await policy;
+    } catch (error) {
+      policy = null;
+      throw error;
+    }
   };
   return {
     async load(onProgress) {
-      if (degraded) return;
-      try {
-        await ensure(onProgress);
-      } catch (error) {
-        degraded = true;
-        onFallback?.(error);
-      }
+      await ensure(onProgress);
     },
     async rank(state, candidates) {
-      if (!degraded) {
-        let ranker: CandidateRanker | null = null;
-        try {
-          ranker = await ensure();
-        } catch (error) {
-          degraded = true;
-          onFallback?.(error);
-        }
-        if (ranker !== null) {
-          try {
-            return await ranker.rank(state, candidates);
-          } catch (error) {
-            onFallback?.(error);
-          }
-        }
-      }
-      return greedyRanking(candidates);
+      const ranker = await ensure();
+      return ranker.rank(state, candidates);
     },
   };
 }

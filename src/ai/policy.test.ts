@@ -84,68 +84,40 @@ describe("greedyRanker", () => {
 });
 
 describe("createAdvisorRanker", () => {
-  test("falls back to the greedy ranking when the model cannot load", async () => {
-    const failures: unknown[] = [];
-    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]), (e) =>
-      failures.push(e),
-    );
+  test("rank rejects when the model cannot load", async () => {
+    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]));
     const record = fixtureRecord(0);
-    const ranking = await ranker.rank(record.state, record.candidates);
-    expect({ ranking, failures: failures.length }).toEqual({
-      ranking: greedyRanking(record.candidates),
-      failures: 1,
-    });
+    await expect(
+      ranker.rank(record.state, record.candidates),
+    ).rejects.toThrow();
   });
 
-  test("reports the fallback only once across calls", async () => {
-    const failures: unknown[] = [];
-    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]), (e) =>
-      failures.push(e),
-    );
+  test("does not serve a greedy ranking when the model is unavailable", async () => {
+    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]));
     const record = fixtureRecord(0);
-    await ranker.rank(record.state, record.candidates);
-    await ranker.rank(record.state, record.candidates);
-    expect(failures).toHaveLength(1);
+    const outcome = await ranker
+      .rank(record.state, record.candidates)
+      .then((ranking) => ({ rejected: false, ranking }))
+      .catch(() => ({ rejected: true, ranking: null }));
+    expect(outcome).toEqual({ rejected: true, ranking: null });
   });
 
-  test("load reports the fallback when the model cannot load", async () => {
-    const failures: unknown[] = [];
-    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]), (e) =>
-      failures.push(e),
-    );
-    await ranker.load();
-    expect(failures).toHaveLength(1);
+  test("load rejects when the model cannot load", async () => {
+    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]));
+    await expect(ranker.load()).rejects.toThrow();
   });
 
-  test("load reports the fallback at most once across load and rank", async () => {
-    const failures: unknown[] = [];
-    const ranker = createAdvisorRanker(new Uint8Array([1, 2, 3]), (e) =>
-      failures.push(e),
-    );
-    const record = fixtureRecord(0);
-    await ranker.load();
-    await ranker.rank(record.state, record.candidates);
-    expect(failures).toHaveLength(1);
-  });
-
-  test("an unencodable state falls back to greedy for that decision", async () => {
-    const failures: unknown[] = [];
-    const ranker = createAdvisorRanker(readFileSync(MODEL_PATH), (e) =>
-      failures.push(e),
-    );
+  test("a per-decision encoding failure rejects instead of falling back to greedy", async () => {
+    const ranker = createAdvisorRanker(readFileSync(MODEL_PATH));
     const record = fixtureRecord(0);
     const wideState: ModelState = {
       ...record.state,
       hand: new Array(HAND_SLOTS + 1).fill(record.state.hand[0]),
     };
-    const ranking = await ranker.rank(wideState, record.candidates);
-    expect({ ranking, failures: failures.length }).toEqual({
-      ranking: greedyRanking(record.candidates),
-      failures: 1,
-    });
+    await expect(ranker.rank(wideState, record.candidates)).rejects.toThrow();
   });
 
-  test("ranks with the model again after a per-decision failure", async () => {
+  test("still ranks valid decisions with the model after a per-decision failure", async () => {
     const ranker = createAdvisorRanker(readFileSync(MODEL_PATH));
     const direct = await loadPolicyRanker(readFileSync(MODEL_PATH));
     const record = fixtureRecord(0);
@@ -153,25 +125,10 @@ describe("createAdvisorRanker", () => {
       ...record.state,
       hand: new Array(HAND_SLOTS + 1).fill(record.state.hand[0]),
     };
-    await ranker.rank(wideState, record.candidates);
+    await ranker.rank(wideState, record.candidates).catch(() => undefined);
     expect(await ranker.rank(record.state, record.candidates)).toEqual(
       await direct.rank(record.state, record.candidates),
     );
-  });
-
-  test("reports every per-decision fallback", async () => {
-    const failures: unknown[] = [];
-    const ranker = createAdvisorRanker(readFileSync(MODEL_PATH), (e) =>
-      failures.push(e),
-    );
-    const record = fixtureRecord(0);
-    const wideState: ModelState = {
-      ...record.state,
-      hand: new Array(HAND_SLOTS + 1).fill(record.state.hand[0]),
-    };
-    await ranker.rank(wideState, record.candidates);
-    await ranker.rank(wideState, record.candidates);
-    expect(failures).toHaveLength(2);
   });
 });
 

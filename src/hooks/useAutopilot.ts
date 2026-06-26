@@ -29,6 +29,7 @@ export interface AutopilotControls {
   readonly pendingDecision: AutopilotDecision | null;
   readonly modelProgress: DownloadProgress | null;
   readonly proposalUnavailable: boolean;
+  readonly advisorUnavailable: boolean;
   readonly approve: () => void;
   readonly approveOption: (option: HandOption) => void;
   readonly previewOption: (option: HandOption) => void;
@@ -59,6 +60,7 @@ export function useAutopilot(
     null,
   );
   const [proposalUnavailable, setProposalUnavailable] = useState(false);
+  const [advisorUnavailable, setAdvisorUnavailable] = useState(false);
   const modelLoadedRef = useRef(false);
   const proposalRef = useRef<HandOption | null>(null);
   proposalRef.current = pendingProposal;
@@ -99,27 +101,35 @@ export function useAutopilot(
     const timer = setTimeout(() => {
       void (async () => {
         if (cancelled || !autopilotIdle(getState())) return;
-        if (!modelLoadedRef.current) {
-          setModelProgress({ loaded: 0, total: null });
-          await ranker.load((progress) => {
-            if (!cancelled) setModelProgress(progress);
-          });
+        setAdvisorUnavailable(false);
+        try {
+          if (!modelLoadedRef.current) {
+            setModelProgress({ loaded: 0, total: null });
+            await ranker.load((progress) => {
+              if (!cancelled) setModelProgress(progress);
+            });
+            if (cancelled) return;
+            modelLoadedRef.current = true;
+            setModelProgress(null);
+          }
+          const fresh = getState();
+          if (cancelled || !autopilotIdle(fresh)) return;
+          const decision = await decideAutopilotAction(fresh, ranker);
           if (cancelled) return;
-          modelLoadedRef.current = true;
+          if (decision === null) {
+            setProposalUnavailable(true);
+            return;
+          }
+          setProposalUnavailable(false);
+          fresh.selectCards(decision.action.cardIds);
+          setPendingDecision(decision);
+          setPendingProposal(decision.action);
+        } catch {
+          if (cancelled) return;
           setModelProgress(null);
+          setAdvisorUnavailable(true);
+          onStopRef.current();
         }
-        const fresh = getState();
-        if (cancelled || !autopilotIdle(fresh)) return;
-        const decision = await decideAutopilotAction(fresh, ranker);
-        if (cancelled) return;
-        if (decision === null) {
-          setProposalUnavailable(true);
-          return;
-        }
-        setProposalUnavailable(false);
-        fresh.selectCards(decision.action.cardIds);
-        setPendingDecision(decision);
-        setPendingProposal(decision.action);
       })();
     }, stepMs);
     return () => {
@@ -202,6 +212,7 @@ export function useAutopilot(
     pendingDecision,
     modelProgress,
     proposalUnavailable,
+    advisorUnavailable,
     approve,
     approveOption,
     previewOption,

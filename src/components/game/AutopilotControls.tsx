@@ -17,6 +17,7 @@ export interface AutopilotControlsProps {
   readonly proposal: HandOption | null;
   readonly modelProgress: DownloadProgress | null;
   readonly proposalUnavailable?: boolean;
+  readonly advisorUnavailable?: boolean;
   readonly explanation: MoveExplanationState;
   readonly feedbackCandidates?: ReadonlyArray<HandOption> | null;
   readonly feedbackRecorded?: boolean;
@@ -147,6 +148,7 @@ export default function AutopilotControls({
   proposal,
   modelProgress,
   proposalUnavailable = false,
+  advisorUnavailable = false,
   explanation,
   feedbackCandidates = null,
   feedbackRecorded = false,
@@ -193,6 +195,14 @@ export default function AutopilotControls({
             max={1}
           />
         </div>
+      ) : advisorUnavailable ? (
+        <p
+          className="autopilot-proposal autopilot-error"
+          data-testid="autopilot-advisor-unavailable"
+          role="alert"
+        >
+          {t("advisor.advisorUnavailable")}
+        </p>
       ) : proposalUnavailable ? (
         <p
           className="autopilot-proposal"
