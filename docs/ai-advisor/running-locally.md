@@ -112,6 +112,20 @@ python3 ml/evaluate_real_play.py public/models/advisor-policy-v9.onnx
 python3 ml/evaluate_real_play.py --shop public/models/advisor-shop-policy-v8.onnx
 ```
 
+The benchmark prints a compact comparison table (`winRate`, `avgAnte`, `avgBlinds`, `avgHands`, `avgSkipped`) followed by a detailed per-agent block:
+
+```
+=== advisor-policy-v9.onnx ===
+  wins 2/200 (1.0% ± 0.7%)  reachedFinalAnte 0
+  ante      mean    3.10  sd   0.80  min   1.00  p25   2.00  med   3.00  p75   4.00  max   6.00
+  blinds    mean    3.06  sd   1.41  min   0.00  p25   2.00  med   3.00  p75   4.00  max   8.00
+  money     mean   42.30  sd  18.20  min   4.00  p25  28.00  med  40.00  p75  55.00  max 120.00
+  shop      rerolls 0.30  jokers 1.20  consumables 0.80  vouchers 0.10  packsOpened 0.40  packPicks 0.50  spent 24.10
+  lossesByAnte  a1:30  a2:48  a3:90  a4:30
+```
+
+`avgBlinds` is still the **only** ship gate, but read the rest to catch regressions the headline number hides — a wide `blinds` spread, a `lossesByAnte` wall at one ante, or **money piling up (`money.mean` high) while `packsOpened`/`packPicks` stay near zero**, which is the signature of the shop agent hoarding cash instead of opening packs.
+
 **Ship only on a clear `avgBlinds` win** over the incumbent across disjoint seeds — never on validation accuracy alone (see the [validation-accuracy trap](./ml-pipeline.md#mldatasetpy--ingestion--weighting)). When you ship, commit the new `public/models/advisor-policy-v{N}.onnx` and point `ADVISOR_MODEL_URL` (in [`advisorRanker.ts`](../../src/ai/advisor/advisorRanker.ts)) — or `SHOP_MODEL_URL` in [`shopRanker.ts`](../../src/ai/advisor/shopRanker.ts) — at it.
 
 ---
