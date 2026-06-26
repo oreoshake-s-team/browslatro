@@ -15,38 +15,26 @@ async function startRound(page: Page): Promise<void> {
 
 const HAND_CARDS = '[aria-label="Your hand"] .card';
 
-test("a discard records a decision the dev menu can clear", async ({ page }) => {
+test("a discard records a decision the sidebar log can clear", async ({ page }) => {
   await startRound(page);
   await page.locator(HAND_CARDS).first().click();
   await page.getByRole("button", { name: /^Discard/ }).click();
-  await page.getByText("Apply modifiers").click();
+  await page.getByText("Human play log").click();
   const count = page.getByTestId("human-play-log-count");
   await expect(count).toHaveText("1 recorded decision");
   await page.getByRole("button", { name: /Clear log/ }).click();
   await expect(count).toHaveText("0 recorded decisions");
 });
 
-test("the dev menu exports recorded decisions as JSONL", async ({ page }) => {
+test("the sidebar log exports recorded decisions as JSONL", async ({ page }) => {
   await startRound(page);
   await page.locator(HAND_CARDS).first().click();
   await page.getByRole("button", { name: /^Discard/ }).click();
-  await page.getByText("Apply modifiers").click();
+  await page.getByText("Human play log").click();
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: /Export log/ }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe("browslatro-human-play.jsonl");
-});
-
-test("a shop purchase shows up in the per-kind breakdown", async ({ page }) => {
-  await startRound(page);
-  await page.getByText("Apply modifiers").click();
-  await page.getByText(/Win/).click();
-  await page.getByTestId("shop-offer-0").locator(".shop-offer-buy").click();
-  const breakdown = page.getByTestId("human-play-log-breakdown");
-  if (!(await breakdown.isVisible().catch(() => false))) {
-    await page.getByText("Apply modifiers").click();
-  }
-  await expect(breakdown).toContainText("purchases 1");
 });
 
 test("skipping a blind is recorded", async ({ page }) => {

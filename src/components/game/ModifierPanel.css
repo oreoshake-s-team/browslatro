@@ -202,21 +202,3 @@
   background-color: var(--accent-stone);
   border-color: var(--accent-orange-strong);
 }
-
-.human-play-log {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.6rem;
-  flex-wrap: wrap;
-}
-
-.human-play-log-count {
-  font-size: 0.85rem;
-  color: var(--text-on-light-dimmed);
-}
-
-.human-play-log-breakdown {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
