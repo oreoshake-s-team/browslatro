@@ -250,7 +250,7 @@ if (isMain) {
     games: intFlag("--games", 50),
     seedOffset: intFlag("--seed-offset", 0),
     handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
-    horizon: intFlag("--horizon", 3),
+    horizon: intFlag("--horizon", 8),
     rollouts: intFlag("--rollouts", 2),
   };
   const parallelJobs = intFlag("--parallel-jobs", 1);
