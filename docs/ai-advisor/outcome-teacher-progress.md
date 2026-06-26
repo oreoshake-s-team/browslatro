@@ -3,6 +3,42 @@
 Status snapshot for resuming on another machine. Branch: `feat/outcome-teacher-experiments`
 (based on `main` at `23819ef`, the v8 ship). This doc + the branch code are the transfer.
 
+## Resume run — 2026-06-25 (CPU box, both planned experiments executed)
+
+`main` merged into this branch (clean; `headlessShopAgent.ts` kept both the shop-activity
+tracking from `main` and the `chooseIndex`/`onShopDecision` hooks — no conflict materialized).
+Typecheck clean, affected unit tests pass. The OOM open issue below is **resolved** — it was
+memory pressure, not a bug; `--parallel-jobs 4` + a heap bump runs clean.
+
+Both planned experiments ran end-to-end on a CPU-only box (no CUDA) and both are **clean
+negatives** vs the v8 incumbent (hand v9, 4 seeds × 500 games, full statistical summary):
+
+| shop policy | avgBlinds | avgAnte | vs v8 | verdict |
+|---|---|---|---|---|
+| **v8** (incumbent, reproduced) | 5.078 | 2.31 | — | baseline (matches doc's 5.082) |
+| **strong-build pivot** (`--games 1000 --horizon 8 --rollouts 1`) | 4.875 | 2.25 | −0.20 | below v8, uniform across all 4 seeds |
+| **Track B self-play REINFORCE** | 3.06 | 1.69 | −2.02 | policy **collapsed** (buys nothing, only opens packs) |
+
+- **Strong-build pivot:** the richer build labels (planets/tarots/spectrals + x-mult priority)
+  made the policy buy *more* aggressively (vouchers 0.29 vs v8 0.00, more rerolls) but it ends
+  poorer (money 16.1 vs 19.1) and dies marginally shallower (tail to ante 6 vs v8's ante 7).
+  Richer build prior did not break the imitation ceiling — consistent with the Track A finding.
+- **Track B REINFORCE:** `ml/train_rl.py` loss diverges monotonically to −5449 over 20 epochs
+  (signed-advantage cross-entropy with no entropy term / no advantage clamp / no learned
+  baseline → logits blow up). Resulting ONNX is degenerate: 0 jokers/consumables/vouchers/rerolls,
+  avgBlinds 3.06. **The trainer needs stabilization before Track B is a fair test** —
+  add entropy regularization, clamp/standardize advantages, and a value baseline.
+- **v7 shop policy is no longer benchmarkable** on this code: it predates encoding v4 and the
+  current `headlessShopAgent` feeds 78 features → onnxruntime shape error. The doc's v7 baseline
+  (5.578) was measured on the old encoding and is not apples-to-apples with v8/candidate today.
+
+Offline recipe used on this box (npm registry DNS-blocked, so no `yarn dlx`): Node 24 runs TS via
+an offline `tsx` assembled from the global Berry cache —
+`node --import file://<cache>/tsx/dist/loader.mjs scripts/<x>.ts …` (esbuild symlinked from the
+pnpm store; deps under a real `node_modules/`). Training: `python ml/train.py … --device cpu`
+(tiny net, ~8s). Artifacts under `ml/outcome/` (gitignored scratch): `strongbuild.{jsonl,onnx}`,
+`selfplay.{jsonl,onnx}`, `logs/`.
+
 ## Goal
 
 Make the ML **shop** advisor build a winning engine — escape the "imitation ceiling"
@@ -71,7 +107,11 @@ Different mechanism: learn from *actual game returns* of trajectories the policy
 
 `yarn typecheck` was clean at last edit; new unit tests pass.
 
-## OPEN ISSUE — full-horizon strong-build regen keeps dying
+## ~~OPEN ISSUE~~ RESOLVED — full-horizon strong-build regen was OOM (memory pressure)
+
+**Resolved 2026-06-25:** it was memory pressure, not a bug. Re-ran at `--parallel-jobs 4` with
+`NODE_OPTIONS=--max-old-space-size=4096` and the full 1000-game / horizon-8 generation completed
+cleanly (12,916 records in ~27 min, all 4 jobs finished). Original diagnosis below for context.
 
 `generateShopRolloutDataset` at `--horizon 8` with the stronger heuristic fails partway
 (last run reached `3/6 jobs done` then a worker died **silently** — no stack trace). Suspected
