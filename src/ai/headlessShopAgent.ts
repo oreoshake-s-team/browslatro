@@ -19,6 +19,7 @@ import {
   encodePackCandidates,
   encodeShopCandidates,
   shopBuildSummary,
+  type ShopBuild,
 } from "./advisor/shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./advisor/types";
 import type { HeadlessShopAgent, ShopResult, ShopView } from "./headlessRun";
@@ -33,6 +34,27 @@ import { emptyShopActivity, type ShopActivity } from "./shopActivity";
 
 const MAX_REROLLS = 2;
 
+type ShopOfferSnapshot = Extract<ShopAdviceCandidate, { action: "buy" }>["item"];
+
+export interface ShopDecisionLog {
+  readonly kind: "purchase" | "reroll";
+  readonly money: number;
+  readonly ante: number;
+  readonly round: number;
+  readonly offers: ReadonlyArray<ShopOfferSnapshot>;
+  readonly item?: ShopOfferSnapshot | null;
+  readonly cost?: number;
+  readonly handLevels: Readonly<Record<string, number>>;
+  readonly jokers: ReadonlyArray<{ readonly effectKind: string; readonly rarity: string }>;
+  readonly deckEnhancements: Readonly<Record<string, number>>;
+  readonly consumablesHeld: number;
+}
+
+export interface HeadlessShopAgentOptions {
+  readonly chooseIndex?: (logits: Float32Array, n: number) => number;
+  readonly onShopDecision?: (log: ShopDecisionLog) => void;
+}
+
 function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
   const category = categorizePackOption(opt);
   const attributes = packOptionAttributes(opt);
@@ -43,7 +65,7 @@ function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
   return { action: "pick", option: { optionType: "playing-card", category, attributes, id: "card", name: "Card", description: "" } };
 }
 
-function shopItemCandidate(item: ShopItem): ShopAdviceCandidate {
+function shopItemCandidate(item: ShopItem): Extract<ShopAdviceCandidate, { action: "buy" }> {
   const category = categorizeShopItem(item);
   const attributes = shopItemAttributes(item);
   if (item.kind === "joker") return { action: "buy", item: { itemType: "joker", category, attributes, id: item.joker.id, name: item.joker.name, description: "", cost: item.price } };
@@ -61,7 +83,38 @@ export function voucherCandidate(voucher: Voucher): ShopAdviceCandidate {
   };
 }
 
-export async function createHeadlessShopAgent(modelPath: string): Promise<HeadlessShopAgent> {
+export function buildShopDecisionLog(
+  offers: ReadonlyArray<ShopItem>,
+  build: ShopBuild,
+  ante: number,
+  round: number,
+  money: number,
+  candidates: ReadonlyArray<ShopAdviceCandidate>,
+  topIdx: number,
+): ShopDecisionLog | null {
+  const base = {
+    money,
+    ante,
+    round,
+    offers: offers.map((o) => shopItemCandidate(o).item),
+    handLevels: build.handLevels,
+    jokers: build.jokers,
+    deckEnhancements: build.deckEnhancements,
+    consumablesHeld: build.consumablesHeld,
+  };
+  if (topIdx < offers.length) {
+    return { kind: "purchase", ...base, item: shopItemCandidate(offers[topIdx]).item };
+  }
+  const cand = candidates[topIdx];
+  if (cand?.action === "leave") return { kind: "purchase", ...base, item: null };
+  if (cand?.action === "reroll") return { kind: "reroll", ...base, cost: cand.cost };
+  return null;
+}
+
+export async function createHeadlessShopAgent(
+  modelPath: string,
+  options: HeadlessShopAgentOptions = {},
+): Promise<HeadlessShopAgent> {
   const bytes = readFileSync(modelPath);
   const ort = await import("onnxruntime-web");
   const session = await ort.InferenceSession.create(bytes);
@@ -78,6 +131,7 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
 
   async function topRanked(encoded: Float32Array, n: number): Promise<number> {
     const data = await runSession(encoded, n);
+    if (options.chooseIndex !== undefined) return options.chooseIndex(data, n);
     return Array.from({ length: n }, (_, i) => i).sort((a, b) => data[b] - data[a])[0] ?? 0;
   }
 
@@ -133,6 +187,10 @@ export async function createHeadlessShopAgent(modelPath: string): Promise<Headle
         ];
         const build = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
         const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length);
+        if (options.onShopDecision !== undefined) {
+          const log = buildShopDecisionLog(offers, build, view.ante, view.round, money, candidates, topIdx);
+          if (log !== null) options.onShopDecision(log);
+        }
         const choice = candidates[topIdx];
         if (choice === undefined || choice.action === "leave") break;
 

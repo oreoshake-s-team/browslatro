@@ -65,4 +65,5 @@ __pycache__/
 /ml/teacher*.jsonl
 /ml/.venv/
 /ml/gen/
+/ml/outcome/
 /e2e/.admin-state.json
