@@ -13,6 +13,7 @@ DEVICE="${DEVICE:-cpu}"
 SHOP="${SHOP:-0}"
 HUMAN="${HUMAN:-0}"
 HUMAN_WEIGHT="${HUMAN_WEIGHT:-5}"
+HUMAN_KEY="${HUMAN_KEY:-}"
 
 DATASET="$(mktemp /tmp/dataset-XXXXXX.jsonl)"
 MODEL="$(mktemp /tmp/model-XXXXXX.onnx)"
@@ -25,6 +26,15 @@ if [[ "$SHOP" == "1" ]]; then
   train_args+=(--shop)
 fi
 
+human_args=()
+
+if [[ -n "$HUMAN_KEY" ]]; then
+  HUMAN_FILE="$(mktemp /tmp/human-XXXXXX.jsonl)"
+  echo "downloading human-play log: $HUMAN_KEY"
+  yarn dlx tsx scripts/remote/getObjectCli.ts "$HUMAN_KEY" "$HUMAN_FILE"
+  human_args+=(--human "$HUMAN_FILE")
+fi
+
 if [[ "$HUMAN" == "1" ]]; then
   shopt -s nullglob
   human_files=(ml/data/human-play/*.jsonl)
@@ -34,13 +44,16 @@ if [[ "$HUMAN" == "1" ]]; then
     exit 1
   fi
   for f in "${human_files[@]}"; do
-    train_args+=(--human "$f")
+    human_args+=(--human "$f")
   done
-  train_args+=(--human-weight "$HUMAN_WEIGHT")
-  echo "merging ${#human_files[@]} human-play files at weight $HUMAN_WEIGHT"
+  echo "merging ${#human_files[@]} baked human-play files"
 fi
 
-echo "training: epochs=$EPOCHS device=$DEVICE shop=$SHOP human=$HUMAN"
+if [[ ${#human_args[@]} -gt 0 ]]; then
+  train_args+=("${human_args[@]}" --human-weight "$HUMAN_WEIGHT")
+fi
+
+echo "training: epochs=$EPOCHS device=$DEVICE shop=$SHOP human=$HUMAN human_key=${HUMAN_KEY:-none}"
 python3 ml/train.py "${train_args[@]}"
 
 echo "uploading model -> $OUTPUT_KEY"

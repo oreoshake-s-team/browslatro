@@ -84,6 +84,16 @@ describe("trainingEnv", () => {
   test("maps the human weight", () => {
     expect(trainingEnv("d", "m", { ...TRAIN, human: true, humanWeight: 8 }).HUMAN_WEIGHT).toBe("8");
   });
+
+  test("passes an uploaded human-play log key through to the worker", () => {
+    expect(
+      trainingEnv("d", "m", { ...TRAIN, humanKey: "training/run1/human.jsonl" }).HUMAN_KEY,
+    ).toBe("training/run1/human.jsonl");
+  });
+
+  test("omits HUMAN_KEY when no log was uploaded", () => {
+    expect(trainingEnv("d", "m", TRAIN).HUMAN_KEY).toBeUndefined();
+  });
 });
 
 describe("runRemoteTraining", () => {
