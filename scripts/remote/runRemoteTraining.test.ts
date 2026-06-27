@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
+  parseCpuKind,
   runRemoteTraining,
   trainingEnv,
   type RemoteTrainingOptions,
@@ -45,6 +46,20 @@ function options(overrides: Partial<RemoteTrainingOptions> = {}): RemoteTraining
   };
 }
 
+describe("parseCpuKind", () => {
+  test("accepts shared", () => {
+    expect(parseCpuKind("shared")).toBe("shared");
+  });
+
+  test("accepts performance", () => {
+    expect(parseCpuKind("performance")).toBe("performance");
+  });
+
+  test("rejects an unknown cpu kind", () => {
+    expect(() => parseCpuKind("turbo")).toThrow(/shared.*performance/);
+  });
+});
+
 describe("trainingEnv", () => {
   test("maps dataset, output, and train args to env vars", () => {
     expect(trainingEnv("d.jsonl", "m.onnx", TRAIN)).toEqual({
@@ -68,6 +83,16 @@ describe("trainingEnv", () => {
 
   test("maps the human weight", () => {
     expect(trainingEnv("d", "m", { ...TRAIN, human: true, humanWeight: 8 }).HUMAN_WEIGHT).toBe("8");
+  });
+
+  test("passes an uploaded human-play log key through to the worker", () => {
+    expect(
+      trainingEnv("d", "m", { ...TRAIN, humanKey: "training/run1/human.jsonl" }).HUMAN_KEY,
+    ).toBe("training/run1/human.jsonl");
+  });
+
+  test("omits HUMAN_KEY when no log was uploaded", () => {
+    expect(trainingEnv("d", "m", TRAIN).HUMAN_KEY).toBeUndefined();
   });
 });
 

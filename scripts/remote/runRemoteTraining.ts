@@ -17,6 +17,7 @@ export interface TrainArgs {
   readonly device: string;
   readonly human: boolean;
   readonly humanWeight: number;
+  readonly humanKey?: string;
 }
 
 export interface RemoteTrainingOptions {
@@ -48,7 +49,7 @@ export function trainingEnv(
   outputKey: string,
   train: TrainArgs,
 ): Record<string, string> {
-  return {
+  const env: Record<string, string> = {
     DATASET_KEY: datasetKey,
     OUTPUT_KEY: outputKey,
     EPOCHS: String(train.epochs),
@@ -57,6 +58,10 @@ export function trainingEnv(
     HUMAN: train.human ? "1" : "0",
     HUMAN_WEIGHT: String(train.humanWeight),
   };
+  if (train.humanKey !== undefined && train.humanKey !== "") {
+    env.HUMAN_KEY = train.humanKey;
+  }
+  return env;
 }
 
 export async function runRemoteTraining(
@@ -112,6 +117,11 @@ function requireEnv(name: string): string {
   return value;
 }
 
+export function parseCpuKind(raw: string): "shared" | "performance" {
+  if (raw === "shared" || raw === "performance") return raw;
+  throw new Error(`--cpu-kind must be "shared" or "performance", got "${raw}"`);
+}
+
 const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
 if (isMain) {
@@ -119,7 +129,7 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--human] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
     );
     process.exit(1);
   }
@@ -143,6 +153,14 @@ if (isMain) {
   console.log(`uploading dataset -> ${datasetKey}`);
   await putObject(s3Config, datasetKey, readFileSync(datasetPath));
 
+  const humanFilePath = stringFlag("--human-file", "");
+  let humanKey: string | undefined;
+  if (humanFilePath !== "") {
+    humanKey = `training/${runId}/human.jsonl`;
+    console.log(`uploading human-play log -> ${humanKey}`);
+    await putObject(s3Config, humanKey, readFileSync(humanFilePath));
+  }
+
   const options: RemoteTrainingOptions = {
     runId,
     datasetKey,
@@ -151,7 +169,7 @@ if (isMain) {
     guest: {
       cpus: intFlag("--cpus", 4),
       memoryMb: intFlag("--memory-mb", 4096),
-      cpuKind: "shared",
+      cpuKind: parseCpuKind(stringFlag("--cpu-kind", "shared")),
     },
     train: {
       epochs: intFlag("--epochs", 30),
@@ -159,6 +177,7 @@ if (isMain) {
       device: "cpu",
       human: hasFlag("--human"),
       humanWeight: intFlag("--human-weight", 5),
+      humanKey,
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,

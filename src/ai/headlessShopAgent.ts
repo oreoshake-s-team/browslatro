@@ -98,7 +98,6 @@ function jokerSellCandidate(joker: Joker, index: number): ShopAdviceCandidate {
 }
 
 export function buildShopDecisionLog(
-  offers: ReadonlyArray<ShopItem>,
   build: ShopBuild,
   ante: number,
   round: number,
@@ -110,16 +109,18 @@ export function buildShopDecisionLog(
     money,
     ante,
     round,
-    offers: offers.map((o) => shopItemCandidate(o).item),
+    offers: candidates.flatMap((c) =>
+      c.action === "buy" || c.action === "sell" ? [c.item] : [],
+    ),
     handLevels: build.handLevels,
     jokers: build.jokers,
     deckEnhancements: build.deckEnhancements,
     consumablesHeld: build.consumablesHeld,
   };
-  if (topIdx < offers.length) {
-    return { kind: "purchase", ...base, item: shopItemCandidate(offers[topIdx]).item };
-  }
   const cand = candidates[topIdx];
+  if (cand?.action === "buy" || cand?.action === "sell") {
+    return { kind: "purchase", ...base, item: cand.item };
+  }
   if (cand?.action === "leave") return { kind: "purchase", ...base, item: null };
   if (cand?.action === "reroll") return { kind: "reroll", ...base, cost: cand.cost };
   return null;
@@ -209,7 +210,7 @@ export async function createHeadlessShopAgent(
         const build = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
         const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length);
         if (options.onShopDecision !== undefined) {
-          const log = buildShopDecisionLog(offers, build, view.ante, view.round, money, candidates, topIdx);
+          const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx);
           if (log !== null) options.onShopDecision(log);
         }
         const choice = candidates[topIdx];

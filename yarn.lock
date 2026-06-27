@@ -12,9 +12,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@anthropic-ai/sdk@npm:^0.105.0":
-  version: 0.105.0
-  resolution: "@anthropic-ai/sdk@npm:0.105.0"
+"@anthropic-ai/sdk@npm:^0.106.0":
+  version: 0.106.0
+  resolution: "@anthropic-ai/sdk@npm:0.106.0"
   dependencies:
     json-schema-to-ts: "npm:^3.1.1"
     standardwebhooks: "npm:^1.0.0"
@@ -25,7 +25,7 @@ __metadata:
       optional: true
   bin:
     anthropic-ai-sdk: bin/cli
-  checksum: 10c0/4adb63fe0627e59379b087d4a284b9df97ae6dad902913d121ea244db428b8ecc3fa46c37f30bd994e75a1626524e43b262bb5035785bc4d8fedc058d2f3901d
+  checksum: 10c0/65961f0f86a0c263e4ebb5b754d3abbae432ec742946dfbaba33cde22679334aff097afb04c5c6d8d1a794e046a560e6e68f564f4357592b4aa0bd7be0a17d80
   languageName: node
   linkType: hard
 
@@ -334,7 +334,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@csstools/css-syntax-patches-for-csstree@npm:^1.1.3, @csstools/css-syntax-patches-for-csstree@npm:^1.1.4":
+"@csstools/css-syntax-patches-for-csstree@npm:^1.1.3, @csstools/css-syntax-patches-for-csstree@npm:^1.1.5":
   version: 1.1.5
   resolution: "@csstools/css-syntax-patches-for-csstree@npm:1.1.5"
   peerDependencies:
@@ -1306,28 +1306,28 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/builder-vite@npm:10.4.2":
-  version: 10.4.2
-  resolution: "@storybook/builder-vite@npm:10.4.2"
+"@storybook/builder-vite@npm:10.4.6":
+  version: 10.4.6
+  resolution: "@storybook/builder-vite@npm:10.4.6"
   dependencies:
-    "@storybook/csf-plugin": "npm:10.4.2"
+    "@storybook/csf-plugin": "npm:10.4.6"
     ts-dedent: "npm:^2.0.0"
   peerDependencies:
-    storybook: ^10.4.2
+    storybook: ^10.4.6
     vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
-  checksum: 10c0/34a2ad375b5a40d7666e3f001686a464aa1c5d7217ec7531b44fb7dbfad0289a449efb0f1755435e1a613e37f33024774e839807a4cbadf05332dc8f7bad2b0c
+  checksum: 10c0/6238a6574485b979f698fe4979df4307a1a2554748c7a6530e7985f5df238cc6419b53ea6812f4c206ec39d96554a911ba302b9aa19460bacb6097af8c4be36e
   languageName: node
   linkType: hard
 
-"@storybook/csf-plugin@npm:10.4.2":
-  version: 10.4.2
-  resolution: "@storybook/csf-plugin@npm:10.4.2"
+"@storybook/csf-plugin@npm:10.4.6":
+  version: 10.4.6
+  resolution: "@storybook/csf-plugin@npm:10.4.6"
   dependencies:
     unplugin: "npm:^2.3.5"
   peerDependencies:
     esbuild: "*"
     rollup: "*"
-    storybook: ^10.4.2
+    storybook: ^10.4.6
     vite: "*"
     webpack: "*"
   peerDependenciesMeta:
@@ -1339,7 +1339,7 @@ __metadata:
       optional: true
     webpack:
       optional: true
-  checksum: 10c0/6515ebd9bef1b183fdc0f1dfaf9866c8686874bc8342cbe909e53f9055c0497b62399f136d67197eff97e0c7d86dfb0edbb559d20a69404bcc56d57867c3d6aa
+  checksum: 10c0/73346ae0be948a2365b3fbc0f3b0fadfcb1c440accb40e012f3244417106c165baf83e3f4dff8c08ae7ca94ce6a26595d17fe09edd5e90c411c038ced0beba2b
   languageName: node
   linkType: hard
 
@@ -1360,32 +1360,32 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@storybook/react-dom-shim@npm:10.4.2":
-  version: 10.4.2
-  resolution: "@storybook/react-dom-shim@npm:10.4.2"
+"@storybook/react-dom-shim@npm:10.4.6":
+  version: 10.4.6
+  resolution: "@storybook/react-dom-shim@npm:10.4.6"
   peerDependencies:
     "@types/react": ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     "@types/react-dom": ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-    storybook: ^10.4.2
+    storybook: ^10.4.6
   peerDependenciesMeta:
     "@types/react":
       optional: true
     "@types/react-dom":
       optional: true
-  checksum: 10c0/ae851a2b86adce768abb4649eddd6fad6d6e11e96791a185891accf121aebb30af4102f9a23107ff647d02c1820f8fbfeafce575f3efe57ade4314036ac25b12
+  checksum: 10c0/d7b2f86be48714cbe217628207a9c6de43839cf74c684501f107049983e6444d0de6b7d84d006a0fb5b63e42ab789ea3abc40e2450a3dee6b38ceba482cc7176
   languageName: node
   linkType: hard
 
-"@storybook/react-vite@npm:10.4.2":
-  version: 10.4.2
-  resolution: "@storybook/react-vite@npm:10.4.2"
+"@storybook/react-vite@npm:10.4.6":
+  version: 10.4.6
+  resolution: "@storybook/react-vite@npm:10.4.6"
   dependencies:
     "@joshwooding/vite-plugin-react-docgen-typescript": "npm:^0.7.0"
     "@rollup/pluginutils": "npm:^5.0.2"
-    "@storybook/builder-vite": "npm:10.4.2"
-    "@storybook/react": "npm:10.4.2"
+    "@storybook/builder-vite": "npm:10.4.6"
+    "@storybook/react": "npm:10.4.6"
     empathic: "npm:^2.0.0"
     magic-string: "npm:^0.30.0"
     react-docgen: "npm:^8.0.0"
@@ -1394,18 +1394,18 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-    storybook: ^10.4.2
+    storybook: ^10.4.6
     vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
-  checksum: 10c0/d1d4ec4624ea375063d30e07e3d269c8848649593f8fab85ba3143100ba573f6426fe57f05e49bc4b9d8e19a21733599f7a1a641ccae93b1b0440b1033c7fbd2
+  checksum: 10c0/5e85ce8c585c8cb9fee11bf2d0d574663818e806892cb72c8cab94c88445084b92632cabd2684178a64f53e2564cd8fb0ac586dabf1ff0c31279615c30d8c183
   languageName: node
   linkType: hard
 
-"@storybook/react@npm:10.4.2":
-  version: 10.4.2
-  resolution: "@storybook/react@npm:10.4.2"
+"@storybook/react@npm:10.4.6":
+  version: 10.4.6
+  resolution: "@storybook/react@npm:10.4.6"
   dependencies:
     "@storybook/global": "npm:^5.0.0"
-    "@storybook/react-dom-shim": "npm:10.4.2"
+    "@storybook/react-dom-shim": "npm:10.4.6"
     react-docgen: "npm:^8.0.2"
     react-docgen-typescript: "npm:^2.2.2"
   peerDependencies:
@@ -1413,7 +1413,7 @@ __metadata:
     "@types/react-dom": ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
     react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-    storybook: ^10.4.2
+    storybook: ^10.4.6
     typescript: ">= 4.9.x"
   peerDependenciesMeta:
     "@types/react":
@@ -1422,7 +1422,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 10c0/0c698d63abf645db2af574e86fb1c578593cc5ffd587d511e7bd6d005df19cdcd94b28447b430416c58d0f21571d683cd12ab11c23e5e93f80ae5b2344a3272e
+  checksum: 10c0/8785d8665c47db86591964fdbde3601fa08f177cd81b85b99b01e2c89b3a0ef5635d71114836afc73944c1009a3fcb6157fe5fb6ef3a6b806eaaed601bb05ee0
   languageName: node
   linkType: hard
 
@@ -2021,12 +2021,12 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "browslatro@workspace:."
   dependencies:
-    "@anthropic-ai/sdk": "npm:^0.105.0"
+    "@anthropic-ai/sdk": "npm:^0.106.0"
     "@axe-core/playwright": "npm:^4.11.3"
     "@dragdroptouch/drag-drop-touch": "npm:^2.0.3"
     "@playwright/test": "npm:^1.61.0"
     "@storybook/addon-a11y": "npm:10.4.6"
-    "@storybook/react-vite": "npm:10.4.2"
+    "@storybook/react-vite": "npm:10.4.6"
     "@testing-library/dom": "npm:^10.4.1"
     "@testing-library/jest-dom": "npm:^6.9.1"
     "@testing-library/react": "npm:^16.3.2"
@@ -2040,13 +2040,13 @@ __metadata:
     "@vitest/coverage-istanbul": "npm:^4.1.7"
     i18next: "npm:^26.3.1"
     jsdom: "npm:^29.0.0"
-    onnxruntime-web: "npm:^1.26.0"
+    onnxruntime-web: "npm:^1.27.0"
     react: "npm:^19.2.6"
     react-dom: "npm:^19.2.6"
     react-i18next: "npm:^17.0.8"
     rollup-plugin-visualizer: "npm:^7.0.1"
     storybook: "npm:10.4.2"
-    stylelint: "npm:^17.13.0"
+    stylelint: "npm:^17.14.0"
     stylelint-config-standard: "npm:^40.0.0"
     typescript: "npm:^6.0.3"
     vite: "npm:^8.0.0"
@@ -2167,7 +2167,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cosmiconfig@npm:^9.0.1":
+"cosmiconfig@npm:^9.0.2":
   version: 9.0.2
   resolution: "cosmiconfig@npm:9.0.2"
   dependencies:
@@ -3498,24 +3498,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"onnxruntime-common@npm:1.26.0":
-  version: 1.26.0
-  resolution: "onnxruntime-common@npm:1.26.0"
-  checksum: 10c0/220679e2b0129fcc8efd710e1502f792ee5583173d261840369c2dd07bbfdcb9dbbeb027002131094f05e0d287354f7cf66605084b6eb0d90d9543fe485c8c6f
+"onnxruntime-common@npm:1.27.0":
+  version: 1.27.0
+  resolution: "onnxruntime-common@npm:1.27.0"
+  checksum: 10c0/175f68638b3714adb2cbb66c236ea1d107d1190cedc71bc43011c6ee58f7cc23ce699592a38db03f8b4be5b5f672d5e7481d81427f73d5df4c96d4a694c8f8f5
   languageName: node
   linkType: hard
 
-"onnxruntime-web@npm:^1.26.0":
-  version: 1.26.0
-  resolution: "onnxruntime-web@npm:1.26.0"
+"onnxruntime-web@npm:^1.27.0":
+  version: 1.27.0
+  resolution: "onnxruntime-web@npm:1.27.0"
   dependencies:
     flatbuffers: "npm:^25.1.24"
     guid-typescript: "npm:^1.0.9"
     long: "npm:^5.2.3"
-    onnxruntime-common: "npm:1.26.0"
+    onnxruntime-common: "npm:1.27.0"
     platform: "npm:^1.3.6"
     protobufjs: "npm:^7.2.4"
-  checksum: 10c0/6e63265dd2810c22897843c140b5c6b5912f285274f5f743af83ebdfeded863e5dea9f92e5f246cf72a0eb8ae4f38e64990869f6cd7472a0f20940b19b362c83
+  checksum: 10c0/77c223ba41b37e7b89073cf71521d98faeaa03648ac83fe98f2ed3639543420614b9095b7d4e32d8c61a72ed77e2a3757b62411e515be1cc16c11619d1eed38b
   languageName: node
   linkType: hard
 
@@ -3803,7 +3803,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"postcss-selector-parser@npm:^7.1.1":
+"postcss-selector-parser@npm:^7.1.4":
   version: 7.1.4
   resolution: "postcss-selector-parser@npm:7.1.4"
   dependencies:
@@ -4381,19 +4381,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"stylelint@npm:^17.13.0":
-  version: 17.13.0
-  resolution: "stylelint@npm:17.13.0"
+"stylelint@npm:^17.14.0":
+  version: 17.14.0
+  resolution: "stylelint@npm:17.14.0"
   dependencies:
     "@csstools/css-calc": "npm:^3.2.1"
     "@csstools/css-parser-algorithms": "npm:^4.0.0"
-    "@csstools/css-syntax-patches-for-csstree": "npm:^1.1.4"
+    "@csstools/css-syntax-patches-for-csstree": "npm:^1.1.5"
     "@csstools/css-tokenizer": "npm:^4.0.0"
     "@csstools/media-query-list-parser": "npm:^5.0.0"
     "@csstools/selector-resolve-nested": "npm:^4.0.0"
     "@csstools/selector-specificity": "npm:^6.0.0"
     colord: "npm:^2.9.3"
-    cosmiconfig: "npm:^9.0.1"
+    cosmiconfig: "npm:^9.0.2"
     css-functions-list: "npm:^3.3.3"
     css-tree: "npm:^3.2.1"
     debug: "npm:^4.4.3"
@@ -4413,7 +4413,7 @@ __metadata:
     picocolors: "npm:^1.1.1"
     postcss: "npm:^8.5.15"
     postcss-safe-parser: "npm:^7.0.1"
-    postcss-selector-parser: "npm:^7.1.1"
+    postcss-selector-parser: "npm:^7.1.4"
     postcss-value-parser: "npm:^4.2.0"
     string-width: "npm:^8.2.1"
     supports-hyperlinks: "npm:^4.4.0"
@@ -4422,7 +4422,7 @@ __metadata:
     write-file-atomic: "npm:^7.0.1"
   bin:
     stylelint: bin/stylelint.mjs
-  checksum: 10c0/07b8e640099c042a5ee807303f79d065998304410ec94e18c419a22e5695bebfe9b2ca10a760630eff9d71f108b2404da8ab7eaba2559686ba99f688b747820b
+  checksum: 10c0/7be23db5c66eba4d4b540bcf9b94e42daf40b1f52b089792dcb8e7d951f81fbec342a458f692fb5156848d6073ce6c36065ba9ec71e86d1c68360dbc3c251a00
   languageName: node
   linkType: hard
 

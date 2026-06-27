@@ -139,10 +139,13 @@ As with generation, the S3 object is the source of truth: if the machine stops
 without exporting a non-empty model the orchestrator fails fast.
 
 Build and push the training image (it adds Python + the `ml/requirements.txt`
-deps on top of the worker image):
+deps on top of the worker image). It uses a dedicated config, `fly.train.toml`,
+that pins `dockerfile = "Dockerfile.train"` — `fly deploy`'s `--dockerfile` flag
+is overridden by a config's `[build] dockerfile`, so the Dockerfile must be set
+in the config, not on the command line:
 
 ```bash
-fly deploy --config ml/remote/fly.toml --dockerfile ml/remote/Dockerfile.train \
+fly deploy --config ml/remote/fly.train.toml \
   --build-only --push --image-label train-latest .
 export TRAIN_IMAGE=registry.fly.io/browslatro-dataset:train-latest
 ```
@@ -165,6 +168,19 @@ are baked into the training image (`ml/data/human-play` is the one `ml/data`
 subtree the build context keeps), and a `--human` run fails fast if the image
 somehow has none. Benchmark the result before shipping with
 `scripts/benchmarkPolicy.ts` exactly as for a locally-trained model.
+
+To mix in a **freshly-uploaded** play-log that isn't baked into the image, pass
+`--human-file <local.jsonl>`: the orchestrator uploads it to
+`training/<runId>/human.jsonl` and the worker downloads it and adds it as a
+`--human` source (sharing `--human-weight`). It composes with `--human` (baked)
+and is the path the one-shot upload→regen→train→bench pipeline uses.
+
+Training is a sustained single-machine CPU grind, so Fly's default **shared**
+CPUs get throttled and it drags. Pass `--cpu-kind performance` for dedicated
+cores (no throttle) — for this tiny MLP that's far better value than a GPU
+(the bottleneck is the host-side Python loss loop, not FLOPs). Only the training
+step takes this flag; dataset-gen / self-play / benchmark stay on shared
+(fanned-out or short, so throttling doesn't matter and shared is cheaper).
 
 ## Running a remote benchmark job
 
@@ -263,10 +279,46 @@ The preflight marker objects (and any shard/model objects) accumulate in the
 bucket; set a lifecycle TTL on the `preflight/`, `datasets/`, `training/`, and
 `benchmark/` prefixes (tracked below).
 
+## Running a remote self-play collection (shop policy)
+
+The **shop** policy is trained from self-play returns (`scripts/collectSelfPlayShop.ts`
+→ `ml/train_rl.py`), not from the search-expert labels above. Collection is the same
+embarrassingly-parallel shape as generation — independent games, sharded by seed — so
+`runRemoteSelfPlay.ts` fans it out the same way, writing shards under `selfplay/<runId>/`
+and concatenating them into one `.jsonl`.
+
+The worker is pure TypeScript, so (like the benchmark) it **reuses the dataset image**
+with a command override (`ml/remote/selfplay-entrypoint.sh`) — no third image. Rebuild
+`dataset-latest` once so the image contains the entrypoint, then:
+
+```bash
+yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts selfplay.jsonl \
+  --run-id 2026-06-26a \
+  --games 1000 --machines 8 --cpus 2 --memory-mb 2048 \
+  --shop-model public/models/advisor-shop-policy-v9.onnx \
+  --hand-model public/models/advisor-policy-v9.onnx \
+  --temperature 1.0
+```
+
+Each machine samples its seed slice from the given shop policy (softmax at `--temperature`)
+under the given hand policy, tagging each shop decision with the game's realized return.
+Train the result with the REINFORCE/PPO trainer (locally for now):
+
+```bash
+python ml/train_rl.py selfplay.jsonl \
+  --init public/models/advisor-shop-policy-v9.onnx --ppo-clip 0.2 --out candidate-shop.onnx
+```
+
+For an on-policy iteration, re-collect from the *new* policy each round (warm-started from
+it) — see `ml/on_policy_track_b.sh`. Benchmark before shipping as usual.
+
 ## Deferred / follow-up work
 
+- A remote **`train_rl.py`** runner (PPO shop training on a machine), and chaining the full
+  **on-policy loop** (collect → warm-start-train → repeat) on Fly.
+- Chaining **generate → train → benchmark** into a single orchestrated run.
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.
-- Wiring the bucket lifecycle (TTL on the `preflight/`, `datasets/`,
+- Wiring the bucket lifecycle (TTL on the `preflight/`, `datasets/`, `selfplay/`,
   `training/`, and `benchmark/` prefixes).
