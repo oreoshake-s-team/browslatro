@@ -223,35 +223,49 @@ baseline on `averageBlindsCleared`, per `ml-pipeline.md`.
 
 ## Running the whole loop in one command
 
-`runRemotePipeline.ts` composes the three jobs above into a single
-generate → train → benchmark cycle. It generates and concatenates a dataset,
-uploads it, trains a model, then benchmarks that model **directly from the
-training output object** (no redundant re-upload). A single preflight runs up
-front, and a failed stage aborts the rest.
+`runRemotePipeline.ts` chains **regenerate → train → benchmark** into a single
+command, mixing in an uploaded play-log (the positional `<play-log.jsonl>`
+argument). It fans out dataset generation, uploads both the dataset and the
+play-log to S3, trains a candidate with the log mixed in, then benchmarks that
+candidate against the baseline. A single preflight runs up front, and a failed
+stage aborts the rest.
 
 ```
 runRemotePipeline.ts (orchestrator, runs locally)
   │  runRemoteDataset() ── shards → concatenated dataset
-  │  putObject(dataset) → training/<runId>/dataset.jsonl
+  │  putObject(dataset)  → training/<runId>/dataset.jsonl
+  │  putObject(play-log) → training/<runId>/human.jsonl
   │  runRemoteTraining() ── model → training/<runId>/model.onnx
-  └  runRemoteBenchmark(modelKey = training/<runId>/model.onnx) → BenchmarkSummary
+  └  runRemoteBenchmark(modelKey = benchmark/<runId>/candidate.onnx) → BenchmarkSummary
 ```
 
 ```bash
-yarn dlx tsx scripts/remote/runRemotePipeline.ts advisor-policy-v10.onnx \
+yarn dlx tsx scripts/remote/runRemotePipeline.ts play-log.jsonl \
   --run-id 2026-06-26a \
-  --games 2000 --machines 8 \
-  --epochs 30 --human \
-  --benchmark-games 500 \
+  --games 2000 --machines 8 --epochs 30 \
+  --cpu-kind performance \
   --baseline public/models/advisor-policy-v9.onnx \
-  --shop-policy public/models/advisor-shop-policy-v9.onnx \
-  --summary-out summary.json
+  --shop-policy public/models/advisor-shop-policy-v9.onnx
 ```
 
 It needs both `DATASET_IMAGE` (generation + benchmark) and `TRAIN_IMAGE`
 (training), and the same S3 env as the individual jobs. It writes the trained
-`<out.onnx>` and prints the per-agent ship-gate metrics. To iterate on a single
-stage, run the individual orchestrators instead.
+candidate to `--out-model` (default `candidate.onnx`) and the full
+`BenchmarkSummary` to `--out-summary` (default `summary.json`), printing the
+per-agent `winRate`/`avgBlinds` ship-gate metrics. Ship only if the candidate
+beats the baseline on `avgBlinds`. To iterate on a single stage, run the
+individual orchestrators instead.
+
+This is the flow built for "attach a log in a Claude Code cloud session and go":
+a cloud session runs on Anthropic hardware (no local machine) and, with the
+right network level, can orchestrate Fly. Set up the cloud session once:
+- **Network**: set the environment to `Full`, or `Custom` allowlisting
+  `api.machines.dev`, `fly.storage.tigris.dev`, `fly.io`, and the npm
+  registries. (The default `Trusted` level does not cover Fly/Tigris — node
+  `fetch` will get `403 host_not_allowed`.)
+- **Secrets**: provide `FLY_API_TOKEN`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`,
+  `BROWSLATRO_DATASET_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  plus `DATASET_IMAGE` and `TRAIN_IMAGE` (see the env table above).
 
 ## Preflight and teardown
 
@@ -316,7 +330,7 @@ it) — see `ml/on_policy_track_b.sh`. Benchmark before shipping as usual.
 
 - A remote **`train_rl.py`** runner (PPO shop training on a machine), and chaining the full
   **on-policy loop** (collect → warm-start-train → repeat) on Fly.
-- Chaining **generate → train → benchmark** into a single orchestrated run.
+- Triggering the pipeline as an **API/GitHub Routine** (drop-and-go without an interactive session).
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.

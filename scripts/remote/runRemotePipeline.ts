@@ -1,55 +1,69 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
 import { DEFAULT_DECK } from "../../src/items/decks";
 import { DEFAULT_STAKE } from "../../src/items/stakes";
-import { FlyMachinesClient } from "./flyMachines";
+import { FlyMachinesClient, type MachineGuest } from "./flyMachines";
 import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
-import { runRemoteDataset, type RemoteDatasetOptions, type RemoteDatasetResult } from "./runRemoteDataset";
-import { runRemoteTraining, type RemoteTrainingOptions, type RemoteTrainingResult } from "./runRemoteTraining";
-import { runRemoteBenchmark, type BenchmarkSummary, type RemoteBenchmarkOptions } from "./runRemoteBenchmark";
+import { runRemoteDataset, type RemoteDatasetOptions } from "./runRemoteDataset";
+import { parseCpuKind, runRemoteTraining, type RemoteTrainingOptions } from "./runRemoteTraining";
+import {
+  runRemoteBenchmark,
+  type BenchmarkSummary,
+  type RemoteBenchmarkOptions,
+} from "./runRemoteBenchmark";
 
-export interface RemotePipelineOptions {
-  readonly dataset: RemoteDatasetOptions;
-  readonly training: RemoteTrainingOptions;
-  readonly benchmark: RemoteBenchmarkOptions;
+export interface PipelineKeys {
+  readonly datasetKey: string;
+  readonly humanKey: string;
+  readonly modelKey: string;
 }
 
-export interface RemotePipelineDeps {
-  readonly generate: (options: RemoteDatasetOptions) => Promise<RemoteDatasetResult>;
-  readonly putArtifact: (key: string, body: Buffer) => Promise<void>;
-  readonly train: (options: RemoteTrainingOptions) => Promise<RemoteTrainingResult>;
-  readonly benchmark: (options: RemoteBenchmarkOptions) => Promise<BenchmarkSummary>;
+export function pipelineKeys(runId: string): PipelineKeys {
+  return {
+    datasetKey: `training/${runId}/dataset.jsonl`,
+    humanKey: `training/${runId}/human.jsonl`,
+    modelKey: `benchmark/${runId}/candidate.onnx`,
+  };
+}
+
+export interface PipelineRunners {
+  readonly regen: () => Promise<{ dataset: Buffer; records: number }>;
+  readonly train: (datasetKey: string, humanKey: string) => Promise<{ model: Buffer }>;
+  readonly benchmark: (modelKey: string) => Promise<BenchmarkSummary>;
+  readonly putObject: (key: string, body: Buffer) => Promise<void>;
+  readonly humanLog: () => Buffer;
   readonly log?: (message: string) => void;
 }
 
-export interface RemotePipelineResult {
-  readonly records: number;
-  readonly modelBytes: number;
+export interface PipelineResult {
   readonly summary: BenchmarkSummary;
+  readonly model: Buffer;
+  readonly records: number;
 }
 
 export async function runRemotePipeline(
-  options: RemotePipelineOptions,
-  deps: RemotePipelineDeps,
-): Promise<RemotePipelineResult> {
-  const log = deps.log ?? (() => {});
+  runId: string,
+  runners: PipelineRunners,
+): Promise<PipelineResult> {
+  const log = runners.log ?? (() => {});
+  const keys = pipelineKeys(runId);
 
-  log("pipeline: generating dataset");
-  const generated = await deps.generate(options.dataset);
+  log("pipeline: regenerating dataset");
+  const { dataset, records } = await runners.regen();
+  await runners.putObject(keys.datasetKey, dataset);
+  await runners.putObject(keys.humanKey, runners.humanLog());
 
-  log(`pipeline: uploading dataset (${generated.records} records) -> ${options.training.datasetKey}`);
-  await deps.putArtifact(options.training.datasetKey, generated.dataset);
+  log(`pipeline: training on ${records} records + uploaded play-log`);
+  const { model } = await runners.train(keys.datasetKey, keys.humanKey);
+  await runners.putObject(keys.modelKey, model);
 
-  log("pipeline: training");
-  const trained = await deps.train(options.training);
+  log("pipeline: benchmarking candidate");
+  const summary = await runners.benchmark(keys.modelKey);
 
-  log("pipeline: benchmarking trained model");
-  const summary = await deps.benchmark(options.benchmark);
-
-  return { records: generated.records, modelBytes: trained.bytes, summary };
+  return { summary, model, records };
 }
 
 const __filename = fileURLToPath(import.meta.url);
@@ -61,10 +75,6 @@ function stringFlag(name: string, fallback: string): string {
   return process.argv[index + 1];
 }
 
-function hasFlag(name: string): boolean {
-  return process.argv.includes(name);
-}
-
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (value === undefined || value === "") throw new Error(`missing required env ${name}`);
@@ -74,36 +84,34 @@ function requireEnv(name: string): string {
 const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res, ms));
 
 if (isMain) {
-  const outPath = process.argv[2];
-  if (outPath === undefined || outPath.startsWith("--") || stringFlag("--run-id", "") === "") {
+  const playLog = process.argv[2];
+  const runId = stringFlag("--run-id", "");
+  if (playLog === undefined || playLog.startsWith("--") || runId === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <out.onnx> --run-id ID [--games N] [--machines N] [--epochs N] [--shop] [--human] [--benchmark-games N] [--baseline REPO_PATH] [--shop-policy PATH] [--summary-out FILE]",
+      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> --run-id ID [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH]",
     );
     process.exit(1);
   }
-
-  const runId = stringFlag("--run-id", "");
-  const deck = stringFlag("--deck", DEFAULT_DECK);
-  const stake = stringFlag("--stake", DEFAULT_STAKE);
-  const shop = hasFlag("--shop");
-  const shopPolicy = stringFlag("--shop-policy", "");
 
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({
     app: requireEnv("FLY_APP"),
     token: requireEnv("FLY_API_TOKEN"),
   });
-  const workerEnv = {
+  const workerEnv: Record<string, string> = {
     AWS_ENDPOINT_URL_S3: s3Config.endpoint,
     AWS_REGION: s3Config.region,
     BROWSLATRO_DATASET_BUCKET: s3Config.bucket,
     AWS_ACCESS_KEY_ID: s3Config.accessKeyId,
     AWS_SECRET_ACCESS_KEY: s3Config.secretAccessKey,
   };
-
-  const workerImage = stringFlag("--image", requireEnv("DATASET_IMAGE"));
+  const datasetImage = stringFlag("--dataset-image", requireEnv("DATASET_IMAGE"));
   const trainImage = stringFlag("--train-image", requireEnv("TRAIN_IMAGE"));
-  const modelKey = `training/${runId}/model.onnx`;
+  const sharedGuest: MachineGuest = { cpus: intFlag("--cpus", 4), memoryMb: 2048, cpuKind: "shared" };
+  const deck = stringFlag("--deck", DEFAULT_DECK);
+  const stake = stringFlag("--stake", DEFAULT_STAKE);
+  const shop = !process.argv.includes("--no-shop");
+  const deps = { launcher, getArtifact: (k: string) => getObject(s3Config, k), sleep, log: console.log };
 
   await runPreflight(runId, {
     putMarker: (key, body) => putObject(s3Config, key, body),
@@ -111,83 +119,80 @@ if (isMain) {
     log: (message) => console.log(message),
   });
 
-  const options: RemotePipelineOptions = {
-    dataset: {
-      runId,
-      totalGames: intFlag("--games", 1000),
-      machines: intFlag("--machines", 4),
-      image: workerImage,
-      guest: { cpus: intFlag("--cpus", 4), memoryMb: intFlag("--memory-mb", 2048), cpuKind: "shared" },
-      generate: {
-        rollouts: intFlag("--rollouts", 4),
-        topN: intFlag("--top-n", 3),
-        maxAnte: intFlag("--max-ante", 8),
-        deck,
-        stake,
-        jokerLoadoutFraction: 0,
-        shopPolicy,
-      },
-      workerEnv,
+  const datasetOptions: RemoteDatasetOptions = {
+    runId,
+    totalGames: intFlag("--games", 2000),
+    machines: intFlag("--machines", 8),
+    image: datasetImage,
+    guest: sharedGuest,
+    generate: {
+      rollouts: intFlag("--rollouts", 4),
+      topN: intFlag("--top-n", 3),
+      maxAnte: intFlag("--max-ante", 8),
+      deck,
+      stake,
+      jokerLoadoutFraction: 0,
+      shopPolicy: stringFlag("--shop-policy", "public/models/advisor-shop-policy-v9.onnx"),
     },
-    training: {
-      runId,
-      datasetKey: `training/${runId}/dataset.jsonl`,
-      outputKey: modelKey,
-      image: trainImage,
-      guest: { cpus: intFlag("--train-cpus", 4), memoryMb: intFlag("--train-memory-mb", 4096), cpuKind: "shared" },
-      train: {
-        epochs: intFlag("--epochs", 30),
-        shop,
-        device: "cpu",
-        human: hasFlag("--human"),
-        humanWeight: intFlag("--human-weight", 5),
-      },
-      workerEnv,
-    },
-    benchmark: {
-      runId,
-      modelKey,
-      outputKey: `benchmark/${runId}/summary.json`,
-      image: workerImage,
-      guest: { cpus: intFlag("--cpus", 4), memoryMb: intFlag("--memory-mb", 2048), cpuKind: "shared" },
-      benchmark: {
-        games: intFlag("--benchmark-games", 200),
-        seedOffset: intFlag("--seed-offset", 5000),
-        deck,
-        stake,
-        shop: !hasFlag("--no-shop"),
-        baseline: stringFlag("--baseline", ""),
-      },
-      workerEnv,
-    },
+    workerEnv,
+  };
+  const trainGuest: MachineGuest = {
+    cpus: intFlag("--cpus", 4),
+    memoryMb: 4096,
+    cpuKind: parseCpuKind(stringFlag("--cpu-kind", "shared")),
   };
 
-  const started = Date.now();
-  const result = await runRemotePipeline(options, {
-    generate: (o) => runRemoteDataset(o, { launcher, getShard: (k) => getObject(s3Config, k), sleep, log: (m) => console.log(m) }),
-    putArtifact: (key, body) => putObject(s3Config, key, body),
-    train: (o) => runRemoteTraining(o, { launcher, getArtifact: (k) => getObject(s3Config, k), sleep, log: (m) => console.log(m) }),
-    benchmark: (o) => runRemoteBenchmark(o, { launcher, getArtifact: (k) => getObject(s3Config, k), sleep, log: (m) => console.log(m) }),
-    log: (m) => console.log(m),
+  const result = await runRemotePipeline(runId, {
+    regen: () => runRemoteDataset(datasetOptions, { ...deps, getShard: deps.getArtifact }),
+    train: (datasetKey, humanKey) => {
+      const options: RemoteTrainingOptions = {
+        runId,
+        datasetKey,
+        outputKey: `training/${runId}/model.onnx`,
+        image: trainImage,
+        guest: trainGuest,
+        train: {
+          epochs: intFlag("--epochs", 30),
+          shop,
+          device: "cpu",
+          human: false,
+          humanWeight: intFlag("--human-weight", 5),
+          humanKey,
+        },
+        workerEnv,
+      };
+      return runRemoteTraining(options, deps);
+    },
+    benchmark: (modelKey) => {
+      const options: RemoteBenchmarkOptions = {
+        runId,
+        modelKey,
+        outputKey: `benchmark/${runId}/summary.json`,
+        image: datasetImage,
+        guest: sharedGuest,
+        benchmark: {
+          games: intFlag("--bench-games", 500),
+          seedOffset: intFlag("--bench-seed", 5000),
+          deck,
+          stake,
+          shop,
+          baseline: stringFlag("--baseline", "public/models/advisor-policy-v9.onnx"),
+        },
+        workerEnv,
+      };
+      return runRemoteBenchmark(options, deps);
+    },
+    putObject: (key, body) => putObject(s3Config, key, body),
+    humanLog: () => readFileSync(playLog),
+    log: (message) => console.log(message),
   });
 
-  const model = await getObject(s3Config, modelKey);
-  writeFileSync(outPath, model);
-
+  writeFileSync(stringFlag("--out-model", "candidate.onnx"), result.model);
+  writeFileSync(stringFlag("--out-summary", "summary.json"), JSON.stringify(result.summary, null, 2));
+  console.log(`\npipeline complete (${result.records} dataset records):`);
   for (const agent of result.summary.agents) {
     console.log(
-      `${agent.label}: winRate=${agent.winRate.toFixed(3)} avgBlinds=${agent.averageBlindsCleared.toFixed(2)} (${agent.wins}/${agent.games})`,
+      `  ${agent.label}: winRate=${agent.winRate.toFixed(3)} avgBlinds=${agent.averageBlindsCleared.toFixed(2)} (${agent.wins}/${agent.games})`,
     );
   }
-
-  const summaryOut = stringFlag("--summary-out", "");
-  if (summaryOut !== "") {
-    writeFileSync(summaryOut, `${JSON.stringify(result.summary, null, 2)}\n`);
-    console.log(`wrote ${summaryOut}`);
-  }
-
-  console.log(
-    `pipeline done in ${((Date.now() - started) / 1000).toFixed(1)}s: ${result.records} records, model ${result.modelBytes} bytes`,
-  );
-  console.log(`wrote ${outPath}`);
 }
