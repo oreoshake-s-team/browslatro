@@ -221,6 +221,38 @@ The orchestrator prints `winRate` / `avgBlinds` per agent and (with `--out`)
 writes the full `BenchmarkSummary`. Ship only if the candidate beats the
 baseline on `averageBlindsCleared`, per `ml-pipeline.md`.
 
+## Running the whole loop in one command
+
+`runRemotePipeline.ts` composes the three jobs above into a single
+generate → train → benchmark cycle. It generates and concatenates a dataset,
+uploads it, trains a model, then benchmarks that model **directly from the
+training output object** (no redundant re-upload). A single preflight runs up
+front, and a failed stage aborts the rest.
+
+```
+runRemotePipeline.ts (orchestrator, runs locally)
+  │  runRemoteDataset() ── shards → concatenated dataset
+  │  putObject(dataset) → training/<runId>/dataset.jsonl
+  │  runRemoteTraining() ── model → training/<runId>/model.onnx
+  └  runRemoteBenchmark(modelKey = training/<runId>/model.onnx) → BenchmarkSummary
+```
+
+```bash
+yarn dlx tsx scripts/remote/runRemotePipeline.ts advisor-policy-v10.onnx \
+  --run-id 2026-06-26a \
+  --games 2000 --machines 8 \
+  --epochs 30 --human \
+  --benchmark-games 500 \
+  --baseline public/models/advisor-policy-v9.onnx \
+  --shop-policy public/models/advisor-shop-policy-v9.onnx \
+  --summary-out summary.json
+```
+
+It needs both `DATASET_IMAGE` (generation + benchmark) and `TRAIN_IMAGE`
+(training), and the same S3 env as the individual jobs. It writes the trained
+`<out.onnx>` and prints the per-agent ship-gate metrics. To iterate on a single
+stage, run the individual orchestrators instead.
+
 ## Preflight and teardown
 
 Every orchestrator runs a **preflight** before launching (or uploading) anything:
