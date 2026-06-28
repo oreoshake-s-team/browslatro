@@ -1,8 +1,9 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, test } from "vitest";
 import type { Card } from "../../cards/types";
+import { createPlusFourMultJoker } from "../../items/jokers/factories";
 import { useGame } from "../../store/game";
-import { buildShopRolloutState } from "./shopRolloutCapture";
+import { buildShopRolloutState, shopBuildFromState } from "./shopRolloutCapture";
 
 beforeEach(() => {
   useGame.getState().resetGame();
@@ -36,5 +37,23 @@ describe("buildShopRolloutState", () => {
     expect(buildShopRolloutState(useGame.getState(), NO_OFFERS).offers).toBe(
       NO_OFFERS,
     );
+  });
+});
+
+describe("shopBuildFromState", () => {
+  test("captures owned jokers into the build", () => {
+    useGame.getState().setJokers([createPlusFourMultJoker()]);
+    expect(shopBuildFromState(useGame.getState()).jokers).toHaveLength(1);
+  });
+
+  test("reflects leveled-up hands", () => {
+    useGame
+      .getState()
+      .setHandStats((prev) => ({ ...prev, Pair: { ...prev.Pair, level: 5 } }));
+    expect(shopBuildFromState(useGame.getState()).handLevels.Pair).toBe(5);
+  });
+
+  test("reflects the consumables held count", () => {
+    expect(shopBuildFromState(useGame.getState()).consumablesHeld).toBe(0);
   });
 });

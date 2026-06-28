@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import type { Advice } from "../../ai/advisor/advice";
@@ -14,14 +14,20 @@ import { useGame } from "../../store/game";
 import ShopSuggestion, { type ShopSuggestionProps } from "./ShopSuggestion";
 
 const { rankState } = vi.hoisted(() => ({
-  rankState: { value: [0] as ReadonlyArray<number> },
+  rankState: {
+    value: [0] as ReadonlyArray<number>,
+    lastInput: null as { build?: { jokers: ReadonlyArray<unknown> }; round?: number } | null,
+  },
 }));
 
 vi.mock("../../ai/advisor/shopRanker", async (importActual) => ({
   ...(await importActual<typeof import("../../ai/advisor/shopRanker")>()),
   sharedShopRanker: () => ({
     load: () => Promise.resolve(),
-    rankShop: () => Promise.resolve(rankState.value),
+    rankShop: (input: { build?: { jokers: ReadonlyArray<unknown> }; round?: number }) => {
+      rankState.lastInput = input;
+      return Promise.resolve(rankState.value);
+    },
     rankPack: () => Promise.resolve([0]),
   }),
 }));
@@ -30,6 +36,7 @@ beforeEach(() => {
   window.localStorage.clear();
   useGame.getState().resetGame();
   rankState.value = [0];
+  rankState.lastInput = null;
   clearShopAdvice();
 });
 
@@ -58,7 +65,7 @@ function renderSuggestion(
   advice: Advice = adviceFixture(),
 ) {
   const props: ShopSuggestionProps = {
-    money: 20,
+    money: 30,
     equippedJokerCount: 0,
     jokerCapacity: 5,
     consumableCount: 0,
@@ -85,6 +92,24 @@ function renderSuggestion(
 async function revealCoachPick(): Promise<void> {
   await userEvent.click(screen.getByTestId("coach-trigger"));
 }
+
+describe("ShopSuggestion build context", () => {
+  test("passes the player's real build to the ranker", async () => {
+    useGame.getState().setJokers([createPlusFourMultJoker()]);
+    renderSuggestion();
+    await revealCoachPick();
+    await waitFor(() =>
+      expect(rankState.lastInput?.build?.jokers).toHaveLength(1),
+    );
+  });
+
+  test("passes the real round counter to the ranker", async () => {
+    useGame.getState().setRound(7);
+    renderSuggestion();
+    await revealCoachPick();
+    await waitFor(() => expect(rankState.lastInput?.round).toBe(7));
+  });
+});
 
 describe("ShopSuggestion click-to-reveal", () => {
   test("shows a Coach tip trigger, not the panel, by default", () => {

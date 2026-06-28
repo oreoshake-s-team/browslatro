@@ -40,7 +40,7 @@ function voucherFixture(): Voucher {
 
 function inputFixture(overrides: Partial<ShopAdviceInput> = {}): ShopAdviceInput {
   return {
-    money: 20,
+    money: 30,
     ante: 2,
     jokers: [],
     consumables: [],
@@ -79,7 +79,7 @@ describe("buildShopAdvicePlan", () => {
 
   test("excludes unaffordable offers", () => {
     const plan = buildShopAdvicePlan(
-      inputFixture({ money: 4, rerollCost: 4, offers: [jokerOffer({ price: 5 })] }),
+      inputFixture({ money: 30, rerollCost: 5, offers: [jokerOffer({ price: 35 })] }),
     );
     expect(plan?.actions.some((action) => action.kind === "buy")).toBe(false);
   });
@@ -139,7 +139,7 @@ describe("buildShopAdvicePlan", () => {
   });
 
   test("includes the reroll candidate with its cost when affordable", () => {
-    const plan = buildShopAdvicePlan(inputFixture({ rerollCost: 5 }));
+    const plan = buildShopAdvicePlan(inputFixture({ money: 30, rerollCost: 5 }));
     expect(plan?.request.candidates).toContainEqual({
       action: "reroll",
       cost: 5,
@@ -151,6 +151,22 @@ describe("buildShopAdvicePlan", () => {
       inputFixture({ money: 5, rerollCost: 6 }),
     );
     expect(plan?.actions.some((action) => action.kind === "reroll")).toBe(false);
+  });
+
+  test("excludes the reroll candidate below the $30 threshold even when affordable", () => {
+    const plan = buildShopAdvicePlan(inputFixture({ money: 20, rerollCost: 5 }));
+    expect(plan?.actions.some((action) => action.kind === "reroll")).toBe(false);
+  });
+
+  test("includes the reroll candidate below $30 when a reroll voucher is owned", () => {
+    const plan = buildShopAdvicePlan(
+      inputFixture({
+        money: 10,
+        rerollCost: 5,
+        ownedVoucherIds: new Set(["reroll-surplus"]),
+      }),
+    );
+    expect(plan?.actions.some((action) => action.kind === "reroll")).toBe(true);
   });
 
   test("always puts leave last", () => {

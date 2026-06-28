@@ -1,6 +1,6 @@
 import type { Consumable } from "../../items/consumables";
 import type { Joker } from "../../items/jokers";
-import type { ShopItem } from "../../items/shop";
+import { rerollAllowed, type ShopItem } from "../../items/shop";
 import {
   applyShopDiscount,
   type Voucher,
@@ -98,7 +98,11 @@ export function buildShopAdvicePlan(input: ShopAdviceInput): ShopAdvicePlan | nu
     });
   });
   const tail: PlanEntry[] = [];
-  if (input.money >= input.rerollCost) {
+  const ownedJokerIds = new Set(input.jokers.map((joker) => joker.id));
+  if (
+    input.money >= input.rerollCost &&
+    rerollAllowed(input.money, input.ownedVoucherIds, ownedJokerIds)
+  ) {
     tail.push({
       candidate: { action: "reroll", cost: input.rerollCost },
       action: { kind: "reroll", cost: input.rerollCost },
