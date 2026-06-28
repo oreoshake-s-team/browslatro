@@ -227,3 +227,15 @@ export function encodePackCandidates(input: PackRankInput): Float32Array {
     }),
   );
 }
+
+export function encodePackCandidatesV2(input: PackRankInput): Float32Array {
+  const { money, ante, round, picksRemaining } = input;
+  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
+  return new Float32Array(
+    input.candidates.flatMap((c) => {
+      if (c.action === "pick")
+        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, 0, false, false, false, false);
+      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, 0, false, false, true, false);
+    }),
+  );
+}
