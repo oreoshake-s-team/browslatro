@@ -45,14 +45,26 @@ const MAX_REROLLS = 2;
 
 type ShopOfferSnapshot = Extract<ShopAdviceCandidate, { action: "buy" }>["item"];
 
+export interface ShopCandidateSnapshot {
+  readonly itemType: string;
+  readonly category: string;
+  readonly attributes?: ReadonlyArray<number>;
+  readonly cost: number;
+  readonly isReroll: boolean;
+  readonly isLeave: boolean;
+  readonly isUse: boolean;
+}
+
 export interface ShopDecisionLog {
-  readonly kind: "purchase" | "reroll";
+  readonly kind: "purchase" | "reroll" | "use";
   readonly money: number;
   readonly ante: number;
   readonly round: number;
   readonly offers: ReadonlyArray<ShopOfferSnapshot>;
   readonly item?: ShopOfferSnapshot | null;
   readonly cost?: number;
+  readonly candidates?: ReadonlyArray<ShopCandidateSnapshot>;
+  readonly chosenIndex?: number;
   readonly handLevels: Readonly<Record<string, number>>;
   readonly jokers: ReadonlyArray<{ readonly effectKind: string; readonly rarity: string }>;
   readonly deckEnhancements: Readonly<Record<string, number>>;
@@ -129,6 +141,24 @@ export function consumableUseCandidate(consumable: Consumable, index: number): S
   };
 }
 
+function candidateSnapshot(candidate: ShopAdviceCandidate): ShopCandidateSnapshot {
+  if (candidate.action === "buy" || candidate.action === "sell" || candidate.action === "use") {
+    return {
+      itemType: candidate.item.itemType,
+      category: candidate.item.category,
+      attributes: candidate.item.attributes,
+      cost: candidate.item.cost,
+      isReroll: false,
+      isLeave: false,
+      isUse: candidate.action === "use",
+    };
+  }
+  if (candidate.action === "reroll") {
+    return { itemType: "", category: "other", cost: candidate.cost, isReroll: true, isLeave: false, isUse: false };
+  }
+  return { itemType: "", category: "other", cost: 0, isReroll: false, isLeave: true, isUse: false };
+}
+
 export function buildShopDecisionLog(
   build: ShopBuild,
   ante: number,
@@ -136,6 +166,7 @@ export function buildShopDecisionLog(
   money: number,
   candidates: ReadonlyArray<ShopAdviceCandidate>,
   topIdx: number,
+  hold = false,
 ): ShopDecisionLog | null {
   const base = {
     money,
@@ -150,6 +181,22 @@ export function buildShopDecisionLog(
     consumablesHeld: build.consumablesHeld,
   };
   const cand = candidates[topIdx];
+  if (hold) {
+    if (cand === undefined) return null;
+    const kind =
+      cand.action === "reroll" ? "reroll" : cand.action === "use" ? "use" : "purchase";
+    const item =
+      cand.action === "buy" || cand.action === "sell" || cand.action === "use"
+        ? cand.item
+        : null;
+    return {
+      kind,
+      ...base,
+      item,
+      candidates: candidates.map(candidateSnapshot),
+      chosenIndex: topIdx,
+    };
+  }
   if (cand?.action === "buy" || cand?.action === "sell") {
     return { kind: "purchase", ...base, item: cand.item };
   }
@@ -266,7 +313,7 @@ export async function createHeadlessShopAgent(
         const build = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: hold ? inventory.length : lastConsumable !== null ? 1 : 0 }));
         const topIdx = await topRanked(encodeShop({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length, featureCount);
         if (options.onShopDecision !== undefined) {
-          const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx);
+          const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx, hold);
           if (log !== null) options.onShopDecision(log);
         }
         const choice = candidates[topIdx];

@@ -104,10 +104,32 @@ describe("buildShopDecisionLog", () => {
     item: { itemType: "joker", category: "joker-mult", id: "sell:j_old:0", name: "Old", description: "", cost: -3 },
   };
   const candidates: ShopAdviceCandidate[] = [buyCandidate, { action: "leave" }];
+  const useCandidate: ShopAdviceCandidate = {
+    action: "use",
+    item: { itemType: "tarot", category: "tarot-deck", id: "use:c_star:0", name: "The Star", description: "", cost: 0 },
+  };
 
   test("records a purchase with the chosen offer item", () => {
     const log = buildShopDecisionLog(EMPTY_BUILD, 2, 3, 10, candidates, 0);
     expect(log?.kind === "purchase" && log.item?.id).toBe("j_test");
+  });
+
+  test("in hold mode records a use decision kind", () => {
+    const withUse: ShopAdviceCandidate[] = [buyCandidate, useCandidate, { action: "leave" }];
+    const log = buildShopDecisionLog(EMPTY_BUILD, 2, 3, 10, withUse, 1, true);
+    expect(log?.kind).toBe("use");
+  });
+
+  test("in hold mode logs the full ordered candidate list with the use flag", () => {
+    const withUse: ShopAdviceCandidate[] = [buyCandidate, useCandidate, { action: "leave" }];
+    const log = buildShopDecisionLog(EMPTY_BUILD, 2, 3, 10, withUse, 1, true);
+    expect(log?.candidates?.map((c) => c.isUse)).toEqual([false, true, false]);
+  });
+
+  test("in hold mode records the chosen index", () => {
+    const withUse: ShopAdviceCandidate[] = [buyCandidate, useCandidate, { action: "leave" }];
+    const log = buildShopDecisionLog(EMPTY_BUILD, 2, 3, 10, withUse, 1, true);
+    expect(log?.chosenIndex).toBe(1);
   });
 
   test("records a leave as a purchase with a null item", () => {
