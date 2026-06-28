@@ -344,3 +344,32 @@ describe("simulatePlay — jokers apply left-to-right within the joker phase", (
     expect(mult([plus4, xMult3])).toBe(18);
   });
 });
+
+describe("simulatePlay — optimizeJokerOrder picks the best copy-joker placement", () => {
+  const pair = [card("9", "hearts"), card("9", "spades")];
+  const xMult3 = joker({
+    id: "xmult3",
+    effect: { kind: "on-hand-type-x-mult", requires: "Pair", amount: 3 },
+  });
+  const plus4 = joker({ id: "plus4", effect: { kind: "additive-mult", amount: 4 } });
+  const blueprint = joker({ id: "blueprint", effect: { kind: "copy-right-joker" } });
+
+  function mult(
+    jokers: ReturnType<typeof joker>[],
+    optimizeJokerOrder: boolean,
+  ): number {
+    const result = simulatePlay(
+      input(pair, { jokers, optimizeJokerOrder }),
+      pair.map((c) => c.id),
+    );
+    return result.legal ? result.mult : NaN;
+  }
+
+  test("scores the declared order when optimization is off", () => {
+    expect(mult([xMult3, plus4, blueprint], false)).toBe(10);
+  });
+
+  test("scores the optimal copy placement when optimization is on", () => {
+    expect(mult([xMult3, plus4, blueprint], true)).toBe(54);
+  });
+});
