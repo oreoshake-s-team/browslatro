@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import {
   encodePackCandidates,
+  encodePackCandidatesV2,
   encodeShopCandidates,
   encodeShopCandidatesV2,
   shopBuildSummary,
@@ -100,6 +101,34 @@ describe("encodeShopCandidatesV2", () => {
   test("reuses the v1 encoding as the row prefix", () => {
     const v1 = encodeShopCandidates(rankInput(buyCandidate()));
     const v2 = encodeShopCandidatesV2(rankInput(buyCandidate()));
+    expect(Array.from(v2.slice(0, SHOP_INPUT_FEATURES))).toEqual(
+      Array.from(v1),
+    );
+  });
+});
+
+describe("encodePackCandidatesV2", () => {
+  const packInput = (candidate: PackAdviceCandidate): PackRankInput => ({
+    money: 10,
+    ante: 1,
+    round: 0,
+    picksRemaining: 1,
+    candidates: [candidate],
+  });
+
+  test("emits one v2-width row per candidate", () => {
+    const encoded = encodePackCandidatesV2(packInput(pickCandidate()));
+    expect(encoded.length).toBe(SHOP_INPUT_FEATURES_V2);
+  });
+
+  test("leaves the use flag unset for a pack pick", () => {
+    const encoded = encodePackCandidatesV2(packInput(pickCandidate()));
+    expect(encoded[SHOP_INPUT_FEATURES_V2 - 1]).toBe(0);
+  });
+
+  test("reuses the v1 pack encoding as the row prefix", () => {
+    const v1 = encodePackCandidates(packInput(pickCandidate()));
+    const v2 = encodePackCandidatesV2(packInput(pickCandidate()));
     expect(Array.from(v2.slice(0, SHOP_INPUT_FEATURES))).toEqual(
       Array.from(v1),
     );

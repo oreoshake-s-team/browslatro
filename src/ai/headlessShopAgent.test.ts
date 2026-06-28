@@ -1,10 +1,13 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import type { Consumable } from "../items/consumables";
 import { createPlusFourMultJoker } from "../items/jokers/factories";
+import { createPlanetCatalog } from "../items/planets";
 import { VOUCHER_CATALOG } from "../items/vouchers";
 import { createDefaultHandStats } from "../scoring/handStats";
 import {
   buildShopDecisionLog,
+  consumableUseCandidate,
   createHeadlessShopAgent,
   voucherCandidate,
 } from "./headlessShopAgent";
@@ -13,6 +16,10 @@ import type { ShopAdviceCandidate } from "./advisor/types";
 import type { ShopBuild } from "./advisor/shopEncoding";
 
 const SHOP_MODEL = "public/models/advisor-shop-policy-v10.onnx";
+
+function planetConsumable(): Consumable {
+  return { kind: "planet", card: createPlanetCatalog()[0] };
+}
 
 function shopViewWithJoker(): ShopView {
   return {
@@ -33,6 +40,46 @@ const buyCandidate: ShopAdviceCandidate = {
   action: "buy",
   item: { itemType: "joker", category: "joker-mult", id: "j_test", name: "T", description: "", cost: 4 },
 };
+
+describe("holdConsumables", () => {
+  test("runs the shop loop end to end with the v2 encoder", async () => {
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      holdConsumables: true,
+      scoreCandidates: (_encoded, n) => new Float32Array(n),
+    });
+    const result = await agent.buyAfterRound(shopViewWithJoker());
+    expect(result.money).toBeLessThanOrEqual(10);
+  });
+
+  test("never offers a use candidate while the inventory is empty", async () => {
+    const widths: number[] = [];
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      holdConsumables: true,
+      scoreCandidates: (encoded, n, featureCount) => {
+        for (let i = 0; i < n; i++) {
+          widths.push(encoded[i * featureCount + (featureCount - 1)]);
+        }
+        return new Float32Array(n).fill(0);
+      },
+    });
+    await agent.buyAfterRound({ ...shopViewWithJoker(), jokers: [], money: 0 });
+    expect(widths.every((flag) => flag === 0)).toBe(true);
+  });
+});
+
+describe("consumableUseCandidate", () => {
+  test("builds a use candidate carrying the consumable item type", () => {
+    const candidate = consumableUseCandidate(planetConsumable(), 0);
+    expect(candidate.action === "use" && candidate.item.itemType).toBe("planet");
+  });
+
+  test("encodes the inventory index into the candidate id", () => {
+    const candidate = consumableUseCandidate(planetConsumable(), 1);
+    expect(candidate.action === "use" && candidate.item.id.endsWith(":1")).toBe(
+      true,
+    );
+  });
+});
 
 describe("voucherCandidate", () => {
   const wasteful = VOUCHER_CATALOG.find((v) => v.id === "wasteful");

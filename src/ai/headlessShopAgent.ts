@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import type { Consumable } from "../items/consumables";
+import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
 import { createPlanetCatalog } from "../items/planets";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
@@ -22,8 +22,11 @@ import {
 import type { HandStats } from "../scoring/handStats";
 import {
   SHOP_INPUT_FEATURES,
+  SHOP_INPUT_FEATURES_V2,
   encodePackCandidates,
+  encodePackCandidatesV2,
   encodeShopCandidates,
+  encodeShopCandidatesV2,
   shopBuildSummary,
   type ShopBuild,
 } from "./advisor/shopEncoding";
@@ -60,6 +63,12 @@ export interface HeadlessShopAgentOptions {
   readonly chooseIndex?: (logits: Float32Array, n: number) => number;
   readonly onShopDecision?: (log: ShopDecisionLog) => void;
   readonly buildOverride?: (build: ShopBuild) => ShopBuild;
+  readonly holdConsumables?: boolean;
+  readonly scoreCandidates?: (
+    encoded: Float32Array,
+    n: number,
+    featureCount: number,
+  ) => Float32Array | Promise<Float32Array>;
 }
 
 function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
@@ -95,6 +104,28 @@ function jokerSellCandidate(joker: Joker, index: number): ShopAdviceCandidate {
   return {
     action: "sell",
     item: { itemType: "joker", category: categorizeShopItem(item), attributes: shopItemAttributes(item), id: `sell:${joker.id}:${index}`, name: joker.name, description: "", cost: -jokerSellValue(joker) },
+  };
+}
+
+function consumableToPackOption(consumable: Consumable): PackOption {
+  if (consumable.kind === "planet") return { kind: "planet", planet: consumable.card };
+  if (consumable.kind === "tarot") return { kind: "tarot", tarot: consumable.card };
+  return { kind: "spectral", spectral: consumable.card };
+}
+
+export function consumableUseCandidate(consumable: Consumable, index: number): ShopAdviceCandidate {
+  const option = consumableToPackOption(consumable);
+  return {
+    action: "use",
+    item: {
+      itemType: consumable.kind,
+      category: categorizePackOption(option),
+      attributes: packOptionAttributes(option),
+      id: `use:${consumable.card.id}:${index}`,
+      name: consumable.card.name,
+      description: "",
+      cost: 0,
+    },
   };
 }
 
@@ -141,14 +172,25 @@ export async function createHeadlessShopAgent(
   const withBuildOverride = (build: ShopBuild): ShopBuild =>
     options.buildOverride !== undefined ? options.buildOverride(build) : build;
 
-  async function runSession(encoded: Float32Array, n: number): Promise<Float32Array> {
-    const input = new ort.Tensor("float32", encoded, [n, SHOP_INPUT_FEATURES]);
+  async function runSession(
+    encoded: Float32Array,
+    n: number,
+    featureCount: number,
+  ): Promise<Float32Array> {
+    if (options.scoreCandidates !== undefined) {
+      return options.scoreCandidates(encoded, n, featureCount);
+    }
+    const input = new ort.Tensor("float32", encoded, [n, featureCount]);
     const { logits } = await session.run({ candidates: input });
     return logits.data as Float32Array;
   }
 
-  async function topRanked(encoded: Float32Array, n: number): Promise<number> {
-    const data = await runSession(encoded, n);
+  async function topRanked(
+    encoded: Float32Array,
+    n: number,
+    featureCount: number,
+  ): Promise<number> {
+    const data = await runSession(encoded, n, featureCount);
     if (options.chooseIndex !== undefined) return options.chooseIndex(data, n);
     return Array.from({ length: n }, (_, i) => i).sort((a, b) => data[b] - data[a])[0] ?? 0;
   }
@@ -198,6 +240,16 @@ export async function createHeadlessShopAgent(
         }
       };
 
+      const hold = options.holdConsumables === true;
+      const featureCount = hold ? SHOP_INPUT_FEATURES_V2 : SHOP_INPUT_FEATURES;
+      const encodeShop = hold ? encodeShopCandidatesV2 : encodeShopCandidates;
+      const encodePack = hold ? encodePackCandidatesV2 : encodePackCandidates;
+      const inventory: Consumable[] = [];
+      const acquireConsumable = (consumable: Consumable): void => {
+        if (hold && inventory.length < MAX_CONSUMABLE_SLOTS) inventory.push(consumable);
+        else useConsumable(consumable);
+      };
+
       for (;;) {
         const rerollCost = Math.max(0, rerollCostFor(rerollsDone) - rerollCostReduction(ownedVoucherIds));
         const sellList = jokers
@@ -206,12 +258,13 @@ export async function createHeadlessShopAgent(
         const candidates: ShopAdviceCandidate[] = [
           ...offers.map(shopItemCandidate),
           ...sellList.map(({ joker, index }) => jokerSellCandidate(joker, index)),
+          ...(hold ? inventory.map((c, i) => consumableUseCandidate(c, i)) : []),
           ...(voucher !== null && voucher.cost <= money ? [voucherCandidate(voucher)] : []),
           ...(rerollsDone < MAX_REROLLS && rerollCost <= money && rerollAllowed(money, ownedVoucherIds, ownedIds) ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
-        const build = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 }));
-        const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length);
+        const build = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: hold ? inventory.length : lastConsumable !== null ? 1 : 0 }));
+        const topIdx = await topRanked(encodeShop({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length, featureCount);
         if (options.onShopDecision !== undefined) {
           const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx);
           if (log !== null) options.onShopDecision(log);
@@ -238,6 +291,15 @@ export async function createHeadlessShopAgent(
           continue;
         }
 
+        if (choice.action === "use") {
+          const inventoryIndex = topIdx - offers.length - sellList.length;
+          const consumable = inventory[inventoryIndex];
+          if (consumable === undefined) break;
+          inventory.splice(inventoryIndex, 1);
+          useConsumable(consumable);
+          continue;
+        }
+
         if (choice.action === "buy" && choice.item.itemType === "voucher" && voucher !== null) {
           money -= voucher.cost;
           spend(voucher.cost);
@@ -258,13 +320,13 @@ export async function createHeadlessShopAgent(
           ownedIds.add(offer.joker.id);
           activity = { ...activity, jokersBought: activity.jokersBought + 1 };
         } else if (offer.kind === "planet") {
-          useConsumable({ kind: "planet", card: offer.planet });
+          acquireConsumable({ kind: "planet", card: offer.planet });
           activity = { ...activity, consumablesBought: activity.consumablesBought + 1 };
         } else if (offer.kind === "tarot") {
-          useConsumable({ kind: "tarot", card: offer.tarot });
+          acquireConsumable({ kind: "tarot", card: offer.tarot });
           activity = { ...activity, consumablesBought: activity.consumablesBought + 1 };
         } else if (offer.kind === "spectral") {
-          useConsumable({ kind: "spectral", card: offer.spectral });
+          acquireConsumable({ kind: "spectral", card: offer.spectral });
           activity = { ...activity, consumablesBought: activity.consumablesBought + 1 };
         } else if (offer.kind === "pack") {
           activity = { ...activity, packsOpened: activity.packsOpened + 1 };
@@ -273,19 +335,21 @@ export async function createHeadlessShopAgent(
           while (picksLeft > 0 && packOptions.length > 0) {
             const packCandidates: PackAdviceCandidate[] = [...packOptions.map(packOptionToCandidate), { action: "skip" }];
             const packBuild = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 }));
-            const pickIdx = await topRanked(encodePackCandidates({ money, ante: view.ante, round: view.round, picksRemaining: picksLeft, build: packBuild, candidates: packCandidates }), packCandidates.length);
+            const pickIdx = await topRanked(encodePack({ money, ante: view.ante, round: view.round, picksRemaining: picksLeft, build: packBuild, candidates: packCandidates }), packCandidates.length, featureCount);
             const picked = packOptions[pickIdx];
             if (picked === undefined) break;
             packOptions = packOptions.filter((_, i) => i !== pickIdx);
             picksLeft -= 1;
             activity = { ...activity, packPicks: activity.packPicks + 1 };
             if (picked.kind === "joker" && jokers.length < jokerCapacity()) { jokers.push(picked.joker); ownedIds.add(picked.joker.id); }
-            else if (picked.kind === "planet") { useConsumable({ kind: "planet", card: picked.planet }); }
-            else if (picked.kind === "tarot") { useConsumable({ kind: "tarot", card: picked.tarot }); }
-            else if (picked.kind === "spectral") { useConsumable({ kind: "spectral", card: picked.spectral }); }
+            else if (picked.kind === "planet") { acquireConsumable({ kind: "planet", card: picked.planet }); }
+            else if (picked.kind === "tarot") { acquireConsumable({ kind: "tarot", card: picked.tarot }); }
+            else if (picked.kind === "spectral") { acquireConsumable({ kind: "spectral", card: picked.spectral }); }
           }
         }
       }
+
+      for (const consumable of inventory) useConsumable(consumable);
 
       return { jokers, money, handStats, ownedVoucherIds, deck, lastConsumable, activity };
     },
