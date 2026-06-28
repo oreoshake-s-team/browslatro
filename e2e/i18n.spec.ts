@@ -110,7 +110,7 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings", as
   for (let i = 0; i < 5; i += 1) {
     await handCards.nth(i).click();
   }
-  await page.getByRole("button", { name: /^Submit Hand/ }).click();
+  await page.getByRole("button", { name: /^Hoʻoholo Haʻawina/ }).click();
   await expect(page.getByText("Kālā i loaʻa")).toBeVisible();
   await expect(page.getByText("Huinanui")).toBeVisible();
   await page.getByRole("button", { name: "Hoʻomau →" }).click();
