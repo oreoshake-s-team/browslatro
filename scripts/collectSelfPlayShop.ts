@@ -6,6 +6,7 @@ import {
   type ShopDecisionLog,
 } from "../src/ai/headlessShopAgent";
 import { playHeadlessRun, seededRng } from "../src/ai/headlessRun";
+import { exploringStart } from "../src/ai/exploringStarts";
 
 function flag(name: string, fallback: string): string {
   const idx = process.argv.indexOf(name);
@@ -54,14 +55,25 @@ async function main(): Promise<void> {
     holdConsumables: process.argv.includes("--hold-consumables"),
   });
 
+  const exploringFraction = Number(flag("--exploring-starts-fraction", "0"));
+  const seedEvery =
+    exploringFraction > 0 ? Math.max(1, Math.round(1 / exploringFraction)) : 0;
+  let seededGames = 0;
+
   const lines: string[] = [];
   let returns = 0;
   for (let g = 0; g < games; g += 1) {
     buffer = [];
+    const seeded = seedEvery > 0 && g % seedEvery === 0;
+    const start = seeded ? exploringStart(seededGames) : undefined;
+    if (seeded) seededGames += 1;
     const result = await playHeadlessRun(handAgent, {
       seed: seedOffset + g,
       shopAgent,
       maxAnte: 8,
+      ...(start !== undefined
+        ? { jokers: start.jokers, startHandStats: start.handStats }
+        : {}),
     });
     returns += result.blindsCleared;
     for (const log of buffer) {
