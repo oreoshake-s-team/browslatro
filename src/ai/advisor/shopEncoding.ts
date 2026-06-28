@@ -177,6 +177,45 @@ export function encodeShopCandidates(input: ShopRankInput): Float32Array {
   );
 }
 
+export const SHOP_INPUT_FEATURES_V2 = SHOP_INPUT_FEATURES + 1;
+
+function candidateRowV2(
+  money: number,
+  ante: number,
+  round: number,
+  picks: number,
+  build: ReadonlyArray<number>,
+  itemType: string,
+  category: string,
+  attributes: ReadonlyArray<number>,
+  cost: number,
+  isReroll: boolean,
+  isLeave: boolean,
+  isSkip: boolean,
+  isUse: boolean,
+): number[] {
+  return [
+    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, cost, isReroll, isLeave, isSkip),
+    isUse ? 1 : 0,
+  ];
+}
+
+export function encodeShopCandidatesV2(input: ShopRankInput): Float32Array {
+  const { money, ante, round } = input;
+  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
+  return new Float32Array(
+    input.candidates.flatMap((c) => {
+      if (c.action === "buy" || c.action === "sell")
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.cost, false, false, false, false);
+      if (c.action === "use")
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.cost, false, false, false, true);
+      if (c.action === "reroll")
+        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, c.cost, true, false, false, false);
+      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, 0, false, true, false, false);
+    }),
+  );
+}
+
 export function encodePackCandidates(input: PackRankInput): Float32Array {
   const { money, ante, round, picksRemaining } = input;
   const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
