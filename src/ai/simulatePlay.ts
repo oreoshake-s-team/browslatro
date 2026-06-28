@@ -32,6 +32,7 @@ import {
   isFaceCard,
 } from "../items/jokers";
 import type { Joker, RandomSource } from "../items/jokers/types";
+import { chooseOptimalJokerOrder } from "../items/jokers/jokerOrdering";
 import { observatoryMultFor, type VoucherId } from "../items/vouchers";
 import type { HandPlayCounts } from "../components/hud/handPlayCounts";
 import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
@@ -70,6 +71,7 @@ export interface SimulatePlayInput {
   readonly todoHand: HandLabel | null;
   readonly idolTarget: { readonly rank: Rank; readonly suit: Suit } | null;
   readonly ancientSuit: Suit | null;
+  readonly optimizeJokerOrder?: boolean;
 }
 
 export type IllegalPlayReason =
@@ -91,7 +93,33 @@ export type SimulatePlayResult =
 
 const neverProc: RandomSource = () => 1;
 
+function sameJokerOrder(
+  a: ReadonlyArray<Joker>,
+  b: ReadonlyArray<Joker>,
+): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
 export function simulatePlay(
+  input: SimulatePlayInput,
+  cardIds: ReadonlyArray<number>,
+): SimulatePlayResult {
+  if (input.optimizeJokerOrder !== true) return scorePlay(input, cardIds);
+  const baseline = scorePlay(input, cardIds);
+  if (!baseline.legal) return baseline;
+  const order = chooseOptimalJokerOrder(input.jokers, (perm) => {
+    const result = scorePlay({ ...input, jokers: perm }, cardIds);
+    return result.legal ? result.score : Number.NEGATIVE_INFINITY;
+  });
+  if (sameJokerOrder(order, input.jokers)) return baseline;
+  return scorePlay({ ...input, jokers: order }, cardIds);
+}
+
+function scorePlay(
   input: SimulatePlayInput,
   cardIds: ReadonlyArray<number>,
 ): SimulatePlayResult {

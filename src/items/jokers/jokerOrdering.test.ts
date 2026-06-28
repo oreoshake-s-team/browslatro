@@ -5,6 +5,7 @@ import type { HandLabel } from "../../scoring/handEvaluator";
 import { createJokerCatalog } from "./catalog";
 import { withEdition } from "./editions";
 import {
+  createBlueprintJoker,
   createCavendishJoker,
   createJokerStencilJoker,
   createJollyJoker,
@@ -13,7 +14,14 @@ import {
   createSlyJoker,
   createTheDuoJoker,
 } from "./factories";
-import { orderJokersForScoring, producesXMult } from "./jokerOrdering";
+import {
+  additiveFirstInversions,
+  chooseOptimalJokerOrder,
+  hasCopyJoker,
+  orderJokersForScoring,
+  producesXMult,
+} from "./jokerOrdering";
+import type { Joker } from "./types";
 import { applyHandLevelJokers } from "./scoring/handLevel";
 
 function card(rank: Rank, suit: Suit, id: number): Card {
@@ -110,5 +118,78 @@ describe("orderJokersForScoring", () => {
     if (copy === undefined) return;
     const input = [createTheDuoJoker(), copy, createJollyJoker()];
     expect(orderJokersForScoring(input)).toEqual(input);
+  });
+});
+
+describe("hasCopyJoker", () => {
+  test("detects a copy joker in the loadout", () => {
+    expect(hasCopyJoker([createBlueprintJoker(), createJollyJoker()])).toBe(true);
+  });
+
+  test("returns false without a copy joker", () => {
+    expect(hasCopyJoker([createCavendishJoker(), createJollyJoker()])).toBe(false);
+  });
+});
+
+describe("additiveFirstInversions", () => {
+  test("counts none for an additive-before-x-mult order", () => {
+    expect(
+      additiveFirstInversions([createJollyJoker(), createCavendishJoker()]),
+    ).toBe(0);
+  });
+
+  test("counts one for an x-mult-before-additive order", () => {
+    expect(
+      additiveFirstInversions([createCavendishJoker(), createJollyJoker()]),
+    ).toBe(1);
+  });
+});
+
+describe("chooseOptimalJokerOrder", () => {
+  test("skips the exact search when no copy joker is present", () => {
+    let calls = 0;
+    chooseOptimalJokerOrder([createCavendishJoker(), createJollyJoker()], () => {
+      calls += 1;
+      return 0;
+    });
+    expect(calls).toBe(0);
+  });
+
+  test("falls back to the partition when no copy joker is present", () => {
+    const ordered = chooseOptimalJokerOrder(
+      [createCavendishJoker(), createJollyJoker()],
+      () => 0,
+    );
+    expect(producesXMult(ordered[ordered.length - 1])).toBe(true);
+  });
+
+  test("selects the highest-scoring permutation when a copy joker is present", () => {
+    const blueprint = createBlueprintJoker();
+    const cavendish = createCavendishJoker();
+    const jolly = createJollyJoker();
+    const rank = new Map<string, number>([
+      [cavendish.id, 3],
+      [blueprint.id, 2],
+      [jolly.id, 1],
+    ]);
+    const scoreOf = (order: ReadonlyArray<Joker>): number =>
+      order.reduce(
+        (sum, joker, i) => sum + (rank.get(joker.id) ?? 0) * (order.length - i),
+        0,
+      );
+    const ordered = chooseOptimalJokerOrder([jolly, blueprint, cavendish], scoreOf);
+    expect(ordered.map((j) => j.id)).toEqual([
+      cavendish.id,
+      blueprint.id,
+      jolly.id,
+    ]);
+  });
+
+  test("breaks score ties toward the additive-before-x-mult shape", () => {
+    const ordered = chooseOptimalJokerOrder(
+      [createCavendishJoker(), createBlueprintJoker(), createJollyJoker()],
+      () => 0,
+    );
+    expect(producesXMult(ordered[ordered.length - 1])).toBe(true);
   });
 });
