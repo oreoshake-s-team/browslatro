@@ -99,7 +99,7 @@ test("keyboard-only sell of a joker announces the sale", async ({
     page.getByTestId("joker-tile-filled-plus-four-mult"),
   ).toHaveCount(0);
   await expect(page.getByTestId("live-announcer")).toHaveText(
-    /^Sold \+4 Mult for \$\d+$/,
+    /^Sold Joker for \$\d+$/,
   );
 });
 
