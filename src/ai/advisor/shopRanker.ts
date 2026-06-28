@@ -1,13 +1,13 @@
 import { fetchModelBytes, type DownloadProgressListener } from "./download";
 import {
-  encodePackCandidates,
-  encodeShopCandidates,
-  SHOP_INPUT_FEATURES,
+  encodePackCandidatesV2,
+  encodeShopCandidatesV2,
+  SHOP_INPUT_FEATURES_V2,
 } from "./shopEncoding";
 import type { PackRankInput, ShopRankInput } from "./shopEncoding";
 
-export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v10.onnx";
-export const SHOP_POLICY_MODEL_ID = "advisor-shop-policy-v10";
+export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v11.onnx";
+export const SHOP_POLICY_MODEL_ID = "advisor-shop-policy-v11";
 
 export interface ShopCandidateRanker {
   load(onProgress?: DownloadProgressListener): Promise<void>;
@@ -25,7 +25,7 @@ async function loadRawShopRanker(
 
   async function rank(encoded: Float32Array, n: number): Promise<ReadonlyArray<number>> {
     if (n === 0) return [];
-    const input = new ort.Tensor("float32", encoded, [n, SHOP_INPUT_FEATURES]);
+    const input = new ort.Tensor("float32", encoded, [n, SHOP_INPUT_FEATURES_V2]);
     const { logits } = await session.run({ candidates: input });
     const data = logits.data as Float32Array;
     return Array.from({ length: n }, (_, i) => i).sort((a, b) => data[b] - data[a]);
@@ -33,8 +33,8 @@ async function loadRawShopRanker(
 
   return {
     async load() {},
-    async rankShop(i) { return rank(encodeShopCandidates(i), i.candidates.length); },
-    async rankPack(i) { return rank(encodePackCandidates(i), i.candidates.length); },
+    async rankShop(i) { return rank(encodeShopCandidatesV2(i), i.candidates.length); },
+    async rankPack(i) { return rank(encodePackCandidatesV2(i), i.candidates.length); },
   };
 }
 

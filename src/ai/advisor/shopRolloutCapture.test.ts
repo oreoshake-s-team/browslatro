@@ -63,10 +63,10 @@ describe("shopBuildFromState", () => {
     expect(shopBuildFromState(useGame.getState()).consumablesHeld).toBe(0);
   });
 
-  test("caps consumables held at one to match the training signal", () => {
+  test("reflects the real consumables held count for the v11 policy", () => {
     useGame
       .getState()
       .setConsumables([planetConsumable(0), planetConsumable(1)]);
-    expect(shopBuildFromState(useGame.getState()).consumablesHeld).toBe(1);
+    expect(shopBuildFromState(useGame.getState()).consumablesHeld).toBe(2);
   });
 });

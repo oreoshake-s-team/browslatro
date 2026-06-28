@@ -3,7 +3,7 @@ import { SHOP_MODEL_URL, sharedShopRanker } from "./shopRanker";
 
 describe("sharedShopRanker", () => {
   test("points at the committed model asset", () => {
-    expect(SHOP_MODEL_URL).toBe("/models/advisor-shop-policy-v10.onnx");
+    expect(SHOP_MODEL_URL).toBe("/models/advisor-shop-policy-v11.onnx");
   });
 
   test("exposes a ranker with load, rankShop, and rankPack", () => {
