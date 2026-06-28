@@ -438,7 +438,7 @@ describe("Joker tooltip — effective odds with a probability multiplier", () =>
     const user = userEvent.setup();
     render(<Jokers jokers={[createBusinessCardJoker()]} />);
     await user.hover(screen.getByTestId("joker-tile-filled-business-card"));
-    expect(screen.getByRole("tooltip")).toHaveTextContent(/50% chance/);
+    expect(screen.getByRole("tooltip")).toHaveTextContent(/1 in 2 chance/);
   });
 });
 

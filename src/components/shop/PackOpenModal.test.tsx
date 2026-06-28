@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import PackOpenModal from "./PackOpenModal";
+import { localizedJokerName } from "../../i18n/jokerOverrides";
 import type { PackOffer } from "../../items/packs";
 import type { Card } from "../../cards/types";
 import { createPlanetCatalog } from "../../items/planets";
@@ -327,8 +328,9 @@ describe("PackOpenModal — Buffoon pack rendering", () => {
       />,
     );
     const firstJoker = JOKERS[0];
+    const localizedName = localizedJokerName("en", firstJoker.id, firstJoker.name);
     expect(
-      screen.getByRole("button", { name: `Pick ${firstJoker.name}` }),
+      screen.getByRole("button", { name: `Pick ${localizedName}` }),
     ).toBeInTheDocument();
   });
 

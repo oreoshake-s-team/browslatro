@@ -1,28 +1,29 @@
-export interface JokerContentOverride {
-  readonly name?: string;
-  readonly description?: string;
-}
+import { en } from "./locales/en";
+import { haw } from "./locales/haw";
+import { JOKER_PLACEHOLDER_VALUES } from "./jokerPlaceholders";
 
-export type JokerOverrideMap = Readonly<Record<string, JokerContentOverride>>;
+type JokerStrings = Readonly<Record<string, string>>;
 
-export const HAW_JOKER_OVERRIDES: JokerOverrideMap = {};
-
-const OVERRIDES_BY_LOCALE: Readonly<Record<string, JokerOverrideMap>> = {
-  haw: HAW_JOKER_OVERRIDES,
+const NAMES_BY_LOCALE: Readonly<Record<string, JokerStrings>> = {
+  en: en.jokerNames,
+  haw: haw.jokerNames,
 };
 
-export function localizedJokerName(
-  locale: string,
-  id: string,
-  fallback: string,
-): string {
-  return OVERRIDES_BY_LOCALE[locale]?.[id]?.name ?? fallback;
+const DESCRIPTIONS_BY_LOCALE: Readonly<Record<string, JokerStrings>> = {
+  en: en.jokerDescriptions,
+  haw: haw.jokerDescriptions,
+};
+
+function interpolate(template: string, id: string): string {
+  const values = JOKER_PLACEHOLDER_VALUES[id];
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key: string) => values?.[key] ?? match);
 }
 
-export function localizedJokerDescription(
-  locale: string,
-  id: string,
-  fallback: string,
-): string {
-  return OVERRIDES_BY_LOCALE[locale]?.[id]?.description ?? fallback;
+export function localizedJokerName(locale: string, id: string, fallback: string): string {
+  return NAMES_BY_LOCALE[locale]?.[id] ?? NAMES_BY_LOCALE.en[id] ?? fallback;
+}
+
+export function localizedJokerDescription(locale: string, id: string, fallback: string): string {
+  const template = DESCRIPTIONS_BY_LOCALE[locale]?.[id] ?? DESCRIPTIONS_BY_LOCALE.en[id];
+  return template !== undefined ? interpolate(template, id) : fallback;
 }

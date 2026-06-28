@@ -1,41 +1,25 @@
-import {
-  HAW_JOKER_OVERRIDES,
-  localizedJokerDescription,
-  localizedJokerName,
-} from "./jokerOverrides";
-import {
-  createJokerCatalog,
-  createLegendaryJokerCatalog,
-} from "../items/jokers";
+import { localizedJokerDescription, localizedJokerName } from "./jokerOverrides";
 
 describe("jokerOverrides", () => {
-  test("localizedJokerName returns the fallback when no override exists", () => {
-    expect(localizedJokerName("haw", "abstract-joker", "Abstract Joker")).toBe(
-      "Abstract Joker",
+  test("localizedJokerName returns the canonical i18n name, not the code fallback", () => {
+    expect(localizedJokerName("en", "plus-four-mult", "+4 Mult")).toBe("Joker");
+  });
+
+  test("localizedJokerName returns the fallback for an unknown id", () => {
+    expect(localizedJokerName("en", "not-a-joker", "Fallback")).toBe("Fallback");
+  });
+
+  test("localizedJokerDescription interpolates the templated values", () => {
+    expect(localizedJokerDescription("en", "bull", "fallback")).toBe(
+      "+2 Chips for each $1 you have",
     );
   });
 
-  test("localizedJokerName returns the fallback under en (negative)", () => {
-    expect(localizedJokerName("en", "abstract-joker", "Abstract Joker")).toBe(
-      "Abstract Joker",
-    );
+  test("localizedJokerDescription returns the fallback for an unknown id", () => {
+    expect(localizedJokerDescription("en", "not-a-joker", "Fallback")).toBe("Fallback");
   });
 
-  test("localizedJokerDescription returns the fallback when no override exists", () => {
-    expect(localizedJokerDescription("haw", "egg", "Gains sell value")).toBe(
-      "Gains sell value",
-    );
-  });
-
-  test("every haw joker override id exists in a joker catalog", () => {
-    const known = new Set(
-      [...createJokerCatalog(), ...createLegendaryJokerCatalog()].map(
-        (j) => j.id,
-      ),
-    );
-    const unknown = Object.keys(HAW_JOKER_OVERRIDES).filter(
-      (id) => !known.has(id),
-    );
-    expect(unknown).toEqual([]);
+  test("an untranslated haw joker name falls back to the English text", () => {
+    expect(localizedJokerName("haw", "plus-four-mult", "+4 Mult")).toBe("Joker");
   });
 });
