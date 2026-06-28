@@ -332,17 +332,32 @@ def encode_shop_decision(record):
 
 
 def encode_shop_decision_v2(record):
-    """V2 (use-aware) shop encoding: appends a trailing isUse flag per candidate.
+    """V2 (use-aware) shop encoding: a trailing isUse flag per candidate.
 
-    Existing decision kinds carry isUse=0 on every candidate. The use-action
-    decision kind (logged once the headless sim's hold-consumables path feeds
-    training) sets the flag on its held-consumable candidates.
+    Hold-consumables records carry an explicit ``candidates`` list (one entry
+    per candidate the policy faced, in order) and a ``chosenIndex``; each is
+    encoded verbatim with its ``isUse`` flag, so no candidate-order
+    reconstruction is needed. Older records without ``candidates`` fall back to
+    the v1 reconstruction with isUse=0 on every candidate.
     """
+    explicit = record.get("candidates")
+    if explicit is not None:
+        ctx = _encode_shop_context(record)
+        money = record["money"]
+        rows = [
+            ctx
+            + _encode_shop_candidate(
+                c.get("itemType") or None,
+                c.get("cost", 0),
+                money,
+                category=c.get("category", "other"),
+                attributes=c.get("attributes"),
+                is_reroll=bool(c.get("isReroll")),
+                is_leave=bool(c.get("isLeave")),
+            )
+            + [1.0 if c.get("isUse") else 0.0]
+            for c in explicit
+        ]
+        return rows, record.get("chosenIndex", -1)
     candidates, chosen = encode_shop_decision(record)
-    use_flags = record.get("useFlags")
-    if use_flags is None:
-        return [row + [0.0] for row in candidates], chosen
-    return [
-        row + [1.0 if i < len(use_flags) and use_flags[i] else 0.0]
-        for i, row in enumerate(candidates)
-    ], chosen
+    return [row + [0.0] for row in candidates], chosen

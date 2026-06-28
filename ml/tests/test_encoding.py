@@ -378,6 +378,31 @@ class EncodeShopDecisionTests(unittest.TestCase):
         candidates, _ = encode_shop_decision_v2(record)
         self.assertEqual(candidates[0][-1], 0.0)
 
+    def test_v2_explicit_candidates_set_use_flag(self):
+        record = shop_envelope(
+            kind="use",
+            candidates=[
+                {"itemType": "joker", "category": "joker-mult", "cost": 5, "isReroll": False, "isLeave": False, "isUse": False},
+                {"itemType": "tarot", "category": "tarot-deck", "cost": 0, "isReroll": False, "isLeave": False, "isUse": True},
+                {"itemType": "", "category": "other", "cost": 0, "isReroll": False, "isLeave": True, "isUse": False},
+            ],
+            chosenIndex=1,
+        )
+        candidates, _ = encode_shop_decision_v2(record)
+        self.assertEqual([row[-1] for row in candidates], [0.0, 1.0, 0.0])
+
+    def test_v2_explicit_candidates_return_chosen_index(self):
+        record = shop_envelope(
+            kind="use",
+            candidates=[
+                {"itemType": "tarot", "category": "tarot-deck", "cost": 0, "isReroll": False, "isLeave": False, "isUse": True},
+                {"itemType": "", "category": "other", "cost": 0, "isReroll": False, "isLeave": True, "isUse": False},
+            ],
+            chosenIndex=0,
+        )
+        _, chosen = encode_shop_decision_v2(record)
+        self.assertEqual(chosen, 0)
+
     def test_can_afford_set_when_cost_within_money(self):
         record = shop_envelope(
             money=10,
