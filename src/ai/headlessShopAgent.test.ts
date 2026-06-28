@@ -1,9 +1,32 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import { createPlusFourMultJoker } from "../items/jokers/factories";
 import { VOUCHER_CATALOG } from "../items/vouchers";
-import { buildShopDecisionLog, voucherCandidate } from "./headlessShopAgent";
+import { createDefaultHandStats } from "../scoring/handStats";
+import {
+  buildShopDecisionLog,
+  createHeadlessShopAgent,
+  voucherCandidate,
+} from "./headlessShopAgent";
+import type { ShopView } from "./headlessRun";
 import type { ShopAdviceCandidate } from "./advisor/types";
 import type { ShopBuild } from "./advisor/shopEncoding";
+
+const SHOP_MODEL = "public/models/advisor-shop-policy-v10.onnx";
+
+function shopViewWithJoker(): ShopView {
+  return {
+    ante: 2,
+    round: 4,
+    money: 10,
+    jokers: [createPlusFourMultJoker()],
+    handStats: createDefaultHandStats(),
+    deck: [],
+    ownedVoucherIds: new Set(),
+    lastConsumable: null,
+    rng: () => 0.5,
+  };
+}
 
 const EMPTY_BUILD: ShopBuild = { handLevels: {}, jokers: [], deckEnhancements: {}, consumablesHeld: 0 };
 const buyCandidate: ShopAdviceCandidate = {
@@ -71,5 +94,29 @@ describe("buildShopDecisionLog", () => {
     const all: ShopAdviceCandidate[] = [buyCandidate, sellCandidate, voucherCandidate(voucher), { action: "leave" }];
     const log = buildShopDecisionLog(EMPTY_BUILD, 2, 3, 10, all, 0);
     expect(log?.offers.map((o) => o.id)).toEqual(["j_test", "sell:j_old:0", "wasteful"]);
+  });
+});
+
+describe("buildOverride", () => {
+  test("receives the player's real build before encoding", async () => {
+    const seen: ShopBuild[] = [];
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      buildOverride: (build) => {
+        seen.push(build);
+        return build;
+      },
+    });
+    await agent.buyAfterRound(shopViewWithJoker());
+    expect(seen[0]?.jokers).toHaveLength(1);
+  });
+
+  test("substitutes the transformed build into the decision log", async () => {
+    const logs: Array<ReadonlyArray<unknown>> = [];
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      buildOverride: () => EMPTY_BUILD,
+      onShopDecision: (log) => logs.push(log.jokers),
+    });
+    await agent.buyAfterRound(shopViewWithJoker());
+    expect(logs[0]).toHaveLength(0);
   });
 });
