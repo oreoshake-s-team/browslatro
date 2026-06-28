@@ -331,7 +331,7 @@ describe("Options — language picker", () => {
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Language"), "haw");
     expect(
-      await screen.findByRole("heading", { name: "Nā koho" }),
+      await screen.findByRole("heading", { name: "Nā Koho" }),
     ).toBeInTheDocument();
   });
 
@@ -362,40 +362,40 @@ describe("Options i18n", () => {
     await restoreEnglishLocale();
   });
 
-  test("the New game button renders Pāʻani hou under the haw locale", async () => {
+  test("the New game button renders Puni Pāʻani hou under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     render(<Options onNewGame={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
-    expect(screen.getByRole("button", { name: "Pāʻani hou" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Nā Koho" }));
+    expect(screen.getByRole("button", { name: "Puni Pāʻani hou" })).toBeInTheDocument();
   });
 
   test("the Close button renders Pani under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     render(<Options onNewGame={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
+    await userEvent.click(screen.getByRole("button", { name: "Nā Koho" }));
     expect(screen.getByRole("button", { name: "Pani" })).toBeInTheDocument();
   });
 
-  test("animation speed options render Lohi and Wikiwiki under the haw locale", async () => {
+  test("animation speed options render Pupū and Wikiwiki under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     render(<Options onNewGame={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
-    expect(screen.getByRole("option", { name: "Lohi" })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Nā Koho" }));
+    expect(screen.getByRole("option", { name: "Pupū" })).toBeInTheDocument();
     expect(screen.getByRole("option", { name: "Wikiwiki" })).toBeInTheDocument();
   });
 
-  test("the New game confirm copy stays English fallback under the haw locale (negative)", async () => {
+  test("the New game confirm copy is localized under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<Options onNewGame={() => {}} />);
-    await userEvent.click(screen.getByRole("button", { name: "Nā koho" }));
-    await userEvent.click(screen.getByRole("button", { name: "Pāʻani hou" }));
+    await userEvent.click(screen.getByRole("button", { name: "Nā Koho" }));
+    await userEvent.click(screen.getByRole("button", { name: "Puni Pāʻani hou" }));
     expect(confirmSpy).toHaveBeenCalledWith(
-      "Start a new game? This will end your current run.",
+      "E pāʻani hou? E pau ana kēia puni i nā pēlā.",
     );
     confirmSpy.mockRestore();
   });
