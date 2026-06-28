@@ -5,9 +5,11 @@ import { describe, expect, test } from "vitest";
 import {
   encodePackCandidates,
   encodeShopCandidates,
+  encodeShopCandidatesV2,
   shopBuildSummary,
   SHOP_BUILD_FEATURES,
   SHOP_INPUT_FEATURES,
+  SHOP_INPUT_FEATURES_V2,
 } from "./shopEncoding";
 import type { PackRankInput, ShopBuild, ShopRankInput } from "./shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
@@ -33,6 +35,20 @@ function rerollCandidate(): ShopAdviceCandidate {
   return { action: "reroll", cost: 5 };
 }
 
+function useCandidate(): ShopAdviceCandidate {
+  return {
+    action: "use",
+    item: {
+      id: "c_star",
+      name: "The Star",
+      itemType: "tarot",
+      category: "tarot-deck",
+      cost: 0,
+      description: "test",
+    },
+  };
+}
+
 function leaveCandidate(): ShopAdviceCandidate {
   return { action: "leave" };
 }
@@ -51,6 +67,42 @@ function skipCandidate(): PackAdviceCandidate {
 describe("SHOP_INPUT_FEATURES", () => {
   test("equals 78", () => {
     expect(SHOP_INPUT_FEATURES).toBe(78);
+  });
+});
+
+describe("encodeShopCandidatesV2", () => {
+  const rankInput = (candidate: ShopAdviceCandidate): ShopRankInput => ({
+    money: 10,
+    ante: 1,
+    round: 0,
+    candidates: [candidate],
+  });
+
+  test("adds exactly one feature over the v1 width", () => {
+    expect(SHOP_INPUT_FEATURES_V2).toBe(SHOP_INPUT_FEATURES + 1);
+  });
+
+  test("emits one v2-width row per candidate", () => {
+    const encoded = encodeShopCandidatesV2(rankInput(buyCandidate()));
+    expect(encoded.length).toBe(SHOP_INPUT_FEATURES_V2);
+  });
+
+  test("sets the trailing use flag for a use candidate", () => {
+    const encoded = encodeShopCandidatesV2(rankInput(useCandidate()));
+    expect(encoded[SHOP_INPUT_FEATURES_V2 - 1]).toBe(1);
+  });
+
+  test("leaves the use flag unset for a buy candidate", () => {
+    const encoded = encodeShopCandidatesV2(rankInput(buyCandidate()));
+    expect(encoded[SHOP_INPUT_FEATURES_V2 - 1]).toBe(0);
+  });
+
+  test("reuses the v1 encoding as the row prefix", () => {
+    const v1 = encodeShopCandidates(rankInput(buyCandidate()));
+    const v2 = encodeShopCandidatesV2(rankInput(buyCandidate()));
+    expect(Array.from(v2.slice(0, SHOP_INPUT_FEATURES))).toEqual(
+      Array.from(v1),
+    );
   });
 });
 
