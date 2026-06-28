@@ -1,6 +1,11 @@
 import { consumableUseBlock, type Consumable } from "../../items/consumables";
 import type { Joker } from "../../items/jokers";
-import { rerollAllowed, type ShopItem } from "../../items/shop";
+import {
+  consumablePurchaseAllowed,
+  isConsumableShopKind,
+  rerollAllowed,
+  type ShopItem,
+} from "../../items/shop";
 import {
   applyShopDiscount,
   type Voucher,
@@ -57,13 +62,9 @@ function isBuyable(offer: ShopItem, price: number, input: ShopAdviceInput): bool
   if (offer.kind === "joker" && input.equippedJokerCount >= input.jokerCapacity) {
     return false;
   }
-  if (
-    (offer.kind === "planet" ||
-      offer.kind === "tarot" ||
-      offer.kind === "spectral") &&
-    input.consumableCount >= input.consumableCapacity
-  ) {
-    return false;
+  if (isConsumableShopKind(offer.kind)) {
+    if (input.consumableCount >= input.consumableCapacity) return false;
+    if (!consumablePurchaseAllowed(input.money)) return false;
   }
   return input.money >= price;
 }

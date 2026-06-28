@@ -114,6 +114,20 @@ describe("buildShopAdvicePlan", () => {
     expect(plan?.actions.some((action) => action.kind === "buy")).toBe(false);
   });
 
+  test("excludes consumable offers below the $20 economy threshold", () => {
+    const plan = buildShopAdvicePlan(
+      inputFixture({ money: 15, offers: [planetOffer(), jokerOffer()] }),
+    );
+    expect(plan?.actions.filter((action) => action.kind === "buy").length).toBe(1);
+  });
+
+  test("includes consumable offers once at the $20 economy threshold", () => {
+    const plan = buildShopAdvicePlan(
+      inputFixture({ money: 20, offers: [planetOffer(), jokerOffer()] }),
+    );
+    expect(plan?.actions.filter((action) => action.kind === "buy").length).toBe(2);
+  });
+
   test("includes an affordable voucher as a buy-voucher action", () => {
     const plan = buildShopAdvicePlan(
       inputFixture({ offers: [], vouchers: [voucherFixture()] }),
