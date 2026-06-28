@@ -1,9 +1,15 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, test } from "vitest";
 import type { Card } from "../../cards/types";
+import type { Consumable } from "../../items/consumables";
 import { createPlusFourMultJoker } from "../../items/jokers/factories";
+import { createPlanetCatalog } from "../../items/planets";
 import { useGame } from "../../store/game";
 import { buildShopRolloutState, shopBuildFromState } from "./shopRolloutCapture";
+
+function planetConsumable(index: number): Consumable {
+  return { kind: "planet", card: createPlanetCatalog()[index] };
+}
 
 beforeEach(() => {
   useGame.getState().resetGame();
@@ -55,5 +61,12 @@ describe("shopBuildFromState", () => {
 
   test("reflects the consumables held count", () => {
     expect(shopBuildFromState(useGame.getState()).consumablesHeld).toBe(0);
+  });
+
+  test("caps consumables held at one to match the training signal", () => {
+    useGame
+      .getState()
+      .setConsumables([planetConsumable(0), planetConsumable(1)]);
+    expect(shopBuildFromState(useGame.getState()).consumablesHeld).toBe(1);
   });
 });
