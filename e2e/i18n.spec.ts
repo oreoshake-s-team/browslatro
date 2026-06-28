@@ -112,7 +112,7 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings", as
   }
   await page.getByRole("button", { name: /^Hoʻoholo Haʻawina/ }).click();
   await expect(page.getByText("Kālā i loaʻa")).toBeVisible();
-  await expect(page.getByText("Huinanui")).toBeVisible();
+  await expect(page.getByText("Huinanui", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Hoʻomau →" }).click();
   await expect(page.getByRole("heading", { name: /Hale kūʻai/ })).toBeVisible();
 });
