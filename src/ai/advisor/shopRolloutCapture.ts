@@ -21,7 +21,7 @@ export function shopBuildFromState(state: GameState): ShopBuild {
     jokers: state.jokers,
     handStats: state.handStats,
     deck: deckFromState(state),
-    consumablesHeld: Math.min(state.consumables.length, 1),
+    consumablesHeld: state.consumables.length,
   });
 }
 
