@@ -11,6 +11,7 @@ import {
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
+import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 const BENCHMARK_EXEC = ["bash", "ml/remote/benchmark-entrypoint.sh"] as const;
@@ -162,13 +163,14 @@ const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res
 
 if (isMain) {
   const modelPath = stringFlag("--model", "");
-  const runId = stringFlag("--run-id", "");
-  if (modelPath === "" || runId === "") {
+  if (modelPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> --run-id ID [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--image IMG] [--out summary.json]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--image IMG] [--out summary.json]",
     );
     process.exit(1);
   }
+  const runId = resolveRunId(stringFlag("--run-id", ""));
+  console.log(`run id: ${runId}`);
 
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({

@@ -90,7 +90,6 @@ Then launch a sharded run:
 
 ```bash
 yarn dlx tsx scripts/remote/runRemoteDataset.ts dataset.jsonl \
-  --run-id 2026-06-26a \
   --games 2000 \
   --machines 8 \
   --cpus 4 --memory-mb 2048 \
@@ -101,6 +100,13 @@ The orchestrator starts 8 machines (each generating ~250 games), waits for all
 of them to finish and upload, downloads the shards, and writes the concatenated
 `dataset.jsonl`. Train on it exactly as with a locally-generated dataset — see
 [`ml-pipeline.md`](./ml-pipeline.md) and [`running-locally.md`](./running-locally.md).
+
+Every orchestrator (`runRemoteDataset`, `runRemoteTraining`, `runRemoteBenchmark`,
+`runRemoteSelfPlay`, and the one-shot `runRemotePipeline`) auto-generates a
+timestamped `--run-id` when you omit it — a UTC stamp to the second, e.g.
+`2026-06-27-143005` — and prints it on startup so you can find the S3 objects it
+namespaces. Pass `--run-id ID` explicitly only when you want to reuse a namespace
+or reproduce a previous run's per-shard seed ranges.
 
 ### Configuration reference
 
@@ -155,7 +161,6 @@ Then train a dataset (the same S3 env vars as generation apply):
 ```bash
 yarn dlx tsx scripts/remote/runRemoteTraining.ts advisor-policy-v10.onnx \
   --dataset dataset.jsonl \
-  --run-id 2026-06-26a \
   --epochs 30 \
   --human
 ```
@@ -211,7 +216,6 @@ machine-readable summary comes from `benchmarkPolicy.ts --json <path>`.
 ```bash
 yarn dlx tsx scripts/remote/runRemoteBenchmark.ts \
   --model advisor-policy-v10.onnx \
-  --run-id 2026-06-26a \
   --baseline public/models/advisor-policy-v9.onnx \
   --games 500 \
   --out summary.json
@@ -223,35 +227,48 @@ baseline on `averageBlindsCleared`, per `ml-pipeline.md`.
 
 ## Running the whole loop in one command
 
-`runRemotePipeline.ts` composes the three jobs above into a single
-generate → train → benchmark cycle. It generates and concatenates a dataset,
-uploads it, trains a model, then benchmarks that model **directly from the
-training output object** (no redundant re-upload). A single preflight runs up
-front, and a failed stage aborts the rest.
+`runRemotePipeline.ts` chains **regenerate → train → benchmark** into a single
+command, mixing in an uploaded play-log (the positional `<play-log.jsonl>`
+argument). It fans out dataset generation, uploads both the dataset and the
+play-log to S3, trains a candidate with the log mixed in, then benchmarks that
+candidate against the baseline. A single preflight runs up front, and a failed
+stage aborts the rest.
 
 ```
 runRemotePipeline.ts (orchestrator, runs locally)
   │  runRemoteDataset() ── shards → concatenated dataset
-  │  putObject(dataset) → training/<runId>/dataset.jsonl
+  │  putObject(dataset)  → training/<runId>/dataset.jsonl
+  │  putObject(play-log) → training/<runId>/human.jsonl
   │  runRemoteTraining() ── model → training/<runId>/model.onnx
-  └  runRemoteBenchmark(modelKey = training/<runId>/model.onnx) → BenchmarkSummary
+  └  runRemoteBenchmark(modelKey = benchmark/<runId>/candidate.onnx) → BenchmarkSummary
 ```
 
 ```bash
-yarn dlx tsx scripts/remote/runRemotePipeline.ts advisor-policy-v10.onnx \
-  --run-id 2026-06-26a \
-  --games 2000 --machines 8 \
-  --epochs 30 --human \
-  --benchmark-games 500 \
+yarn dlx tsx scripts/remote/runRemotePipeline.ts play-log.jsonl \
+  --games 2000 --machines 8 --epochs 30 \
+  --cpu-kind performance \
   --baseline public/models/advisor-policy-v9.onnx \
-  --shop-policy public/models/advisor-shop-policy-v9.onnx \
-  --summary-out summary.json
+  --shop-policy public/models/advisor-shop-policy-v9.onnx
 ```
 
 It needs both `DATASET_IMAGE` (generation + benchmark) and `TRAIN_IMAGE`
 (training), and the same S3 env as the individual jobs. It writes the trained
-`<out.onnx>` and prints the per-agent ship-gate metrics. To iterate on a single
-stage, run the individual orchestrators instead.
+candidate to `--out-model` (default `candidate.onnx`) and the full
+`BenchmarkSummary` to `--out-summary` (default `summary.json`), printing the
+per-agent `winRate`/`avgBlinds` ship-gate metrics. Ship only if the candidate
+beats the baseline on `avgBlinds`. To iterate on a single stage, run the
+individual orchestrators instead.
+
+This is the flow built for "attach a log in a Claude Code cloud session and go":
+a cloud session runs on Anthropic hardware (no local machine) and, with the
+right network level, can orchestrate Fly. Set up the cloud session once:
+- **Network**: set the environment to `Full`, or `Custom` allowlisting
+  `api.machines.dev`, `fly.storage.tigris.dev`, `fly.io`, and the npm
+  registries. (The default `Trusted` level does not cover Fly/Tigris — node
+  `fetch` will get `403 host_not_allowed`.)
+- **Secrets**: provide `FLY_API_TOKEN`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`,
+  `BROWSLATRO_DATASET_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+  plus `DATASET_IMAGE` and `TRAIN_IMAGE` (see the env table above).
 
 ## Preflight and teardown
 
@@ -293,7 +310,6 @@ with a command override (`ml/remote/selfplay-entrypoint.sh`) — no third image.
 
 ```bash
 yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts selfplay.jsonl \
-  --run-id 2026-06-26a \
   --games 1000 --machines 8 --cpus 2 --memory-mb 2048 \
   --shop-model public/models/advisor-shop-policy-v9.onnx \
   --hand-model public/models/advisor-policy-v9.onnx \
@@ -316,7 +332,7 @@ it) — see `ml/on_policy_track_b.sh`. Benchmark before shipping as usual.
 
 - A remote **`train_rl.py`** runner (PPO shop training on a machine), and chaining the full
   **on-policy loop** (collect → warm-start-train → repeat) on Fly.
-- Chaining **generate → train → benchmark** into a single orchestrated run.
+- Triggering the pipeline as an **API/GitHub Routine** (drop-and-go without an interactive session).
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
 - **Cost controls**: budget caps, max wall-clock, machine-size presets.

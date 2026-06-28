@@ -10,6 +10,7 @@ import {
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
+import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 const SELFPLAY_EXEC = ["bash", "ml/remote/selfplay-entrypoint.sh"] as const;
@@ -141,11 +142,13 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> --run-id ID --games N --machines N [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--image IMG] [--cpus N] [--memory-mb N]",
     );
     process.exit(1);
   }
 
+  const runId = resolveRunId(stringFlag("--run-id", ""));
+  console.log(`run id: ${runId}`);
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({
     app: requireEnv("FLY_APP"),
@@ -153,7 +156,7 @@ if (isMain) {
   });
 
   const options: RemoteSelfPlayOptions = {
-    runId: stringFlag("--run-id", ""),
+    runId,
     totalGames: intFlag("--games", 1000),
     machines: intFlag("--machines", 4),
     seedOffset: intFlag("--seed-offset", 0),
