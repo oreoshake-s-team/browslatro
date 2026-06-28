@@ -32,6 +32,8 @@ import {
   pickShopItemOffers,
   pickShopOffers,
   pickSingleShopOffer,
+  consumablePurchaseAllowed,
+  isConsumableShopKind,
   rerollAllowed,
   rerollCostFor,
   rerollShopOffer,
@@ -98,6 +100,26 @@ describe("rerollAllowed", () => {
 
   test("allows rerolls below $30 with the flash-card joker", () => {
     expect(rerollAllowed(10, new Set(), new Set(["flash-card"]))).toBe(true);
+  });
+});
+
+describe("consumablePurchaseAllowed", () => {
+  test("blocks consumable purchases below $20", () => {
+    expect(consumablePurchaseAllowed(19)).toBe(false);
+  });
+
+  test("allows consumable purchases at $20 or more", () => {
+    expect(consumablePurchaseAllowed(20)).toBe(true);
+  });
+});
+
+describe("isConsumableShopKind", () => {
+  test("treats tarot, planet, and spectral as consumables", () => {
+    expect(["tarot", "planet", "spectral"].every(isConsumableShopKind)).toBe(true);
+  });
+
+  test("does not treat joker or pack as a consumable", () => {
+    expect(["joker", "pack"].some(isConsumableShopKind)).toBe(false);
   });
 });
 
