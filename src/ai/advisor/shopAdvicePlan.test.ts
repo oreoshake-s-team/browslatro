@@ -1,8 +1,20 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
+import type { Consumable } from "../../items/consumables";
 import { createPlusFourMultJoker } from "../../items/jokers/factories";
 import { createPlanetCatalog } from "../../items/planets";
+import { createTarotCatalog } from "../../items/tarots";
 import type { ShopItem } from "../../items/shop";
+
+function planetConsumable(): Consumable {
+  return { kind: "planet", card: createPlanetCatalog()[0] };
+}
+
+function targetTarot(): Consumable {
+  const card = createTarotCatalog().find((t) => t.effect.kind === "convert-suit");
+  if (card === undefined) throw new Error("expected a convert-suit tarot");
+  return { kind: "tarot", card };
+}
 import { applyShopDiscount, type Voucher } from "../../items/vouchers";
 import {
   buildShopAdvicePlan,
@@ -144,6 +156,23 @@ describe("buildShopAdvicePlan", () => {
       action: "reroll",
       cost: 5,
     });
+  });
+
+  test("generates a use candidate for a held consumable", () => {
+    const plan = buildShopAdvicePlan(inputFixture({ consumables: [planetConsumable()] }));
+    expect(plan?.actions.some((a) => a.kind === "use-consumable")).toBe(true);
+  });
+
+  test("marks a no-target consumable as not requiring targets", () => {
+    const plan = buildShopAdvicePlan(inputFixture({ consumables: [planetConsumable()] }));
+    const use = plan?.actions.find((a) => a.kind === "use-consumable");
+    expect(use?.kind === "use-consumable" && use.requiresTargets).toBe(false);
+  });
+
+  test("marks a target-requiring consumable as requiring targets", () => {
+    const plan = buildShopAdvicePlan(inputFixture({ consumables: [targetTarot()] }));
+    const use = plan?.actions.find((a) => a.kind === "use-consumable");
+    expect(use?.kind === "use-consumable" && use.requiresTargets).toBe(true);
   });
 
   test("excludes the reroll candidate when unaffordable", () => {

@@ -8,10 +8,23 @@ import {
   clearShopAdvice,
   matchedShopDisagreement,
 } from "../../ai/advisor/shownShopAdvice";
+import type { Consumable } from "../../items/consumables";
 import { createPlusFourMultJoker } from "../../items/jokers/factories";
+import { createPlanetCatalog } from "../../items/planets";
+import { createTarotCatalog } from "../../items/tarots";
 import type { ShopItem } from "../../items/shop";
 import { useGame } from "../../store/game";
 import ShopSuggestion, { type ShopSuggestionProps } from "./ShopSuggestion";
+
+function planetConsumable(): Consumable {
+  return { kind: "planet", card: createPlanetCatalog()[0] };
+}
+
+function targetTarot(): Consumable {
+  const card = createTarotCatalog().find((t) => t.effect.kind === "convert-suit");
+  if (card === undefined) throw new Error("expected a convert-suit tarot");
+  return { kind: "tarot", card };
+}
 
 const { rankState } = vi.hoisted(() => ({
   rankState: {
@@ -108,6 +121,39 @@ describe("ShopSuggestion build context", () => {
     renderSuggestion();
     await revealCoachPick();
     await waitFor(() => expect(rankState.lastInput?.round).toBe(7));
+  });
+});
+
+describe("ShopSuggestion consumable use", () => {
+  test("applying a no-target use suggestion removes the consumable from the tray", async () => {
+    useGame.getState().setConsumables([planetConsumable()]);
+    rankState.value = [1];
+    renderSuggestion();
+    await revealCoachPick();
+    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await waitFor(() =>
+      expect(useGame.getState().consumables).toHaveLength(0),
+    );
+  });
+
+  test("disables apply for a target-requiring use suggestion", async () => {
+    useGame.getState().setConsumables([targetTarot()]);
+    rankState.value = [1];
+    renderSuggestion();
+    await revealCoachPick();
+    await waitFor(() =>
+      expect(screen.getByTestId("coach-apply")).toBeDisabled(),
+    );
+  });
+
+  test("shows the use-during-the-blind note for a target-requiring suggestion", async () => {
+    useGame.getState().setConsumables([targetTarot()]);
+    rankState.value = [1];
+    renderSuggestion();
+    await revealCoachPick();
+    await waitFor(() =>
+      expect(screen.getByTestId("coach-apply-blocked")).toBeInTheDocument(),
+    );
   });
 });
 

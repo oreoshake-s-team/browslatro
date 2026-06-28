@@ -1,4 +1,4 @@
-import type { Consumable } from "../../items/consumables";
+import { consumableUseBlock, type Consumable } from "../../items/consumables";
 import type { Joker } from "../../items/jokers";
 import { rerollAllowed, type ShopItem } from "../../items/shop";
 import {
@@ -7,6 +7,7 @@ import {
   type VoucherId,
 } from "../../items/vouchers";
 import {
+  consumableAdviceItem,
   consumableRefs,
   jokerRefs,
   shopAdviceItem,
@@ -22,6 +23,11 @@ import {
 export type ShopSuggestionAction =
   | { readonly kind: "buy"; readonly offerIdx: number }
   | { readonly kind: "buy-voucher"; readonly voucherIdx: number }
+  | {
+      readonly kind: "use-consumable";
+      readonly consumableIdx: number;
+      readonly requiresTargets: boolean;
+    }
   | { readonly kind: "reroll"; readonly cost: number }
   | { readonly kind: "leave" };
 
@@ -97,6 +103,14 @@ export function buildShopAdvicePlan(input: ShopAdviceInput): ShopAdvicePlan | nu
       action: { kind: "buy-voucher", voucherIdx },
     });
   });
+  const uses: PlanEntry[] = input.consumables.map((consumable, consumableIdx) => ({
+    candidate: { action: "use", item: consumableAdviceItem(consumable, consumableIdx) },
+    action: {
+      kind: "use-consumable",
+      consumableIdx,
+      requiresTargets: consumableUseBlock(consumable, 0) !== null,
+    },
+  }));
   const tail: PlanEntry[] = [];
   const ownedJokerIds = new Set(input.jokers.map((joker) => joker.id));
   if (
@@ -109,7 +123,8 @@ export function buildShopAdvicePlan(input: ShopAdviceInput): ShopAdvicePlan | nu
     });
   }
   tail.push({ candidate: { action: "leave" }, action: { kind: "leave" } });
-  const entries = [...buys.slice(0, MAX_CANDIDATES - tail.length), ...tail];
+  const middle = [...buys, ...uses];
+  const entries = [...middle.slice(0, MAX_CANDIDATES - tail.length), ...tail];
   if (entries.length < MIN_CONTEXT_CANDIDATES) return null;
   return {
     request: {

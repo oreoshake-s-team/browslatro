@@ -26,6 +26,7 @@ import {
   captureAdviceFeedback,
   setHumanPlayRecordingSuppressed,
 } from "../../ai/humanPlayWiring";
+import { useConsumableActions } from "../../hooks/useConsumableActions";
 import type { ShopItem } from "../../items/shop";
 import type { Voucher, VoucherId } from "../../items/vouchers";
 import { useGame } from "../../store/game";
@@ -56,6 +57,7 @@ export default function ShopSuggestion(
   props: ShopSuggestionProps,
 ): React.JSX.Element {
   const { t } = useTranslation();
+  const { useConsumable } = useConsumableActions();
   const ante = useGame((s) => s.ante);
   const round = useGame((s) => s.round);
   const jokers = useGame((s) => s.jokers);
@@ -153,7 +155,9 @@ export default function ShopSuggestion(
     try {
       if (action.kind === "buy") props.onBuy(action.offerIdx);
       else if (action.kind === "buy-voucher") props.onBuyVoucher(action.voucherIdx);
-      else if (action.kind === "reroll") props.onApplyReroll();
+      else if (action.kind === "use-consumable") {
+        if (!action.requiresTargets) useConsumable(action.consumableIdx);
+      } else if (action.kind === "reroll") props.onApplyReroll();
       else props.onNext();
     } finally {
       setHumanPlayRecordingSuppressed(false);
@@ -169,6 +173,15 @@ export default function ShopSuggestion(
     if (action === undefined) return;
     applyAction(action);
   }
+
+  const recommended =
+    state.phase !== "idle" && state.onnxIndex !== null
+      ? state.actions[state.onnxIndex]
+      : undefined;
+  const applyBlockedReason =
+    recommended?.kind === "use-consumable" && recommended.requiresTargets
+      ? t("advisor.useDuringBlind")
+      : undefined;
 
   const trigger = (
     <button
@@ -209,6 +222,8 @@ export default function ShopSuggestion(
           feedbackSubmitLabel={t("advisor.feedbackDoInstead")}
           modelProgress={modelProgress}
           onApply={apply}
+          applyDisabled={applyBlockedReason !== undefined}
+          applyDisabledReason={applyBlockedReason}
           onAskAi={() => void askAi()}
           onDismiss={() => {
             reset();
