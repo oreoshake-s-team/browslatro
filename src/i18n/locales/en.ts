@@ -281,6 +281,7 @@ export const en = {
     buyCandidate: "Buy {{name}} for ${{cost}}",
     sellCandidate: "Sell {{name}} for ${{value}}",
     useCandidate: "Use {{name}}",
+    useDuringBlind: "Use this during the blind — it needs card targets you can't pick in the shop.",
     rerollCandidate: "Reroll the shop for ${{cost}}",
     leaveCandidate: "Leave the shop and bank your money",
     pickCandidate: "Pick {{name}}",

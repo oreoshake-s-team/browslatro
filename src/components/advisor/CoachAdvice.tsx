@@ -16,6 +16,8 @@ export interface CoachAdviceProps<TAction> {
   readonly onFeedback?: (correctedIndex: number | null) => void;
   readonly feedbackSubmitLabel?: string;
   readonly modelProgress?: DownloadProgress | null;
+  readonly applyDisabled?: boolean;
+  readonly applyDisabledReason?: string;
 }
 
 export default function CoachAdvice<TAction>({
@@ -26,6 +28,8 @@ export default function CoachAdvice<TAction>({
   onFeedback,
   feedbackSubmitLabel,
   modelProgress = null,
+  applyDisabled = false,
+  applyDisabledReason,
 }: CoachAdviceProps<TAction>): React.JSX.Element | null {
   const { t } = useTranslation();
   const loadProgress = useModelLoadProgress(modelProgress);
@@ -68,10 +72,20 @@ export default function CoachAdvice<TAction>({
               className="btn coach-advice-apply"
               data-testid="coach-apply"
               onClick={onApply}
+              disabled={applyDisabled}
             >
               <span aria-hidden="true">✅ </span>
               {t("advisor.suggestApply")}
             </button>
+            {applyDisabled && applyDisabledReason !== undefined && (
+              <p
+                className="coach-advice-apply-blocked"
+                role="note"
+                data-testid="coach-apply-blocked"
+              >
+                {applyDisabledReason}
+              </p>
+            )}
             {onFeedback !== undefined && (
               <AdviceFeedbackControl
                 candidateLabels={state.candidates.map((c) =>

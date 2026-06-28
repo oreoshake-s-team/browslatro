@@ -186,7 +186,7 @@ function isShopItem(value: unknown): boolean {
 
 function isShopCandidate(value: unknown): boolean {
   if (!isRecord(value)) return false;
-  if (value.action === "buy") return isShopItem(value.item);
+  if (value.action === "buy" || value.action === "use") return isShopItem(value.item);
   if (value.action === "reroll") return isFiniteNumber(value.cost);
   return value.action === "leave";
 }
