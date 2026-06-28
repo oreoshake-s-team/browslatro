@@ -6,7 +6,10 @@ import {
   type ShopSuggestionAction,
 } from "../../ai/advisor/shopAdvicePlan";
 import { buildShopPolicyFeedbackEvent } from "../../ai/advisor/adviceFeedback";
-import { buildShopRolloutState } from "../../ai/advisor/shopRolloutCapture";
+import {
+  buildShopRolloutState,
+  shopBuildFromState,
+} from "../../ai/advisor/shopRolloutCapture";
 import {
   clearShopAdvice,
   rememberShopAdvice,
@@ -54,6 +57,7 @@ export default function ShopSuggestion(
 ): React.JSX.Element {
   const { t } = useTranslation();
   const ante = useGame((s) => s.ante);
+  const round = useGame((s) => s.round);
   const jokers = useGame((s) => s.jokers);
   const consumables = useGame((s) => s.consumables);
   const shopRanker = sharedShopRanker();
@@ -87,12 +91,13 @@ export default function ShopSuggestion(
         .rankShop({
           money: props.money,
           ante,
-          round: (ante - 1) * 3,
+          round,
+          build: shopBuildFromState(useGame.getState()),
           candidates: candidates as ReadonlyArray<ShopAdviceCandidate>,
         })
         .then((ranked) => ranked[0] ?? null);
     },
-    [shopRanker, props.money, ante],
+    [shopRanker, props.money, ante, round],
   );
   const { state, coach, askAi, reset } = useSuggestion<ShopSuggestionAction>(
     () => buildShopAdvicePlan(planInput),

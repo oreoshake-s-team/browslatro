@@ -59,6 +59,7 @@ export interface ShopDecisionLog {
 export interface HeadlessShopAgentOptions {
   readonly chooseIndex?: (logits: Float32Array, n: number) => number;
   readonly onShopDecision?: (log: ShopDecisionLog) => void;
+  readonly buildOverride?: (build: ShopBuild) => ShopBuild;
 }
 
 function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
@@ -137,6 +138,8 @@ export async function createHeadlessShopAgent(
   const planetCatalog = createPlanetCatalog();
   const tarotCatalog = createTarotCatalog();
   const spectralCatalog = createSpectralCatalog();
+  const withBuildOverride = (build: ShopBuild): ShopBuild =>
+    options.buildOverride !== undefined ? options.buildOverride(build) : build;
 
   async function runSession(encoded: Float32Array, n: number): Promise<Float32Array> {
     const input = new ort.Tensor("float32", encoded, [n, SHOP_INPUT_FEATURES]);
@@ -207,7 +210,7 @@ export async function createHeadlessShopAgent(
           ...(rerollsDone < MAX_REROLLS && rerollCost <= money && rerollAllowed(money, ownedVoucherIds, ownedIds) ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
-        const build = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
+        const build = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 }));
         const topIdx = await topRanked(encodeShopCandidates({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length);
         if (options.onShopDecision !== undefined) {
           const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx);
@@ -269,7 +272,7 @@ export async function createHeadlessShopAgent(
           let picksLeft = packPickLimit(offer.pack.variant);
           while (picksLeft > 0 && packOptions.length > 0) {
             const packCandidates: PackAdviceCandidate[] = [...packOptions.map(packOptionToCandidate), { action: "skip" }];
-            const packBuild = shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 });
+            const packBuild = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 }));
             const pickIdx = await topRanked(encodePackCandidates({ money, ante: view.ante, round: view.round, picksRemaining: picksLeft, build: packBuild, candidates: packCandidates }), packCandidates.length);
             const picked = packOptions[pickIdx];
             if (picked === undefined) break;
