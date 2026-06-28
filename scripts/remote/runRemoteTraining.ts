@@ -9,6 +9,7 @@ import {
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
+import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 export interface TrainArgs {
@@ -129,12 +130,13 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> --run-id ID [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
     );
     process.exit(1);
   }
 
-  const runId = stringFlag("--run-id", "");
+  const runId = resolveRunId(stringFlag("--run-id", ""));
+  console.log(`run id: ${runId}`);
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({
     app: requireEnv("FLY_APP"),

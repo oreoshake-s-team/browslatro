@@ -12,6 +12,7 @@ import {
 } from "./flyMachines";
 import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
+import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 export interface GenerateArgs {
@@ -151,11 +152,13 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteDataset.ts <out.jsonl> --run-id ID --games N --machines N [--seed-offset N] [--image IMG] [--cpus N] [--memory-mb N] [--rollouts N] [--top-n N] [--max-ante N] [--deck ID] [--stake ID] [--shop-policy PATH]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteDataset.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--image IMG] [--cpus N] [--memory-mb N] [--rollouts N] [--top-n N] [--max-ante N] [--deck ID] [--stake ID] [--shop-policy PATH]",
     );
     process.exit(1);
   }
 
+  const runId = resolveRunId(stringFlag("--run-id", ""));
+  console.log(`run id: ${runId}`);
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({
     app: requireEnv("FLY_APP"),
@@ -163,7 +166,7 @@ if (isMain) {
   });
 
   const options: RemoteDatasetOptions = {
-    runId: stringFlag("--run-id", ""),
+    runId,
     totalGames: intFlag("--games", 1000),
     machines: intFlag("--machines", 4),
     seedOffset: intFlag("--seed-offset", 0),

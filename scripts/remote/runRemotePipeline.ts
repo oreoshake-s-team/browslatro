@@ -7,6 +7,7 @@ import { DEFAULT_STAKE } from "../../src/items/stakes";
 import { FlyMachinesClient, type MachineGuest } from "./flyMachines";
 import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
+import { resolveRunId } from "./runId";
 import { runRemoteDataset, type RemoteDatasetOptions } from "./runRemoteDataset";
 import { parseCpuKind, runRemoteTraining, type RemoteTrainingOptions } from "./runRemoteTraining";
 import {
@@ -85,13 +86,14 @@ const sleep = (ms: number): Promise<void> => new Promise((res) => setTimeout(res
 
 if (isMain) {
   const playLog = process.argv[2];
-  const runId = stringFlag("--run-id", "");
-  if (playLog === undefined || playLog.startsWith("--") || runId === "") {
+  if (playLog === undefined || playLog.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> --run-id ID [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH]",
+      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> [--run-id ID] [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH]",
     );
     process.exit(1);
   }
+  const runId = resolveRunId(stringFlag("--run-id", ""));
+  console.log(`run id: ${runId}`);
 
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({

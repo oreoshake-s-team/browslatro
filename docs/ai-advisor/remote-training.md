@@ -90,7 +90,6 @@ Then launch a sharded run:
 
 ```bash
 yarn dlx tsx scripts/remote/runRemoteDataset.ts dataset.jsonl \
-  --run-id 2026-06-26a \
   --games 2000 \
   --machines 8 \
   --cpus 4 --memory-mb 2048 \
@@ -101,6 +100,13 @@ The orchestrator starts 8 machines (each generating ~250 games), waits for all
 of them to finish and upload, downloads the shards, and writes the concatenated
 `dataset.jsonl`. Train on it exactly as with a locally-generated dataset — see
 [`ml-pipeline.md`](./ml-pipeline.md) and [`running-locally.md`](./running-locally.md).
+
+Every orchestrator (`runRemoteDataset`, `runRemoteTraining`, `runRemoteBenchmark`,
+`runRemoteSelfPlay`, and the one-shot `runRemotePipeline`) auto-generates a
+timestamped `--run-id` when you omit it — a UTC stamp to the second, e.g.
+`2026-06-27-143005` — and prints it on startup so you can find the S3 objects it
+namespaces. Pass `--run-id ID` explicitly only when you want to reuse a namespace
+or reproduce a previous run's per-shard seed ranges.
 
 ### Configuration reference
 
@@ -155,7 +161,6 @@ Then train a dataset (the same S3 env vars as generation apply):
 ```bash
 yarn dlx tsx scripts/remote/runRemoteTraining.ts advisor-policy-v10.onnx \
   --dataset dataset.jsonl \
-  --run-id 2026-06-26a \
   --epochs 30 \
   --human
 ```
@@ -211,7 +216,6 @@ machine-readable summary comes from `benchmarkPolicy.ts --json <path>`.
 ```bash
 yarn dlx tsx scripts/remote/runRemoteBenchmark.ts \
   --model advisor-policy-v10.onnx \
-  --run-id 2026-06-26a \
   --baseline public/models/advisor-policy-v9.onnx \
   --games 500 \
   --out summary.json
@@ -241,7 +245,6 @@ runRemotePipeline.ts (orchestrator, runs locally)
 
 ```bash
 yarn dlx tsx scripts/remote/runRemotePipeline.ts play-log.jsonl \
-  --run-id 2026-06-26a \
   --games 2000 --machines 8 --epochs 30 \
   --cpu-kind performance \
   --baseline public/models/advisor-policy-v9.onnx \
@@ -307,7 +310,6 @@ with a command override (`ml/remote/selfplay-entrypoint.sh`) — no third image.
 
 ```bash
 yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts selfplay.jsonl \
-  --run-id 2026-06-26a \
   --games 1000 --machines 8 --cpus 2 --memory-mb 2048 \
   --shop-model public/models/advisor-shop-policy-v9.onnx \
   --hand-model public/models/advisor-policy-v9.onnx \
