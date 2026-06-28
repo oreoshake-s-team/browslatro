@@ -14,6 +14,7 @@ import { DEFAULT_DECK, deckStartingMoneyDelta, type Deck } from "../items/decks"
 import type { Consumable } from "../items/consumables";
 import { interestMultiplierFromJokers } from "../items/jokers/collection";
 import type { Joker, RandomSource } from "../items/jokers/types";
+import { orderJokersForScoring } from "../items/jokers/jokerOrdering";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
 import {
   resolveTagEffect,
@@ -228,7 +229,7 @@ export async function playHeadlessRun(
   const maxAnte = config.maxAnte ?? FINAL_ANTE;
   const startAnte = config.startAnte ?? 1;
   const roundBudget = config.maxRounds ?? Infinity;
-  let jokers: ReadonlyArray<Joker> = config.jokers ?? [];
+  let jokers: ReadonlyArray<Joker> = orderJokersForScoring(config.jokers ?? []);
   const stake = config.stake ?? DEFAULT_STAKE;
   const deckId = config.deck ?? DEFAULT_DECK;
   let deck: ReadonlyArray<Card> = applyCardModifiers(config.startDeck ?? buildHeadlessDeck(), {
@@ -401,7 +402,7 @@ export async function playHeadlessRun(
       }
       if (config.shopAgent !== undefined) {
         const result = await config.shopAgent.buyAfterRound({ ante, round: blindsCleared, money, jokers, handStats, deck, ownedVoucherIds, lastConsumable, rng });
-        jokers = result.jokers;
+        jokers = orderJokersForScoring(result.jokers);
         money = result.money;
         handStats = result.handStats;
         deck = result.deck ?? deck;
