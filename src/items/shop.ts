@@ -327,6 +327,16 @@ export function rerollAllowed(
   return ownedJokerIds.has("flash-card");
 }
 
+export const CONSUMABLE_MONEY_THRESHOLD = 20;
+
+export function consumablePurchaseAllowed(money: number): boolean {
+  return money >= CONSUMABLE_MONEY_THRESHOLD;
+}
+
+export function isConsumableShopKind(kind: string): boolean {
+  return kind === "planet" || kind === "tarot" || kind === "spectral";
+}
+
 function pickRandomExcluding<T extends { readonly id: string }>(
   catalog: ReadonlyArray<T>,
   excludedIds: ReadonlyArray<string>,

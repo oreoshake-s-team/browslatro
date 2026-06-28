@@ -7,7 +7,7 @@ import { canSellJoker } from "../items/jokers/stickers";
 import { jokerSellValue } from "../items/jokers/scoring/utils";
 import type { Joker } from "../items/jokers/types";
 import { packPickLimit, type PackOption } from "../items/packs";
-import { pickShopOffers, rerollAllowed, rerollCostFor, type ShopItem } from "../items/shop";
+import { consumablePurchaseAllowed, isConsumableShopKind, pickShopOffers, rerollAllowed, rerollCostFor, type ShopItem } from "../items/shop";
 import { createSpectralCatalog } from "../items/spectrals";
 import { createTarotCatalog } from "../items/tarots";
 import {
@@ -302,8 +302,11 @@ export async function createHeadlessShopAgent(
         const sellList = jokers
           .map((joker, index) => ({ joker, index }))
           .filter(({ joker }) => canSellJoker(joker));
+        const visibleOffers = offers.filter(
+          (o) => !(isConsumableShopKind(o.kind) && !consumablePurchaseAllowed(money)),
+        );
         const candidates: ShopAdviceCandidate[] = [
-          ...offers.map(shopItemCandidate),
+          ...visibleOffers.map(shopItemCandidate),
           ...sellList.map(({ joker, index }) => jokerSellCandidate(joker, index)),
           ...(hold ? inventory.map((c, i) => consumableUseCandidate(c, i)) : []),
           ...(voucher !== null && voucher.cost <= money ? [voucherCandidate(voucher)] : []),
@@ -329,7 +332,7 @@ export async function createHeadlessShopAgent(
         }
 
         if (choice.action === "sell") {
-          const target = sellList[topIdx - offers.length];
+          const target = sellList[topIdx - visibleOffers.length];
           if (target === undefined) break;
           money += jokerSellValue(target.joker);
           jokers.splice(target.index, 1);
@@ -339,7 +342,7 @@ export async function createHeadlessShopAgent(
         }
 
         if (choice.action === "use") {
-          const inventoryIndex = topIdx - offers.length - sellList.length;
+          const inventoryIndex = topIdx - visibleOffers.length - sellList.length;
           const consumable = inventory[inventoryIndex];
           if (consumable === undefined) break;
           inventory.splice(inventoryIndex, 1);
@@ -356,11 +359,11 @@ export async function createHeadlessShopAgent(
           continue;
         }
 
-        const offer = offers[topIdx];
+        const offer = visibleOffers[topIdx];
         if (offer === undefined || offer.price > money) break;
         money -= offer.price;
         spend(offer.price);
-        offers = offers.filter((_, i) => i !== topIdx);
+        offers = offers.filter((o) => o !== offer);
 
         if (offer.kind === "joker" && jokers.length < jokerCapacity()) {
           jokers.push(offer.joker);
