@@ -220,6 +220,7 @@ SHOP_CANDIDATE_FEATURES = (
     len(SHOP_ITEM_TYPES) + 5 + len(SHOP_CANDIDATE_CATEGORIES) + SHOP_ATTRIBUTE_FEATURES
 )
 SHOP_INPUT_FEATURES = SHOP_CONTEXT_FEATURES + SHOP_CANDIDATE_FEATURES
+SHOP_INPUT_FEATURES_V2 = SHOP_INPUT_FEATURES + 1
 
 
 def _shop_attributes(attrs):
@@ -328,3 +329,20 @@ def encode_shop_decision(record):
         return candidates, chosen
 
     return [], -1
+
+
+def encode_shop_decision_v2(record):
+    """V2 (use-aware) shop encoding: appends a trailing isUse flag per candidate.
+
+    Existing decision kinds carry isUse=0 on every candidate. The use-action
+    decision kind (logged once the headless sim's hold-consumables path feeds
+    training) sets the flag on its held-consumable candidates.
+    """
+    candidates, chosen = encode_shop_decision(record)
+    use_flags = record.get("useFlags")
+    if use_flags is None:
+        return [row + [0.0] for row in candidates], chosen
+    return [
+        row + [1.0 if i < len(use_flags) and use_flags[i] else 0.0]
+        for i, row in enumerate(candidates)
+    ], chosen

@@ -32,11 +32,17 @@ import argparse
 import json
 import random
 
-from encoding import SHOP_INPUT_FEATURES, encode_shop_decision
+from encoding import (
+    SHOP_INPUT_FEATURES,
+    SHOP_INPUT_FEATURES_V2,
+    encode_shop_decision,
+    encode_shop_decision_v2,
+)
 
 
-def load_selfplay(paths):
+def load_selfplay(paths, v2=False):
     """Yields (candidate_vectors, sampled_index, game_return) per decision."""
+    encode = encode_shop_decision_v2 if v2 else encode_shop_decision
     decisions = []
     for path in paths:
         with open(path, encoding="utf-8") as handle:
@@ -47,7 +53,7 @@ def load_selfplay(paths):
                 record = json.loads(line)
                 if "return" not in record:
                     continue
-                inputs, chosen = encode_shop_decision(record)
+                inputs, chosen = encode(record)
                 if not inputs or chosen < 0 or chosen >= len(inputs):
                     continue
                 decisions.append((inputs, chosen, float(record["return"])))
@@ -138,6 +144,11 @@ def main():
         default=0.2,
         help="PPO trust-region clip; needs --init (the old policy). 0 disables (plain REINFORCE)",
     )
+    parser.add_argument(
+        "--v2",
+        action="store_true",
+        help="use the use-aware shop encoding (79 features) for a v11+ policy",
+    )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
     args = parser.parse_args()
 
@@ -150,14 +161,15 @@ def main():
     random.seed(args.seed)
     torch.manual_seed(args.seed)
 
-    decisions = load_selfplay(args.datasets)
+    features = SHOP_INPUT_FEATURES_V2 if args.v2 else SHOP_INPUT_FEATURES
+    decisions = load_selfplay(args.datasets, v2=args.v2)
     if not decisions:
         raise SystemExit("no self-play decisions with a return field")
     advantages = normalized_advantages([d[2] for d in decisions], args.adv_clip)
     samples = [(inp, chosen, adv) for (inp, chosen, _), adv in zip(decisions, advantages)]
 
     device = resolve_device(args.device)
-    model = CandidateScorer(SHOP_INPUT_FEATURES, args.hidden).to(device)
+    model = CandidateScorer(features, args.hidden).to(device)
     if args.init:
         loaded = warm_start(model, args.init, device, torch)
         print(f"warm-started {loaded} tensors from {args.init}")
@@ -213,7 +225,7 @@ def main():
         print(f"epoch {epoch + 1}: loss={total / n:.4f} entropy={total_entropy / n:.4f}")
 
     model.eval()
-    example = torch.zeros((2, SHOP_INPUT_FEATURES), dtype=torch.float32, device=device)
+    example = torch.zeros((2, features), dtype=torch.float32, device=device)
     torch.onnx.export(
         model,
         (example,),
@@ -224,7 +236,7 @@ def main():
         opset_version=18,
         external_data=False,
     )
-    print(f"exported {args.out} (shop encoding, {SHOP_INPUT_FEATURES} features)")
+    print(f"exported {args.out} (shop encoding, {features} features)")
 
 
 if __name__ == "__main__":

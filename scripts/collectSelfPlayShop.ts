@@ -51,6 +51,7 @@ async function main(): Promise<void> {
   const shopAgent = await createHeadlessShopAgent(shopModel, {
     chooseIndex: softmaxSampler(rng, temperature),
     onShopDecision: (log) => buffer.push(log),
+    holdConsumables: process.argv.includes("--hold-consumables"),
   });
 
   const lines: string[] = [];
