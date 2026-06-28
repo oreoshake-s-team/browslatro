@@ -14,11 +14,13 @@ from encoding import (
     JOKER_SLOTS,
     SHOP_CONTEXT_FEATURES,
     SHOP_INPUT_FEATURES,
+    SHOP_INPUT_FEATURES_V2,
     SHOP_ITEM_TYPES,
     STATE_FEATURES,
     encode_candidate,
     encode_decision,
     encode_shop_decision,
+    encode_shop_decision_v2,
     encode_state,
 )
 
@@ -347,6 +349,34 @@ class EncodeShopDecisionTests(unittest.TestCase):
         candidates, chosen = encode_shop_decision(record)
         self.assertEqual(candidates, [])
         self.assertEqual(chosen, -1)
+
+    def test_v2_candidate_vector_is_one_wider(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        candidates, _ = encode_shop_decision_v2(record)
+        self.assertEqual(len(candidates[0]), SHOP_INPUT_FEATURES_V2)
+
+    def test_v2_reuses_v1_encoding_as_prefix(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        v1, _ = encode_shop_decision(record)
+        v2, _ = encode_shop_decision_v2(record)
+        self.assertEqual(v2[0][:SHOP_INPUT_FEATURES], v1[0])
+
+    def test_v2_use_flag_defaults_to_zero(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        candidates, _ = encode_shop_decision_v2(record)
+        self.assertEqual(candidates[0][-1], 0.0)
 
     def test_can_afford_set_when_cost_within_money(self):
         record = shop_envelope(

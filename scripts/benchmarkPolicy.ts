@@ -66,9 +66,10 @@ const deck = deckFlag();
 const stake = stakeFlag();
 const shopDisabled = process.argv.includes("--no-shop");
 const shopPolicyPath = stringFlag("--shop-policy", DEFAULT_SHOP_POLICY);
+const holdConsumables = process.argv.includes("--hold-consumables");
 const shopAgent: HeadlessShopAgent | undefined = shopDisabled
   ? undefined
-  : await createHeadlessShopAgent(shopPolicyPath);
+  : await createHeadlessShopAgent(shopPolicyPath, { holdConsumables });
 
 const useSkip = process.argv.includes("--skip");
 const withSkip = (agent: HeadlessAgent): HeadlessAgent =>
