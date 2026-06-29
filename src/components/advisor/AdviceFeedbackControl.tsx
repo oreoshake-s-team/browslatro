@@ -5,6 +5,9 @@ import "./AdviceFeedbackControl.css";
 export interface AdviceFeedbackControlProps {
   readonly candidateLabels: ReadonlyArray<string>;
   readonly onSubmit: (correctedIndex: number | null) => void;
+  readonly onAgree: () => void;
+  readonly agreeDisabled?: boolean;
+  readonly agreeDisabledReason?: string;
   readonly onPreview?: (correctedIndex: number) => void;
   readonly submitLabel?: string;
   readonly testIdPrefix?: string;
@@ -13,6 +16,9 @@ export interface AdviceFeedbackControlProps {
 export default function AdviceFeedbackControl({
   candidateLabels,
   onSubmit,
+  onAgree,
+  agreeDisabled = false,
+  agreeDisabledReason,
   onPreview,
   submitLabel,
   testIdPrefix = "advice-feedback",
@@ -27,6 +33,11 @@ export default function AdviceFeedbackControl({
   const record = (correctedIndex: number | null): void => {
     onSubmit(correctedIndex);
     setOpen(false);
+    setSubmitted(true);
+  };
+
+  const agree = (): void => {
+    onAgree();
     setSubmitted(true);
   };
 
@@ -55,17 +66,43 @@ export default function AdviceFeedbackControl({
   return (
     <div className="advice-feedback">
       {!open ? (
-        <button
-          type="button"
-          className="btn btn--secondary advice-feedback-open"
-          data-testid={`${testIdPrefix}-open`}
-          aria-expanded={false}
-          aria-label={t("advisor.feedbackOpenLabel")}
-          onClick={openPicker}
+        <div
+          className="advice-feedback-choice"
+          role="group"
+          aria-label={t("advisor.feedbackChoiceLabel")}
         >
-          <span aria-hidden="true">👎 </span>
-          {t("advisor.feedbackBadPick")}
-        </button>
+          <button
+            type="button"
+            className="btn btn--secondary advice-feedback-agree"
+            data-testid={`${testIdPrefix}-agree`}
+            aria-label={t("advisor.feedbackAgreeLabel")}
+            disabled={agreeDisabled}
+            onClick={agree}
+          >
+            <span aria-hidden="true">👍 </span>
+            {t("advisor.feedbackGoodPick")}
+          </button>
+          <button
+            type="button"
+            className="btn btn--secondary advice-feedback-open"
+            data-testid={`${testIdPrefix}-open`}
+            aria-expanded={false}
+            aria-label={t("advisor.feedbackOpenLabel")}
+            onClick={openPicker}
+          >
+            <span aria-hidden="true">👎 </span>
+            {t("advisor.feedbackBadPick")}
+          </button>
+          {agreeDisabled && agreeDisabledReason !== undefined && (
+            <p
+              className="advice-feedback-agree-blocked"
+              role="note"
+              data-testid={`${testIdPrefix}-agree-blocked`}
+            >
+              {agreeDisabledReason}
+            </p>
+          )}
+        </div>
       ) : (
         <div
           className="advice-feedback-picker"

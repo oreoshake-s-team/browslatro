@@ -73,6 +73,7 @@ function renderCoach(
     onAskAi: () => void;
     onDismiss: () => void;
     onFeedback: (correctedIndex: number | null) => void;
+    onAgree: () => void;
   }> = {},
 ) {
   render(
@@ -82,6 +83,7 @@ function renderCoach(
       onAskAi={handlers.onAskAi ?? vi.fn()}
       onDismiss={handlers.onDismiss ?? vi.fn()}
       onFeedback={handlers.onFeedback}
+      onAgree={handlers.onFeedback === undefined ? undefined : (handlers.onAgree ?? vi.fn())}
     />,
   );
 }
@@ -190,6 +192,18 @@ describe("CoachAdvice", () => {
     await userEvent.click(screen.getByTestId("advice-feedback-open"));
     await userEvent.click(screen.getByTestId("advice-feedback-just-bad"));
     expect(onFeedback).toHaveBeenCalledWith(null);
+  });
+
+  test("shows the good-pick affordance when onFeedback is provided", () => {
+    renderCoach(coachState(0), { onFeedback: vi.fn() });
+    expect(screen.getByTestId("advice-feedback-agree")).toBeInTheDocument();
+  });
+
+  test("agreeing calls onAgree", async () => {
+    const onAgree = vi.fn();
+    renderCoach(coachState(0), { onFeedback: vi.fn(), onAgree });
+    await userEvent.click(screen.getByTestId("advice-feedback-agree"));
+    expect(onAgree).toHaveBeenCalledTimes(1);
   });
 
   test("the downvote stays available after asking the AI", () => {

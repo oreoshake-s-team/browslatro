@@ -310,6 +310,9 @@ export const haw: LocaleMessages = {
     autopilotApprove: "ʻʻĀpono aʻe nei",
     autopilotStop: "Hoʻōki i ke kūkākūkā",
     autopilotAskAi: "Nīnau i ke kaʻi AI",
+    feedbackChoiceLabel: "Rate this suggestion", // needs translation
+    feedbackGoodPick: "Good pick", // needs translation
+    feedbackAgreeLabel: "Agree with this suggestion and apply it", // needs translation
     feedbackBadPick: "Bad pick", // needs translation
     feedbackOpenLabel: "Flag this suggestion as a bad pick", // needs translation
     feedbackPrompt: "Which would you pick instead?", // needs translation
