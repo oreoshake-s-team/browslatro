@@ -104,7 +104,7 @@ describe("Jokers UI", () => {
 
   test("displays the joker description", () => {
     render(<Jokers jokers={[createPlusFourMultJoker()]} />);
-    expect(screen.getByText("Adds +4 Mult to every played hand")).toBeInTheDocument();
+    expect(screen.getByText("+4 Mult")).toBeInTheDocument();
   });
 
   test("does not apply the pulse class when the joker has not fired", () => {
@@ -602,7 +602,7 @@ describe("Jokers keyboard reorder and sell", () => {
     );
     fireEvent.click(screen.getByTestId("joker-move-right-plus-four-mult"));
     expect(screen.getByTestId("live-announcer")).toHaveTextContent(
-      "+4 Mult moved to position 2 of 3",
+      "Joker moved to position 2 of 3",
     );
   });
 
@@ -617,7 +617,7 @@ describe("Jokers keyboard reorder and sell", () => {
     fireEvent.click(screen.getByTestId("joker-move-left-plus-four-mult"));
     expect(onReorder).not.toHaveBeenCalled();
     expect(screen.getByTestId("live-announcer")).toHaveTextContent(
-      "+4 Mult is already at the first position",
+      "Joker is already at the first position",
     );
   });
 
@@ -655,7 +655,7 @@ describe("Jokers keyboard reorder and sell", () => {
     const value = jokerSellValue(three[0]);
     expect(screen.getByTestId("joker-sell-plus-four-mult")).toHaveAttribute(
       "aria-label",
-      `Sell +4 Mult (worth $${value})`,
+      `Sell Joker (worth $${value})`,
     );
   });
 
