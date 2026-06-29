@@ -1,4 +1,9 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { sliceJobs } from "./generateDataset";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 import {
@@ -32,10 +37,52 @@ function softmaxSampler(rng: () => number, temperature: number) {
   };
 }
 
+const __filename = fileURLToPath(import.meta.url);
+
+async function runParallel(out: string, games: number, seedOffset: number, parallelJobs: number, forwarded: string[]): Promise<void> {
+  const evalIdx = process.execArgv.indexOf("--eval");
+  const loaderArgs = evalIdx >= 0 ? process.execArgv.slice(0, evalIdx) : [...process.execArgv];
+  const tmpDir = mkdtempSync(join(tmpdir(), "browslatro-sp-"));
+  const slices = sliceJobs(games, seedOffset, parallelJobs);
+  console.log(`spawning ${slices.length} parallel self-play jobs ...`);
+
+  let done = 0;
+  await Promise.all(
+    slices.map((slice, i) => {
+      const tmpOut = join(tmpDir, `chunk-${i}.jsonl`);
+      const args = [__filename, tmpOut, "--games", String(slice.games), "--seed-offset", String(slice.seedOffset), ...forwarded];
+      return new Promise<void>((resolveJob, reject) => {
+        const proc = spawn(process.execPath, [...loaderArgs, ...args], { stdio: ["ignore", "ignore", "inherit"] });
+        proc.on("close", (code) => {
+          if (code === 0) {
+            done += 1;
+            process.stderr.write(`  ${done}/${slices.length} self-play jobs done\n`);
+            resolveJob();
+          } else {
+            reject(new Error(`self-play job ${i} (seed-offset ${slice.seedOffset}) exited ${String(code)}`));
+          }
+        });
+      });
+    }),
+  );
+
+  let total = 0;
+  writeFileSync(out, "");
+  for (let i = 0; i < slices.length; i += 1) {
+    const content = readFileSync(join(tmpDir, `chunk-${i}.jsonl`), "utf8").trimEnd();
+    if (content.length > 0) {
+      total += content.split("\n").length;
+      appendFileSync(out, `${content}\n`);
+    }
+  }
+  rmSync(tmpDir, { recursive: true });
+  console.log(`wrote ${total} self-play decisions from ${games} games (${slices.length} jobs) to ${out}`);
+}
+
 async function main(): Promise<void> {
   const out = process.argv[2];
   if (out === undefined || out.startsWith("--")) {
-    console.error("Usage: tsx scripts/collectSelfPlayShop.ts <out.jsonl> [--games N] [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T]");
+    console.error("Usage: tsx scripts/collectSelfPlayShop.ts <out.jsonl> [--games N] [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--hold-consumables] [--exploring-starts-fraction F] [--parallel-jobs N]");
     process.exit(1);
   }
   const games = Number(flag("--games", "500"));
@@ -43,6 +90,21 @@ async function main(): Promise<void> {
   const shopModel = flag("--shop-model", "public/models/advisor-shop-policy-v10.onnx");
   const handModel = flag("--hand-model", "public/models/advisor-policy-v9.onnx");
   const temperature = Number(flag("--temperature", "1.0"));
+  const exploringFractionRaw = flag("--exploring-starts-fraction", "0");
+  const holdConsumables = process.argv.includes("--hold-consumables");
+  const parallelJobs = Number(flag("--parallel-jobs", "1"));
+
+  if (parallelJobs > 1) {
+    const forwarded = [
+      "--shop-model", shopModel,
+      "--hand-model", handModel,
+      "--temperature", String(temperature),
+      "--exploring-starts-fraction", exploringFractionRaw,
+      ...(holdConsumables ? ["--hold-consumables"] : []),
+    ];
+    await runParallel(out, games, seedOffset, parallelJobs, forwarded);
+    return;
+  }
 
   const ranker = await loadPolicyRanker(readFileSync(handModel));
   const handAgent = createPolicyAgent(ranker);

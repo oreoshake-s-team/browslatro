@@ -12,15 +12,25 @@ SEED_OFFSET="${SEED_OFFSET:-0}"
 SHOP_MODEL="${SHOP_MODEL:-public/models/advisor-shop-policy-v9.onnx}"
 HAND_MODEL="${HAND_MODEL:-public/models/advisor-policy-v9.onnx}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
+HOLD="${HOLD:-0}"
+PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 
 SHARD="$(mktemp /tmp/selfplay-XXXXXX.jsonl)"
 
-echo "collecting self-play: games=$GAMES seed-offset=$SEED_OFFSET shop=$SHOP_MODEL hand=$HAND_MODEL temp=$TEMPERATURE -> $OUTPUT_KEY"
-yarn dlx tsx scripts/collectSelfPlayShop.ts "$SHARD" \
-  --games "$GAMES" \
-  --seed-offset "$SEED_OFFSET" \
-  --shop-model "$SHOP_MODEL" \
-  --hand-model "$HAND_MODEL" \
+selfplay_args=(
+  "$SHARD"
+  --games "$GAMES"
+  --seed-offset "$SEED_OFFSET"
+  --shop-model "$SHOP_MODEL"
+  --hand-model "$HAND_MODEL"
   --temperature "$TEMPERATURE"
+  --parallel-jobs "$PARALLEL_JOBS"
+)
+if [ "$HOLD" = "1" ]; then
+  selfplay_args+=(--hold-consumables)
+fi
+
+echo "collecting self-play: games=$GAMES seed-offset=$SEED_OFFSET shop=$SHOP_MODEL hand=$HAND_MODEL temp=$TEMPERATURE hold=$HOLD jobs=$PARALLEL_JOBS -> $OUTPUT_KEY"
+yarn dlx tsx scripts/collectSelfPlayShop.ts "${selfplay_args[@]}"
 yarn dlx tsx scripts/remote/putShard.ts "$SHARD" "$OUTPUT_KEY"
 echo "self-play shard complete: $OUTPUT_KEY"

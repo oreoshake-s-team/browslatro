@@ -19,6 +19,8 @@ export interface SelfPlayArgs {
   readonly shopModel: string;
   readonly handModel: string;
   readonly temperature: number;
+  readonly hold: boolean;
+  readonly parallelJobs: number;
 }
 
 export interface RemoteSelfPlayOptions {
@@ -56,6 +58,8 @@ export function selfPlayShardEnv(shard: RemoteShard, selfPlay: SelfPlayArgs): Re
     SHOP_MODEL: selfPlay.shopModel,
     HAND_MODEL: selfPlay.handModel,
     TEMPERATURE: String(selfPlay.temperature),
+    HOLD: selfPlay.hold ? "1" : "0",
+    PARALLEL_JOBS: String(selfPlay.parallelJobs),
   };
 }
 
@@ -142,7 +146,7 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--hold-consumables] [--parallel-jobs N] [--image IMG] [--cpus N] [--memory-mb N]",
     );
     process.exit(1);
   }
@@ -155,6 +159,7 @@ if (isMain) {
     token: requireEnv("FLY_API_TOKEN"),
   });
 
+  const cpus = intFlag("--cpus", 2);
   const options: RemoteSelfPlayOptions = {
     runId,
     totalGames: intFlag("--games", 1000),
@@ -162,7 +167,7 @@ if (isMain) {
     seedOffset: intFlag("--seed-offset", 0),
     image: stringFlag("--image", requireEnv("DATASET_IMAGE")),
     guest: {
-      cpus: intFlag("--cpus", 2),
+      cpus: cpus,
       memoryMb: intFlag("--memory-mb", 2048),
       cpuKind: "shared",
     },
@@ -170,6 +175,8 @@ if (isMain) {
       shopModel: stringFlag("--shop-model", "public/models/advisor-shop-policy-v9.onnx"),
       handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
       temperature: Number(stringFlag("--temperature", "1.0")),
+      hold: process.argv.includes("--hold-consumables"),
+      parallelJobs: intFlag("--parallel-jobs", cpus),
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,
