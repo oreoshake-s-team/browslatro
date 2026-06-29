@@ -416,11 +416,11 @@ describe("RoundWonModal i18n", () => {
     expect(screen.getByRole("button", { name: "Hoʻomau →" })).toBeInTheDocument();
   });
 
-  test("the total row label renders Huina under the haw locale", async () => {
+  test("the total row label renders Huinanui under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
-    expect(screen.getByText("Huina")).toBeInTheDocument();
+    expect(screen.getByText("Huinanui")).toBeInTheDocument();
   });
 
   test("the interest label keeps its interpolated values under the haw locale", async () => {
@@ -433,7 +433,7 @@ describe("RoundWonModal i18n", () => {
       />,
     );
     expect(screen.getByTestId("round-won-interest-label")).toHaveTextContent(
-      "on $15",
+      "ma ka $15",
     );
   });
 

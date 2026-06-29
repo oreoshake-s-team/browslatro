@@ -24,6 +24,6 @@ describe("handLabels", () => {
 
   test("tHandLabel resolves through the active locale", async () => {
     await i18n.changeLanguage("haw");
-    expect(tHandLabel(i18n.t, "Flush")).toBe("Flush");
+    expect(tHandLabel(i18n.t, "Flush")).toBe("Palaki");
   });
 });

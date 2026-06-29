@@ -14,7 +14,7 @@ async function startRound(page: Page): Promise<void> {
 }
 
 async function switchLanguage(page: Page, locale: string): Promise<void> {
-  await page.getByRole("button", { name: /Options|Nā koho/ }).click();
+  await page.getByRole("button", { name: /Options|Nā Koho/ }).click();
   await page.getByTestId("options-language").selectOption(locale);
   await page.locator(".options-footer .btn--secondary").click();
 }
@@ -26,7 +26,7 @@ test("switching to Hawaiian translates the sidebar", async ({
   await expect(page.getByText("Money", { exact: true })).toBeVisible();
   await switchLanguage(page, "haw");
   await expect(page.getByText("Kālā", { exact: true })).toBeVisible();
-  await expect(page.getByText("Nā lima", { exact: true })).toBeVisible();
+  await expect(page.getByText("Nā Haʻawina Pepa", { exact: true })).toBeVisible();
   await expect(page.getByText("Money", { exact: true })).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("lang", "haw");
 });
@@ -67,7 +67,7 @@ test("the shop renders Hawaiian strings under the haw locale", async ({
   ).toBeVisible();
   await expect(
     page.locator(".shop-offer-buy").first(),
-  ).toHaveText(/Kūʻai mai|Wehe|Ua kūʻai ʻia|Slots full/);
+  ).toHaveText(/Kūʻai no|Wehe|Ua kūʻai ʻia|Slots full/);
   await expect(page.getByRole("heading", { name: /^Shop$/ })).toHaveCount(0);
 });
 
@@ -110,9 +110,9 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings", as
   for (let i = 0; i < 5; i += 1) {
     await handCards.nth(i).click();
   }
-  await page.getByRole("button", { name: /^Submit Hand/ }).click();
+  await page.getByRole("button", { name: /^Hoʻoholo Haʻawina/ }).click();
   await expect(page.getByText("Kālā i loaʻa")).toBeVisible();
-  await expect(page.getByText("Huina")).toBeVisible();
+  await expect(page.getByText("Huinanui", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Hoʻomau →" }).click();
   await expect(page.getByRole("heading", { name: /Hale kūʻai/ })).toBeVisible();
 });
@@ -126,15 +126,15 @@ test("aria-labels are translated under the haw locale", async ({
   await startRound(page);
   await expect(page.getByTestId("hand-cards")).toHaveAttribute(
     "aria-label",
-    "Kāu lima",
+    "Kāu haʻawina",
   );
   await expect(page.getByTestId("jokers-tray")).toHaveAttribute(
     "aria-label",
-    "Nā Joker i hoʻokomo ʻia",
+    "Nā Kiʻi Pepa i hoʻokomo ʻia",
   );
   await expect(page.getByTestId("consumables-tray")).toHaveAttribute(
     "aria-label",
-    "Nā wahi consumable",
+    "Nā hakahaka kemu",
   );
   await expect(page.getByTestId("deck-pile")).toHaveAttribute(
     "aria-label",

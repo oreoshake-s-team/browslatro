@@ -89,7 +89,7 @@ describe("Hawaiian aria-labels", () => {
   test("Consumables tray exposes the Hawaiian aria-label", async () => {
     await i18n.changeLanguage("haw");
     render(<Consumables consumables={[]} selectedCount={0} onUse={() => {}} />);
-    expect(screen.getByLabelText("Nā wahi consumable")).toBeInTheDocument();
+    expect(screen.getByLabelText("Nā hakahaka kemu")).toBeInTheDocument();
   });
 
   test("Consumables tray does not expose the English aria-label in Hawaiian", async () => {
