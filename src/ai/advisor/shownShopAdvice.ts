@@ -85,6 +85,7 @@ export function recordShopFeedback(
       disagreement.correctedIndex,
       "auto-disagreement",
       disagreement.advice.rollout,
+      "bad",
     ),
   );
 }

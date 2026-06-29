@@ -159,5 +159,22 @@ class AgreementCorrectionSeparationTest(unittest.TestCase):
             self.assertEqual(load_feedback_corrections([path], "hand"), [])
 
 
+class FeedbackSchemaVersionTest(unittest.TestCase):
+    def test_raises_on_unsupported_feedback_schema_version(self):
+        record = hand_agreement()
+        record["schemaVersion"] = 99
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            with self.assertRaises(ValueError):
+                load_feedback_agreements([path], "hand")
+
+    def test_loads_a_v3_record_for_back_compat(self):
+        record = hand_agreement()
+        record["schemaVersion"] = 3
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            self.assertEqual(len(load_feedback_agreements([path], "hand")), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -133,15 +133,26 @@ def load_shop_decisions_split(paths, teacher_weight=5.0):
 
 
 def _iter_feedback_records(path):
-    """Yields advice-feedback RunEventRecords from a JSONL file, skipping others."""
+    """Yields advice-feedback RunEventRecords from a JSONL file, skipping others.
+
+    Raises on an unexpected schema version so a stale dataset fails loudly rather
+    than KeyError-ing on a changed record shape downstream.
+    """
     with open(path, encoding="utf-8") as handle:
-        for line in handle:
+        for line_number, line in enumerate(handle, start=1):
             line = line.strip()
             if not line:
                 continue
             record = json.loads(line)
-            if record.get("kind") == "advice-feedback":
-                yield record
+            if record.get("kind") != "advice-feedback":
+                continue
+            version = record.get("schemaVersion")
+            if version not in SUPPORTED_SHOP_SCHEMA_VERSIONS:
+                raise ValueError(
+                    f"{path}:{line_number}: advice-feedback schemaVersion {version}, "
+                    f"expected one of {sorted(SUPPORTED_SHOP_SCHEMA_VERSIONS)}"
+                )
+            yield record
 
 
 def _encode_hand_label(record, index):
