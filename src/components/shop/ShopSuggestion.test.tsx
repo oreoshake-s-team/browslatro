@@ -142,7 +142,10 @@ describe("ShopSuggestion consumable use", () => {
     renderSuggestion();
     await revealCoachPick();
     await waitFor(() =>
-      expect(screen.getByTestId("advice-feedback-agree")).toBeDisabled(),
+      expect(screen.getByTestId("advice-feedback-agree")).toHaveAttribute(
+        "aria-disabled",
+        "true",
+      ),
     );
   });
 

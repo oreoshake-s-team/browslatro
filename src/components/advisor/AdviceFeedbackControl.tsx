@@ -25,6 +25,7 @@ export default function AdviceFeedbackControl({
 }: AdviceFeedbackControlProps): React.JSX.Element {
   const { t } = useTranslation();
   const groupName = useId();
+  const blockedId = useId();
   const firstRadioRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<number | null>(null);
@@ -37,6 +38,7 @@ export default function AdviceFeedbackControl({
   };
 
   const agree = (): void => {
+    if (agreeDisabled) return;
     onAgree();
     setSubmitted(true);
   };
@@ -76,7 +78,12 @@ export default function AdviceFeedbackControl({
             className="btn btn--secondary advice-feedback-agree"
             data-testid={`${testIdPrefix}-agree`}
             aria-label={t("advisor.feedbackAgreeLabel")}
-            disabled={agreeDisabled}
+            aria-disabled={agreeDisabled || undefined}
+            aria-describedby={
+              agreeDisabled && agreeDisabledReason !== undefined
+                ? blockedId
+                : undefined
+            }
             onClick={agree}
           >
             <span aria-hidden="true">👍 </span>
@@ -95,6 +102,7 @@ export default function AdviceFeedbackControl({
           </button>
           {agreeDisabled && agreeDisabledReason !== undefined && (
             <p
+              id={blockedId}
               className="advice-feedback-agree-blocked"
               role="note"
               data-testid={`${testIdPrefix}-agree-blocked`}

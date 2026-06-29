@@ -52,6 +52,57 @@ describe("AdviceFeedbackControl", () => {
     expect(screen.getByTestId("advice-feedback-recorded")).toBeInTheDocument();
   });
 
+  test("marks the agree button aria-disabled when agreement is blocked", () => {
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onAgree={vi.fn()}
+        agreeDisabled
+        agreeDisabledReason="Use this during the blind"
+      />,
+    );
+    expect(screen.getByTestId("advice-feedback-agree")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
+  test("a blocked agree does not call onAgree", async () => {
+    const onAgree = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onAgree={onAgree}
+        agreeDisabled
+        agreeDisabledReason="Use this during the blind"
+      />,
+    );
+    await user.click(screen.getByTestId("advice-feedback-agree"));
+    expect(onAgree).not.toHaveBeenCalled();
+  });
+
+  test("links the blocked reason to the agree button via aria-describedby", () => {
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onAgree={vi.fn()}
+        agreeDisabled
+        agreeDisabledReason="Use this during the blind"
+      />,
+    );
+    const describedBy = screen
+      .getByTestId("advice-feedback-agree")
+      .getAttribute("aria-describedby");
+    expect(screen.getByTestId("advice-feedback-agree-blocked")).toHaveAttribute(
+      "id",
+      describedBy,
+    );
+  });
+
   test("the affordance is collapsed by default", () => {
     renderControl();
     expect(screen.getByTestId("advice-feedback-open")).toHaveAttribute(
