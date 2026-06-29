@@ -25,6 +25,7 @@ export interface AutopilotControlsProps {
   readonly onAskAi: () => void;
   readonly onRetry: () => void;
   readonly onFeedback?: (correctedIndex: number | null) => void;
+  readonly onAgree?: () => void;
   readonly onPreviewFeedback?: (option: HandOption) => void;
 }
 
@@ -156,6 +157,7 @@ export default function AutopilotControls({
   onAskAi,
   onRetry,
   onFeedback,
+  onAgree,
   onPreviewFeedback,
 }: AutopilotControlsProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -164,6 +166,7 @@ export default function AutopilotControls({
   const canGiveFeedback =
     proposal !== null &&
     onFeedback !== undefined &&
+    onAgree !== undefined &&
     feedbackCandidates !== null &&
     feedbackCandidates.length > 0;
   return (
@@ -213,7 +216,7 @@ export default function AutopilotControls({
         </p>
       ) : null}
       <div className="autopilot-actions">
-        {proposal !== null && (
+        {proposal !== null && !canGiveFeedback && (
           <button className="btn autopilot-approve-button" onClick={onApprove}>
             <span aria-hidden="true">✅ </span>
             {t("advisor.autopilotApprove")}
@@ -229,12 +232,13 @@ export default function AutopilotControls({
             {t("advisor.autopilotAskAi")}
           </button>
         )}
-        {canGiveFeedback && (
+        {canGiveFeedback && onFeedback !== undefined && onAgree !== undefined && (
           <AdviceFeedbackControl
             candidateLabels={feedbackCandidates.map((c) =>
               describeCandidate(t, c, hand),
             )}
             onSubmit={onFeedback}
+            onAgree={onAgree}
             onPreview={
               onPreviewFeedback === undefined
                 ? undefined

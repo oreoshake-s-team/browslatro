@@ -81,6 +81,7 @@ function renderControls(
     onAskAi?: () => void;
     onRetry?: () => void;
     onFeedback?: (correctedIndex: number | null) => void;
+    onAgree?: () => void;
   } = {},
 ) {
   return render(
@@ -96,6 +97,7 @@ function renderControls(
       onAskAi={overrides.onAskAi ?? vi.fn()}
       onRetry={overrides.onRetry ?? vi.fn()}
       onFeedback={overrides.onFeedback}
+      onAgree={overrides.onFeedback === undefined ? undefined : (overrides.onAgree ?? vi.fn())}
     />,
   );
 }
@@ -248,6 +250,28 @@ describe("AutopilotControls", () => {
     await user.click(screen.getByTestId("advice-feedback-open"));
     await user.click(screen.getByTestId("advice-feedback-just-bad"));
     expect(onFeedback).toHaveBeenCalledWith(null);
+  });
+
+  test("shows the good-pick affordance when policy feedback candidates are provided", () => {
+    renderControls({
+      proposal: playProposal(),
+      feedbackCandidates: [playProposal(), discardProposal()],
+      onFeedback: vi.fn(),
+    });
+    expect(screen.getByTestId("advice-feedback-agree")).toBeInTheDocument();
+  });
+
+  test("agreeing calls onAgree", async () => {
+    const onAgree = vi.fn();
+    const user = userEvent.setup();
+    renderControls({
+      proposal: playProposal(),
+      feedbackCandidates: [playProposal(), discardProposal()],
+      onFeedback: vi.fn(),
+      onAgree,
+    });
+    await user.click(screen.getByTestId("advice-feedback-agree"));
+    expect(onAgree).toHaveBeenCalledTimes(1);
   });
 
   test("announces the recorded confirmation after feedback (proposal dismissed)", () => {

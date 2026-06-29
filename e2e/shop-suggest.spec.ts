@@ -144,6 +144,28 @@ test("committing a different shop action than the coach records auto-disagreemen
   expect(log).toContain('"context":"shop"');
 });
 
+test("agreeing with the coach pick records a good policy verdict", async ({
+  page,
+}) => {
+  await openShop(page);
+  await revealCoachPick(page);
+
+  await page.getByTestId("advice-feedback-agree").click();
+
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+      ),
+    )
+    .toContain('"verdict":"good"');
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).toContain('"source":"explicit"');
+  expect(log).toContain('"context":"shop"');
+});
+
 test("downvoting the coach pick records policy advice feedback", async ({
   page,
 }) => {

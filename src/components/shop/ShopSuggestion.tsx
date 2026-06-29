@@ -174,6 +174,27 @@ export default function ShopSuggestion(
     applyAction(action);
   }
 
+  function handleAgree(): void {
+    if (state.phase === "idle" || state.onnxIndex === null) return;
+    const plan = buildShopAdvicePlan(planInput);
+    if (plan === null) return;
+    captureAdviceFeedback(
+      useGame.getState(),
+      buildShopPolicyFeedbackEvent(
+        plan.request.shop,
+        plan.request.candidates,
+        state.onnxIndex,
+        state.onnxIndex,
+        "explicit",
+        buildShopRolloutState(useGame.getState(), props.offers),
+        "good",
+      ),
+    );
+    clearShopAdvice();
+    setFeedbackRecorded(true);
+    apply();
+  }
+
   const recommended =
     state.phase !== "idle" && state.onnxIndex !== null
       ? state.actions[state.onnxIndex]
@@ -219,6 +240,7 @@ export default function ShopSuggestion(
         <CoachAdvice
           state={state}
           onFeedback={handleFeedback}
+          onAgree={handleAgree}
           feedbackSubmitLabel={t("advisor.feedbackDoInstead")}
           modelProgress={modelProgress}
           onApply={apply}

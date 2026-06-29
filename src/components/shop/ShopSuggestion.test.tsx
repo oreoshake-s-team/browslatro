@@ -130,7 +130,7 @@ describe("ShopSuggestion consumable use", () => {
     rankState.value = [1];
     renderSuggestion();
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
     await waitFor(() =>
       expect(useGame.getState().consumables).toHaveLength(0),
     );
@@ -142,7 +142,10 @@ describe("ShopSuggestion consumable use", () => {
     renderSuggestion();
     await revealCoachPick();
     await waitFor(() =>
-      expect(screen.getByTestId("coach-apply")).toBeDisabled(),
+      expect(screen.getByTestId("advice-feedback-agree")).toHaveAttribute(
+        "aria-disabled",
+        "true",
+      ),
     );
   });
 
@@ -152,7 +155,7 @@ describe("ShopSuggestion consumable use", () => {
     renderSuggestion();
     await revealCoachPick();
     await waitFor(() =>
-      expect(screen.getByTestId("coach-apply-blocked")).toBeInTheDocument(),
+      expect(screen.getByTestId("advice-feedback-agree-blocked")).toBeInTheDocument(),
     );
   });
 });
@@ -186,7 +189,7 @@ describe("ShopSuggestion click-to-reveal", () => {
   test("applying the coach pick buys the mapped offer", async () => {
     const props = renderSuggestion();
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
     expect(props.onBuy).toHaveBeenCalledWith(0);
   });
 
@@ -194,7 +197,7 @@ describe("ShopSuggestion click-to-reveal", () => {
     rankState.value = [1];
     const props = renderSuggestion();
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
     expect(props.onApplyReroll).toHaveBeenCalledOnce();
   });
 
@@ -202,21 +205,21 @@ describe("ShopSuggestion click-to-reveal", () => {
     rankState.value = [2];
     const props = renderSuggestion();
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
     expect(props.onNext).toHaveBeenCalledOnce();
   });
 
   test("the coach trigger returns after applying a pick so you can ask again", async () => {
     renderSuggestion();
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
     expect(screen.getByTestId("coach-trigger")).toBeInTheDocument();
   });
 
   test("re-opening the coach after acting shows a fresh recommendation", async () => {
     renderSuggestion();
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
     await userEvent.click(screen.getByTestId("coach-trigger"));
     expect(
       await screen.findByTestId("coach-recommendation"),
@@ -379,16 +382,16 @@ describe("ShopSuggestion click-to-reveal", () => {
     expect(matchedShopDisagreement({ kind: "reroll", cost: 5 })).toBeNull();
   });
 
-  test("an applied coach purchase is not recorded as human play, while a manual one after it is", async () => {
+  test("an applied coach pick records feedback but no phantom purchase, while a later manual buy is a purchase", async () => {
     useGame.getState().setMoney(20);
     useGame.getState().setShopOffers([jokerOffer(), jokerOffer()]);
     renderSuggestion({
       onBuy: (offerIdx) => useGame.getState().buyShopOffer(offerIdx),
     });
     await revealCoachPick();
-    await userEvent.click(await screen.findByTestId("coach-apply"));
-    expect(humanPlayLog().count()).toBe(0);
+    await userEvent.click(await screen.findByTestId("advice-feedback-agree"));
+    expect(humanPlayLog().counts().purchase).toBeUndefined();
     useGame.getState().buyShopOffer(1);
-    expect(humanPlayLog().counts()).toEqual({ purchase: 1 });
+    expect(humanPlayLog().counts().purchase).toBe(1);
   });
 });

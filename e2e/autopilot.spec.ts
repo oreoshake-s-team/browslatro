@@ -17,7 +17,7 @@ async function startRound(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
 }
 
-test("autopilot proposes a move and plays it after approval", async ({
+test("autopilot proposes a move and plays it after agreeing", async ({
   page,
 }) => {
   await startRound(page);
@@ -28,18 +28,18 @@ test("autopilot proposes a move and plays it after approval", async ({
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
 
-  const approve = page.getByRole("button", { name: /Approve move/ });
-  await expect(approve).toBeVisible({ timeout: 10_000 });
+  const agree = page.getByTestId("advice-feedback-agree");
+  await expect(agree).toBeVisible({ timeout: 10_000 });
 
-  // The proposal is pending — it must not execute until approved.
+  // The proposal is pending — it must not execute until accepted.
   await expect(roundScore).toHaveText("0");
 
-  await approve.click();
-  // Approving plays the proposed hand, which scores.
+  await agree.click();
+  // Agreeing plays the proposed hand, which scores.
   await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
 });
 
-test("approving the autopilot proposal records no auto-disagreement", async ({
+test("agreeing with the autopilot proposal records no auto-disagreement", async ({
   page,
 }) => {
   await startRound(page);
@@ -47,9 +47,9 @@ test("approving the autopilot proposal records no auto-disagreement", async ({
 
   const toggle = page.getByRole("button", { name: "Suggest", exact: true });
   await toggle.click();
-  const approve = page.getByRole("button", { name: /Approve move/ });
-  await expect(approve).toBeVisible({ timeout: 10_000 });
-  await approve.click();
+  const agree = page.getByTestId("advice-feedback-agree");
+  await expect(agree).toBeVisible({ timeout: 10_000 });
+  await agree.click();
   await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
 
   const log = await page.evaluate(
@@ -69,7 +69,7 @@ test("toggling autopilot off does not execute the proposed move", async ({
 
   const toggle = page.getByRole("button", { name: "Suggest", exact: true });
   await toggle.click();
-  await expect(page.getByRole("button", { name: /Approve move/ })).toBeVisible({
+  await expect(page.getByTestId("advice-feedback-agree")).toBeVisible({
     timeout: 10_000,
   });
   await expect(
@@ -88,7 +88,7 @@ test("downvoting the policy proposal records policy advice feedback", async ({
   await startRound(page);
   const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
-  await expect(page.getByRole("button", { name: /Approve move/ })).toBeVisible({
+  await expect(page.getByTestId("advice-feedback-agree")).toBeVisible({
     timeout: 10_000,
   });
 
@@ -110,6 +110,32 @@ test("downvoting the policy proposal records policy advice feedback", async ({
   expect(log).toContain('"correctedIndex":1');
 });
 
+test("agreeing with the policy proposal records a good policy verdict", async ({
+  page,
+}) => {
+  await startRound(page);
+  const toggle = page.getByRole("button", { name: "Suggest" });
+  await toggle.click();
+  await expect(page.getByTestId("advice-feedback-agree")).toBeVisible({
+    timeout: 10_000,
+  });
+
+  await page.getByTestId("advice-feedback-agree").click();
+
+  await expect
+    .poll(async () =>
+      page.evaluate(
+        () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+      ),
+    )
+    .toContain('"verdict":"good"');
+  const log = await page.evaluate(
+    () => window.localStorage.getItem("browslatro.human-play-log.v1") ?? "",
+  );
+  expect(log).toContain('"source":"explicit"');
+  expect(log).toContain('"context":"hand"');
+});
+
 test("autopilot can be switched off", async ({ page }) => {
   await startRound(page);
   const toggle = page.getByRole("button", { name: "Suggest" });
@@ -125,7 +151,7 @@ test("a pending suggestion fills the Submit Hand preview and sidebar hand score"
   const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
 
-  const approve = page.getByRole("button", { name: /Approve move/ });
+  const approve = page.getByTestId("advice-feedback-agree");
   await expect(approve).toBeVisible({ timeout: 10_000 });
 
   await expect(page.getByTestId("submit-hand-detected")).toBeVisible();

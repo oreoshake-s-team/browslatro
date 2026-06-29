@@ -5,9 +5,16 @@ import AdviceFeedbackControl from "./AdviceFeedbackControl";
 
 const LABELS = ["Play Pair", "Discard two cards", "Reroll"];
 
-function renderControl(onSubmit: (i: number | null) => void = vi.fn()) {
+function renderControl(
+  onSubmit: (i: number | null) => void = vi.fn(),
+  onAgree: () => void = vi.fn(),
+) {
   return render(
-    <AdviceFeedbackControl candidateLabels={LABELS} onSubmit={onSubmit} />,
+    <AdviceFeedbackControl
+      candidateLabels={LABELS}
+      onSubmit={onSubmit}
+      onAgree={onAgree}
+    />,
   );
 }
 
@@ -15,6 +22,85 @@ describe("AdviceFeedbackControl", () => {
   test("renders the bad-pick affordance initially", () => {
     renderControl();
     expect(screen.getByTestId("advice-feedback-open")).toBeInTheDocument();
+  });
+
+  test("renders the good-pick affordance initially", () => {
+    renderControl();
+    expect(screen.getByTestId("advice-feedback-agree")).toBeInTheDocument();
+  });
+
+  test("agreeing reports the agreement", async () => {
+    const onAgree = vi.fn();
+    const user = userEvent.setup();
+    renderControl(vi.fn(), onAgree);
+    await user.click(screen.getByTestId("advice-feedback-agree"));
+    expect(onAgree).toHaveBeenCalledTimes(1);
+  });
+
+  test("agreeing does not report a downvote (negative)", async () => {
+    const onSubmit = vi.fn();
+    const user = userEvent.setup();
+    renderControl(onSubmit);
+    await user.click(screen.getByTestId("advice-feedback-agree"));
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  test("shows a recorded confirmation after agreeing", async () => {
+    const user = userEvent.setup();
+    renderControl();
+    await user.click(screen.getByTestId("advice-feedback-agree"));
+    expect(screen.getByTestId("advice-feedback-recorded")).toBeInTheDocument();
+  });
+
+  test("marks the agree button aria-disabled when agreement is blocked", () => {
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onAgree={vi.fn()}
+        agreeDisabled
+        agreeDisabledReason="Use this during the blind"
+      />,
+    );
+    expect(screen.getByTestId("advice-feedback-agree")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+
+  test("a blocked agree does not call onAgree", async () => {
+    const onAgree = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onAgree={onAgree}
+        agreeDisabled
+        agreeDisabledReason="Use this during the blind"
+      />,
+    );
+    await user.click(screen.getByTestId("advice-feedback-agree"));
+    expect(onAgree).not.toHaveBeenCalled();
+  });
+
+  test("links the blocked reason to the agree button via aria-describedby", () => {
+    render(
+      <AdviceFeedbackControl
+        candidateLabels={LABELS}
+        onSubmit={vi.fn()}
+        onAgree={vi.fn()}
+        agreeDisabled
+        agreeDisabledReason="Use this during the blind"
+      />,
+    );
+    const describedBy = screen
+      .getByTestId("advice-feedback-agree")
+      .getAttribute("aria-describedby");
+    expect(screen.getByTestId("advice-feedback-agree-blocked")).toHaveAttribute(
+      "id",
+      describedBy,
+    );
   });
 
   test("the affordance is collapsed by default", () => {
@@ -71,6 +157,7 @@ describe("AdviceFeedbackControl", () => {
       <AdviceFeedbackControl
         candidateLabels={LABELS}
         onSubmit={vi.fn()}
+        onAgree={vi.fn()}
         submitLabel="Play this instead"
       />,
     );
@@ -141,6 +228,7 @@ describe("AdviceFeedbackControl", () => {
       <AdviceFeedbackControl
         candidateLabels={LABELS}
         onSubmit={vi.fn()}
+        onAgree={vi.fn()}
         onPreview={onPreview}
       />,
     );
@@ -156,6 +244,7 @@ describe("AdviceFeedbackControl", () => {
       <AdviceFeedbackControl
         candidateLabels={LABELS}
         onSubmit={vi.fn()}
+        onAgree={vi.fn()}
         onPreview={onPreview}
       />,
     );

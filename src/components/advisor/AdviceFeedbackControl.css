@@ -4,6 +4,21 @@
   gap: 0.5rem;
 }
 
+.advice-feedback-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.advice-feedback-choice > .btn {
+  flex: 1 1 0;
+}
+
+.advice-feedback-agree[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .advice-feedback-picker {
   display: flex;
   flex-direction: column;
@@ -49,4 +64,11 @@
   margin: 0;
   font-weight: 700;
   color: var(--accent-success);
+}
+
+.advice-feedback-agree-blocked {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
 }

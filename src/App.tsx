@@ -284,6 +284,22 @@ function App() {
       autopilot.dismissProposal();
     }
   };
+  const handleAutopilotAgree = (): void => {
+    if (policyDecision !== null) {
+      captureAdviceFeedback(
+        useGame.getState(),
+        buildHandPolicyFeedbackEvent(
+          policyDecision,
+          policyDecision.recommendationIndex,
+          "explicit",
+          "good",
+        ),
+      );
+      setAutopilotFeedbackRecorded(true);
+    }
+    clearHandAdvice();
+    autopilot.approve();
+  };
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
       applyGainedTag,
@@ -543,6 +559,7 @@ function App() {
         onAskAiAutopilot={askAiForMove}
         onRetryAutopilot={askAiForMove}
         onAutopilotFeedback={handleAutopilotFeedback}
+        onAutopilotAgree={handleAutopilotAgree}
         onAutopilotPreviewFeedback={autopilot.previewOption}
         canDiscard={
           selectedIds.size > 0 &&

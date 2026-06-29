@@ -14,6 +14,7 @@ export interface CoachAdviceProps<TAction> {
   readonly onAskAi: () => void;
   readonly onDismiss: () => void;
   readonly onFeedback?: (correctedIndex: number | null) => void;
+  readonly onAgree?: () => void;
   readonly feedbackSubmitLabel?: string;
   readonly modelProgress?: DownloadProgress | null;
   readonly applyDisabled?: boolean;
@@ -26,6 +27,7 @@ export default function CoachAdvice<TAction>({
   onAskAi,
   onDismiss,
   onFeedback,
+  onAgree,
   feedbackSubmitLabel,
   modelProgress = null,
   applyDisabled = false,
@@ -67,31 +69,38 @@ export default function CoachAdvice<TAction>({
             {describeContextCandidate(t, coachCandidate)}
           </p>
           <div className="coach-advice-actions">
-            <button
-              type="button"
-              className="btn coach-advice-apply"
-              data-testid="coach-apply"
-              onClick={onApply}
-              disabled={applyDisabled}
-            >
-              <span aria-hidden="true">✅ </span>
-              {t("advisor.suggestApply")}
-            </button>
-            {applyDisabled && applyDisabledReason !== undefined && (
-              <p
-                className="coach-advice-apply-blocked"
-                role="note"
-                data-testid="coach-apply-blocked"
+            {onAgree === undefined && (
+              <button
+                type="button"
+                className="btn coach-advice-apply"
+                data-testid="coach-apply"
+                onClick={onApply}
+                disabled={applyDisabled}
               >
-                {applyDisabledReason}
-              </p>
+                <span aria-hidden="true">✅ </span>
+                {t("advisor.suggestApply")}
+              </button>
             )}
-            {onFeedback !== undefined && (
+            {onAgree === undefined &&
+              applyDisabled &&
+              applyDisabledReason !== undefined && (
+                <p
+                  className="coach-advice-apply-blocked"
+                  role="note"
+                  data-testid="coach-apply-blocked"
+                >
+                  {applyDisabledReason}
+                </p>
+              )}
+            {onFeedback !== undefined && onAgree !== undefined && (
               <AdviceFeedbackControl
                 candidateLabels={state.candidates.map((c) =>
                   describeContextCandidate(t, c),
                 )}
                 onSubmit={onFeedback}
+                onAgree={onAgree}
+                agreeDisabled={applyDisabled}
+                agreeDisabledReason={applyDisabledReason}
                 submitLabel={feedbackSubmitLabel}
               />
             )}
