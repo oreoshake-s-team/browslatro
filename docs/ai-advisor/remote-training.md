@@ -44,9 +44,11 @@ locally with `--parallel-jobs` or remotely across machines.
 | `scripts/remote/flyMachines.ts` | `MachineLauncher` interface + `FlyMachinesClient` over the Fly Machines REST API. |
 | `scripts/remote/s3.ts` | Dependency-free SigV4 signing + `putObject`/`getObject` for any S3-compatible store (Tigris). |
 | `scripts/remote/runRemoteDataset.ts` | Orchestrator: plan → launch → poll → collect → concatenate. |
+| `scripts/remote/runRemoteSelfPlay.ts` | Same fan-out for **shop-policy self-play** (`--hold-consumables` for the v2/use-aware encoding; forwards `HOLD`/`PARALLEL_JOBS`). |
 | `scripts/remote/putShard.ts` | Worker-side uploader invoked inside the container. |
 | `ml/remote/Dockerfile` | Worker image (Node 22 + repo + deps). |
 | `ml/remote/worker-entrypoint.sh` | Generates a shard, then uploads it. |
+| `ml/remote/selfplay-entrypoint.sh` | Collects a self-play shard (honors `HOLD`/`PARALLEL_JOBS`), then uploads it. |
 | `ml/remote/fly.toml` | Fly app/build config for the worker image. |
 
 ## One-time setup
@@ -305,28 +307,65 @@ embarrassingly-parallel shape as generation — independent games, sharded by se
 and concatenating them into one `.jsonl`.
 
 The worker is pure TypeScript, so (like the benchmark) it **reuses the dataset image**
-with a command override (`ml/remote/selfplay-entrypoint.sh`) — no third image. Rebuild
-`dataset-latest` once so the image contains the entrypoint, then:
+with a command override (`ml/remote/selfplay-entrypoint.sh`) — no third image.
+
+> **The image bakes `public/models` at build time.** The `--shop-model` / `--hand-model`
+> you pass must exist *inside* `dataset-latest`, so **rebuild and push the image after
+> shipping a new policy** (e.g. v12), or every worker fails to load it and produces an empty
+> shard (the orchestrator then fails fast rather than ship a partial dataset).
 
 ```bash
+fly deploy --config ml/remote/fly.toml --dockerfile ml/remote/Dockerfile \
+  --build-only --push --image-label dataset-latest .
+
 yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts selfplay.jsonl \
-  --games 1000 --machines 8 --cpus 2 --memory-mb 2048 \
-  --shop-model public/models/advisor-shop-policy-v9.onnx \
+  --games 1500 --machines 8 --cpus 2 --memory-mb 2048 \
+  --shop-model public/models/advisor-shop-policy-v12.onnx \
   --hand-model public/models/advisor-policy-v9.onnx \
-  --temperature 1.0
+  --temperature 1.0 --hold-consumables
 ```
 
 Each machine samples its seed slice from the given shop policy (softmax at `--temperature`)
 under the given hand policy, tagging each shop decision with the game's realized return.
-Train the result with the REINFORCE/PPO trainer (locally for now):
+
+**`--hold-consumables` selects the use-aware v2 encoding** — the 79-feature policy the live
+app and v11/v12 serve (consumables are held in inventory and the `consumablesHeld` count is
+encoded). Omit it for the legacy v1 (78-feature) policies. Inside each machine the collection
+is itself sharded across the machine's vCPUs (`PARALLEL_JOBS`, defaults to `--cpus`); the same
+`--parallel-jobs N` flag shards a **local** `collectSelfPlayShop.ts` run across cores.
+
+Train the result with the REINFORCE/PPO trainer (locally — there is no remote `train_rl`
+runner yet). **Pass `--v2` when the self-play was collected with `--hold-consumables`** so the
+trainer decodes the 79-feature rows:
 
 ```bash
-python ml/train_rl.py selfplay.jsonl \
-  --init public/models/advisor-shop-policy-v9.onnx --ppo-clip 0.2 --out candidate-shop.onnx
+python ml/train_rl.py selfplay.jsonl --v2 \
+  --init public/models/advisor-shop-policy-v12.onnx --ppo-clip 0.3 --out candidate-shop.onnx
 ```
 
-For an on-policy iteration, re-collect from the *new* policy each round (warm-started from
-it) — see `ml/on_policy_track_b.sh`. Benchmark before shipping as usual.
+For an on-policy iteration, re-collect from the *new* policy each round (warm-started from it)
+— `ml/on_policy_track_b.sh` does this; set `HOLD=1` to wire `--hold-consumables` (self-play +
+benchmark) and `--v2` (trainer) together. Benchmark before shipping as usual.
+
+### Wall-clock
+
+One on-policy iteration, measured 2026-06-29 (1500 games, 8 machines, hold/v2, warm-started
+from v12; local steps on an 8-vCPU laptop):
+
+| Phase | Where | Time |
+| --- | --- | --- |
+| self-play (1500 games) | 8 Fly machines | ~60 s |
+| `train_rl.py` (28 epochs, ~17k decisions) | local CPU | ~100 s |
+| benchmark (750 games) | local CPU | ~97 s |
+| **per iteration** | | **~4 min** |
+
+A full 8-iteration retrain is therefore ~30–35 min. Two caveats: (1) the **local** train +
+benchmark dominate, and they grow with policy strength (a stronger policy reaches further
+antes → longer games → more decisions), so a remote `train_rl` runner (below) is the next
+real speedup; and (2) remote self-play is **boot-dominated** at this size — ~60 s is mostly
+machine boot, so for ≤~2k games a local `--parallel-jobs` run on a multi-core box is
+comparable or faster. Remote self-play only wins once `--games` is large enough to saturate
+local cores.
 
 ## Deferred / follow-up work
 
