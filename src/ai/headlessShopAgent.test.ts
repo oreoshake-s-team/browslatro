@@ -119,6 +119,14 @@ describe("voucherCandidate", () => {
     const candidate = voucherCandidate(wasteful);
     expect(candidate.action === "buy" && candidate.item.id).toBe("wasteful");
   });
+
+  test("carries a non-zero voucher feature vector", () => {
+    if (wasteful === undefined) return;
+    const candidate = voucherCandidate(wasteful);
+    const features =
+      candidate.action === "buy" ? candidate.item.voucherFeatures : undefined;
+    expect(features?.some((v) => v !== 0)).toBe(true);
+  });
 });
 
 describe("buildShopDecisionLog", () => {
@@ -193,6 +201,7 @@ describe("buildOverride", () => {
   test("receives the player's real build before encoding", async () => {
     const seen: ShopBuild[] = [];
     const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      scoreCandidates: (_encoded, n) => new Float32Array(n),
       buildOverride: (build) => {
         seen.push(build);
         return build;
@@ -205,6 +214,7 @@ describe("buildOverride", () => {
   test("substitutes the transformed build into the decision log", async () => {
     const logs: Array<ReadonlyArray<unknown>> = [];
     const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      scoreCandidates: (_encoded, n) => new Float32Array(n),
       buildOverride: () => EMPTY_BUILD,
       onShopDecision: (log) => logs.push(log.jokers),
     });
