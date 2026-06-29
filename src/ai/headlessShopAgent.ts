@@ -141,6 +141,14 @@ export function consumableUseCandidate(consumable: Consumable, index: number): S
   };
 }
 
+export function consumablesHeldFeature(
+  hold: boolean,
+  inventoryCount: number,
+  lastConsumable: Consumable | null,
+): number {
+  return hold ? inventoryCount : lastConsumable !== null ? 1 : 0;
+}
+
 function candidateSnapshot(candidate: ShopAdviceCandidate): ShopCandidateSnapshot {
   if (candidate.action === "buy" || candidate.action === "sell" || candidate.action === "use") {
     return {
@@ -296,6 +304,8 @@ export async function createHeadlessShopAgent(
         if (hold && inventory.length < MAX_CONSUMABLE_SLOTS) inventory.push(consumable);
         else useConsumable(consumable);
       };
+      const buildFor = (): ShopBuild =>
+        withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: consumablesHeldFeature(hold, inventory.length, lastConsumable) }));
 
       for (;;) {
         const rerollCost = Math.max(0, rerollCostFor(rerollsDone) - rerollCostReduction(ownedVoucherIds));
@@ -313,7 +323,7 @@ export async function createHeadlessShopAgent(
           ...(rerollsDone < MAX_REROLLS && rerollCost <= money && rerollAllowed(money, ownedVoucherIds, ownedIds) ? [{ action: "reroll" as const, cost: rerollCost }] : []),
           { action: "leave" as const },
         ];
-        const build = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: hold ? inventory.length : lastConsumable !== null ? 1 : 0 }));
+        const build = buildFor();
         const topIdx = await topRanked(encodeShop({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length, featureCount);
         if (options.onShopDecision !== undefined) {
           const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx, hold);
@@ -384,7 +394,7 @@ export async function createHeadlessShopAgent(
           let picksLeft = packPickLimit(offer.pack.variant);
           while (picksLeft > 0 && packOptions.length > 0) {
             const packCandidates: PackAdviceCandidate[] = [...packOptions.map(packOptionToCandidate), { action: "skip" }];
-            const packBuild = withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: lastConsumable !== null ? 1 : 0 }));
+            const packBuild = buildFor();
             const pickIdx = await topRanked(encodePack({ money, ante: view.ante, round: view.round, picksRemaining: picksLeft, build: packBuild, candidates: packCandidates }), packCandidates.length, featureCount);
             const picked = packOptions[pickIdx];
             if (picked === undefined) break;
