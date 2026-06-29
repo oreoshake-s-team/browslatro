@@ -12,8 +12,8 @@ from encoding import (
 )
 
 DATASET_SCHEMA_VERSION = 1
-SHOP_SCHEMA_VERSION = 3
-SUPPORTED_SHOP_SCHEMA_VERSIONS = frozenset({2, 3})
+SHOP_SCHEMA_VERSION = 4
+SUPPORTED_SHOP_SCHEMA_VERSIONS = frozenset({2, 3, 4})
 
 _SHOP_KINDS = frozenset({"purchase", "reroll", "pack-pick"})
 
@@ -133,29 +133,40 @@ def load_shop_decisions_split(paths, teacher_weight=5.0):
 
 
 def _iter_feedback_records(path):
-    """Yields advice-feedback RunEventRecords from a JSONL file, skipping others."""
+    """Yields advice-feedback RunEventRecords from a JSONL file, skipping others.
+
+    Raises on an unexpected schema version so a stale dataset fails loudly rather
+    than KeyError-ing on a changed record shape downstream.
+    """
     with open(path, encoding="utf-8") as handle:
-        for line in handle:
+        for line_number, line in enumerate(handle, start=1):
             line = line.strip()
             if not line:
                 continue
             record = json.loads(line)
-            if record.get("kind") == "advice-feedback":
-                yield record
+            if record.get("kind") != "advice-feedback":
+                continue
+            version = record.get("schemaVersion")
+            if version not in SUPPORTED_SHOP_SCHEMA_VERSIONS:
+                raise ValueError(
+                    f"{path}:{line_number}: advice-feedback schemaVersion {version}, "
+                    f"expected one of {sorted(SUPPORTED_SHOP_SCHEMA_VERSIONS)}"
+                )
+            yield record
 
 
-def _encode_hand_correction(record):
+def _encode_hand_label(record, index):
     decision = record["decision"]
     return encode_decision(
         {
             "state": decision["state"],
             "candidates": decision["candidates"],
-            "chosenIndex": record["correctedIndex"],
+            "chosenIndex": index,
         }
     )
 
 
-def _encode_shop_correction(record):
+def _encode_shop_label(record, index):
     ctx = _encode_shop_context(record)
     money = record["money"]
     inputs = []
@@ -179,7 +190,7 @@ def _encode_shop_correction(record):
             )
         else:
             inputs.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
-    return inputs, record["correctedIndex"]
+    return inputs, index
 
 
 DEFAULT_MIN_SCORE_FRACTION = 0.25
@@ -222,6 +233,8 @@ def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=Non
     decisions = []
     for path in paths:
         for record in _iter_feedback_records(path):
+            if record.get("verdict", "bad") != "bad":
+                continue
             if record.get("correctedIndex") is None:
                 continue
             decision = record.get("decision", {})
@@ -234,9 +247,50 @@ def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=Non
                     decision["candidates"], record["correctedIndex"], min_score_fraction
                 ):
                     continue
-                inputs, chosen = _encode_hand_correction(record)
+                inputs, chosen = _encode_hand_label(record, record["correctedIndex"])
             elif context == "shop":
-                inputs, chosen = _encode_shop_correction(record)
+                inputs, chosen = _encode_shop_label(record, record["correctedIndex"])
+            else:
+                continue
+            if not inputs or chosen < 0 or chosen >= len(inputs):
+                continue
+            decisions.append((inputs, chosen, record["runSeed"], weight))
+    return decisions
+
+
+def load_feedback_agreements(paths, context, weight=1.0, min_score_fraction=None):
+    """Re-encodes explicit advisor agreements into weighted positive labels.
+
+    Only explicit thumbs-up records (verdict "good", source "explicit") train;
+    implicit auto-agreement records (source "auto-agreement") are eval/telemetry
+    only and skipped here, so the policy is not flooded with confirmations of its
+    own picks. The label is the recommendationIndex the human confirmed. context
+    selects "hand" or "shop". When min_score_fraction is set, hand agreements pass
+    the same quality gate as corrections so a weak recommendation is not distilled.
+    """
+    decisions = []
+    for path in paths:
+        for record in _iter_feedback_records(path):
+            if record.get("verdict") != "good":
+                continue
+            if record.get("source") != "explicit":
+                continue
+            index = record.get("recommendationIndex")
+            if index is None:
+                continue
+            decision = record.get("decision", {})
+            if decision.get("context") != context:
+                continue
+            if context == "hand":
+                if len(decision["state"]["hand"]) > HAND_SLOTS:
+                    continue
+                if min_score_fraction is not None and not _hand_correction_justified(
+                    decision["candidates"], index, min_score_fraction
+                ):
+                    continue
+                inputs, chosen = _encode_hand_label(record, index)
+            elif context == "shop":
+                inputs, chosen = _encode_shop_label(record, index)
             else:
                 continue
             if not inputs or chosen < 0 or chosen >= len(inputs):

@@ -94,6 +94,17 @@ describe("buildHandPolicyFeedbackEvent", () => {
     ).toBe("auto-disagreement");
   });
 
+  test("defaults the verdict to bad", async () => {
+    expect(buildHandPolicyFeedbackEvent(await decision(), 1).verdict).toBe("bad");
+  });
+
+  test("records a good verdict when given", async () => {
+    expect(
+      buildHandPolicyFeedbackEvent(await decision(), 0, "auto-agreement", "good")
+        .verdict,
+    ).toBe("good");
+  });
+
   test("embeds the hand decision context", async () => {
     expect(buildHandPolicyFeedbackEvent(await decision(), 1).decision.context).toBe(
       "hand",
@@ -187,6 +198,26 @@ describe("buildShopPolicyFeedbackEvent", () => {
         "auto-disagreement",
       ).source,
     ).toBe("auto-disagreement");
+  });
+
+  test("defaults the verdict to bad", () => {
+    expect(buildShopPolicyFeedbackEvent(shopState, shopCandidates, 0, 1).verdict).toBe(
+      "bad",
+    );
+  });
+
+  test("records a good verdict when given", () => {
+    expect(
+      buildShopPolicyFeedbackEvent(
+        shopState,
+        shopCandidates,
+        0,
+        0,
+        "auto-agreement",
+        undefined,
+        "good",
+      ).verdict,
+    ).toBe("good");
   });
 
   test("omits the rollout state when none is given", () => {

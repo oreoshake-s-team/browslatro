@@ -4,10 +4,10 @@ import { useAutopilot } from "./hooks/useAutopilot";
 import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
 import { captureAdviceFeedback } from "./ai/humanPlayWiring";
 import { buildHandPolicyFeedbackEvent } from "./ai/advisor/adviceFeedback";
-import { recordShopDisagreement } from "./ai/advisor/shownShopAdvice";
+import { recordShopFeedback } from "./ai/advisor/shownShopAdvice";
 import {
   clearHandAdvice,
-  recordHandDisagreement,
+  recordHandFeedback,
   rememberHandAdvice,
 } from "./ai/advisor/shownHandAdvice";
 
@@ -213,14 +213,14 @@ function App() {
     skipDrawAfterDiscardRef,
   });
   const submitHand = () => {
-    recordHandDisagreement(
+    recordHandFeedback(
       { action: "play", cardIds: [...useGame.getState().selectedIds] },
       useGame.getState(),
     );
     submitHandRaw();
   };
   const discardSelected = () => {
-    recordHandDisagreement(
+    recordHandFeedback(
       { action: "discard", cardIds: [...useGame.getState().selectedIds] },
       useGame.getState(),
     );
@@ -419,7 +419,7 @@ function App() {
     const pre = useGame.getState();
     if (buyShopOfferAction(idx)) {
       play("pop");
-      recordShopDisagreement({ kind: "buy", offerIdx: idx }, pre);
+      recordShopFeedback({ kind: "buy", offerIdx: idx }, pre);
     }
   };
 
@@ -430,11 +430,11 @@ function App() {
     const pre = useGame.getState();
     play("pop");
     rerollShopOffersAction(cost);
-    recordShopDisagreement({ kind: "reroll", cost }, pre);
+    recordShopFeedback({ kind: "reroll", cost }, pre);
   };
 
   function closeShopAndStartNextRound() {
-    recordShopDisagreement({ kind: "leave" }, useGame.getState());
+    recordShopFeedback({ kind: "leave" }, useGame.getState());
     const copies = shopExitConsumableCopies(
       jokers,
       useGame.getState().consumables,
@@ -465,7 +465,7 @@ function App() {
     const pre = useGame.getState();
     play("pop");
     buyAnteVoucherAction(voucherIdx);
-    recordShopDisagreement({ kind: "buy-voucher", voucherIdx }, pre);
+    recordShopFeedback({ kind: "buy-voucher", voucherIdx }, pre);
   };
 
   function dismissRoundWonModal() {

@@ -5,8 +5,9 @@ import { humanPlayLog } from "../humanPlayWiring";
 import { createDefaultHandStats } from "../../scoring/handStats";
 import {
   clearShopAdvice,
+  matchedShopAgreement,
   matchedShopDisagreement,
-  recordShopDisagreement,
+  recordShopFeedback,
   rememberShopAdvice,
   type ShownShopAdvice,
 } from "./shownShopAdvice";
@@ -79,45 +80,69 @@ describe("matchedShopDisagreement", () => {
   });
 });
 
-describe("recordShopDisagreement", () => {
-  test("records an auto-disagreement event for a divergent action", () => {
-    rememberShopAdvice(advice());
-    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
-    expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
+describe("matchedShopAgreement", () => {
+  test("returns null when no advice was shown", () => {
+    expect(matchedShopAgreement({ kind: "buy", offerIdx: 0 })).toBeNull();
   });
 
-  test("tags the recorded event as auto-disagreement", () => {
+  test("flags a commit that matches the recommendation", () => {
     rememberShopAdvice(advice());
-    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
+    expect(
+      matchedShopAgreement({ kind: "buy", offerIdx: 0 })?.advice.recommendationIndex,
+    ).toBe(0);
+  });
+
+  test("returns null when the commit diverges from the recommendation", () => {
+    rememberShopAdvice(advice());
+    expect(matchedShopAgreement({ kind: "reroll", cost: 5 })).toBeNull();
+  });
+});
+
+describe("recordShopFeedback", () => {
+  test("tags a divergent action as auto-disagreement", () => {
+    rememberShopAdvice(advice());
+    recordShopFeedback({ kind: "reroll", cost: 5 }, useGame.getState());
     expect(humanPlayLog().toJsonl()).toContain('"source":"auto-disagreement"');
   });
 
   test("records the committed candidate as correctedIndex", () => {
     rememberShopAdvice(advice());
-    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
+    recordShopFeedback({ kind: "reroll", cost: 5 }, useGame.getState());
     expect(humanPlayLog().toJsonl()).toContain('"correctedIndex":1');
   });
 
-  test("records nothing when the committed action matches the recommendation", () => {
+  test("tags a matching action as auto-agreement", () => {
     rememberShopAdvice(advice());
-    recordShopDisagreement({ kind: "buy", offerIdx: 0 }, useGame.getState());
-    expect(humanPlayLog().count()).toBe(0);
+    recordShopFeedback({ kind: "buy", offerIdx: 0 }, useGame.getState());
+    expect(humanPlayLog().toJsonl()).toContain('"source":"auto-agreement"');
+  });
+
+  test("tags an agreement event with the good verdict", () => {
+    rememberShopAdvice(advice());
+    recordShopFeedback({ kind: "buy", offerIdx: 0 }, useGame.getState());
+    expect(humanPlayLog().toJsonl()).toContain('"verdict":"good"');
+  });
+
+  test("records exactly one event per commit", () => {
+    rememberShopAdvice(advice());
+    recordShopFeedback({ kind: "buy", offerIdx: 0 }, useGame.getState());
+    expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
   });
 
   test("records nothing when no advice was shown (negative)", () => {
-    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
+    recordShopFeedback({ kind: "reroll", cost: 5 }, useGame.getState());
     expect(humanPlayLog().count()).toBe(0);
   });
 
   test("clears the advice so a later commit does not double-fire", () => {
     rememberShopAdvice(advice());
-    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
+    recordShopFeedback({ kind: "reroll", cost: 5 }, useGame.getState());
     expect(matchedShopDisagreement({ kind: "leave" })).toBeNull();
   });
 
   test("carries the remembered rollout state into the recorded event", () => {
     rememberShopAdvice(advice());
-    recordShopDisagreement({ kind: "reroll", cost: 5 }, useGame.getState());
+    recordShopFeedback({ kind: "reroll", cost: 5 }, useGame.getState());
     const record = JSON.parse(humanPlayLog().toJsonl().trim());
     expect(record.decision.rollout).toBeDefined();
   });

@@ -151,8 +151,7 @@ test("downvoting the coach pick records policy advice feedback", async ({
   await revealCoachPick(page);
 
   await page.getByTestId("advice-feedback-open").click();
-  await page.getByTestId("advice-feedback-option-1").click();
-  await page.getByTestId("advice-feedback-submit").click();
+  await page.getByTestId("advice-feedback-just-bad").click();
 
   await expect(page.getByTestId("coach-advice")).toHaveCount(0);
   await expect(page.getByTestId("coach-feedback-recorded")).toBeVisible();

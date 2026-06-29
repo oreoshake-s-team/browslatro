@@ -9,7 +9,11 @@ import {
   isShopCorrectionJustified,
   type ShopGateDeps,
 } from "./shopCorrectionGate";
-import { shopItemSnapshot, type RunEventRecord } from "./runEvents";
+import {
+  RUN_EVENT_SCHEMA_VERSION,
+  shopItemSnapshot,
+  type RunEventRecord,
+} from "./runEvents";
 import type { PostShopState, RolloutOptions } from "./shopRolloutExpert";
 
 const OFFER: ShopItem = {
@@ -45,7 +49,7 @@ function shopCorrection(
   rollout: boolean = true,
 ): RunEventRecord {
   return {
-    schemaVersion: 3,
+    schemaVersion: RUN_EVENT_SCHEMA_VERSION,
     kind: "advice-feedback",
     runSeed: 7,
     ante: 2,
