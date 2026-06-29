@@ -41,7 +41,7 @@ Browslatro has **two independent advisors** that both answer the same question �
 | Surface in the UI | The **Suggest** buttons (shop / pack / blind) and the autopilot **move explanation** — produces a recommendation **plus a plain-language explanation, a tempting alternative, and a transferable concept**. | Ranks candidates for **autopilot** and pre-ranks the LLM's candidate list while Claude is still thinking. Fast, local, free, but explanation-free. |
 | Cost / latency | Slow (25 s server timeout), [BYOK](https://en.wikipedia.org/wiki/Bring_your_own_device)-capable, rate-limited, costs money. | Instant, offline, free. |
 | How it's built | Zero-shot — Claude already "knows" Balatro, grounded with retrieved wiki notes. | [Imitation learning](https://en.wikipedia.org/wiki/Imitation_learning): trained offline to copy a Monte-Carlo search expert + weighted human play. |
-| Production model | `claude-opus-4-8` (overridable via `ADVISOR_MODEL`). | Hand: [`advisor-policy-v9.onnx`](../../public/models/advisor-policy-v9.onnx). Shop: [`advisor-shop-policy-v10.onnx`](../../public/models/advisor-shop-policy-v10.onnx). |
+| Production model | `claude-opus-4-8` (overridable via `ADVISOR_MODEL`). | Hand: [`advisor-policy-v9.onnx`](../../public/models/advisor-policy-v9.onnx). Shop: [`advisor-shop-policy-v12.onnx`](../../public/models/advisor-shop-policy-v12.onnx) (use-aware v2 encoding). |
 
 The two paths share the **same candidate enumeration** ([`getHandOptions`](../../src/ai/getHandOptions.ts)) and the **same state projection** ([`ModelState`](../../src/ai/modelState.ts)). That shared spine is what makes them interchangeable and comparable. See [engine-plumbing.md](./engine-plumbing.md).
 

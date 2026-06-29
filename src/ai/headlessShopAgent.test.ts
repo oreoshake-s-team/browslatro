@@ -8,6 +8,7 @@ import { createDefaultHandStats } from "../scoring/handStats";
 import {
   buildShopDecisionLog,
   consumableUseCandidate,
+  consumablesHeldFeature,
   createHeadlessShopAgent,
   voucherCandidate,
 } from "./headlessShopAgent";
@@ -64,6 +65,28 @@ describe("holdConsumables", () => {
     });
     await agent.buyAfterRound({ ...shopViewWithJoker(), jokers: [], money: 0 });
     expect(widths.every((flag) => flag === 0)).toBe(true);
+  });
+});
+
+describe("consumablesHeldFeature", () => {
+  test("in hold mode reports the held inventory count", () => {
+    expect(consumablesHeldFeature(true, 2, null)).toBe(2);
+  });
+
+  test("in hold mode reports zero for an empty inventory", () => {
+    expect(consumablesHeldFeature(true, 0, planetConsumable())).toBe(0);
+  });
+
+  test("without hold reports one when a consumable was used", () => {
+    expect(consumablesHeldFeature(false, 0, planetConsumable())).toBe(1);
+  });
+
+  test("without hold reports zero when no consumable was used", () => {
+    expect(consumablesHeldFeature(false, 0, null)).toBe(0);
+  });
+
+  test("without hold ignores the inventory count", () => {
+    expect(consumablesHeldFeature(false, 2, null)).toBe(0);
   });
 });
 
