@@ -35,19 +35,42 @@ export function matchedHandDisagreement(
   return { decision: shown, correctedIndex: index };
 }
 
-export function recordHandDisagreement(
+export function matchedHandAgreement(
+  committed: CommittedHandMove,
+): { readonly decision: AutopilotDecision } | null {
+  if (shown === null) return null;
+  const index = shown.candidates.findIndex((c) => sameMove(c, committed));
+  if (index < 0 || index !== shown.recommendationIndex) return null;
+  return { decision: shown };
+}
+
+export function recordHandFeedback(
   committed: CommittedHandMove,
   state: GameState,
 ): void {
-  const match = matchedHandDisagreement(committed);
+  const agreement = matchedHandAgreement(committed);
+  const disagreement = matchedHandDisagreement(committed);
   clearHandAdvice();
-  if (match === null) return;
+  if (agreement !== null) {
+    captureAdviceFeedback(
+      state,
+      buildHandPolicyFeedbackEvent(
+        agreement.decision,
+        agreement.decision.recommendationIndex,
+        "auto-agreement",
+        "good",
+      ),
+    );
+    return;
+  }
+  if (disagreement === null) return;
   captureAdviceFeedback(
     state,
     buildHandPolicyFeedbackEvent(
-      match.decision,
-      match.correctedIndex,
+      disagreement.decision,
+      disagreement.correctedIndex,
       "auto-disagreement",
+      "bad",
     ),
   );
 }

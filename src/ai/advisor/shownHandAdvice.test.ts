@@ -7,8 +7,9 @@ import { toModelStateInput } from "./snapshot";
 import type { AutopilotDecision } from "./autopilot";
 import {
   clearHandAdvice,
+  matchedHandAgreement,
   matchedHandDisagreement,
-  recordHandDisagreement,
+  recordHandFeedback,
   rememberHandAdvice,
 } from "./shownHandAdvice";
 
@@ -78,48 +79,64 @@ describe("matchedHandDisagreement", () => {
   });
 });
 
-describe("recordHandDisagreement", () => {
-  test("records an auto-disagreement event for a divergent play", () => {
-    rememberHandAdvice(decision());
-    recordHandDisagreement(
-      { action: "play", cardIds: [3, 4] },
-      useGame.getState(),
-    );
-    expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
+describe("matchedHandAgreement", () => {
+  test("returns null when no advice was shown", () => {
+    expect(matchedHandAgreement({ action: "play", cardIds: [1, 2] })).toBeNull();
   });
 
-  test("tags the recorded event as auto-disagreement", () => {
+  test("flags a commit that matches the recommendation", () => {
     rememberHandAdvice(decision());
-    recordHandDisagreement(
-      { action: "play", cardIds: [3, 4] },
-      useGame.getState(),
-    );
+    expect(
+      matchedHandAgreement({ action: "play", cardIds: [1, 2] })?.decision
+        .recommendationIndex,
+    ).toBe(0);
+  });
+
+  test("returns null when the commit diverges from the recommendation", () => {
+    rememberHandAdvice(decision());
+    expect(matchedHandAgreement({ action: "play", cardIds: [3, 4] })).toBeNull();
+  });
+});
+
+describe("recordHandFeedback", () => {
+  test("records an auto-disagreement event for a divergent play", () => {
+    rememberHandAdvice(decision());
+    recordHandFeedback({ action: "play", cardIds: [3, 4] }, useGame.getState());
     expect(humanPlayLog().toJsonl()).toContain('"source":"auto-disagreement"');
   });
 
-  test("records nothing when the committed move matches the recommendation", () => {
+  test("records an auto-agreement event when the commit matches the recommendation", () => {
     rememberHandAdvice(decision());
-    recordHandDisagreement(
-      { action: "play", cardIds: [1, 2] },
-      useGame.getState(),
-    );
-    expect(humanPlayLog().count()).toBe(0);
+    recordHandFeedback({ action: "play", cardIds: [1, 2] }, useGame.getState());
+    expect(humanPlayLog().toJsonl()).toContain('"source":"auto-agreement"');
+  });
+
+  test("tags an agreement event with the good verdict", () => {
+    rememberHandAdvice(decision());
+    recordHandFeedback({ action: "play", cardIds: [1, 2] }, useGame.getState());
+    expect(humanPlayLog().toJsonl()).toContain('"verdict":"good"');
+  });
+
+  test("records exactly one event per commit", () => {
+    rememberHandAdvice(decision());
+    recordHandFeedback({ action: "play", cardIds: [1, 2] }, useGame.getState());
+    expect(humanPlayLog().counts()["advice-feedback"]).toBe(1);
   });
 
   test("records nothing when no advice was shown (negative)", () => {
-    recordHandDisagreement(
-      { action: "play", cardIds: [3, 4] },
-      useGame.getState(),
-    );
+    recordHandFeedback({ action: "play", cardIds: [3, 4] }, useGame.getState());
+    expect(humanPlayLog().count()).toBe(0);
+  });
+
+  test("records nothing for a commit matching no candidate", () => {
+    rememberHandAdvice(decision());
+    recordHandFeedback({ action: "play", cardIds: [8, 9] }, useGame.getState());
     expect(humanPlayLog().count()).toBe(0);
   });
 
   test("clears the advice so a later commit does not double-fire", () => {
     rememberHandAdvice(decision());
-    recordHandDisagreement(
-      { action: "play", cardIds: [3, 4] },
-      useGame.getState(),
-    );
+    recordHandFeedback({ action: "play", cardIds: [3, 4] }, useGame.getState());
     expect(matchedHandDisagreement({ action: "discard", cardIds: [5, 6] })).toBeNull();
   });
 });

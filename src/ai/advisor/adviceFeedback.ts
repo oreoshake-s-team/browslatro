@@ -1,4 +1,8 @@
-import type { AdviceFeedbackEvent, AdviceFeedbackSource } from "../runEvents";
+import type {
+  AdviceFeedbackEvent,
+  AdviceFeedbackSource,
+  AdviceVerdict,
+} from "../runEvents";
 import type { AutopilotDecision } from "./autopilot";
 import { ADVISOR_POLICY_MODEL_ID } from "./advisorRanker";
 import { SHOP_POLICY_MODEL_ID } from "./shopRanker";
@@ -15,6 +19,7 @@ export function buildShopPolicyFeedbackEvent(
   correctedIndex: number | null,
   source: AdviceFeedbackSource = "explicit",
   rollout?: ShopRolloutState,
+  verdict: AdviceVerdict = "bad",
 ): AdviceFeedbackEvent {
   return {
     kind: "advice-feedback",
@@ -22,7 +27,7 @@ export function buildShopPolicyFeedbackEvent(
     model: SHOP_POLICY_MODEL_ID,
     recommendationIndex,
     alternativeIndex: null,
-    verdict: "bad",
+    verdict,
     correctedIndex,
     source,
     decision: {
@@ -38,6 +43,7 @@ export function buildHandPolicyFeedbackEvent(
   decision: AutopilotDecision,
   correctedIndex: number | null,
   source: AdviceFeedbackSource = "explicit",
+  verdict: AdviceVerdict = "bad",
 ): AdviceFeedbackEvent {
   return {
     kind: "advice-feedback",
@@ -45,7 +51,7 @@ export function buildHandPolicyFeedbackEvent(
     model: ADVISOR_POLICY_MODEL_ID,
     recommendationIndex: decision.recommendationIndex,
     alternativeIndex: null,
-    verdict: "bad",
+    verdict,
     correctedIndex,
     source,
     decision: {

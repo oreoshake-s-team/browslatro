@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, test } from "vitest";
 import { useGame } from "../store/game";
 import {
   buildRunEventRecord,
+  RUN_EVENT_SCHEMA_VERSION,
   type AdviceDecision,
   type AdviceFeedbackEvent,
 } from "./runEvents";
@@ -93,6 +94,6 @@ describe("AdviceDecision contexts", () => {
       7,
       feedback(shopDecision),
     );
-    expect(record.schemaVersion).toBe(3);
+    expect(record.schemaVersion).toBe(RUN_EVENT_SCHEMA_VERSION);
   });
 });

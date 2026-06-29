@@ -11,7 +11,7 @@ import type {
   ShopRolloutState,
 } from "./advisor/types";
 
-export const RUN_EVENT_SCHEMA_VERSION = 3;
+export const RUN_EVENT_SCHEMA_VERSION = 4;
 
 export type RunEventKind =
   | "purchase"
@@ -93,8 +93,11 @@ export interface BlindSkipEvent {
 }
 
 export type AdvisorKind = "llm" | "policy";
-export type AdviceVerdict = "bad";
-export type AdviceFeedbackSource = "explicit" | "auto-disagreement";
+export type AdviceVerdict = "bad" | "good";
+export type AdviceFeedbackSource =
+  | "explicit"
+  | "auto-disagreement"
+  | "auto-agreement";
 
 export interface HandAdviceDecision {
   readonly context: "hand";

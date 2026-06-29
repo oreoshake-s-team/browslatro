@@ -34,6 +34,7 @@ from torch import nn
 from dataset import (
     DEFAULT_MIN_SCORE_FRACTION,
     build_training_set,
+    load_feedback_agreements,
     load_all,
     load_feedback_corrections,
     load_shop_decisions_split,
@@ -127,6 +128,13 @@ def main():
     )
     parser.add_argument("--corrections-weight", type=float, default=5.0)
     parser.add_argument(
+        "--agreements",
+        action="append",
+        default=[],
+        help="JSONL of human-play exports; explicit advisor agreements (thumbs-up) train as positive labels",
+    )
+    parser.add_argument("--agreements-weight", type=float, default=1.0)
+    parser.add_argument(
         "--min-score-fraction",
         type=float,
         default=DEFAULT_MIN_SCORE_FRACTION,
@@ -165,7 +173,10 @@ def main():
         corrections = load_feedback_corrections(
             args.corrections, "shop", args.corrections_weight
         )
-        train = build_training_set(generated_train, teacher, corrections)
+        agreements = load_feedback_agreements(
+            args.agreements, "shop", args.agreements_weight
+        )
+        train = build_training_set(generated_train, teacher, corrections, agreements)
         enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}"
     else:
         features = INPUT_FEATURES
@@ -175,12 +186,18 @@ def main():
         corrections = load_feedback_corrections(
             args.corrections, "hand", args.corrections_weight, args.min_score_fraction
         )
-        train = build_training_set(generated_train, human, teacher, corrections)
+        agreements = load_feedback_agreements(
+            args.agreements, "hand", args.agreements_weight, args.min_score_fraction
+        )
+        train = build_training_set(
+            generated_train, human, teacher, corrections, agreements
+        )
         print(
             f"{len(train)} train decisions ({len(human)} human at "
             f"weight {args.human_weight}, {len(teacher)} teacher at "
             f"weight {args.teacher_weight}, {len(corrections)} corrections at "
-            f"weight {args.corrections_weight}), {len(validation)} validation decisions"
+            f"weight {args.corrections_weight}, {len(agreements)} agreements at "
+            f"weight {args.agreements_weight}), {len(validation)} validation decisions"
         )
         enc_label = f"encoding v{ENCODING_VERSION}"
 

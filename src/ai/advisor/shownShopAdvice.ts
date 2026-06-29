@@ -44,22 +44,47 @@ export function matchedShopDisagreement(
   return { advice: shown, correctedIndex: index };
 }
 
-export function recordShopDisagreement(
+export function matchedShopAgreement(
+  committed: ShopSuggestionAction,
+): { readonly advice: ShownShopAdvice } | null {
+  if (shown === null) return null;
+  const index = shown.actions.findIndex((action) => sameAction(action, committed));
+  if (index < 0 || index !== shown.recommendationIndex) return null;
+  return { advice: shown };
+}
+
+export function recordShopFeedback(
   committed: ShopSuggestionAction,
   state: GameState,
 ): void {
-  const match = matchedShopDisagreement(committed);
+  const agreement = matchedShopAgreement(committed);
+  const disagreement = matchedShopDisagreement(committed);
   clearShopAdvice();
-  if (match === null) return;
+  if (agreement !== null) {
+    captureAdviceFeedback(
+      state,
+      buildShopPolicyFeedbackEvent(
+        agreement.advice.shop,
+        agreement.advice.candidates,
+        agreement.advice.recommendationIndex,
+        agreement.advice.recommendationIndex,
+        "auto-agreement",
+        agreement.advice.rollout,
+        "good",
+      ),
+    );
+    return;
+  }
+  if (disagreement === null) return;
   captureAdviceFeedback(
     state,
     buildShopPolicyFeedbackEvent(
-      match.advice.shop,
-      match.advice.candidates,
-      match.advice.recommendationIndex,
-      match.correctedIndex,
+      disagreement.advice.shop,
+      disagreement.advice.candidates,
+      disagreement.advice.recommendationIndex,
+      disagreement.correctedIndex,
       "auto-disagreement",
-      match.advice.rollout,
+      disagreement.advice.rollout,
     ),
   );
 }
