@@ -12,6 +12,8 @@ const SELF_PLAY: SelfPlayArgs = {
   shopModel: "public/models/advisor-shop-policy-v9.onnx",
   handModel: "public/models/advisor-policy-v9.onnx",
   temperature: 1,
+  hold: false,
+  parallelJobs: 1,
 };
 
 class FakeLauncher implements MachineLauncher {
@@ -72,7 +74,17 @@ describe("selfPlayShardEnv", () => {
       SHOP_MODEL: "public/models/advisor-shop-policy-v9.onnx",
       HAND_MODEL: "public/models/advisor-policy-v9.onnx",
       TEMPERATURE: "1",
+      HOLD: "0",
+      PARALLEL_JOBS: "1",
     });
+  });
+
+  test("encodes hold-consumables and in-machine parallel jobs", () => {
+    const env = selfPlayShardEnv(
+      { index: 0, games: 9, seedOffset: 0, outputKey: "selfplay/run1/shard-0.jsonl" },
+      { ...SELF_PLAY, hold: true, parallelJobs: 4 },
+    );
+    expect(env).toMatchObject({ HOLD: "1", PARALLEL_JOBS: "4" });
   });
 });
 

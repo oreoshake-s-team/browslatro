@@ -22,8 +22,16 @@ EPOCHS="${EPOCHS:-20}"
 LR="${LR:-1e-3}"
 PPO_CLIP="${PPO_CLIP:-0.2}"
 OUTDIR="${OUTDIR:-ml/outcome/onpolicy}"
+HOLD="${HOLD:-0}"
 TSX_RUN="${TSX_RUN:-node .yarn/releases/yarn-4.15.0.cjs dlx tsx}"
 PYTHON="${PYTHON:-python3}"
+
+hold_flag=()
+v2_flag=()
+if [ "$HOLD" = "1" ]; then
+  hold_flag=(--hold-consumables)
+  v2_flag=(--v2)
+fi
 
 mkdir -p "$OUTDIR"
 current="$BASE"
@@ -34,12 +42,12 @@ for k in $(seq 1 "$ITERS"); do
   next="$OUTDIR/iter-$k.onnx"
   echo "=== iteration $k: sampling $GAMES games from $(basename "$current") ==="
   $TSX_RUN scripts/collectSelfPlayShop.ts "$data" \
-    --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE"
+    --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE" "${hold_flag[@]}"
   $PYTHON ml/train_rl.py "$data" --device "$DEVICE" --init "$current" \
-    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next"
+    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next" "${v2_flag[@]}"
   echo "--- benchmark iter $k ($BENCH_GAMES games, seed $BENCH_SEED) ---"
   $TSX_RUN scripts/benchmarkPolicy.ts "$HAND" \
-    --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" \
+    --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" "${hold_flag[@]}" \
     | grep -E "advisor-policy|shop "
   current="$next"
 done
