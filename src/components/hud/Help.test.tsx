@@ -57,6 +57,6 @@ describe("Help i18n", () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     render(<Help />);
-    expect(screen.getByRole("button", { name: "Kōkua" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "I Kōkua?" })).toBeInTheDocument();
   });
 });

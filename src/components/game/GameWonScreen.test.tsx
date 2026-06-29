@@ -101,7 +101,7 @@ describe("GameWonScreen i18n", () => {
       <GameWonScreen info={buildInfo()} onNewRun={() => {}} onEndless={() => {}} />,
     );
     expect(
-      screen.getByRole("heading", { name: "Lanakila!" }),
+      screen.getByRole("heading", { name: "Ua lanakila!" }),
     ).toBeInTheDocument();
   });
 });

@@ -1015,11 +1015,11 @@ describe("Shop i18n", () => {
     ).toBeInTheDocument();
   });
 
-  test("an affordable offer's buy button renders Kūʻai mai under the haw locale", async () => {
+  test("an affordable offer's buy button renders Kūʻai no under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     renderShop({ offers: [planetOffer("pluto")] });
-    expect(screen.getByText("Kūʻai mai ($3)")).toBeInTheDocument();
+    expect(screen.getByText("Kūʻai no ($3)")).toBeInTheDocument();
   });
 
   test("a sold offer's buy button renders Ua kūʻai ʻia under the haw locale", async () => {
@@ -1064,12 +1064,12 @@ describe("Shop card-label i18n", () => {
     );
   });
 
-  test("a gold-sealed playing-card offer keeps the English seal fallback under the haw locale (negative)", async () => {
+  test("a gold-sealed playing-card offer localizes the seal under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     renderShop({ offers: [playingCardOffer({ seal: "gold" })] });
     expect(screen.getByTestId("shop-card-seal-0")).toHaveTextContent(
-      "Gold Seal",
+      "Sila Kula",
     );
   });
 });

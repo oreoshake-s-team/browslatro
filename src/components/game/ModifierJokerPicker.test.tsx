@@ -193,12 +193,12 @@ describe("ModifierJokerPicker aria i18n", () => {
     ).toBeInTheDocument();
   });
 
-  test("the pagination nav keeps the English fallback under the haw locale (negative)", async () => {
+  test("the pagination nav is localized under the haw locale", async () => {
     const { default: i18n } = await import("../../i18n");
     await i18n.changeLanguage("haw");
     render(<ModifierJokerPicker />);
     expect(
-      screen.getByRole("navigation", { name: "Joker picker pagination" }),
+      screen.getByRole("navigation", { name: "Kaʻina ʻaoʻao o nā Kiʻi Pepa" }),
     ).toBeInTheDocument();
   });
 });

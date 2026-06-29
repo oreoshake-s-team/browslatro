@@ -20,10 +20,10 @@ describe("card identity strings", () => {
     ).toEqual(["Spades", "Hearts", "Diamonds", "Clubs"]);
   });
 
-  test("cardName keeps the English fallback under the haw locale (negative)", async () => {
+  test("cardName localizes the suit under the haw locale", async () => {
     await i18n.changeLanguage("haw");
     expect(cardName(i18n.t, { rank: "10", suit: "hearts" })).toBe(
-      "10 of Hearts",
+      "10 o ka Haka",
     );
   });
 });
