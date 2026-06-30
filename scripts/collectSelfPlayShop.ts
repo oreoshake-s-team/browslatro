@@ -87,7 +87,7 @@ async function main(): Promise<void> {
   }
   const games = Number(flag("--games", "500"));
   const seedOffset = Number(flag("--seed-offset", "0"));
-  const shopModel = flag("--shop-model", "public/models/advisor-shop-policy-v10.onnx");
+  const shopModel = flag("--shop-model", "public/models/advisor-shop-policy-v13.onnx");
   const handModel = flag("--hand-model", "public/models/advisor-policy-v9.onnx");
   const temperature = Number(flag("--temperature", "1.0"));
   const exploringFractionRaw = flag("--exploring-starts-fraction", "0");

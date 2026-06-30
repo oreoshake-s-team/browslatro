@@ -38,6 +38,7 @@ import {
   shopItemAttributes,
   ZERO_SHOP_ATTRIBUTES,
 } from "./advisor/shopCandidateAttributes";
+import { voucherFeatureVector } from "./advisor/voucherFeatures";
 import { applyConsumable } from "./headlessConsumables";
 import { emptyShopActivity, type ShopActivity } from "./shopActivity";
 
@@ -49,6 +50,7 @@ export interface ShopCandidateSnapshot {
   readonly itemType: string;
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
+  readonly voucherFeatures?: ReadonlyArray<number>;
   readonly cost: number;
   readonly isReroll: boolean;
   readonly isLeave: boolean;
@@ -107,7 +109,7 @@ function shopItemCandidate(item: ShopItem): Extract<ShopAdviceCandidate, { actio
 export function voucherCandidate(voucher: Voucher): ShopAdviceCandidate {
   return {
     action: "buy",
-    item: { itemType: "voucher", category: "other", attributes: ZERO_SHOP_ATTRIBUTES, id: voucher.id, name: voucher.name, description: "", cost: voucher.cost },
+    item: { itemType: "voucher", category: "other", attributes: ZERO_SHOP_ATTRIBUTES, voucherFeatures: voucherFeatureVector(voucher), id: voucher.id, name: voucher.name, description: "", cost: voucher.cost },
   };
 }
 
@@ -155,6 +157,7 @@ function candidateSnapshot(candidate: ShopAdviceCandidate): ShopCandidateSnapsho
       itemType: candidate.item.itemType,
       category: candidate.item.category,
       attributes: candidate.item.attributes,
+      voucherFeatures: candidate.item.voucherFeatures,
       cost: candidate.item.cost,
       isReroll: false,
       isLeave: false,

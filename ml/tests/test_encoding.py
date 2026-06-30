@@ -16,6 +16,7 @@ from encoding import (
     SHOP_INPUT_FEATURES,
     SHOP_INPUT_FEATURES_V2,
     SHOP_ITEM_TYPES,
+    SHOP_VOUCHER_FEATURES,
     STATE_FEATURES,
     encode_candidate,
     encode_decision,
@@ -349,6 +350,22 @@ class EncodeShopDecisionTests(unittest.TestCase):
         candidates, chosen = encode_shop_decision(record)
         self.assertEqual(candidates, [])
         self.assertEqual(chosen, -1)
+
+    def test_voucher_offer_carries_its_voucher_feature_block(self):
+        feats = [0.5] + [0.0] * (SHOP_VOUCHER_FEATURES - 1)
+        voucher = {"itemType": "voucher", "id": "overstock", "name": "Overstock", "cost": 10, "voucherFeatures": feats}
+        record = shop_envelope(kind="purchase", item=voucher, offers=[voucher])
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(candidates[0][-SHOP_VOUCHER_FEATURES:], feats)
+
+    def test_non_voucher_offer_has_a_zero_voucher_block(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(candidates[0][-SHOP_VOUCHER_FEATURES:], [0.0] * SHOP_VOUCHER_FEATURES)
 
     def test_v2_candidate_vector_is_one_wider(self):
         record = shop_envelope(

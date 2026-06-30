@@ -17,6 +17,11 @@ import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
 import type { Card } from "../../cards/types";
 import { createDefaultHandStats } from "../../scoring/handStats";
 import { createJokerCatalog } from "../../items/jokers";
+import { VOUCHER_CATALOG } from "../../items/vouchers";
+import {
+  VOUCHER_FEATURES,
+  voucherFeatureVector,
+} from "./voucherFeatures";
 
 function buyCandidate(): ShopAdviceCandidate {
   return {
@@ -66,8 +71,8 @@ function skipCandidate(): PackAdviceCandidate {
 }
 
 describe("SHOP_INPUT_FEATURES", () => {
-  test("equals 78", () => {
-    expect(SHOP_INPUT_FEATURES).toBe(78);
+  test("equals 96", () => {
+    expect(SHOP_INPUT_FEATURES).toBe(96);
   });
 });
 
@@ -231,6 +236,62 @@ describe("encodeShopCandidates", () => {
   });
 });
 
+function voucherBuyCandidate(voucherId: string): ShopAdviceCandidate {
+  const voucher = VOUCHER_CATALOG.find((v) => v.id === voucherId);
+  if (voucher === undefined) throw new Error(`unknown voucher ${voucherId}`);
+  return {
+    action: "buy",
+    item: {
+      id: voucher.id,
+      name: voucher.name,
+      itemType: "voucher",
+      category: "other",
+      voucherFeatures: voucherFeatureVector(voucher),
+      cost: voucher.cost,
+      description: "test",
+    },
+  };
+}
+
+describe("encodeShopCandidates — voucher features", () => {
+  function voucherBlock(candidate: ShopAdviceCandidate): number[] {
+    const encoded = encodeShopCandidates({
+      money: 50,
+      ante: 1,
+      round: 0,
+      candidates: [candidate],
+    });
+    return Array.from(
+      encoded.slice(SHOP_INPUT_FEATURES - VOUCHER_FEATURES, SHOP_INPUT_FEATURES),
+    );
+  }
+
+  test("a voucher buy carries its voucher feature vector", () => {
+    const voucher = VOUCHER_CATALOG.find((v) => v.id === "overstock");
+    expect(voucherBlock(voucherBuyCandidate("overstock"))).toEqual(
+      voucherFeatureVector(voucher!),
+    );
+  });
+
+  test("distinct vouchers encode to distinct feature blocks", () => {
+    expect(voucherBlock(voucherBuyCandidate("overstock"))).not.toEqual(
+      voucherBlock(voucherBuyCandidate("grabber")),
+    );
+  });
+
+  test("a non-voucher buy leaves the voucher block all zeros", () => {
+    expect(voucherBlock(buyCandidate())).toEqual(
+      new Array(VOUCHER_FEATURES).fill(0),
+    );
+  });
+
+  test("a reroll candidate leaves the voucher block all zeros", () => {
+    expect(voucherBlock(rerollCandidate())).toEqual(
+      new Array(VOUCHER_FEATURES).fill(0),
+    );
+  });
+});
+
 describe("encodePackCandidates", () => {
   test("produces a row of SHOP_INPUT_FEATURES per candidate", () => {
     const input: PackRankInput = {
@@ -276,6 +337,7 @@ interface GoldenOffer {
   readonly itemType: string;
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
+  readonly voucherFeatures?: ReadonlyArray<number>;
   readonly id: string;
   readonly name: string;
   readonly cost: number;
@@ -325,7 +387,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "purchase") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "leave" });
     return { money, ante, round, build: buildFromGolden(rec), candidates };
@@ -334,7 +396,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "reroll") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
     candidates.push({ action: "leave" });

@@ -9,7 +9,7 @@ set -euo pipefail
 : "${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}"
 
 SEED_OFFSET="${SEED_OFFSET:-0}"
-SHOP_MODEL="${SHOP_MODEL:-public/models/advisor-shop-policy-v9.onnx}"
+SHOP_MODEL="${SHOP_MODEL:-public/models/advisor-shop-policy-v13.onnx}"
 HAND_MODEL="${HAND_MODEL:-public/models/advisor-policy-v9.onnx}"
 TEMPERATURE="${TEMPERATURE:-1.0}"
 HOLD="${HOLD:-0}"

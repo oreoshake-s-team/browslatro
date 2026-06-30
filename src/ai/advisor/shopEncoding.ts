@@ -13,6 +13,7 @@ import {
   SHOP_ATTRIBUTE_FEATURES,
   ZERO_SHOP_ATTRIBUTES,
 } from "./shopCandidateAttributes";
+import { VOUCHER_FEATURES, ZERO_VOUCHER_FEATURES } from "./voucherFeatures";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
 
 const ITEM_TYPES = [
@@ -39,7 +40,8 @@ export const SHOP_INPUT_FEATURES =
   ITEM_TYPES.length +
   5 +
   SHOP_CANDIDATE_CATEGORIES.length +
-  SHOP_ATTRIBUTE_FEATURES;
+  SHOP_ATTRIBUTE_FEATURES +
+  VOUCHER_FEATURES;
 
 export interface ShopBuildJoker {
   readonly effectKind: string;
@@ -135,6 +137,7 @@ function candidateRow(
   itemType: string,
   category: string,
   attributes: ReadonlyArray<number>,
+  voucherFeatures: ReadonlyArray<number>,
   cost: number,
   isReroll: boolean,
   isLeave: boolean,
@@ -146,6 +149,10 @@ function candidateRow(
     attributes.length === SHOP_ATTRIBUTE_FEATURES
       ? attributes
       : ZERO_SHOP_ATTRIBUTES;
+  const vfeats =
+    voucherFeatures.length === VOUCHER_FEATURES
+      ? voucherFeatures
+      : ZERO_VOUCHER_FEATURES;
   return [
     money / 20,
     ante / 8,
@@ -160,6 +167,7 @@ function candidateRow(
     isSkip ? 1 : 0,
     ...categoryHot,
     ...attrs,
+    ...vfeats,
   ];
 }
 
@@ -169,10 +177,10 @@ export function encodeShopCandidates(input: ShopRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "buy" || c.action === "sell")
-        return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.cost, false, false, false);
+        return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false);
       if (c.action === "reroll")
-        return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, c.cost, true, false, false);
-      return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, 0, false, true, false);
+        return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false);
+      return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false);
     }),
   );
 }
@@ -188,6 +196,7 @@ function candidateRowV2(
   itemType: string,
   category: string,
   attributes: ReadonlyArray<number>,
+  voucherFeatures: ReadonlyArray<number>,
   cost: number,
   isReroll: boolean,
   isLeave: boolean,
@@ -195,7 +204,7 @@ function candidateRowV2(
   isUse: boolean,
 ): number[] {
   return [
-    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, cost, isReroll, isLeave, isSkip),
+    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, voucherFeatures, cost, isReroll, isLeave, isSkip),
     isUse ? 1 : 0,
   ];
 }
@@ -206,12 +215,12 @@ export function encodeShopCandidatesV2(input: ShopRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "buy" || c.action === "sell")
-        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.cost, false, false, false, false);
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, false);
       if (c.action === "use")
-        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.cost, false, false, false, true);
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, true);
       if (c.action === "reroll")
-        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, c.cost, true, false, false, false);
-      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, 0, false, true, false, false);
+        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false, false);
+      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false, false);
     }),
   );
 }
@@ -222,8 +231,8 @@ export function encodePackCandidates(input: PackRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "pick")
-        return candidateRow(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, 0, false, false, false);
-      return candidateRow(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, 0, false, false, true);
+        return candidateRow(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false);
+      return candidateRow(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true);
     }),
   );
 }
@@ -234,8 +243,8 @@ export function encodePackCandidatesV2(input: PackRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "pick")
-        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, 0, false, false, false, false);
-      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, 0, false, false, true, false);
+        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false, false);
+      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true, false);
     }),
   );
 }

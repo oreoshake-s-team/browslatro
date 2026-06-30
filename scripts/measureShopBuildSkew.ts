@@ -24,7 +24,7 @@ function stringFlag(name: string, fallback: string): string {
 
 const games = intFlag("--games", 200);
 const seedOffset = intFlag("--seed-offset", 5000);
-const shopPolicy = stringFlag("--shop-policy", "public/models/advisor-shop-policy-v10.onnx");
+const shopPolicy = stringFlag("--shop-policy", "public/models/advisor-shop-policy-v13.onnx");
 const gamePolicy = stringFlag("--policy", "public/models/advisor-policy-v9.onnx");
 
 const ranker = await loadPolicyRanker(readFileSync(gamePolicy));

@@ -134,7 +134,7 @@ if (isMain) {
       deck,
       stake,
       jokerLoadoutFraction: 0,
-      shopPolicy: stringFlag("--shop-policy", "public/models/advisor-shop-policy-v9.onnx"),
+      shopPolicy: stringFlag("--shop-policy", "public/models/advisor-shop-policy-v13.onnx"),
     },
     workerEnv,
   };

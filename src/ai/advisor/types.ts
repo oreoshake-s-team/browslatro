@@ -34,6 +34,7 @@ export interface ShopAdviceItem {
   readonly itemType: string;
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
+  readonly voucherFeatures?: ReadonlyArray<number>;
   readonly id: string;
   readonly name: string;
   readonly description: string;
