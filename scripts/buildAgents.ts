@@ -20,7 +20,7 @@ function stringFlag(name: string, fallback: string): string {
 
 const games = intFlag("--games", 200);
 const handModel = stringFlag("--policy", "public/models/advisor-policy-v9.onnx");
-const shopModel = stringFlag("--shop-policy", "public/models/advisor-shop-policy-v12.onnx");
+const shopModel = stringFlag("--shop-policy", "public/models/advisor-shop-policy-v13.onnx");
 
 const ranker = await loadPolicyRanker(readFileSync(handModel));
 const hand = createPolicyAgent(ranker);

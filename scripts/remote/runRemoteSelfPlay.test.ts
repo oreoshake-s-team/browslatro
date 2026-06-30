@@ -9,7 +9,7 @@ import {
 import type { MachineHandle, MachineLauncher, MachineRunSpec } from "./flyMachines";
 
 const SELF_PLAY: SelfPlayArgs = {
-  shopModel: "public/models/advisor-shop-policy-v9.onnx",
+  shopModel: "public/models/advisor-shop-policy-v13.onnx",
   handModel: "public/models/advisor-policy-v9.onnx",
   temperature: 1,
   hold: false,
@@ -71,7 +71,7 @@ describe("selfPlayShardEnv", () => {
       OUTPUT_KEY: "selfplay/run1/shard-1.jsonl",
       GAMES: "7",
       SEED_OFFSET: "12",
-      SHOP_MODEL: "public/models/advisor-shop-policy-v9.onnx",
+      SHOP_MODEL: "public/models/advisor-shop-policy-v13.onnx",
       HAND_MODEL: "public/models/advisor-policy-v9.onnx",
       TEMPERATURE: "1",
       HOLD: "0",

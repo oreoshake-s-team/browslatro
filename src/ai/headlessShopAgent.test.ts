@@ -16,7 +16,7 @@ import type { ShopView } from "./headlessRun";
 import type { ShopAdviceCandidate } from "./advisor/types";
 import type { ShopBuild } from "./advisor/shopEncoding";
 
-const SHOP_MODEL = "public/models/advisor-shop-policy-v10.onnx";
+const SHOP_MODEL = "public/models/advisor-shop-policy-v13.onnx";
 
 function planetConsumable(): Consumable {
   return { kind: "planet", card: createPlanetCatalog()[0] };

@@ -172,7 +172,7 @@ if (isMain) {
       cpuKind: "shared",
     },
     selfPlay: {
-      shopModel: stringFlag("--shop-model", "public/models/advisor-shop-policy-v9.onnx"),
+      shopModel: stringFlag("--shop-model", "public/models/advisor-shop-policy-v13.onnx"),
       handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
       temperature: Number(stringFlag("--temperature", "1.0")),
       hold: process.argv.includes("--hold-consumables"),
