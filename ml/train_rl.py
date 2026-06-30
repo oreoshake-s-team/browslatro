@@ -121,6 +121,29 @@ def clipped_surrogate(ratio, advantage, clip):
     return min(ratio * advantage, clamped * advantage)
 
 
+def masked_log_probs(logits, mask):
+    """Row-wise log-softmax over a ragged, padded candidate batch.
+
+    Padded candidates (``mask`` False) are set to -inf before the softmax, so
+    ``exp(-inf)=0`` leaves them out of the denominator — identical to scoring
+    each decision on its own ragged candidate set.
+    """
+    import torch
+
+    return torch.nn.functional.log_softmax(logits.masked_fill(~mask, float("-inf")), dim=1)
+
+
+def masked_entropy(log_probs, mask):
+    """Per-decision entropy that ignores padded candidates.
+
+    Padded log-probs are -inf, so ``p * log p`` would be ``0 * -inf = nan`` (and
+    its gradient nan). Replacing the *log-prob* factor with 0 at padded positions
+    keeps both the value and the gradient finite while leaving real candidates
+    untouched.
+    """
+    return -(log_probs.exp() * log_probs.masked_fill(~mask, 0.0)).sum(dim=1)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("datasets", nargs="+")
@@ -175,15 +198,43 @@ def main():
         print(f"warm-started {loaded} tensors from {args.init}")
 
     use_ppo = bool(args.init) and args.ppo_clip > 0
+    # Each decision has a ragged candidate set, so a minibatch is padded to the
+    # batch's max candidate count and the padding is masked to -inf before the
+    # softmax (exp(-inf)=0, so it contributes nothing). This is numerically
+    # equivalent to scoring each decision on its own, but runs as one batched
+    # forward instead of a Python loop over decisions.
+    def pad_batch(batch_idx):
+        rows = [samples[j] for j in batch_idx]
+        max_n = max(len(inp) for inp, _, _ in rows)
+        feats = len(rows[0][0][0])
+        size = len(rows)
+        x = torch.zeros((size, max_n, feats), dtype=torch.float32, device=device)
+        mask = torch.zeros((size, max_n), dtype=torch.bool, device=device)
+        chosen = torch.empty(size, dtype=torch.long, device=device)
+        adv = torch.empty(size, dtype=torch.float32, device=device)
+        for b, (inp, ch, ad) in enumerate(rows):
+            n = len(inp)
+            x[b, :n] = torch.tensor(inp, dtype=torch.float32, device=device)
+            mask[b, :n] = True
+            chosen[b] = ch
+            adv[b] = ad
+        return x, mask, chosen, adv
+
+    def chosen_log_probs(log_probs, chosen):
+        return log_probs.gather(1, chosen.unsqueeze(1)).squeeze(1)
+
     old_logps = None
     if use_ppo:
         old_model = copy.deepcopy(model).to(device)
         old_model.eval()
-        old_logps = []
+        old_logps = [0.0] * len(samples)
         with torch.no_grad():
-            for inputs, chosen, _ in samples:
-                logits = old_model(torch.tensor(inputs, dtype=torch.float32, device=device))
-                old_logps.append(float(torch.nn.functional.log_softmax(logits, dim=0)[chosen]))
+            for i in range(0, len(samples), args.batch_size):
+                batch = list(range(i, min(i + args.batch_size, len(samples))))
+                x, mask, chosen, _ = pad_batch(batch)
+                lp = chosen_log_probs(masked_log_probs(old_model(x), mask), chosen)
+                for k, j in enumerate(batch):
+                    old_logps[j] = float(lp[k])
         print(f"PPO trust region clip={args.ppo_clip} (old policy = {args.init})")
     else:
         print("plain REINFORCE (no --init / --ppo-clip 0)")
@@ -199,28 +250,26 @@ def main():
         for i in range(0, len(indexed), args.batch_size):
             batch = indexed[i : i + args.batch_size]
             optimizer.zero_grad()
-            loss = torch.zeros((), device=device)
-            batch_entropy = torch.zeros((), device=device)
-            for j in batch:
-                inputs, chosen, adv = samples[j]
-                logits = model(torch.tensor(inputs, dtype=torch.float32, device=device))
-                log_probs = torch.nn.functional.log_softmax(logits, dim=0)
-                entropy = -(log_probs.exp() * log_probs).sum()
-                if use_ppo:
-                    ratio = torch.exp(log_probs[chosen] - old_logps[j])
-                    surrogate = torch.min(
-                        ratio * adv,
-                        torch.clamp(ratio, 1.0 - args.ppo_clip, 1.0 + args.ppo_clip) * adv,
-                    )
-                    loss = loss - surrogate - args.entropy_coef * entropy
-                else:
-                    chosen_logp = log_probs[chosen].clamp(min=-args.logp_floor)
-                    loss = loss - adv * chosen_logp - args.entropy_coef * entropy
-                batch_entropy = batch_entropy + entropy.detach()
+            x, mask, chosen, adv = pad_batch(batch)
+            log_probs = masked_log_probs(model(x), mask)
+            chosen_logp = chosen_log_probs(log_probs, chosen)
+            entropy = masked_entropy(log_probs, mask)
+            if use_ppo:
+                old_lp = torch.tensor([old_logps[j] for j in batch], dtype=torch.float32, device=device)
+                ratio = torch.exp(chosen_logp - old_lp)
+                surrogate = torch.min(
+                    ratio * adv,
+                    torch.clamp(ratio, 1.0 - args.ppo_clip, 1.0 + args.ppo_clip) * adv,
+                )
+                per_decision = -surrogate - args.entropy_coef * entropy
+            else:
+                clamped = chosen_logp.clamp(min=-args.logp_floor)
+                per_decision = -adv * clamped - args.entropy_coef * entropy
+            loss = per_decision.sum()
             (loss / len(batch)).backward()
             optimizer.step()
             total += float(loss)
-            total_entropy += float(batch_entropy)
+            total_entropy += float(entropy.sum())
         n = len(samples)
         print(f"epoch {epoch + 1}: loss={total / n:.4f} entropy={total_entropy / n:.4f}")
 
