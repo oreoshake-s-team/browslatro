@@ -1,9 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { evaluateAgent } from "./evaluateAgent";
+import { aggregateRunResults, evaluateAgent } from "./evaluateAgent";
 import { createGreedyAgent, createSkipAgent } from "./agents";
 import { joker } from "./test-helpers";
+import { emptyShopActivity } from "./shopActivity";
 import type {
+  HeadlessRunResult,
   HeadlessShopAgent,
   ShopResult,
   ShopView,
@@ -168,5 +170,48 @@ describe("evaluateAgent", () => {
     });
     expect(calls).toBe(0);
     expect(callsWithAgent).toBeGreaterThan(0);
+  });
+});
+
+function runResult(over: Partial<HeadlessRunResult>): HeadlessRunResult {
+  return {
+    won: false,
+    anteReached: 1,
+    blindsCleared: 1,
+    handsPlayed: 4,
+    blindsSkipped: 0,
+    finalMoney: 4,
+    shopActivity: emptyShopActivity(),
+    ...over,
+  };
+}
+
+const sample: HeadlessRunResult[] = [
+  runResult({ won: true, anteReached: 8, blindsCleared: 24, finalMoney: 30 }),
+  runResult({ anteReached: 2, blindsCleared: 4 }),
+  runResult({ anteReached: 3, blindsCleared: 6, finalMoney: 12 }),
+  runResult({ anteReached: 1, blindsCleared: 0 }),
+  runResult({ anteReached: 2, blindsCleared: 5, finalMoney: 8 }),
+];
+
+describe("aggregateRunResults", () => {
+  test("counts games as the size of the merged results", () => {
+    expect(aggregateRunResults("a", sample, 8).games).toBe(5);
+  });
+
+  test("computes win rate over the merged results", () => {
+    expect(aggregateRunResults("a", sample, 8).winRate).toBe(0.2);
+  });
+
+  test("aggregating concatenated shards equals aggregating the whole", () => {
+    const whole = aggregateRunResults("a", sample, 8);
+    const sharded = aggregateRunResults("a", [...sample.slice(0, 2), ...sample.slice(2)], 8);
+    expect(sharded).toEqual(whole);
+  });
+
+  test("merged shards in a different order aggregate identically (partition invariance)", () => {
+    const whole = aggregateRunResults("a", sample, 8);
+    const reordered = aggregateRunResults("a", [...sample.slice(3), ...sample.slice(0, 3)], 8);
+    expect(reordered.blindsCleared).toEqual(whole.blindsCleared);
   });
 });

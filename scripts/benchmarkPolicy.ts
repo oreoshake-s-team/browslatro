@@ -1,15 +1,24 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { basename } from "node:path";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { FINAL_ANTE } from "../src/constants";
 import { createGreedyAgent, createSkipAgent } from "../src/ai/agents";
-import { evaluateAgent, type EvaluationResult } from "../src/ai/evaluateAgent";
+import {
+  aggregateRunResults,
+  playAgentGames,
+  type EvaluationResult,
+} from "../src/ai/evaluateAgent";
 import type { Distribution } from "../src/ai/evaluationStats";
-import type { HeadlessAgent } from "../src/ai/headlessRun";
+import type { HeadlessAgent, HeadlessRunResult } from "../src/ai/headlessRun";
 import type { HeadlessShopAgent } from "../src/ai/headlessRun";
 import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
 import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
 import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
+import { sliceJobs } from "./generateDataset";
 
 const DEFAULT_SHOP_POLICY = "public/models/advisor-shop-policy-v13.onnx";
 
@@ -55,7 +64,7 @@ const modelPaths = process.argv
   .filter((arg, index, args) => !arg.startsWith("--") && args[index - 1]?.startsWith("--") !== true);
 if (modelPaths.length === 0) {
   console.error(
-    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--no-shop] [--skip]",
+    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--hold-consumables] [--no-shop] [--skip] [--parallel-jobs N]",
   );
   process.exit(1);
 }
@@ -123,27 +132,85 @@ function formatDetail(label: string, result: EvaluationResult): string {
   ].join("\n");
 }
 
-const started = Date.now();
-const agents: { label: string; result: EvaluationResult }[] = [];
-const greedy = await evaluateAgent(() => withSkip(createGreedyAgent()), {
-  games,
-  seedOffset,
-  deck,
-  stake,
-  shopAgent,
-});
-agents.push({ label: "greedy (baseline)", result: greedy });
-for (const path of modelPaths) {
-  const ranker = await loadPolicyRanker(readFileSync(path));
-  const result = await evaluateAgent(() => withSkip(createPolicyAgent(ranker)), {
-    games,
-    seedOffset,
+interface AgentSlice {
+  readonly label: string;
+  readonly agentName: string;
+  readonly results: HeadlessRunResult[];
+}
+
+async function playSlice(sliceGames: number, sliceSeedOffset: number): Promise<AgentSlice[]> {
+  const out: AgentSlice[] = [];
+  const greedy = await playAgentGames(() => withSkip(createGreedyAgent()), {
+    games: sliceGames,
+    seedOffset: sliceSeedOffset,
     deck,
     stake,
     shopAgent,
   });
-  agents.push({ label: basename(path), result });
+  out.push({ label: "greedy (baseline)", agentName: greedy.agentName, results: [...greedy.results] });
+  for (const path of modelPaths) {
+    const ranker = await loadPolicyRanker(readFileSync(path));
+    const r = await playAgentGames(() => withSkip(createPolicyAgent(ranker)), {
+      games: sliceGames,
+      seedOffset: sliceSeedOffset,
+      deck,
+      stake,
+      shopAgent,
+    });
+    out.push({ label: basename(path), agentName: r.agentName, results: [...r.results] });
+  }
+  return out;
 }
+
+const rawOut = stringFlag("--raw-out", "");
+if (rawOut !== "") {
+  const slice = await playSlice(games, seedOffset);
+  writeFileSync(rawOut, JSON.stringify(slice));
+  process.exit(0);
+}
+
+const parallelJobs = intFlag("--parallel-jobs", 1);
+const started = Date.now();
+
+async function collectAgentSlices(): Promise<AgentSlice[]> {
+  if (parallelJobs <= 1) return playSlice(games, seedOffset);
+  const selfPath = fileURLToPath(import.meta.url);
+  const evalIdx = process.execArgv.indexOf("--eval");
+  const loaderArgs = evalIdx >= 0 ? process.execArgv.slice(0, evalIdx) : [...process.execArgv];
+  const forwarded = [
+    "--deck", deck,
+    "--stake", stake,
+    ...(shopDisabled ? ["--no-shop"] : ["--shop-policy", shopPolicyPath]),
+    ...(holdConsumables ? ["--hold-consumables"] : []),
+    ...(useSkip ? ["--skip"] : []),
+  ];
+  const tmpDir = mkdtempSync(join(tmpdir(), "browslatro-bench-"));
+  const slices = sliceJobs(games, seedOffset, parallelJobs);
+  console.log(`benchmarking across ${slices.length} parallel jobs ...`);
+  const chunks = await Promise.all(
+    slices.map((slice, i) => {
+      const tmpFile = join(tmpDir, `chunk-${i}.json`);
+      const args = [selfPath, ...modelPaths, "--games", String(slice.games), "--seed-offset", String(slice.seedOffset), "--raw-out", tmpFile, ...forwarded];
+      return new Promise<AgentSlice[]>((resolve, reject) => {
+        const proc = spawn(process.execPath, [...loaderArgs, ...args], { stdio: ["ignore", "ignore", "inherit"] });
+        proc.on("close", (code) => {
+          if (code === 0) resolve(JSON.parse(readFileSync(tmpFile, "utf8")) as AgentSlice[]);
+          else reject(new Error(`benchmark job ${i} (seed-offset ${slice.seedOffset}) exited ${String(code)}`));
+        });
+      });
+    }),
+  );
+  rmSync(tmpDir, { recursive: true });
+  return chunks[0].map((first, idx) => ({
+    label: first.label,
+    agentName: first.agentName,
+    results: chunks.flatMap((chunk) => chunk[idx].results),
+  }));
+}
+
+const agents: { label: string; result: EvaluationResult }[] = (await collectAgentSlices()).map(
+  (slice) => ({ label: slice.label, result: aggregateRunResults(slice.agentName, slice.results, FINAL_ANTE) }),
+);
 
 console.log(`${games} games per agent, seeds ${seedOffset}..${seedOffset + games - 1}`);
 console.log(`deck: ${deck}, stake: ${stake}, skip: ${useSkip ? "on" : "off"}`);
