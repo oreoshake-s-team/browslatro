@@ -5,7 +5,13 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from train_rl import clipped_surrogate, normalized_advantages, warm_start
+from train_rl import (
+    clipped_surrogate,
+    masked_entropy,
+    masked_log_probs,
+    normalized_advantages,
+    warm_start,
+)
 
 try:
     import onnx  # noqa: F401
@@ -83,6 +89,32 @@ class WarmStartTest(unittest.TestCase):
             target = CandidateScorer(78, 128)
             loaded = warm_start(target, path, torch.device("cpu"), torch)
         self.assertEqual(loaded, len(target.state_dict()))
+
+
+@unittest.skipUnless(HAS_TORCH_ONNX, "masked entropy needs torch")
+class MaskedEntropyTest(unittest.TestCase):
+    def test_padded_candidates_keep_entropy_finite(self):
+        logits = torch.tensor([[1.0, 2.0, 0.5], [0.3, 1.5, 0.0]])
+        mask = torch.tensor([[True, True, True], [True, True, False]])
+        entropy = masked_entropy(masked_log_probs(logits, mask), mask)
+        self.assertTrue(bool(torch.isfinite(entropy).all()))
+
+    def test_padded_candidates_keep_the_gradient_finite(self):
+        logits = torch.tensor([[0.3, 1.5, 0.0]], requires_grad=True)
+        mask = torch.tensor([[True, True, False]])
+        masked_entropy(masked_log_probs(logits, mask), mask).sum().backward()
+        self.assertTrue(bool(torch.isfinite(logits.grad).all()))
+
+    def test_padding_does_not_change_entropy_versus_the_real_candidate_set(self):
+        padded = masked_entropy(
+            masked_log_probs(torch.tensor([[0.3, 1.5, 0.0]]), torch.tensor([[True, True, False]])),
+            torch.tensor([[True, True, False]]),
+        )
+        unpadded = masked_entropy(
+            masked_log_probs(torch.tensor([[0.3, 1.5]]), torch.tensor([[True, True]])),
+            torch.tensor([[True, True]]),
+        )
+        self.assertAlmostEqual(float(padded[0]), float(unpadded[0]), places=6)
 
 
 if __name__ == "__main__":
