@@ -47,10 +47,15 @@ export interface EvaluationResult {
   readonly shopActivity: ShopActivity;
 }
 
-export async function evaluateAgent(
+export interface AgentRunResults {
+  readonly agentName: string;
+  readonly results: ReadonlyArray<HeadlessRunResult>;
+}
+
+export async function playAgentGames(
   agentForSeed: (seed: number) => HeadlessAgent,
   config: EvaluateAgentConfig,
-): Promise<EvaluationResult> {
+): Promise<AgentRunResults> {
   if (config.games <= 0) {
     throw new Error(`games must be positive, got ${config.games}`);
   }
@@ -72,8 +77,16 @@ export async function evaluateAgent(
       }),
     );
   }
+  return { agentName, results };
+}
+
+export function aggregateRunResults(
+  agentName: string,
+  results: ReadonlyArray<HeadlessRunResult>,
+  maxAnte: number,
+): EvaluationResult {
+  const games = results.length;
   const wins = results.filter((r) => r.won).length;
-  const maxAnte = config.maxAnte ?? FINAL_ANTE;
   const distribution = (pick: (r: HeadlessRunResult) => number): Distribution =>
     summarize(results.map(pick));
   const anteReached = distribution((r) => r.anteReached);
@@ -83,10 +96,10 @@ export async function evaluateAgent(
   const finalMoney = distribution((r) => r.finalMoney);
   return {
     agentName,
-    games: config.games,
+    games,
     wins,
-    winRate: wins / config.games,
-    winRateStdErr: winRateStandardError(wins, config.games),
+    winRate: wins / games,
+    winRateStdErr: winRateStandardError(wins, games),
     reachedFinalAnte: results.filter((r) => r.anteReached >= maxAnte).length,
     averageAnteReached: anteReached.mean,
     averageBlindsCleared: blindsCleared.mean,
@@ -102,4 +115,12 @@ export async function evaluateAgent(
     ),
     shopActivity: averageShopActivity(results.map((r) => r.shopActivity)),
   };
+}
+
+export async function evaluateAgent(
+  agentForSeed: (seed: number) => HeadlessAgent,
+  config: EvaluateAgentConfig,
+): Promise<EvaluationResult> {
+  const { agentName, results } = await playAgentGames(agentForSeed, config);
+  return aggregateRunResults(agentName, results, config.maxAnte ?? FINAL_ANTE);
 }
