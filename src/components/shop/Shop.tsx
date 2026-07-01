@@ -577,7 +577,7 @@ export default function Shop({
           <div className="shop-suggest-slot" ref={setSuggestSlot} />
           <button
             type="button"
-            className="btn btn--secondary shop-next"
+            className="btn btn--secondary shop-action-button"
             onClick={onNext}
             disabled={disabled}
             title={disabled ? lockTooltip : undefined}
