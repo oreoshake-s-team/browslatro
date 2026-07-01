@@ -207,7 +207,7 @@ export default function ShopSuggestion(
   const trigger = (
     <button
       type="button"
-      className="btn btn--advisor shop-suggest-button"
+      className="btn btn--advisor shop-action-button"
       data-testid="coach-trigger"
       disabled={props.disabled}
       onClick={() => {

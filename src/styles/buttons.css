@@ -1,10 +1,18 @@
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font: inherit;
   font-weight: 600;
+  line-height: 1.25;
   padding: 0.5rem 1rem;
   border: 1px solid transparent;
   border-radius: 6px;
   cursor: pointer;
+}
+
+.btn > [aria-hidden="true"] {
+  line-height: 0;
 }
 
 .btn:focus-visible {
