@@ -103,7 +103,6 @@
 
 .scoring-trace-modal__body .scoring-trace__list {
   gap: 0.4rem;
-  padding-left: 1.75rem;
 }
 
 @media (orientation: portrait) and (width <= 768px) {
