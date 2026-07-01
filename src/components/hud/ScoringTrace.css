@@ -108,7 +108,9 @@
 
 .scoring-trace__list {
   margin: 0;
-  padding-left: 1.25rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: scoring-step;
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
@@ -132,7 +134,17 @@
 }
 
 .scoring-trace__item {
+  counter-increment: scoring-step;
+  display: grid;
+  grid-template-columns: 3.25ch minmax(0, 1fr);
+  column-gap: 0.5ch;
   overflow-wrap: break-word;
+}
+
+.scoring-trace__item::before {
+  content: counter(scoring-step) ".";
+  text-align: right;
+  white-space: nowrap;
 }
 
 .scoring-trace__total {
