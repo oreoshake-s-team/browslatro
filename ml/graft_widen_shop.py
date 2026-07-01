@@ -12,11 +12,6 @@ warm-started PPO retrain under the new encoding.
 
 import argparse
 
-import numpy as np
-import onnx
-import torch
-from onnx import numpy_helper
-
 from encoding import (
     SHOP_BUILD_FEATURES,
     SHOP_BUILD_WINCON_FEATURES,
@@ -24,7 +19,6 @@ from encoding import (
     SHOP_INPUT_FEATURES,
     SHOP_INPUT_FEATURES_V2,
 )
-from train import CandidateScorer
 
 
 def carried_columns(new_width, v2):
@@ -43,6 +37,9 @@ def carried_columns(new_width, v2):
 
 
 def old_state(onnx_path):
+    import onnx
+    from onnx import numpy_helper
+
     tensors = {}
     for tensor in onnx.load(onnx_path).graph.initializer:
         tensors[tensor.name] = numpy_helper.to_array(tensor)
@@ -50,6 +47,11 @@ def old_state(onnx_path):
 
 
 def main():
+    import numpy as np
+    import torch
+
+    from train import CandidateScorer
+
     parser = argparse.ArgumentParser()
     parser.add_argument("source")
     parser.add_argument("--out", required=True)
