@@ -168,11 +168,24 @@ def _encode_hand_label(record, index):
 
 
 def _encode_shop_label(record, index):
-    sig = _shop_build_signals(record)
-    ctx = _encode_shop_context(record, sig)
+    decision = record["decision"]
+    state = decision.get("state", {})
+    hand_stats = decision.get("rollout", {}).get("handStats", {})
+    flat = {
+        "money": record["money"],
+        "ante": record["ante"],
+        "round": record["round"],
+        "jokers": state.get("jokers", []),
+        "handLevels": {hand: info.get("level", 1) for hand, info in hand_stats.items()},
+        "consumablesHeld": len(state.get("consumables", [])),
+        "deckEnhancements": {},
+        "picksRemaining": 0,
+    }
+    sig = _shop_build_signals(flat)
+    ctx = _encode_shop_context(flat, sig)
     money = record["money"]
     inputs = []
-    for candidate in record["decision"]["candidates"]:
+    for candidate in decision["candidates"]:
         action = candidate["action"]
         if action == "buy":
             item = candidate["item"]
