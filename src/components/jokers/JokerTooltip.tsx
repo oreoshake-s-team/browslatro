@@ -50,6 +50,9 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
   const todoHand = useGame((s) => s.todoHand);
   const castleSuit = useGame((s) => s.castleSuit);
   const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
+  const idolTarget = useGame((s) => s.idolTarget);
+  const idolRankName = idolTarget?.rank ?? null;
+  const idolSuitName = idolTarget ? tSuitName(t, idolTarget.suit) : null;
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
   const effectiveOdds = useEffectiveOdds(joker);
@@ -78,6 +81,8 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
           todoHand,
           castleSuit,
           castleSuitName,
+          idolRankName,
+          idolSuitName,
         })}
       </p>
       {currentValue && (

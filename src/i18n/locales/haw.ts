@@ -706,7 +706,7 @@ export const haw: LocaleMessages = {
     "swashbuckler": "Adds the sell value of all other owned {{cards}} to Mult", // needs translation
     "the-duo": "{{xmult}} Mult if played hand contains a Pair", // needs translation
     "the-family": "{{xmult}} Mult if played hand contains a Four of a Kind", // needs translation
-    "the-idol": "Each played {{rank}} of {{suit}} gives {{xmult}} Mult when scoredCard changes every round", // needs translation
+    "the-idol": "Each played {{rank}} of {{suit}} gives {{xmult}} Mult when scored", // needs translation
     "the-order": "{{xmult}} Mult if played hand contains a Straight", // needs translation
     "the-tribe": "{{xmult}} Mult if played hand contains a Flush", // needs translation
     "the-trio": "{{xmult}} Mult if played hand contains a Three of a Kind", // needs translation

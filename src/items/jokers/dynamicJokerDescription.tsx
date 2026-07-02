@@ -6,6 +6,7 @@ import {
   castleDescriptionNode,
   castleDescriptionText,
 } from "./castleDescription";
+import { idolDescriptionText } from "./idolDescription";
 import {
   toDoListDescriptionNode,
   toDoListDescriptionText,
@@ -18,6 +19,8 @@ export interface DynamicJokerDescriptionArgs {
   readonly todoHand: HandLabel | null;
   readonly castleSuit: Suit | null;
   readonly castleSuitName: string | null;
+  readonly idolRankName: string | null;
+  readonly idolSuitName: string | null;
 }
 
 export function dynamicJokerDescriptionText(
@@ -33,6 +36,9 @@ export function dynamicJokerDescriptionText(
   }
   if (args.jokerId === "castle") {
     return castleDescriptionText(base, args.castleSuit, args.castleSuitName);
+  }
+  if (args.jokerId === "the-idol") {
+    return idolDescriptionText(base, args.idolRankName, args.idolSuitName);
   }
   return base;
 }
@@ -50,6 +56,9 @@ export function dynamicJokerDescriptionNode(
   }
   if (args.jokerId === "castle") {
     return castleDescriptionNode(base, args.castleSuit, args.castleSuitName);
+  }
+  if (args.jokerId === "the-idol") {
+    return idolDescriptionText(base, args.idolRankName, args.idolSuitName);
   }
   return base;
 }

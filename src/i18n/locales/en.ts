@@ -711,7 +711,7 @@ export const en = {
     "swashbuckler": "Adds the sell value of all other owned {{cards}} to Mult",
     "the-duo": "{{xmult}} Mult if played hand contains a Pair",
     "the-family": "{{xmult}} Mult if played hand contains a Four of a Kind",
-    "the-idol": "Each played {{rank}} of {{suit}} gives {{xmult}} Mult when scoredCard changes every round",
+    "the-idol": "Each played {{rank}} of {{suit}} gives {{xmult}} Mult when scored",
     "the-order": "{{xmult}} Mult if played hand contains a Straight",
     "the-tribe": "{{xmult}} Mult if played hand contains a Flush",
     "the-trio": "{{xmult}} Mult if played hand contains a Three of a Kind",
