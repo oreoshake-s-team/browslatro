@@ -41,7 +41,21 @@ from encoding import (
 )
 
 
-def load_selfplay(paths, v2=False):
+def reward_to_go(total_return, blinds_cleared_before):
+    """Future-only return for one decision: blinds cleared *after* it was made.
+
+    Self-play shop records carry ``round`` = blinds already cleared when the
+    decision happened (the headless run passes ``round: blindsCleared`` to
+    ``buyAfterRound``), so the game's total return splits into a past the
+    decision could not have caused and a future it could. Crediting only the
+    future removes the variance of early luck from late decisions and stops
+    early decisions in long runs from soaking up credit for blinds that were
+    already banked before the shop even opened.
+    """
+    return max(0.0, float(total_return) - float(blinds_cleared_before))
+
+
+def load_selfplay(paths, v2=False, use_reward_to_go=False):
     """Yields (candidate_vectors, sampled_index, game_return) per decision."""
     encode = encode_shop_decision_v2 if v2 else encode_shop_decision
     decisions = []
@@ -57,7 +71,12 @@ def load_selfplay(paths, v2=False):
                 inputs, chosen = encode(record)
                 if not inputs or chosen < 0 or chosen >= len(inputs):
                     continue
-                decisions.append((inputs, chosen, float(record["return"])))
+                ret = (
+                    reward_to_go(record["return"], record.get("round", 0))
+                    if use_reward_to_go
+                    else float(record["return"])
+                )
+                decisions.append((inputs, chosen, ret))
     return decisions
 
 
@@ -203,6 +222,12 @@ def main():
         default=0.5,
         help="weight of the value-network MSE loss when --value-baseline is set",
     )
+    parser.add_argument(
+        "--reward-to-go",
+        action="store_true",
+        help="credit each decision with only the blinds cleared AFTER it "
+        "(return - record.round) instead of the whole game return",
+    )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
     args = parser.parse_args()
 
@@ -216,7 +241,9 @@ def main():
     torch.manual_seed(args.seed)
 
     features = SHOP_INPUT_FEATURES_V2 if args.v2 else SHOP_INPUT_FEATURES
-    decisions = load_selfplay(args.datasets, v2=args.v2)
+    decisions = load_selfplay(args.datasets, v2=args.v2, use_reward_to_go=args.reward_to_go)
+    if args.reward_to_go:
+        print("reward-to-go credit: return = blinds cleared after each decision")
     if not decisions:
         raise SystemExit("no self-play decisions with a return field")
     samples = decisions
