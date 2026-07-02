@@ -1,6 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import { pipelineKeys, runRemotePipeline, type PipelineRunners } from "./runRemotePipeline";
+import {
+  pipelineKeys,
+  routePlayLog,
+  runRemotePipeline,
+  type PipelineRunners,
+} from "./runRemotePipeline";
 import type { BenchmarkSummary } from "./runRemoteBenchmark";
 
 const SUMMARY: BenchmarkSummary = {
@@ -45,6 +50,20 @@ describe("pipelineKeys", () => {
       datasetKey: "training/run1/dataset.jsonl",
       humanKey: "training/run1/human.jsonl",
       modelKey: "benchmark/run1/candidate.onnx",
+    });
+  });
+});
+
+describe("routePlayLog", () => {
+  test("routes the play-log to agreements for shop training", () => {
+    expect(routePlayLog(true, "training/run1/human.jsonl")).toEqual({
+      agreementsKey: "training/run1/human.jsonl",
+    });
+  });
+
+  test("routes the play-log to human imitation for hand training", () => {
+    expect(routePlayLog(false, "training/run1/human.jsonl")).toEqual({
+      humanKey: "training/run1/human.jsonl",
     });
   });
 });

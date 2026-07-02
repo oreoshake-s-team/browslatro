@@ -19,6 +19,11 @@ export interface TrainArgs {
   readonly human: boolean;
   readonly humanWeight: number;
   readonly humanKey?: string;
+  readonly agreements: boolean;
+  readonly agreementsWeight: number;
+  readonly agreementsKey?: string;
+  readonly correctionsWeight: number;
+  readonly correctionsKey?: string;
 }
 
 export interface RemoteTrainingOptions {
@@ -58,9 +63,18 @@ export function trainingEnv(
     SHOP: train.shop ? "1" : "0",
     HUMAN: train.human ? "1" : "0",
     HUMAN_WEIGHT: String(train.humanWeight),
+    AGREEMENTS: train.agreements ? "1" : "0",
+    AGREEMENTS_WEIGHT: String(train.agreementsWeight),
+    CORRECTIONS_WEIGHT: String(train.correctionsWeight),
   };
   if (train.humanKey !== undefined && train.humanKey !== "") {
     env.HUMAN_KEY = train.humanKey;
+  }
+  if (train.agreementsKey !== undefined && train.agreementsKey !== "") {
+    env.AGREEMENTS_KEY = train.agreementsKey;
+  }
+  if (train.correctionsKey !== undefined && train.correctionsKey !== "") {
+    env.CORRECTIONS_KEY = train.correctionsKey;
   }
   return env;
 }
@@ -130,7 +144,7 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements] [--agreements-file PATH] [--agreements-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
     );
     process.exit(1);
   }
@@ -163,6 +177,22 @@ if (isMain) {
     await putObject(s3Config, humanKey, readFileSync(humanFilePath));
   }
 
+  const correctionsFilePath = stringFlag("--corrections-file", "");
+  let correctionsKey: string | undefined;
+  if (correctionsFilePath !== "") {
+    correctionsKey = `training/${runId}/corrections.jsonl`;
+    console.log(`uploading gated corrections -> ${correctionsKey}`);
+    await putObject(s3Config, correctionsKey, readFileSync(correctionsFilePath));
+  }
+
+  const agreementsFilePath = stringFlag("--agreements-file", "");
+  let agreementsKey: string | undefined;
+  if (agreementsFilePath !== "") {
+    agreementsKey = `training/${runId}/agreements.jsonl`;
+    console.log(`uploading agreements log -> ${agreementsKey}`);
+    await putObject(s3Config, agreementsKey, readFileSync(agreementsFilePath));
+  }
+
   const options: RemoteTrainingOptions = {
     runId,
     datasetKey,
@@ -180,6 +210,11 @@ if (isMain) {
       human: hasFlag("--human"),
       humanWeight: intFlag("--human-weight", 5),
       humanKey,
+      agreements: hasFlag("--agreements"),
+      agreementsWeight: intFlag("--agreements-weight", 1),
+      agreementsKey,
+      correctionsWeight: intFlag("--corrections-weight", 5),
+      correctionsKey,
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,

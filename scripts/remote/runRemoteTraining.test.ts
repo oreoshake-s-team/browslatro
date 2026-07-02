@@ -9,7 +9,16 @@ import {
 } from "./runRemoteTraining";
 import type { MachineHandle, MachineLauncher, MachineRunSpec } from "./flyMachines";
 
-const TRAIN: TrainArgs = { epochs: 30, shop: false, device: "cpu", human: false, humanWeight: 5 };
+const TRAIN: TrainArgs = {
+  epochs: 30,
+  shop: false,
+  device: "cpu",
+  human: false,
+  humanWeight: 5,
+  agreements: false,
+  agreementsWeight: 1,
+  correctionsWeight: 5,
+};
 
 class FakeLauncher implements MachineLauncher {
   readonly launched: MachineRunSpec[] = [];
@@ -70,6 +79,9 @@ describe("trainingEnv", () => {
       SHOP: "0",
       HUMAN: "0",
       HUMAN_WEIGHT: "5",
+      AGREEMENTS: "0",
+      AGREEMENTS_WEIGHT: "1",
+      CORRECTIONS_WEIGHT: "5",
     });
   });
 
@@ -93,6 +105,40 @@ describe("trainingEnv", () => {
 
   test("omits HUMAN_KEY when no log was uploaded", () => {
     expect(trainingEnv("d", "m", TRAIN).HUMAN_KEY).toBeUndefined();
+  });
+
+  test("flags baked agreements merging", () => {
+    expect(trainingEnv("d", "m", { ...TRAIN, agreements: true }).AGREEMENTS).toBe("1");
+  });
+
+  test("maps the agreements weight", () => {
+    expect(trainingEnv("d", "m", { ...TRAIN, agreementsWeight: 3 }).AGREEMENTS_WEIGHT).toBe("3");
+  });
+
+  test("maps the corrections weight", () => {
+    expect(trainingEnv("d", "m", { ...TRAIN, correctionsWeight: 8 }).CORRECTIONS_WEIGHT).toBe("8");
+  });
+
+  test("passes an uploaded corrections key through to the worker", () => {
+    expect(
+      trainingEnv("d", "m", { ...TRAIN, correctionsKey: "training/run1/corrections.jsonl" })
+        .CORRECTIONS_KEY,
+    ).toBe("training/run1/corrections.jsonl");
+  });
+
+  test("passes an uploaded agreements key through to the worker", () => {
+    expect(
+      trainingEnv("d", "m", { ...TRAIN, agreementsKey: "training/run1/agreements.jsonl" })
+        .AGREEMENTS_KEY,
+    ).toBe("training/run1/agreements.jsonl");
+  });
+
+  test("omits CORRECTIONS_KEY when no corrections were uploaded", () => {
+    expect(trainingEnv("d", "m", TRAIN).CORRECTIONS_KEY).toBeUndefined();
+  });
+
+  test("omits AGREEMENTS_KEY when no agreements log was uploaded", () => {
+    expect(trainingEnv("d", "m", TRAIN).AGREEMENTS_KEY).toBeUndefined();
   });
 });
 

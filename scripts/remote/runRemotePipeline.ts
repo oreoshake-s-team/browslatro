@@ -45,6 +45,13 @@ export interface PipelineResult {
   readonly records: number;
 }
 
+export function routePlayLog(
+  shop: boolean,
+  humanKey: string,
+): { readonly humanKey?: string; readonly agreementsKey?: string } {
+  return shop ? { agreementsKey: humanKey } : { humanKey };
+}
+
 export async function runRemotePipeline(
   runId: string,
   runners: PipelineRunners,
@@ -88,7 +95,7 @@ if (isMain) {
   const playLog = process.argv[2];
   if (playLog === undefined || playLog.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> [--run-id ID] [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH]",
+      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> [--run-id ID] [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH]",
     );
     process.exit(1);
   }
@@ -144,6 +151,14 @@ if (isMain) {
     cpuKind: parseCpuKind(stringFlag("--cpu-kind", "shared")),
   };
 
+  const correctionsFilePath = stringFlag("--corrections-file", "");
+  let correctionsKey: string | undefined;
+  if (correctionsFilePath !== "") {
+    correctionsKey = `training/${runId}/corrections.jsonl`;
+    console.log(`uploading gated corrections -> ${correctionsKey}`);
+    await putObject(s3Config, correctionsKey, readFileSync(correctionsFilePath));
+  }
+
   const result = await runRemotePipeline(runId, {
     regen: () => runRemoteDataset(datasetOptions, { ...deps, getShard: deps.getArtifact }),
     train: (datasetKey, humanKey) => {
@@ -159,7 +174,11 @@ if (isMain) {
           device: "cpu",
           human: false,
           humanWeight: intFlag("--human-weight", 5),
-          humanKey,
+          agreements: false,
+          agreementsWeight: intFlag("--agreements-weight", 1),
+          correctionsWeight: intFlag("--corrections-weight", 5),
+          correctionsKey,
+          ...routePlayLog(shop, humanKey),
         },
         workerEnv,
       };
