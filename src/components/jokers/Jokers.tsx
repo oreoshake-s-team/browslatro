@@ -59,6 +59,9 @@ export default function Jokers({
   const todoHand = useGame((s) => s.todoHand);
   const castleSuit = useGame((s) => s.castleSuit);
   const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
+  const idolTarget = useGame((s) => s.idolTarget);
+  const idolRankName = idolTarget?.rank ?? null;
+  const idolSuitName = idolTarget ? tSuitName(t, idolTarget.suit) : null;
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
@@ -294,6 +297,8 @@ export default function Jokers({
                   todoHand,
                   castleSuit,
                   castleSuitName,
+                  idolRankName,
+                  idolSuitName,
                 })}
                 aria-label={ariaLabel}
                 aria-describedby={tooltipOpen ? tooltipId : undefined}
@@ -353,6 +358,8 @@ export default function Jokers({
                       todoHand,
                       castleSuit,
                       castleSuitName,
+                      idolRankName,
+                      idolSuitName,
                     })}
                   </span>
                   {(joker.edition || jokerStickers(joker).length > 0) && (
