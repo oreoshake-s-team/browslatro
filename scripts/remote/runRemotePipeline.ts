@@ -5,6 +5,7 @@ import { intFlag } from "../generateDataset";
 import { DEFAULT_DECK } from "../../src/items/decks";
 import { DEFAULT_STAKE } from "../../src/items/stakes";
 import { FlyMachinesClient, type MachineGuest } from "./flyMachines";
+import { FlyLogsClient } from "./flyLogs";
 import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 import { resolveRunId } from "./runId";
@@ -95,7 +96,7 @@ if (isMain) {
   const playLog = process.argv[2];
   if (playLog === undefined || playLog.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> [--run-id ID] [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH]",
+      "Usage: yarn dlx tsx scripts/remote/runRemotePipeline.ts <play-log.jsonl> [--run-id ID] [--games N] [--machines N] [--epochs N] [--shop] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements-weight N] [--shop-policy PATH] [--baseline PATH] [--bench-games N] [--bench-seed N] [--cpu-kind shared|performance] [--out-model PATH] [--out-summary PATH] [--no-tail]",
     );
     process.exit(1);
   }
@@ -103,10 +104,12 @@ if (isMain) {
   console.log(`run id: ${runId}`);
 
   const s3Config = s3ConfigFromEnv();
-  const launcher = new FlyMachinesClient({
-    app: requireEnv("FLY_APP"),
-    token: requireEnv("FLY_API_TOKEN"),
-  });
+  const flyApp = requireEnv("FLY_APP");
+  const flyToken = requireEnv("FLY_API_TOKEN");
+  const launcher = new FlyMachinesClient({ app: flyApp, token: flyToken });
+  const logs = process.argv.includes("--no-tail")
+    ? undefined
+    : new FlyLogsClient({ app: flyApp, token: flyToken });
   const workerEnv: Record<string, string> = {
     AWS_ENDPOINT_URL_S3: s3Config.endpoint,
     AWS_REGION: s3Config.region,
@@ -182,7 +185,7 @@ if (isMain) {
         },
         workerEnv,
       };
-      return runRemoteTraining(options, deps);
+      return runRemoteTraining(options, { ...deps, logs });
     },
     benchmark: (modelKey) => {
       const options: RemoteBenchmarkOptions = {
