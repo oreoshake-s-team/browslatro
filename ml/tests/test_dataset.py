@@ -10,6 +10,8 @@ from dataset import (
     build_training_set,
     load_all,
     load_decisions,
+    load_feedback_agreements,
+    load_feedback_corrections,
     load_shop_decisions,
     load_shop_decisions_split,
     split_by_seed,
@@ -323,6 +325,73 @@ class LoadShopDecisionsSplitTest(unittest.TestCase):
             path = write_jsonl(directory, "shop.jsonl", [shop_record()])
             rollout, _ = load_shop_decisions_split([path], teacher_weight=7.0)
             self.assertEqual(rollout[0][3], 1.0)
+
+
+class LoadFeedbackCorrectionsTest(unittest.TestCase):
+    def test_records_a_training_decision_for_a_shop_correction(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [shop_advice_feedback_record()])
+            self.assertEqual(len(load_feedback_corrections([path], "shop")), 1)
+
+    def test_skips_bare_downvotes_with_no_corrected_index(self):
+        record = shop_advice_feedback_record(correctedIndex=None)
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            self.assertEqual(load_feedback_corrections([path], "shop"), [])
+
+    def test_skips_non_bad_verdicts(self):
+        record = shop_advice_feedback_record(verdict="good")
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            self.assertEqual(load_feedback_corrections([path], "shop"), [])
+
+    def test_skips_records_with_mismatched_context(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [shop_advice_feedback_record()])
+            self.assertEqual(load_feedback_corrections([path], "hand"), [])
+
+    def test_applies_weight(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [shop_advice_feedback_record()])
+            _, _, _, weight = load_feedback_corrections([path], "shop", weight=3.0)[0]
+            self.assertEqual(weight, 3.0)
+
+    def test_jokers_in_decision_state_are_reflected_in_encoded_vector(self):
+        joker = {"effectKind": "flat-mult", "rarity": "common", "edition": None, "counter": None}
+        with_joker = shop_advice_feedback_record()
+        with_joker["decision"]["state"]["jokers"] = [joker]
+        without_joker = shop_advice_feedback_record()
+        with tempfile.TemporaryDirectory() as directory:
+            path_with = write_jsonl(directory, "with.jsonl", [with_joker])
+            path_without = write_jsonl(directory, "without.jsonl", [without_joker])
+            inputs_with = load_feedback_corrections([path_with], "shop")[0][0]
+            inputs_without = load_feedback_corrections([path_without], "shop")[0][0]
+            self.assertNotEqual(inputs_with, inputs_without)
+
+
+class LoadFeedbackAgreementsTest(unittest.TestCase):
+    def test_records_a_training_decision_for_an_explicit_agreement(self):
+        record = shop_advice_feedback_record(verdict="good", source="explicit")
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            self.assertEqual(len(load_feedback_agreements([path], "shop")), 1)
+
+    def test_skips_auto_agreement_records(self):
+        record = shop_advice_feedback_record(verdict="good", source="auto-agreement")
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            self.assertEqual(load_feedback_agreements([path], "shop"), [])
+
+    def test_skips_non_good_verdicts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [shop_advice_feedback_record()])
+            self.assertEqual(load_feedback_agreements([path], "shop"), [])
+
+    def test_skips_records_with_mismatched_context(self):
+        record = shop_advice_feedback_record(verdict="good", source="explicit")
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "fb.jsonl", [record])
+            self.assertEqual(load_feedback_agreements([path], "hand"), [])
 
 
 if __name__ == "__main__":
