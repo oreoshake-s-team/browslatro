@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Browslatro
 
 Browslatro is an educational journey meant to help the author brush up on their frontend skills. The author is still learning react and struggles with CSS.
@@ -46,6 +50,41 @@ Greedy algorithms — anything that commits to the locally-best choice at each s
 - **Never use greedy as a fallback.** A greedy "graceful degradation" path is still greedy. Do not add one. When the preferred mechanism is unavailable (a model fails to load, a service is down, data is missing), **fail fast** — surface a clear error and stop — rather than silently serving greedy results that masquerade as correct.
 - **Prefer failing loudly over a quiet wrong answer.** A visible failure is debuggable and honest; a greedy fallback hides the breakage and ships a worse experience that no one notices.
 - **The one sanctioned exception is the AI advisor's `greedyRanker`/`createGreedyAgent`**, which exists *only* as a benchmark floor to measure the trained policy against — never as a decision path, data source, or training target. Its usage is fenced by `src/ai/greedyUsage.guard.test.ts` (an allowlist of three legacy files). Do **not** widen that allowlist, and do **not** model new code on it. See [`docs/ai-advisor/ml-pipeline.md`](docs/ai-advisor/ml-pipeline.md) and [`docs/ai-advisor/engine-plumbing.md`](docs/ai-advisor/engine-plumbing.md).
+
+# Commands
+
+- `yarn install` — required in every fresh clone or worktree (Yarn 4 Berry, `nodeLinker: pnpm`; activate via `corepack enable`). Never use npm.
+- `yarn start` — Vite dev server with HMR at http://localhost:3000.
+- `yarn test` — run the Vitest unit suite once; `yarn test:watch` for watch mode; `yarn test:coverage` for coverage.
+- `yarn test src/scoring/scoring.test.ts` — run a single test file; add `-t "name"` to filter by test name.
+- `yarn typecheck` — `tsc --noEmit`; must be clean before committing.
+- `yarn build && yarn e2e` — Playwright suite (chromium). `yarn e2e` serves the existing `build/` via `vite preview`, so build first. Run one spec with `yarn e2e e2e/shop.spec.ts`.
+- `yarn lint:css` / `yarn lint:css:fix` — Stylelint over `src/**/*.css`.
+- `yarn storybook` — component workshop at http://localhost:6006; every component under `src/components/` has co-located `*.stories.tsx`.
+- `yarn build` — typecheck + production bundle into `build/`.
+- ML pipeline (Python): `pip install -r ml/requirements.txt`, then `python3 -m unittest discover -s ml/tests`. See `ml/README.md` for the canonical workflow; TS-side dataset/eval scripts live in `scripts/`.
+
+CI (`.github/workflows/test.yml`) runs CSS lint, the sharded unit suite, the `ml/` Python tests, and the e2e suite — all must be green before merging.
+
+# Architecture overview
+
+Full detail lives in `docs/onboarding/` (see [Documentation](#documentation)); this is the map.
+
+**Four layers, strictly separated.** Game *rules* are pure TypeScript — data in, data out, no React, no DOM — under `src/scoring` (hand detection, base scoring, payout, trace), `src/cards` (deck, enhancements, editions, seals), `src/items` (jokers, tarots, planets, spectrals, bosses, tags, vouchers, decks, stakes, shop, packs), and `src/run`. On top sits a single Zustand store assembled from ~17 focused slices (`src/store/*.ts`); orchestration hooks (`src/hooks`: `usePlayHand`, `useScoringPipeline`, `useDiscardPipeline`, `useRoundLifecycle`, …) drive the game loop; `src/components` (grouped by feature: cards, jokers, hud, shop, game, options, system, advisor) is the skin. UI preferences live in a separate tiny store (`src/components/system/preferences.ts`).
+
+**Effects are data; engines are code.** Each of the 150 jokers carries a `JokerEffect` — one arm of a large discriminated union — plus optional `state` for scaling jokers. Pure engines in `src/items/jokers/scoring/` interpret effects at score time; exhaustive `switch` + `assertNever` makes the compiler flag every place a new effect kind must be handled.
+
+**The score is computed twice.** Eagerly in `src/hooks/usePlayHand.ts` (the real result — jokers, retriggers, editions, seals, boss effects) and incrementally in `useScoringPipeline` (driving the staged animation and the `ScoringEvent` trace). Any new scoring contribution must be added to **both** passes or the animated total won't land on the real one — this is the #1 scoring-bug class. Note the two unrelated `scoring.ts` files: `src/scoring/scoring.ts` is the pure base-hand scorer; `src/store/scoring.ts` is the store slice with live chips/mult and animation cursors.
+
+**Cross-cutting invariants:**
+
+- Randomness is injected (`src/dev/rngConfig.ts`); roll probabilities through `rollChance` so the force-100% test override applies. Never call `Math.random()` directly in logic.
+- `Set`/`Map` are pervasive in state and round-trip through the `src/save` localStorage layer — always build a new one in a setter, never mutate in place.
+- All user-facing strings (including aria-labels) go through i18next with typed keys — add to `src/i18n/locales/en.ts` and `haw.ts`; a missing key is a compile error.
+- Styling uses design tokens (`src/styles/tokens.css`) and shared `.btn` classes; unit "layout tests" enforce token usage, so no hardcoded hex in component CSS.
+- Dev affordances (the "Apply modifiers" panel, boss/voucher pickers, the Scoring Trace panel) render only in dev builds — use them to visually verify changes via `yarn start`.
+
+**AI advisor.** Two independent advisors share one candidate spine (`src/ai/getHandOptions.ts` enumerates legal moves, `simulatePlay` scores them deterministically, `ModelState` projects the store): a prompted-LLM coach (`src/ai/advisor/` → the `/api/advice` Vercel function in `api/advice.ts`) and an in-browser ONNX policy (`src/ai/policy.ts`, models in `public/models/`) used for autopilot and pre-ranking. The engine owns legality and arithmetic; the model only picks an index into the vetted candidate list and never computes a number. Offline training lives in `ml/` (Python) with dataset/teacher scripts in `scripts/`.
 
 # Testing
 
@@ -112,6 +151,8 @@ How Browslatro suggests moves to the player — both the prompted LLM coach and 
 - `wiki-retrieval.md` — how the prompted advisor is grounded with curated Balatro notes (`src/ai/advisor/wiki.ts`).
 - `ml-pipeline.md` — the offline pipeline: headless play, datasets, training, evaluation, ONNX export.
 - `running-locally.md` — exercising each advisor piece locally (JS/TS via Yarn; `ml/` via Python).
+- `remote-training.md` — running CPU-bound dataset generation across rented Fly.io machines (shard planner, S3/Tigris transport, orchestrator).
+- `outcome-teacher-progress.md` — work-in-progress handoff notes for the outcome-teacher/on-policy experiments (not shipped).
 - `glossary.md` — domain terms (Balatro mechanics, ML, infrastructure) with authoritative links.
 
 See also `src/ai/advisor/model.ts` for the advisor `MODEL_ID` and `ml/README.md` for the canonical ML workflow.
