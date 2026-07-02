@@ -186,24 +186,30 @@ const RANK_DISPLAY_ORDER: Record<Rank, number> = {
   A: 12,
 };
 
+function isStone(card: Card): boolean {
+  return card.enhancement === "stone";
+}
+
 export function sortCards(
   cards: ReadonlyArray<Card>,
   mode: SortMode,
 ): Card[] {
   const arr = cards.slice();
-  if (mode === "rank") {
-    arr.sort(
-      (a, b) =>
+  arr.sort((a, b) => {
+    const stoneOrder = Number(isStone(a)) - Number(isStone(b));
+    if (stoneOrder !== 0) return stoneOrder;
+    if (isStone(a)) return 0;
+    if (mode === "rank") {
+      return (
         RANK_DISPLAY_ORDER[b.rank] - RANK_DISPLAY_ORDER[a.rank] ||
-        SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit],
+        SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit]
+      );
+    }
+    return (
+      SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit] ||
+      RANK_DISPLAY_ORDER[b.rank] - RANK_DISPLAY_ORDER[a.rank]
     );
-  } else {
-    arr.sort(
-      (a, b) =>
-        SUIT_DISPLAY_ORDER[a.suit] - SUIT_DISPLAY_ORDER[b.suit] ||
-        RANK_DISPLAY_ORDER[b.rank] - RANK_DISPLAY_ORDER[a.rank],
-    );
-  }
+  });
   return arr;
 }
 
