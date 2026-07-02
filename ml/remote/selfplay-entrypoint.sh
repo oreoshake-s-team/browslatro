@@ -25,6 +25,18 @@ if [[ -n "${SHOP_MODEL_KEY:-}" ]]; then
   fi
 fi
 
+starts_args=()
+if [[ -n "${STARTS_KEY:-}" ]]; then
+  STARTS_FILE="$(mktemp /tmp/starts-XXXXXX.jsonl)"
+  echo "downloading deep-run starts: $STARTS_KEY"
+  yarn dlx tsx scripts/remote/getObjectCli.ts "$STARTS_KEY" "$STARTS_FILE"
+  if [[ ! -s "$STARTS_FILE" ]]; then
+    echo "starts object $STARTS_KEY is empty" >&2
+    exit 1
+  fi
+  starts_args+=(--starts-file "$STARTS_FILE" --exploring-starts-fraction "${STARTS_FRACTION:-0.25}")
+fi
+
 SHARD="$(mktemp /tmp/selfplay-XXXXXX.jsonl)"
 
 selfplay_args=(
@@ -38,6 +50,9 @@ selfplay_args=(
 )
 if [ "$HOLD" = "1" ]; then
   selfplay_args+=(--hold-consumables)
+fi
+if [ ${#starts_args[@]} -gt 0 ]; then
+  selfplay_args+=("${starts_args[@]}")
 fi
 
 echo "collecting self-play: games=$GAMES seed-offset=$SEED_OFFSET shop=$SHOP_MODEL hand=$HAND_MODEL temp=$TEMPERATURE hold=$HOLD jobs=$PARALLEL_JOBS -> $OUTPUT_KEY"

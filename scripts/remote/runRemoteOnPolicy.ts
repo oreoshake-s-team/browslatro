@@ -138,7 +138,7 @@ if (isMain) {
   const basePath = stringFlag("--base", "");
   if (outDir === undefined || outDir.startsWith("--") || basePath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--starts-file LOCAL.jsonl [--starts-fraction F]] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
     );
     process.exit(1);
   }
@@ -178,6 +178,15 @@ if (isMain) {
     log: (message) => console.log(message),
   });
 
+  const startsFile = stringFlag("--starts-file", "");
+  let startsKey: string | undefined;
+  if (startsFile !== "") {
+    startsKey = `onpolicy/${runId}/starts.jsonl`;
+    console.log(`uploading deep-run starts -> ${startsKey}`);
+    await putObject(s3Config, startsKey, readFileSync(startsFile));
+  }
+  const startsFraction = Number(stringFlag("--starts-fraction", "0.25"));
+
   mkdirSync(outDir, { recursive: true });
 
   const options: RemoteOnPolicyOptions = {
@@ -206,6 +215,8 @@ if (isMain) {
             temperature: Number(stringFlag("--temperature", "1.0")),
             hold,
             parallelJobs: selfplayCpus,
+            startsKey,
+            startsFraction,
           },
           workerEnv,
         },

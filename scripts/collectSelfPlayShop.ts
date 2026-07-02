@@ -11,7 +11,8 @@ import {
   type ShopDecisionLog,
 } from "../src/ai/headlessShopAgent";
 import { playHeadlessRun, seededRng } from "../src/ai/headlessRun";
-import { exploringStart } from "../src/ai/exploringStarts";
+import { exploringStart, type SeededBuild } from "../src/ai/exploringStarts";
+import { deepRunStart, parseDeepRunStarts, type DeepRunStart } from "../src/ai/deepRunStarts";
 
 function flag(name: string, fallback: string): string {
   const idx = process.argv.indexOf(name);
@@ -82,7 +83,7 @@ async function runParallel(out: string, games: number, seedOffset: number, paral
 async function main(): Promise<void> {
   const out = process.argv[2];
   if (out === undefined || out.startsWith("--")) {
-    console.error("Usage: tsx scripts/collectSelfPlayShop.ts <out.jsonl> [--games N] [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--hold-consumables] [--exploring-starts-fraction F] [--parallel-jobs N]");
+    console.error("Usage: tsx scripts/collectSelfPlayShop.ts <out.jsonl> [--games N] [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--hold-consumables] [--exploring-starts-fraction F] [--starts-file PATH] [--parallel-jobs N]");
     process.exit(1);
   }
   const games = Number(flag("--games", "500"));
@@ -91,6 +92,7 @@ async function main(): Promise<void> {
   const handModel = flag("--hand-model", "public/models/advisor-policy-v9.onnx");
   const temperature = Number(flag("--temperature", "1.0"));
   const exploringFractionRaw = flag("--exploring-starts-fraction", "0");
+  const startsFile = flag("--starts-file", "");
   const holdConsumables = process.argv.includes("--hold-consumables");
   const parallelJobs = Number(flag("--parallel-jobs", "1"));
 
@@ -100,6 +102,7 @@ async function main(): Promise<void> {
       "--hand-model", handModel,
       "--temperature", String(temperature),
       "--exploring-starts-fraction", exploringFractionRaw,
+      ...(startsFile !== "" ? ["--starts-file", startsFile] : []),
       ...(holdConsumables ? ["--hold-consumables"] : []),
     ];
     await runParallel(out, games, seedOffset, parallelJobs, forwarded);
@@ -120,6 +123,13 @@ async function main(): Promise<void> {
   const exploringFraction = Number(flag("--exploring-starts-fraction", "0"));
   const seedEvery =
     exploringFraction > 0 ? Math.max(1, Math.round(1 / exploringFraction)) : 0;
+  const deepStarts: ReadonlyArray<DeepRunStart> | null =
+    startsFile !== "" ? parseDeepRunStarts(readFileSync(startsFile, "utf8")) : null;
+  const seededBuild = (index: number): SeededBuild =>
+    deepStarts !== null ? deepRunStart(deepStarts, index) : exploringStart(index);
+  if (deepStarts !== null) {
+    console.log(`seeding from ${deepStarts.length} deep-run starts (${startsFile})`);
+  }
   let seededGames = 0;
 
   const lines: string[] = [];
@@ -127,7 +137,7 @@ async function main(): Promise<void> {
   for (let g = 0; g < games; g += 1) {
     buffer = [];
     const seeded = seedEvery > 0 && g % seedEvery === 0;
-    const start = seeded ? exploringStart(seededGames) : undefined;
+    const start = seeded ? seededBuild(seededGames) : undefined;
     if (seeded) seededGames += 1;
     const result = await playHeadlessRun(handAgent, {
       seed: seedOffset + g,
