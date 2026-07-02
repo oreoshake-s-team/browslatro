@@ -462,7 +462,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       s.setRemainingDiscards((prev) => Math.max(0, prev + discardGain));
     }
     if (voucher.id === "hieroglyph" || voucher.id === "petroglyph") {
-      s.setAnte((prev) => Math.max(1, prev - 1));
+      s.setAnte((prev) => Math.max(0, prev - 1));
     }
     s.setOwnedVoucherIds(nextOwnedVoucherIds);
     s.setSoldVoucherIds((prev) => {

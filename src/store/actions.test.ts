@@ -163,7 +163,7 @@ describe("game actions slice", () => {
     expect(useGame.getState().ante).toBe(2);
   });
 
-  test("buyAnteVoucher Hieroglyph clamps ante to a minimum of 1", () => {
+  test("buyAnteVoucher Hieroglyph decrements ante to 0 when on ante 1", () => {
     const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
     if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
     const game = useGame.getState();
@@ -171,7 +171,18 @@ describe("game actions slice", () => {
     game.setCurrentAnteVouchers([hieroglyph]);
     game.setMoney(hieroglyph.cost);
     game.buyAnteVoucher(0);
-    expect(useGame.getState().ante).toBe(1);
+    expect(useGame.getState().ante).toBe(0);
+  });
+
+  test("buyAnteVoucher Hieroglyph clamps ante to a minimum of 0", () => {
+    const hieroglyph = VOUCHER_CATALOG.find((v) => v.id === "hieroglyph");
+    if (!hieroglyph) throw new Error("expected Hieroglyph voucher");
+    const game = useGame.getState();
+    game.setAnte(0);
+    game.setCurrentAnteVouchers([hieroglyph]);
+    game.setMoney(hieroglyph.cost);
+    game.buyAnteVoucher(0);
+    expect(useGame.getState().ante).toBe(0);
   });
 
   test("buyAnteVoucher Petroglyph requires Hieroglyph (negative)", () => {
