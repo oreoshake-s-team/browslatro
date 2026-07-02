@@ -85,6 +85,27 @@ describe("benchmarkEnv", () => {
   test("flags a disabled shop", () => {
     expect(benchmarkEnv("m", "s", { ...BENCHMARK, shop: false }).SHOP).toBe("0");
   });
+
+  test("omits shop-candidate env for a hand-policy candidate", () => {
+    const env = benchmarkEnv("m", "s", BENCHMARK);
+    expect([env.SHOP_CANDIDATE, env.HOLD]).toEqual([undefined, undefined]);
+  });
+
+  test("maps a shop-policy candidate to the shop-candidate entrypoint mode", () => {
+    const env = benchmarkEnv("m", "s", {
+      ...BENCHMARK,
+      shopCandidate: true,
+      handModel: "public/models/advisor-policy-v9.onnx",
+      hold: true,
+      parallelJobs: 4,
+    });
+    expect(env).toMatchObject({
+      SHOP_CANDIDATE: "1",
+      HAND_MODEL: "public/models/advisor-policy-v9.onnx",
+      HOLD: "1",
+      PARALLEL_JOBS: "4",
+    });
+  });
 });
 
 describe("parseBenchmark", () => {

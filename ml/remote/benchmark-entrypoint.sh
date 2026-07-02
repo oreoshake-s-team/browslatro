@@ -13,6 +13,10 @@ SEED_OFFSET="${SEED_OFFSET:-5000}"
 DECK="${DECK:-red-deck}"
 STAKE="${STAKE:-white}"
 SHOP="${SHOP:-1}"
+SHOP_CANDIDATE="${SHOP_CANDIDATE:-0}"
+HAND_MODEL="${HAND_MODEL:-public/models/advisor-policy-v9.onnx}"
+HOLD="${HOLD:-0}"
+PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 
 CANDIDATE="$(mktemp /tmp/candidate-XXXXXX.onnx)"
 SUMMARY="$(mktemp /tmp/summary-XXXXXX.json)"
@@ -20,22 +24,30 @@ SUMMARY="$(mktemp /tmp/summary-XXXXXX.json)"
 echo "downloading candidate: $MODEL_KEY"
 yarn dlx tsx scripts/remote/getObjectCli.ts "$MODEL_KEY" "$CANDIDATE"
 
-benchmark_args=("$CANDIDATE")
-if [[ -n "${BASELINE:-}" ]]; then
-  benchmark_args+=("$BASELINE")
+if [[ "$SHOP_CANDIDATE" == "1" ]]; then
+  benchmark_args=("$HAND_MODEL" --shop-policy "$CANDIDATE")
+else
+  benchmark_args=("$CANDIDATE")
+  if [[ -n "${BASELINE:-}" ]]; then
+    benchmark_args+=("$BASELINE")
+  fi
 fi
 benchmark_args+=(
   --games "$GAMES"
   --seed-offset "$SEED_OFFSET"
   --deck "$DECK"
   --stake "$STAKE"
+  --parallel-jobs "$PARALLEL_JOBS"
   --json "$SUMMARY"
 )
 if [[ "$SHOP" != "1" ]]; then
   benchmark_args+=(--no-shop)
 fi
+if [[ "$HOLD" == "1" ]]; then
+  benchmark_args+=(--hold-consumables)
+fi
 
-echo "benchmarking: games=$GAMES seed-offset=$SEED_OFFSET deck=$DECK stake=$STAKE shop=$SHOP"
+echo "benchmarking: games=$GAMES seed-offset=$SEED_OFFSET deck=$DECK stake=$STAKE shop=$SHOP shop-candidate=$SHOP_CANDIDATE hold=$HOLD"
 yarn dlx tsx scripts/benchmarkPolicy.ts "${benchmark_args[@]}"
 
 echo "uploading summary -> $OUTPUT_KEY"

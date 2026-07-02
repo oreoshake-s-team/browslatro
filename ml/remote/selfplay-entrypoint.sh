@@ -15,6 +15,16 @@ TEMPERATURE="${TEMPERATURE:-1.0}"
 HOLD="${HOLD:-0}"
 PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 
+if [[ -n "${SHOP_MODEL_KEY:-}" ]]; then
+  SHOP_MODEL="$(mktemp /tmp/shop-model-XXXXXX.onnx)"
+  echo "downloading shop model: $SHOP_MODEL_KEY"
+  yarn dlx tsx scripts/remote/getObjectCli.ts "$SHOP_MODEL_KEY" "$SHOP_MODEL"
+  if [[ ! -s "$SHOP_MODEL" ]]; then
+    echo "shop model object $SHOP_MODEL_KEY is empty" >&2
+    exit 1
+  fi
+fi
+
 SHARD="$(mktemp /tmp/selfplay-XXXXXX.jsonl)"
 
 selfplay_args=(
