@@ -7,9 +7,11 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from train_rl import (
     clipped_surrogate,
+    load_selfplay,
     masked_entropy,
     masked_log_probs,
     normalized_advantages,
+    reward_to_go,
     value_baseline_advantages,
     warm_start,
 )
@@ -63,6 +65,42 @@ class ValueBaselineAdvantagesTest(unittest.TestCase):
     def test_residuals_are_mean_centered(self):
         advantages = value_baseline_advantages([1.0, 2.0, 3.0], [0.0, 0.0, 0.0], clip=1e9)
         self.assertAlmostEqual(sum(advantages), 0.0, places=6)
+
+
+class RewardToGoTest(unittest.TestCase):
+    def test_subtracts_blinds_already_cleared(self):
+        self.assertEqual(reward_to_go(10.0, 4), 6.0)
+
+    def test_an_ante_one_shop_keeps_the_whole_return(self):
+        self.assertEqual(reward_to_go(10.0, 0), 10.0)
+
+    def test_never_goes_negative(self):
+        self.assertEqual(reward_to_go(3.0, 5), 0.0)
+
+    def test_load_selfplay_applies_reward_to_go_per_decision(self):
+        record = {
+            "schemaVersion": 2,
+            "runSeed": 1,
+            "ante": 3,
+            "round": 6,
+            "blind": 0,
+            "money": 8,
+            "kind": "purchase",
+            "item": {"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 5},
+            "offers": [{"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 5}],
+            "return": 10.0,
+        }
+        import json
+
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as handle:
+            handle.write(json.dumps(record) + "\n")
+            path = handle.name
+        try:
+            plain = load_selfplay([path])
+            rtg = load_selfplay([path], use_reward_to_go=True)
+        finally:
+            os.unlink(path)
+        self.assertEqual((plain[0][2], rtg[0][2]), (10.0, 4.0))
 
 
 class ClippedSurrogateTest(unittest.TestCase):
