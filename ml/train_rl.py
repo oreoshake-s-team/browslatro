@@ -33,6 +33,7 @@ import json
 import random
 
 from encoding import (
+    SHOP_CONTEXT_FEATURES,
     SHOP_INPUT_FEATURES,
     SHOP_INPUT_FEATURES_V2,
     encode_shop_decision,
@@ -108,6 +109,24 @@ def normalized_advantages(returns, clip):
     return [max(-clip, min(clip, (r - mean) / std)) for r in returns]
 
 
+def value_baseline_advantages(returns, values, clip):
+    """Per-decision advantage against a *learned* state-value baseline.
+
+    ``advantage = return - V(state)``, then standardized and clamped like
+    ``normalized_advantages``. Unlike the constant mean baseline, ``V(state)``
+    accounts for how hard each state is (an ante-5 shop expects a higher return
+    than an ante-1 shop), so a decision is credited by how much its run beat the
+    *expectation for that state* rather than the global average — the causal
+    credit signal the flat baseline can't provide. Pure/torch-free so the
+    normalization matches the training loop and stays unit-testable.
+    """
+    residuals = [r - v for r, v in zip(returns, values)]
+    mean = sum(residuals) / len(residuals)
+    var = sum((a - mean) ** 2 for a in residuals) / len(residuals)
+    std = max(var ** 0.5, 1e-6)
+    return [max(-clip, min(clip, (a - mean) / std)) for a in residuals]
+
+
 def clipped_surrogate(ratio, advantage, clip):
     """PPO surrogate for one decision: ``min(r*A, clamp(r, 1±clip)*A)``.
 
@@ -172,6 +191,18 @@ def main():
         action="store_true",
         help="use the use-aware shop encoding (79 features) for a v11+ policy",
     )
+    parser.add_argument(
+        "--value-baseline",
+        action="store_true",
+        help="learn a state-value baseline V(s) for per-decision advantage "
+        "(advantage = return - V(s)) instead of the constant mean baseline",
+    )
+    parser.add_argument(
+        "--value-coef",
+        type=float,
+        default=0.5,
+        help="weight of the value-network MSE loss when --value-baseline is set",
+    )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
     args = parser.parse_args()
 
@@ -188,14 +219,34 @@ def main():
     decisions = load_selfplay(args.datasets, v2=args.v2)
     if not decisions:
         raise SystemExit("no self-play decisions with a return field")
-    advantages = normalized_advantages([d[2] for d in decisions], args.adv_clip)
-    samples = [(inp, chosen, adv) for (inp, chosen, _), adv in zip(decisions, advantages)]
+    samples = decisions
+    const_adv = normalized_advantages([d[2] for d in decisions], args.adv_clip)
 
     device = resolve_device(args.device)
     model = CandidateScorer(features, args.hidden).to(device)
     if args.init:
         loaded = warm_start(model, args.init, device, torch)
         print(f"warm-started {loaded} tensors from {args.init}")
+
+    import torch.nn as nn
+
+    class ValueNet(nn.Module):
+        def __init__(self, context_features, hidden):
+            super().__init__()
+            self.layers = nn.Sequential(
+                nn.Linear(context_features, hidden // 2),
+                nn.ReLU(),
+                nn.Linear(hidden // 2, 1),
+            )
+
+        def forward(self, ctx):
+            return self.layers(ctx).squeeze(-1)
+
+    value_net = (
+        ValueNet(SHOP_CONTEXT_FEATURES, args.hidden).to(device)
+        if args.value_baseline
+        else None
+    )
 
     use_ppo = bool(args.init) and args.ppo_clip > 0
     # Each decision has a ragged candidate set, so a minibatch is padded to the
@@ -211,14 +262,14 @@ def main():
         x = torch.zeros((size, max_n, feats), dtype=torch.float32, device=device)
         mask = torch.zeros((size, max_n), dtype=torch.bool, device=device)
         chosen = torch.empty(size, dtype=torch.long, device=device)
-        adv = torch.empty(size, dtype=torch.float32, device=device)
-        for b, (inp, ch, ad) in enumerate(rows):
+        ret = torch.empty(size, dtype=torch.float32, device=device)
+        for b, (inp, ch, r) in enumerate(rows):
             n = len(inp)
             x[b, :n] = torch.tensor(inp, dtype=torch.float32, device=device)
             mask[b, :n] = True
             chosen[b] = ch
-            adv[b] = ad
-        return x, mask, chosen, adv
+            ret[b] = r
+        return x, mask, chosen, ret
 
     def chosen_log_probs(log_probs, chosen):
         return log_probs.gather(1, chosen.unsqueeze(1)).squeeze(1)
@@ -240,20 +291,34 @@ def main():
         print("plain REINFORCE (no --init / --ppo-clip 0)")
 
     indexed = list(range(len(samples)))
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    params = list(model.parameters())
+    if value_net is not None:
+        params += list(value_net.parameters())
+        print(f"value baseline: V(s) over {SHOP_CONTEXT_FEATURES} context features (coef {args.value_coef})")
+    optimizer = torch.optim.Adam(params, lr=args.lr)
     print(f"{len(samples)} self-play decisions on {device}")
 
     for epoch in range(args.epochs):
         random.shuffle(indexed)
         total = 0.0
         total_entropy = 0.0
+        total_value = 0.0
         for i in range(0, len(indexed), args.batch_size):
             batch = indexed[i : i + args.batch_size]
             optimizer.zero_grad()
-            x, mask, chosen, adv = pad_batch(batch)
+            x, mask, chosen, ret = pad_batch(batch)
             log_probs = masked_log_probs(model(x), mask)
             chosen_logp = chosen_log_probs(log_probs, chosen)
             entropy = masked_entropy(log_probs, mask)
+            value_loss = torch.zeros((), device=device)
+            if value_net is not None:
+                values = value_net(x[:, 0, :SHOP_CONTEXT_FEATURES])
+                residual = ret - values.detach()
+                denom = residual.std(unbiased=False).clamp_min(1e-6)
+                adv = ((residual - residual.mean()) / denom).clamp(-args.adv_clip, args.adv_clip)
+                value_loss = torch.nn.functional.mse_loss(values, ret)
+            else:
+                adv = torch.tensor([const_adv[j] for j in batch], dtype=torch.float32, device=device)
             if use_ppo:
                 old_lp = torch.tensor([old_logps[j] for j in batch], dtype=torch.float32, device=device)
                 ratio = torch.exp(chosen_logp - old_lp)
@@ -266,12 +331,14 @@ def main():
                 clamped = chosen_logp.clamp(min=-args.logp_floor)
                 per_decision = -adv * clamped - args.entropy_coef * entropy
             loss = per_decision.sum()
-            (loss / len(batch)).backward()
+            (loss / len(batch) + args.value_coef * value_loss).backward()
             optimizer.step()
             total += float(loss)
             total_entropy += float(entropy.sum())
+            total_value += float(value_loss) * len(batch)
         n = len(samples)
-        print(f"epoch {epoch + 1}: loss={total / n:.4f} entropy={total_entropy / n:.4f}")
+        value_msg = f" value_mse={total_value / n:.4f}" if value_net is not None else ""
+        print(f"epoch {epoch + 1}: loss={total / n:.4f} entropy={total_entropy / n:.4f}{value_msg}")
 
     model.eval()
     example = torch.zeros((2, features), dtype=torch.float32, device=device)
