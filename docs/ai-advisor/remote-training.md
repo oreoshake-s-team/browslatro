@@ -182,6 +182,22 @@ To mix in a **freshly-uploaded** play-log that isn't baked into the image, pass
 `--human` source (sharing `--human-weight`). It composes with `--human` (baked)
 and is the path the one-shot upload→regen→train→bench pipeline uses.
 
+**Advice-feedback flows through separate channels** — `train.py` ignores
+`--human` entirely under `--shop`, so shop training only learns from human play
+via `--corrections`/`--agreements`:
+
+- `--agreements` mixes in the baked `ml/data/human-play/*.jsonl` exports as
+  `--agreements` sources (thumbs-up advisor confirmations, default weight 1,
+  tunable with `--agreements-weight`). Like `--human`, it fails fast if the
+  image has no baked files. `--agreements-file <local.jsonl>` uploads a fresh
+  log instead (composable with the baked toggle).
+- `--corrections-file <local.jsonl>` uploads a corrections log (default weight
+  5, tunable with `--corrections-weight`). Shop corrections carry no
+  per-candidate score for the trainer's built-in quality gate, so **gate them
+  locally first** with `scripts/gateShopCorrections.ts` and upload the gated
+  output — the worker treats whatever it receives as already vetted. The worker
+  fails fast if the uploaded object is empty.
+
 Training is a sustained single-machine CPU grind, so Fly's default **shared**
 CPUs get throttled and it drags. Pass `--cpu-kind performance` for dedicated
 cores (no throttle) — for this tiny MLP that's far better value than a GPU
@@ -235,6 +251,12 @@ argument). It fans out dataset generation, uploads both the dataset and the
 play-log to S3, trains a candidate with the log mixed in, then benchmarks that
 candidate against the baseline. A single preflight runs up front, and a failed
 stage aborts the rest.
+
+The play-log is routed by training mode: shop training (the default) consumes
+it as an `--agreements` source (the only human-play channel `train.py --shop`
+reads), while `--no-shop` hand training consumes it as a `--human` imitation
+source. Pass `--corrections-file <gated.jsonl>` (pre-gated with
+`scripts/gateShopCorrections.ts`) to also train on advice-feedback corrections.
 
 ```
 runRemotePipeline.ts (orchestrator, runs locally)

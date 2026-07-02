@@ -14,6 +14,11 @@ SHOP="${SHOP:-0}"
 HUMAN="${HUMAN:-0}"
 HUMAN_WEIGHT="${HUMAN_WEIGHT:-5}"
 HUMAN_KEY="${HUMAN_KEY:-}"
+CORRECTIONS_KEY="${CORRECTIONS_KEY:-}"
+CORRECTIONS_WEIGHT="${CORRECTIONS_WEIGHT:-5}"
+AGREEMENTS="${AGREEMENTS:-0}"
+AGREEMENTS_KEY="${AGREEMENTS_KEY:-}"
+AGREEMENTS_WEIGHT="${AGREEMENTS_WEIGHT:-1}"
 
 DATASET="$(mktemp /tmp/dataset-XXXXXX.jsonl)"
 MODEL="$(mktemp /tmp/model-XXXXXX.onnx)"
@@ -53,7 +58,49 @@ if [[ ${#human_args[@]} -gt 0 ]]; then
   train_args+=("${human_args[@]}" --human-weight "$HUMAN_WEIGHT")
 fi
 
-echo "training: epochs=$EPOCHS device=$DEVICE shop=$SHOP human=$HUMAN human_key=${HUMAN_KEY:-none}"
+if [[ -n "$CORRECTIONS_KEY" ]]; then
+  CORRECTIONS_FILE="$(mktemp /tmp/corrections-XXXXXX.jsonl)"
+  echo "downloading gated corrections: $CORRECTIONS_KEY"
+  yarn dlx tsx scripts/remote/getObjectCli.ts "$CORRECTIONS_KEY" "$CORRECTIONS_FILE"
+  if [[ ! -s "$CORRECTIONS_FILE" ]]; then
+    echo "corrections object $CORRECTIONS_KEY is empty" >&2
+    exit 1
+  fi
+  train_args+=(--corrections "$CORRECTIONS_FILE" --corrections-weight "$CORRECTIONS_WEIGHT")
+fi
+
+agreements_args=()
+
+if [[ -n "$AGREEMENTS_KEY" ]]; then
+  AGREEMENTS_FILE="$(mktemp /tmp/agreements-XXXXXX.jsonl)"
+  echo "downloading agreements log: $AGREEMENTS_KEY"
+  yarn dlx tsx scripts/remote/getObjectCli.ts "$AGREEMENTS_KEY" "$AGREEMENTS_FILE"
+  if [[ ! -s "$AGREEMENTS_FILE" ]]; then
+    echo "agreements object $AGREEMENTS_KEY is empty" >&2
+    exit 1
+  fi
+  agreements_args+=(--agreements "$AGREEMENTS_FILE")
+fi
+
+if [[ "$AGREEMENTS" == "1" ]]; then
+  shopt -s nullglob
+  agreement_files=(ml/data/human-play/*.jsonl)
+  shopt -u nullglob
+  if [[ ${#agreement_files[@]} -eq 0 ]]; then
+    echo "AGREEMENTS=1 but no human-play files baked into the image (ml/data/human-play/*.jsonl)" >&2
+    exit 1
+  fi
+  for f in "${agreement_files[@]}"; do
+    agreements_args+=(--agreements "$f")
+  done
+  echo "merging ${#agreement_files[@]} baked agreement sources"
+fi
+
+if [[ ${#agreements_args[@]} -gt 0 ]]; then
+  train_args+=("${agreements_args[@]}" --agreements-weight "$AGREEMENTS_WEIGHT")
+fi
+
+echo "training: epochs=$EPOCHS device=$DEVICE shop=$SHOP human=$HUMAN human_key=${HUMAN_KEY:-none} corrections_key=${CORRECTIONS_KEY:-none} agreements=$AGREEMENTS agreements_key=${AGREEMENTS_KEY:-none}"
 python3 ml/train.py "${train_args[@]}"
 
 echo "uploading model -> $OUTPUT_KEY"
