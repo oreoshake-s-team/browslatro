@@ -222,4 +222,36 @@ describe("runRemoteTraining", () => {
       }),
     ).rejects.toThrow(/empty object/);
   });
+
+  test("streams tailed worker logs through the orchestrator log", async () => {
+    const launcher = new FakeLauncher();
+    const messages: string[] = [];
+    await runRemoteTraining(options(), {
+      launcher,
+      getArtifact: async () => Buffer.from("x"),
+      sleep: async () => {},
+      log: (message) => messages.push(message),
+      logs: {
+        poll: async () => ({ lines: ["epoch 1/30 loss=0.42"], nextToken: "t1" }),
+      },
+    });
+    expect(messages).toContain("training | epoch 1/30 loss=0.42");
+  });
+
+  test("tails the launched training machine", async () => {
+    const launcher = new FakeLauncher();
+    const polled: string[] = [];
+    await runRemoteTraining(options(), {
+      launcher,
+      getArtifact: async () => Buffer.from("x"),
+      sleep: async () => {},
+      logs: {
+        poll: async (machineId: string) => {
+          polled.push(machineId);
+          return { lines: [], nextToken: "" };
+        },
+      },
+    });
+    expect(polled[0]).toBe("trainer");
+  });
 });

@@ -7,7 +7,8 @@ import {
   type MachineGuest,
   type MachineLauncher,
 } from "./flyMachines";
-import { waitForMachineTerminal } from "./machineWait";
+import { FlyLogsClient, type LogSource } from "./flyLogs";
+import { waitForMachineTerminal, type MachineLogTail } from "./machineWait";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
@@ -54,6 +55,7 @@ export interface RemoteTrainingDeps {
   readonly getArtifact: (key: string) => Promise<Buffer>;
   readonly sleep: (ms: number) => Promise<void>;
   readonly log?: (message: string) => void;
+  readonly logs?: LogSource;
 }
 
 export interface RemoteTrainingResult {
@@ -113,12 +115,22 @@ export async function runRemoteTraining(
   });
   log(`training: launched machine ${handle.id} on ${options.datasetKey}`);
 
+  const logs = deps.logs;
+  const tail: MachineLogTail | undefined =
+    logs === undefined
+      ? undefined
+      : {
+          poll: (machineId, nextToken) => logs.poll(machineId, nextToken),
+          onLine: (line) => log(`training | ${line}`),
+        };
+
   try {
     await waitForMachineTerminal(handle.id, handle.state, "training", {
       pollIntervalMs: options.pollIntervalMs ?? 10_000,
       maxWaitMs: options.maxWaitMs ?? 60 * 60_000,
       sleep: deps.sleep,
       get: deps.launcher.get.bind(deps.launcher),
+      tail,
     });
   } finally {
     await deps.launcher.destroy(handle.id);
@@ -165,7 +177,7 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements] [--agreements-file PATH] [--agreements-weight N] [--rl --init-file PATH [--lr F] [--ppo-clip F] [--v2] [--value-baseline] [--value-coef F] [--reward-to-go]] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements] [--agreements-file PATH] [--agreements-weight N] [--rl --init-file PATH [--lr F] [--ppo-clip F] [--v2] [--value-baseline] [--value-coef F] [--reward-to-go]] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
     );
     process.exit(1);
   }
@@ -173,10 +185,12 @@ if (isMain) {
   const runId = resolveRunId(stringFlag("--run-id", ""));
   console.log(`run id: ${runId}`);
   const s3Config = s3ConfigFromEnv();
-  const launcher = new FlyMachinesClient({
-    app: requireEnv("FLY_APP"),
-    token: requireEnv("FLY_API_TOKEN"),
-  });
+  const flyApp = requireEnv("FLY_APP");
+  const flyToken = requireEnv("FLY_API_TOKEN");
+  const launcher = new FlyMachinesClient({ app: flyApp, token: flyToken });
+  const logs = hasFlag("--no-tail")
+    ? undefined
+    : new FlyLogsClient({ app: flyApp, token: flyToken });
 
   const datasetKey = `training/${runId}/dataset.jsonl`;
   const outputKey = `training/${runId}/model.onnx`;
@@ -273,6 +287,7 @@ if (isMain) {
     getArtifact: (key) => getObject(s3Config, key),
     sleep,
     log: (message) => console.log(message),
+    logs,
   });
   writeFileSync(outPath, result.model);
   console.log(`trained model (${result.bytes} bytes) in ${((Date.now() - started) / 1000).toFixed(1)}s`);

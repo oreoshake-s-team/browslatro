@@ -42,6 +42,7 @@ locally with `--parallel-jobs` or remotely across machines.
 | --- | --- |
 | `scripts/remote/shardPlan.ts` | Deterministic shard plan (seed slices + object keys). |
 | `scripts/remote/flyMachines.ts` | `MachineLauncher` interface + `FlyMachinesClient` over the Fly Machines REST API. |
+| `scripts/remote/flyLogs.ts` | `LogSource` interface + `FlyLogsClient` over Fly's logs REST API, used to tail worker stdout. |
 | `scripts/remote/s3.ts` | Dependency-free SigV4 signing + `putObject`/`getObject` for any S3-compatible store (Tigris). |
 | `scripts/remote/runRemoteDataset.ts` | Orchestrator: plan → launch → poll → collect → concatenate. |
 | `scripts/remote/runRemoteSelfPlay.ts` | Same fan-out for **shop-policy self-play** (`--hold-consumables` for the v2/use-aware encoding; forwards `HOLD`/`PARALLEL_JOBS`). |
@@ -198,6 +199,30 @@ via `--corrections`/`--agreements`:
   output — the worker treats whatever it receives as already vetted. The worker
   fails fast if the uploaded object is empty.
 
+### Tailing training logs
+
+Training is the long, single-machine stage with nothing to show until the model
+lands, so the orchestrator **tails the training machine's logs by default**:
+while waiting for the machine to finish, each state poll also polls Fly's logs
+REST API (`GET api.fly.io/api/v1/apps/<app>/logs?instance=<machine>`, the same
+endpoint `fly logs` uses, authenticated with the existing `FLY_API_TOKEN`) and
+prints every new worker line prefixed with `training | `. You see the
+entrypoint's download/upload steps and `train.py`'s per-epoch progress live in
+the session that launched the run — including a Claude Code cloud session.
+
+- The cursor (`meta.next_token`) is threaded between polls so lines are printed
+  exactly once, and a final poll after the machine stops flushes the tail.
+- A failed log poll is **non-fatal**: it prints `training | log tail failed: …`
+  and the run keeps waiting on machine state. Tailing is observability, not
+  correctness — the S3 object remains the source of truth.
+- Pass `--no-tail` to any orchestrator that trains (`runRemoteTraining.ts`,
+  `runRemotePipeline.ts`, `runRemoteOnPolicy.ts`) to silence it.
+
+Cloud-session note: the logs endpoint lives on `api.fly.io`, so a `Custom`
+network allowlist needs that host too (see the allowlist below). If it is
+blocked, the run still works — you just see `log tail failed` lines instead of
+worker output.
+
 Training is a sustained single-machine CPU grind, so Fly's default **shared**
 CPUs get throttled and it drags. Pass `--cpu-kind performance` for dedicated
 cores (no throttle) — for this tiny MLP that's far better value than a GPU
@@ -287,9 +312,9 @@ This is the flow built for "attach a log in a Claude Code cloud session and go":
 a cloud session runs on Anthropic hardware (no local machine) and, with the
 right network level, can orchestrate Fly. Set up the cloud session once:
 - **Network**: set the environment to `Full`, or `Custom` allowlisting
-  `api.machines.dev`, `fly.storage.tigris.dev`, `fly.io`, and the npm
-  registries. (The default `Trusted` level does not cover Fly/Tigris — node
-  `fetch` will get `403 host_not_allowed`.)
+  `api.machines.dev`, `api.fly.io` (log tailing), `fly.storage.tigris.dev`,
+  `fly.io`, and the npm registries. (The default `Trusted` level does not cover
+  Fly/Tigris — node `fetch` will get `403 host_not_allowed`.)
 - **Secrets**: provide `FLY_API_TOKEN`, `AWS_ENDPOINT_URL_S3`, `AWS_REGION`,
   `BROWSLATRO_DATASET_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
   plus `DATASET_IMAGE` and `TRAIN_IMAGE` (see the env table above).
