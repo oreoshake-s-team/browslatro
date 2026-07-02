@@ -26,13 +26,17 @@ const ITEM_TYPES = [
   "voucher",
 ] as const;
 
+export const SHOP_BUILD_WINCON_FEATURES = 2;
+export const SHOP_CANDIDATE_WINCON_FEATURES = 3;
+
 export const SHOP_BUILD_FEATURES =
   HAND_LABELS.length +
   1 +
   JOKER_RARITIES.length +
   JOKER_EFFECT_CATEGORIES.length +
   1 +
-  ENHANCEMENTS.length;
+  ENHANCEMENTS.length +
+  SHOP_BUILD_WINCON_FEATURES;
 
 export const SHOP_INPUT_FEATURES =
   4 +
@@ -41,7 +45,8 @@ export const SHOP_INPUT_FEATURES =
   5 +
   SHOP_CANDIDATE_CATEGORIES.length +
   SHOP_ATTRIBUTE_FEATURES +
-  VOUCHER_FEATURES;
+  VOUCHER_FEATURES +
+  SHOP_CANDIDATE_WINCON_FEATURES;
 
 export interface ShopBuildJoker {
   readonly effectKind: string;
@@ -90,24 +95,71 @@ export function shopBuildSummary(input: {
   };
 }
 
-function encodeShopBuild(build: ShopBuild): number[] {
-  const rarityCounts: Record<string, number> = {};
-  for (const rarity of JOKER_RARITIES) rarityCounts[rarity] = 0;
+interface BuildSignals {
+  readonly topHand: string | null;
+  readonly topLevel: number;
+  readonly secondLevel: number;
+  readonly handLevels: Readonly<Record<string, number>>;
+  readonly categoryCounts: Readonly<Record<string, number>>;
+}
+
+function buildSignals(build: ShopBuild): BuildSignals {
+  let topHand: string | null = null;
+  let topLevel = 1;
+  let secondLevel = 1;
+  for (const label of HAND_LABELS) {
+    const level = build.handLevels[label] ?? 1;
+    if (level > topLevel) {
+      secondLevel = topLevel;
+      topLevel = level;
+      topHand = label;
+    } else if (level > secondLevel) {
+      secondLevel = level;
+    }
+  }
   const categoryCounts: Record<string, number> = {};
   for (const category of JOKER_EFFECT_CATEGORIES) categoryCounts[category] = 0;
+  for (const joker of build.jokers) {
+    categoryCounts[jokerEffectCategory(joker.effectKind)] += 1;
+  }
+  return { topHand, topLevel, secondLevel, handLevels: build.handLevels, categoryCounts };
+}
+
+function winconFeatures(
+  advancesHands: ReadonlyArray<string> | undefined,
+  category: string,
+  sig: BuildSignals,
+): number[] {
+  const advances = advancesHands ?? [];
+  const advancesTopHand =
+    sig.topHand !== null && advances.includes(sig.topHand) ? 1 : 0;
+  let advancedHandLevel = 0;
+  for (const hand of advances) {
+    advancedHandLevel = Math.max(advancedHandLevel, ((sig.handLevels[hand] ?? 1) - 1) / 20);
+  }
+  const sameCategoryJokerOwned = category.startsWith("joker-")
+    ? (sig.categoryCounts[category.slice("joker-".length)] ?? 0) / 5
+    : 0;
+  return [advancesTopHand, advancedHandLevel, sameCategoryJokerOwned];
+}
+
+function encodeShopBuild(build: ShopBuild, sig: BuildSignals): number[] {
+  const rarityCounts: Record<string, number> = {};
+  for (const rarity of JOKER_RARITIES) rarityCounts[rarity] = 0;
   for (const joker of build.jokers) {
     if (rarityCounts[joker.rarity] !== undefined) {
       rarityCounts[joker.rarity] += 1;
     }
-    categoryCounts[jokerEffectCategory(joker.effectKind)] += 1;
   }
   return [
     ...HAND_LABELS.map((label) => (build.handLevels[label] ?? 1) / 20),
     build.jokers.length / 5,
     ...JOKER_RARITIES.map((rarity) => rarityCounts[rarity] / 5),
-    ...JOKER_EFFECT_CATEGORIES.map((category) => categoryCounts[category] / 5),
+    ...JOKER_EFFECT_CATEGORIES.map((category) => sig.categoryCounts[category] / 5),
     build.consumablesHeld / 2,
     ...ENHANCEMENTS.map((enh) => (build.deckEnhancements[enh] ?? 0) / 52),
+    (sig.topLevel - 1) / 20,
+    (sig.topLevel - sig.secondLevel) / 20,
   ];
 }
 
@@ -142,6 +194,8 @@ function candidateRow(
   isReroll: boolean,
   isLeave: boolean,
   isSkip: boolean,
+  advancesHands: ReadonlyArray<string> | undefined,
+  sig: BuildSignals,
 ): number[] {
   const hot = ITEM_TYPES.map((t) => (t === itemType ? 1 : 0));
   const categoryHot = SHOP_CANDIDATE_CATEGORIES.map((c) => (c === category ? 1 : 0));
@@ -168,19 +222,21 @@ function candidateRow(
     ...categoryHot,
     ...attrs,
     ...vfeats,
+    ...winconFeatures(advancesHands, category, sig),
   ];
 }
 
 export function encodeShopCandidates(input: ShopRankInput): Float32Array {
   const { money, ante, round } = input;
-  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
+  const sig = buildSignals(input.build ?? EMPTY_SHOP_BUILD);
+  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD, sig);
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "buy" || c.action === "sell")
-        return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false);
+        return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, c.item.advancesHands, sig);
       if (c.action === "reroll")
-        return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false);
-      return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false);
+        return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false, undefined, sig);
+      return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false, undefined, sig);
     }),
   );
 }
@@ -202,49 +258,54 @@ function candidateRowV2(
   isLeave: boolean,
   isSkip: boolean,
   isUse: boolean,
+  advancesHands: ReadonlyArray<string> | undefined,
+  sig: BuildSignals,
 ): number[] {
   return [
-    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, voucherFeatures, cost, isReroll, isLeave, isSkip),
+    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, voucherFeatures, cost, isReroll, isLeave, isSkip, advancesHands, sig),
     isUse ? 1 : 0,
   ];
 }
 
 export function encodeShopCandidatesV2(input: ShopRankInput): Float32Array {
   const { money, ante, round } = input;
-  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
+  const sig = buildSignals(input.build ?? EMPTY_SHOP_BUILD);
+  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD, sig);
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "buy" || c.action === "sell")
-        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, false);
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, false, c.item.advancesHands, sig);
       if (c.action === "use")
-        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, true);
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, true, c.item.advancesHands, sig);
       if (c.action === "reroll")
-        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false, false);
-      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false, false);
+        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false, false, undefined, sig);
+      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false, false, undefined, sig);
     }),
   );
 }
 
 export function encodePackCandidates(input: PackRankInput): Float32Array {
   const { money, ante, round, picksRemaining } = input;
-  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
+  const sig = buildSignals(input.build ?? EMPTY_SHOP_BUILD);
+  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD, sig);
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "pick")
-        return candidateRow(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false);
-      return candidateRow(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true);
+        return candidateRow(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false, c.option.advancesHands, sig);
+      return candidateRow(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true, undefined, sig);
     }),
   );
 }
 
 export function encodePackCandidatesV2(input: PackRankInput): Float32Array {
   const { money, ante, round, picksRemaining } = input;
-  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD);
+  const sig = buildSignals(input.build ?? EMPTY_SHOP_BUILD);
+  const build = encodeShopBuild(input.build ?? EMPTY_SHOP_BUILD, sig);
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "pick")
-        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false, false);
-      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true, false);
+        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false, false, c.option.advancesHands, sig);
+      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true, false, undefined, sig);
     }),
   );
 }

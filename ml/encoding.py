@@ -190,7 +190,7 @@ def encode_decision(record):
     return inputs, record["chosenIndex"]
 
 
-SHOP_ENCODING_VERSION = 5
+SHOP_ENCODING_VERSION = 6
 SHOP_ITEM_TYPES = ["joker", "planet", "tarot", "spectral", "playing-card", "pack", "voucher"]
 SHOP_CANDIDATE_CATEGORIES = [
     "joker-mult",
@@ -208,6 +208,8 @@ SHOP_CANDIDATE_CATEGORIES = [
 ]
 SHOP_ATTRIBUTE_FEATURES = 18
 SHOP_VOUCHER_FEATURES = 18
+SHOP_BUILD_WINCON_FEATURES = 2
+SHOP_CANDIDATE_WINCON_FEATURES = 3
 SHOP_BUILD_FEATURES = (
     len(HAND_LABELS)
     + 1
@@ -215,6 +217,7 @@ SHOP_BUILD_FEATURES = (
     + len(JOKER_EFFECT_CATEGORIES)
     + 1
     + len(ENHANCEMENTS)
+    + SHOP_BUILD_WINCON_FEATURES
 )
 SHOP_CONTEXT_FEATURES = 4 + SHOP_BUILD_FEATURES
 SHOP_CANDIDATE_FEATURES = (
@@ -223,6 +226,7 @@ SHOP_CANDIDATE_FEATURES = (
     + len(SHOP_CANDIDATE_CATEGORIES)
     + SHOP_ATTRIBUTE_FEATURES
     + SHOP_VOUCHER_FEATURES
+    + SHOP_CANDIDATE_WINCON_FEATURES
 )
 SHOP_INPUT_FEATURES = SHOP_CONTEXT_FEATURES + SHOP_CANDIDATE_FEATURES
 SHOP_INPUT_FEATURES_V2 = SHOP_INPUT_FEATURES + 1
@@ -246,44 +250,84 @@ def _shop_voucher_features(features):
     return vals
 
 
-def _encode_shop_build(record):
+def _shop_build_signals(record):
+    levels = record.get("handLevels") or {}
+    jokers = record.get("jokers") or []
+    top_hand = None
+    top_level = 1
+    second_level = 1
+    for label in HAND_LABELS:
+        level = levels.get(label, 1)
+        if level > top_level:
+            second_level = top_level
+            top_level = level
+            top_hand = label
+        elif level > second_level:
+            second_level = level
+    category_counts = {c: 0 for c in JOKER_EFFECT_CATEGORIES}
+    for joker in jokers:
+        category_counts[_joker_effect_category(joker.get("effectKind", ""))] += 1
+    return {
+        "top_hand": top_hand,
+        "top_level": top_level,
+        "second_level": second_level,
+        "levels": levels,
+        "category_counts": category_counts,
+    }
+
+
+def _shop_wincon_features(advances_hands, category, sig):
+    advances = advances_hands or []
+    advances_top = 1.0 if (sig["top_hand"] is not None and sig["top_hand"] in advances) else 0.0
+    advanced_level = 0.0
+    for hand in advances:
+        advanced_level = max(advanced_level, (sig["levels"].get(hand, 1) - 1) / 20.0)
+    if category.startswith("joker-"):
+        same_cat = sig["category_counts"].get(category[len("joker-"):], 0) / 5.0
+    else:
+        same_cat = 0.0
+    return [advances_top, advanced_level, same_cat]
+
+
+def _encode_shop_build(record, sig):
     levels = record.get("handLevels") or {}
     jokers = record.get("jokers") or []
     rarity_counts = {r: 0 for r in JOKER_RARITIES}
-    category_counts = {c: 0 for c in JOKER_EFFECT_CATEGORIES}
     for joker in jokers:
         rarity = joker.get("rarity")
         if rarity in rarity_counts:
             rarity_counts[rarity] += 1
-        category_counts[_joker_effect_category(joker.get("effectKind", ""))] += 1
     enhancements = record.get("deckEnhancements") or {}
     return (
         [levels.get(label, 1) / 20.0 for label in HAND_LABELS]
         + [len(jokers) / 5.0]
         + [rarity_counts[r] / 5.0 for r in JOKER_RARITIES]
-        + [category_counts[c] / 5.0 for c in JOKER_EFFECT_CATEGORIES]
+        + [sig["category_counts"][c] / 5.0 for c in JOKER_EFFECT_CATEGORIES]
         + [record.get("consumablesHeld", 0) / 2.0]
         + [enhancements.get(e, 0) / 52.0 for e in ENHANCEMENTS]
+        + [(sig["top_level"] - 1) / 20.0, (sig["top_level"] - sig["second_level"]) / 20.0]
     )
 
 
-def _encode_shop_context(record):
+def _encode_shop_context(record, sig):
     return [
         record["money"] / 20.0,
         record["ante"] / 8.0,
         record["round"] / 24.0,
         record.get("picksRemaining", 0) / 5.0,
-    ] + _encode_shop_build(record)
+    ] + _encode_shop_build(record, sig)
 
 
 def _encode_shop_candidate(
     item_type,
     cost,
     money,
+    sig,
     *,
     category="other",
     attributes=None,
     voucher_features=None,
+    advances_hands=None,
     is_reroll=False,
     is_leave=False,
     is_skip=False,
@@ -295,6 +339,7 @@ def _encode_shop_candidate(
         + _one_hot(category, SHOP_CANDIDATE_CATEGORIES)
         + _shop_attributes(attributes)
         + _shop_voucher_features(voucher_features)
+        + _shop_wincon_features(advances_hands, category, sig)
     )
 
 
@@ -305,17 +350,18 @@ def encode_shop_decision(record):
     reroll    → buy-candidates for each rejected offer + reroll + leave; chosen = reroll index
     pack-pick → pick-candidates for each option + skip; chosen = pickedIndex or skip
     """
-    ctx = _encode_shop_context(record)
+    sig = _shop_build_signals(record)
+    ctx = _encode_shop_context(record, sig)
     kind = record["kind"]
     money = record["money"]
 
     if kind == "purchase":
         offers = record["offers"]
         candidates = [
-            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"))
+            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"), advances_hands=o.get("advancesHands"))
             for o in offers
         ]
-        candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
+        candidates.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True))
         item = record.get("item")
         if item is None:
             chosen = len(offers)
@@ -326,20 +372,20 @@ def encode_shop_decision(record):
     if kind == "reroll":
         offers = record["offers"]
         candidates = [
-            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"))
+            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"), advances_hands=o.get("advancesHands"))
             for o in offers
         ]
-        candidates.append(ctx + _encode_shop_candidate(None, record["cost"], money, is_reroll=True))
-        candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
+        candidates.append(ctx + _encode_shop_candidate(None, record["cost"], money, sig, is_reroll=True))
+        candidates.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True))
         return candidates, len(offers)
 
     if kind == "pack-pick":
         options = record["options"]
         candidates = [
-            ctx + _encode_shop_candidate(o["optionType"], 0, money, category=o.get("category", "other"), attributes=o.get("attributes"))
+            ctx + _encode_shop_candidate(o["optionType"], 0, money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), advances_hands=o.get("advancesHands"))
             for o in options
         ]
-        candidates.append(ctx + _encode_shop_candidate(None, 0, money, is_skip=True))
+        candidates.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_skip=True))
         picked = record["pickedIndex"]
         chosen = picked if picked is not None else len(options)
         return candidates, chosen
@@ -358,7 +404,8 @@ def encode_shop_decision_v2(record):
     """
     explicit = record.get("candidates")
     if explicit is not None:
-        ctx = _encode_shop_context(record)
+        sig = _shop_build_signals(record)
+        ctx = _encode_shop_context(record, sig)
         money = record["money"]
         rows = [
             ctx
@@ -366,9 +413,11 @@ def encode_shop_decision_v2(record):
                 c.get("itemType") or None,
                 c.get("cost", 0),
                 money,
+                sig,
                 category=c.get("category", "other"),
                 attributes=c.get("attributes"),
                 voucher_features=c.get("voucherFeatures"),
+                advances_hands=c.get("advancesHands"),
                 is_reroll=bool(c.get("isReroll")),
                 is_leave=bool(c.get("isLeave")),
             )

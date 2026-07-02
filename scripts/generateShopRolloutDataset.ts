@@ -53,22 +53,22 @@ function stringFlag(name: string, fallback: string): string {
   return process.argv[index + 1];
 }
 
-function shopItemSnapshot(item: ShopItem): { itemType: string; category: string; attributes: number[]; id: string; name: string; cost: number } {
+function shopItemSnapshot(item: ShopItem): { itemType: string; category: string; attributes: number[]; advancesHands?: ReadonlyArray<string>; id: string; name: string; cost: number } {
   const category = categorizeShopItem(item);
   const attributes = shopItemAttributes(item);
   if (item.kind === "joker") return { itemType: "joker", category, attributes, id: item.joker.id, name: item.joker.name, cost: item.price };
-  if (item.kind === "planet") return { itemType: "planet", category, attributes, id: item.planet.id, name: item.planet.name, cost: item.price };
+  if (item.kind === "planet") return { itemType: "planet", category, attributes, advancesHands: item.planet.hands, id: item.planet.id, name: item.planet.name, cost: item.price };
   if (item.kind === "tarot") return { itemType: "tarot", category, attributes, id: item.tarot.id, name: item.tarot.name, cost: item.price };
   if (item.kind === "spectral") return { itemType: "spectral", category, attributes, id: item.spectral.id, name: item.spectral.name, cost: item.price };
   if (item.kind === "pack") return { itemType: "pack", category, attributes, id: item.pack.pool, name: item.pack.pool, cost: item.price };
   return { itemType: "playing-card", category, attributes, id: "card", name: "Card", cost: item.price };
 }
 
-function packOptionSnapshot(opt: PackOption): { optionType: string; category: string; attributes: number[]; id: string; name: string } {
+function packOptionSnapshot(opt: PackOption): { optionType: string; category: string; attributes: number[]; advancesHands?: ReadonlyArray<string>; id: string; name: string } {
   const category = categorizePackOption(opt);
   const attributes = packOptionAttributes(opt);
   if (opt.kind === "joker") return { optionType: "joker", category, attributes, id: opt.joker.id, name: opt.joker.name };
-  if (opt.kind === "planet") return { optionType: "planet", category, attributes, id: opt.planet.id, name: opt.planet.name };
+  if (opt.kind === "planet") return { optionType: "planet", category, attributes, advancesHands: opt.planet.hands, id: opt.planet.id, name: opt.planet.name };
   if (opt.kind === "tarot") return { optionType: "tarot", category, attributes, id: opt.tarot.id, name: opt.tarot.name };
   if (opt.kind === "spectral") return { optionType: "spectral", category, attributes, id: opt.spectral.id, name: opt.spectral.name };
   return { optionType: "playing-card", category, attributes, id: `${opt.card.rank}${opt.card.suit}`, name: `${opt.card.rank} of ${opt.card.suit}` };

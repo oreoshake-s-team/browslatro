@@ -35,6 +35,7 @@ export interface ShopAdviceItem {
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
   readonly voucherFeatures?: ReadonlyArray<number>;
+  readonly advancesHands?: ReadonlyArray<string>;
   readonly id: string;
   readonly name: string;
   readonly description: string;
@@ -68,6 +69,7 @@ export interface PackAdviceOption {
   readonly optionType: string;
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
+  readonly advancesHands?: ReadonlyArray<string>;
   readonly id: string;
   readonly name: string;
   readonly description: string;

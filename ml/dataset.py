@@ -7,6 +7,7 @@ from encoding import (
     HAND_SLOTS,
     _encode_shop_candidate,
     _encode_shop_context,
+    _shop_build_signals,
     encode_decision,
     encode_shop_decision,
 )
@@ -167,7 +168,8 @@ def _encode_hand_label(record, index):
 
 
 def _encode_shop_label(record, index):
-    ctx = _encode_shop_context(record)
+    sig = _shop_build_signals(record)
+    ctx = _encode_shop_context(record, sig)
     money = record["money"]
     inputs = []
     for candidate in record["decision"]["candidates"]:
@@ -180,16 +182,19 @@ def _encode_shop_label(record, index):
                     item["itemType"],
                     item["cost"],
                     money,
+                    sig,
                     category=item.get("category", "other"),
                     attributes=item.get("attributes"),
+                    voucher_features=item.get("voucherFeatures"),
+                    advances_hands=item.get("advancesHands"),
                 )
             )
         elif action == "reroll":
             inputs.append(
-                ctx + _encode_shop_candidate(None, candidate["cost"], money, is_reroll=True)
+                ctx + _encode_shop_candidate(None, candidate["cost"], money, sig, is_reroll=True)
             )
         else:
-            inputs.append(ctx + _encode_shop_candidate(None, 0, money, is_leave=True))
+            inputs.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True))
     return inputs, index
 
 

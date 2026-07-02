@@ -23,6 +23,7 @@ LR="${LR:-1e-3}"
 PPO_CLIP="${PPO_CLIP:-0.2}"
 OUTDIR="${OUTDIR:-ml/outcome/onpolicy}"
 HOLD="${HOLD:-0}"
+PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 TSX_RUN="${TSX_RUN:-node .yarn/releases/yarn-4.15.0.cjs dlx tsx}"
 PYTHON="${PYTHON:-python3}"
 
@@ -42,13 +43,14 @@ for k in $(seq 1 "$ITERS"); do
   next="$OUTDIR/iter-$k.onnx"
   echo "=== iteration $k: sampling $GAMES games from $(basename "$current") ==="
   $TSX_RUN scripts/collectSelfPlayShop.ts "$data" \
-    --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE" "${hold_flag[@]}"
+    --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE" \
+    --parallel-jobs "$PARALLEL_JOBS" "${hold_flag[@]}"
   $PYTHON ml/train_rl.py "$data" --device "$DEVICE" --init "$current" \
     --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next" "${v2_flag[@]}"
   echo "--- benchmark iter $k ($BENCH_GAMES games, seed $BENCH_SEED) ---"
   $TSX_RUN scripts/benchmarkPolicy.ts "$HAND" \
     --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" "${hold_flag[@]}" \
-    | grep -E "advisor-policy|shop "
+    | grep -E "advisor-policy|wins |ante |blinds |shop "
   current="$next"
 done
 echo "done; final model: $current"

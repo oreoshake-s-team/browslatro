@@ -139,4 +139,4 @@ The [ONNX policy models](./ml-pipeline.md#onnx-export) are static assets in [`pu
   { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" } ] }
 ```
 
-Model files are content-versioned in their names (`advisor-policy-v{N}.onnx`), so `immutable` caching is safe — a new model is a new URL. `index.html` and `sw.js` are served `max-age=0, must-revalidate` so app updates land immediately. There is no special build step copying the models; they're committed under `public/` and served as-is. The current production files are `advisor-policy-v9.onnx` (hand, ~400 KB) and `advisor-shop-policy-v13.onnx` (shop, ~84 KB).
+Model files are content-versioned in their names (`advisor-policy-v{N}.onnx`), so `immutable` caching is safe — a new model is a new URL. `index.html` and `sw.js` are served `max-age=0, must-revalidate` so app updates land immediately. There is no special build step copying the models; they're committed under `public/` and served as-is. The current production files are `advisor-policy-v9.onnx` (hand, ~400 KB) and `advisor-shop-policy-v14.onnx` (shop, ~85 KB).

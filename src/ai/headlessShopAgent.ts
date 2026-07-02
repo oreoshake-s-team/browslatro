@@ -51,6 +51,7 @@ export interface ShopCandidateSnapshot {
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
   readonly voucherFeatures?: ReadonlyArray<number>;
+  readonly advancesHands?: ReadonlyArray<string>;
   readonly cost: number;
   readonly isReroll: boolean;
   readonly isLeave: boolean;
@@ -89,7 +90,7 @@ function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
   const category = categorizePackOption(opt);
   const attributes = packOptionAttributes(opt);
   if (opt.kind === "joker") return { action: "pick", option: { optionType: "joker", category, attributes, id: opt.joker.id, name: opt.joker.name, description: "" } };
-  if (opt.kind === "planet") return { action: "pick", option: { optionType: "planet", category, attributes, id: opt.planet.id, name: opt.planet.name, description: "" } };
+  if (opt.kind === "planet") return { action: "pick", option: { optionType: "planet", category, attributes, advancesHands: opt.planet.hands, id: opt.planet.id, name: opt.planet.name, description: "" } };
   if (opt.kind === "tarot") return { action: "pick", option: { optionType: "tarot", category, attributes, id: opt.tarot.id, name: opt.tarot.name, description: "" } };
   if (opt.kind === "spectral") return { action: "pick", option: { optionType: "spectral", category, attributes, id: opt.spectral.id, name: opt.spectral.name, description: "" } };
   return { action: "pick", option: { optionType: "playing-card", category, attributes, id: "card", name: "Card", description: "" } };
@@ -99,7 +100,7 @@ function shopItemCandidate(item: ShopItem): Extract<ShopAdviceCandidate, { actio
   const category = categorizeShopItem(item);
   const attributes = shopItemAttributes(item);
   if (item.kind === "joker") return { action: "buy", item: { itemType: "joker", category, attributes, id: item.joker.id, name: item.joker.name, description: "", cost: item.price } };
-  if (item.kind === "planet") return { action: "buy", item: { itemType: "planet", category, attributes, id: item.planet.id, name: item.planet.name, description: "", cost: item.price } };
+  if (item.kind === "planet") return { action: "buy", item: { itemType: "planet", category, attributes, advancesHands: item.planet.hands, id: item.planet.id, name: item.planet.name, description: "", cost: item.price } };
   if (item.kind === "tarot") return { action: "buy", item: { itemType: "tarot", category, attributes, id: item.tarot.id, name: item.tarot.name, description: "", cost: item.price } };
   if (item.kind === "spectral") return { action: "buy", item: { itemType: "spectral", category, attributes, id: item.spectral.id, name: item.spectral.name, description: "", cost: item.price } };
   if (item.kind === "pack") return { action: "buy", item: { itemType: "pack", category, attributes, id: item.pack.pool, name: item.pack.pool, description: "", cost: item.price } };
@@ -135,6 +136,7 @@ export function consumableUseCandidate(consumable: Consumable, index: number): S
       itemType: consumable.kind,
       category: categorizePackOption(option),
       attributes: packOptionAttributes(option),
+      ...(consumable.kind === "planet" ? { advancesHands: consumable.card.hands } : {}),
       id: `use:${consumable.card.id}:${index}`,
       name: consumable.card.name,
       description: "",
@@ -158,6 +160,7 @@ function candidateSnapshot(candidate: ShopAdviceCandidate): ShopCandidateSnapsho
       category: candidate.item.category,
       attributes: candidate.item.attributes,
       voucherFeatures: candidate.item.voucherFeatures,
+      advancesHands: candidate.item.advancesHands,
       cost: candidate.item.cost,
       isReroll: false,
       isLeave: false,
