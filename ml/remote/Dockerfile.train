@@ -12,7 +12,8 @@ WORKDIR /app
 RUN corepack enable
 
 COPY ml/requirements.txt ml/requirements.txt
-RUN pip install --no-cache-dir -r ml/requirements.txt
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
+  && pip install --no-cache-dir -r ml/requirements.txt
 
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn
