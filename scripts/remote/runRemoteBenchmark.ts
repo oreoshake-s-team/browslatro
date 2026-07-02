@@ -23,6 +23,10 @@ export interface BenchmarkArgs {
   readonly stake: string;
   readonly shop: boolean;
   readonly baseline?: string;
+  readonly shopCandidate?: boolean;
+  readonly handModel?: string;
+  readonly hold?: boolean;
+  readonly parallelJobs?: number;
 }
 
 export interface RemoteBenchmarkOptions {
@@ -76,6 +80,18 @@ export function benchmarkEnv(
   };
   if (benchmark.baseline !== undefined && benchmark.baseline !== "") {
     env.BASELINE = benchmark.baseline;
+  }
+  if (benchmark.shopCandidate === true) {
+    env.SHOP_CANDIDATE = "1";
+  }
+  if (benchmark.handModel !== undefined && benchmark.handModel !== "") {
+    env.HAND_MODEL = benchmark.handModel;
+  }
+  if (benchmark.hold === true) {
+    env.HOLD = "1";
+  }
+  if (benchmark.parallelJobs !== undefined) {
+    env.PARALLEL_JOBS = String(benchmark.parallelJobs);
   }
   return env;
 }
@@ -165,7 +181,7 @@ if (isMain) {
   const modelPath = stringFlag("--model", "");
   if (modelPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--image IMG] [--out summary.json]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--shop-candidate [--hand-model REPO_PATH] [--hold-consumables]] [--parallel-jobs N] [--image IMG] [--out summary.json]",
     );
     process.exit(1);
   }
@@ -207,6 +223,10 @@ if (isMain) {
       stake: stringFlag("--stake", DEFAULT_STAKE),
       shop: !process.argv.includes("--no-shop"),
       baseline: stringFlag("--baseline", ""),
+      shopCandidate: process.argv.includes("--shop-candidate"),
+      handModel: stringFlag("--hand-model", ""),
+      hold: process.argv.includes("--hold-consumables"),
+      parallelJobs: intFlag("--parallel-jobs", 4),
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,

@@ -86,6 +86,22 @@ describe("selfPlayShardEnv", () => {
     );
     expect(env).toMatchObject({ HOLD: "1", PARALLEL_JOBS: "4" });
   });
+
+  test("omits SHOP_MODEL_KEY when no S3 shop model is supplied", () => {
+    const env = selfPlayShardEnv(
+      { index: 0, games: 1, seedOffset: 0, outputKey: "selfplay/run1/shard-0.jsonl" },
+      SELF_PLAY,
+    );
+    expect(env.SHOP_MODEL_KEY).toBeUndefined();
+  });
+
+  test("passes SHOP_MODEL_KEY through so workers download the policy from S3", () => {
+    const env = selfPlayShardEnv(
+      { index: 0, games: 1, seedOffset: 0, outputKey: "selfplay/run1/shard-0.jsonl" },
+      { ...SELF_PLAY, shopModelKey: "onpolicy/run1/iter-0.onnx" },
+    );
+    expect(env.SHOP_MODEL_KEY).toBe("onpolicy/run1/iter-0.onnx");
+  });
 });
 
 describe("runRemoteSelfPlay", () => {

@@ -11,6 +11,7 @@ set -euo pipefail
 EPOCHS="${EPOCHS:-30}"
 DEVICE="${DEVICE:-cpu}"
 SHOP="${SHOP:-0}"
+RL="${RL:-0}"
 HUMAN="${HUMAN:-0}"
 HUMAN_WEIGHT="${HUMAN_WEIGHT:-5}"
 HUMAN_KEY="${HUMAN_KEY:-}"
@@ -25,6 +26,43 @@ MODEL="$(mktemp /tmp/model-XXXXXX.onnx)"
 
 echo "downloading dataset: $DATASET_KEY"
 yarn dlx tsx scripts/remote/getObjectCli.ts "$DATASET_KEY" "$DATASET"
+
+if [[ "$RL" == "1" ]]; then
+  : "${INIT_KEY:?INIT_KEY is required when RL=1}"
+  LR="${LR:-1e-3}"
+  PPO_CLIP="${PPO_CLIP:-0.2}"
+  V2="${V2:-0}"
+  VALUE_BASELINE="${VALUE_BASELINE:-0}"
+  VALUE_COEF="${VALUE_COEF:-0.5}"
+  REWARD_TO_GO="${REWARD_TO_GO:-0}"
+
+  INIT="$(mktemp /tmp/init-XXXXXX.onnx)"
+  echo "downloading init policy: $INIT_KEY"
+  yarn dlx tsx scripts/remote/getObjectCli.ts "$INIT_KEY" "$INIT"
+  if [[ ! -s "$INIT" ]]; then
+    echo "init policy object $INIT_KEY is empty" >&2
+    exit 1
+  fi
+
+  rl_args=("$DATASET" --device "$DEVICE" --init "$INIT" --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$MODEL")
+  if [[ "$V2" == "1" ]]; then
+    rl_args+=(--v2)
+  fi
+  if [[ "$VALUE_BASELINE" == "1" ]]; then
+    rl_args+=(--value-baseline --value-coef "$VALUE_COEF")
+  fi
+  if [[ "$REWARD_TO_GO" == "1" ]]; then
+    rl_args+=(--reward-to-go)
+  fi
+
+  echo "RL training: epochs=$EPOCHS lr=$LR ppo-clip=$PPO_CLIP v2=$V2 value-baseline=$VALUE_BASELINE reward-to-go=$REWARD_TO_GO init=$INIT_KEY"
+  python3 ml/train_rl.py "${rl_args[@]}"
+
+  echo "uploading model -> $OUTPUT_KEY"
+  yarn dlx tsx scripts/remote/putShard.ts "$MODEL" "$OUTPUT_KEY"
+  echo "RL training complete: $OUTPUT_KEY"
+  exit 0
+fi
 
 train_args=("$DATASET" --epochs "$EPOCHS" --device "$DEVICE" --out "$MODEL")
 if [[ "$SHOP" == "1" ]]; then

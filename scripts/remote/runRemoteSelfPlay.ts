@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
@@ -17,6 +17,7 @@ const SELFPLAY_EXEC = ["bash", "ml/remote/selfplay-entrypoint.sh"] as const;
 
 export interface SelfPlayArgs {
   readonly shopModel: string;
+  readonly shopModelKey?: string;
   readonly handModel: string;
   readonly temperature: number;
   readonly hold: boolean;
@@ -51,7 +52,7 @@ export interface RemoteSelfPlayResult {
 }
 
 export function selfPlayShardEnv(shard: RemoteShard, selfPlay: SelfPlayArgs): Record<string, string> {
-  return {
+  const env: Record<string, string> = {
     OUTPUT_KEY: shard.outputKey,
     GAMES: String(shard.games),
     SEED_OFFSET: String(shard.seedOffset),
@@ -61,6 +62,10 @@ export function selfPlayShardEnv(shard: RemoteShard, selfPlay: SelfPlayArgs): Re
     HOLD: selfPlay.hold ? "1" : "0",
     PARALLEL_JOBS: String(selfPlay.parallelJobs),
   };
+  if (selfPlay.shopModelKey !== undefined && selfPlay.shopModelKey !== "") {
+    env.SHOP_MODEL_KEY = selfPlay.shopModelKey;
+  }
+  return env;
 }
 
 async function runShard(
@@ -146,7 +151,7 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--hand-model PATH] [--temperature T] [--hold-consumables] [--parallel-jobs N] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--shop-model-file LOCAL.onnx] [--hand-model PATH] [--temperature T] [--hold-consumables] [--parallel-jobs N] [--image IMG] [--cpus N] [--memory-mb N]",
     );
     process.exit(1);
   }
@@ -160,6 +165,9 @@ if (isMain) {
   });
 
   const cpus = intFlag("--cpus", 2);
+  const shopModelFile = stringFlag("--shop-model-file", "");
+  const shopModelKey =
+    shopModelFile !== "" ? `selfplay/${runId}/shop-model.onnx` : undefined;
   const options: RemoteSelfPlayOptions = {
     runId,
     totalGames: intFlag("--games", 1000),
@@ -173,6 +181,7 @@ if (isMain) {
     },
     selfPlay: {
       shopModel: stringFlag("--shop-model", "public/models/advisor-shop-policy-v13.onnx"),
+      shopModelKey,
       handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
       temperature: Number(stringFlag("--temperature", "1.0")),
       hold: process.argv.includes("--hold-consumables"),
@@ -192,6 +201,11 @@ if (isMain) {
     checkFly: () => launcher.assertReachable(),
     log: (message) => console.log(message),
   });
+
+  if (shopModelFile !== "" && shopModelKey !== undefined) {
+    console.log(`uploading shop model -> ${shopModelKey}`);
+    await putObject(s3Config, shopModelKey, readFileSync(shopModelFile));
+  }
 
   const started = Date.now();
   const result = await runRemoteSelfPlay(options, {

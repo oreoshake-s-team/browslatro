@@ -107,6 +107,35 @@ describe("trainingEnv", () => {
     expect(trainingEnv("d", "m", TRAIN).HUMAN_KEY).toBeUndefined();
   });
 
+  test("omits the RL block for supervised training", () => {
+    expect(trainingEnv("d", "m", TRAIN).RL).toBeUndefined();
+  });
+
+  test("maps a warm-start RL block to entrypoint env vars", () => {
+    const env = trainingEnv("d", "m", {
+      ...TRAIN,
+      rl: {
+        initKey: "onpolicy/run1/iter-0.onnx",
+        lr: 0.0013,
+        ppoClip: 0.3,
+        v2: true,
+        valueBaseline: true,
+        valueCoef: 0.5,
+        rewardToGo: false,
+      },
+    });
+    expect(env).toMatchObject({
+      RL: "1",
+      INIT_KEY: "onpolicy/run1/iter-0.onnx",
+      LR: "0.0013",
+      PPO_CLIP: "0.3",
+      V2: "1",
+      VALUE_BASELINE: "1",
+      VALUE_COEF: "0.5",
+      REWARD_TO_GO: "0",
+    });
+  });
+
   test("flags baked agreements merging", () => {
     expect(trainingEnv("d", "m", { ...TRAIN, agreements: true }).AGREEMENTS).toBe("1");
   });

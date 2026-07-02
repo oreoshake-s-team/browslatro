@@ -12,6 +12,16 @@ import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
+export interface RlArgs {
+  readonly initKey: string;
+  readonly lr: number;
+  readonly ppoClip: number;
+  readonly v2: boolean;
+  readonly valueBaseline: boolean;
+  readonly valueCoef: number;
+  readonly rewardToGo: boolean;
+}
+
 export interface TrainArgs {
   readonly epochs: number;
   readonly shop: boolean;
@@ -24,6 +34,7 @@ export interface TrainArgs {
   readonly agreementsKey?: string;
   readonly correctionsWeight: number;
   readonly correctionsKey?: string;
+  readonly rl?: RlArgs;
 }
 
 export interface RemoteTrainingOptions {
@@ -75,6 +86,16 @@ export function trainingEnv(
   }
   if (train.correctionsKey !== undefined && train.correctionsKey !== "") {
     env.CORRECTIONS_KEY = train.correctionsKey;
+  }
+  if (train.rl !== undefined) {
+    env.RL = "1";
+    env.INIT_KEY = train.rl.initKey;
+    env.LR = String(train.rl.lr);
+    env.PPO_CLIP = String(train.rl.ppoClip);
+    env.V2 = train.rl.v2 ? "1" : "0";
+    env.VALUE_BASELINE = train.rl.valueBaseline ? "1" : "0";
+    env.VALUE_COEF = String(train.rl.valueCoef);
+    env.REWARD_TO_GO = train.rl.rewardToGo ? "1" : "0";
   }
   return env;
 }
@@ -144,7 +165,7 @@ if (isMain) {
   const datasetPath = stringFlag("--dataset", "");
   if (outPath === undefined || outPath.startsWith("--") || datasetPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements] [--agreements-file PATH] [--agreements-weight N] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteTraining.ts <out.onnx> --dataset <local.jsonl> [--run-id ID] [--epochs N] [--shop] [--human] [--human-file PATH] [--human-weight N] [--corrections-file PATH] [--corrections-weight N] [--agreements] [--agreements-file PATH] [--agreements-weight N] [--rl --init-file PATH [--lr F] [--ppo-clip F] [--v2] [--value-baseline] [--value-coef F] [--reward-to-go]] [--image IMG] [--cpus N] [--memory-mb N] [--cpu-kind shared|performance]",
     );
     process.exit(1);
   }
@@ -193,6 +214,26 @@ if (isMain) {
     await putObject(s3Config, agreementsKey, readFileSync(agreementsFilePath));
   }
 
+  let rl: RlArgs | undefined;
+  if (hasFlag("--rl")) {
+    const initFilePath = stringFlag("--init-file", "");
+    if (initFilePath === "") {
+      throw new Error("--rl requires --init-file <policy.onnx> to warm-start from");
+    }
+    const initKey = `training/${runId}/init.onnx`;
+    console.log(`uploading init policy -> ${initKey}`);
+    await putObject(s3Config, initKey, readFileSync(initFilePath));
+    rl = {
+      initKey,
+      lr: Number(stringFlag("--lr", "1e-3")),
+      ppoClip: Number(stringFlag("--ppo-clip", "0.2")),
+      v2: hasFlag("--v2"),
+      valueBaseline: hasFlag("--value-baseline"),
+      valueCoef: Number(stringFlag("--value-coef", "0.5")),
+      rewardToGo: hasFlag("--reward-to-go"),
+    };
+  }
+
   const options: RemoteTrainingOptions = {
     runId,
     datasetKey,
@@ -215,6 +256,7 @@ if (isMain) {
       agreementsKey,
       correctionsWeight: intFlag("--corrections-weight", 5),
       correctionsKey,
+      rl,
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,

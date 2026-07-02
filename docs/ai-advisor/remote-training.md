@@ -356,9 +356,9 @@ encoded). Omit it for the legacy v1 (78-feature) policies. Inside each machine t
 is itself sharded across the machine's vCPUs (`PARALLEL_JOBS`, defaults to `--cpus`); the same
 `--parallel-jobs N` flag shards a **local** `collectSelfPlayShop.ts` run across cores.
 
-Train the result with the REINFORCE/PPO trainer (locally — there is no remote `train_rl`
-runner yet). **Pass `--v2` when the self-play was collected with `--hold-consumables`** so the
-trainer decodes the 79-feature rows:
+Train the result with the REINFORCE/PPO trainer — locally, or remotely via
+`runRemoteTraining.ts --rl` (below). **Pass `--v2` when the self-play was collected with
+`--hold-consumables`** so the trainer decodes the 79-feature rows:
 
 ```bash
 python ml/train_rl.py selfplay.jsonl --v2 \
@@ -366,8 +366,48 @@ python ml/train_rl.py selfplay.jsonl --v2 \
 ```
 
 For an on-policy iteration, re-collect from the *new* policy each round (warm-started from it)
-— `ml/on_policy_track_b.sh` does this; set `HOLD=1` to wire `--hold-consumables` (self-play +
-benchmark) and `--v2` (trainer) together. Benchmark before shipping as usual.
+— `ml/on_policy_track_b.sh` does this locally; set `HOLD=1` to wire `--hold-consumables`
+(self-play + benchmark) and `--v2` (trainer) together. `runRemoteOnPolicy.ts` (below) runs the
+same loop entirely on Fly. Benchmark before shipping as usual.
+
+## Running a remote on-policy shop retrain
+
+`scripts/remote/runRemoteOnPolicy.ts` chains the whole warm-start PPO loop on Fly — per
+iteration: sharded self-play from the current policy → `train_rl.py --init` on a train
+machine → a shop-candidate benchmark — with every model, dataset, and summary keyed under
+`onpolicy/<runId>/` in S3. Nothing heavy runs locally; the orchestrator only uploads the base
+policy, threads S3 keys between machines, and downloads each iteration's model.
+
+Three pieces make it possible:
+
+- **S3 model transport.** Self-play workers accept a `SHOP_MODEL_KEY` (downloaded at boot),
+  so the sampling policy no longer has to be baked into the image; `runRemoteSelfPlay.ts
+  --shop-model-file` uploads any local `.onnx` the same way for one-off collections.
+- **An RL mode on the train image.** `RL=1` makes `train-entrypoint.sh` run `train_rl.py`
+  with an `INIT_KEY` warm-start (plus `LR` / `PPO_CLIP` / `V2` / `VALUE_BASELINE` /
+  `VALUE_COEF` / `REWARD_TO_GO`); `runRemoteTraining.ts --rl --init-file <policy.onnx>`
+  drives it standalone.
+- **A shop-candidate benchmark mode.** `SHOP_CANDIDATE=1` benchmarks the downloaded model as
+  `benchmarkPolicy <hand> --shop-policy <candidate>` (with `HOLD` for the v2 encoding)
+  instead of treating it as a hand policy.
+
+```bash
+yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts ml/outcome/remote-onpolicy \
+  --base public/models/advisor-shop-policy-v15.onnx \
+  --iterations 8 --games 3000 --machines 8 --selfplay-cpus 4 \
+  --hold-consumables --value-baseline \
+  --epochs 20 --lr 1.3e-3 --ppo-clip 0.3 \
+  --bench-games 500 --bench-seed 5000
+```
+
+Each iteration's model lands in `<out-dir>/iter-N.onnx` and a per-iteration
+`avgBlinds`/`win%` table (plus `summary.json`) is printed at the end. `--hold-consumables`
+selects the v2 encoding end-to-end (self-play `HOLD`, trainer `--v2`, benchmark
+`--hold-consumables`) — the same coupling as `HOLD=1` in the local loop. Seed offsets advance
+by `--games` each iteration so no round resamples the previous round's seeds. The usual image
+caveat applies doubly here: rebuild + push **both** images after changing the encoder,
+`collectSelfPlayShop.ts`, or `train_rl.py`, since self-play, training, and benchmarking all
+run from them.
 
 ### Wall-clock
 
@@ -391,8 +431,6 @@ local cores.
 
 ## Deferred / follow-up work
 
-- A remote **`train_rl.py`** runner (PPO shop training on a machine), and chaining the full
-  **on-policy loop** (collect → warm-start-train → repeat) on Fly.
 - Triggering the pipeline as an **API/GitHub Routine** (drop-and-go without an interactive session).
 - **Spot/ephemeral retries** and per-shard re-launch on failure.
 - **Autoscaling** the machine count to a games-per-minute target.
