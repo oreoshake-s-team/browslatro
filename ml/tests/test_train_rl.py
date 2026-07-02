@@ -10,6 +10,7 @@ from train_rl import (
     masked_entropy,
     masked_log_probs,
     normalized_advantages,
+    value_baseline_advantages,
     warm_start,
 )
 
@@ -40,6 +41,28 @@ class NormalizedAdvantagesTest(unittest.TestCase):
     def test_constant_returns_yield_zero_advantage_without_dividing_by_zero(self):
         advantages = normalized_advantages([5.0, 5.0, 5.0], clip=3.0)
         self.assertEqual(advantages, [0.0, 0.0, 0.0])
+
+
+class ValueBaselineAdvantagesTest(unittest.TestCase):
+    def test_perfect_value_predictions_yield_zero_advantage(self):
+        advantages = value_baseline_advantages([3.0, 7.0, 5.0], [3.0, 7.0, 5.0], clip=3.0)
+        self.assertEqual(advantages, [0.0, 0.0, 0.0])
+
+    def test_same_return_different_state_value_gives_different_credit(self):
+        advantages = value_baseline_advantages([4.0, 4.0], [1.0, 4.0], clip=1e9)
+        self.assertGreater(advantages[0], advantages[1])
+
+    def test_beating_the_state_baseline_is_positive_advantage(self):
+        advantages = value_baseline_advantages([9.0, 1.0], [5.0, 5.0], clip=1e9)
+        self.assertGreater(advantages[0], 0.0)
+
+    def test_clamps_a_large_residual_to_the_clip(self):
+        advantages = value_baseline_advantages([0.0, 0.0, 0.0, 100.0], [0.0, 0.0, 0.0, 0.0], clip=1.0)
+        self.assertEqual(max(advantages), 1.0)
+
+    def test_residuals_are_mean_centered(self):
+        advantages = value_baseline_advantages([1.0, 2.0, 3.0], [0.0, 0.0, 0.0], clip=1e9)
+        self.assertAlmostEqual(sum(advantages), 0.0, places=6)
 
 
 class ClippedSurrogateTest(unittest.TestCase):

@@ -24,6 +24,8 @@ PPO_CLIP="${PPO_CLIP:-0.2}"
 OUTDIR="${OUTDIR:-ml/outcome/onpolicy}"
 HOLD="${HOLD:-0}"
 PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
+VALUE_BASELINE="${VALUE_BASELINE:-0}"
+VALUE_COEF="${VALUE_COEF:-0.5}"
 TSX_RUN="${TSX_RUN:-node .yarn/releases/yarn-4.15.0.cjs dlx tsx}"
 PYTHON="${PYTHON:-python3}"
 
@@ -32,6 +34,11 @@ v2_flag=()
 if [ "$HOLD" = "1" ]; then
   hold_flag=(--hold-consumables)
   v2_flag=(--v2)
+fi
+
+value_flag=()
+if [ "$VALUE_BASELINE" = "1" ]; then
+  value_flag=(--value-baseline --value-coef "$VALUE_COEF")
 fi
 
 mkdir -p "$OUTDIR"
@@ -46,7 +53,7 @@ for k in $(seq 1 "$ITERS"); do
     --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE" \
     --parallel-jobs "$PARALLEL_JOBS" "${hold_flag[@]}"
   $PYTHON ml/train_rl.py "$data" --device "$DEVICE" --init "$current" \
-    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next" "${v2_flag[@]}"
+    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next" "${v2_flag[@]}" "${value_flag[@]}"
   echo "--- benchmark iter $k ($BENCH_GAMES games, seed $BENCH_SEED) ---"
   $TSX_RUN scripts/benchmarkPolicy.ts "$HAND" \
     --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" "${hold_flag[@]}" \
