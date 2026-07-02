@@ -64,6 +64,27 @@ export interface BenchmarkSummary {
   readonly agents: readonly AgentSummary[];
 }
 
+export const MEMORY_MB_PER_PARALLEL_JOB = 1024;
+export const MIN_MEMORY_MB_PER_PARALLEL_JOB = 512;
+
+export function resolveBenchmarkMemoryMb(
+  parallelJobs: number,
+  requestedMb?: number,
+): number {
+  if (requestedMb === undefined) {
+    return Math.max(2048, parallelJobs * MEMORY_MB_PER_PARALLEL_JOB);
+  }
+  const floor = parallelJobs * MIN_MEMORY_MB_PER_PARALLEL_JOB;
+  if (requestedMb < floor) {
+    throw new Error(
+      `--memory-mb ${requestedMb} is unsafe for --parallel-jobs ${parallelJobs}: ` +
+        `benchmark workers OOM the machine below ~${MIN_MEMORY_MB_PER_PARALLEL_JOB}MB per job ` +
+        `(need at least ${floor}MB, or drop --parallel-jobs)`,
+    );
+  }
+  return requestedMb;
+}
+
 export function benchmarkEnv(
   modelKey: string,
   outputKey: string,
@@ -181,7 +202,7 @@ if (isMain) {
   const modelPath = stringFlag("--model", "");
   if (modelPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--shop-candidate [--hand-model REPO_PATH] [--hold-consumables]] [--parallel-jobs N] [--image IMG] [--out summary.json]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--shop-candidate [--hand-model REPO_PATH] [--hold-consumables]] [--parallel-jobs N] [--memory-mb N] [--max-wait-minutes N] [--image IMG] [--out summary.json]",
     );
     process.exit(1);
   }
@@ -206,6 +227,10 @@ if (isMain) {
   console.log(`uploading candidate -> ${modelKey}`);
   await putObject(s3Config, modelKey, readFileSync(modelPath));
 
+  const parallelJobs = intFlag("--parallel-jobs", 4);
+  const requestedMemoryMb = process.argv.includes("--memory-mb")
+    ? intFlag("--memory-mb", 0)
+    : undefined;
   const options: RemoteBenchmarkOptions = {
     runId,
     modelKey,
@@ -213,9 +238,10 @@ if (isMain) {
     image: stringFlag("--image", requireEnv("DATASET_IMAGE")),
     guest: {
       cpus: intFlag("--cpus", 4),
-      memoryMb: intFlag("--memory-mb", 2048),
+      memoryMb: resolveBenchmarkMemoryMb(parallelJobs, requestedMemoryMb),
       cpuKind: "shared",
     },
+    maxWaitMs: intFlag("--max-wait-minutes", 60) * 60_000,
     benchmark: {
       games: intFlag("--games", 200),
       seedOffset: intFlag("--seed-offset", 5000),
@@ -226,7 +252,7 @@ if (isMain) {
       shopCandidate: process.argv.includes("--shop-candidate"),
       handModel: stringFlag("--hand-model", ""),
       hold: process.argv.includes("--hold-consumables"),
-      parallelJobs: intFlag("--parallel-jobs", 4),
+      parallelJobs,
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,

@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   benchmarkEnv,
   parseBenchmark,
+  resolveBenchmarkMemoryMb,
   runRemoteBenchmark,
   type BenchmarkArgs,
   type RemoteBenchmarkOptions,
@@ -105,6 +106,28 @@ describe("benchmarkEnv", () => {
       HOLD: "1",
       PARALLEL_JOBS: "4",
     });
+  });
+});
+
+describe("resolveBenchmarkMemoryMb", () => {
+  test("scales the default memory with parallel jobs", () => {
+    expect(resolveBenchmarkMemoryMb(8)).toBe(8192);
+  });
+
+  test("keeps a 2048 floor for small job counts", () => {
+    expect(resolveBenchmarkMemoryMb(1)).toBe(2048);
+  });
+
+  test("passes a safe explicit memory request through unchanged", () => {
+    expect(resolveBenchmarkMemoryMb(4, 4096)).toBe(4096);
+  });
+
+  test("rejects an explicit memory request the workers would OOM under", () => {
+    expect(() => resolveBenchmarkMemoryMb(8, 2048)).toThrow(/unsafe for --parallel-jobs 8/);
+  });
+
+  test("accepts an explicit request exactly at the per-job floor", () => {
+    expect(resolveBenchmarkMemoryMb(4, 2048)).toBe(2048);
   });
 });
 
