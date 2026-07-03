@@ -80,6 +80,70 @@ def load_selfplay(paths, v2=False, use_reward_to_go=False):
     return decisions
 
 
+def load_selfplay_games(paths, v2=False):
+    """Groups self-play decisions into ordered per-game sequences.
+
+    A game is a contiguous run of records sharing a ``runSeed`` (the collector
+    writes each game's decision buffer in order, and shard seed ranges are
+    disjoint). Each game is ``{"return": R, "rounds": [...], "decisions":
+    [(inputs, chosen), ...]}`` — exactly what within-run temporal credit needs.
+    """
+    encode = encode_shop_decision_v2 if v2 else encode_shop_decision
+    games = []
+    current_seed = object()
+    for path in paths:
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                record = json.loads(line)
+                if "return" not in record:
+                    continue
+                inputs, chosen = encode(record)
+                if not inputs or chosen < 0 or chosen >= len(inputs):
+                    continue
+                seed = record.get("runSeed")
+                if seed != current_seed or not games:
+                    games.append({"return": float(record["return"]), "rounds": [], "decisions": []})
+                    current_seed = seed
+                games[-1]["rounds"].append(float(record.get("round", 0)))
+                games[-1]["decisions"].append((inputs, chosen))
+    return games
+
+
+def game_rewards(rounds, total_return):
+    """Per-decision rewards from within-run blind counts.
+
+    ``rounds`` is blinds-cleared at each decision; the reward of decision t is
+    the blinds banked before the next decision (0 between decisions in the same
+    shop visit), and the last decision earns everything that followed it.
+    """
+    rewards = []
+    for t in range(len(rounds) - 1):
+        rewards.append(rounds[t + 1] - rounds[t])
+    rewards.append(max(0.0, float(total_return) - rounds[-1]))
+    return rewards
+
+
+def gae_advantages(rewards, values, lam):
+    """Generalized advantage estimation over one game (gamma = 1).
+
+    TD residuals ``d_t = r_t + V(s_{t+1}) - V(s_t)`` (terminal V = 0) are mixed
+    with decay ``lam``: A_t = d_t + lam * A_{t+1}. lam=0 is pure one-step TD
+    (each decision credited only by its own marginal state improvement); lam=1
+    telescopes back to the Monte-Carlo form (reward-to-go minus V(s_t)).
+    """
+    advantages = [0.0] * len(rewards)
+    running = 0.0
+    for t in range(len(rewards) - 1, -1, -1):
+        next_value = values[t + 1] if t + 1 < len(values) else 0.0
+        delta = rewards[t] + next_value - values[t]
+        running = delta + lam * running
+        advantages[t] = running
+    return advantages
+
+
 def warm_start(model, onnx_path, device, torch):
     """Load named initializers from an onnx shop policy into ``model``.
 
@@ -228,8 +292,19 @@ def main():
         help="credit each decision with only the blinds cleared AFTER it "
         "(return - record.round) instead of the whole game return",
     )
+    parser.add_argument(
+        "--gae",
+        type=float,
+        default=None,
+        metavar="LAMBDA",
+        help="within-run TD/GAE decision-level advantage (lambda in [0,1]; "
+        "0 = pure one-step TD, 1 = Monte-Carlo); requires --value-baseline",
+    )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
     args = parser.parse_args()
+
+    if args.gae is not None and not args.value_baseline:
+        raise SystemExit("--gae requires --value-baseline (V(s) supplies the TD residuals)")
 
     import copy
 
@@ -241,13 +316,22 @@ def main():
     torch.manual_seed(args.seed)
 
     features = SHOP_INPUT_FEATURES_V2 if args.v2 else SHOP_INPUT_FEATURES
-    decisions = load_selfplay(args.datasets, v2=args.v2, use_reward_to_go=args.reward_to_go)
-    if args.reward_to_go:
-        print("reward-to-go credit: return = blinds cleared after each decision")
-    if not decisions:
+    game_spans = []
+    if args.gae is not None:
+        games = load_selfplay_games(args.datasets, v2=args.v2)
+        samples = []
+        for game in games:
+            game_spans.append((len(samples), game["rounds"], game["return"]))
+            for (inputs, chosen), rnd in zip(game["decisions"], game["rounds"]):
+                samples.append((inputs, chosen, reward_to_go(game["return"], rnd)))
+        print(f"GAE lambda={args.gae}: within-run decision-level credit over {len(games)} games")
+    else:
+        samples = load_selfplay(args.datasets, v2=args.v2, use_reward_to_go=args.reward_to_go)
+        if args.reward_to_go:
+            print("reward-to-go credit: return = blinds cleared after each decision")
+    if not samples:
         raise SystemExit("no self-play decisions with a return field")
-    samples = decisions
-    const_adv = normalized_advantages([d[2] for d in decisions], args.adv_clip)
+    const_adv = normalized_advantages([d[2] for d in samples], args.adv_clip)
 
     device = resolve_device(args.device)
     model = CandidateScorer(features, args.hidden).to(device)
@@ -325,7 +409,26 @@ def main():
     optimizer = torch.optim.Adam(params, lr=args.lr)
     print(f"{len(samples)} self-play decisions on {device}")
 
+    def epoch_gae_advantages():
+        assert value_net is not None
+        values = [0.0] * len(samples)
+        with torch.no_grad():
+            for i in range(0, len(samples), args.batch_size):
+                batch = list(range(i, min(i + args.batch_size, len(samples))))
+                x, _, _, _ = pad_batch(batch)
+                v = value_net(x[:, 0, :SHOP_CONTEXT_FEATURES])
+                for k, j in enumerate(batch):
+                    values[j] = float(v[k])
+        raw = [0.0] * len(samples)
+        for start, rounds, total_return in game_spans:
+            rewards = game_rewards(rounds, total_return)
+            game_values = values[start : start + len(rounds)]
+            for k, adv in enumerate(gae_advantages(rewards, game_values, args.gae)):
+                raw[start + k] = adv
+        return normalized_advantages(raw, args.adv_clip)
+
     for epoch in range(args.epochs):
+        epoch_adv = epoch_gae_advantages() if args.gae is not None else None
         random.shuffle(indexed)
         total = 0.0
         total_entropy = 0.0
@@ -340,10 +443,13 @@ def main():
             value_loss = torch.zeros((), device=device)
             if value_net is not None:
                 values = value_net(x[:, 0, :SHOP_CONTEXT_FEATURES])
-                residual = ret - values.detach()
-                denom = residual.std(unbiased=False).clamp_min(1e-6)
-                adv = ((residual - residual.mean()) / denom).clamp(-args.adv_clip, args.adv_clip)
                 value_loss = torch.nn.functional.mse_loss(values, ret)
+                if epoch_adv is not None:
+                    adv = torch.tensor([epoch_adv[j] for j in batch], dtype=torch.float32, device=device)
+                else:
+                    residual = ret - values.detach()
+                    denom = residual.std(unbiased=False).clamp_min(1e-6)
+                    adv = ((residual - residual.mean()) / denom).clamp(-args.adv_clip, args.adv_clip)
             else:
                 adv = torch.tensor([const_adv[j] for j in batch], dtype=torch.float32, device=device)
             if use_ppo:

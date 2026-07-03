@@ -21,6 +21,7 @@ export interface RlArgs {
   readonly valueBaseline: boolean;
   readonly valueCoef: number;
   readonly rewardToGo: boolean;
+  readonly gae?: number;
 }
 
 export interface TrainArgs {
@@ -98,6 +99,9 @@ export function trainingEnv(
     env.VALUE_BASELINE = train.rl.valueBaseline ? "1" : "0";
     env.VALUE_COEF = String(train.rl.valueCoef);
     env.REWARD_TO_GO = train.rl.rewardToGo ? "1" : "0";
+    if (train.rl.gae !== undefined) {
+      env.GAE = String(train.rl.gae);
+    }
   }
   return env;
 }
@@ -245,6 +249,7 @@ if (isMain) {
       valueBaseline: hasFlag("--value-baseline"),
       valueCoef: Number(stringFlag("--value-coef", "0.5")),
       rewardToGo: hasFlag("--reward-to-go"),
+      gae: hasFlag("--gae") ? Number(stringFlag("--gae", "0.9")) : undefined,
     };
   }
 
