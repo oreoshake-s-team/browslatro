@@ -137,6 +137,9 @@ export const haw: LocaleMessages = {
   },
   roundEnd: {
     wonTitle: "Ua lanakila!",
+    savedTitle: "Saved by Mr. Bones!", // needs translation
+    mrBonesConsumed:
+      "Mr. Bones self-destructed to keep the run alive — no reward for this Blind.", // needs translation
     lostTitle: "Auē! Ua lilo ē, ua lilo aku nō!",
     roundScore: "Huina helu ʻai o kēia puni",
     requiredScore: "Koina helu ʻai",
@@ -412,6 +415,7 @@ export const haw: LocaleMessages = {
     faceDownJoker: "Joker huli i lalo, wahi {{position}} o {{total}}", // needs translation
     jokerDebuffed: "Hoʻonāwaliwali ʻia — ʻaʻole helu ʻia.",
     jokerDisabledByBoss: "Ua hoʻopau ʻia ʻo {{name}} i kēia lima.", // needs translation
+    savedByMrBones: "Saved by Mr. Bones — the joker self-destructed.", // needs translation
     jokerEdition: "{{name}} mana: {{description}}.",
     sellHint: "Kake-kaomi a alakō paha i ka pūʻulu e kūʻai aku no ${{value}}.",
     sellJoker: "E kūʻai aku iā {{name}} (${{value}} ka waiwai)",

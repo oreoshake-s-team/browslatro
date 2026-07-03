@@ -214,6 +214,7 @@ export function usePlayHand({
       canPreventDeath(jokers, newRoundScore, requiredScore);
     if (mrBonesSave) {
       setJokers((prev) => consumeDeathPreventer(prev));
+      announce(t("a11y.savedByMrBones"));
     }
     const roundWon = newRoundScore >= requiredScore || mrBonesSave;
     if (submittedSelection.size > 0) {
@@ -308,7 +309,7 @@ export function usePlayHand({
         setPendingWin({
           roundScore: newRoundScore,
           requiredScore,
-          baseReward: smallBlindSkipped ? 0 : blind + 2,
+          baseReward: mrBonesSave || smallBlindSkipped ? 0 : blind + 2,
           walletAtPayout: postJokerWallet,
           interestWallet: postGoldWallet,
           interest: deckSuppressesInterest(selectedDeck)
@@ -325,6 +326,7 @@ export function usePlayHand({
             : REMAINING_HAND_BONUS,
           usesHandsAndDiscardsBonus: usesGreenDeckBonus,
           endOfRoundJokerSteps: endOfRoundJokerResult.steps,
+          savedByMrBones: mrBonesSave,
         });
       };
       if (heldGoldIds.length === 0) {

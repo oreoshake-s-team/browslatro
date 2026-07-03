@@ -30,8 +30,23 @@
   color: var(--text-primary);
 }
 
+.round-won-title--saved {
+  color: var(--accent-money);
+}
+
+.round-won-saved-note {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 .round-won-stat-beat dd {
   color: var(--accent-success-mid);
+}
+
+.round-won-stat-saved dd {
+  color: var(--accent-money);
 }
 
 .round-won-payout {

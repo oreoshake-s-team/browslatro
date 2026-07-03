@@ -68,6 +68,22 @@ export const WithJokerPayouts: Story = {
   },
 };
 
+export const SavedByMrBones: Story = {
+  args: {
+    info: {
+      roundScore: 14088,
+      requiredScore: 16500,
+      baseReward: 0,
+      walletAtPayout: 18,
+      interestWallet: 15,
+      interest: 3,
+      goldHeldCount: 0,
+      remainingHandsCount: 0,
+      savedByMrBones: true,
+    },
+  },
+};
+
 export const GreenDeckHandsAndDiscards: Story = {
   args: {
     info: {

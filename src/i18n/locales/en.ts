@@ -129,6 +129,9 @@ export const en = {
   },
   roundEnd: {
     wonTitle: "Round Won!",
+    savedTitle: "Saved by Mr. Bones!",
+    mrBonesConsumed:
+      "Mr. Bones self-destructed to keep the run alive — no reward for this Blind.",
     lostTitle: "Game Over",
     roundScore: "Round score",
     requiredScore: "Required score",
@@ -415,6 +418,7 @@ export const en = {
     faceDownJoker: "Face-down joker, slot {{position}} of {{total}}",
     jokerDebuffed: "Debuffed — does not score.",
     jokerDisabledByBoss: "{{name}} is disabled this hand.",
+    savedByMrBones: "Saved by Mr. Bones — the joker self-destructed.",
     jokerEdition: "{{name}} edition: {{description}}.",
     sellHint: "Shift-click or drag to deck to sell for ${{value}}.",
     sellJoker: "Sell {{name}} (worth ${{value}})",

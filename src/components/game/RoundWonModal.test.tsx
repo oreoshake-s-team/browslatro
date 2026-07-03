@@ -384,6 +384,80 @@ describe("RoundWonModal — Green Deck payout", () => {
   });
 });
 
+describe("RoundWonModal — Saved by Mr. Bones", () => {
+  function savedInfo(overrides: Partial<RoundWonInfo> = {}): RoundWonInfo {
+    return buildInfo({
+      roundScore: 14088,
+      requiredScore: 16500,
+      baseReward: 0,
+      savedByMrBones: true,
+      ...overrides,
+    });
+  }
+
+  test("renders the saved title instead of Round Won", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    expect(screen.getByText("Saved by Mr. Bones!")).toBeInTheDocument();
+  });
+
+  test("does not render the Round Won title when saved", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    expect(screen.queryByText("Round Won!")).not.toBeInTheDocument();
+  });
+
+  test("shows how far the score fell short", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    expect(screen.getByTestId("round-won-short-by")).toHaveTextContent("2,412");
+  });
+
+  test("does not render the beat-by stat when saved", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    expect(screen.queryByTestId("round-won-beat-by")).not.toBeInTheDocument();
+  });
+
+  test("explains that Mr. Bones was consumed", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    expect(screen.getByTestId("round-won-saved-note")).toHaveTextContent(
+      "Mr. Bones self-destructed",
+    );
+  });
+
+  test("renders the zeroed base reward row", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    expect(screen.getByTestId("round-won-base-reward")).toHaveTextContent("$0");
+  });
+
+  test("still pays interest in the total when saved", () => {
+    render(
+      <RoundWonModal info={savedInfo({ interest: 3 })} onContinue={() => {}} />,
+    );
+    expect(screen.getByTestId("round-won-total")).toHaveTextContent("$3");
+  });
+
+  test("a normal win does not render the saved note (negative)", () => {
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.queryByTestId("round-won-saved-note")).not.toBeInTheDocument();
+  });
+
+  test("a normal win does not render the short-by stat (negative)", () => {
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.queryByTestId("round-won-short-by")).not.toBeInTheDocument();
+  });
+
+  test("a normal win renders a positive beat-by margin", () => {
+    render(<RoundWonModal info={buildInfo()} onContinue={() => {}} />);
+    expect(screen.getByTestId("round-won-beat-by")).toHaveTextContent("+100");
+  });
+
+  test("the skull glyph is aria-hidden so it does not split the title's accessible name", () => {
+    render(<RoundWonModal info={savedInfo()} onContinue={() => {}} />);
+    const decoration = document
+      .getElementById("round-won-title")
+      ?.querySelector("span[aria-hidden='true']");
+    expect(decoration).toHaveTextContent("💀");
+  });
+});
+
 describe("RoundWonModal focus trap", () => {
   test("traps Tab on the Continue button and restores focus to the opener on close", async () => {
     const user = userEvent.setup();
