@@ -136,6 +136,39 @@ describe("trainingEnv", () => {
     });
   });
 
+  test("omits GAE for a plain value-baseline RL round", () => {
+    const env = trainingEnv("d", "m", {
+      ...TRAIN,
+      rl: {
+        initKey: "onpolicy/run1/iter-0.onnx",
+        lr: 0.0013,
+        ppoClip: 0.3,
+        v2: true,
+        valueBaseline: true,
+        valueCoef: 0.5,
+        rewardToGo: false,
+      },
+    });
+    expect(env.GAE).toBeUndefined();
+  });
+
+  test("maps the GAE lambda through to the RL entrypoint", () => {
+    const env = trainingEnv("d", "m", {
+      ...TRAIN,
+      rl: {
+        initKey: "onpolicy/run1/iter-0.onnx",
+        lr: 0.0013,
+        ppoClip: 0.3,
+        v2: true,
+        valueBaseline: true,
+        valueCoef: 0.5,
+        rewardToGo: false,
+        gae: 0.9,
+      },
+    });
+    expect(env.GAE).toBe("0.9");
+  });
+
   test("flags baked agreements merging", () => {
     expect(trainingEnv("d", "m", { ...TRAIN, agreements: true }).AGREEMENTS).toBe("1");
   });

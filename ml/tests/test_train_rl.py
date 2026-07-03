@@ -7,7 +7,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from train_rl import (
     clipped_surrogate,
+    gae_advantages,
+    game_rewards,
     load_selfplay,
+    load_selfplay_games,
     masked_entropy,
     masked_log_probs,
     normalized_advantages,
@@ -101,6 +104,71 @@ class RewardToGoTest(unittest.TestCase):
         finally:
             os.unlink(path)
         self.assertEqual((plain[0][2], rtg[0][2]), (10.0, 4.0))
+
+
+class GameRewardsTest(unittest.TestCase):
+    def test_credits_each_decision_with_the_blinds_banked_before_the_next(self):
+        self.assertEqual(game_rewards([3.0, 4.0, 4.0], 10.0), [1.0, 0.0, 6.0])
+
+    def test_single_decision_earns_the_whole_remaining_return(self):
+        self.assertEqual(game_rewards([2.0], 7.0), [5.0])
+
+    def test_terminal_reward_never_goes_negative(self):
+        self.assertEqual(game_rewards([5.0], 3.0), [0.0])
+
+
+class GaeAdvantagesTest(unittest.TestCase):
+    def test_lambda_zero_is_pure_one_step_td(self):
+        advantages = gae_advantages([1.0, 2.0], [0.5, 1.0], lam=0.0)
+        self.assertEqual(advantages, [1.5, 1.0])
+
+    def test_lambda_one_telescopes_to_reward_to_go_minus_value(self):
+        rewards = [1.0, 0.0, 2.0]
+        values = [0.5, 1.5, 1.0]
+        advantages = gae_advantages(rewards, values, lam=1.0)
+        for t, adv in enumerate(advantages):
+            self.assertAlmostEqual(adv, sum(rewards[t:]) - values[t], places=9)
+
+    def test_perfect_values_yield_zero_advantage_at_any_lambda(self):
+        rewards = [1.0, 2.0]
+        values = [3.0, 2.0]
+        self.assertEqual(gae_advantages(rewards, values, lam=0.5), [0.0, 0.0])
+
+    def test_intermediate_lambda_decays_later_residuals(self):
+        advantages = gae_advantages([0.0, 4.0], [0.0, 0.0], lam=0.5)
+        self.assertEqual(advantages, [2.0, 4.0])
+
+
+class LoadSelfplayGamesTest(unittest.TestCase):
+    def test_groups_contiguous_records_by_run_seed_in_order(self):
+        import json
+
+        def rec(seed, rnd):
+            return {
+                "schemaVersion": 2,
+                "runSeed": seed,
+                "ante": 2,
+                "round": rnd,
+                "blind": 0,
+                "money": 8,
+                "kind": "purchase",
+                "item": {"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 5},
+                "offers": [{"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 5}],
+                "return": 9.0,
+            }
+
+        lines = [rec(1, 2), rec(1, 4), rec(2, 1)]
+        with tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False) as handle:
+            handle.write("\n".join(json.dumps(r) for r in lines) + "\n")
+            path = handle.name
+        try:
+            games = load_selfplay_games([path])
+        finally:
+            os.unlink(path)
+        self.assertEqual(
+            [(g["return"], g["rounds"], len(g["decisions"])) for g in games],
+            [(9.0, [2.0, 4.0], 2), (9.0, [1.0], 1)],
+        )
 
 
 class ClippedSurrogateTest(unittest.TestCase):

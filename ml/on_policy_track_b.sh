@@ -27,6 +27,7 @@ PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 VALUE_BASELINE="${VALUE_BASELINE:-0}"
 VALUE_COEF="${VALUE_COEF:-0.5}"
 REWARD_TO_GO="${REWARD_TO_GO:-0}"
+GAE="${GAE:-}"
 TSX_RUN="${TSX_RUN:-node .yarn/releases/yarn-4.15.0.cjs dlx tsx}"
 PYTHON="${PYTHON:-python3}"
 
@@ -43,6 +44,9 @@ if [ "$VALUE_BASELINE" = "1" ]; then
 fi
 if [ "$REWARD_TO_GO" = "1" ]; then
   value_flag+=(--reward-to-go)
+fi
+if [ -n "$GAE" ]; then
+  value_flag+=(--gae "$GAE")
 fi
 
 mkdir -p "$OUTDIR"

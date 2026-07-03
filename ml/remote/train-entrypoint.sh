@@ -35,6 +35,7 @@ if [[ "$RL" == "1" ]]; then
   VALUE_BASELINE="${VALUE_BASELINE:-0}"
   VALUE_COEF="${VALUE_COEF:-0.5}"
   REWARD_TO_GO="${REWARD_TO_GO:-0}"
+  GAE="${GAE:-}"
 
   INIT="$(mktemp /tmp/init-XXXXXX.onnx)"
   echo "downloading init policy: $INIT_KEY"
@@ -54,8 +55,11 @@ if [[ "$RL" == "1" ]]; then
   if [[ "$REWARD_TO_GO" == "1" ]]; then
     rl_args+=(--reward-to-go)
   fi
+  if [[ -n "$GAE" ]]; then
+    rl_args+=(--gae "$GAE")
+  fi
 
-  echo "RL training: epochs=$EPOCHS lr=$LR ppo-clip=$PPO_CLIP v2=$V2 value-baseline=$VALUE_BASELINE reward-to-go=$REWARD_TO_GO init=$INIT_KEY"
+  echo "RL training: epochs=$EPOCHS lr=$LR ppo-clip=$PPO_CLIP v2=$V2 value-baseline=$VALUE_BASELINE reward-to-go=$REWARD_TO_GO gae=${GAE:-off} init=$INIT_KEY"
   python3 ml/train_rl.py "${rl_args[@]}"
 
   echo "uploading model -> $OUTPUT_KEY"

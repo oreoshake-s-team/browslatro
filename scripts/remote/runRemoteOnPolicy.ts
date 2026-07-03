@@ -139,7 +139,7 @@ if (isMain) {
   const basePath = stringFlag("--base", "");
   if (outDir === undefined || outDir.startsWith("--") || basePath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--starts-file LOCAL.jsonl [--starts-fraction F]] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--selfplay-memory-mb N] [--bench-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--starts-file LOCAL.jsonl [--starts-fraction F]] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--gae LAMBDA] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--selfplay-memory-mb N] [--bench-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
     );
     process.exit(1);
   }
@@ -264,6 +264,9 @@ if (isMain) {
               valueBaseline: process.argv.includes("--value-baseline"),
               valueCoef: Number(stringFlag("--value-coef", "0.5")),
               rewardToGo: process.argv.includes("--reward-to-go"),
+              gae: process.argv.includes("--gae")
+                ? Number(stringFlag("--gae", "0.9"))
+                : undefined,
             },
           },
           workerEnv,
