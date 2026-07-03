@@ -7,10 +7,11 @@ import { FlyLogsClient } from "./flyLogs";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
-import { runRemoteSelfPlay } from "./runRemoteSelfPlay";
+import { runRemoteSelfPlay, resolveSelfPlayMemoryMb } from "./runRemoteSelfPlay";
 import { runRemoteTraining, parseCpuKind } from "./runRemoteTraining";
 import {
   runRemoteBenchmark,
+  resolveBenchmarkMemoryMb,
   type AgentSummary,
   type BenchmarkSummary,
 } from "./runRemoteBenchmark";
@@ -138,7 +139,7 @@ if (isMain) {
   const basePath = stringFlag("--base", "");
   if (outDir === undefined || outDir.startsWith("--") || basePath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--starts-file LOCAL.jsonl [--starts-fraction F]] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--starts-file LOCAL.jsonl [--starts-fraction F]] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--selfplay-memory-mb N] [--bench-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
     );
     process.exit(1);
   }
@@ -158,11 +159,20 @@ if (isMain) {
   const hold = process.argv.includes("--hold-consumables");
   const handModel = stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx");
   const machines = intFlag("--machines", 8);
+  const cpuKind = parseCpuKind(stringFlag("--cpu-kind", "shared"));
   const selfplayCpus = intFlag("--selfplay-cpus", 4);
+  const selfplayMemoryMb = resolveSelfPlayMemoryMb(
+    selfplayCpus,
+    process.argv.includes("--selfplay-memory-mb")
+      ? intFlag("--selfplay-memory-mb", 0)
+      : undefined,
+  );
+  const benchCpus = intFlag("--bench-cpus", 4);
+  const benchMemoryMb = resolveBenchmarkMemoryMb(benchCpus);
   const trainGuest: MachineGuest = {
     cpus: intFlag("--train-cpus", 4),
     memoryMb: intFlag("--train-memory-mb", 4096),
-    cpuKind: parseCpuKind(stringFlag("--cpu-kind", "shared")),
+    cpuKind,
   };
   const workerEnv = {
     AWS_ENDPOINT_URL_S3: s3Config.endpoint,
@@ -207,7 +217,7 @@ if (isMain) {
           machines,
           seedOffset,
           image: datasetImage,
-          guest: { cpus: selfplayCpus, memoryMb: 2048, cpuKind: "shared" },
+          guest: { cpus: selfplayCpus, memoryMb: selfplayMemoryMb, cpuKind },
           selfPlay: {
             shopModel: "unused-downloaded-from-s3",
             shopModelKey,
@@ -275,7 +285,7 @@ if (isMain) {
           modelKey,
           outputKey: onPolicyKeys(runId, iteration).summaryKey,
           image: datasetImage,
-          guest: { cpus: 4, memoryMb: 2048, cpuKind: "shared" },
+          guest: { cpus: benchCpus, memoryMb: benchMemoryMb, cpuKind },
           benchmark: {
             games: intFlag("--bench-games", 500),
             seedOffset: intFlag("--bench-seed", 5000),
@@ -285,7 +295,7 @@ if (isMain) {
             shopCandidate: true,
             handModel,
             hold,
-            parallelJobs: 4,
+            parallelJobs: benchCpus,
           },
           workerEnv,
         },

@@ -53,6 +53,26 @@ export interface RemoteSelfPlayResult {
   readonly records: number;
 }
 
+export const MIN_SELFPLAY_MEMORY_MB_PER_JOB = 512;
+
+export function resolveSelfPlayMemoryMb(
+  parallelJobs: number,
+  requestedMb?: number,
+): number {
+  if (requestedMb === undefined) {
+    return Math.max(2048, parallelJobs * MIN_SELFPLAY_MEMORY_MB_PER_JOB);
+  }
+  const floor = parallelJobs * MIN_SELFPLAY_MEMORY_MB_PER_JOB;
+  if (requestedMb < floor) {
+    throw new Error(
+      `--memory-mb ${requestedMb} is unsafe for ${parallelJobs} parallel self-play jobs: ` +
+        `workers OOM the machine below ~${MIN_SELFPLAY_MEMORY_MB_PER_JOB}MB per job ` +
+        `(need at least ${floor}MB, or drop the job count)`,
+    );
+  }
+  return requestedMb;
+}
+
 export function selfPlayShardEnv(shard: RemoteShard, selfPlay: SelfPlayArgs): Record<string, string> {
   const env: Record<string, string> = {
     OUTPUT_KEY: shard.outputKey,
@@ -176,6 +196,10 @@ if (isMain) {
     shopModelFile !== "" ? `selfplay/${runId}/shop-model.onnx` : undefined;
   const startsFile = stringFlag("--starts-file", "");
   const startsKey = startsFile !== "" ? `selfplay/${runId}/starts.jsonl` : undefined;
+  const parallelJobs = intFlag("--parallel-jobs", cpus);
+  const requestedMemoryMb = process.argv.includes("--memory-mb")
+    ? intFlag("--memory-mb", 0)
+    : undefined;
   const options: RemoteSelfPlayOptions = {
     runId,
     totalGames: intFlag("--games", 1000),
@@ -184,7 +208,7 @@ if (isMain) {
     image: stringFlag("--image", requireEnv("DATASET_IMAGE")),
     guest: {
       cpus: cpus,
-      memoryMb: intFlag("--memory-mb", 2048),
+      memoryMb: resolveSelfPlayMemoryMb(parallelJobs, requestedMemoryMb),
       cpuKind: "shared",
     },
     selfPlay: {
@@ -193,7 +217,7 @@ if (isMain) {
       handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
       temperature: Number(stringFlag("--temperature", "1.0")),
       hold: process.argv.includes("--hold-consumables"),
-      parallelJobs: intFlag("--parallel-jobs", cpus),
+      parallelJobs,
       startsKey,
       startsFraction: Number(stringFlag("--starts-fraction", "0.25")),
     },
