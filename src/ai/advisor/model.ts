@@ -30,7 +30,7 @@ export type AdviceModelResult =
       readonly code: AdviceModelErrorCode;
     };
 
-export const MODEL_ID = "claude-opus-4-8";
+export const MODEL_ID = "claude-fable-5";
 export const MODEL_TIMEOUT_MS = 25_000;
 export const MAX_OUTPUT_TOKENS = 16_000;
 

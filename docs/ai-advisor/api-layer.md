@@ -80,7 +80,7 @@ Credentials are read from either Upstash or [Vercel KV](https://vercel.com/docs/
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | `handler.ts` (`defaultDeps.getApiKey`) | **Server-side** Anthropic key. Never bundled client-side. | `503 not_configured` |
 | `x-advisor-key` header | `handler.ts` | Player's own [Anthropic API key](https://docs.anthropic.com/en/api/admin-api/apikeys/get-api-key) ([BYOK](https://en.wikipedia.org/wiki/Bring_your_own_device)). Bypasses both rate limits. | falls back to server key |
-| `ADVISOR_MODEL` / `ADVISOR_THINKING` / `ADVISOR_EFFORT` | `model.ts` | Model + inference overrides — see [llm-advisor.md](./llm-advisor.md#calling-claude-buildcreateparams--env-overrides). | model `claude-opus-4-8`, thinking + effort on |
+| `ADVISOR_MODEL` / `ADVISOR_THINKING` / `ADVISOR_EFFORT` | `model.ts` | Model + inference overrides — see [llm-advisor.md](./llm-advisor.md#calling-claude-buildcreateparams--env-overrides). | model `claude-fable-5`, thinking + effort on |
 | `UPSTASH_REDIS_REST_URL` / `KV_REST_API_URL` | `durableRateLimit.ts` | Durable rate-limit endpoint. | in-memory limiter |
 | `UPSTASH_REDIS_REST_TOKEN` / `KV_REST_API_TOKEN` | `durableRateLimit.ts` | Durable rate-limit auth. | in-memory limiter |
 
