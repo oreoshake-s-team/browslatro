@@ -2,7 +2,9 @@
 import { describe, expect, test } from "vitest";
 import {
   applyOfferToState,
+  bestHeldUse,
   bestShopChoice,
+  bestShopChoiceHeld,
   buyOfferToHold,
   flushHeldConsumables,
   useHeldConsumable,
@@ -219,6 +221,51 @@ describe("useHeldConsumable", () => {
 
   test("returns null for an out-of-range index (negative)", () => {
     expect(useHeldConsumable(3, baseState({ consumables: [planetConsumable()] }), CONSUMABLE_DEPS, () => 0)).toBeNull();
+  });
+});
+
+describe("bestShopChoiceHeld", () => {
+  const opts: RolloutOptions = {
+    agent: createGreedyAgent(),
+    horizonAntes: 2,
+    rollouts: 1,
+    maxAnte: 8,
+    consumableDeps: CONSUMABLE_DEPS,
+  };
+
+  test("prefers a strong joker over leaving the shop", async () => {
+    const choice = await bestShopChoiceHeld(1, [jokerOffer(powerJoker, 4)], baseState(), opts, 100);
+    expect(choice.bestOffer).toBe(0);
+  });
+
+  test("picks nothing when the only offer is unaffordable (negative)", async () => {
+    const choice = await bestShopChoiceHeld(1, [jokerOffer(powerJoker, 999)], baseState({ money: 3 }), opts, 200);
+    expect({ bestOffer: choice.bestOffer, bestUse: choice.bestUse }).toEqual({ bestOffer: -1, bestUse: -1 });
+  });
+
+  test("rejects options without consumable deps (negative)", async () => {
+    const bare: RolloutOptions = { agent: createGreedyAgent(), horizonAntes: 2, rollouts: 1, maxAnte: 8 };
+    await expect(bestShopChoiceHeld(1, [], baseState(), bare, 300)).rejects.toThrow();
+  });
+});
+
+describe("bestHeldUse", () => {
+  const opts: RolloutOptions = {
+    agent: createGreedyAgent(),
+    horizonAntes: 1,
+    rollouts: 1,
+    maxAnte: 8,
+    consumableDeps: CONSUMABLE_DEPS,
+  };
+
+  test("returns an index within the held list", async () => {
+    const holding = baseState({ consumables: [planetConsumable(), tarotConsumable("the-fool")] });
+    const index = await bestHeldUse(1, holding, opts, 400);
+    expect([0, 1]).toContain(index);
+  });
+
+  test("defaults to the first slot when nothing is held", async () => {
+    expect(await bestHeldUse(1, baseState(), opts, 500)).toBe(0);
   });
 });
 

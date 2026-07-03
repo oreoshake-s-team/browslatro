@@ -210,6 +210,82 @@ export function buyOfferToHold(
   return { ...post, consumables: state.consumables ?? [] };
 }
 
+export interface HeldShopChoice {
+  readonly leaveValue: number;
+  readonly bestValue: number;
+  readonly bestOffer: number;
+  readonly bestUse: number;
+}
+
+function requireDeps(opts: RolloutOptions): ConsumableLabelDeps {
+  if (opts.consumableDeps === undefined) {
+    throw new Error("hold-aware shop evaluation requires consumableDeps");
+  }
+  return opts.consumableDeps;
+}
+
+export async function bestShopChoiceHeld(
+  ante: number,
+  offers: ReadonlyArray<ShopItem>,
+  state: PostShopState,
+  opts: RolloutOptions,
+  seedBase: number,
+): Promise<HeldShopChoice> {
+  const deps = requireDeps(opts);
+  const flushedNow = flushHeldConsumables(state, deps, seededRng(seedBase + 13));
+  const leaveValue = await rolloutValue(ante, flushedNow, opts, seedBase);
+  let bestValue = leaveValue;
+  let bestOffer = -1;
+  let bestUse = -1;
+  for (let i = 0; i < offers.length; i += 1) {
+    const post = buyOfferToHold(offers[i], state, deps, seededRng(seedBase + (i + 1) * 92821));
+    if (post === null) continue;
+    const flushed = flushHeldConsumables(post, deps, seededRng(seedBase + (i + 1) * 92821 + 1));
+    const value = await rolloutValue(ante, flushed, opts, seedBase + (i + 1) * 104729);
+    if (value > bestValue) {
+      bestValue = value;
+      bestOffer = i;
+      bestUse = -1;
+    }
+  }
+  const held = state.consumables ?? [];
+  for (let k = 0; k < held.length; k += 1) {
+    const post = useHeldConsumable(k, state, deps, seededRng(seedBase + (k + 1) * 15485863));
+    if (post === null) continue;
+    const flushed = flushHeldConsumables(post, deps, seededRng(seedBase + (k + 1) * 15485863 + 1));
+    const value = await rolloutValue(ante, flushed, opts, seedBase + (k + 1) * 24036583);
+    if (value > bestValue) {
+      bestValue = value;
+      bestOffer = -1;
+      bestUse = k;
+    }
+  }
+  return { leaveValue, bestValue, bestOffer, bestUse };
+}
+
+export async function bestHeldUse(
+  ante: number,
+  state: PostShopState,
+  opts: RolloutOptions,
+  seedBase: number,
+): Promise<number> {
+  const deps = requireDeps(opts);
+  const held = state.consumables ?? [];
+  let bestUse = 0;
+  let bestValue = -Infinity;
+  for (let k = 0; k < held.length; k += 1) {
+    const post = useHeldConsumable(k, state, deps, seededRng(seedBase + (k + 1) * 15485863));
+    if (post === null) continue;
+    const flushed = flushHeldConsumables(post, deps, seededRng(seedBase + (k + 1) * 15485863 + 1));
+    const value = await rolloutValue(ante, flushed, opts, seedBase + (k + 1) * 24036583);
+    if (value > bestValue) {
+      bestValue = value;
+      bestUse = k;
+    }
+  }
+  return bestUse;
+}
+
 export interface ShopChoice {
   readonly index: number;
   readonly leaveValue: number;
