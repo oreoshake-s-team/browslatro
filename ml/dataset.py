@@ -17,7 +17,7 @@ DATASET_SCHEMA_VERSION = 1
 SHOP_SCHEMA_VERSION = 4
 SUPPORTED_SHOP_SCHEMA_VERSIONS = frozenset({2, 3, 4})
 
-_SHOP_KINDS = frozenset({"purchase", "reroll", "pack-pick"})
+_SHOP_KINDS = frozenset({"purchase", "reroll", "pack-pick", "use"})
 
 
 def load_decisions(path, weight=1.0):

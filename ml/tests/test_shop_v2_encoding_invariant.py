@@ -141,6 +141,83 @@ class ShopAgreementsEncodingInvariant(unittest.TestCase):
             )
 
 
+def shop_use_record():
+    return {
+        "schemaVersion": 4,
+        "kind": "use",
+        "runSeed": 21,
+        "ante": 2,
+        "round": 4,
+        "blind": 0,
+        "money": 9,
+        "handLevels": {},
+        "jokers": [],
+        "deckEnhancements": {},
+        "consumablesHeld": 1,
+        "item": {"itemType": "tarot", "category": "other", "id": "use:the-fool:0", "name": "The Fool", "cost": 0},
+        "offers": [],
+        "candidates": [
+            {"itemType": "tarot", "category": "other", "cost": 0, "isReroll": False, "isLeave": False, "isUse": True},
+            {"itemType": "", "category": "other", "cost": 0, "isReroll": False, "isLeave": True, "isUse": False},
+        ],
+        "chosenIndex": 0,
+    }
+
+
+def explicit_purchase_record():
+    return {
+        **shop_purchase(),
+        "candidates": [
+            {"itemType": "joker", "category": "joker-x-mult", "cost": 10, "isReroll": False, "isLeave": False, "isUse": False},
+            {"itemType": "tarot", "category": "other", "cost": 0, "isReroll": False, "isLeave": False, "isUse": True},
+            {"itemType": "", "category": "other", "cost": 0, "isReroll": False, "isLeave": True, "isUse": False},
+        ],
+        "chosenIndex": 0,
+    }
+
+
+class ShopUseRecordEncodingInvariant(unittest.TestCase):
+    def test_v2_use_records_match_the_runtime_encoding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [shop_use_record()])
+            self.assertEqual(_dims(load_shop_decisions(path, v2=True)), [SHOP_INPUT_FEATURES_V2])
+
+    def test_v2_use_records_flag_the_use_candidate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [shop_use_record()])
+            inputs, _chosen, _seed, _weight = load_shop_decisions(path, v2=True)[0]
+            self.assertEqual([row[-1] for row in inputs], [1.0, 0.0])
+
+    def test_v2_use_records_label_the_chosen_index(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [shop_use_record()])
+            _inputs, chosen, _seed, _weight = load_shop_decisions(path, v2=True)[0]
+            self.assertEqual(chosen, 0)
+
+    def test_v1_skips_use_records(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [shop_use_record()])
+            self.assertEqual(load_shop_decisions(path, v2=False), [])
+
+
+class ExplicitCandidatePurchaseInvariant(unittest.TestCase):
+    def test_v2_explicit_purchases_match_the_runtime_encoding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [explicit_purchase_record()])
+            self.assertEqual(_dims(load_shop_decisions(path, v2=True)), [SHOP_INPUT_FEATURES_V2])
+
+    def test_v2_explicit_purchases_encode_one_row_per_candidate(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [explicit_purchase_record()])
+            inputs, _chosen, _seed, _weight = load_shop_decisions(path, v2=True)[0]
+            self.assertEqual(len(inputs), 3)
+
+    def test_v1_explicit_purchases_still_reconstruct_from_offers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, [explicit_purchase_record()])
+            self.assertEqual(_dims(load_shop_decisions(path, v2=False)), [SHOP_INPUT_FEATURES])
+
+
 class RuntimeEncodingWidth(unittest.TestCase):
     def test_v2_is_exactly_one_use_flag_wider_than_v1(self):
         self.assertEqual(SHOP_INPUT_FEATURES_V2, SHOP_INPUT_FEATURES + 1)

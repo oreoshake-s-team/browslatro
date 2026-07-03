@@ -1,5 +1,5 @@
 import type { Card } from "../cards/types";
-import type { Consumable } from "../items/consumables";
+import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
 import { MAX_JOKERS } from "../items/jokers/constants";
 import type { Joker } from "../items/jokers/types";
 import { applyPlanetUpgrade, type PlanetCard } from "../items/planets";
@@ -30,6 +30,7 @@ export interface PostShopState {
   readonly money: number;
   readonly handStats: HandStats;
   readonly deck: ReadonlyArray<Card>;
+  readonly consumables?: ReadonlyArray<Consumable>;
 }
 
 export async function rolloutValue(
@@ -112,6 +113,101 @@ export function applyOfferToState(
     };
   }
   return null;
+}
+
+export function applyConsumableToState(
+  consumable: Consumable,
+  state: PostShopState,
+  deps: ConsumableLabelDeps,
+  rng: () => number,
+): PostShopState | null {
+  if (consumable.kind === "planet") {
+    return { ...state, handStats: applyPlanetUpgrade(state.handStats, consumable.card) };
+  }
+  const result = applyConsumable(
+    {
+      deck: state.deck,
+      money: state.money,
+      handStats: state.handStats,
+      lastConsumable: null,
+      createdJokers: [],
+    },
+    consumable,
+    {
+      jokers: state.jokers,
+      jokerCatalog: deps.jokerCatalog,
+      jokerCapacity: MAX_JOKERS,
+      tarotCatalog: deps.tarotCatalog,
+      planetCatalog: deps.planetCatalog,
+    },
+    rng,
+  );
+  if (state.jokers.length + result.createdJokers.length > MAX_JOKERS) return null;
+  return {
+    ...state,
+    jokers: [...state.jokers, ...result.createdJokers],
+    money: result.money,
+    handStats: result.handStats,
+    deck: result.deck,
+  };
+}
+
+export function useHeldConsumable(
+  index: number,
+  state: PostShopState,
+  deps: ConsumableLabelDeps,
+  rng: () => number,
+): PostShopState | null {
+  const held = state.consumables ?? [];
+  const consumable = held[index];
+  if (consumable === undefined) return null;
+  const applied = applyConsumableToState(consumable, state, deps, rng);
+  if (applied === null) return null;
+  return { ...applied, consumables: held.filter((_, i) => i !== index) };
+}
+
+export function flushHeldConsumables(
+  state: PostShopState,
+  deps: ConsumableLabelDeps,
+  rng: () => number,
+): PostShopState {
+  let current = state;
+  for (;;) {
+    const held = current.consumables ?? [];
+    if (held.length === 0) return current;
+    const next = useHeldConsumable(0, current, deps, rng);
+    current = next ?? { ...current, consumables: held.slice(1) };
+  }
+}
+
+export function buyOfferToHold(
+  offer: ShopItem,
+  state: PostShopState,
+  deps: ConsumableLabelDeps,
+  rng: () => number,
+): PostShopState | null {
+  if (offer.price > state.money) return null;
+  if (offer.kind === "planet" || offer.kind === "tarot" || offer.kind === "spectral") {
+    const consumable: Consumable =
+      offer.kind === "planet"
+        ? { kind: "planet", card: offer.planet }
+        : offer.kind === "tarot"
+          ? { kind: "tarot", card: offer.tarot }
+          : { kind: "spectral", card: offer.spectral };
+    const held = state.consumables ?? [];
+    if (held.length < MAX_CONSUMABLE_SLOTS) {
+      return { ...state, money: state.money - offer.price, consumables: [...held, consumable] };
+    }
+    return applyConsumableToState(
+      consumable,
+      { ...state, money: state.money - offer.price },
+      deps,
+      rng,
+    );
+  }
+  const post = applyOfferToState(offer, state, deps, rng);
+  if (post === null) return null;
+  return { ...post, consumables: state.consumables ?? [] };
 }
 
 export interface ShopChoice {
