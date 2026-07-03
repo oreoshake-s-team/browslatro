@@ -10,6 +10,7 @@ from encoding import (
     _shop_build_signals,
     encode_decision,
     encode_shop_decision,
+    encode_shop_decision_v2,
 )
 
 DATASET_SCHEMA_VERSION = 1
@@ -94,22 +95,25 @@ def _iter_shop_records(path):
             yield record
 
 
-def load_shop_decisions(path, weight=1.0):
+def load_shop_decisions(path, weight=1.0, v2=False):
     """Loads shop/pack decisions from a JSONL file of schema-v2 RunEventRecords.
 
     Handles purchase, reroll, and pack-pick kinds. Skips unrecognised kinds and
     records where encoding produces no candidates or an invalid chosen index.
+    v2 selects the use-aware encoding (SHOP_INPUT_FEATURES_V2) so human-play
+    exports can train a model in the runtime (v2) encoding.
     """
+    encode = encode_shop_decision_v2 if v2 else encode_shop_decision
     decisions = []
     for record in _iter_shop_records(path):
-        inputs, chosen = encode_shop_decision(record)
+        inputs, chosen = encode(record)
         if chosen < 0 or not inputs:
             continue
         decisions.append((inputs, chosen, record["runSeed"], weight))
     return decisions
 
 
-def load_shop_decisions_split(paths, teacher_weight=5.0):
+def load_shop_decisions_split(paths, teacher_weight=5.0, v2=False):
     """Loads shop decisions, partitioned into (rollout, teacher) lists.
 
     Records the generator marked teacherLabeled (the Sonnet 4.6 teacher chose
@@ -119,11 +123,12 @@ def load_shop_decisions_split(paths, teacher_weight=5.0):
     teacher records yield an empty teacher list, so rollout-only data trains
     exactly as before.
     """
+    encode = encode_shop_decision_v2 if v2 else encode_shop_decision
     rollout = []
     teacher = []
     for path in paths:
         for record in _iter_shop_records(path):
-            inputs, chosen = encode_shop_decision(record)
+            inputs, chosen = encode(record)
             if chosen < 0 or not inputs:
                 continue
             if record.get("teacherLabeled") is True:
@@ -167,7 +172,7 @@ def _encode_hand_label(record, index):
     )
 
 
-def _encode_shop_label(record, index):
+def _encode_shop_label(record, index, v2=False):
     decision = record["decision"]
     state = decision.get("state", {})
     hand_stats = decision.get("rollout", {}).get("handStats", {})
@@ -208,6 +213,8 @@ def _encode_shop_label(record, index):
             )
         else:
             inputs.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True))
+    if v2:
+        inputs = [row + [0.0] for row in inputs]
     return inputs, index
 
 
@@ -233,7 +240,7 @@ def _hand_correction_justified(candidates, chosen_index, min_score_fraction):
     return chosen["score"] >= best * min_score_fraction
 
 
-def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=None):
+def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=None, v2=False):
     """Re-encodes advice-feedback corrections into weighted training labels.
 
     Only corrections carrying a correctedIndex (the candidate the human would
@@ -267,7 +274,7 @@ def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=Non
                     continue
                 inputs, chosen = _encode_hand_label(record, record["correctedIndex"])
             elif context == "shop":
-                inputs, chosen = _encode_shop_label(record, record["correctedIndex"])
+                inputs, chosen = _encode_shop_label(record, record["correctedIndex"], v2=v2)
             else:
                 continue
             if not inputs or chosen < 0 or chosen >= len(inputs):
@@ -276,7 +283,7 @@ def load_feedback_corrections(paths, context, weight=5.0, min_score_fraction=Non
     return decisions
 
 
-def load_feedback_agreements(paths, context, weight=1.0, min_score_fraction=None):
+def load_feedback_agreements(paths, context, weight=1.0, min_score_fraction=None, v2=False):
     """Re-encodes explicit advisor agreements into weighted positive labels.
 
     Only explicit thumbs-up records (verdict "good", source "explicit") train;
@@ -308,7 +315,7 @@ def load_feedback_agreements(paths, context, weight=1.0, min_score_fraction=None
                     continue
                 inputs, chosen = _encode_hand_label(record, index)
             elif context == "shop":
-                inputs, chosen = _encode_shop_label(record, index)
+                inputs, chosen = _encode_shop_label(record, index, v2=v2)
             else:
                 continue
             if not inputs or chosen < 0 or chosen >= len(inputs):
