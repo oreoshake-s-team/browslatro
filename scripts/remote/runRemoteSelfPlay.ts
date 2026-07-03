@@ -22,6 +22,8 @@ export interface SelfPlayArgs {
   readonly temperature: number;
   readonly hold: boolean;
   readonly parallelJobs: number;
+  readonly startsKey?: string;
+  readonly startsFraction?: number;
 }
 
 export interface RemoteSelfPlayOptions {
@@ -64,6 +66,10 @@ export function selfPlayShardEnv(shard: RemoteShard, selfPlay: SelfPlayArgs): Re
   };
   if (selfPlay.shopModelKey !== undefined && selfPlay.shopModelKey !== "") {
     env.SHOP_MODEL_KEY = selfPlay.shopModelKey;
+  }
+  if (selfPlay.startsKey !== undefined && selfPlay.startsKey !== "") {
+    env.STARTS_KEY = selfPlay.startsKey;
+    env.STARTS_FRACTION = String(selfPlay.startsFraction ?? 0.25);
   }
   return env;
 }
@@ -151,7 +157,7 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--shop-model-file LOCAL.onnx] [--hand-model PATH] [--temperature T] [--hold-consumables] [--parallel-jobs N] [--image IMG] [--cpus N] [--memory-mb N]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteSelfPlay.ts <out.jsonl> [--run-id ID] --games N --machines N [--seed-offset N] [--shop-model PATH] [--shop-model-file LOCAL.onnx] [--hand-model PATH] [--temperature T] [--hold-consumables] [--starts-file LOCAL.jsonl [--starts-fraction F]] [--parallel-jobs N] [--image IMG] [--cpus N] [--memory-mb N]",
     );
     process.exit(1);
   }
@@ -168,6 +174,8 @@ if (isMain) {
   const shopModelFile = stringFlag("--shop-model-file", "");
   const shopModelKey =
     shopModelFile !== "" ? `selfplay/${runId}/shop-model.onnx` : undefined;
+  const startsFile = stringFlag("--starts-file", "");
+  const startsKey = startsFile !== "" ? `selfplay/${runId}/starts.jsonl` : undefined;
   const options: RemoteSelfPlayOptions = {
     runId,
     totalGames: intFlag("--games", 1000),
@@ -186,6 +194,8 @@ if (isMain) {
       temperature: Number(stringFlag("--temperature", "1.0")),
       hold: process.argv.includes("--hold-consumables"),
       parallelJobs: intFlag("--parallel-jobs", cpus),
+      startsKey,
+      startsFraction: Number(stringFlag("--starts-fraction", "0.25")),
     },
     workerEnv: {
       AWS_ENDPOINT_URL_S3: s3Config.endpoint,
@@ -205,6 +215,11 @@ if (isMain) {
   if (shopModelFile !== "" && shopModelKey !== undefined) {
     console.log(`uploading shop model -> ${shopModelKey}`);
     await putObject(s3Config, shopModelKey, readFileSync(shopModelFile));
+  }
+
+  if (startsFile !== "" && startsKey !== undefined) {
+    console.log(`uploading deep-run starts -> ${startsKey}`);
+    await putObject(s3Config, startsKey, readFileSync(startsFile));
   }
 
   const started = Date.now();

@@ -102,6 +102,33 @@ describe("selfPlayShardEnv", () => {
     );
     expect(env.SHOP_MODEL_KEY).toBe("onpolicy/run1/iter-0.onnx");
   });
+
+  test("omits the deep-run starts env when no starts key is supplied", () => {
+    const env = selfPlayShardEnv(
+      { index: 0, games: 1, seedOffset: 0, outputKey: "selfplay/run1/shard-0.jsonl" },
+      SELF_PLAY,
+    );
+    expect([env.STARTS_KEY, env.STARTS_FRACTION]).toEqual([undefined, undefined]);
+  });
+
+  test("passes the starts key and seeding fraction through to workers", () => {
+    const env = selfPlayShardEnv(
+      { index: 0, games: 1, seedOffset: 0, outputKey: "selfplay/run1/shard-0.jsonl" },
+      { ...SELF_PLAY, startsKey: "onpolicy/run1/starts.jsonl", startsFraction: 0.5 },
+    );
+    expect(env).toMatchObject({
+      STARTS_KEY: "onpolicy/run1/starts.jsonl",
+      STARTS_FRACTION: "0.5",
+    });
+  });
+
+  test("defaults the seeding fraction when only a starts key is given", () => {
+    const env = selfPlayShardEnv(
+      { index: 0, games: 1, seedOffset: 0, outputKey: "selfplay/run1/shard-0.jsonl" },
+      { ...SELF_PLAY, startsKey: "onpolicy/run1/starts.jsonl" },
+    );
+    expect(env.STARTS_FRACTION).toBe("0.25");
+  });
 });
 
 describe("runRemoteSelfPlay", () => {
