@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { resolve, join } from "node:path";
 import { intFlag } from "../generateDataset";
 import { FlyMachinesClient, type MachineGuest } from "./flyMachines";
+import { FlyLogsClient } from "./flyLogs";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
@@ -137,7 +138,7 @@ if (isMain) {
   const basePath = stringFlag("--base", "");
   if (outDir === undefined || outDir.startsWith("--") || basePath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts <out-dir> --base <policy.onnx> [--run-id ID] [--iterations N] [--games N] [--machines N] [--seed-offset N] [--hand-model PATH] [--temperature T] [--hold-consumables] [--epochs N] [--lr F] [--ppo-clip F] [--value-baseline] [--value-coef F] [--reward-to-go] [--bench-games N] [--bench-seed N] [--selfplay-cpus N] [--train-cpus N] [--train-memory-mb N] [--cpu-kind shared|performance] [--no-tail]",
     );
     process.exit(1);
   }
@@ -145,10 +146,12 @@ if (isMain) {
   const runId = resolveRunId(stringFlag("--run-id", ""));
   console.log(`run id: ${runId}`);
   const s3Config = s3ConfigFromEnv();
-  const launcher = new FlyMachinesClient({
-    app: requireEnv("FLY_APP"),
-    token: requireEnv("FLY_API_TOKEN"),
-  });
+  const flyApp = requireEnv("FLY_APP");
+  const flyToken = requireEnv("FLY_API_TOKEN");
+  const launcher = new FlyMachinesClient({ app: flyApp, token: flyToken });
+  const logs = process.argv.includes("--no-tail")
+    ? undefined
+    : new FlyLogsClient({ app: flyApp, token: flyToken });
 
   const datasetImage = stringFlag("--image", requireEnv("DATASET_IMAGE"));
   const trainImage = stringFlag("--train-image", requireEnv("TRAIN_IMAGE"));
@@ -249,6 +252,7 @@ if (isMain) {
           getArtifact: (key) => getObject(s3Config, key),
           sleep,
           log: (message) => console.log(message),
+          logs,
         },
       );
       return { model: result.model };
