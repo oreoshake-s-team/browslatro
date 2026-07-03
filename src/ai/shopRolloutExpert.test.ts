@@ -3,10 +3,14 @@ import { describe, expect, test } from "vitest";
 import {
   applyOfferToState,
   bestShopChoice,
+  buyOfferToHold,
+  flushHeldConsumables,
+  useHeldConsumable,
   type ConsumableLabelDeps,
   type PostShopState,
   type RolloutOptions,
 } from "./shopRolloutExpert";
+import type { Consumable } from "../items/consumables";
 import { createGreedyAgent } from "./agents";
 import { buildHeadlessDeck } from "./headlessRun";
 import { createJokerStackingShopAgent } from "./rolloutShopAgent";
@@ -138,5 +142,101 @@ describe("bestShopChoice", () => {
     const offers = [jokerOffer(powerJoker, 4)];
     const choice = await bestShopChoice(1, offers, baseState(), shoppingOpts, 300);
     expect(choice.index).toBe(0);
+  });
+});
+
+const PLANETS = createPlanetCatalog();
+
+function planetConsumable(): Consumable {
+  return { kind: "planet", card: PLANETS[0] };
+}
+
+function tarotConsumable(id: string): Consumable {
+  return { kind: "tarot", card: tarotCard(id) };
+}
+
+function planetOffer(price: number): ShopItem {
+  return { kind: "planet", planet: PLANETS[0], price, sold: false };
+}
+
+describe("buyOfferToHold", () => {
+  test("holds a bought planet instead of applying it", () => {
+    const next = buyOfferToHold(planetOffer(3), baseState(), CONSUMABLE_DEPS, () => 0);
+    expect(next?.consumables).toEqual([planetConsumable()]);
+  });
+
+  test("a held planet does not upgrade hand levels yet (negative)", () => {
+    const next = buyOfferToHold(planetOffer(3), baseState(), CONSUMABLE_DEPS, () => 0);
+    expect(totalLevels(next?.handStats ?? createDefaultHandStats())).toBe(BASELINE_LEVELS);
+  });
+
+  test("deducts the price when holding", () => {
+    const next = buyOfferToHold(planetOffer(3), baseState({ money: 10 }), CONSUMABLE_DEPS, () => 0);
+    expect(next?.money).toBe(7);
+  });
+
+  test("applies immediately when consumable slots are full", () => {
+    const full = baseState({ consumables: [tarotConsumable("the-fool"), tarotConsumable("the-fool")] });
+    const next = buyOfferToHold(planetOffer(3), full, CONSUMABLE_DEPS, () => 0);
+    expect(totalLevels(next?.handStats ?? createDefaultHandStats())).toBeGreaterThan(BASELINE_LEVELS);
+  });
+
+  test("keeps the held list unchanged when slots are full", () => {
+    const full = baseState({ consumables: [tarotConsumable("the-fool"), tarotConsumable("the-fool")] });
+    const next = buyOfferToHold(planetOffer(3), full, CONSUMABLE_DEPS, () => 0);
+    expect(next?.consumables?.length).toBe(2);
+  });
+
+  test("buys jokers through the immediate path and preserves held consumables", () => {
+    const holding = baseState({ consumables: [planetConsumable()] });
+    const next = buyOfferToHold(jokerOffer(powerJoker, 4), holding, CONSUMABLE_DEPS, () => 0);
+    expect(next?.consumables).toEqual([planetConsumable()]);
+  });
+
+  test("returns null when the offer is unaffordable (negative)", () => {
+    expect(buyOfferToHold(planetOffer(99), baseState({ money: 3 }), CONSUMABLE_DEPS, () => 0)).toBeNull();
+  });
+});
+
+describe("useHeldConsumable", () => {
+  test("applies the held planet's hand upgrade", () => {
+    const holding = baseState({ consumables: [planetConsumable()] });
+    const next = useHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
+    expect(totalLevels(next?.handStats ?? createDefaultHandStats())).toBeGreaterThan(BASELINE_LEVELS);
+  });
+
+  test("removes the used consumable from the held list", () => {
+    const holding = baseState({ consumables: [planetConsumable(), tarotConsumable("the-fool")] });
+    const next = useHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
+    expect(next?.consumables).toEqual([tarotConsumable("the-fool")]);
+  });
+
+  test("The Magician held then used enhances the deck", () => {
+    const holding = baseState({ consumables: [tarotConsumable("the-magician")] });
+    const next = useHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
+    expect(next?.deck.some((c) => c.enhancement === "lucky")).toBe(true);
+  });
+
+  test("returns null for an out-of-range index (negative)", () => {
+    expect(useHeldConsumable(3, baseState({ consumables: [planetConsumable()] }), CONSUMABLE_DEPS, () => 0)).toBeNull();
+  });
+});
+
+describe("flushHeldConsumables", () => {
+  test("applies every held consumable", () => {
+    const holding = baseState({ consumables: [planetConsumable(), planetConsumable()] });
+    const next = flushHeldConsumables(holding, CONSUMABLE_DEPS, () => 0);
+    expect(totalLevels(next.handStats)).toBe(BASELINE_LEVELS + 2);
+  });
+
+  test("empties the held list", () => {
+    const holding = baseState({ consumables: [planetConsumable(), tarotConsumable("the-fool")] });
+    const next = flushHeldConsumables(holding, CONSUMABLE_DEPS, () => 0);
+    expect(next.consumables).toEqual([]);
+  });
+
+  test("returns the state unchanged when nothing is held", () => {
+    const base = baseState();
+    expect(flushHeldConsumables(base, CONSUMABLE_DEPS, () => 0)).toBe(base);
   });
 });
