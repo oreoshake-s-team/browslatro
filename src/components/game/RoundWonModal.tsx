@@ -32,6 +32,7 @@ export interface RoundWonInfo {
   readonly remainingHandsBonusPerUnit?: number;
   readonly usesHandsAndDiscardsBonus?: boolean;
   readonly endOfRoundJokerSteps?: ReadonlyArray<RoundWonJokerPayoutStep>;
+  readonly savedByMrBones?: boolean;
 }
 
 interface RoundWonModalProps {
@@ -53,8 +54,10 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     remainingHandsBonusPerUnit = REMAINING_HAND_BONUS,
     usesHandsAndDiscardsBonus = false,
     endOfRoundJokerSteps,
+    savedByMrBones = false,
   } = info;
   const beatBy = roundScore - requiredScore;
+  const shortBy = Math.max(0, requiredScore - roundScore);
   const goldBonus = goldHeldCount * GOLD_HELD_BONUS_PER_CARD;
   const bonusUnits = usesHandsAndDiscardsBonus
     ? remainingHandsCount + remainingDiscardsCount
@@ -86,13 +89,25 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
     <Modal
       onClose={onContinue}
       labelledBy="round-won-title"
-      accent="success"
+      accent={savedByMrBones ? "neutral" : "success"}
       className="round-won-modal"
     >
-        <h2 id="round-won-title" className="round-won-title">
-          <span aria-hidden="true">🏆 </span>
-          {t("roundEnd.wonTitle")}
+        <h2
+          id="round-won-title"
+          className={
+            savedByMrBones
+              ? "round-won-title round-won-title--saved"
+              : "round-won-title"
+          }
+        >
+          <span aria-hidden="true">{savedByMrBones ? "💀 " : "🏆 "}</span>
+          {savedByMrBones ? t("roundEnd.savedTitle") : t("roundEnd.wonTitle")}
         </h2>
+        {savedByMrBones && (
+          <p className="round-won-saved-note" data-testid="round-won-saved-note">
+            {t("roundEnd.mrBonesConsumed")}
+          </p>
+        )}
         <dl className="round-won-stats">
           <div className="stat-pill round-won-stat">
             <dt>{t("roundEnd.roundScore")}</dt>
@@ -102,10 +117,17 @@ export default function RoundWonModal({ info, onContinue }: RoundWonModalProps) 
             <dt>{t("roundEnd.requiredScore")}</dt>
             <dd data-testid="round-won-required">{formatNumber(requiredScore)}</dd>
           </div>
-          <div className="stat-pill round-won-stat round-won-stat-beat">
-            <dt>{t("roundEnd.beatBy")}</dt>
-            <dd data-testid="round-won-beat-by">+{formatNumber(beatBy)}</dd>
-          </div>
+          {savedByMrBones ? (
+            <div className="stat-pill round-won-stat round-won-stat-saved">
+              <dt>{t("roundEnd.shortBy")}</dt>
+              <dd data-testid="round-won-short-by">{formatNumber(shortBy)}</dd>
+            </div>
+          ) : (
+            <div className="stat-pill round-won-stat round-won-stat-beat">
+              <dt>{t("roundEnd.beatBy")}</dt>
+              <dd data-testid="round-won-beat-by">+{formatNumber(beatBy)}</dd>
+            </div>
+          )}
         </dl>
         <div className="round-won-payout">
           <h3 className="round-won-payout-title">{t("roundEnd.moneyWon")}</h3>

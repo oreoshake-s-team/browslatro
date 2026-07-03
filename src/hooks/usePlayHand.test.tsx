@@ -1,8 +1,9 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { usePlayHand, type UsePlayHandParams } from "./usePlayHand";
 import { useGame } from "../store/game";
 import { createBossCatalog } from "../items/bosses";
+import { createMrBonesJoker } from "../items/jokers";
 import { applyPlanetUpgrade } from "../items/planets";
 import { createPlanetCatalog } from "../items/planets";
 import type { Card } from "../cards/types";
@@ -220,6 +221,107 @@ describe("usePlayHand — The Arm lowers the played hand level", () => {
         .getState()
         .scoringEvents.some((e) => e.kind === "boss-adjustment"),
     ).toBe(true);
+  });
+});
+
+describe("usePlayHand — Mr. Bones save on the last hand", () => {
+  function setupLastHandPair(roundScore: number): void {
+    useGame.getState().setBlind(1);
+    useGame.getState().setJokers([createMrBonesJoker()]);
+    useGame.getState().setDealt({
+      hand: [card(1, "5", "clubs"), card(2, "5", "hearts")],
+      remaining: [card(3, "9", "spades")],
+    });
+    useGame.getState().setHandDisplayOrder([1, 2]);
+    useGame.getState().setSelectedIds(new Set([1, 2]));
+    useGame.getState().setRemainingHands(1);
+    useGame.getState().setRoundScore(roundScore);
+  }
+
+  test("a failed last hand above the 25% threshold ends the round flagged as saved", async () => {
+    setupLastHandPair(100);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() =>
+      expect(useGame.getState().pendingWin).not.toBeNull(),
+    );
+    expect(useGame.getState().pendingWin?.savedByMrBones).toBe(true);
+  });
+
+  test("a save pays no base reward", async () => {
+    setupLastHandPair(100);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() =>
+      expect(useGame.getState().pendingWin).not.toBeNull(),
+    );
+    expect(useGame.getState().pendingWin?.baseReward).toBe(0);
+  });
+
+  test("a save consumes Mr. Bones", async () => {
+    setupLastHandPair(100);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() =>
+      expect(useGame.getState().pendingWin).not.toBeNull(),
+    );
+    expect(useGame.getState().jokers).toHaveLength(0);
+  });
+
+  test("a save does not call loseGame", async () => {
+    setupLastHandPair(100);
+    const loseGame = vi.fn();
+    const { result } = renderHook(() => usePlayHand(makeParams(loseGame)));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() =>
+      expect(useGame.getState().pendingWin).not.toBeNull(),
+    );
+    expect(loseGame).not.toHaveBeenCalled();
+  });
+
+  test("a failed last hand below the 25% threshold still loses (negative)", async () => {
+    setupLastHandPair(0);
+    const loseGame = vi.fn();
+    const { result } = renderHook(() => usePlayHand(makeParams(loseGame)));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() => expect(loseGame).toHaveBeenCalled());
+    expect(useGame.getState().pendingWin).toBeNull();
+  });
+
+  test("a genuine win is not flagged as saved (negative)", async () => {
+    setupLastHandPair(1_000_000);
+    useGame.getState().setJokers([]);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() =>
+      expect(useGame.getState().pendingWin).not.toBeNull(),
+    );
+    expect(useGame.getState().pendingWin?.savedByMrBones).toBe(false);
+  });
+
+  test("a genuine win still pays the blind's base reward (negative)", async () => {
+    setupLastHandPair(1_000_000);
+    useGame.getState().setJokers([]);
+    const { result } = renderHook(() => usePlayHand(makeParams()));
+
+    act(() => result.current.submitHand());
+
+    await waitFor(() =>
+      expect(useGame.getState().pendingWin).not.toBeNull(),
+    );
+    expect(useGame.getState().pendingWin?.baseReward).toBe(3);
   });
 });
 
