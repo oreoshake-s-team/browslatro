@@ -16,7 +16,7 @@ How to exercise each piece of the advisor on your machine. The JS/TS side uses [
 | Var | Side | Needed for | Notes |
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | server | the live LLM advisor, `labelDisagreements.ts` | **Server-only**; never put it in client/Vite env. Without it, `/api/advice` returns `503 not_configured`. |
-| `ADVISOR_MODEL` | server | overriding the teacher/advisor model | default `claude-opus-4-8`. |
+| `ADVISOR_MODEL` | server | overriding the teacher/advisor model | default `claude-fable-5`. |
 | `ADVISOR_THINKING` | server | disabling extended thinking | set `"none"` to turn off. |
 | `ADVISOR_EFFORT` | server | dropping the effort hint | set `"none"` to turn off. |
 | `UPSTASH_REDIS_REST_URL` / `KV_REST_API_URL` | server | durable (multi-instance) rate limiting | optional; falls back to in-memory. |

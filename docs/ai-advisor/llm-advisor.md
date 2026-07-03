@@ -113,7 +113,7 @@ This is the **same `chosen`-index label shape** the [training pipeline](./ml-pip
 
 ```ts
 {
-  model: process.env.ADVISOR_MODEL ?? MODEL_ID,        // MODEL_ID = "claude-opus-4-8"
+  model: process.env.ADVISOR_MODEL ?? MODEL_ID,        // MODEL_ID = "claude-fable-5"
   max_tokens: MAX_OUTPUT_TOKENS,                        // 16_000
   ...(useThinking ? { thinking: { type: "adaptive" } } : {}),
   output_config: {
@@ -131,7 +131,7 @@ This is the **same `chosen`-index label shape** the [training pipeline](./ml-pip
 
 | Env var | Effect | Default |
 | --- | --- | --- |
-| `ADVISOR_MODEL` | Override the model id | `claude-opus-4-8` |
+| `ADVISOR_MODEL` | Override the model id | `claude-fable-5` |
 | `ADVISOR_THINKING` | Set to `"none"` to disable [extended thinking](https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking) | thinking on (`adaptive`) |
 | `ADVISOR_EFFORT` | Set to `"none"` to drop the `effort: "low"` hint | `effort: "low"` |
 
