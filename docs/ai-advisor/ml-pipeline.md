@@ -41,6 +41,21 @@ headless self-play (search expert)            human play (UI capture)
 
 The production hand policy [`advisor-policy-v9`](../../public/models/advisor-policy-v9.onnx) was produced exactly this way: ~20k realistic shop-driven games + weighted human play + a distribution-matched LLM teacher. It benchmarks on par with the prior `advisor-policy-v8` (within noise on `avgBlinds`) while being trained on the correct distribution.
 
+### Encoding invariant — training data must never diverge from the runtime encoding
+
+**Every training input channel must always be able to train a model in the *current runtime* encoding — human-play imports especially. Human data must always be importable.** When the feature encoding advances (e.g. shop V1 → V2 "use-aware"), migrate **all** channels in the same change so none is stranded on a dead encoding:
+
+- self-play collection (`collectSelfPlayShop.ts`, `--hold-consumables`),
+- supervised dataset regen (`generateShopRolloutDataset.ts`),
+- the human agreements/corrections loaders (`ml/dataset.py`: `load_shop_decisions`, `load_feedback_corrections`, `load_feedback_agreements`),
+- the trainer (`train.py --shop`, `train_rl.py --v2`),
+- the orchestrators (`runRemotePipeline.ts` must thread `--v2`/hold the way `runRemoteOnPolicy.ts` already does),
+- and the benchmark (`--hold-consumables`).
+
+A partial migration **is** the divergence. This actually happened: the shop encoder moved to V2 (`encode_shop_decision_v2`, `SHOP_INPUT_FEATURES_V2` = 102 dims, hold-consumables) on the self-play/PPO track (#1592) and shipped v11→v15, but the one-shot supervised pipeline (`runRemotePipeline.ts`) and the human advice-feedback loaders stayed V1 (`encode_shop_decision`, 101 dims). Result: imported human shop feedback could only train V1 models — off the V2 runtime — so it could **not** train a v15-comparable candidate. Re-uniting the human-data path with the V2 runtime is tracked by #1655 (the generator half is #1597).
+
+**Guard it in CI.** A test must assert the shop training / human-data loaders emit vectors whose dimension equals the runtime shop encoding (`SHOP_INPUT_FEATURES_V2`), so a future encoder bump that forgets a channel fails loudly instead of silently stranding human data.
+
 ---
 
 ## `headlessRun.ts` — the headless game loop
