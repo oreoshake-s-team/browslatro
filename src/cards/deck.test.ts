@@ -260,6 +260,65 @@ describe("sortCards", () => {
   test("returns an empty array when given no cards", () => {
     expect(sortCards([], "rank")).toEqual([]);
   });
+
+  test("rank mode places stone cards after every non-stone card", () => {
+    const withStone: Card[] = [
+      { id: 1, rank: "A", suit: "hearts", enhancement: "stone" },
+      { id: 2, rank: "2", suit: "spades" },
+      { id: 3, rank: "K", suit: "clubs" },
+    ];
+    const sorted = sortCards(withStone, "rank");
+    expect(sorted.map((c) => c.id)).toEqual([3, 2, 1]);
+  });
+
+  test("suit mode places stone cards after every non-stone card", () => {
+    const withStone: Card[] = [
+      { id: 1, rank: "5", suit: "clubs", enhancement: "stone" },
+      { id: 2, rank: "9", suit: "hearts" },
+      { id: 3, rank: "3", suit: "spades" },
+    ];
+    const sorted = sortCards(withStone, "suit");
+    expect(sorted.map((c) => c.id)).toEqual([3, 2, 1]);
+  });
+
+  test("stone cards keep their relative order in rank mode", () => {
+    const twoStones: Card[] = [
+      { id: 1, rank: "2", suit: "clubs", enhancement: "stone" },
+      { id: 2, rank: "7", suit: "diamonds" },
+      { id: 3, rank: "A", suit: "spades", enhancement: "stone" },
+    ];
+    const sorted = sortCards(twoStones, "rank");
+    expect(sorted.map((c) => c.id)).toEqual([2, 1, 3]);
+  });
+
+  test("stone cards keep their relative order in suit mode", () => {
+    const twoStones: Card[] = [
+      { id: 1, rank: "A", suit: "hearts", enhancement: "stone" },
+      { id: 2, rank: "7", suit: "diamonds" },
+      { id: 3, rank: "2", suit: "clubs", enhancement: "stone" },
+    ];
+    const sorted = sortCards(twoStones, "suit");
+    expect(sorted.map((c) => c.id)).toEqual([2, 1, 3]);
+  });
+
+  test("cards with non-stone enhancements are not moved to the end", () => {
+    const enhanced: Card[] = [
+      { id: 1, rank: "2", suit: "spades" },
+      { id: 2, rank: "A", suit: "hearts", enhancement: "glass" },
+    ];
+    const sorted = sortCards(enhanced, "rank");
+    expect(sorted.map((c) => c.id)).toEqual([2, 1]);
+  });
+
+  test("a hand of only stone cards keeps its original order", () => {
+    const allStone: Card[] = [
+      { id: 1, rank: "A", suit: "hearts", enhancement: "stone" },
+      { id: 2, rank: "2", suit: "clubs", enhancement: "stone" },
+      { id: 3, rank: "K", suit: "spades", enhancement: "stone" },
+    ];
+    const sorted = sortCards(allStone, "suit");
+    expect(sorted.map((c) => c.id)).toEqual([1, 2, 3]);
+  });
 });
 
 describe("SUIT_DISPLAY_ORDER — alternation invariant", () => {
