@@ -45,6 +45,7 @@ from encoding import (
     INPUT_FEATURES,
     SHOP_ENCODING_VERSION,
     SHOP_INPUT_FEATURES,
+    SHOP_INPUT_FEATURES_V2,
 )
 
 
@@ -157,6 +158,11 @@ def main():
         help="decisions per optimizer step",
     )
     parser.add_argument("--shop", action="store_true", help="train on shop/pack decisions")
+    parser.add_argument(
+        "--v2",
+        action="store_true",
+        help="use the v2 (use-aware, hold-consumables) shop encoding so exports match the runtime",
+    )
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
 
@@ -167,17 +173,19 @@ def main():
     random.seed(args.seed)
 
     if args.shop:
-        features = SHOP_INPUT_FEATURES
-        rollout, teacher = load_shop_decisions_split(args.datasets, args.teacher_weight)
+        features = SHOP_INPUT_FEATURES_V2 if args.v2 else SHOP_INPUT_FEATURES
+        rollout, teacher = load_shop_decisions_split(
+            args.datasets, args.teacher_weight, v2=args.v2
+        )
         generated_train, validation = split_by_seed(rollout)
         corrections = load_feedback_corrections(
-            args.corrections, "shop", args.corrections_weight
+            args.corrections, "shop", args.corrections_weight, v2=args.v2
         )
         agreements = load_feedback_agreements(
-            args.agreements, "shop", args.agreements_weight
+            args.agreements, "shop", args.agreements_weight, v2=args.v2
         )
         train = build_training_set(generated_train, teacher, corrections, agreements)
-        enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}"
+        enc_label = f"shop encoding v{SHOP_ENCODING_VERSION}{' (use-aware v2)' if args.v2 else ''}"
     else:
         features = INPUT_FEATURES
         generated_train, validation = split_by_seed(load_all(args.datasets))
