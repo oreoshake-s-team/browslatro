@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import {
+  resolveSelfPlayMemoryMb,
   runRemoteSelfPlay,
   selfPlayShardEnv,
   type RemoteSelfPlayOptions,
@@ -128,6 +129,28 @@ describe("selfPlayShardEnv", () => {
       { ...SELF_PLAY, startsKey: "onpolicy/run1/starts.jsonl" },
     );
     expect(env.STARTS_FRACTION).toBe("0.25");
+  });
+});
+
+describe("resolveSelfPlayMemoryMb", () => {
+  test("scales the default memory with the job count", () => {
+    expect(resolveSelfPlayMemoryMb(8)).toBe(4096);
+  });
+
+  test("keeps a 2048 floor for small job counts", () => {
+    expect(resolveSelfPlayMemoryMb(2)).toBe(2048);
+  });
+
+  test("passes a safe explicit memory request through unchanged", () => {
+    expect(resolveSelfPlayMemoryMb(4, 4096)).toBe(4096);
+  });
+
+  test("accepts an explicit request exactly at the per-job floor", () => {
+    expect(resolveSelfPlayMemoryMb(4, 2048)).toBe(2048);
+  });
+
+  test("rejects an explicit memory request the workers would OOM under", () => {
+    expect(() => resolveSelfPlayMemoryMb(8, 2048)).toThrow(/unsafe for 8 parallel self-play jobs/);
   });
 });
 
