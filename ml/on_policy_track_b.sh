@@ -10,7 +10,8 @@
 #   TSX_RUN="node --import file:///path/to/tsx/dist/loader.mjs" ml/on_policy_track_b.sh
 set -euo pipefail
 
-BASE="${BASE:-public/models/advisor-shop-policy-v13.onnx}"
+# Fallback model paths mirror src/ai/advisor/productionModels.ts — update together.
+BASE="${BASE:-public/models/advisor-shop-policy-v15.onnx}"
 HAND="${HAND:-public/models/advisor-policy-v9.onnx}"
 ITERS="${ITERS:-5}"
 GAMES="${GAMES:-1000}"

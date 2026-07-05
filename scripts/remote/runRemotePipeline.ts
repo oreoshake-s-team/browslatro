@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH, SHOP_MODEL_REPO_PATH } from "../../src/ai/advisor/productionModels";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
@@ -144,7 +145,7 @@ if (isMain) {
       deck,
       stake,
       jokerLoadoutFraction: 0,
-      shopPolicy: stringFlag("--shop-policy", "public/models/advisor-shop-policy-v13.onnx"),
+      shopPolicy: stringFlag("--shop-policy", SHOP_MODEL_REPO_PATH),
     },
     workerEnv,
   };
@@ -200,7 +201,7 @@ if (isMain) {
           deck,
           stake,
           shop,
-          baseline: stringFlag("--baseline", "public/models/advisor-policy-v9.onnx"),
+          baseline: stringFlag("--baseline", HAND_MODEL_REPO_PATH),
         },
         workerEnv,
       };

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH, SHOP_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import { basename } from "node:path";
 import { EMPTY_SHOP_BUILD } from "../src/ai/advisor/shopEncoding";
 import { evaluateAgent, type EvaluationResult } from "../src/ai/evaluateAgent";
@@ -24,8 +25,8 @@ function stringFlag(name: string, fallback: string): string {
 
 const games = intFlag("--games", 200);
 const seedOffset = intFlag("--seed-offset", 5000);
-const shopPolicy = stringFlag("--shop-policy", "public/models/advisor-shop-policy-v13.onnx");
-const gamePolicy = stringFlag("--policy", "public/models/advisor-policy-v9.onnx");
+const shopPolicy = stringFlag("--shop-policy", SHOP_MODEL_REPO_PATH);
+const gamePolicy = stringFlag("--policy", HAND_MODEL_REPO_PATH);
 
 const ranker = await loadPolicyRanker(readFileSync(gamePolicy));
 const realShop = await createHeadlessShopAgent(shopPolicy);

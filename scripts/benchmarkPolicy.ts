@@ -1,4 +1,5 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { SHOP_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
@@ -20,7 +21,7 @@ import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 import { sliceJobs } from "./generateDataset";
 
-const DEFAULT_SHOP_POLICY = "public/models/advisor-shop-policy-v13.onnx";
+const DEFAULT_SHOP_POLICY = SHOP_MODEL_REPO_PATH;
 
 function deckFlag(): Deck {
   const raw = stringFlag("--deck", DEFAULT_DECK);

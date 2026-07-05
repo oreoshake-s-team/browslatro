@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import { playHeadlessRun } from "../src/ai/headlessRun";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
@@ -26,7 +27,7 @@ const handModel = (() => {
   const i = process.argv.indexOf("--policy");
   return i >= 0 && i + 1 < process.argv.length
     ? process.argv[i + 1]
-    : "public/models/advisor-policy-v9.onnx";
+    : HAND_MODEL_REPO_PATH;
 })();
 
 const ranker = await loadPolicyRanker(readFileSync(handModel));

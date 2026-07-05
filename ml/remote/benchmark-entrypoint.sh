@@ -14,6 +14,7 @@ DECK="${DECK:-red-deck}"
 STAKE="${STAKE:-white}"
 SHOP="${SHOP:-1}"
 SHOP_CANDIDATE="${SHOP_CANDIDATE:-0}"
+# Fallback model path mirrors src/ai/advisor/productionModels.ts — update together.
 HAND_MODEL="${HAND_MODEL:-public/models/advisor-policy-v9.onnx}"
 HOLD="${HOLD:-0}"
 PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
