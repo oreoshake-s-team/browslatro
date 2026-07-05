@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from train_rl import (
     clipped_surrogate,
+    pearson,
     gae_advantages,
     game_rewards,
     load_selfplay,
@@ -169,6 +170,20 @@ class LoadSelfplayGamesTest(unittest.TestCase):
             [(g["return"], g["rounds"], len(g["decisions"])) for g in games],
             [(9.0, [2.0, 4.0], 2), (9.0, [1.0], 1)],
         )
+
+
+class PearsonTest(unittest.TestCase):
+    def test_perfectly_correlated_series_score_one(self):
+        self.assertAlmostEqual(pearson([1.0, 2.0, 3.0], [2.0, 4.0, 6.0]), 1.0)
+
+    def test_inverted_series_score_minus_one(self):
+        self.assertAlmostEqual(pearson([1.0, 2.0, 3.0], [3.0, 2.0, 1.0]), -1.0)
+
+    def test_constant_predictions_score_zero_instead_of_dividing_by_zero(self):
+        self.assertEqual(pearson([1.0, 1.0, 1.0], [1.0, 2.0, 3.0]), 0.0)
+
+    def test_uncorrelated_series_score_near_zero(self):
+        self.assertAlmostEqual(pearson([1.0, 2.0, 1.0, 2.0], [5.0, 5.0, 7.0, 7.0]), 0.0)
 
 
 class ClippedSurrogateTest(unittest.TestCase):
