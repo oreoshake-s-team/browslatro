@@ -7,6 +7,10 @@ import {
   LUCKY_ENHANCEMENT_MULT_AMOUNT,
   enhancementRngConfig,
 } from "./cards/enhancements";
+import {
+  LUCKY_CAT_X_MULT_PER_TRIGGER,
+  createLuckyCatJoker,
+} from "./items/jokers";
 import { bossPickerRngConfig } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
 import { useGame } from "./store/game";
@@ -275,6 +279,77 @@ describe("Lucky proc dual-fire on the same scoring event", () => {
       money: document.querySelector("[data-testid^='lucky-money-scoring-']"),
       moneyDelta: useGame.getState().money - moneyBefore,
     }).toEqual({ mult: null, money: null, moneyDelta: 0 });
+  });
+});
+
+describe("Lucky Cat same-hand scaling", () => {
+  async function playThreeQueensWithLuckyCat(): Promise<void> {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    useGame.getState().setJokers([createLuckyCatJoker()]);
+    const cards = getHandCardButtons();
+    await user.click(cards[0]);
+    await user.click(cards[1]);
+    await user.click(cards[2]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+  }
+
+  test("Lucky Cat's X Mult from this hand's lucky triggers applies to the same hand's score", async () => {
+    enhancementRngConfig.rng = () => 0;
+    deckConfig.hand = [
+      makeCard("Q", "diamonds"),
+      makeCard("Q", "spades"),
+      makeCard("Q", "spades", "lucky"),
+      makeCard("2", "clubs"),
+      makeCard("3", "diamonds"),
+      makeCard("4", "hearts"),
+      makeCard("5", "spades"),
+      makeCard("6", "clubs"),
+    ];
+    await playThreeQueensWithLuckyCat();
+    const chips = 30 + 30;
+    const multAfterLuckyProc = 3 + LUCKY_ENHANCEMENT_MULT_AMOUNT;
+    const luckyCatFactor = 1 + 2 * LUCKY_CAT_X_MULT_PER_TRIGGER;
+    expect(useGame.getState().roundScore).toBe(
+      Math.floor(chips * multAfterLuckyProc * luckyCatFactor),
+    );
+  });
+
+  test("Lucky Cat's counter reflects this hand's triggers after scoring", async () => {
+    enhancementRngConfig.rng = () => 0;
+    deckConfig.hand = [
+      makeCard("Q", "diamonds"),
+      makeCard("Q", "spades"),
+      makeCard("Q", "spades", "lucky"),
+      makeCard("2", "clubs"),
+      makeCard("3", "diamonds"),
+      makeCard("4", "hearts"),
+      makeCard("5", "spades"),
+      makeCard("6", "clubs"),
+    ];
+    await playThreeQueensWithLuckyCat();
+    expect(useGame.getState().jokers[0].state).toEqual({
+      kind: "counter",
+      value: 2,
+    });
+  });
+
+  test("Lucky Cat contributes X1 when no lucky trigger fires (negative)", async () => {
+    enhancementRngConfig.rng = () => 0.999;
+    deckConfig.hand = [
+      makeCard("Q", "diamonds"),
+      makeCard("Q", "spades"),
+      makeCard("Q", "spades", "lucky"),
+      makeCard("2", "clubs"),
+      makeCard("3", "diamonds"),
+      makeCard("4", "hearts"),
+      makeCard("5", "spades"),
+      makeCard("6", "clubs"),
+    ];
+    await playThreeQueensWithLuckyCat();
+    expect(useGame.getState().roundScore).toBe((30 + 30) * 3);
   });
 });
 

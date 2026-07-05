@@ -693,25 +693,6 @@ export function usePlayHand({
       ...handPlayCounts,
       [label]: handPlayCounts[label] + 1,
     };
-    const handJokerResult = applyHandLevelJokers(scoringJokers, {
-      playedHandLabel: label,
-      playedCardCount: playedCards.length,
-      scoredCards: scoring,
-      remainingDiscards,
-      remainingHands,
-      money,
-      heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
-      fullDeck: handLevelFullDeck,
-      remainingDeck: dealt.remaining,
-      baseDeckSize: baseDeckCards.length,
-      handPlayCounts: handPlayCountsWithThisHand,
-      handLabelsThisRound: handHistoryThisRound,
-      blindsSkipped: runStats.blindsSkipped,
-      addedCardsCount: addedCards.length,
-      todoHand: useGame.getState().todoHand,
-      bossTriggered,
-    });
-
     let perCardAdditiveMult = 0;
     let perCardAdditiveChips = 0;
     let perCardXMult = 1;
@@ -753,6 +734,27 @@ export function usePlayHand({
         applyLuckyTriggersToJokerStates(prev, luckyTriggerCount),
       );
     }
+    const handJokerResult = applyHandLevelJokers(
+      applyLuckyTriggersToJokerStates(scoringJokers, luckyTriggerCount),
+      {
+        playedHandLabel: label,
+        playedCardCount: playedCards.length,
+        scoredCards: scoring,
+        remainingDiscards,
+        remainingHands,
+        money,
+        heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
+        fullDeck: handLevelFullDeck,
+        remainingDeck: dealt.remaining,
+        baseDeckSize: baseDeckCards.length,
+        handPlayCounts: handPlayCountsWithThisHand,
+        handLabelsThisRound: handHistoryThisRound,
+        blindsSkipped: runStats.blindsSkipped,
+        addedCardsCount: addedCards.length,
+        todoHand: useGame.getState().todoHand,
+        bossTriggered,
+      },
+    );
 
     const heldSteelIds = heldEnhancementIdsWithRedSeal(
       dealt.hand,
