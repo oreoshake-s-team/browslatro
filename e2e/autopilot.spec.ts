@@ -136,6 +136,24 @@ test("agreeing with the policy proposal records a good policy verdict", async ({
   expect(log).toContain('"context":"hand"');
 });
 
+test("the feedback confirmation clears once the next hand is dealt", async ({
+  page,
+}) => {
+  await startRound(page);
+  const roundScore = page.locator(".round-score-value");
+  const toggle = page.getByRole("button", { name: "Suggest" });
+  await toggle.click();
+  const agree = page.getByTestId("advice-feedback-agree");
+  await expect(agree).toBeVisible({ timeout: 10_000 });
+
+  await agree.click();
+  const recorded = page.getByTestId("autopilot-feedback-recorded");
+  await expect(recorded).toBeVisible();
+
+  await expect(roundScore).not.toHaveText("0", { timeout: 10_000 });
+  await expect(recorded).toBeHidden({ timeout: 15_000 });
+});
+
 test("autopilot can be switched off", async ({ page }) => {
   await startRound(page);
   const toggle = page.getByRole("button", { name: "Suggest" });
