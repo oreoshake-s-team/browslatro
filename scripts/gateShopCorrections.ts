@@ -15,6 +15,7 @@
  *     [--hand-model PATH] [--horizon N] [--rollouts N] [--min-score-fraction 0.25]
  */
 import { readFileSync, writeFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 
 import { createPolicyAgent } from "../src/ai/policyAgent";
 import { loadPolicyRanker } from "../src/ai/policy";
@@ -63,7 +64,7 @@ async function main(): Promise<void> {
   }
 
   const ranker = await loadPolicyRanker(
-    readFileSync(stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx")),
+    readFileSync(stringFlag("--hand-model", HAND_MODEL_REPO_PATH)),
   );
   const consumableDeps: ConsumableLabelDeps = {
     jokerCatalog: createJokerCatalog().filter((j) => j.rarity !== "legendary"),

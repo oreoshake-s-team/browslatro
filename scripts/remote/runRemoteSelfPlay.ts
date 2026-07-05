@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH, SHOP_MODEL_REPO_PATH } from "../../src/ai/advisor/productionModels";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { intFlag } from "../generateDataset";
@@ -212,9 +213,9 @@ if (isMain) {
       cpuKind: "shared",
     },
     selfPlay: {
-      shopModel: stringFlag("--shop-model", "public/models/advisor-shop-policy-v13.onnx"),
+      shopModel: stringFlag("--shop-model", SHOP_MODEL_REPO_PATH),
       shopModelKey,
-      handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
+      handModel: stringFlag("--hand-model", HAND_MODEL_REPO_PATH),
       temperature: Number(stringFlag("--temperature", "1.0")),
       hold: process.argv.includes("--hold-consumables"),
       parallelJobs,

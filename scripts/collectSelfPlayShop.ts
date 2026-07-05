@@ -1,4 +1,5 @@
 import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH, SHOP_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -88,8 +89,8 @@ async function main(): Promise<void> {
   }
   const games = Number(flag("--games", "500"));
   const seedOffset = Number(flag("--seed-offset", "0"));
-  const shopModel = flag("--shop-model", "public/models/advisor-shop-policy-v13.onnx");
-  const handModel = flag("--hand-model", "public/models/advisor-policy-v9.onnx");
+  const shopModel = flag("--shop-model", SHOP_MODEL_REPO_PATH);
+  const handModel = flag("--hand-model", HAND_MODEL_REPO_PATH);
   const temperature = Number(flag("--temperature", "1.0"));
   const exploringFractionRaw = flag("--exploring-starts-fraction", "0");
   const startsFile = flag("--starts-file", "");

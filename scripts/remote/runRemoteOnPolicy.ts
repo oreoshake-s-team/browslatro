@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH } from "../../src/ai/advisor/productionModels";
 import { fileURLToPath } from "node:url";
 import { resolve, join } from "node:path";
 import { intFlag } from "../generateDataset";
@@ -157,7 +158,7 @@ if (isMain) {
   const datasetImage = stringFlag("--image", requireEnv("DATASET_IMAGE"));
   const trainImage = stringFlag("--train-image", requireEnv("TRAIN_IMAGE"));
   const hold = process.argv.includes("--hold-consumables");
-  const handModel = stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx");
+  const handModel = stringFlag("--hand-model", HAND_MODEL_REPO_PATH);
   const machines = intFlag("--machines", 8);
   const cpuKind = parseCpuKind(stringFlag("--cpu-kind", "shared"));
   const selfplayCpus = intFlag("--selfplay-cpus", 4);

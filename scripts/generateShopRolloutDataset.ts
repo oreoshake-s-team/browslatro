@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { HAND_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
@@ -303,7 +304,7 @@ if (isMain) {
   const config: GenConfig = {
     games: intFlag("--games", 50),
     seedOffset: intFlag("--seed-offset", 0),
-    handModel: stringFlag("--hand-model", "public/models/advisor-policy-v9.onnx"),
+    handModel: stringFlag("--hand-model", HAND_MODEL_REPO_PATH),
     horizon: intFlag("--horizon", 8),
     rollouts: intFlag("--rollouts", 2),
     rolloutShopModel: stringFlag("--rollout-shop-model", ""),

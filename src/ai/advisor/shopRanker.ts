@@ -5,9 +5,10 @@ import {
   SHOP_INPUT_FEATURES_V2,
 } from "./shopEncoding";
 import type { PackRankInput, ShopRankInput } from "./shopEncoding";
+import { SHOP_MODEL_ID, SHOP_MODEL_SERVING_URL } from "./productionModels";
 
-export const SHOP_MODEL_URL = "/models/advisor-shop-policy-v15.onnx";
-export const SHOP_POLICY_MODEL_ID = "advisor-shop-policy-v15";
+export const SHOP_MODEL_URL = SHOP_MODEL_SERVING_URL;
+export const SHOP_POLICY_MODEL_ID = SHOP_MODEL_ID;
 
 export interface ShopCandidateRanker {
   load(onProgress?: DownloadProgressListener): Promise<void>;

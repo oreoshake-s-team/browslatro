@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { HAND_MODEL_REPO_PATH, SHOP_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import { playHeadlessRun, type HeadlessShopAgent } from "../src/ai/headlessRun";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
@@ -19,8 +20,8 @@ function stringFlag(name: string, fallback: string): string {
 }
 
 const games = intFlag("--games", 200);
-const handModel = stringFlag("--policy", "public/models/advisor-policy-v9.onnx");
-const shopModel = stringFlag("--shop-policy", "public/models/advisor-shop-policy-v13.onnx");
+const handModel = stringFlag("--policy", HAND_MODEL_REPO_PATH);
+const shopModel = stringFlag("--shop-policy", SHOP_MODEL_REPO_PATH);
 
 const ranker = await loadPolicyRanker(readFileSync(handModel));
 const hand = createPolicyAgent(ranker);
