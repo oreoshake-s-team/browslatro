@@ -1358,6 +1358,40 @@ describe("applyAstronomerPricing", () => {
     const out = applyAstronomerPricing(offers, true);
     expect(out[0].kind === "pack" && out[0].price).toBe(4);
   });
+
+  test("records the original Planet price in basePrice when zeroing", () => {
+    const out = applyAstronomerPricing([planetOffer("jupiter", 3)], true);
+    expect(out[0].kind === "planet" && out[0].basePrice).toBe(3);
+  });
+
+  test("restores a zeroed Planet offer's price once Astronomer is gone", () => {
+    const zeroed = applyAstronomerPricing([planetOffer("jupiter", 3)], true);
+    const out = applyAstronomerPricing(zeroed, false);
+    expect(out[0].kind === "planet" && out[0].price).toBe(3);
+  });
+
+  test("restores a zeroed Celestial pack's price once Astronomer is gone", () => {
+    const zeroed = applyAstronomerPricing([celestialPackOffer(4)], true);
+    const out = applyAstronomerPricing(zeroed, false);
+    expect(out[0].kind === "pack" && out[0].price).toBe(4);
+  });
+
+  test("re-zeroes a restored Planet offer without losing the original price", () => {
+    const restored = applyAstronomerPricing(
+      applyAstronomerPricing([planetOffer("jupiter", 3)], true),
+      false,
+    );
+    const out = applyAstronomerPricing(restored, true);
+    expect(out[0].kind === "planet" && out[0].basePrice).toBe(3);
+  });
+
+  test("keeps an already-free Planet offer free after Astronomer leaves (negative)", () => {
+    const out = applyAstronomerPricing(
+      applyAstronomerPricing([planetOffer("jupiter", 0)], true),
+      false,
+    );
+    expect(out[0].kind === "planet" && out[0].price).toBe(0);
+  });
 });
 
 describe("Telescope: guaranteedPlanetId on forced Celestial pack", () => {

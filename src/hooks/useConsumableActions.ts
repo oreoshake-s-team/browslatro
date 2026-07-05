@@ -85,6 +85,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
   const setCardEditionsById = useGame((s) => s.setCardEditionsById);
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
   const handDisplayOrder = useGame((s) => s.handDisplayOrder);
+  const refreshCelestialPricing = useGame((s) => s.refreshCelestialPricing);
 
   function useConsumable(consumableIdx: number): void {
     const entry = consumables[consumableIdx];
@@ -279,6 +280,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (!created) return;
       play("pop");
       setJokers((prev) => [...prev, created]);
+      refreshCelestialPricing();
       consume();
       return;
     }

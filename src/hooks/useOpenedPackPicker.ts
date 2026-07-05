@@ -72,6 +72,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
   const applySpectralEffect = useGame((s) => s.applySpectralEffect);
   const decrementPackPicks = useGame((s) => s.decrementPackPicks);
+  const refreshCelestialPricing = useGame((s) => s.refreshCelestialPricing);
   const setPickedPackOptionIndices = useGame(
     (s) => s.setPickedPackOptionIndices,
   );
@@ -150,6 +151,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
         play("pop");
         markUsed("tarot");
         setJokers((prev) => [...prev, created]);
+        refreshCelestialPricing();
       } else if (effect.kind === "destroy-selected") {
         if (packPreviewHand.length === 0) {
           if (!hasFreeConsumableSlot(consumables, consumableCapacity)) return;
@@ -274,6 +276,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
       }
       play("pop");
       setJokers((prev) => [...prev, option.joker]);
+      refreshCelestialPricing();
     } else if (option.kind === "spectral") {
       const effect = option.spectral.effect;
       if (effect.kind === "duplicate-selected") {

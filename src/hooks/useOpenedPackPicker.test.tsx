@@ -547,3 +547,70 @@ describe("pickFromOpenedPack — updates The Fool's last-used consumable", () =>
     });
   });
 });
+
+describe("pickFromOpenedPack — Astronomer repricing of shop offers", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  function findJoker(id: string) {
+    const joker = createJokerCatalog().find((j) => j.id === id);
+    if (!joker) throw new Error(`${id} missing from catalog`);
+    return joker;
+  }
+
+  function openBuffoonPack(jokerId: string): void {
+    useGame.getState().setOpenedPack({
+      pool: "buffoon",
+      variant: "normal",
+      options: [{ kind: "joker", joker: findJoker(jokerId) }],
+    });
+    useGame.getState().setPackPicksRemaining(1);
+    useGame.getState().setPackPreviewHand([]);
+  }
+
+  function stockShopWithCelestials(): void {
+    useGame.getState().setShopOffers([
+      { kind: "planet", planet: findPlanet("mercury"), price: 3, sold: false },
+      {
+        kind: "pack",
+        pack: { pool: "celestial", variant: "normal", options: [] },
+        price: 4,
+        sold: false,
+      },
+    ]);
+  }
+
+  test("picking Astronomer from a Buffoon pack makes a Planet offer free", () => {
+    stockShopWithCelestials();
+    openBuffoonPack("astronomer");
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(0);
+  });
+
+  test("picking Astronomer from a Buffoon pack makes the Celestial pack free", () => {
+    stockShopWithCelestials();
+    openBuffoonPack("astronomer");
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().shopOffers?.[1]?.price).toBe(0);
+  });
+
+  test("picking a non-Astronomer joker leaves the Planet offer priced (negative)", () => {
+    stockShopWithCelestials();
+    openBuffoonPack("erosion");
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(3);
+  });
+
+  test("Judgement creating a joker refreshes stale pricing while Astronomer is held", () => {
+    useGame.getState().setJokers([findJoker("astronomer")]);
+    stockShopWithCelestials();
+    openPack([tarotOption("judgement")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(0);
+  });
+});

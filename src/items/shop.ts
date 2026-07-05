@@ -137,6 +137,7 @@ export type ShopItem =
       readonly kind: "planet";
       readonly planet: PlanetCard;
       readonly price: number;
+      readonly basePrice?: number;
       readonly sold: boolean;
     }
   | {
@@ -161,6 +162,7 @@ export type ShopItem =
       readonly kind: "pack";
       readonly pack: PackOffer;
       readonly price: number;
+      readonly basePrice?: number;
       readonly sold: boolean;
     };
 
@@ -270,13 +272,21 @@ export function applyAstronomerPricing(
   offers: ReadonlyArray<ShopItem>,
   astronomerActive: boolean,
 ): ShopItem[] {
-  if (!astronomerActive) return [...offers];
   return offers.map((offer) => {
-    if (offer.kind === "planet") return { ...offer, price: 0 };
-    if (offer.kind === "pack" && offer.pack.pool === "celestial") {
-      return { ...offer, price: 0 };
+    if (
+      offer.kind !== "planet" &&
+      (offer.kind !== "pack" || offer.pack.pool !== "celestial")
+    ) {
+      return offer;
     }
-    return offer;
+    if (astronomerActive) {
+      if (offer.price === 0) return offer;
+      return { ...offer, basePrice: offer.basePrice ?? offer.price, price: 0 };
+    }
+    if (offer.basePrice === undefined || offer.price === offer.basePrice) {
+      return offer;
+    }
+    return { ...offer, price: offer.basePrice };
   });
 }
 
