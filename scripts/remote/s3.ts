@@ -1,4 +1,5 @@
 import { createHash, createHmac } from "node:crypto";
+import { fetchWithRetry } from "./fetchRetry";
 
 export interface S3Config {
   readonly endpoint: string;
@@ -99,7 +100,7 @@ export async function putObject(
   const signed = signS3Request(config, "PUT", key, body, new Date());
   const payload = new Uint8Array(body.byteLength);
   payload.set(body);
-  const res = await fetch(signed.url, {
+  const res = await fetchWithRetry(fetch, signed.url, {
     method: "PUT",
     headers: { ...signed.headers, "content-type": contentType },
     body: payload,
@@ -111,7 +112,7 @@ export async function putObject(
 
 export async function getObject(config: S3Config, key: string): Promise<Buffer> {
   const signed = signS3Request(config, "GET", key, Buffer.alloc(0), new Date());
-  const res = await fetch(signed.url, { method: "GET", headers: signed.headers });
+  const res = await fetchWithRetry(fetch, signed.url, { method: "GET", headers: signed.headers });
   if (!res.ok) {
     throw new Error(`S3 GET ${key} failed: ${res.status}`);
   }
