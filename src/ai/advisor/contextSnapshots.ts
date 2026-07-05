@@ -2,6 +2,7 @@ import type { Consumable } from "../../items/consumables";
 import type { Joker } from "../../items/jokers";
 import { packPickLimit, type PackOption } from "../../items/packs";
 import type { ShopItem } from "../../items/shop";
+import { packFeatureVector } from "./packFeatures";
 import { categorizePackOption, categorizeShopItem } from "./shopCategory";
 import {
   packOptionAttributes,
@@ -97,6 +98,9 @@ export function shopAdviceItem(offer: ShopItem, cost: number): ShopAdviceItem {
     category: categorizeShopItem(offer),
     attributes: shopItemAttributes(offer),
     ...(offer.kind === "planet" ? { advancesHands: offer.planet.hands } : {}),
+    ...(offer.kind === "pack"
+      ? { packFeatures: packFeatureVector(offer.pack.pool, offer.pack.variant) }
+      : {}),
     id: item.id,
     name: item.name,
     description: item.description,

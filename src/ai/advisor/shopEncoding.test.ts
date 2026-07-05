@@ -9,10 +9,13 @@ import {
   encodeShopCandidatesV2,
   shopBuildSummary,
   SHOP_BUILD_FEATURES,
+  SHOP_CANDIDATE_PACK_FEATURES,
   SHOP_CANDIDATE_WINCON_FEATURES,
   SHOP_INPUT_FEATURES,
   SHOP_INPUT_FEATURES_V2,
 } from "./shopEncoding";
+import { packFeatureVector } from "./packFeatures";
+import type { PackPool, PackVariant } from "../../items/packs";
 import type { PackRankInput, ShopBuild, ShopRankInput } from "./shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
 import type { Card } from "../../cards/types";
@@ -72,13 +75,15 @@ function skipCandidate(): PackAdviceCandidate {
 }
 
 describe("SHOP_INPUT_FEATURES", () => {
-  test("equals 101", () => {
-    expect(SHOP_INPUT_FEATURES).toBe(101);
+  test("equals 111", () => {
+    expect(SHOP_INPUT_FEATURES).toBe(111);
   });
 });
 
 describe("wincon features", () => {
   const WINCON = 3;
+  const WINCON_START =
+    SHOP_INPUT_FEATURES - SHOP_CANDIDATE_PACK_FEATURES - WINCON;
   function planetBuy(advancesHands: ReadonlyArray<string>): ShopAdviceCandidate {
     return {
       action: "buy",
@@ -94,29 +99,29 @@ describe("wincon features", () => {
 
   test("advancesTopHand is 1 when the planet levels the current top hand", () => {
     const row = encodeBuy(planetBuy(["Flush"]), flushBuild);
-    expect(row[SHOP_INPUT_FEATURES - WINCON]).toBe(1);
+    expect(row[WINCON_START]).toBe(1);
   });
 
   test("advancesTopHand is 0 when the planet levels a non-top hand", () => {
     const row = encodeBuy(planetBuy(["Pair"]), flushBuild);
-    expect(row[SHOP_INPUT_FEATURES - WINCON]).toBe(0);
+    expect(row[WINCON_START]).toBe(0);
   });
 
   test("advancedHandLevel reflects the current level of the advanced hand", () => {
     const build: ShopBuild = { handLevels: { Pair: 5 }, jokers: [], deckEnhancements: {}, consumablesHeld: 0 };
     const row = encodeBuy(planetBuy(["Pair"]), build);
-    expect(row[SHOP_INPUT_FEATURES - WINCON + 1]).toBeCloseTo((5 - 1) / 20, 6);
+    expect(row[WINCON_START + 1]).toBeCloseTo((5 - 1) / 20, 6);
   });
 
   test("sameCategoryJokerOwned counts owned jokers of the offer's effect category", () => {
     const build: ShopBuild = { handLevels: {}, jokers: [{ effectKind: "additive-mult", rarity: "common" }], deckEnhancements: {}, consumablesHeld: 0 };
     const row = encodeBuy(buyCandidate(), build);
-    expect(row[SHOP_INPUT_FEATURES - 1]).toBeCloseTo(1 / 5, 6);
+    expect(row[WINCON_START + 2]).toBeCloseTo(1 / 5, 6);
   });
 
   test("a leave candidate has a zero wincon block", () => {
     const row = encodeBuy(leaveCandidate(), flushBuild);
-    expect(row.slice(SHOP_INPUT_FEATURES - WINCON)).toEqual([0, 0, 0]);
+    expect(row.slice(WINCON_START, WINCON_START + WINCON)).toEqual([0, 0, 0]);
   });
 
   test("winconConcentration is 0 for an unleveled build", () => {
@@ -310,7 +315,10 @@ describe("encodeShopCandidates — voucher features", () => {
       round: 0,
       candidates: [candidate],
     });
-    const voucherEnd = SHOP_INPUT_FEATURES - SHOP_CANDIDATE_WINCON_FEATURES;
+    const voucherEnd =
+      SHOP_INPUT_FEATURES -
+      SHOP_CANDIDATE_PACK_FEATURES -
+      SHOP_CANDIDATE_WINCON_FEATURES;
     return Array.from(
       encoded.slice(voucherEnd - VOUCHER_FEATURES, voucherEnd),
     );
@@ -338,6 +346,60 @@ describe("encodeShopCandidates — voucher features", () => {
   test("a reroll candidate leaves the voucher block all zeros", () => {
     expect(voucherBlock(rerollCandidate())).toEqual(
       new Array(VOUCHER_FEATURES).fill(0),
+    );
+  });
+});
+
+function packBuyCandidate(
+  pool: PackPool,
+  variant: PackVariant,
+): ShopAdviceCandidate {
+  return {
+    action: "buy",
+    item: {
+      id: `${pool}-${variant}`,
+      name: `${variant} ${pool} pack`,
+      itemType: "pack",
+      category: "other",
+      packFeatures: packFeatureVector(pool, variant),
+      cost: 6,
+      description: "test",
+    },
+  };
+}
+
+describe("encodeShopCandidates — pack features", () => {
+  function packBlock(candidate: ShopAdviceCandidate): number[] {
+    const encoded = encodeShopCandidates({
+      money: 50,
+      ante: 1,
+      round: 0,
+      candidates: [candidate],
+    });
+    return Array.from(encoded.slice(SHOP_INPUT_FEATURES - SHOP_CANDIDATE_PACK_FEATURES));
+  }
+
+  test("a pack buy carries its pack feature vector", () => {
+    expect(packBlock(packBuyCandidate("arcana", "mega"))).toEqual(
+      packFeatureVector("arcana", "mega"),
+    );
+  });
+
+  test("distinct packs encode to distinct pack blocks", () => {
+    expect(packBlock(packBuyCandidate("arcana", "mega"))).not.toEqual(
+      packBlock(packBuyCandidate("celestial", "normal")),
+    );
+  });
+
+  test("a non-pack buy leaves the pack block all zeros", () => {
+    expect(packBlock(buyCandidate())).toEqual(
+      new Array(SHOP_CANDIDATE_PACK_FEATURES).fill(0),
+    );
+  });
+
+  test("a reroll candidate leaves the pack block all zeros", () => {
+    expect(packBlock(rerollCandidate())).toEqual(
+      new Array(SHOP_CANDIDATE_PACK_FEATURES).fill(0),
     );
   });
 });
@@ -388,6 +450,7 @@ interface GoldenOffer {
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
   readonly voucherFeatures?: ReadonlyArray<number>;
+  readonly packFeatures?: ReadonlyArray<number>;
   readonly advancesHands?: ReadonlyArray<string>;
   readonly id: string;
   readonly name: string;
@@ -439,7 +502,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "purchase") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, advancesHands: o.advancesHands, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, packFeatures: o.packFeatures, advancesHands: o.advancesHands, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "leave" });
     return { money, ante, round, build: buildFromGolden(rec), candidates };
@@ -448,7 +511,7 @@ function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
   if (rec.kind === "reroll") {
     const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
       action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, advancesHands: o.advancesHands, cost: o.cost, description: "" },
+      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, packFeatures: o.packFeatures, advancesHands: o.advancesHands, cost: o.cost, description: "" },
     }));
     candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
     candidates.push({ action: "leave" });

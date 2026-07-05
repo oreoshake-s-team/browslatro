@@ -190,7 +190,7 @@ def encode_decision(record):
     return inputs, record["chosenIndex"]
 
 
-SHOP_ENCODING_VERSION = 6
+SHOP_ENCODING_VERSION = 7
 SHOP_ITEM_TYPES = ["joker", "planet", "tarot", "spectral", "playing-card", "pack", "voucher"]
 SHOP_CANDIDATE_CATEGORIES = [
     "joker-mult",
@@ -210,6 +210,7 @@ SHOP_ATTRIBUTE_FEATURES = 18
 SHOP_VOUCHER_FEATURES = 18
 SHOP_BUILD_WINCON_FEATURES = 2
 SHOP_CANDIDATE_WINCON_FEATURES = 3
+SHOP_CANDIDATE_PACK_FEATURES = 10
 SHOP_BUILD_FEATURES = (
     len(HAND_LABELS)
     + 1
@@ -227,6 +228,7 @@ SHOP_CANDIDATE_FEATURES = (
     + SHOP_ATTRIBUTE_FEATURES
     + SHOP_VOUCHER_FEATURES
     + SHOP_CANDIDATE_WINCON_FEATURES
+    + SHOP_CANDIDATE_PACK_FEATURES
 )
 SHOP_INPUT_FEATURES = SHOP_CONTEXT_FEATURES + SHOP_CANDIDATE_FEATURES
 SHOP_INPUT_FEATURES_V2 = SHOP_INPUT_FEATURES + 1
@@ -247,6 +249,15 @@ def _shop_voucher_features(features):
     vals = [float(x) for x in features[:SHOP_VOUCHER_FEATURES]]
     if len(vals) < SHOP_VOUCHER_FEATURES:
         vals += [0.0] * (SHOP_VOUCHER_FEATURES - len(vals))
+    return vals
+
+
+def _shop_pack_features(features):
+    if not features:
+        return [0.0] * SHOP_CANDIDATE_PACK_FEATURES
+    vals = [float(x) for x in features[:SHOP_CANDIDATE_PACK_FEATURES]]
+    if len(vals) < SHOP_CANDIDATE_PACK_FEATURES:
+        vals += [0.0] * (SHOP_CANDIDATE_PACK_FEATURES - len(vals))
     return vals
 
 
@@ -327,6 +338,7 @@ def _encode_shop_candidate(
     category="other",
     attributes=None,
     voucher_features=None,
+    pack_features=None,
     advances_hands=None,
     is_reroll=False,
     is_leave=False,
@@ -340,6 +352,7 @@ def _encode_shop_candidate(
         + _shop_attributes(attributes)
         + _shop_voucher_features(voucher_features)
         + _shop_wincon_features(advances_hands, category, sig)
+        + _shop_pack_features(pack_features)
     )
 
 
@@ -358,7 +371,7 @@ def encode_shop_decision(record):
     if kind == "purchase":
         offers = record["offers"]
         candidates = [
-            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"), advances_hands=o.get("advancesHands"))
+            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"), pack_features=o.get("packFeatures"), advances_hands=o.get("advancesHands"))
             for o in offers
         ]
         candidates.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True))
@@ -372,7 +385,7 @@ def encode_shop_decision(record):
     if kind == "reroll":
         offers = record["offers"]
         candidates = [
-            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"), advances_hands=o.get("advancesHands"))
+            ctx + _encode_shop_candidate(o["itemType"], o["cost"], money, sig, category=o.get("category", "other"), attributes=o.get("attributes"), voucher_features=o.get("voucherFeatures"), pack_features=o.get("packFeatures"), advances_hands=o.get("advancesHands"))
             for o in offers
         ]
         candidates.append(ctx + _encode_shop_candidate(None, record["cost"], money, sig, is_reroll=True))
@@ -417,6 +430,7 @@ def encode_shop_decision_v2(record):
                 category=c.get("category", "other"),
                 attributes=c.get("attributes"),
                 voucher_features=c.get("voucherFeatures"),
+                pack_features=c.get("packFeatures"),
                 advances_hands=c.get("advancesHands"),
                 is_reroll=bool(c.get("isReroll")),
                 is_leave=bool(c.get("isLeave")),

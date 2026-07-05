@@ -14,6 +14,7 @@ import {
   ZERO_SHOP_ATTRIBUTES,
 } from "./shopCandidateAttributes";
 import { VOUCHER_FEATURES, ZERO_VOUCHER_FEATURES } from "./voucherFeatures";
+import { PACK_FEATURES, ZERO_PACK_FEATURES } from "./packFeatures";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
 
 const ITEM_TYPES = [
@@ -40,6 +41,8 @@ export const SHOP_BUILD_FEATURES =
 
 export const SHOP_CONTEXT_FEATURES = 4 + SHOP_BUILD_FEATURES;
 
+export const SHOP_CANDIDATE_PACK_FEATURES = PACK_FEATURES;
+
 export const SHOP_INPUT_FEATURES =
   SHOP_CONTEXT_FEATURES +
   ITEM_TYPES.length +
@@ -47,7 +50,8 @@ export const SHOP_INPUT_FEATURES =
   SHOP_CANDIDATE_CATEGORIES.length +
   SHOP_ATTRIBUTE_FEATURES +
   VOUCHER_FEATURES +
-  SHOP_CANDIDATE_WINCON_FEATURES;
+  SHOP_CANDIDATE_WINCON_FEATURES +
+  SHOP_CANDIDATE_PACK_FEATURES;
 
 export interface ShopBuildJoker {
   readonly effectKind: string;
@@ -201,6 +205,7 @@ function candidateRow(
   category: string,
   attributes: ReadonlyArray<number>,
   voucherFeatures: ReadonlyArray<number>,
+  packFeatures: ReadonlyArray<number>,
   cost: number,
   isReroll: boolean,
   isLeave: boolean,
@@ -218,6 +223,8 @@ function candidateRow(
     voucherFeatures.length === VOUCHER_FEATURES
       ? voucherFeatures
       : ZERO_VOUCHER_FEATURES;
+  const pfeats =
+    packFeatures.length === PACK_FEATURES ? packFeatures : ZERO_PACK_FEATURES;
   return [
     money / 20,
     ante / 8,
@@ -234,6 +241,7 @@ function candidateRow(
     ...attrs,
     ...vfeats,
     ...winconFeatures(advancesHands, category, sig),
+    ...pfeats,
   ];
 }
 
@@ -244,10 +252,10 @@ export function encodeShopCandidates(input: ShopRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "buy" || c.action === "sell")
-        return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, c.item.advancesHands, sig);
+        return candidateRow(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.packFeatures ?? ZERO_PACK_FEATURES, c.item.cost, false, false, false, c.item.advancesHands, sig);
       if (c.action === "reroll")
-        return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false, undefined, sig);
-      return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false, undefined, sig);
+        return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, c.cost, true, false, false, undefined, sig);
+      return candidateRow(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, 0, false, true, false, undefined, sig);
     }),
   );
 }
@@ -264,6 +272,7 @@ function candidateRowV2(
   category: string,
   attributes: ReadonlyArray<number>,
   voucherFeatures: ReadonlyArray<number>,
+  packFeatures: ReadonlyArray<number>,
   cost: number,
   isReroll: boolean,
   isLeave: boolean,
@@ -273,7 +282,7 @@ function candidateRowV2(
   sig: BuildSignals,
 ): number[] {
   return [
-    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, voucherFeatures, cost, isReroll, isLeave, isSkip, advancesHands, sig),
+    ...candidateRow(money, ante, round, picks, build, itemType, category, attributes, voucherFeatures, packFeatures, cost, isReroll, isLeave, isSkip, advancesHands, sig),
     isUse ? 1 : 0,
   ];
 }
@@ -285,12 +294,12 @@ export function encodeShopCandidatesV2(input: ShopRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "buy" || c.action === "sell")
-        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, false, c.item.advancesHands, sig);
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.packFeatures ?? ZERO_PACK_FEATURES, c.item.cost, false, false, false, false, c.item.advancesHands, sig);
       if (c.action === "use")
-        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, c.item.cost, false, false, false, true, c.item.advancesHands, sig);
+        return candidateRowV2(money, ante, round, 0, build, c.item.itemType, c.item.category, c.item.attributes ?? ZERO_SHOP_ATTRIBUTES, c.item.voucherFeatures ?? ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, c.item.cost, false, false, false, true, c.item.advancesHands, sig);
       if (c.action === "reroll")
-        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, c.cost, true, false, false, false, undefined, sig);
-      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, true, false, false, undefined, sig);
+        return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, c.cost, true, false, false, false, undefined, sig);
+      return candidateRowV2(money, ante, round, 0, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, 0, false, true, false, false, undefined, sig);
     }),
   );
 }
@@ -302,8 +311,8 @@ export function encodePackCandidates(input: PackRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "pick")
-        return candidateRow(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false, c.option.advancesHands, sig);
-      return candidateRow(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true, undefined, sig);
+        return candidateRow(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, 0, false, false, false, c.option.advancesHands, sig);
+      return candidateRow(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, 0, false, false, true, undefined, sig);
     }),
   );
 }
@@ -315,8 +324,8 @@ export function encodePackCandidatesV2(input: PackRankInput): Float32Array {
   return new Float32Array(
     input.candidates.flatMap((c) => {
       if (c.action === "pick")
-        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, false, false, c.option.advancesHands, sig);
-      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, 0, false, false, true, false, undefined, sig);
+        return candidateRowV2(money, ante, round, picksRemaining, build, c.option.optionType, c.option.category, c.option.attributes ?? ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, 0, false, false, false, false, c.option.advancesHands, sig);
+      return candidateRowV2(money, ante, round, picksRemaining, build, "", "other", ZERO_SHOP_ATTRIBUTES, ZERO_VOUCHER_FEATURES, ZERO_PACK_FEATURES, 0, false, false, true, false, undefined, sig);
     }),
   );
 }

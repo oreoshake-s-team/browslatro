@@ -16,6 +16,7 @@ from encoding import (
     SHOP_INPUT_FEATURES,
     SHOP_INPUT_FEATURES_V2,
     SHOP_ITEM_TYPES,
+    SHOP_CANDIDATE_PACK_FEATURES,
     SHOP_CANDIDATE_WINCON_FEATURES,
     SHOP_VOUCHER_FEATURES,
     STATE_FEATURES,
@@ -357,7 +358,7 @@ class EncodeShopDecisionTests(unittest.TestCase):
         voucher = {"itemType": "voucher", "id": "overstock", "name": "Overstock", "cost": 10, "voucherFeatures": feats}
         record = shop_envelope(kind="purchase", item=voucher, offers=[voucher])
         candidates, _ = encode_shop_decision(record)
-        block = candidates[0][-(SHOP_VOUCHER_FEATURES + SHOP_CANDIDATE_WINCON_FEATURES):-SHOP_CANDIDATE_WINCON_FEATURES]
+        block = candidates[0][-(SHOP_VOUCHER_FEATURES + SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES):-(SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES)]
         self.assertEqual(block, feats)
 
     def test_non_voucher_offer_has_a_zero_voucher_block(self):
@@ -367,26 +368,26 @@ class EncodeShopDecisionTests(unittest.TestCase):
             offers=[offer("joker", "jolly", 5)],
         )
         candidates, _ = encode_shop_decision(record)
-        block = candidates[0][-(SHOP_VOUCHER_FEATURES + SHOP_CANDIDATE_WINCON_FEATURES):-SHOP_CANDIDATE_WINCON_FEATURES]
+        block = candidates[0][-(SHOP_VOUCHER_FEATURES + SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES):-(SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES)]
         self.assertEqual(block, [0.0] * SHOP_VOUCHER_FEATURES)
 
     def test_planet_advancing_the_top_hand_sets_the_advances_top_flag(self):
         planet = {"itemType": "planet", "id": "jupiter", "name": "jupiter", "cost": 3, "category": "planet", "advancesHands": ["Flush"]}
         record = shop_envelope(kind="purchase", item=planet, offers=[planet], handLevels={"Flush": 4})
         candidates, _ = encode_shop_decision(record)
-        self.assertEqual(candidates[0][-SHOP_CANDIDATE_WINCON_FEATURES], 1.0)
+        self.assertEqual(candidates[0][-(SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES)], 1.0)
 
     def test_planet_advancing_a_non_top_hand_leaves_advances_top_zero(self):
         planet = {"itemType": "planet", "id": "mercury", "name": "mercury", "cost": 3, "category": "planet", "advancesHands": ["Pair"]}
         record = shop_envelope(kind="purchase", item=planet, offers=[planet], handLevels={"Flush": 4})
         candidates, _ = encode_shop_decision(record)
-        self.assertEqual(candidates[0][-SHOP_CANDIDATE_WINCON_FEATURES], 0.0)
+        self.assertEqual(candidates[0][-(SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES)], 0.0)
 
     def test_advanced_hand_level_reflects_the_current_level_of_the_advanced_hand(self):
         planet = {"itemType": "planet", "id": "mercury", "name": "mercury", "cost": 3, "category": "planet", "advancesHands": ["Pair"]}
         record = shop_envelope(kind="purchase", item=planet, offers=[planet], handLevels={"Pair": 5})
         candidates, _ = encode_shop_decision(record)
-        self.assertAlmostEqual(candidates[0][-SHOP_CANDIDATE_WINCON_FEATURES + 1], (5 - 1) / 20.0)
+        self.assertAlmostEqual(candidates[0][-(SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES) + 1], (5 - 1) / 20.0)
 
     def test_same_category_joker_counts_owned_jokers_of_that_category(self):
         joker = {"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 4, "category": "joker-mult"}
@@ -397,12 +398,28 @@ class EncodeShopDecisionTests(unittest.TestCase):
             jokers=[{"effectKind": "additive-mult", "rarity": "common"}],
         )
         candidates, _ = encode_shop_decision(record)
-        self.assertAlmostEqual(candidates[0][-1], 1 / 5.0)
+        self.assertAlmostEqual(candidates[0][-(SHOP_CANDIDATE_PACK_FEATURES + 1)], 1 / 5.0)
 
     def test_leave_candidate_has_a_zero_wincon_block(self):
         record = shop_envelope(kind="purchase", item=None, offers=[offer("joker", "jolly", 5)], handLevels={"Flush": 4})
         candidates, _ = encode_shop_decision(record)
-        self.assertEqual(candidates[-1][-SHOP_CANDIDATE_WINCON_FEATURES:], [0.0] * SHOP_CANDIDATE_WINCON_FEATURES)
+        self.assertEqual(candidates[-1][-(SHOP_CANDIDATE_WINCON_FEATURES + SHOP_CANDIDATE_PACK_FEATURES):-SHOP_CANDIDATE_PACK_FEATURES], [0.0] * SHOP_CANDIDATE_WINCON_FEATURES)
+
+    def test_pack_offer_carries_its_pack_feature_block(self):
+        feats = [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
+        pack = {"itemType": "pack", "id": "arcana-mega", "name": "mega arcana pack", "cost": 8, "category": "other", "packFeatures": feats}
+        record = shop_envelope(kind="purchase", item=pack, offers=[pack])
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(candidates[0][-SHOP_CANDIDATE_PACK_FEATURES:], feats)
+
+    def test_non_pack_offer_has_a_zero_pack_block(self):
+        record = shop_envelope(
+            kind="purchase",
+            item=offer("joker", "jolly", 5),
+            offers=[offer("joker", "jolly", 5)],
+        )
+        candidates, _ = encode_shop_decision(record)
+        self.assertEqual(candidates[0][-SHOP_CANDIDATE_PACK_FEATURES:], [0.0] * SHOP_CANDIDATE_PACK_FEATURES)
 
     def test_v2_candidate_vector_is_one_wider(self):
         record = shop_envelope(

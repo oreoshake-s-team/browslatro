@@ -13,26 +13,24 @@ warm-started PPO retrain under the new encoding.
 import argparse
 
 from encoding import (
-    SHOP_BUILD_FEATURES,
-    SHOP_BUILD_WINCON_FEATURES,
-    SHOP_CANDIDATE_WINCON_FEATURES,
+    SHOP_CANDIDATE_PACK_FEATURES,
     SHOP_INPUT_FEATURES,
     SHOP_INPUT_FEATURES_V2,
 )
 
 
 def carried_columns(new_width, v2):
-    """New-vector column indices that carry over from the old (narrower) vector.
+    """New-vector column indices that carry over from the source policy.
 
-    The build wincon block sits at the end of the build features; the candidate
-    wincon block sits immediately before the trailing v2 use flag (or at the very
-    end for v1). Every other column is inherited from the source policy in order.
+    The source is the current production shop encoding (wincon features already
+    present); this bump appends the pack-optionality block immediately after the
+    candidate wincon block, i.e. immediately before the trailing v2 use flag (or
+    at the very end for v1). That block is the only newly inserted feature; every
+    other column is inherited from the source policy in order.
     """
-    build_end = 4 + SHOP_BUILD_FEATURES
-    build_wincon = range(build_end - SHOP_BUILD_WINCON_FEATURES, build_end)
     tail = new_width - (1 if v2 else 0)
-    cand_wincon = range(tail - SHOP_CANDIDATE_WINCON_FEATURES, tail)
-    new_cols = set(build_wincon) | set(cand_wincon)
+    pack_block = range(tail - SHOP_CANDIDATE_PACK_FEATURES, tail)
+    new_cols = set(pack_block)
     return [i for i in range(new_width) if i not in new_cols]
 
 
