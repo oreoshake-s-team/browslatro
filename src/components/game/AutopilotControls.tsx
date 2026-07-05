@@ -180,7 +180,11 @@ export default function AutopilotControls({
         {t("advisor.suggestTitle")}
       </p>
       {feedbackRecorded && proposal === null && (
-        <p className="autopilot-feedback-recorded" role="status">
+        <p
+          className="autopilot-feedback-recorded"
+          role="status"
+          data-testid="autopilot-feedback-recorded"
+        >
           {t("advisor.feedbackRecorded")}
         </p>
       )}

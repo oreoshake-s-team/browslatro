@@ -63,6 +63,7 @@ import {
 } from "./components/system/preferences";
 import { initialDeal } from "./cards/deckBuild";
 import { createDeck, resetCardIds } from "./cards/deck";
+import { useAdviceFeedbackNotice } from "./hooks/useAdviceFeedbackNotice";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
@@ -261,11 +262,14 @@ function App() {
     if (pendingDecision !== null) rememberHandAdvice(pendingDecision);
   }, [pendingDecision]);
   useEffect(() => () => clearHandAdvice(), []);
-  const [autopilotFeedbackRecorded, setAutopilotFeedbackRecorded] =
-    useState(false);
+  const {
+    recorded: autopilotFeedbackRecorded,
+    markRecorded: markAutopilotFeedbackRecorded,
+    clear: clearAutopilotFeedbackNotice,
+  } = useAdviceFeedbackNotice(isScoring);
   useEffect(() => {
-    if (autopilotProposal !== null) setAutopilotFeedbackRecorded(false);
-  }, [autopilotProposal]);
+    if (autopilotProposal !== null) clearAutopilotFeedbackNotice();
+  }, [autopilotProposal, clearAutopilotFeedbackNotice]);
   const handleAutopilotFeedback = (correctedIndex: number | null): void => {
     if (policyDecision === null) return;
     captureAdviceFeedback(
@@ -273,7 +277,7 @@ function App() {
       buildHandPolicyFeedbackEvent(policyDecision, correctedIndex),
     );
     clearHandAdvice();
-    setAutopilotFeedbackRecorded(true);
+    markAutopilotFeedbackRecorded();
     const corrected =
       correctedIndex !== null
         ? policyDecision.candidates[correctedIndex]
@@ -295,7 +299,7 @@ function App() {
           "good",
         ),
       );
-      setAutopilotFeedbackRecorded(true);
+      markAutopilotFeedbackRecorded();
     }
     clearHandAdvice();
     autopilot.approve();
