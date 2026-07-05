@@ -74,6 +74,14 @@ export interface ShopDecisionLog {
   readonly consumablesHeld: number;
 }
 
+export interface ShopActionChoiceInput {
+  readonly candidates: ReadonlyArray<ShopAdviceCandidate>;
+  readonly build: ShopBuild;
+  readonly money: number;
+  readonly ante: number;
+  readonly round: number;
+}
+
 export interface HeadlessShopAgentOptions {
   readonly chooseIndex?: (logits: Float32Array, n: number) => number;
   readonly onShopDecision?: (log: ShopDecisionLog) => void;
@@ -84,6 +92,7 @@ export interface HeadlessShopAgentOptions {
     n: number,
     featureCount: number,
   ) => Float32Array | Promise<Float32Array>;
+  readonly chooseShopAction?: (input: ShopActionChoiceInput) => Promise<number>;
 }
 
 function packOptionToCandidate(opt: PackOption): PackAdviceCandidate {
@@ -330,7 +339,10 @@ export async function createHeadlessShopAgent(
           { action: "leave" as const },
         ];
         const build = buildFor();
-        const topIdx = await topRanked(encodeShop({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length, featureCount);
+        const topIdx =
+          options.chooseShopAction !== undefined
+            ? await options.chooseShopAction({ candidates, build, money, ante: view.ante, round: view.round })
+            : await topRanked(encodeShop({ money, ante: view.ante, round: view.round, build, candidates }), candidates.length, featureCount);
         if (options.onShopDecision !== undefined) {
           const log = buildShopDecisionLog(build, view.ante, view.round, money, candidates, topIdx, hold);
           if (log !== null) options.onShopDecision(log);

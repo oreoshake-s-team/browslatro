@@ -15,6 +15,7 @@ import type { Distribution } from "../src/ai/evaluationStats";
 import type { HeadlessAgent, HeadlessRunResult } from "../src/ai/headlessRun";
 import type { HeadlessShopAgent } from "../src/ai/headlessRun";
 import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
+import { createSearchShopAgent } from "../src/ai/searchShopAgent";
 import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
 import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import { loadPolicyRanker } from "../src/ai/policy";
@@ -77,9 +78,12 @@ const stake = stakeFlag();
 const shopDisabled = process.argv.includes("--no-shop");
 const shopPolicyPath = stringFlag("--shop-policy", DEFAULT_SHOP_POLICY);
 const holdConsumables = process.argv.includes("--hold-consumables");
+const shopSearchValuePath = stringFlag("--shop-search", "");
 const shopAgent: HeadlessShopAgent | undefined = shopDisabled
   ? undefined
-  : await createHeadlessShopAgent(shopPolicyPath, { holdConsumables });
+  : shopSearchValuePath !== ""
+    ? await createSearchShopAgent(shopSearchValuePath, shopPolicyPath, { holdConsumables })
+    : await createHeadlessShopAgent(shopPolicyPath, { holdConsumables });
 
 const useSkip = process.argv.includes("--skip");
 const withSkip = (agent: HeadlessAgent): HeadlessAgent =>
@@ -182,6 +186,7 @@ async function collectAgentSlices(): Promise<AgentSlice[]> {
     "--deck", deck,
     "--stake", stake,
     ...(shopDisabled ? ["--no-shop"] : ["--shop-policy", shopPolicyPath]),
+    ...(shopSearchValuePath !== "" ? ["--shop-search", shopSearchValuePath] : []),
     ...(holdConsumables ? ["--hold-consumables"] : []),
     ...(useSkip ? ["--skip"] : []),
   ];
@@ -215,7 +220,9 @@ const agents: { label: string; result: EvaluationResult }[] = (await collectAgen
 
 console.log(`${games} games per agent, seeds ${seedOffset}..${seedOffset + games - 1}`);
 console.log(`deck: ${deck}, stake: ${stake}, skip: ${useSkip ? "on" : "off"}`);
-console.log(`shop: ${shopAgent ? basename(shopPolicyPath) : "disabled (no purchases)"}`);
+console.log(
+  `shop: ${shopAgent ? (shopSearchValuePath !== "" ? `visit-search(${basename(shopSearchValuePath)}) + ${basename(shopPolicyPath)} packs` : basename(shopPolicyPath)) : "disabled (no purchases)"}`,
+);
 console.log(
   ["model".padEnd(28), "winRate".padStart(8), "avgAnte".padStart(9), "avgBlinds".padStart(11), "avgHands".padStart(11), "avgSkipped".padStart(11)].join(""),
 );

@@ -222,3 +222,21 @@ describe("buildOverride", () => {
     expect(logs[0]).toHaveLength(0);
   });
 });
+
+describe("chooseShopAction override", () => {
+  test("routes the shop decision through the override instead of the ranker", async () => {
+    const seen: number[] = [];
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      holdConsumables: true,
+      scoreCandidates: () => {
+        throw new Error("ranker must not be consulted when chooseShopAction is set");
+      },
+      chooseShopAction: async ({ candidates }) => {
+        seen.push(candidates.length);
+        return candidates.findIndex((c) => c.action === "leave");
+      },
+    });
+    await agent.buyAfterRound(shopViewWithJoker());
+    expect(seen.length).toBeGreaterThan(0);
+  });
+});
