@@ -210,6 +210,23 @@ def value_baseline_advantages(returns, values, clip):
     return [max(-clip, min(clip, (a - mean) / std)) for a in residuals]
 
 
+def pearson(xs, ys):
+    """Pearson correlation, torch-free; 0.0 when either side is constant.
+
+    Used to report how well the trained V(context) tracks realized
+    reward-to-go — the quality gate for using V as a search evaluator.
+    """
+    n = len(xs)
+    mean_x = sum(xs) / n
+    mean_y = sum(ys) / n
+    cov = sum((x - mean_x) * (y - mean_y) for x, y in zip(xs, ys))
+    var_x = sum((x - mean_x) ** 2 for x in xs)
+    var_y = sum((y - mean_y) ** 2 for y in ys)
+    if var_x <= 0 or var_y <= 0:
+        return 0.0
+    return cov / ((var_x ** 0.5) * (var_y ** 0.5))
+
+
 def clipped_surrogate(ratio, advantage, clip):
     """PPO surrogate for one decision: ``min(r*A, clamp(r, 1±clip)*A)``.
 
@@ -301,10 +318,19 @@ def main():
         "0 = pure one-step TD, 1 = Monte-Carlo); requires --value-baseline",
     )
     parser.add_argument("--out", default="advisor-shop-policy-rl.onnx")
+    parser.add_argument(
+        "--value-out",
+        default=None,
+        help="also export the trained value network V(context) to this onnx path "
+        "(requires --value-baseline); reports V's correlation with realized "
+        "reward-to-go so downstream search can judge the estimator's quality",
+    )
     args = parser.parse_args()
 
     if args.gae is not None and not args.value_baseline:
         raise SystemExit("--gae requires --value-baseline (V(s) supplies the TD residuals)")
+    if args.value_out is not None and not args.value_baseline:
+        raise SystemExit("--value-out requires --value-baseline (there is no V(s) to export)")
 
     import copy
 
@@ -486,6 +512,34 @@ def main():
         external_data=False,
     )
     print(f"exported {args.out} (shop encoding, {features} features)")
+
+    if args.value_out is not None and value_net is not None:
+        value_net.eval()
+        predicted = [0.0] * len(samples)
+        with torch.no_grad():
+            for i in range(0, len(samples), args.batch_size):
+                batch = list(range(i, min(i + args.batch_size, len(samples))))
+                x, _, _, _ = pad_batch(batch)
+                v = value_net(x[:, 0, :SHOP_CONTEXT_FEATURES])
+                for k, j in enumerate(batch):
+                    predicted[j] = float(v[k])
+        targets = [s[2] for s in samples]
+        corr = pearson(predicted, targets)
+        value_example = torch.zeros((2, SHOP_CONTEXT_FEATURES), dtype=torch.float32, device=device)
+        torch.onnx.export(
+            value_net,
+            (value_example,),
+            args.value_out,
+            input_names=["context"],
+            output_names=["value"],
+            dynamic_axes={"context": {0: "n"}, "value": {0: "n"}},
+            opset_version=18,
+            external_data=False,
+        )
+        print(
+            f"exported {args.value_out} (value net, {SHOP_CONTEXT_FEATURES} context features, "
+            f"corr(V, target)={corr:.3f} over {len(samples)} decisions)"
+        )
 
 
 if __name__ == "__main__":
