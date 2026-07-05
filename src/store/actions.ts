@@ -123,6 +123,7 @@ import { availableJokerCatalog } from "./jokerCatalog";
 export interface ActionsState {
   sellConsumable: (consumableIdx: number) => void;
   sellJoker: (jokerIdx: number) => void;
+  refreshCelestialPricing: () => void;
   reorderJokers: (orderedIds: ReadonlyArray<string>) => void;
   rerollShopOffers: (cost: number) => void;
   buyAnteVoucher: (voucherIdx: number) => void;
@@ -358,6 +359,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       const pick = pickRandomNonEmpty(remaining);
       return [...remaining, cloneJoker(pick)];
     });
+    get().refreshCelestialPricing();
+  },
+  refreshCelestialPricing: () => {
+    get().setShopOffers((current) =>
+      current
+        ? applyAstronomerPricing(current, hasAstronomerInJokers(get().jokers))
+        : current,
+    );
   },
   reorderJokers: (orderedIds) => {
     get().setJokers((prev) => {
@@ -666,6 +675,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       s.setJokers((prev) => [...prev, offer.joker]);
       s.setSoldJokerIdsThisShopVisit((prev) => [...prev, offer.joker.id]);
       s.markOfferSold(idx);
+      s.refreshCelestialPricing();
       return true;
     }
     if (offer.kind === "playing-card") {
@@ -866,6 +876,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         if (!created) return;
         s.setJokers((prev) => [...prev, created]);
         if (effect.setMoneyToZero) s.setMoney(0);
+        s.refreshCelestialPricing();
         return;
       }
       case "ectoplasm": {
@@ -879,12 +890,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         s.setJokers((prev) =>
           polychromeRandomJokerDestroyOthers(prev, Math.random),
         );
+        s.refreshCelestialPricing();
         return;
       }
       case "ankh": {
         s.setJokers((prev) =>
           copyRandomJokerDestroyOthers(prev, Math.random),
         );
+        s.refreshCelestialPricing();
         return;
       }
       case "create-legendary": {
@@ -901,7 +914,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
           capacity,
           Math.random,
         );
-        if (created) s.setJokers((prev) => [...prev, created]);
+        if (created) {
+          s.setJokers((prev) => [...prev, created]);
+          s.refreshCelestialPricing();
+        }
         return;
       }
       case "apply-seal":

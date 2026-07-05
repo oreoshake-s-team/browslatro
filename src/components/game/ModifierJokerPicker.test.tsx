@@ -202,3 +202,31 @@ describe("ModifierJokerPicker aria i18n", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("ModifierJokerPicker — celestial repricing", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  test("adding Astronomer reprices a Planet offer in the open shop to free", async () => {
+    const user = userEvent.setup();
+    const { createPlanetCatalog } = await import("../../items/planets");
+    useGame.getState().setShopOffers([
+      {
+        kind: "planet",
+        planet: createPlanetCatalog()[0],
+        price: 3,
+        sold: false,
+      },
+    ]);
+    render(<ModifierJokerPicker />);
+    await openPicker(user);
+    const idx = ALL.findIndex((j) => j.id === "astronomer");
+    const targetPage = Math.floor(idx / PAGE_SIZE) + 1;
+    for (let i = 1; i < targetPage; i += 1) {
+      await user.click(screen.getByTestId("modifier-joker-picker-next"));
+    }
+    await user.click(tileFor("astronomer"));
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(0);
+  });
+});

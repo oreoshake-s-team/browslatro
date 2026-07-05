@@ -21,6 +21,7 @@ export default function ModifierJokerPicker() {
   const { t } = useTranslation();
   const jokers = useGame((s) => s.jokers);
   const setJokers = useGame((s) => s.setJokers);
+  const refreshCelestialPricing = useGame((s) => s.refreshCelestialPricing);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
   const capacity = Math.max(
@@ -75,6 +76,7 @@ export default function ModifierJokerPicker() {
     if (isFull) return;
     play("pop");
     setJokers((prev) => [...prev, { ...joker }]);
+    refreshCelestialPricing();
   }
 
   return (

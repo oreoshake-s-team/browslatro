@@ -18,7 +18,11 @@ import { VOUCHER_CATALOG } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { createDeck } from "../cards/deck";
 import { buildShuffledDeck } from "../cards/deckBuild";
-import { forceShopLayout, shopPickerRngConfig } from "../items/shop";
+import {
+  forceShopLayout,
+  shopPickerRngConfig,
+  type ShopItem,
+} from "../items/shop";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
 import { applyBossFaceDown, createBossCatalog } from "../items/bosses";
 import { FINAL_ANTE } from "../constants";
@@ -2011,5 +2015,117 @@ describe("applyAuraSelectedPreviewCards", () => {
       .getState()
       .packPreviewHand.find((c) => c.id === preview[0].id);
     expect(card?.edition).toBeUndefined();
+  });
+});
+
+describe("celestial pricing follows Astronomer mid-shop", () => {
+  beforeEach(() => {
+    useGame.getState().resetGame();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function astronomerJoker() {
+    const joker = createJokerCatalog().find((j) => j.id === "astronomer");
+    if (!joker) throw new Error("no astronomer in catalog");
+    return joker;
+  }
+
+  function planetOffer(price = 3): ShopItem {
+    return {
+      kind: "planet",
+      planet: createPlanetCatalog()[0],
+      price,
+      sold: false,
+    };
+  }
+
+  function celestialPackOffer(price = 4): ShopItem {
+    return {
+      kind: "pack",
+      pack: { pool: "celestial", variant: "normal", options: [] },
+      price,
+      sold: false,
+    };
+  }
+
+  test("buying Astronomer from the shop zeroes an existing Planet offer", () => {
+    const game = useGame.getState();
+    game.setShopOffers([
+      { kind: "joker", joker: astronomerJoker(), price: 5, sold: false },
+      planetOffer(3),
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().shopOffers?.[1]?.price).toBe(0);
+  });
+
+  test("buying Astronomer from the shop zeroes an existing Celestial pack offer", () => {
+    const game = useGame.getState();
+    game.setShopOffers([
+      { kind: "joker", joker: astronomerJoker(), price: 5, sold: false },
+      celestialPackOffer(4),
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().shopOffers?.[1]?.price).toBe(0);
+  });
+
+  test("buying a non-Astronomer joker leaves a Planet offer's price unchanged (negative)", () => {
+    const game = useGame.getState();
+    game.setShopOffers([
+      { kind: "joker", joker: createJokerCatalog()[0], price: 5, sold: false },
+      planetOffer(3),
+    ]);
+    game.setMoney(10);
+    game.buyShopOffer(0);
+    expect(useGame.getState().shopOffers?.[1]?.price).toBe(3);
+  });
+
+  test("selling Astronomer restores a Planet offer's original price", () => {
+    const game = useGame.getState();
+    game.setJokers([astronomerJoker()]);
+    game.setShopOffers([planetOffer(3)]);
+    game.refreshCelestialPricing();
+    useGame.getState().sellJoker(0);
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(3);
+  });
+
+  test("selling Astronomer restores a Celestial pack's original price", () => {
+    const game = useGame.getState();
+    game.setJokers([astronomerJoker()]);
+    game.setShopOffers([celestialPackOffer(4)]);
+    game.refreshCelestialPricing();
+    useGame.getState().sellJoker(0);
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(4);
+  });
+
+  test("selling a different joker keeps Planet offers free while Astronomer remains (negative)", () => {
+    const game = useGame.getState();
+    game.setJokers([createJokerCatalog()[0], astronomerJoker()]);
+    game.setShopOffers([planetOffer(3)]);
+    game.refreshCelestialPricing();
+    useGame.getState().sellJoker(0);
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(0);
+  });
+
+  test("Hex destroying Astronomer restores a Planet offer's price", () => {
+    const game = useGame.getState();
+    game.setJokers([createJokerCatalog()[0], astronomerJoker()]);
+    game.setShopOffers([planetOffer(3)]);
+    game.refreshCelestialPricing();
+    vi.spyOn(Math, "random").mockReturnValue(0);
+    useGame.getState().applySpectralEffect({ kind: "hex" });
+    expect(useGame.getState().shopOffers?.[0]?.price).toBe(3);
+  });
+
+  test("refreshCelestialPricing is a no-op when the shop is closed", () => {
+    const game = useGame.getState();
+    game.setJokers([astronomerJoker()]);
+    game.setShopOffers(null);
+    game.refreshCelestialPricing();
+    expect(useGame.getState().shopOffers).toBeNull();
   });
 });
