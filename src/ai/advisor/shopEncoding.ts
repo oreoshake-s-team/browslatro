@@ -38,9 +38,10 @@ export const SHOP_BUILD_FEATURES =
   ENHANCEMENTS.length +
   SHOP_BUILD_WINCON_FEATURES;
 
+export const SHOP_CONTEXT_FEATURES = 4 + SHOP_BUILD_FEATURES;
+
 export const SHOP_INPUT_FEATURES =
-  4 +
-  SHOP_BUILD_FEATURES +
+  SHOP_CONTEXT_FEATURES +
   ITEM_TYPES.length +
   5 +
   SHOP_CANDIDATE_CATEGORIES.length +
@@ -161,6 +162,16 @@ function encodeShopBuild(build: ShopBuild, sig: BuildSignals): number[] {
     (sig.topLevel - 1) / 20,
     (sig.topLevel - sig.secondLevel) / 20,
   ];
+}
+
+export function encodeShopSearchContext(
+  build: ShopBuild,
+  money: number,
+  ante: number,
+  round: number,
+): number[] {
+  const sig = buildSignals(build);
+  return [money / 20, ante / 8, round / 24, 0, ...encodeShopBuild(build, sig)];
 }
 
 export interface ShopRankInput {
