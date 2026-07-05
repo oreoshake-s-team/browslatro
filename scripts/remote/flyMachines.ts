@@ -23,6 +23,8 @@ export interface MachineLauncher {
   destroy(id: string): Promise<void>;
 }
 
+import { fetchWithRetry } from "./fetchRetry";
+
 type FetchImpl = (input: string, init?: RequestInit) => Promise<Response>;
 
 export interface FlyMachinesClientOptions {
@@ -47,7 +49,7 @@ export class FlyMachinesClient implements MachineLauncher {
     this.app = options.app;
     this.token = options.token;
     this.baseUrl = (options.baseUrl ?? "https://api.machines.dev/v1").replace(/\/$/, "");
-    this.fetchImpl = options.fetchImpl ?? ((input, init) => fetch(input, init));
+    this.fetchImpl = options.fetchImpl ?? ((input, init) => fetchWithRetry(fetch, input, init));
   }
 
   private url(path: string): string {
