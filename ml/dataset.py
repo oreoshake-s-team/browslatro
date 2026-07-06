@@ -172,50 +172,83 @@ def _encode_hand_label(record, index):
     )
 
 
-def _encode_shop_label(record, index, v2=False):
+def _shop_label_build(record):
+    """Build-context fields for a feedback label, mirroring shopBuildSummary.
+
+    Prefers the rollout snapshot captured with the feedback event (full jokers
+    with effect kind/rarity, the real deck) and falls back to the advice-state
+    fields for records that predate rollout capture. picksRemaining stays 0
+    because the runtime shop encoders pass picks=0 for shop-context rows.
+    """
     decision = record["decision"]
     state = decision.get("state", {})
-    hand_stats = decision.get("rollout", {}).get("handStats", {})
-    flat = {
+    rollout = decision.get("rollout") or {}
+    hand_stats = rollout.get("handStats") or {}
+    rollout_jokers = rollout.get("jokers")
+    if rollout_jokers is None:
+        jokers = state.get("jokers", [])
+    else:
+        jokers = [
+            {
+                "effectKind": (joker.get("effect") or {}).get("kind", ""),
+                "rarity": joker.get("rarity"),
+            }
+            for joker in rollout_jokers
+        ]
+    enhancements = {}
+    for card in rollout.get("deck") or []:
+        enhancement = card.get("enhancement")
+        if enhancement is not None:
+            enhancements[enhancement] = enhancements.get(enhancement, 0) + 1
+    return {
         "money": record["money"],
         "ante": record["ante"],
         "round": record["round"],
-        "jokers": state.get("jokers", []),
+        "jokers": jokers,
         "handLevels": {hand: info.get("level", 1) for hand, info in hand_stats.items()},
         "consumablesHeld": len(state.get("consumables", [])),
-        "deckEnhancements": {},
+        "deckEnhancements": enhancements,
         "picksRemaining": 0,
     }
+
+
+def _encode_shop_label(record, index, v2=False):
+    """Re-encodes a feedback record's candidate list, mirroring the runtime.
+
+    buy and sell candidates are full item rows in both encodings; use
+    candidates are full item rows with the trailing isUse flag in v2 and
+    leave-shaped in v1 only because the v1 runtime encoder does the same.
+    The runtime gives use rows zero pack features, so this does too.
+    """
+    decision = record["decision"]
+    flat = _shop_label_build(record)
     sig = _shop_build_signals(flat)
     ctx = _encode_shop_context(flat, sig)
     money = record["money"]
+    item_actions = ("buy", "sell", "use") if v2 else ("buy", "sell")
     inputs = []
     for candidate in decision["candidates"]:
         action = candidate["action"]
-        if action == "buy":
+        if action in item_actions:
             item = candidate["item"]
-            inputs.append(
-                ctx
-                + _encode_shop_candidate(
-                    item["itemType"],
-                    item["cost"],
-                    money,
-                    sig,
-                    category=item.get("category", "other"),
-                    attributes=item.get("attributes"),
-                    voucher_features=item.get("voucherFeatures"),
-                    pack_features=item.get("packFeatures"),
-                    advances_hands=item.get("advancesHands"),
-                )
+            row = ctx + _encode_shop_candidate(
+                item["itemType"],
+                item["cost"],
+                money,
+                sig,
+                category=item.get("category", "other"),
+                attributes=item.get("attributes"),
+                voucher_features=item.get("voucherFeatures"),
+                pack_features=None if action == "use" else item.get("packFeatures"),
+                advances_hands=item.get("advancesHands"),
             )
         elif action == "reroll":
-            inputs.append(
-                ctx + _encode_shop_candidate(None, candidate["cost"], money, sig, is_reroll=True)
-            )
+            row = ctx + _encode_shop_candidate(None, candidate["cost"], money, sig, is_reroll=True)
         else:
-            inputs.append(ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True))
-    if v2:
-        inputs = [row + [0.0] for row in inputs]
+            row = ctx + _encode_shop_candidate(None, 0, money, sig, is_leave=True)
+        if v2:
+            row = row + [1.0 if action == "use" else 0.0]
+        inputs.append(row)
     return inputs, index
 
 
