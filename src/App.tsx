@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { useBodyClass } from "./hooks/useBodyClass";
 import { useTranslation } from "react-i18next";
 import { useAutopilot } from "./hooks/useAutopilot";
 import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
@@ -133,19 +134,9 @@ function App() {
     );
   }, [setDealt, setBaseDeckCards]);
   const highVisibility = usePreferences((state) => state.highVisibility);
-  useEffect(() => {
-    document.body.classList.toggle("high-visibility", highVisibility);
-    return () => {
-      document.body.classList.remove("high-visibility");
-    };
-  }, [highVisibility]);
+  useBodyClass(highVisibility, "high-visibility");
   const dyslexicFont = usePreferences((state) => state.dyslexicFont);
-  useEffect(() => {
-    document.body.classList.toggle("dyslexic-font", dyslexicFont);
-    return () => {
-      document.body.classList.remove("dyslexic-font");
-    };
-  }, [dyslexicFont]);
+  useBodyClass(dyslexicFont, "dyslexic-font");
   const animationSpeed = usePreferences((state) => state.animationSpeed);
   const selectedIds = useGame((state) => state.selectedIds);
   const discardingIds = useGame((state) => state.discardingIds);
