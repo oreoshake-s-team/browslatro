@@ -4,7 +4,6 @@ import { useAutopilot } from "./hooks/useAutopilot";
 import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
 import { captureAdviceFeedback } from "./ai/humanPlayWiring";
 import { buildHandPolicyFeedbackEvent } from "./ai/advisor/adviceFeedback";
-import { recordShopFeedback } from "./ai/advisor/shownShopAdvice";
 import {
   clearHandAdvice,
   recordHandFeedback,
@@ -40,19 +39,13 @@ const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { useShopController } from "./hooks/useShopController";
 import { usePackOpenController } from "./hooks/usePackOpenController";
-import { deckJokerSlotsDelta } from "./items/decks";
 import {
   pruneTagsByCategory,
   rollAnteSkipOffers,
   tagOfferRngConfig,
 } from "./items/tags";
-import { applyNextShopModifiers } from "./run/nextShopMods";
-import {
-  MAX_CONSUMABLE_SLOTS,
-  hasFreeConsumableSlot,
-} from "./items/consumables";
+import { MAX_CONSUMABLE_SLOTS } from "./items/consumables";
 import Sidebar from "./components/hud/Sidebar";
-import { play } from "./components/system/sounds";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
 import BossEffectToast from "./components/system/BossEffectToast";
