@@ -39,6 +39,7 @@ import {
   ZERO_SHOP_ATTRIBUTES,
 } from "./advisor/shopCandidateAttributes";
 import { voucherFeatureVector } from "./advisor/voucherFeatures";
+import { packFeatureVector } from "./advisor/packFeatures";
 import { applyConsumable } from "./headlessConsumables";
 import { emptyShopActivity, type ShopActivity } from "./shopActivity";
 
@@ -112,7 +113,7 @@ function shopItemCandidate(item: ShopItem): Extract<ShopAdviceCandidate, { actio
   if (item.kind === "planet") return { action: "buy", item: { itemType: "planet", category, attributes, advancesHands: item.planet.hands, id: item.planet.id, name: item.planet.name, description: "", cost: item.price } };
   if (item.kind === "tarot") return { action: "buy", item: { itemType: "tarot", category, attributes, id: item.tarot.id, name: item.tarot.name, description: "", cost: item.price } };
   if (item.kind === "spectral") return { action: "buy", item: { itemType: "spectral", category, attributes, id: item.spectral.id, name: item.spectral.name, description: "", cost: item.price } };
-  if (item.kind === "pack") return { action: "buy", item: { itemType: "pack", category, attributes, id: item.pack.pool, name: item.pack.pool, description: "", cost: item.price } };
+  if (item.kind === "pack") return { action: "buy", item: { itemType: "pack", category, attributes, packFeatures: packFeatureVector(item.pack.pool, item.pack.variant), id: item.pack.pool, name: item.pack.pool, description: "", cost: item.price } };
   return { action: "buy", item: { itemType: "playing-card", category, attributes, id: "card", name: "Card", description: "", cost: item.price } };
 }
 

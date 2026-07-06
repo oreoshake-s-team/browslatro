@@ -204,6 +204,7 @@ def _encode_shop_label(record, index, v2=False):
                     category=item.get("category", "other"),
                     attributes=item.get("attributes"),
                     voucher_features=item.get("voucherFeatures"),
+                    pack_features=item.get("packFeatures"),
                     advances_hands=item.get("advancesHands"),
                 )
             )

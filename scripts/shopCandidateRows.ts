@@ -1,17 +1,18 @@
 import { categorizeShopItem } from "../src/ai/advisor/shopCategory";
 import { shopItemAttributes } from "../src/ai/advisor/shopCandidateAttributes";
+import { packFeatureVector } from "../src/ai/advisor/packFeatures";
 import { consumableUseCandidate } from "../src/ai/headlessShopAgent";
 import type { Consumable } from "../src/items/consumables";
 import type { ShopItem } from "../src/items/shop";
 
-export function shopItemSnapshot(item: ShopItem): { itemType: string; category: string; attributes: number[]; advancesHands?: ReadonlyArray<string>; id: string; name: string; cost: number } {
+export function shopItemSnapshot(item: ShopItem): { itemType: string; category: string; attributes: number[]; packFeatures?: ReadonlyArray<number>; advancesHands?: ReadonlyArray<string>; id: string; name: string; cost: number } {
   const category = categorizeShopItem(item);
   const attributes = shopItemAttributes(item);
   if (item.kind === "joker") return { itemType: "joker", category, attributes, id: item.joker.id, name: item.joker.name, cost: item.price };
   if (item.kind === "planet") return { itemType: "planet", category, attributes, advancesHands: item.planet.hands, id: item.planet.id, name: item.planet.name, cost: item.price };
   if (item.kind === "tarot") return { itemType: "tarot", category, attributes, id: item.tarot.id, name: item.tarot.name, cost: item.price };
   if (item.kind === "spectral") return { itemType: "spectral", category, attributes, id: item.spectral.id, name: item.spectral.name, cost: item.price };
-  if (item.kind === "pack") return { itemType: "pack", category, attributes, id: item.pack.pool, name: item.pack.pool, cost: item.price };
+  if (item.kind === "pack") return { itemType: "pack", category, attributes, packFeatures: packFeatureVector(item.pack.pool, item.pack.variant), id: item.pack.pool, name: item.pack.pool, cost: item.price };
   return { itemType: "playing-card", category, attributes, id: "card", name: "Card", cost: item.price };
 }
 
@@ -28,6 +29,7 @@ export interface ShopCandidateRow {
   readonly itemType: string;
   readonly category: string;
   readonly attributes?: ReadonlyArray<number>;
+  readonly packFeatures?: ReadonlyArray<number>;
   readonly advancesHands?: ReadonlyArray<string>;
   readonly id?: string;
   readonly name?: string;
