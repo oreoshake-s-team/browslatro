@@ -27,6 +27,7 @@ import {
   pickBossForAnte,
 } from "./items/bosses";
 import { chanceOverrideConfig } from "./dev/chanceOverride";
+import { useChanceOverrides } from "./hooks/useChanceOverrides";
 import { bootIntoShop, shouldBootIntoShop } from "./dev/bootShop";
 import { devToolsEnabled } from "./dev/devTools";
 import { readSeededConsumables } from "./dev/seedConsumables";
@@ -45,15 +46,12 @@ import Sidebar from "./components/hud/Sidebar";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
 import BossEffectToast from "./components/system/BossEffectToast";
-import {
-  getAnimationSpeed,
-  getAnimationSpeedMultiplier,
-  hasUserOverriddenAnimationSpeed,
-  usePreferences,
-  type AnimationSpeed,
-} from "./components/system/preferences";
+import { getAnimationSpeed, getAnimationSpeedMultiplier, hasUserOverriddenAnimationSpeed, usePreferences, type AnimationSpeed } from "./components/system/preferences";
+import { useScoringStepMs } from "./hooks/useScoringStepMs";
+import { useDevAnimationSpeedStyle } from "./hooks/useDevAnimationSpeedStyle";
 import { initialDeal } from "./cards/deckBuild";
 import { createDeck, resetCardIds } from "./cards/deck";
+import { useInitialDeal } from "./hooks/useInitialDeal";
 import { useAdviceFeedbackNotice } from "./hooks/useAdviceFeedbackNotice";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
@@ -70,22 +68,7 @@ import {
   VOUCHER_CATALOG,
 } from "./items/vouchers";
 
-export const SCORING_STEP_MS = 500;
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || !window.matchMedia) return false;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-export function getScoringStepMs(
-  speed: AnimationSpeed = getAnimationSpeed(),
-): number {
-  if (hasUserOverriddenAnimationSpeed(speed)) {
-    return Math.round(SCORING_STEP_MS * getAnimationSpeedMultiplier(speed));
-  }
-  if (prefersReducedMotion()) return 0;
-  return SCORING_STEP_MS;
-}
+export { getScoringStepMs } from "./hooks/useScoringStepMs";
 
 function App() {
   const { t } = useTranslation();
@@ -101,38 +84,13 @@ function App() {
   const devChipsBonus = useGame((state) => state.devChipsBonus);
   const devMultBonus = useGame((state) => state.devMultBonus);
   const devMultFactor = useGame((state) => state.devMultFactor);
-  const forceProbabilities = useGame((state) => state.forceProbabilities);
-  useEffect(() => {
-    chanceOverrideConfig.force100 = forceProbabilities;
-    return () => {
-      chanceOverrideConfig.force100 = false;
-    };
-  }, [forceProbabilities]);
+  useChanceOverrides();
   const roundScore = useGame((state) => state.roundScore);
   const selectedHand = useGame((state) => state.selectedHand);
   const remainingHands = useGame((state) => state.remainingHands);
   const remainingDiscards = useGame((state) => state.remainingDiscards);
   const runStats = useGame((state) => state.runStats);
-  const setDealt = useGame((state) => state.setDealt);
-  const setBaseDeckCards = useGame((state) => state.setBaseDeckCards);
-  useEffect(() => {
-    if (didRestoreFromSnapshot()) return;
-    resetCardIds();
-    const fresh = createDeck();
-    setBaseDeckCards(fresh);
-    const s = useGame.getState();
-    setDealt(
-      initialDeal(
-        fresh,
-        s.destroyedCardIds,
-        undefined,
-        s.addedCards,
-        s.cardEnhancementsById,
-        s.cardSealsById,
-        s.cardEditionsById,
-      ),
-    );
-  }, [setDealt, setBaseDeckCards]);
+  useInitialDeal();
   const highVisibility = usePreferences((state) => state.highVisibility);
   useBodyClass(highVisibility, "high-visibility");
   const dyslexicFont = usePreferences((state) => state.dyslexicFont);
@@ -146,13 +104,6 @@ function App() {
     if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
-  useEffect(() => {
-    chanceOverrideConfig.probabilityMultiplier =
-      probabilityMultiplierFromJokers(jokers);
-    return () => {
-      chanceOverrideConfig.probabilityMultiplier = 1;
-    };
-  }, [jokers]);
   const handPlayCounts = useGame((state) => state.handPlayCounts);
   const handStats = useGame((state) => state.handStats);
   const {
@@ -167,7 +118,7 @@ function App() {
 
   const { applyGainedTag } = useTagDispatcher();
 
-  const scoringStepMs = getScoringStepMs(animationSpeed);
+  const scoringStepMs = useScoringStepMs(animationSpeed);
   const loseGameRef = useRef<
     (info: { roundScore: number; requiredScore: number }) => void
   >(() => {});
@@ -385,11 +336,7 @@ function App() {
 
   const continueEndless = useGame((s) => s.continueEndless);
 
-  const appStyle = hasUserOverriddenAnimationSpeed(animationSpeed)
-    ? ({
-        "--animation-speed": String(getAnimationSpeedMultiplier(animationSpeed)),
-      } as React.CSSProperties)
-    : undefined;
+  const appStyle = useDevAnimationSpeedStyle(animationSpeed);
 
   return (
     <div
