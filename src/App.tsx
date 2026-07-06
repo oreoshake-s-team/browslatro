@@ -38,6 +38,8 @@ const RoundWonModal = lazy(() => import("./components/game/RoundWonModal"));
 const RoundLostModal = lazy(() => import("./components/game/RoundLostModal"));
 const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
+import { useShopController } from "./hooks/useShopController";
+import { usePackOpenController } from "./hooks/usePackOpenController";
 import { deckJokerSlotsDelta } from "./items/decks";
 import {
   pruneTagsByCategory,
@@ -336,14 +338,6 @@ function App() {
     if (seeded.length > 0) setConsumables(seeded);
   }, [pendingRunSelect, setConsumables]);
   const openedPack = useGame((state) => state.openedPack);
-  const packPicksRemaining = useGame((state) => state.packPicksRemaining);
-  const packPreviewHand = useGame((state) => state.packPreviewHand);
-  const packPreviewSelectedIds = useGame(
-    (state) => state.packPreviewSelectedIds,
-  );
-  const pickedPackOptionIndices = useGame(
-    (state) => state.pickedPackOptionIndices,
-  );
   const skipTagOffers = useGame((state) => state.skipTagOffers);
   const setSkipTagOffers = useGame((state) => state.setSkipTagOffers);
   useEffect(() => {
@@ -352,12 +346,6 @@ function App() {
   }, [setSkipTagOffers]);
   const pendingShopMods = useGame((state) => state.pendingShopMods);
   const setPendingShopMods = useGame((state) => state.setPendingShopMods);
-  const setPackPreviewSelectedIds = useGame(
-    (state) => state.setPackPreviewSelectedIds,
-  );
-  const setPackPreviewDisplayOrder = useGame(
-    (state) => state.setPackPreviewDisplayOrder,
-  );
   const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
@@ -419,74 +407,14 @@ function App() {
   );
 
 
-  function togglePackPreviewCard(cardId: number) {
-    if (packPreviewHand.length === 0) return;
-    setPackPreviewSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(cardId)) {
-        next.delete(cardId);
-      } else {
-        next.add(cardId);
-      }
-      return next;
-    });
-  }
-
-  const closeOpenedPack = useGame((s) => s.closeOpenedPack);
-
-  const buyShopOfferAction = useGame((s) => s.buyShopOffer);
-  const buyShopOffer = (idx: number) => {
-    const pre = useGame.getState();
-    if (buyShopOfferAction(idx)) {
-      play("pop");
-      recordShopFeedback({ kind: "buy", offerIdx: idx }, pre);
-    }
-  };
-
-  const rerollShopOffersAction = useGame((s) => s.rerollShopOffers);
-  const rerollShopOffers = (cost: number) => {
-    if (!shopOffers) return;
-    if (money < cost) return;
-    const pre = useGame.getState();
-    play("pop");
-    rerollShopOffersAction(cost);
-    recordShopFeedback({ kind: "reroll", cost }, pre);
-  };
-
-  function closeShopAndStartNextRound() {
-    recordShopFeedback({ kind: "leave" }, useGame.getState());
-    const copies = shopExitConsumableCopies(
-      jokers,
-      useGame.getState().consumables,
-    );
-    if (copies.length > 0) {
-      setConsumables((prev) => [...prev, ...copies]);
-    }
-    setShopOffers(null);
-    setSoldJokerIdsThisShopVisit([]);
-    setPendingShopMods([]);
-    setPendingTags((prev) => pruneTagsByCategory(prev, "next-shop"));
-    setPendingBlindSelect(true);
-  }
+  const shopProps = useShopController();
 
   function confirmBlindSelect() {
     setPendingBlindSelect(false);
     startNewRound();
   }
 
-  const buyAnteVoucherAction = useGame((s) => s.buyAnteVoucher);
-  const buyAnteVoucher = (voucherIdx: number) => {
-    const voucher = currentAnteVouchers[voucherIdx];
-    if (!voucher) return;
-    if (soldVoucherIds.has(voucher.id)) return;
-    const price = applyShopDiscount(voucher.cost, ownedVoucherIds);
-    if (money < price) return;
-    if (voucher.requires && !ownedVoucherIds.has(voucher.requires)) return;
-    const pre = useGame.getState();
-    play("pop");
-    buyAnteVoucherAction(voucherIdx);
-    recordShopFeedback({ kind: "buy-voucher", voucherIdx }, pre);
-  };
+  const packOpenProps = usePackOpenController();
 
   function dismissRoundWonModal() {
     const precomputed = pendingWin
@@ -575,53 +503,8 @@ function App() {
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
-        shop={
-          shopOffers
-            ? {
-                money,
-                equippedJokerCount: effectiveJokerCount(jokers),
-                jokerCapacity,
-                consumableCount: consumables.length,
-                consumableCapacity,
-                offers: shopOffers,
-                vouchers: currentAnteVouchers,
-                soldVoucherIds,
-                ownedVoucherIds,
-                onBuy: buyShopOffer,
-                onBuyVoucher: buyAnteVoucher,
-                onReroll: rerollShopOffers,
-                onNext: closeShopAndStartNextRound,
-                extraRerollReduction:
-                  applyNextShopModifiers(pendingShopMods).rerollReduction,
-                freeFirstReroll: hasChaosTheClownInJokers(jokers),
-                voucherOptions: VOUCHER_CATALOG,
-                onSetVoucher: (id) => {
-                  const next = VOUCHER_CATALOG.find((v) => v.id === id);
-                  if (next) setCurrentAnteVouchers([next]);
-                },
-              }
-            : undefined
-        }
-        packOpen={
-          openedPack
-            ? {
-                pack: openedPack,
-                picksRemaining: packPicksRemaining,
-                consumableSlotsFull: !hasFreeConsumableSlot(
-                  consumables,
-                  consumableCapacity,
-                ),
-                jokerSlotsFull: effectiveJokerCount(jokers) >= jokerCapacity,
-                previewHand: packPreviewHand,
-                previewSelectedIds: packPreviewSelectedIds,
-                pickedIndices: pickedPackOptionIndices,
-                onSelectPreviewCard: togglePackPreviewCard,
-                onReorderPreview: setPackPreviewDisplayOrder,
-                onPick: pickFromOpenedPack,
-                onClose: closeOpenedPack,
-              }
-            : undefined
-        }
+        shop={shopProps}
+        packOpen={packOpenProps}
         onCardDiscardEnd={handleCardDiscardEnd}
       />
       {pendingWin && (
