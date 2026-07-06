@@ -39,12 +39,7 @@ const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { useShopController } from "./hooks/useShopController";
 import { usePackOpenController } from "./hooks/usePackOpenController";
-import {
-  pruneTagsByCategory,
-  rollAnteSkipOffers,
-  tagOfferRngConfig,
-} from "./items/tags";
-import { MAX_CONSUMABLE_SLOTS } from "./items/consumables";
+import { rollAnteSkipOffers, tagOfferRngConfig } from "./items/tags";
 import Sidebar from "./components/hud/Sidebar";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
@@ -61,23 +56,15 @@ import { createDeck, resetCardIds } from "./cards/deck";
 import { useAdviceFeedbackNotice } from "./hooks/useAdviceFeedbackNotice";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
-import { useOpenedPackPicker } from "./hooks/useOpenedPackPicker";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import {
-  MAX_JOKERS,
-  effectiveJokerCount,
-  hasChaosTheClownInJokers,
   initialJokersConfig,
   probabilityMultiplierFromJokers,
-  shopExitConsumableCopies,
 } from "./items/jokers";
 import {
-  applyShopDiscount,
   BOSS_REROLL_COST,
   bossRerollsRemaining,
-  extraConsumableSlots,
-  extraJokerSlots,
   pickVouchersForAnte,
   VOUCHER_CATALOG,
 } from "./items/vouchers";
@@ -187,7 +174,6 @@ function App() {
   } = useDiscardPipeline();
   const scoringEvents = useGame((state) => state.scoringEvents);
 
-  const { pickFromOpenedPack } = useOpenedPackPicker();
   const { applyGainedTag } = useTagDispatcher();
 
   const scoringStepMs = getScoringStepMs(animationSpeed);
@@ -316,12 +302,6 @@ function App() {
   const setPendingGameWon = useGame((state) => state.setPendingGameWon);
   const setPendingLose = useGame((state) => state.setPendingLose);
 
-  const shopOffers = useGame((state) => state.shopOffers);
-  const setShopOffers = useGame((state) => state.setShopOffers);
-  const setSoldJokerIdsThisShopVisit = useGame(
-    (state) => state.setSoldJokerIdsThisShopVisit,
-  );
-  const consumables = useGame((state) => state.consumables);
   const setConsumables = useGame((state) => state.setConsumables);
   const pendingRunSelect = useGame((state) => state.pendingRunSelect);
   useEffect(() => {
@@ -337,8 +317,6 @@ function App() {
     if (didRestoreFromSnapshot()) return;
     setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
   }, [setSkipTagOffers]);
-  const pendingShopMods = useGame((state) => state.pendingShopMods);
-  const setPendingShopMods = useGame((state) => state.setPendingShopMods);
   const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
@@ -352,9 +330,7 @@ function App() {
   const selectedStake = useGame((state) => state.selectedStake);
   const selectedDeck = useGame((state) => state.selectedDeck);
   const pendingTags = useGame((state) => state.pendingTags);
-  const setPendingTags = useGame((state) => state.setPendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
-  const currentAnteVouchers = useGame((state) => state.currentAnteVouchers);
   const setCurrentAnteVouchers = useGame(
     (state) => state.setCurrentAnteVouchers,
   );
@@ -364,7 +340,6 @@ function App() {
       pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
     );
   }, [setCurrentAnteVouchers]);
-  const soldVoucherIds = useGame((state) => state.soldVoucherIds);
   const currentBoss = useGame((state) => state.currentBoss);
   const bossRerollsUsedThisAnte = useGame(
     (state) => state.bossRerollsUsedThisAnte,
@@ -389,16 +364,6 @@ function App() {
     if (didRestoreFromSnapshot()) return;
     if (shouldBootIntoShop()) bootIntoShop();
   }, []);
-
-  const consumableCapacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
-  const jokerCapacity = Math.max(
-    0,
-    MAX_JOKERS +
-      extraJokerSlots(ownedVoucherIds) +
-      deckJokerSlotsDelta(selectedDeck),
-  );
-
 
   const shopProps = useShopController();
 
