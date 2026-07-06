@@ -302,6 +302,7 @@ export const haw: LocaleMessages = {
     coachLabel: "Coach · local · instant", // needs translation
     coachTip: "Coach tip", // needs translation
     coachComputing: "Coaching…", // needs translation
+    coachUnavailable: "The coach is unavailable — the local model failed to load.", // needs translation
     coachHide: "Hide coach", // needs translation
     askAiButton: "Ask AI (rate-limited)", // needs translation
     askAiButtonByok: "Ask AI", // needs translation

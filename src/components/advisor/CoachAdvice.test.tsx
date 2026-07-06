@@ -39,8 +39,17 @@ const actions: ReadonlyArray<TestAction> = [
   { kind: "leave" },
 ];
 
-function coachState(onnxIndex: number | null): SuggestionState<TestAction> {
-  return { phase: "coach", onnxIndex, candidates: candidates(), actions };
+function coachState(
+  onnxIndex: number | null,
+  coachUnavailable = false,
+): SuggestionState<TestAction> {
+  return {
+    phase: "coach",
+    onnxIndex,
+    candidates: candidates(),
+    actions,
+    coachUnavailable,
+  };
 }
 
 function readyState(
@@ -104,6 +113,18 @@ describe("CoachAdvice", () => {
   test("shows a computing status before the onnx index resolves", () => {
     renderCoach(coachState(null));
     expect(screen.getByTestId("coach-advice")).toHaveTextContent("Coaching");
+  });
+
+  test("shows an unavailable status when the local model failed", () => {
+    renderCoach(coachState(null, true));
+    expect(screen.getByTestId("coach-unavailable")).toHaveTextContent(
+      "The coach is unavailable",
+    );
+  });
+
+  test("keeps the Ask AI escape hatch when the local model failed", () => {
+    renderCoach(coachState(null, true));
+    expect(screen.getByTestId("coach-ask-ai")).toBeInTheDocument();
   });
 
   test("clicking apply invokes the apply handler", async () => {

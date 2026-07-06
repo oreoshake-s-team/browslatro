@@ -88,6 +88,7 @@ export default function ShopSuggestion(
       setModelProgress({ loaded: 0, total: null });
       void shopRanker
         .load((progress) => setModelProgress(progress))
+        .catch(() => undefined)
         .finally(() => setModelProgress(null));
       return shopRanker
         .rankShop({

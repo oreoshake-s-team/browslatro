@@ -296,6 +296,7 @@ export const en = {
     coachLabel: "Coach · local · instant",
     coachTip: "Coach tip",
     coachComputing: "Coaching…",
+    coachUnavailable: "The coach is unavailable — the local model failed to load.",
     coachHide: "Hide coach",
     askAiButton: "Ask AI (rate-limited)",
     askAiButtonByok: "Ask AI",
