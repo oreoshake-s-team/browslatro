@@ -26,6 +26,7 @@ import {
   type PostShopState,
 } from "../src/ai/shopRolloutExpert";
 import { categorizePackOption } from "../src/ai/advisor/shopCategory";
+import { assertTrainingSeedRange } from "./seedSpaces";
 import { packOptionAttributes } from "../src/ai/advisor/shopCandidateAttributes";
 import {
   chosenCandidateIndex,
@@ -310,6 +311,7 @@ if (isMain) {
     rolloutShopModel: stringFlag("--rollout-shop-model", ""),
     winBonus: intFlag("--win-bonus", 0),
   };
+  assertTrainingSeedRange(config.seedOffset, config.games);
   const parallelJobs = intFlag("--parallel-jobs", 1);
 
   if (parallelJobs > 1) {

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHeadlessShopAgent } from "../src/ai/headlessShopAgent";
+import { assertTrainingSeedRange } from "./seedSpaces";
 import { createDeckCatalog, DEFAULT_DECK, type Deck } from "../src/items/decks";
 import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import {
@@ -94,6 +95,7 @@ if (isMain) {
     deck: deckFlag(),
     stake: stakeFlag(),
   };
+  assertTrainingSeedRange(config.seedOffset, config.games);
 
   const parallelJobs = intFlag("--parallel-jobs", 1);
 

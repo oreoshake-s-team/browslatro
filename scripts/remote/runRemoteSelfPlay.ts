@@ -12,6 +12,7 @@ import {
 import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
+import { assertTrainingSeedRange } from "../seedSpaces";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 const SELFPLAY_EXEC = ["bash", "ml/remote/selfplay-entrypoint.sh"] as const;
@@ -201,6 +202,7 @@ if (isMain) {
   const requestedMemoryMb = process.argv.includes("--memory-mb")
     ? intFlag("--memory-mb", 0)
     : undefined;
+  assertTrainingSeedRange(intFlag("--seed-offset", 0), intFlag("--games", 1000));
   const options: RemoteSelfPlayOptions = {
     runId,
     totalGames: intFlag("--games", 1000),

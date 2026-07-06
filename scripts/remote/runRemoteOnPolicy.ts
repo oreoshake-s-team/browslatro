@@ -7,6 +7,7 @@ import { FlyMachinesClient, type MachineGuest } from "./flyMachines";
 import { FlyLogsClient } from "./flyLogs";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
+import { assertBenchmarkSeedRange, assertTrainingSeedRange, BENCHMARK_SEED_BASE } from "../seedSpaces";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 import { runRemoteSelfPlay, resolveSelfPlayMemoryMb } from "./runRemoteSelfPlay";
 import { runRemoteTraining, parseCpuKind } from "./runRemoteTraining";
@@ -207,6 +208,14 @@ if (isMain) {
     seedOffset: intFlag("--seed-offset", 0),
     initialModel: readFileSync(basePath),
   };
+  assertTrainingSeedRange(
+    options.seedOffset,
+    options.iterations * options.gamesPerIteration,
+  );
+  const benchSeed = intFlag("--bench-seed", BENCHMARK_SEED_BASE);
+  assertBenchmarkSeedRange(benchSeed, {
+    allowTrainingSeeds: process.argv.includes("--allow-training-seeds"),
+  });
 
   const started = Date.now();
   const results = await runRemoteOnPolicy(options, {
@@ -292,7 +301,7 @@ if (isMain) {
           guest: { cpus: benchCpus, memoryMb: benchMemoryMb, cpuKind },
           benchmark: {
             games: intFlag("--bench-games", 500),
-            seedOffset: intFlag("--bench-seed", 5000),
+            seedOffset: benchSeed,
             deck: "red-deck",
             stake: "white",
             shop: true,

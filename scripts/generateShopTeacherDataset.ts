@@ -35,6 +35,7 @@ import {
 import { createShopTeacher, type ShopTeacherLabeler } from "./shopTeacher";
 import { labelShopWithGate } from "./shopTeacherGate";
 import { intFlag, sliceJobs } from "./generateDataset";
+import { assertTrainingSeedRange } from "./seedSpaces";
 
 function floatFlag(name: string, fallback: number): number {
   const index = process.argv.indexOf(name);
@@ -298,6 +299,7 @@ if (isMain) {
     margin: floatFlag("--margin", DEFAULT_MARGIN),
     limit: intFlag("--limit", 0),
   };
+  assertTrainingSeedRange(config.seedOffset, config.games);
   const handModelIdx = process.argv.indexOf("--hand-model");
   const handModel = handModelIdx >= 0 ? process.argv[handModelIdx + 1] : "";
   const loadHandAgent = async (): Promise<HeadlessAgent | undefined> =>

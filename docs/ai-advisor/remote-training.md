@@ -422,7 +422,7 @@ yarn dlx tsx scripts/remote/runRemoteOnPolicy.ts ml/outcome/remote-onpolicy \
   --iterations 8 --games 3000 --machines 8 --selfplay-cpus 4 \
   --hold-consumables --value-baseline \
   --epochs 20 --lr 1.3e-3 --ppo-clip 0.3 \
-  --bench-games 500 --bench-seed 5000
+  --bench-games 500
 ```
 
 Each iteration's model lands in `<out-dir>/iter-N.onnx` and a per-iteration

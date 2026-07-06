@@ -26,6 +26,7 @@ import {
   type ShopForwardState,
 } from "./shopRolloutExpert";
 import { intFlag, sliceJobs } from "./generateDataset";
+import { assertTrainingSeedRange } from "./seedSpaces";
 
 type BuyableOffer = Extract<ShopItem, { kind: "joker" | "planet" }>;
 
@@ -199,6 +200,7 @@ if (isMain) {
     games: intFlag("--games", 100),
     seedOffset: intFlag("--seed-offset", 0),
   };
+  assertTrainingSeedRange(config.seedOffset, config.games);
   const parallelJobs = intFlag("--parallel-jobs", 1);
 
   if (parallelJobs > 1) {
