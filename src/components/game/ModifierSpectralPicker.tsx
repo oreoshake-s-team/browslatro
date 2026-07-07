@@ -1,6 +1,7 @@
 import "./ModifierSpectralPicker.css";
-import { useId, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { useAnchoredTooltip } from "../system/useAnchoredTooltip";
 import { consumableCapacityFor } from "../../items/capacities";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
@@ -23,21 +24,11 @@ export default function ModifierSpectralPicker() {
     consumableCapacityFor(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
 
-  const tooltipIdBase = useId();
-  const [tooltip, setTooltip] = useState<{
-    readonly id: string;
-    readonly rect: DOMRect;
-  } | null>(null);
+  const tooltip = useAnchoredTooltip<string>();
+  useEscapeToClose(tooltip.closeAll, tooltip.openId !== null);
 
-  useEscapeToClose(() => setTooltip(null), tooltip !== null);
-
-  function openTooltip(id: string, el: HTMLElement) {
-    setTooltip({ id, rect: el.getBoundingClientRect() });
-  }
-
-  function closeTooltip(id: string) {
-    setTooltip((prev) => (prev?.id === id ? null : prev));
-  }
+  const openTooltip = tooltip.open;
+  const closeTooltip = tooltip.close;
 
   function addSpectral(id: string) {
     const card = spectrals.find((s) => s.id === id);
@@ -56,8 +47,8 @@ export default function ModifierSpectralPicker() {
       </summary>
       <div className="modifier-spectral-picker-grid">
         {spectrals.map((card) => {
-          const tooltipId = `${tooltipIdBase}-${card.id}`;
-          const open = tooltip?.id === card.id;
+           const tooltipId = tooltip.describedBy(card.id);
+           const open = tooltip.isOpen(card.id);
           return (
             <button
               key={card.id}
@@ -66,7 +57,7 @@ export default function ModifierSpectralPicker() {
               data-spectral-id={card.id}
               disabled={isFull}
               aria-disabled={isFull}
-              aria-describedby={open ? tooltipId : undefined}
+               aria-describedby={tooltipId}
               onMouseEnter={(e) => openTooltip(card.id, e.currentTarget)}
               onMouseLeave={() => closeTooltip(card.id)}
               onFocus={(e) => openTooltip(card.id, e.currentTarget)}
@@ -75,11 +66,11 @@ export default function ModifierSpectralPicker() {
             >
               <span aria-hidden="true">👻 </span>
               {card.name}
-              {open && tooltip && (
+               {open && tooltip.anchorRect && (
                 <SpectralTooltip
-                  id={tooltipId}
+                   id={tooltipId!}
                   card={card}
-                  anchorRect={tooltip.rect}
+                   anchorRect={tooltip.anchorRect}
                 />
               )}
             </button>

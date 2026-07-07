@@ -22,46 +22,42 @@ function createMemoryStorage(): Storage {
   };
 }
 
-function isFunctionalStorage(candidate: unknown): candidate is Storage {
-  try {
-    const storage = candidate as Storage | null | undefined;
-    if (!storage || typeof storage.setItem !== "function") return false;
-    const probe = "__memoryLocalStorage_probe__";
-    storage.setItem(probe, "1");
-    storage.removeItem(probe);
-    return true;
-  } catch {
-    return false;
+// Avoid triggering Node's experimental localStorage getter (which warns) by
+// inspecting property descriptors instead of reading globalThis.localStorage.
+function ensureMemoryLocalStorageOn(target: any): void {
+  const desc = Object.getOwnPropertyDescriptor(target, "localStorage");
+  // If there's no own property or it's an accessor (getter/setter), override with a memory storage.
+  if (!desc || typeof desc.get === "function" || typeof desc.set === "function") {
+    Object.defineProperty(target, "localStorage", {
+      value: createMemoryStorage(),
+      configurable: true,
+      writable: true,
+    });
+    return;
+  }
+  // If there's a plain value but it isn't a functional Storage, replace it.
+  const current = desc.value as unknown;
+  const functional =
+    !!current &&
+    typeof (current as Storage).setItem === "function" &&
+    typeof (current as Storage).getItem === "function";
+  if (!functional) {
+    Object.defineProperty(target, "localStorage", {
+      value: createMemoryStorage(),
+      configurable: true,
+      writable: true,
+    });
   }
 }
 
-const globalScope = globalThis as unknown as {
-  localStorage?: Storage;
-  window?: { localStorage?: Storage };
-};
-
-if (!isFunctionalStorage(globalScope.localStorage)) {
-  Object.defineProperty(globalThis, "localStorage", {
-    value: createMemoryStorage(),
-    configurable: true,
-    writable: true,
-  });
-}
-
-const windowScope = globalScope.window;
-if (windowScope === undefined) {
-  Object.defineProperty(globalThis, "window", {
+// Define a window alias if missing first, then ensure both global and window have memory-backed storage.
+if (!Object.getOwnPropertyDescriptor(globalThis as any, "window")) {
+  Object.defineProperty(globalThis as any, "window", {
     value: globalThis,
     configurable: true,
     writable: true,
   });
-} else if (
-  windowScope !== (globalThis as unknown) &&
-  !isFunctionalStorage(windowScope.localStorage)
-) {
-  Object.defineProperty(windowScope, "localStorage", {
-    value: globalScope.localStorage,
-    configurable: true,
-    writable: true,
-  });
 }
+
+ensureMemoryLocalStorageOn(globalThis as any);
+ensureMemoryLocalStorageOn((globalThis as any).window);

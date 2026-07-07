@@ -1,5 +1,6 @@
 import "./ModifierJokerPicker.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { useGame } from "../../store/game";
 import { jokerCapacityFor } from "../../items/capacities";
@@ -51,14 +52,7 @@ export default function ModifierJokerPicker() {
     readonly id: string;
     readonly rect: DOMRect;
   } | null>(null);
-  useEffect(() => {
-    if (!tooltip) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTooltip(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [tooltip]);
+  useEscapeToClose(() => setTooltip(null), tooltip !== null);
 
   const openTip = (id: string, el: HTMLElement) =>
     setTooltip({ id, rect: el.getBoundingClientRect() });
