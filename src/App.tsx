@@ -12,17 +12,10 @@ const JokerGrantAcknowledge = lazy(
 );
 import "./App.css";
 import { useGame } from "./store/game";
-import { BASE_VOUCHER_SLOTS } from "./store/vouchers";
 import { requiredChipsForBlind } from "./scoring/anteScaling";
-import {
-  availableBosses,
-  createBossCatalog,
-  pickBossForAnte,
-} from "./items/bosses";
+import { availableBosses, createBossCatalog } from "./items/bosses";
 import { useChanceOverrides } from "./hooks/useChanceOverrides";
-import { bootIntoShop, shouldBootIntoShop } from "./dev/bootShop";
 import { devToolsEnabled } from "./dev/devTools";
-import { readSeededConsumables } from "./dev/seedConsumables";
 import Game from "./components/game/Game";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
@@ -33,7 +26,6 @@ const GameWonScreen = lazy(() => import("./components/game/GameWonScreen"));
 import NewRunScreen from "./components/game/NewRunScreen";
 import { useShopController } from "./hooks/useShopController";
 import { usePackOpenController } from "./hooks/usePackOpenController";
-import { rollAnteSkipOffers, tagOfferRngConfig } from "./items/tags";
 import Sidebar from "./components/hud/Sidebar";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
@@ -47,13 +39,13 @@ import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import { useGameModals } from "./hooks/useGameModals";
+import { useRunInitialization } from "./hooks/useRunInitialization";
 import {
   initialJokersConfig,
 } from "./items/jokers";
 import {
   BOSS_REROLL_COST,
   bossRerollsRemaining,
-  pickVouchersForAnte,
   VOUCHER_CATALOG,
 } from "./items/vouchers";
 
@@ -171,21 +163,11 @@ function App() {
     continueEndless,
   } = useGameModals(startNewGame);
 
-  const setConsumables = useGame((state) => state.setConsumables);
+  useRunInitialization();
+
   const pendingRunSelect = useGame((state) => state.pendingRunSelect);
-  useEffect(() => {
-    if (didRestoreFromSnapshot()) return;
-    if (pendingRunSelect) return;
-    const seeded = readSeededConsumables();
-    if (seeded.length > 0) setConsumables(seeded);
-  }, [pendingRunSelect, setConsumables]);
   const openedPack = useGame((state) => state.openedPack);
   const skipTagOffers = useGame((state) => state.skipTagOffers);
-  const setSkipTagOffers = useGame((state) => state.setSkipTagOffers);
-  useEffect(() => {
-    if (didRestoreFromSnapshot()) return;
-    setSkipTagOffers(rollAnteSkipOffers(tagOfferRngConfig.rng));
-  }, [setSkipTagOffers]);
   const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
@@ -200,15 +182,6 @@ function App() {
   const selectedDeck = useGame((state) => state.selectedDeck);
   const pendingTags = useGame((state) => state.pendingTags);
   const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
-  const setCurrentAnteVouchers = useGame(
-    (state) => state.setCurrentAnteVouchers,
-  );
-  useEffect(() => {
-    if (didRestoreFromSnapshot()) return;
-    setCurrentAnteVouchers(
-      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
-    );
-  }, [setCurrentAnteVouchers]);
   const currentBoss = useGame((state) => state.currentBoss);
   const bossRerollsUsedThisAnte = useGame(
     (state) => state.bossRerollsUsedThisAnte,
@@ -216,21 +189,12 @@ function App() {
   const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
   const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
-  useEffect(() => {
-    if (didRestoreFromSnapshot()) return;
-    setCurrentBoss(pickBossForAnte({ ante: 1 }));
-  }, [setCurrentBoss]);
   const requiredScore = requiredChipsForBlind({
     ante,
     blind,
     boss: currentBoss,
     stake: selectedStake,
   });
-
-  useEffect(() => {
-    if (didRestoreFromSnapshot()) return;
-    if (shouldBootIntoShop()) bootIntoShop();
-  }, []);
 
   const shopProps = useShopController();
 
