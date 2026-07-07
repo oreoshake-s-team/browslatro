@@ -1,15 +1,8 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef } from "react";
 import { useBodyClass } from "./hooks/useBodyClass";
 import { useTranslation } from "react-i18next";
-import { useAutopilot } from "./hooks/useAutopilot";
-import { useMoveExplanation } from "./ai/advisor/useMoveExplanation";
-import { captureAdviceFeedback } from "./ai/humanPlayWiring";
-import { buildHandPolicyFeedbackEvent } from "./ai/advisor/adviceFeedback";
-import {
-  clearHandAdvice,
-  recordHandFeedback,
-  rememberHandAdvice,
-} from "./ai/advisor/shownHandAdvice";
+import { useAutopilotController } from "./hooks/useAutopilotController";
+import { recordHandFeedback } from "./ai/advisor/shownHandAdvice";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -49,7 +42,6 @@ import { usePreferences } from "./components/system/preferences";
 import { useScoringStepMs } from "./hooks/useScoringStepMs";
 import { useDevAnimationSpeedStyle } from "./hooks/useDevAnimationSpeedStyle";
 import { useInitialDeal } from "./hooks/useInitialDeal";
-import { useAdviceFeedbackNotice } from "./hooks/useAdviceFeedbackNotice";
 import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
@@ -146,83 +138,20 @@ function App() {
     );
     discardSelectedRaw();
   };
-  const [autopilotEnabled, setAutopilotEnabled] = useState(false);
-  const autopilot = useAutopilot(
-    autopilotEnabled,
-    isScoring,
-    { play: submitHand, discard: discardSelected },
-    () => setAutopilotEnabled(false),
-  );
-  const autopilotExplanation = useMoveExplanation();
-  const autopilotProposal = autopilot.pendingProposal;
-  const skipExplanationResetRef = useRef(false);
-  useEffect(() => {
-    if (skipExplanationResetRef.current) {
-      skipExplanationResetRef.current = false;
-      return;
-    }
-    autopilotExplanation.reset();
-  }, [autopilotProposal, autopilotExplanation.reset]);
-  const askAiForMove = (): void => {
-    void autopilotExplanation.suggestMove().then((picked) => {
-      if (picked !== null) {
-        skipExplanationResetRef.current = true;
-        autopilot.setProposal(picked);
-      }
-    });
-  };
-  const policyDecision =
-    autopilot.pendingDecision !== null &&
-    autopilot.pendingProposal === autopilot.pendingDecision.action
-      ? autopilot.pendingDecision
-      : null;
-  const pendingDecision = autopilot.pendingDecision;
-  useEffect(() => {
-    if (pendingDecision !== null) rememberHandAdvice(pendingDecision);
-  }, [pendingDecision]);
-  useEffect(() => () => clearHandAdvice(), []);
   const {
-    recorded: autopilotFeedbackRecorded,
-    markRecorded: markAutopilotFeedbackRecorded,
-    clear: clearAutopilotFeedbackNotice,
-  } = useAdviceFeedbackNotice(isScoring);
-  useEffect(() => {
-    if (autopilotProposal !== null) clearAutopilotFeedbackNotice();
-  }, [autopilotProposal, clearAutopilotFeedbackNotice]);
-  const handleAutopilotFeedback = (correctedIndex: number | null): void => {
-    if (policyDecision === null) return;
-    captureAdviceFeedback(
-      useGame.getState(),
-      buildHandPolicyFeedbackEvent(policyDecision, correctedIndex),
-    );
-    clearHandAdvice();
-    markAutopilotFeedbackRecorded();
-    const corrected =
-      correctedIndex !== null
-        ? policyDecision.candidates[correctedIndex]
-        : undefined;
-    if (corrected !== undefined) {
-      autopilot.approveOption(corrected);
-    } else {
-      autopilot.dismissProposal();
-    }
-  };
-  const handleAutopilotAgree = (): void => {
-    if (policyDecision !== null) {
-      captureAdviceFeedback(
-        useGame.getState(),
-        buildHandPolicyFeedbackEvent(
-          policyDecision,
-          policyDecision.recommendationIndex,
-          "explicit",
-          "good",
-        ),
-      );
-      markAutopilotFeedbackRecorded();
-    }
-    clearHandAdvice();
-    autopilot.approve();
-  };
+    enabled: autopilotEnabled,
+    onToggle: toggleAutopilot,
+    autopilot,
+    explanation: autopilotExplanation,
+    onAskAi: askAiForMove,
+    onFeedback: handleAutopilotFeedback,
+    onAgree: handleAutopilotAgree,
+    feedbackRecorded: autopilotFeedbackRecorded,
+    policyDecision,
+  } = useAutopilotController(isScoring, {
+    play: submitHand,
+    discard: discardSelected,
+  });
   const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
     useRoundLifecycle({
       applyGainedTag,
@@ -371,12 +300,12 @@ function App() {
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
         autopilotEnabled={autopilotEnabled}
-        onToggleAutopilot={() => setAutopilotEnabled((prev) => !prev)}
+        onToggleAutopilot={toggleAutopilot}
         autopilotProposal={autopilot.pendingProposal}
         autopilotModelProgress={autopilot.modelProgress}
         autopilotProposalUnavailable={autopilot.proposalUnavailable}
         autopilotAdvisorUnavailable={autopilot.advisorUnavailable}
-        autopilotExplanation={autopilotExplanation.state}
+        autopilotExplanation={autopilotExplanation}
         autopilotFeedbackCandidates={policyDecision?.candidates ?? null}
         autopilotFeedbackRecorded={autopilotFeedbackRecorded}
         onApproveAutopilot={autopilot.approve}
