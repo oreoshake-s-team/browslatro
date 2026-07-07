@@ -13,6 +13,11 @@ import { pickBossForAnte } from "../items/bosses";
 import { DEFAULT_DECK, deckStartingMoneyDelta, type Deck } from "../items/decks";
 import type { Consumable } from "../items/consumables";
 import { interestMultiplierFromJokers } from "../items/jokers/collection";
+import {
+  applyHandPlayedToJokerStates,
+  applyRoundEndToJokerStates,
+} from "../items/jokers/state";
+import { tickPerishableRounds } from "../items/jokers/stickers";
 import type { Joker, RandomSource } from "../items/jokers/types";
 import { orderJokersForScoring } from "../items/jokers/jokerOrdering";
 import { DEFAULT_STAKE, type Stake } from "../items/stakes";
@@ -351,6 +356,15 @@ export async function playHeadlessRun(
             `${agent.name} made an illegal play: ${result.reason}`,
           );
         }
+        const scoredCards = pile.hand.filter((c) =>
+          result.scoringCardIds.includes(c.id),
+        );
+        jokers = applyHandPlayedToJokerStates(jokers, {
+          playedHandLabel: result.handLabel,
+          playedCardCount: action.cardIds.length,
+          scoredCards,
+          handPlayCounts,
+        });
         handsPlayed += 1;
         runStats = recordHandPlayed(runStats);
         roundScore += result.score;
@@ -398,6 +412,11 @@ export async function playHeadlessRun(
         BLIND_CLEAR_REWARD_BASE +
         interest +
         REMAINING_HAND_BONUS * unusedHands;
+      jokers = applyRoundEndToJokerStates(
+        tickPerishableRounds(jokers),
+        rng,
+        blind === 3,
+      );
       if (blindsCleared >= roundBudget) {
         return finish(false, ante);
       }

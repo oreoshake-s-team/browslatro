@@ -18,6 +18,10 @@ import type { Joker } from "../items/jokers/types";
 import type { Enhancement, Seal } from "../cards/types";
 import type { VoucherId } from "../items/vouchers";
 import { createDefaultHandStats } from "../scoring/handStats";
+import {
+  createIceCreamJoker,
+  createPopcornJoker,
+} from "../items/jokers";
 
 const greedy: HeadlessAgent = {
   name: "greedy-test",
@@ -49,6 +53,67 @@ describe("buildHeadlessDeck", () => {
   test("contains 52 unique cards", () => {
     const deck = buildHeadlessDeck();
     expect(new Set(deck.map((c) => `${c.rank}-${c.suit}`)).size).toBe(52);
+  });
+});
+
+describe("playHeadlessRun — joker state persists across hands and rounds", () => {
+  async function observedCounters(
+    id: string,
+    equipped: Joker,
+    seed: number,
+  ): Promise<number[]> {
+    const counters: number[] = [];
+    const observer: HeadlessAgent = {
+      name: "state-observer",
+      chooseAction(view) {
+        const observed = view.jokers.find((j) => j.id === id);
+        if (observed?.state?.kind === "counter") {
+          counters.push(observed.state.value);
+        }
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed, maxAnte: 1, jokers: [equipped] });
+    return counters;
+  }
+
+  test("Ice Cream melts between hands instead of scoring at a frozen counter", async () => {
+    const counters = await observedCounters("ice-cream", createIceCreamJoker(), 11);
+    expect(counters[counters.length - 1]).toBeLessThan(counters[0]);
+  });
+
+  test("Popcorn decays at round end instead of staying at full mult", async () => {
+    const counters = await observedCounters("popcorn", createPopcornJoker(), 11);
+    expect(Math.min(...counters)).toBeLessThan(counters[0]);
+  });
+
+  test("perishable stickers tick rounds held after a cleared round", async () => {
+    let maxRoundsHeld = 0;
+    const perishable: Joker = {
+      ...joker(),
+      stickers: [{ kind: "perishable", roundsHeld: 0 }],
+    };
+    const observer: HeadlessAgent = {
+      name: "sticker-observer",
+      chooseAction(view) {
+        const sticker = view.jokers[0]?.stickers?.find(
+          (s) => s.kind === "perishable",
+        );
+        if (sticker !== undefined && sticker.kind === "perishable") {
+          maxRoundsHeld = Math.max(maxRoundsHeld, sticker.roundsHeld);
+        }
+        return greedy.chooseAction(view);
+      },
+    };
+    await playHeadlessRun(observer, { seed: 11, maxAnte: 1, jokers: [perishable] });
+    expect(maxRoundsHeld).toBeGreaterThan(0);
+  });
+
+  test("the same seed still reproduces an identical result with stateful jokers", async () => {
+    const config = { seed: 17, maxAnte: 1, jokers: [createIceCreamJoker()] };
+    const first = await playHeadlessRun(greedy, config);
+    const second = await playHeadlessRun(greedy, config);
+    expect(first).toEqual(second);
   });
 });
 
