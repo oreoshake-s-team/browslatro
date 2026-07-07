@@ -35,33 +35,4 @@ function isFunctionalStorage(candidate: unknown): candidate is Storage {
   }
 }
 
-const globalScope = globalThis as unknown as {
-  localStorage?: Storage;
-  window?: { localStorage?: Storage };
-};
-
-if (!isFunctionalStorage(globalScope.localStorage)) {
-  Object.defineProperty(globalThis, "localStorage", {
-    value: createMemoryStorage(),
-    configurable: true,
-    writable: true,
-  });
-}
-
-const windowScope = globalScope.window;
-if (windowScope === undefined) {
-  Object.defineProperty(globalThis, "window", {
-    value: globalThis,
-    configurable: true,
-    writable: true,
-  });
-} else if (
-  windowScope !== (globalThis as unknown) &&
-  !isFunctionalStorage(windowScope.localStorage)
-) {
-  Object.defineProperty(windowScope, "localStorage", {
-    value: globalScope.localStorage,
-    configurable: true,
-    writable: true,
-  });
-}
+// Avoid touching Nodes
