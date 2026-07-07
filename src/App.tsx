@@ -46,6 +46,7 @@ import { usePlayHand } from "./hooks/usePlayHand";
 import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
 import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
+import { useGameModals } from "./hooks/useGameModals";
 import {
   initialJokersConfig,
 } from "./items/jokers";
@@ -160,14 +161,15 @@ function App() {
     });
   loseGameRef.current = loseGame;
 
-  // Round-won modal: when non-null, the player has met the required score and
-  // the modal is showing. Dismissal triggers handleWin().
-  const pendingWin = useGame((state) => state.pendingWin);
-  const setPendingWin = useGame((state) => state.setPendingWin);
-  const pendingLose = useGame((state) => state.pendingLose);
-  const pendingGameWon = useGame((state) => state.pendingGameWon);
-  const setPendingGameWon = useGame((state) => state.setPendingGameWon);
-  const setPendingLose = useGame((state) => state.setPendingLose);
+  const {
+    pendingWin,
+    pendingLose,
+    pendingGameWon,
+    dismissRoundWon,
+    dismissRoundLost,
+    dismissGameWon,
+    continueEndless,
+  } = useGameModals(startNewGame);
 
   const setConsumables = useGame((state) => state.setConsumables);
   const pendingRunSelect = useGame((state) => state.pendingRunSelect);
@@ -225,8 +227,6 @@ function App() {
     stake: selectedStake,
   });
 
-  const handleWin = useGame((s) => s.handleWin);
-
   useEffect(() => {
     if (didRestoreFromSnapshot()) return;
     if (shouldBootIntoShop()) bootIntoShop();
@@ -240,26 +240,6 @@ function App() {
   }
 
   const packOpenProps = usePackOpenController();
-
-  function dismissRoundWonModal() {
-    const precomputed = pendingWin
-      ? { interest: pendingWin.interest, interestWallet: pendingWin.interestWallet }
-      : undefined;
-    setPendingWin(null);
-    handleWin(precomputed);
-  }
-
-  function dismissRoundLostModal() {
-    setPendingLose(null);
-    startNewGame();
-  }
-
-  function dismissGameWonScreen() {
-    setPendingGameWon(null);
-    startNewGame();
-  }
-
-  const continueEndless = useGame((s) => s.continueEndless);
 
   const appStyle = useDevAnimationSpeedStyle(animationSpeed);
 
@@ -331,14 +311,14 @@ function App() {
       {pendingWin && (
         <LazyChunkErrorBoundary>
           <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
-            <RoundWonModal info={pendingWin} onContinue={dismissRoundWonModal} />
+            <RoundWonModal info={pendingWin} onContinue={dismissRoundWon} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
       {pendingLose && (
         <LazyChunkErrorBoundary>
           <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
-            <RoundLostModal info={pendingLose} onContinue={dismissRoundLostModal} />
+            <RoundLostModal info={pendingLose} onContinue={dismissRoundLost} />
           </Suspense>
         </LazyChunkErrorBoundary>
       )}
@@ -347,7 +327,7 @@ function App() {
           <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
             <GameWonScreen
               info={pendingGameWon}
-              onNewRun={dismissGameWonScreen}
+              onNewRun={dismissGameWon}
               onEndless={continueEndless}
             />
           </Suspense>
