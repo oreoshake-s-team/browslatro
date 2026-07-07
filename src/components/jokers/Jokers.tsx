@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useId, useRef, useState } from "react";
+import { Fragment, useId, useRef, useState } from "react";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { localizedJokerName } from "../../i18n/jokerOverrides";
 import "./Jokers.css";
@@ -78,17 +79,10 @@ export default function Jokers({
   const sellable = Boolean(onSell) && !faceDown;
   const tileDraggable = reorderable || sellable;
 
-  useEffect(() => {
-    if (tooltipOpenId === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setTooltipOpenId(null);
-        setTooltipRect(null);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [tooltipOpenId]);
+  useEscapeToClose(() => {
+    setTooltipOpenId(null);
+    setTooltipRect(null);
+  }, tooltipOpenId !== null);
 
   function openTooltip(id: string, el: HTMLElement) {
     setTooltipOpenId(id);
