@@ -41,31 +41,24 @@ async function loadRawShopRanker(
 
 export function createShopRanker(modelUrl: string): ShopCandidateRanker {
   let loaded: Promise<ShopCandidateRanker> | null = null;
-  let failed = false;
-  const ensure = (
+  const ensure = async (
     onProgress?: DownloadProgressListener,
   ): Promise<ShopCandidateRanker> => {
     loaded = loaded ?? loadRawShopRanker(modelUrl, onProgress);
-    return loaded;
-  };
-  const identity = (n: number): ReadonlyArray<number> => Array.from({ length: n }, (_, i) => i);
-
-  async function safe<T>(fn: (r: ShopCandidateRanker) => Promise<T>, fallback: T): Promise<T> {
-    if (failed) return fallback;
     try {
-      return await fn(await ensure());
-    } catch {
-      failed = true;
-      return fallback;
+      return await loaded;
+    } catch (error) {
+      loaded = null;
+      throw error;
     }
-  }
+  };
 
   return {
     async load(onProgress) {
-      if (!failed) await ensure(onProgress).catch(() => { failed = true; });
+      await ensure(onProgress);
     },
-    async rankShop(i) { return safe((r) => r.rankShop(i), identity(i.candidates.length)); },
-    async rankPack(i) { return safe((r) => r.rankPack(i), identity(i.candidates.length)); },
+    async rankShop(i) { return (await ensure()).rankShop(i); },
+    async rankPack(i) { return (await ensure()).rankPack(i); },
   };
 }
 

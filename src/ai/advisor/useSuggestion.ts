@@ -29,7 +29,10 @@ interface SuggestionContext<TAction> {
 export type SuggestionState<TAction> =
   | { readonly phase: "idle" }
   | ({ readonly phase: "loading" } & SuggestionContext<TAction>)
-  | ({ readonly phase: "coach" } & SuggestionContext<TAction>)
+  | ({
+      readonly phase: "coach";
+      readonly coachUnavailable?: boolean;
+    } & SuggestionContext<TAction>)
   | ({ readonly phase: "asking" } & SuggestionContext<TAction>)
   | ({ readonly phase: "ready"; readonly advice: Advice } & SuggestionContext<TAction>)
   | ({
@@ -114,14 +117,19 @@ export function useSuggestion<TAction>(
     const rank = preRankRef.current;
     if (!rank) return;
     let idx: number | null = null;
+    let unavailable = false;
     try {
       idx = await rank(candidates);
     } catch {
-      idx = null;
+      unavailable = true;
     }
     if (requestIdRef.current !== requestId) return;
     onnxIndexRef.current = idx;
-    setState((s) => (s.phase === "coach" ? { ...s, onnxIndex: idx } : s));
+    setState((s) =>
+      s.phase === "coach"
+        ? { ...s, onnxIndex: idx, coachUnavailable: unavailable }
+        : s,
+    );
   }, []);
 
   const askAi = useCallback(async (): Promise<void> => {

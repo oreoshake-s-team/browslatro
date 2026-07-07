@@ -39,6 +39,8 @@ export default function CoachAdvice<TAction>({
 
   const coachCandidate =
     state.onnxIndex !== null ? state.candidates[state.onnxIndex] : undefined;
+  const coachUnavailable =
+    state.phase === "coach" && state.coachUnavailable === true;
   const downloading = modelProgress !== null;
 
   return (
@@ -60,9 +62,19 @@ export default function CoachAdvice<TAction>({
       </div>
 
       {coachCandidate === undefined ? (
-        <p className="coach-advice-status" role="status">
-          {downloading ? t("advisor.downloadingModel") : t("advisor.coachComputing")}
-        </p>
+        coachUnavailable ? (
+          <p
+            className="coach-advice-status"
+            role="status"
+            data-testid="coach-unavailable"
+          >
+            {t("advisor.coachUnavailable")}
+          </p>
+        ) : (
+          <p className="coach-advice-status" role="status">
+            {downloading ? t("advisor.downloadingModel") : t("advisor.coachComputing")}
+          </p>
+        )
       ) : (
         <>
           <p className="coach-advice-move" data-testid="coach-recommendation">
