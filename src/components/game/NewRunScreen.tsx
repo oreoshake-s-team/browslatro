@@ -1,5 +1,6 @@
 import "./NewRunScreen.css";
 import { useEffect, useId, useRef, useState } from "react";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import DeckTooltip from "./DeckTooltip";
@@ -48,14 +49,7 @@ export default function NewRunScreen({
     readonly rect: DOMRect;
   } | null>(null);
 
-  useEffect(() => {
-    if (deckTooltip === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDeckTooltip(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [deckTooltip]);
+  useEscapeToClose(() => setDeckTooltip(null), deckTooltip !== null);
 
   function openDeckTooltip(id: Deck, el: HTMLElement) {
     setDeckTooltip({ id, rect: el.getBoundingClientRect() });

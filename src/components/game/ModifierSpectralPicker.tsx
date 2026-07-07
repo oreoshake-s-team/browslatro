@@ -1,5 +1,6 @@
 import "./ModifierSpectralPicker.css";
 import { useEffect, useId, useMemo, useState } from "react";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import {
@@ -29,14 +30,7 @@ export default function ModifierSpectralPicker() {
     readonly rect: DOMRect;
   } | null>(null);
 
-  useEffect(() => {
-    if (tooltip === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTooltip(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [tooltip]);
+  useEscapeToClose(() => setTooltip(null), tooltip !== null);
 
   function openTooltip(id: string, el: HTMLElement) {
     setTooltip({ id, rect: el.getBoundingClientRect() });

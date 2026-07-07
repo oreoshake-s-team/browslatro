@@ -3,6 +3,7 @@ import "./CardCenterValue.css";
 import "./CardLuckyCenter.css";
 import "./CardEditions.css";
 import { useEffect, useId, useRef, useState } from "react";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";
 import { tSuitName } from "../../i18n/strings";
@@ -137,14 +138,7 @@ export default function Card({
     if (el) setTooltipRect(el.getBoundingClientRect());
   };
   const hideTooltip = () => setTooltipRect(null);
-  useEffect(() => {
-    if (!tooltipRect) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTooltipRect(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [tooltipRect]);
+  useEscapeToClose(() => setTooltipRect(null), tooltipRect !== null);
   const isStone = card.enhancement === "stone";
   const colorClass = isStone
     ? "card-stone-text"

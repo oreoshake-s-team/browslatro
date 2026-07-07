@@ -1,5 +1,6 @@
 import "./BlindSelectScreen.css";
 import { useEffect, useId, useState } from "react";
+import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import type { Blind } from "../../cards/types";
 import type { BossBlind } from "../../items/bosses";
@@ -87,14 +88,7 @@ export default function BlindSelectScreen({
     readonly rect: DOMRect;
   } | null>(null);
 
-  useEffect(() => {
-    if (tooltip === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setTooltip(null);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [tooltip]);
+  useEscapeToClose(() => setTooltip(null), tooltip !== null);
 
   function openTooltip(key: string, spec: TagTooltipSpec, el: HTMLElement) {
     setTooltip({ key, spec, rect: el.getBoundingClientRect() });
