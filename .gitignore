@@ -51,6 +51,7 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
 
 # npm lockfile (this project uses yarn berry, not npm)
 package-lock.json
