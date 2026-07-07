@@ -3,6 +3,7 @@ import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
 import { createPlanetCatalog } from "../items/planets";
 import { createJokerCatalog } from "../items/jokers/catalog";
 import { MAX_JOKERS } from "../items/jokers/constants";
+import { canAddJokerToRow } from "../items/jokers/collection";
 import { canSellJoker } from "../items/jokers/stickers";
 import { jokerSellValue } from "../items/jokers/scoring/utils";
 import type { Joker } from "../items/jokers/types";
@@ -329,7 +330,9 @@ export async function createHeadlessShopAgent(
           .map((joker, index) => ({ joker, index }))
           .filter(({ joker }) => canSellJoker(joker));
         const visibleOffers = offers.filter(
-          (o) => !(isConsumableShopKind(o.kind) && !consumablePurchaseAllowed(money)),
+          (o) =>
+            !(isConsumableShopKind(o.kind) && !consumablePurchaseAllowed(money)) &&
+            !(o.kind === "joker" && !canAddJokerToRow(jokers, o.joker, jokerCapacity())),
         );
         const candidates: ShopAdviceCandidate[] = [
           ...visibleOffers.map(shopItemCandidate),
@@ -390,11 +393,17 @@ export async function createHeadlessShopAgent(
 
         const offer = visibleOffers[topIdx];
         if (offer === undefined || offer.price > money) break;
+        if (
+          offer.kind === "joker" &&
+          !canAddJokerToRow(jokers, offer.joker, jokerCapacity())
+        ) {
+          break;
+        }
         money -= offer.price;
         spend(offer.price);
         offers = offers.filter((o) => o !== offer);
 
-        if (offer.kind === "joker" && jokers.length < jokerCapacity()) {
+        if (offer.kind === "joker") {
           jokers.push(offer.joker);
           ownedIds.add(offer.joker.id);
           activity = { ...activity, jokersBought: activity.jokersBought + 1 };

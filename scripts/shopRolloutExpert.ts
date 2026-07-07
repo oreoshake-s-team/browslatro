@@ -1,5 +1,6 @@
 import { playHeadlessRun, type HeadlessAgent } from "../src/ai/headlessRun";
 import { MAX_JOKERS } from "../src/items/jokers/constants";
+import { canAddJokerToRow } from "../src/items/jokers/collection";
 import type { Joker } from "../src/items/jokers/types";
 import { applyPlanetUpgrade } from "../src/items/planets";
 import type { ShopItem } from "../src/items/shop";
@@ -15,9 +16,11 @@ export interface ShopForwardState {
 export function applyShopBuy(
   state: ShopForwardState,
   item: ShopItem,
-): ShopForwardState {
+): ShopForwardState | null {
+  if (item.price > state.money) return null;
   const money = state.money - item.price;
-  if (item.kind === "joker" && state.jokers.length < MAX_JOKERS) {
+  if (item.kind === "joker") {
+    if (!canAddJokerToRow(state.jokers, item.joker, MAX_JOKERS)) return null;
     return { ...state, money, jokers: [...state.jokers, item.joker] };
   }
   if (item.kind === "planet") {
@@ -27,7 +30,7 @@ export function applyShopBuy(
       handStats: applyPlanetUpgrade(state.handStats, item.planet),
     };
   }
-  return { ...state, money };
+  return null;
 }
 
 export async function scoreShopState(

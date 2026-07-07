@@ -79,6 +79,17 @@ describe("applyOfferToState", () => {
     ).toBeNull();
   });
 
+  test("allows a Negative joker past full joker slots", () => {
+    const full = Array.from({ length: MAX_JOKERS }, (_, i) =>
+      joker({ id: `j${i}` }),
+    );
+    const negative = joker({ id: "neg", edition: "negative" });
+    expect(
+      applyOfferToState(jokerOffer(negative, 4), baseState({ jokers: full, money: 10 }))
+        ?.jokers.length,
+    ).toBe(MAX_JOKERS + 1);
+  });
+
   test("appends the bought joker and deducts the price", () => {
     const next = applyOfferToState(jokerOffer(powerJoker, 6), baseState({ money: 10 }));
     expect(next).toEqual({

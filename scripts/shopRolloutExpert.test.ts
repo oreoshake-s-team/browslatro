@@ -5,6 +5,7 @@ import type { HeadlessAgent, HeadlessRoundView } from "../src/ai/headlessRun";
 import { joker } from "../src/ai/test-helpers";
 import type { Joker } from "../src/items/jokers/types";
 import { createPlanetCatalog } from "../src/items/planets";
+import { createTarotCatalog } from "../src/items/tarots";
 import type { ShopItem } from "../src/items/shop";
 import { createDefaultHandStats } from "../src/scoring/handStats";
 import {
@@ -93,19 +94,37 @@ describe("pickBestState", () => {
 describe("applyShopBuy", () => {
   test("appends a bought joker and deducts its price", () => {
     const next = applyShopBuy(state({ money: 10 }), jokerItem(powerJoker, 6));
-    expect({ jokers: next.jokers.length, money: next.money }).toEqual({ jokers: 1, money: 4 });
+    expect(
+      next === null ? null : { jokers: next.jokers.length, money: next.money },
+    ).toEqual({ jokers: 1, money: 4 });
   });
 
   test("upgrades hand stats when a planet is bought", () => {
     const planet = createPlanetCatalog()[0];
     const item: ShopItem = { kind: "planet", planet, price: 3, sold: false };
     const next = applyShopBuy(state({ money: 5 }), item);
-    expect(next.money).toBe(2);
+    expect(next?.money).toBe(2);
   });
 
-  test("does not append a joker when the joker slots are full", () => {
+  test("refuses a joker when the joker slots are full instead of charging", () => {
     const full = state({ jokers: Array.from({ length: 16 }, () => powerJoker), money: 10 });
-    expect(applyShopBuy(full, jokerItem(powerJoker, 6)).jokers.length).toBe(16);
+    expect(applyShopBuy(full, jokerItem(powerJoker, 6))).toBeNull();
+  });
+
+  test("allows a Negative joker past full joker slots", () => {
+    const full = state({ jokers: Array.from({ length: 16 }, () => powerJoker), money: 10 });
+    const negative = { ...powerJoker, edition: "negative" as const };
+    expect(applyShopBuy(full, jokerItem(negative, 6))?.jokers.length).toBe(17);
+  });
+
+  test("refuses an unaffordable item instead of going negative", () => {
+    expect(applyShopBuy(state({ money: 2 }), jokerItem(powerJoker, 6))).toBeNull();
+  });
+
+  test("refuses an unhandled item kind instead of charging for nothing", () => {
+    const tarot = createTarotCatalog()[0];
+    const item: ShopItem = { kind: "tarot", tarot, price: 3, sold: false };
+    expect(applyShopBuy(state({ money: 5 }), item)).toBeNull();
   });
 });
 

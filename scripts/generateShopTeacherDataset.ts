@@ -187,13 +187,16 @@ export async function generateShopTeacherDecisions(
         const affordable = offers
           .map((o, i) => ({ o, i }))
           .filter(({ o }) => o.price <= result.money);
-        if (affordable.length > 0) {
-          const rolloutCandidates = [
-            ...affordable.map(({ o }) => applyShopBuy(result, o)),
-            result,
-          ];
+        const buyable = affordable
+          .map(({ o, i }) => ({ o, i, next: applyShopBuy(result, o) }))
+          .filter(
+            (b): b is { o: BuyableOffer; i: number; next: ShopForwardState } =>
+              b.next !== null,
+          );
+        if (buyable.length > 0) {
+          const rolloutCandidates = [...buyable.map((b) => b.next), result];
           const teacherCandidates: ShopAdviceCandidate[] = [
-            ...affordable.map(({ o }) => ({
+            ...buyable.map(({ o }) => ({
               action: "buy" as const,
               item: shopAdviceItem(o),
             })),
@@ -208,8 +211,8 @@ export async function generateShopTeacherDecisions(
             margin: config.margin,
           });
           const snapshots = offers.map(shopItemSnapshot);
-          if (chosen < affordable.length) {
-            const offerIdx = affordable[chosen].i;
+          if (chosen < buyable.length) {
+            const offerIdx = buyable[chosen].i;
             if (source === "teacher") {
               recorder.push(
                 JSON.stringify({
@@ -222,7 +225,7 @@ export async function generateShopTeacherDecisions(
                 }),
               );
             }
-            result = applyShopBuy(result, offers[offerIdx]);
+            result = buyable[chosen].next;
           } else if (source === "teacher") {
             recorder.push(
               JSON.stringify({

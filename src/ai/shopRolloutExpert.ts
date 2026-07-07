@@ -1,6 +1,7 @@
 import type { Card } from "../cards/types";
 import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
 import { MAX_JOKERS } from "../items/jokers/constants";
+import { canAddJokerToRow } from "../items/jokers/collection";
 import type { Joker } from "../items/jokers/types";
 import { applyPlanetUpgrade, type PlanetCard } from "../items/planets";
 import type { ShopItem } from "../items/shop";
@@ -65,7 +66,7 @@ export function applyOfferToState(
 ): PostShopState | null {
   if (offer.price > state.money) return null;
   if (offer.kind === "joker") {
-    if (state.jokers.length >= MAX_JOKERS) return null;
+    if (!canAddJokerToRow(state.jokers, offer.joker, MAX_JOKERS)) return null;
     return {
       jokers: [...state.jokers, offer.joker],
       money: state.money - offer.price,

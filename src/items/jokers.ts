@@ -38,6 +38,7 @@ export {
   createJokerByRarity,
   createRandomJoker,
   discardsOverrideFromJokers,
+  canAddJokerToRow,
   effectiveJokerCount,
   extraDebtFloorFromJokers,
   extraStartingDiscardsFromJokers,

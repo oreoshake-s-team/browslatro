@@ -38,6 +38,16 @@ describe("applyShopAction", () => {
     });
   });
 
+  test("a joker buy at full joker slots is not modeled", () => {
+    const full = state({
+      jokers: Array.from({ length: 5 }, () => ({
+        effectKind: "x-mult",
+        rarity: "uncommon",
+      })),
+    });
+    expect(applyShopAction(full, buyJoker("joker-mult", 6))).toBeNull();
+  });
+
   test("an unaffordable buy is not modeled", () => {
     expect(applyShopAction(state({}, 3), buyJoker("joker-mult", 6))).toBeNull();
   });
