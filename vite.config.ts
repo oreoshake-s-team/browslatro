@@ -38,9 +38,19 @@ const siteUrlPlugin: PluginOption = {
   },
 };
 
+const isProfilingBuild = process.env.PROFILE === "true";
+
 export default defineConfig({
   define: {
     "import.meta.env.VITE_ON_VERCEL": JSON.stringify(process.env.VERCEL ?? "0"),
+  },
+  resolve: {
+    alias: isProfilingBuild
+      ? [
+          { find: "react-dom/client", replacement: "react-dom/profiling" },
+          { find: "react-dom", replacement: "react-dom/profiling" },
+        ]
+      : [],
   },
   plugins: [
     react(),
