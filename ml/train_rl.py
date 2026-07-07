@@ -240,6 +240,18 @@ def clipped_surrogate(ratio, advantage, clip):
     return min(ratio * advantage, clamped * advantage)
 
 
+def clipped_surrogate_torch(ratio, advantage, clip):
+    """Vectorized ``clipped_surrogate`` for tensors — must match the pure
+    reference elementwise (pinned by a unit test), so the tested math is the
+    trained math."""
+    import torch
+
+    return torch.min(
+        ratio * advantage,
+        torch.clamp(ratio, 1.0 - clip, 1.0 + clip) * advantage,
+    )
+
+
 def masked_log_probs(logits, mask):
     """Row-wise log-softmax over a ragged, padded candidate batch.
 
@@ -435,7 +447,7 @@ def main():
     optimizer = torch.optim.Adam(params, lr=args.lr)
     print(f"{len(samples)} self-play decisions on {device}")
 
-    def epoch_gae_advantages():
+    def epoch_value_predictions():
         assert value_net is not None
         values = [0.0] * len(samples)
         with torch.no_grad():
@@ -445,6 +457,15 @@ def main():
                 v = value_net(x[:, 0, :SHOP_CONTEXT_FEATURES])
                 for k, j in enumerate(batch):
                     values[j] = float(v[k])
+        return values
+
+    def epoch_value_baseline_advantages():
+        return value_baseline_advantages(
+            [d[2] for d in samples], epoch_value_predictions(), args.adv_clip
+        )
+
+    def epoch_gae_advantages():
+        values = epoch_value_predictions()
         raw = [0.0] * len(samples)
         for start, rounds, total_return in game_spans:
             rewards = game_rewards(rounds, total_return)
@@ -454,7 +475,12 @@ def main():
         return normalized_advantages(raw, args.adv_clip)
 
     for epoch in range(args.epochs):
-        epoch_adv = epoch_gae_advantages() if args.gae is not None else None
+        if args.gae is not None:
+            epoch_adv = epoch_gae_advantages()
+        elif value_net is not None:
+            epoch_adv = epoch_value_baseline_advantages()
+        else:
+            epoch_adv = None
         random.shuffle(indexed)
         total = 0.0
         total_entropy = 0.0
@@ -470,21 +496,14 @@ def main():
             if value_net is not None:
                 values = value_net(x[:, 0, :SHOP_CONTEXT_FEATURES])
                 value_loss = torch.nn.functional.mse_loss(values, ret)
-                if epoch_adv is not None:
-                    adv = torch.tensor([epoch_adv[j] for j in batch], dtype=torch.float32, device=device)
-                else:
-                    residual = ret - values.detach()
-                    denom = residual.std(unbiased=False).clamp_min(1e-6)
-                    adv = ((residual - residual.mean()) / denom).clamp(-args.adv_clip, args.adv_clip)
+                assert epoch_adv is not None
+                adv = torch.tensor([epoch_adv[j] for j in batch], dtype=torch.float32, device=device)
             else:
                 adv = torch.tensor([const_adv[j] for j in batch], dtype=torch.float32, device=device)
             if use_ppo:
                 old_lp = torch.tensor([old_logps[j] for j in batch], dtype=torch.float32, device=device)
                 ratio = torch.exp(chosen_logp - old_lp)
-                surrogate = torch.min(
-                    ratio * adv,
-                    torch.clamp(ratio, 1.0 - args.ppo_clip, 1.0 + args.ppo_clip) * adv,
-                )
+                surrogate = clipped_surrogate_torch(ratio, adv, args.ppo_clip)
                 per_decision = -surrogate - args.entropy_coef * entropy
             else:
                 clamped = chosen_logp.clamp(min=-args.logp_floor)

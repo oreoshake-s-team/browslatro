@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from train_rl import (
     clipped_surrogate,
+    clipped_surrogate_torch,
     pearson,
     gae_advantages,
     game_rewards,
@@ -29,6 +30,28 @@ try:
     HAS_TORCH_ONNX = True
 except ImportError:
     HAS_TORCH_ONNX = False
+
+
+@unittest.skipUnless(HAS_TORCH_ONNX, "torch not installed")
+class ClippedSurrogateTorchTest(unittest.TestCase):
+    def test_matches_the_pure_reference_elementwise(self):
+        import torch
+
+        ratios = [0.2, 0.7, 1.0, 1.15, 1.4, 2.5]
+        advantages = [-2.0, -0.5, 0.0, 0.5, 2.0]
+        clip = 0.2
+        expected = [
+            clipped_surrogate(r, a, clip) for r in ratios for a in advantages
+        ]
+        ratio_t = torch.tensor(
+            [r for r in ratios for _ in advantages], dtype=torch.float32
+        )
+        adv_t = torch.tensor(
+            [a for _ in ratios for a in advantages], dtype=torch.float32
+        )
+        actual = clipped_surrogate_torch(ratio_t, adv_t, clip).tolist()
+        for got, want in zip(actual, expected):
+            self.assertAlmostEqual(got, want, places=6)
 
 
 class NormalizedAdvantagesTest(unittest.TestCase):
