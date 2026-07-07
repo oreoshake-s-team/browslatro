@@ -26,6 +26,7 @@ export function toSimulatePlayInput(state: GameState): SimulatePlayInput {
     todoHand: state.todoHand,
     idolTarget: state.idolTarget,
     ancientSuit: state.ancientSuit,
+    optimizeJokerOrder: true,
   };
 }
 
