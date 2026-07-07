@@ -6,6 +6,15 @@ export const INTEREST_CAP = 5;
 export const GOLD_HELD_BONUS_PER_CARD = 3;
 export const REMAINING_HAND_BONUS = 1;
 
+export function roundBlindReward(input: {
+  readonly blind: number;
+  readonly smallBlindSkipped: boolean;
+  readonly savedByMrBones: boolean;
+}): number {
+  if (input.savedByMrBones || input.smallBlindSkipped) return 0;
+  return input.blind + 2;
+}
+
 export function calculateInterest(
   wallet: number,
   cap: number = INTEREST_CAP,

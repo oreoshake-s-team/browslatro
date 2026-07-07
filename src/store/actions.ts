@@ -95,7 +95,7 @@ import {
   computeStartingDiscards,
   computeStartingHands,
 } from "../run/roundSetup";
-import { calculateInterest } from "../scoring/payout";
+import { calculateInterest, roundBlindReward } from "../scoring/payout";
 import { rollChance } from "../dev/chanceOverride";
 import { pickRandomTarot } from "../cards/seals";
 import { BlindValues, FINAL_ANTE } from "../constants";
@@ -131,6 +131,7 @@ export interface ActionsState {
   handleWin: (precomputed?: {
     readonly interest: number;
     readonly interestWallet: number;
+    readonly savedByMrBones?: boolean;
   }) => void;
   continueEndless: () => void;
   applySpectralEffect: (effect: SpectralEffect) => void;
@@ -722,11 +723,14 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setJokers(jokersAfterRoundEnd);
     s.setRound((prev) => prev + 1);
     s.setRunStats((prev) => recordUnusedDiscards(prev, s.remainingDiscards));
-    const baseBlindReward = s.blind + 2;
     const smallBlindSkipped =
       s.blind === 1 &&
       hasStakeModifier(s.selectedStake, "red-small-blind-no-reward");
-    const blindReward = smallBlindSkipped ? 0 : baseBlindReward;
+    const blindReward = roundBlindReward({
+      blind: s.blind,
+      smallBlindSkipped,
+      savedByMrBones: precomputed?.savedByMrBones ?? false,
+    });
     const interestBefore = precomputed?.interestWallet ?? s.money;
     const interest =
       precomputed?.interest ??

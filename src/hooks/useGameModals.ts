@@ -29,6 +29,7 @@ export function useGameModals(startNewGame: () => void): GameModals {
       ? {
           interest: pendingWin.interest,
           interestWallet: pendingWin.interestWallet,
+          savedByMrBones: pendingWin.savedByMrBones,
         }
       : undefined;
     setPendingWin(null);
