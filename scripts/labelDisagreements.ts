@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./loadEnv";
 import { readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
