@@ -2038,6 +2038,7 @@ __metadata:
     "@vercel/speed-insights": "npm:^2.0.0"
     "@vitejs/plugin-react": "npm:^6.0.0"
     "@vitest/coverage-istanbul": "npm:^4.1.7"
+    dotenv: "npm:^17.4.2"
     i18next: "npm:^26.3.3"
     jsdom: "npm:^29.0.0"
     onnxruntime-web: "npm:^1.27.0"
@@ -2318,6 +2319,13 @@ __metadata:
   version: 0.6.3
   resolution: "dom-accessibility-api@npm:0.6.3"
   checksum: 10c0/10bee5aa514b2a9a37c87cd81268db607a2e933a050074abc2f6fa3da9080ebed206a320cbc123567f2c3087d22292853bdfdceaffdd4334ffe2af9510b29360
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^17.4.2":
+  version: 17.4.2
+  resolution: "dotenv@npm:17.4.2"
+  checksum: 10c0/164f8e77a646c8446867d5b588d26ea6005c8ea7c5eb41cf926f6113d23f2191355f6e0cfd95ea9bab98394a5b0a3f1e51a8399711b666fe55cc7b0bd745f942
   languageName: node
   linkType: hard
 

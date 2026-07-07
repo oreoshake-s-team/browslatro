@@ -8,6 +8,7 @@
     "@dragdroptouch/drag-drop-touch": "^2.0.3",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "dotenv": "^17.4.2",
     "i18next": "^26.3.3",
     "onnxruntime-web": "^1.27.0",
     "react": "^19.2.6",
