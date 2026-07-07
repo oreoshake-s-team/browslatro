@@ -116,14 +116,17 @@ export async function generateShopDecisions(
         const affordable = offers
           .map((o, i) => ({ o, i }))
           .filter(({ o }) => o.price <= result.money);
-        if (affordable.length > 0) {
-          const candidates = [
-            ...affordable.map(({ o }) => applyShopBuy(result, o)),
-            result,
-          ];
+        const buyable = affordable
+          .map(({ o, i }) => ({ o, i, next: applyShopBuy(result, o) }))
+          .filter(
+            (b): b is { o: BuyableOffer; i: number; next: ShopForwardState } =>
+              b.next !== null,
+          );
+        if (buyable.length > 0) {
+          const candidates = [...buyable.map((b) => b.next), result];
           const chosen = await labelByRollout(candidates, ROLLOUT);
-          if (chosen < affordable.length) {
-            const offerIdx = affordable[chosen].i;
+          if (chosen < buyable.length) {
+            const offerIdx = buyable[chosen].i;
             const snapshots = offers.map(shopItemSnapshot);
             recorder.push(
               JSON.stringify({
@@ -133,7 +136,7 @@ export async function generateShopDecisions(
                 offers: snapshots,
               }),
             );
-            result = applyShopBuy(result, offers[offerIdx]);
+            result = buyable[chosen].next;
           }
         }
 

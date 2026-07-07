@@ -6,6 +6,14 @@ import { rollChance } from "../../dev/chanceOverride";
 import { pickRandom, pickRandomNonEmpty } from "../random";
 import type { Joker, JokerRarity, RandomSource } from "./types";
 
+export function canAddJokerToRow(
+  jokers: ReadonlyArray<Joker>,
+  joker: Joker,
+  capacity: number,
+): boolean {
+  return joker.edition === "negative" || effectiveJokerCount(jokers) < capacity;
+}
+
 export function effectiveJokerCount(jokers: ReadonlyArray<Joker>): number {
   let count = 0;
   for (const j of jokers) if (j.edition !== "negative") count += 1;

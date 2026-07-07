@@ -223,6 +223,47 @@ describe("buildOverride", () => {
   });
 });
 
+describe("joker capacity in the shop loop", () => {
+  function fullRowView(): ShopView {
+    return {
+      ...shopViewWithJoker(),
+      jokers: Array.from({ length: 5 }, (_, i) => ({
+        ...createPlusFourMultJoker(),
+        id: `full-${i}`,
+      })),
+    };
+  }
+
+  test("at-cap joker offers never become buy candidates", async () => {
+    const seenJokerBuys: number[] = [];
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      chooseShopAction: async ({ candidates }) => {
+        seenJokerBuys.push(
+          candidates.filter(
+            (c) => c.action === "buy" && c.item.itemType === "joker",
+          ).length,
+        );
+        return candidates.length - 1;
+      },
+    });
+    await agent.buyAfterRound(fullRowView());
+    expect(seenJokerBuys.every((n) => n === 0)).toBe(true);
+  });
+
+  test("a full joker row leaves the wallet untouched by joker offers", async () => {
+    const agent = await createHeadlessShopAgent(SHOP_MODEL, {
+      chooseShopAction: async ({ candidates }) => {
+        const jokerBuy = candidates.findIndex(
+          (c) => c.action === "buy" && c.item.itemType === "joker",
+        );
+        return jokerBuy >= 0 ? jokerBuy : candidates.length - 1;
+      },
+    });
+    const result = await agent.buyAfterRound(fullRowView());
+    expect(result.jokers).toHaveLength(5);
+  });
+});
+
 describe("chooseShopAction override", () => {
   test("routes the shop decision through the override instead of the ranker", async () => {
     const seen: number[] = [];

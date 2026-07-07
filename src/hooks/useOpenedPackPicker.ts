@@ -24,7 +24,7 @@ import {
 } from "../items/tarots";
 import {
   createRandomJoker,
-  effectiveJokerCount,
+  canAddJokerToRow,
   withEdition,
   applyConsumableUsedToJokerStates,
 } from "../items/jokers";
@@ -270,9 +270,11 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
       }
     } else if (option.kind === "joker") {
       if (
-        option.joker.edition !== "negative" &&
-        effectiveJokerCount(jokers) >=
-          jokerCapacityFor(ownedVoucherIds, useGame.getState().selectedDeck)
+        !canAddJokerToRow(
+          jokers,
+          option.joker,
+          jokerCapacityFor(ownedVoucherIds, useGame.getState().selectedDeck),
+        )
       ) {
         return;
       }

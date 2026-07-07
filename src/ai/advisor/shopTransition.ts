@@ -1,4 +1,5 @@
 import type { ShopAdviceCandidate } from "./types";
+import { MAX_JOKERS } from "../../items/jokers/constants";
 import type { ShopBuild, ShopBuildJoker } from "./shopEncoding";
 
 export interface ShopSearchState {
@@ -68,6 +69,7 @@ export function applyShopAction(
   const item = candidate.item;
 
   if (item.itemType === "joker" && candidate.action === "buy") {
+    if (state.build.jokers.length >= MAX_JOKERS) return null;
     const joker = candidateJoker(item);
     if (joker === null || item.cost > state.money) return null;
     return {
