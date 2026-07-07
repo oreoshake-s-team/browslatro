@@ -1,5 +1,5 @@
 import "./ModifierPlanetPicker.css";
-import { useEffect, useId, useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";

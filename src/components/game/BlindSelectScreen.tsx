@@ -1,5 +1,5 @@
 import "./BlindSelectScreen.css";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import type { Blind } from "../../cards/types";

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useId, useRef, useState } from "react";
+import { Fragment, useId, useRef, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { localizedJokerName } from "../../i18n/jokerOverrides";

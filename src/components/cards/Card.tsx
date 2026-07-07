@@ -2,7 +2,7 @@ import "./Card.css";
 import "./CardCenterValue.css";
 import "./CardLuckyCenter.css";
 import "./CardEditions.css";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";

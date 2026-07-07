@@ -1,5 +1,5 @@
 import "./NewRunScreen.css";
-import { useEffect, useId, useRef, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
