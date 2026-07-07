@@ -9,6 +9,7 @@ import { createGreedyAgent } from "../src/ai/agents";
 import { categorizeShopItem } from "../src/ai/advisor/shopCategory";
 import { shopItemAttributes } from "../src/ai/advisor/shopCandidateAttributes";
 import { shopBuildSummary } from "../src/ai/advisor/shopEncoding";
+import { HAND_MODEL_REPO_PATH } from "../src/ai/advisor/productionModels";
 import type { ShopAdviceCandidate, ShopAdviceItem } from "../src/ai/advisor/types";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
@@ -47,13 +48,11 @@ function floatFlag(name: string, fallback: number): number {
 
 type BuyableOffer = Extract<ShopItem, { kind: "joker" | "planet" }>;
 
-const ROLLOUT: RolloutConfig = {
-  agent: createGreedyAgent(),
-  seeds: [1, 2, 3],
-  maxRounds: 6,
-};
-
 const DEFAULT_MARGIN = 0.15;
+
+export function buildRolloutConfig(hand: HeadlessAgent): RolloutConfig {
+  return { agent: hand, seeds: [1, 2, 3], maxRounds: 6 };
+}
 
 function shopItemSnapshot(item: BuyableOffer): {
   readonly itemType: string;
@@ -128,6 +127,7 @@ export async function generateShopTeacherDecisions(
   const jokerCatalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
   const planetCatalog = createPlanetCatalog();
   const hand = handAgent ?? createGreedyAgent();
+  const rollout = buildRolloutConfig(hand);
   const limit = config.limit ?? 0;
   const lines: string[] = [];
   const countingTeacher: ShopTeacherLabeler = async (view, candidates) => {
@@ -202,7 +202,7 @@ export async function generateShopTeacherDecisions(
             })),
             { action: "leave" as const },
           ];
-          const scores = await scoreCandidates(rolloutCandidates, ROLLOUT);
+          const scores = await scoreCandidates(rolloutCandidates, rollout);
           const { index: chosen, source } = await labelShopWithGate({
             scores,
             view,
@@ -258,7 +258,7 @@ export async function generateShopTeacherDecisions(
             })),
             result,
           ];
-          const chosen = await labelByRollout(candidates, ROLLOUT);
+          const chosen = await labelByRollout(candidates, rollout);
           const pickedIndex = chosen < options.length ? chosen : null;
           if (pickedIndex !== null) {
             result = {
@@ -305,11 +305,10 @@ if (isMain) {
   };
   assertTrainingSeedRange(config.seedOffset, config.games);
   const handModelIdx = process.argv.indexOf("--hand-model");
-  const handModel = handModelIdx >= 0 ? process.argv[handModelIdx + 1] : "";
-  const loadHandAgent = async (): Promise<HeadlessAgent | undefined> =>
-    handModel === ""
-      ? undefined
-      : createPolicyAgent(await loadPolicyRanker(readFileSync(handModel)));
+  const handModel =
+    handModelIdx >= 0 ? process.argv[handModelIdx + 1] : HAND_MODEL_REPO_PATH;
+  const loadHandAgent = async (): Promise<HeadlessAgent> =>
+    createPolicyAgent(await loadPolicyRanker(readFileSync(handModel)));
   const parallelJobs = intFlag("--parallel-jobs", 1);
 
   if (parallelJobs > 1) {
@@ -337,7 +336,8 @@ if (isMain) {
             String(config.margin),
             "--limit",
             String(config.limit ?? 0),
-            ...(handModel === "" ? [] : ["--hand-model", handModel]),
+            "--hand-model",
+            handModel,
           ];
           const proc = spawn(process.execPath, [...loaderArgs, ...args], {
             stdio: ["ignore", "ignore", "inherit"],
