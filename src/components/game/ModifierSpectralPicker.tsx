@@ -1,13 +1,12 @@
 import "./ModifierSpectralPicker.css";
 import { useId, useMemo, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { consumableCapacityFor } from "../../items/capacities";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../../items/consumables";
-import { extraConsumableSlots } from "../../items/vouchers";
 import { createSpectralCatalog } from "../../items/spectrals";
 import { sortByDisplayName } from "./displayNameSort";
 import SpectralTooltip from "./SpectralTooltip";
@@ -21,7 +20,7 @@ export default function ModifierSpectralPicker() {
     [],
   );
   const capacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
 
   const tooltipIdBase = useId();

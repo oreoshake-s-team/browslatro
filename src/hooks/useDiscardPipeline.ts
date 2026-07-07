@@ -1,5 +1,6 @@
 import { useRef, type MutableRefObject } from "react";
 import { useGame } from "../store/game";
+import { consumableCapacityFor, handSizeFor } from "../items/capacities";
 import { captureHumanDecision } from "../ai/humanPlayWiring";
 import type { Card } from "../cards/types";
 import {
@@ -10,13 +11,8 @@ import {
   hookRngConfig,
   pickHookDiscardIds,
 } from "../items/bosses";
-import { drawCountForRefill, HAND_SIZE } from "../cards/deck";
+import { drawCountForRefill } from "../cards/deck";
 import {
-  extraConsumableSlots,
-  extraHandSize,
-} from "../items/vouchers";
-import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../items/consumables";
 import { pickRandomTarot, purpleSealDiscarded } from "../cards/seals";
@@ -24,7 +20,6 @@ import {
   applyCardsDestroyedToJokerStates,
   applyDiscardToJokerStates,
   applyOnDiscardJokers,
-  extraStartingHandSizeFromJokers,
   isJokerActive,
   resolveJokerEffect,
 } from "../items/jokers";
@@ -74,15 +69,13 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const setRemainingDiscards = useGame((s) => s.setRemainingDiscards);
   const setDiscardsUsedThisRound = useGame((s) => s.setDiscardsUsedThisRound);
 
-  const currentHandSize = Math.max(
-    1,
-    HAND_SIZE +
-      handSizeModifier +
-      extraHandSize(ownedVoucherIds) +
-      extraStartingHandSizeFromJokers(jokers),
-  );
+  const currentHandSize = handSizeFor({
+    handSizeModifier,
+    ownedVoucherIds,
+    jokers,
+  });
   const consumableCapacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
 
   function finalizeDiscard(idsToDiscard: ReadonlySet<number>): void {
     const wasHandPlayReset = pendingHandPlayResetRef.current;

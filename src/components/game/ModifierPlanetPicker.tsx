@@ -1,13 +1,12 @@
 import "./ModifierPlanetPicker.css";
 import { useId, useMemo, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { consumableCapacityFor } from "../../items/capacities";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../../items/consumables";
-import { extraConsumableSlots } from "../../items/vouchers";
 import { createPlanetCatalog } from "../../items/planets";
 import { sortByDisplayName } from "./displayNameSort";
 import PlanetTooltip from "./PlanetTooltip";
@@ -21,7 +20,7 @@ export default function ModifierPlanetPicker() {
     [],
   );
   const capacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
 
   const tooltipIdBase = useId();

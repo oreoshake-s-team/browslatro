@@ -1,4 +1,5 @@
 import { useGame } from "../store/game";
+import { jokerCapacityFor } from "../items/capacities";
 import { play } from "../components/system/sounds";
 import {
   resolveTagEffect,
@@ -6,10 +7,8 @@ import {
   type TagId,
 } from "../items/tags";
 import type { RunStats } from "../run/runStats";
-import { MAX_JOKERS, createJokerByRarity } from "../items/jokers";
+import { createJokerByRarity } from "../items/jokers";
 import { availableJokerCatalog } from "../store/jokerCatalog";
-import { deckJokerSlotsDelta } from "../items/decks";
-import { extraJokerSlots } from "../items/vouchers";
 import { rollPackForPool, type PackPool, type PackVariant } from "../items/packs";
 import { shopPickerRngConfig } from "../items/shop";
 import {
@@ -82,12 +81,7 @@ export function useTagDispatcher(): UseTagDispatcherResult {
         openTagPack(action.pool, action.variant);
       } else if (action.kind === "create-jokers") {
         play("pop");
-        const capacity = Math.max(
-          0,
-          MAX_JOKERS +
-            extraJokerSlots(ownedVoucherIds) +
-            deckJokerSlotsDelta(selectedDeck),
-        );
+        const capacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
         const grantedIds: string[] = [];
         const catalog = availableJokerCatalog(useGame.getState());
         setJokers((prev) => {

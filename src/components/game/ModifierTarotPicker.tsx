@@ -1,13 +1,12 @@
 import "./ModifierTarotPicker.css";
 import { useId, useMemo, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
+import { consumableCapacityFor } from "../../items/capacities";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../../items/consumables";
-import { extraConsumableSlots } from "../../items/vouchers";
 import { createTarotCatalog } from "../../items/tarots";
 import { sortByDisplayName } from "./displayNameSort";
 import TarotTooltip from "./TarotTooltip";
@@ -21,7 +20,7 @@ export default function ModifierTarotPicker() {
     [],
   );
   const capacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
 
   const tooltipIdBase = useId();

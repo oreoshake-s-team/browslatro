@@ -1,4 +1,5 @@
 import { useGame } from "../store/game";
+import { consumableCapacityFor, handSizeFor, jokerCapacityFor } from "../items/capacities";
 import { captureRunEvent } from "../ai/humanPlayWiring";
 import { play } from "../components/system/sounds";
 import type { Blind } from "../cards/types";
@@ -15,13 +16,9 @@ import {
   BASE_VOUCHER_SLOTS,
 } from "../store/vouchers";
 import {
-  extraHandSize,
   pickVouchersForAnte,
-  extraConsumableSlots,
-  extraJokerSlots,
 } from "../items/vouchers";
 import {
-  HAND_SIZE,
   RANKS,
   SUITS,
   applyDeckCompositionTransforms,
@@ -36,15 +33,12 @@ import type { Card } from "../cards/types";
 import { emptyHandCounts } from "../components/hud/handPlayCounts";
 import type { HandLabel } from "../scoring/handEvaluator";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../items/consumables";
 import {
-  MAX_JOKERS,
   createJokerByRarity,
   createJokerCatalog,
   disablesBossBlindsFromJokers,
-  extraStartingHandSizeFromJokers,
   initialJokersConfig,
   isJokerActive,
   resolveJokerEffect,
@@ -73,7 +67,6 @@ import {
   deckCompositionTransforms,
   deckStartingMoneyDelta,
   type Deck,
-  deckJokerSlotsDelta,
 } from "../items/decks";
 import type { Stake } from "../items/stakes";
 import {
@@ -187,13 +180,11 @@ export function useRoundLifecycle({
   const setPendingWin = useGame((s) => s.setPendingWin);
   const setPendingLose = useGame((s) => s.setPendingLose);
 
-  const currentHandSize = Math.max(
-    1,
-    HAND_SIZE +
-      handSizeModifier +
-      extraHandSize(ownedVoucherIds) +
-      extraStartingHandSizeFromJokers(equippedJokers),
-  );
+  const currentHandSize = handSizeFor({
+    handSizeModifier,
+    ownedVoucherIds,
+    jokers: equippedJokers,
+  });
 
   function startNewRound(opts: {
     blind?: Blind;
@@ -293,7 +284,7 @@ export function useRoundLifecycle({
     }
     if (blindTarots > 0) {
       const tarotCapacity =
-        MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+        consumableCapacityFor(ownedVoucherIds);
       setConsumables((prev) => {
         let next = prev;
         for (let i = 0; i < blindTarots; i += 1) {
@@ -314,12 +305,7 @@ export function useRoundLifecycle({
       if (eff.kind === "blind-select-creates-common-jokers") commonJokerCreations += eff.count;
     }
     if (commonJokerCreations > 0) {
-      const jokerCapacity = Math.max(
-        0,
-        MAX_JOKERS +
-          extraJokerSlots(ownedVoucherIds) +
-          deckJokerSlotsDelta(selectedDeck),
-      );
+      const jokerCapacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
       setJokers((prev) => {
         let next = prev as ReadonlyArray<Joker>;
         for (let i = 0; i < commonJokerCreations; i += 1) {

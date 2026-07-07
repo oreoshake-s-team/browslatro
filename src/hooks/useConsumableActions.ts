@@ -1,4 +1,5 @@
 import { useGame } from "../store/game";
+import { consumableCapacityFor, jokerCapacityFor } from "../items/capacities";
 import { captureRunEvent } from "../ai/humanPlayWiring";
 import { toModelState } from "../ai/modelState";
 import { toModelStateInput } from "../ai/advisor/snapshot";
@@ -22,13 +23,11 @@ import {
 } from "../items/tarots";
 import {
   createRandomJoker,
-  MAX_JOKERS,
   withEdition,
   applyCardsDestroyedToJokerStates,
   applyConsumableUsedToJokerStates,
 } from "../items/jokers";
-import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
-import { MAX_CONSUMABLE_SLOTS, type Consumable } from "../items/consumables";
+import { type Consumable } from "../items/consumables";
 import { availableJokerCatalog } from "../store/jokerCatalog";
 import { nextCardId } from "../cards/deck";
 import type { Card } from "../cards/types";
@@ -270,8 +269,8 @@ export function useConsumableActions(): UseConsumableActionsResult {
       return;
     }
     if (effect.kind === "create-joker") {
-      const ownedVoucherIds = useGame.getState().ownedVoucherIds;
-      const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+      const { ownedVoucherIds, selectedDeck } = useGame.getState();
+      const capacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
       const created = createRandomJoker(
         jokers,
         availableJokerCatalog(useGame.getState()),
@@ -291,7 +290,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (!last) return;
       if (last.kind === "tarot" && last.card.id === "the-fool") return;
       const ownedVoucherIds = useGame.getState().ownedVoucherIds;
-      const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      const capacity = consumableCapacityFor(ownedVoucherIds);
       setConsumables((prev) => addConsumable(prev, last, capacity));
       return;
     }
@@ -299,7 +298,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
       play("pop");
       consume();
       const ownedVoucherIds = useGame.getState().ownedVoucherIds;
-      const capacity = MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+      const capacity = consumableCapacityFor(ownedVoucherIds);
       const rng = tarotRngConfig.rng;
       const tarotPool: ReadonlyArray<TarotCard> =
         effect.consumableKind === "tarot"

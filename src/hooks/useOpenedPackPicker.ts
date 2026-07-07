@@ -1,4 +1,5 @@
 import { useGame } from "../store/game";
+import { consumableCapacityFor, jokerCapacityFor } from "../items/capacities";
 import { captureRunEvent } from "../ai/humanPlayWiring";
 import { packOptionSnapshot } from "../ai/runEvents";
 import { play } from "../components/system/sounds";
@@ -9,7 +10,6 @@ import {
   type PlanetCard,
 } from "../items/planets";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
   hasFreeConsumableSlot,
   type Consumable,
@@ -23,14 +23,12 @@ import {
   type TarotCard,
 } from "../items/tarots";
 import {
-  MAX_JOKERS,
   createRandomJoker,
   effectiveJokerCount,
   withEdition,
   applyConsumableUsedToJokerStates,
 } from "../items/jokers";
 import { spectralNeedsTarget } from "../items/spectrals";
-import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
 import { availableJokerCatalog } from "../store/jokerCatalog";
 
 export interface UseOpenedPackPickerResult {
@@ -78,7 +76,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   );
 
   const consumableCapacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
 
   function pickFromOpenedPack(optionIdx: number): void {
     if (!openedPack || packPicksRemaining <= 0) return;
@@ -141,7 +139,10 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
           triggerNope();
         }
       } else if (effect.kind === "create-joker") {
-        const capacity = MAX_JOKERS + extraJokerSlots(ownedVoucherIds);
+        const capacity = jokerCapacityFor(
+          ownedVoucherIds,
+          useGame.getState().selectedDeck,
+        );
         const created = createRandomJoker(
           jokers,
           availableJokerCatalog(useGame.getState()),
@@ -270,7 +271,8 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
     } else if (option.kind === "joker") {
       if (
         option.joker.edition !== "negative" &&
-        effectiveJokerCount(jokers) >= MAX_JOKERS
+        effectiveJokerCount(jokers) >=
+          jokerCapacityFor(ownedVoucherIds, useGame.getState().selectedDeck)
       ) {
         return;
       }

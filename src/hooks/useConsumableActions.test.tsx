@@ -650,6 +650,15 @@ describe("useConsumableActions — Judgement", () => {
     expect(useGame.getState().consumables).toHaveLength(0);
   });
 
+  test("at MAX_JOKERS with the Black Deck's extra slot, Judgement still creates a joker", () => {
+    useGame.getState().setSelectedDeck("black-deck");
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, MAX_JOKERS));
+    const { result } = renderHook(() => useConsumableActions());
+    act(() => result.current.useConsumable(0));
+    expect(useGame.getState().jokers.length).toBe(MAX_JOKERS + 1);
+  });
+
   test("at joker capacity, Judgement is a no-op and the tarot is NOT consumed (matches Balatro)", () => {
     const catalog = createJokerCatalog();
     useGame.getState().setJokers(catalog.slice(0, MAX_JOKERS));

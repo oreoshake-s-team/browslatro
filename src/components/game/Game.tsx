@@ -21,6 +21,7 @@ const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
 const NopeAnimation = lazy(() => import("./NopeAnimation"));
 import { useGame } from "../../store/game";
+import { consumableCapacityFor, jokerCapacityFor } from "../../items/capacities";
 import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { useCeruleanForcedCard } from "../../hooks/useCeruleanForcedCard";
@@ -32,10 +33,6 @@ import {
   bossHidesJokers,
   debuffedHandIds,
 } from "../../items/bosses";
-import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
-import { MAX_JOKERS } from "../../items/jokers";
-import { deckJokerSlotsDelta } from "../../items/decks";
-import { extraConsumableSlots, extraJokerSlots } from "../../items/vouchers";
 import { fullDeckPile } from "../../cards/deckBuild";
 
 interface GameProps {
@@ -165,14 +162,9 @@ export default function Game({
     toggleCard(card);
   };
   const consumableCapacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
   const foolCopyTarget = foolCopyTargetText(t, i18n.language, lastUsedConsumable);
-  const jokerCapacity = Math.max(
-    0,
-    MAX_JOKERS +
-      extraJokerSlots(ownedVoucherIds) +
-      deckJokerSlotsDelta(selectedDeck),
-  );
+  const jokerCapacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
   const overlayDeckRemaining = useMemo(
     () =>
       fullDeckPile(

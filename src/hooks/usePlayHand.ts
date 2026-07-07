@@ -1,4 +1,5 @@
 import type { MutableRefObject } from "react";
+import { consumableCapacityFor } from "../items/capacities";
 import { useTranslation } from "react-i18next";
 import { useGame } from "../store/game";
 import { createSpectralCatalog } from "../items/spectrals";
@@ -61,7 +62,7 @@ import {
   firstHandCardCopyCount,
 } from "../items/jokers";
 import { applyPlanetUpgrade } from "../items/planets";
-import { extraConsumableSlots, interestCapFor } from "../items/vouchers";
+import { interestCapFor } from "../items/vouchers";
 import {
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
   deckSuppressesInterest,
@@ -70,7 +71,6 @@ import { fullDeckPile } from "../cards/deckBuild";
 import { hasStakeModifier } from "../items/stakes";
 import { observatoryMultFor } from "../items/vouchers";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
 } from "../items/consumables";
 import { requiredChipsForBlind } from "../scoring/anteScaling";
@@ -157,7 +157,7 @@ export function usePlayHand({
     stake: selectedStake,
   });
   const consumableCapacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds);
 
   const setHandPlayCounts = useGame((s) => s.setHandPlayCounts);
   const runStats = useGame((s) => s.runStats);
