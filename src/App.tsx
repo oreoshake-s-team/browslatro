@@ -26,7 +26,6 @@ import {
   createBossCatalog,
   pickBossForAnte,
 } from "./items/bosses";
-import { chanceOverrideConfig } from "./dev/chanceOverride";
 import { useChanceOverrides } from "./hooks/useChanceOverrides";
 import { bootIntoShop, shouldBootIntoShop } from "./dev/bootShop";
 import { devToolsEnabled } from "./dev/devTools";
@@ -46,11 +45,9 @@ import Sidebar from "./components/hud/Sidebar";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
 import BossEffectToast from "./components/system/BossEffectToast";
-import { getAnimationSpeed, getAnimationSpeedMultiplier, hasUserOverriddenAnimationSpeed, usePreferences, type AnimationSpeed } from "./components/system/preferences";
+import { usePreferences } from "./components/system/preferences";
 import { useScoringStepMs } from "./hooks/useScoringStepMs";
 import { useDevAnimationSpeedStyle } from "./hooks/useDevAnimationSpeedStyle";
-import { initialDeal } from "./cards/deckBuild";
-import { createDeck, resetCardIds } from "./cards/deck";
 import { useInitialDeal } from "./hooks/useInitialDeal";
 import { useAdviceFeedbackNotice } from "./hooks/useAdviceFeedbackNotice";
 import { usePlayHand } from "./hooks/usePlayHand";
@@ -59,7 +56,6 @@ import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import {
   initialJokersConfig,
-  probabilityMultiplierFromJokers,
 } from "./items/jokers";
 import {
   BOSS_REROLL_COST,
