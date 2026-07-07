@@ -18,6 +18,7 @@ import { packFeatureVector } from "./packFeatures";
 import type { PackPool, PackVariant } from "../../items/packs";
 import type { PackRankInput, ShopBuild, ShopRankInput } from "./shopEncoding";
 import type { PackAdviceCandidate, ShopAdviceCandidate } from "./types";
+import { recordToInput, type GoldenCase } from "./shopGoldenRecords";
 import type { Card } from "../../cards/types";
 import { createDefaultHandStats } from "../../scoring/handStats";
 import { createJokerCatalog } from "../../items/jokers";
@@ -445,88 +446,7 @@ describe("encodePackCandidates", () => {
 
 const FIXTURES = join(__dirname, "..", "..", "..", "ml", "tests", "fixtures");
 
-interface GoldenOffer {
-  readonly itemType: string;
-  readonly category: string;
-  readonly attributes?: ReadonlyArray<number>;
-  readonly voucherFeatures?: ReadonlyArray<number>;
-  readonly packFeatures?: ReadonlyArray<number>;
-  readonly advancesHands?: ReadonlyArray<string>;
-  readonly id: string;
-  readonly name: string;
-  readonly cost: number;
-}
-
-interface GoldenOption {
-  readonly optionType: string;
-  readonly category: string;
-  readonly attributes?: ReadonlyArray<number>;
-  readonly advancesHands?: ReadonlyArray<string>;
-  readonly id: string;
-  readonly name: string;
-}
-
-interface GoldenRecord {
-  readonly kind: "purchase" | "reroll" | "pack-pick";
-  readonly money: number;
-  readonly ante: number;
-  readonly round: number;
-  readonly picksRemaining?: number;
-  readonly offers?: ReadonlyArray<GoldenOffer>;
-  readonly options?: ReadonlyArray<GoldenOption>;
-  readonly cost?: number;
-  readonly handLevels?: Readonly<Record<string, number>>;
-  readonly jokers?: ReadonlyArray<{ effectKind: string; rarity: string }>;
-  readonly deckEnhancements?: Readonly<Record<string, number>>;
-  readonly consumablesHeld?: number;
-}
-
-function buildFromGolden(rec: GoldenRecord): ShopBuild {
-  return {
-    handLevels: rec.handLevels ?? {},
-    jokers: rec.jokers ?? [],
-    deckEnhancements: rec.deckEnhancements ?? {},
-    consumablesHeld: rec.consumablesHeld ?? 0,
-  };
-}
-
-interface GoldenCase {
-  readonly record: GoldenRecord;
-  readonly candidates: ReadonlyArray<ReadonlyArray<number>>;
-  readonly chosenIndex: number;
-}
-
-function recordToInput(rec: GoldenRecord): ShopRankInput | PackRankInput {
-  const { money, ante, round } = rec;
-
-  if (rec.kind === "purchase") {
-    const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
-      action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, packFeatures: o.packFeatures, advancesHands: o.advancesHands, cost: o.cost, description: "" },
-    }));
-    candidates.push({ action: "leave" });
-    return { money, ante, round, build: buildFromGolden(rec), candidates };
-  }
-
-  if (rec.kind === "reroll") {
-    const candidates: ShopAdviceCandidate[] = (rec.offers ?? []).map((o) => ({
-      action: "buy" as const,
-      item: { id: o.id, name: o.name, itemType: o.itemType, category: o.category, attributes: o.attributes, voucherFeatures: o.voucherFeatures, packFeatures: o.packFeatures, advancesHands: o.advancesHands, cost: o.cost, description: "" },
-    }));
-    candidates.push({ action: "reroll", cost: rec.cost ?? 0 });
-    candidates.push({ action: "leave" });
-    return { money, ante, round, build: buildFromGolden(rec), candidates };
-  }
-
-  const packCandidates: PackAdviceCandidate[] = (rec.options ?? []).map((o) => ({
-    action: "pick" as const,
-    option: { id: o.id, name: o.name, optionType: o.optionType, category: o.category, attributes: o.attributes, advancesHands: o.advancesHands, description: "" },
-  }));
-  packCandidates.push({ action: "skip" });
-  return { money, ante, round, picksRemaining: rec.picksRemaining ?? 0, build: buildFromGolden(rec), candidates: packCandidates };
-}
-
-describe("encodeShopCandidates / encodePackCandidates — cross-language golden vectors", () => {
+describe("encodeShopCandidatesV2 / encodePackCandidatesV2 — cross-language golden vectors", () => {
   function goldenCases(): ReadonlyArray<GoldenCase> {
     return JSON.parse(
       readFileSync(join(FIXTURES, "shop-golden.json"), "utf8"),
@@ -538,12 +458,12 @@ describe("encodeShopCandidates / encodePackCandidates — cross-language golden 
       const input = recordToInput(record);
       const encoded =
         record.kind === "pack-pick"
-          ? encodePackCandidates(input as PackRankInput)
-          : encodeShopCandidates(input as ShopRankInput);
-      expect(encoded.length).toBe(expected.length * SHOP_INPUT_FEATURES);
+          ? encodePackCandidatesV2(input as PackRankInput)
+          : encodeShopCandidatesV2(input as ShopRankInput);
+      expect(encoded.length).toBe(expected.length * SHOP_INPUT_FEATURES_V2);
       for (let i = 0; i < expected.length; i++) {
-        for (let j = 0; j < SHOP_INPUT_FEATURES; j++) {
-          expect(encoded[i * SHOP_INPUT_FEATURES + j]).toBeCloseTo(
+        for (let j = 0; j < SHOP_INPUT_FEATURES_V2; j++) {
+          expect(encoded[i * SHOP_INPUT_FEATURES_V2 + j]).toBeCloseTo(
             expected[i][j],
             5,
           );
@@ -552,10 +472,16 @@ describe("encodeShopCandidates / encodePackCandidates — cross-language golden 
     }
   });
 
-  test("fixture covers purchase, reroll, and pack-pick cases", () => {
-    const kinds = goldenCases().map((c) => c.record.kind);
-    expect(kinds).toContain("purchase");
-    expect(kinds).toContain("reroll");
-    expect(kinds).toContain("pack-pick");
+  test("fixture covers purchase, reroll, pack-pick, and use cases", () => {
+    const kinds = new Set(goldenCases().map((c) => c.record.kind));
+    expect(kinds).toEqual(new Set(["purchase", "reroll", "pack-pick", "use"]));
+  });
+
+  test("flags the isUse candidate in the trailing feature", () => {
+    const useCase = goldenCases().find((c) => c.record.kind === "use");
+    const flags = useCase?.candidates.map(
+      (row) => row[SHOP_INPUT_FEATURES_V2 - 1],
+    );
+    expect(flags).toEqual([1, 0]);
   });
 });
