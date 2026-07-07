@@ -40,6 +40,7 @@ import { useTagDispatcher } from "./hooks/useTagDispatcher";
 import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import { useGameModals } from "./hooks/useGameModals";
 import { useRunInitialization } from "./hooks/useRunInitialization";
+import { useAppViewModel } from "./hooks/useAppViewModel";
 import {
   initialJokersConfig,
 } from "./items/jokers";
@@ -53,40 +54,52 @@ export { getScoringStepMs } from "./hooks/useScoringStepMs";
 
 function App() {
   const { t } = useTranslation();
-  const blind = useGame((state) => state.blind);
-  const round = useGame((state) => state.round);
-  const ante = useGame((state) => state.ante);
-  const money = useGame((state) => state.money);
-  const chips = useGame((state) => state.chips);
-  const multiplier = useGame((state) => state.multiplier);
-  // Dev "Apply modifiers" offsets. Sticky across selection/scoring/finalize
-  // so the displayed chips/multiplier reflect manual bumps until a New game
-  // resets them.
-  const devChipsBonus = useGame((state) => state.devChipsBonus);
-  const devMultBonus = useGame((state) => state.devMultBonus);
-  const devMultFactor = useGame((state) => state.devMultFactor);
+  const {
+    blind,
+    round,
+    ante,
+    money,
+    chips,
+    multiplier,
+    devChipsBonus,
+    devMultBonus,
+    devMultFactor,
+    roundScore,
+    selectedHand,
+    remainingHands,
+    remainingDiscards,
+    runStats,
+    selectedIds,
+    discardingIds,
+    jokers,
+    handPlayCounts,
+    handStats,
+    scoringEvents,
+    pendingRunSelect,
+    openedPack,
+    skipTagOffers,
+    pendingBlindSelect,
+    pendingJokerGrantIds,
+    selectedStake,
+    selectedDeck,
+    pendingTags,
+    ownedVoucherIds,
+    currentBoss,
+    bossRerollsUsedThisAnte,
+    handHistoryThisRound,
+  } = useAppViewModel();
   useChanceOverrides();
-  const roundScore = useGame((state) => state.roundScore);
-  const selectedHand = useGame((state) => state.selectedHand);
-  const remainingHands = useGame((state) => state.remainingHands);
-  const remainingDiscards = useGame((state) => state.remainingDiscards);
-  const runStats = useGame((state) => state.runStats);
   useInitialDeal();
   const highVisibility = usePreferences((state) => state.highVisibility);
   useBodyClass(highVisibility, "high-visibility");
   const dyslexicFont = usePreferences((state) => state.dyslexicFont);
   useBodyClass(dyslexicFont, "dyslexic-font");
   const animationSpeed = usePreferences((state) => state.animationSpeed);
-  const selectedIds = useGame((state) => state.selectedIds);
-  const discardingIds = useGame((state) => state.discardingIds);
-  const jokers = useGame((state) => state.jokers);
   const setJokers = useGame((state) => state.setJokers);
   useEffect(() => {
     if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
-  const handPlayCounts = useGame((state) => state.handPlayCounts);
-  const handStats = useGame((state) => state.handStats);
   const {
     pendingDiscardCountRef,
     pendingHandPlayResetRef,
@@ -95,7 +108,6 @@ function App() {
     discardSelected: discardSelectedRaw,
     resetForNewRound: resetDiscardPipeline,
   } = useDiscardPipeline();
-  const scoringEvents = useGame((state) => state.scoringEvents);
 
   const { applyGainedTag } = useTagDispatcher();
 
@@ -165,30 +177,14 @@ function App() {
 
   useRunInitialization();
 
-  const pendingRunSelect = useGame((state) => state.pendingRunSelect);
-  const openedPack = useGame((state) => state.openedPack);
-  const skipTagOffers = useGame((state) => state.skipTagOffers);
-  const pendingBlindSelect = useGame((state) => state.pendingBlindSelect);
   const setPendingBlindSelect = useGame(
     (state) => state.setPendingBlindSelect,
-  );
-  const pendingJokerGrantIds = useGame(
-    (state) => state.pendingJokerGrantIds,
   );
   const setPendingJokerGrantIds = useGame(
     (state) => state.setPendingJokerGrantIds,
   );
-  const selectedStake = useGame((state) => state.selectedStake);
-  const selectedDeck = useGame((state) => state.selectedDeck);
-  const pendingTags = useGame((state) => state.pendingTags);
-  const ownedVoucherIds = useGame((state) => state.ownedVoucherIds);
-  const currentBoss = useGame((state) => state.currentBoss);
-  const bossRerollsUsedThisAnte = useGame(
-    (state) => state.bossRerollsUsedThisAnte,
-  );
-  const handHistoryThisRound = useGame((state) => state.handHistoryThisRound);
-  const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
+  const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
   const requiredScore = requiredChipsForBlind({
     ante,
     blind,
