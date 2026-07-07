@@ -49,6 +49,11 @@ describe("toSimulatePlayInput", () => {
     ]);
   });
 
+  test("scores candidates under the best joker order, matching headless training", () => {
+    const state = useGame.getState();
+    expect(toSimulatePlayInput(state).optimizeJokerOrder).toBe(true);
+  });
+
   test("carries the store's joker-state targets", () => {
     const state = useGame.getState();
     const input = toSimulatePlayInput(state);
