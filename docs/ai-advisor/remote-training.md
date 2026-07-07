@@ -47,7 +47,7 @@ locally with `--parallel-jobs` or remotely across machines.
 | `scripts/remote/runRemoteDataset.ts` | Orchestrator: plan → launch → poll → collect → concatenate. |
 | `scripts/remote/runRemoteSelfPlay.ts` | Same fan-out for **shop-policy self-play** (`--hold-consumables` for the v2/use-aware encoding; forwards `HOLD`/`PARALLEL_JOBS`). |
 | `scripts/remote/putShard.ts` | Worker-side uploader invoked inside the container. |
-| `ml/remote/Dockerfile` | Worker image (Node 22 + repo + deps). |
+| `ml/remote/Dockerfile` | Worker image (Node 26 + repo + deps). |
 | `ml/remote/worker-entrypoint.sh` | Generates a shard, then uploads it. |
 | `ml/remote/selfplay-entrypoint.sh` | Collects a self-play shard (honors `HOLD`/`PARALLEL_JOBS`), then uploads it. |
 | `ml/remote/fly.toml` | Fly app/build config for the worker image. |

@@ -96,6 +96,7 @@ export default defineConfig({
         test: {
           name: "node",
           environment: "node",
+          setupFiles: ["./src/test/memoryLocalStorage.ts"],
           include: ["src/**/*.{test,spec}.ts", "scripts/**/*.{test,spec}.ts"],
         },
       },
@@ -104,7 +105,7 @@ export default defineConfig({
         test: {
           name: "jsdom",
           environment: "jsdom",
-          setupFiles: ["./src/setupTests.ts"],
+          setupFiles: ["./src/test/memoryLocalStorage.ts", "./src/setupTests.ts"],
           include: ["src/**/*.{test,spec}.tsx"],
         },
       },
