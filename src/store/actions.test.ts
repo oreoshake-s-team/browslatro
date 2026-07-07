@@ -553,6 +553,32 @@ describe("game actions slice", () => {
     expect(useGame.getState().money).toBe(3);
   });
 
+  test("handleWin pays no blind reward on a Mr. Bones save", () => {
+    const game = useGame.getState();
+    game.setMoney(0);
+    game.handleWin({ interest: 0, interestWallet: 0, savedByMrBones: true });
+    expect(useGame.getState().money).toBe(0);
+  });
+
+  test("handleWin still pays interest on a Mr. Bones save", () => {
+    const game = useGame.getState();
+    game.setMoney(0);
+    game.handleWin({ interest: 4, interestWallet: 20, savedByMrBones: true });
+    expect(useGame.getState().money).toBe(4);
+  });
+
+  test("handleWin emits no blind-reward scoring event on a Mr. Bones save", () => {
+    const game = useGame.getState();
+    game.handleWin({ interest: 0, interestWallet: 0, savedByMrBones: true });
+    expect(
+      useGame
+        .getState()
+        .scoringEvents.some(
+          (e) => e.kind === "money-delta" && e.source.includes("reward"),
+        ),
+    ).toBe(false);
+  });
+
   test("handleWin uses the precomputed interest when provided", () => {
     const game = useGame.getState();
     game.setMoney(0);

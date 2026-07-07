@@ -19,6 +19,7 @@ import {
   GOLD_HELD_BONUS_PER_CARD,
   REMAINING_HAND_BONUS,
   calculateInterest,
+  roundBlindReward,
 } from "../scoring/payout";
 import {
   bossAdjustHandEntry,
@@ -309,7 +310,11 @@ export function usePlayHand({
         setPendingWin({
           roundScore: newRoundScore,
           requiredScore,
-          baseReward: mrBonesSave || smallBlindSkipped ? 0 : blind + 2,
+          baseReward: roundBlindReward({
+            blind,
+            smallBlindSkipped,
+            savedByMrBones: mrBonesSave,
+          }),
           walletAtPayout: postJokerWallet,
           interestWallet: postGoldWallet,
           interest: deckSuppressesInterest(selectedDeck)

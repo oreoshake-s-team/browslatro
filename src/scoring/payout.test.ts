@@ -3,6 +3,7 @@ import {
   calculateInterest,
   countGoldHeldInHand,
   goldHeldBonus,
+  roundBlindReward,
   GOLD_HELD_BONUS_PER_CARD,
   INTEREST_CAP,
   INTEREST_RATE_PER,
@@ -64,6 +65,38 @@ describe("calculateInterest", () => {
     const inflated = calculateInterest(walletBeforeEorJokers + cloud9Income);
     const correct = calculateInterest(walletBeforeEorJokers);
     expect(inflated - correct).toBe(1);
+  });
+});
+
+describe("roundBlindReward", () => {
+  test("pays blind + 2 for a normal win", () => {
+    expect(
+      roundBlindReward({
+        blind: 2,
+        smallBlindSkipped: false,
+        savedByMrBones: false,
+      }),
+    ).toBe(4);
+  });
+
+  test("pays nothing when the red stake skips the small blind reward", () => {
+    expect(
+      roundBlindReward({
+        blind: 1,
+        smallBlindSkipped: true,
+        savedByMrBones: false,
+      }),
+    ).toBe(0);
+  });
+
+  test("pays nothing when Mr. Bones saved the round", () => {
+    expect(
+      roundBlindReward({
+        blind: 3,
+        smallBlindSkipped: false,
+        savedByMrBones: true,
+      }),
+    ).toBe(0);
   });
 });
 
