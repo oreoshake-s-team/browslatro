@@ -99,14 +99,21 @@ distribution-matched teacher). Full rationale:
 3. **Benchmark before shipping** (TypeScript, from the repo root):
 
    ```sh
-   yarn dlx tsx scripts/benchmarkPolicy.ts public/models/advisor-policy-v1.onnx ml/candidate.onnx --games 500 --seed-offset 5000
+   yarn dlx tsx scripts/benchmarkPolicy.ts public/models/advisor-policy-v1.onnx ml/candidate.onnx --games 500
    ```
 
    Evaluates each model (plus the greedy baseline) as a headless agent over
    the same seed batch and prints win rate, average ante reached, average
-   blinds cleared, and average hands played. Keep the eval seeds disjoint
-   from the generated training seeds (`--seed-offset`), and only ship a
-   candidate that beats the current model on average blinds cleared.
+   blinds cleared, and average hands played. Only ship a candidate that
+   beats the current model on average blinds cleared.
+
+   **Seed spaces are enforced.** Seeds below 1,000,000 are the training
+   space (dataset generation, self-play); seeds at or above 1,000,000 are
+   the benchmark space. Generators refuse to produce games in the benchmark
+   space, and `benchmarkPolicy.ts` (default `--seed-offset 1000000`) refuses
+   to evaluate on training seeds unless you pass `--allow-training-seeds`
+   for a deliberate memorization check. The guards live in
+   `scripts/seedSpaces.ts`.
 
    **One-command distillation cycle.** `scripts/distillPolicy.ts` runs the whole
    loop — label disagreements with the LLM teacher, train with `--teacher`,
@@ -117,7 +124,7 @@ distribution-matched teacher). Full rationale:
    ANTHROPIC_API_KEY=sk-... yarn dlx tsx scripts/distillPolicy.ts \
      --base ml/dataset.jsonl --model public/models/advisor-policy-v5.onnx \
      --out ml/candidate.onnx --teacher-weight 5 --min-score-fraction 0.25 \
-     --games 500 --seed-offset 5000 --python python3
+     --games 500 --python python3
    ```
 
    `--dry-run` swaps the LLM teacher for a local best-play stand-in, so the full

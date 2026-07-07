@@ -9,6 +9,7 @@ import {
   parseDatasetRecords,
   type TeacherLabeler,
 } from "./labelDisagreements";
+import { BENCHMARK_SEED_BASE } from "./seedSpaces";
 
 export interface DistillConfig {
   readonly base: string;
@@ -133,7 +134,7 @@ async function main(): Promise<void> {
       "Usage: yarn dlx tsx scripts/distillPolicy.ts --base <dataset.jsonl> --model <current.onnx> " +
         "[--out <candidate.onnx>] [--teacher-out <labels.jsonl>] [--teacher-weight 5] " +
         "[--min-score-fraction 0.25] [--limit N] [--concurrency 1] [--epochs 30] [--games 200] " +
-        "[--seed-offset 5000] [--python python3] [--dry-run]",
+        "[--seed-offset N] [--python python3] [--dry-run]",
     );
     process.exit(1);
   }
@@ -147,7 +148,7 @@ async function main(): Promise<void> {
     minScoreFraction: numberFlag("--min-score-fraction", 0.25),
     epochs: numberFlag("--epochs", 30),
     games: numberFlag("--games", 200),
-    seedOffset: numberFlag("--seed-offset", 5000),
+    seedOffset: numberFlag("--seed-offset", BENCHMARK_SEED_BASE),
     limit: numberFlag("--limit", 0),
     concurrency: numberFlag("--concurrency", 1),
     python: stringFlag("--python", "python3"),

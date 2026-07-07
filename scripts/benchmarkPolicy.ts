@@ -21,6 +21,7 @@ import { DEFAULT_STAKE, STAKE_ORDER, type Stake } from "../src/items/stakes";
 import { loadPolicyRanker } from "../src/ai/policy";
 import { createPolicyAgent } from "../src/ai/policyAgent";
 import { sliceJobs } from "./generateDataset";
+import { assertBenchmarkSeedRange, BENCHMARK_SEED_BASE } from "./seedSpaces";
 
 const DEFAULT_SHOP_POLICY = SHOP_MODEL_REPO_PATH;
 
@@ -66,13 +67,15 @@ const modelPaths = process.argv
   .filter((arg, index, args) => !arg.startsWith("--") && args[index - 1]?.startsWith("--") !== true);
 if (modelPaths.length === 0) {
   console.error(
-    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--hold-consumables] [--no-shop] [--skip] [--parallel-jobs N]",
+    "Usage: yarn dlx tsx scripts/benchmarkPolicy.ts <model.onnx> [more.onnx ...] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--shop-policy PATH] [--hold-consumables] [--no-shop] [--skip] [--parallel-jobs N] [--allow-training-seeds]",
   );
   process.exit(1);
 }
 
 const games = intFlag("--games", 200);
-const seedOffset = intFlag("--seed-offset", 5000);
+const seedOffset = intFlag("--seed-offset", BENCHMARK_SEED_BASE);
+const allowTrainingSeeds = process.argv.includes("--allow-training-seeds");
+assertBenchmarkSeedRange(seedOffset, { allowTrainingSeeds });
 const deck = deckFlag();
 const stake = stakeFlag();
 const shopDisabled = process.argv.includes("--no-shop");
@@ -189,6 +192,7 @@ async function collectAgentSlices(): Promise<AgentSlice[]> {
     ...(shopSearchValuePath !== "" ? ["--shop-search", shopSearchValuePath] : []),
     ...(holdConsumables ? ["--hold-consumables"] : []),
     ...(useSkip ? ["--skip"] : []),
+    ...(allowTrainingSeeds ? ["--allow-training-seeds"] : []),
   ];
   const tmpDir = mkdtempSync(join(tmpdir(), "browslatro-bench-"));
   const slices = sliceJobs(games, seedOffset, parallelJobs);

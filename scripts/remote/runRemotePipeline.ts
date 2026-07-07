@@ -10,6 +10,7 @@ import { FlyLogsClient } from "./flyLogs";
 import { runPreflight } from "./preflight";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 import { resolveRunId } from "./runId";
+import { assertBenchmarkSeedRange, BENCHMARK_SEED_BASE } from "../seedSpaces";
 import { runRemoteDataset, type RemoteDatasetOptions } from "./runRemoteDataset";
 import { parseCpuKind, runRemoteTraining, type RemoteTrainingOptions } from "./runRemoteTraining";
 import {
@@ -102,6 +103,10 @@ if (isMain) {
     process.exit(1);
   }
   const runId = resolveRunId(stringFlag("--run-id", ""));
+  const benchSeed = intFlag("--bench-seed", BENCHMARK_SEED_BASE);
+  assertBenchmarkSeedRange(benchSeed, {
+    allowTrainingSeeds: process.argv.includes("--allow-training-seeds"),
+  });
   console.log(`run id: ${runId}`);
 
   const s3Config = s3ConfigFromEnv();
@@ -197,7 +202,7 @@ if (isMain) {
         guest: sharedGuest,
         benchmark: {
           games: intFlag("--bench-games", 500),
-          seedOffset: intFlag("--bench-seed", 5000),
+          seedOffset: benchSeed,
           deck,
           stake,
           shop,

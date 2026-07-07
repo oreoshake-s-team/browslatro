@@ -13,6 +13,7 @@ import {
 import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
+import { assertTrainingSeedRange } from "../seedSpaces";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
 
 export interface GenerateArgs {
@@ -165,6 +166,7 @@ if (isMain) {
     token: requireEnv("FLY_API_TOKEN"),
   });
 
+  assertTrainingSeedRange(intFlag("--seed-offset", 0), intFlag("--games", 1000));
   const options: RemoteDatasetOptions = {
     runId,
     totalGames: intFlag("--games", 1000),

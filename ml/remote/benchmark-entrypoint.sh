@@ -9,7 +9,7 @@ set -euo pipefail
 : "${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY is required}"
 
 GAMES="${GAMES:-200}"
-SEED_OFFSET="${SEED_OFFSET:-5000}"
+SEED_OFFSET="${SEED_OFFSET:-1000000}"
 DECK="${DECK:-red-deck}"
 STAKE="${STAKE:-white}"
 SHOP="${SHOP:-1}"

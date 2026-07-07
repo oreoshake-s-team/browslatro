@@ -14,6 +14,7 @@ import {
 import { playHeadlessRun, seededRng } from "../src/ai/headlessRun";
 import { exploringStart, type SeededBuild } from "../src/ai/exploringStarts";
 import { deepRunStart, parseDeepRunStarts, type DeepRunStart } from "../src/ai/deepRunStarts";
+import { assertTrainingSeedRange } from "./seedSpaces";
 
 function flag(name: string, fallback: string): string {
   const idx = process.argv.indexOf(name);
@@ -96,6 +97,7 @@ async function main(): Promise<void> {
   const startsFile = flag("--starts-file", "");
   const holdConsumables = process.argv.includes("--hold-consumables");
   const parallelJobs = Number(flag("--parallel-jobs", "1"));
+  assertTrainingSeedRange(seedOffset, games);
 
   if (parallelJobs > 1) {
     const forwarded = [

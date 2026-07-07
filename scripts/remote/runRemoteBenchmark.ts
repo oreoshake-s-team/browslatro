@@ -13,6 +13,7 @@ import { waitForMachineTerminal } from "./machineWait";
 import { runPreflight } from "./preflight";
 import { resolveRunId } from "./runId";
 import { getObject, putObject, s3ConfigFromEnv } from "./s3";
+import { assertBenchmarkSeedRange, BENCHMARK_SEED_BASE } from "../seedSpaces";
 
 const BENCHMARK_EXEC = ["bash", "ml/remote/benchmark-entrypoint.sh"] as const;
 
@@ -202,12 +203,16 @@ if (isMain) {
   const modelPath = stringFlag("--model", "");
   if (modelPath === "") {
     console.error(
-      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--shop-candidate [--hand-model REPO_PATH] [--hold-consumables]] [--parallel-jobs N] [--memory-mb N] [--max-wait-minutes N] [--image IMG] [--out summary.json]",
+      "Usage: yarn dlx tsx scripts/remote/runRemoteBenchmark.ts --model <local.onnx> [--run-id ID] [--games N] [--seed-offset N] [--deck ID] [--stake ID] [--baseline REPO_PATH] [--no-shop] [--shop-candidate [--hand-model REPO_PATH] [--hold-consumables]] [--parallel-jobs N] [--memory-mb N] [--max-wait-minutes N] [--image IMG] [--out summary.json] [--allow-training-seeds]",
     );
     process.exit(1);
   }
   const runId = resolveRunId(stringFlag("--run-id", ""));
   console.log(`run id: ${runId}`);
+  const benchSeedOffset = intFlag("--seed-offset", BENCHMARK_SEED_BASE);
+  assertBenchmarkSeedRange(benchSeedOffset, {
+    allowTrainingSeeds: process.argv.includes("--allow-training-seeds"),
+  });
 
   const s3Config = s3ConfigFromEnv();
   const launcher = new FlyMachinesClient({
@@ -244,7 +249,7 @@ if (isMain) {
     maxWaitMs: intFlag("--max-wait-minutes", 60) * 60_000,
     benchmark: {
       games: intFlag("--games", 200),
-      seedOffset: intFlag("--seed-offset", 5000),
+      seedOffset: benchSeedOffset,
       deck: stringFlag("--deck", DEFAULT_DECK),
       stake: stringFlag("--stake", DEFAULT_STAKE),
       shop: !process.argv.includes("--no-shop"),
