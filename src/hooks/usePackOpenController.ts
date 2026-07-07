@@ -1,12 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useGame } from "../store/game";
-import { hasFreeConsumableSlot, MAX_CONSUMABLE_SLOTS } from "../items/consumables";
+import { consumableCapacityFor, jokerCapacityFor } from "../items/capacities";
+import { hasFreeConsumableSlot } from "../items/consumables";
 import {
-  MAX_JOKERS,
   effectiveJokerCount,
 } from "../items/jokers";
-import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
-import { deckJokerSlotsDelta } from "../items/decks";
 import type { PackOpenModalProps } from "../components/shop/PackOpenModal";
 import { useOpenedPackPicker } from "./useOpenedPackPicker";
 
@@ -27,11 +25,11 @@ export function usePackOpenController(): PackOpenModalProps | undefined {
   const { pickFromOpenedPack } = useOpenedPackPicker();
 
   const consumableCapacity = useMemo(() => (
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds)
+    consumableCapacityFor(ownedVoucherIds)
   ), [ownedVoucherIds]);
 
   const jokerCapacity = useMemo(
-    () => Math.max(0, MAX_JOKERS + extraJokerSlots(ownedVoucherIds) + deckJokerSlotsDelta(selectedDeck)),
+    () => jokerCapacityFor(ownedVoucherIds, selectedDeck),
     [ownedVoucherIds, selectedDeck],
   );
 

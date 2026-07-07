@@ -14,15 +14,9 @@ import {
   type SuggestionDeps,
 } from "../../ai/advisor/useSuggestion";
 import { setHumanPlayRecordingSuppressed } from "../../ai/humanPlayWiring";
-import { MAX_CONSUMABLE_SLOTS } from "../../items/consumables";
-import { deckJokerSlotsDelta } from "../../items/decks";
-import { MAX_JOKERS } from "../../items/jokers";
 import type { PackOffer } from "../../items/packs";
-import {
-  extraConsumableSlots,
-  extraJokerSlots,
-} from "../../items/vouchers";
 import { useGame } from "../../store/game";
+import { consumableCapacityFor, jokerCapacityFor } from "../../items/capacities";
 import CoachAdvice from "../advisor/CoachAdvice";
 import "./PackSuggestion.css";
 
@@ -88,14 +82,9 @@ export default function PackSuggestion(
         ante,
         jokers,
         consumables,
-        jokerCapacity: Math.max(
-          0,
-          MAX_JOKERS +
-            extraJokerSlots(ownedVoucherIds) +
-            deckJokerSlotsDelta(selectedDeck),
-        ),
+        jokerCapacity: jokerCapacityFor(ownedVoucherIds, selectedDeck),
         consumableCapacity:
-          MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds),
+          consumableCapacityFor(ownedVoucherIds),
       }),
     props.suggestionDeps,
     preRank,

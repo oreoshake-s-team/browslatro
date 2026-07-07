@@ -248,6 +248,17 @@ describe("pickFromOpenedPack — existing handled effect-kind regressions", () =
     expect(useGame.getState().packPicksRemaining).toBe(2);
   });
 
+  test("a joker pick at capacity adds the joker when the Black Deck grants an extra slot", () => {
+    useGame.getState().setSelectedDeck("black-deck");
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, 5));
+    const joker = withEdition(catalog[6], "foil");
+    openPack([{ kind: "joker", joker }], [], 2);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().jokers).toHaveLength(6);
+  });
+
   test("a Negative joker pick at capacity adds the joker", () => {
     const catalog = createJokerCatalog();
     useGame.getState().setJokers(catalog.slice(0, 5));
@@ -302,6 +313,16 @@ describe("pickFromOpenedPack — Judgement (create-joker) fires immediately (fix
     const { result } = renderHook(() => useOpenedPackPicker());
     act(() => result.current.pickFromOpenedPack(0));
     expect(useGame.getState().packPicksRemaining).toBe(2);
+  });
+
+  test("Judgement at MAX_JOKERS adds a joker when the Black Deck grants an extra slot", () => {
+    useGame.getState().setSelectedDeck("black-deck");
+    const catalog = createJokerCatalog();
+    useGame.getState().setJokers(catalog.slice(0, 5));
+    openPack([tarotOption("judgement")]);
+    const { result } = renderHook(() => useOpenedPackPicker());
+    act(() => result.current.pickFromOpenedPack(0));
+    expect(useGame.getState().jokers).toHaveLength(6);
   });
 
   test("Judgement at MAX_JOKERS capacity does NOT add a joker (negative)", () => {

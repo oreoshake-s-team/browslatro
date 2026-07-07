@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useGame } from "../store/game";
+import { consumableCapacityFor, jokerCapacityFor } from "../items/capacities";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import { recordShopFeedback } from "../ai/advisor/shownShopAdvice";
 import { play } from "../components/system/sounds";
@@ -9,14 +10,10 @@ import {
   VOUCHER_CATALOG,
 } from "../items/vouchers";
 import {
-  MAX_JOKERS,
   effectiveJokerCount,
   hasChaosTheClownInJokers,
   shopExitConsumableCopies,
 } from "../items/jokers";
-import { MAX_CONSUMABLE_SLOTS } from "../items/consumables";
-import { extraConsumableSlots, extraJokerSlots } from "../items/vouchers";
-import { deckJokerSlotsDelta } from "../items/decks";
 import type { ShopProps } from "../components/shop/Shop";
 
 export function useShopController(): ShopProps | undefined {
@@ -45,11 +42,8 @@ export function useShopController(): ShopProps | undefined {
   const consumableCount = consumables.length;
   const selectedDeck = useGame((s) => s.selectedDeck);
   const consumableCapacity =
-    MAX_CONSUMABLE_SLOTS + extraConsumableSlots(ownedVoucherIds);
-  const jokerCapacity = Math.max(
-    0,
-    MAX_JOKERS + extraJokerSlots(ownedVoucherIds) + deckJokerSlotsDelta(selectedDeck),
-  );
+    consumableCapacityFor(ownedVoucherIds);
+  const jokerCapacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
   const extraRerollReduction = useMemo(
     () => applyNextShopModifiers(pendingShopMods).rerollReduction,
     [pendingShopMods],

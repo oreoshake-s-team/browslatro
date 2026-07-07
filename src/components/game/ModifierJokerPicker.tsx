@@ -2,16 +2,14 @@ import "./ModifierJokerPicker.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useGame } from "../../store/game";
+import { jokerCapacityFor } from "../../items/capacities";
 import { play } from "../system/sounds";
 import {
-  MAX_JOKERS,
   createJokerCatalog,
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   type Joker,
 } from "../../items/jokers";
-import { deckJokerSlotsDelta } from "../../items/decks";
-import { extraJokerSlots } from "../../items/vouchers";
 import { sortByDisplayName } from "./displayNameSort";
 import JokerTooltip from "../jokers/JokerTooltip";
 
@@ -24,12 +22,7 @@ export default function ModifierJokerPicker() {
   const refreshCelestialPricing = useGame((s) => s.refreshCelestialPricing);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
-  const capacity = Math.max(
-    0,
-    MAX_JOKERS +
-      extraJokerSlots(ownedVoucherIds) +
-      deckJokerSlotsDelta(selectedDeck),
-  );
+  const capacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
   const isFull = effectiveJokerCount(jokers) >= capacity;
 
   const sortedCatalog = useMemo<ReadonlyArray<Joker>>(

@@ -3,7 +3,6 @@ import { captureRunEvent } from "../ai/humanPlayWiring";
 import { packOptionSnapshot, shopItemSnapshot } from "../ai/runEvents";
 import type { GameState } from "./game";
 import {
-  MAX_CONSUMABLE_SLOTS,
   addConsumable,
   consumableSellValue,
   hasFreeConsumableSlot,
@@ -11,14 +10,12 @@ import {
   type Consumable,
 } from "../items/consumables";
 import {
-  MAX_JOKERS,
   applyEditionToRandomJoker,
   canSellJoker,
   copyRandomJokerDestroyOthers,
   createJokerByRarity,
   createLegendaryJokerCatalog,
   effectiveJokerCount,
-  extraStartingHandSizeFromJokers,
   handEvalOptionsFromJokers,
   hasAstronomerInJokers,
   jokerSellValue,
@@ -69,9 +66,6 @@ import {
   BOSS_REROLL_COST,
   bossRerollsRemaining,
   editionRateMultiplier,
-  extraConsumableSlots,
-  extraHandSize,
-  extraJokerSlots,
   extraShopOfferSlots,
   extraStartingDiscards,
   extraStartingHands,
@@ -84,7 +78,7 @@ import {
 } from "../items/vouchers";
 import { packPickLimit, type PackOffer } from "../items/packs";
 import { pickRandomNonEmpty } from "../items/random";
-import { nextCardId, shuffle, HAND_SIZE, RANKS, SUITS } from "../cards/deck";
+import { nextCardId, shuffle, RANKS, SUITS } from "../cards/deck";
 import { detectHandLabel } from "../scoring/handEvaluator";
 import { MAX_SELECTED } from "../components/cards/Hand";
 import {
@@ -94,7 +88,7 @@ import {
   fullDeckPile,
   initialDeal,
 } from "../cards/deckBuild";
-import { deckJokerSlotsDelta, deckSuppressesInterest } from "../items/decks";
+import { deckSuppressesInterest } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -119,6 +113,7 @@ import {
 } from "../items/bosses";
 import { BASE_VOUCHER_SLOTS } from "./vouchers";
 import { availableJokerCatalog } from "./jokerCatalog";
+import { consumableCapacityFor, handSizeFor, jokerCapacityFor } from "../items/capacities";
 
 export interface ActionsState {
   sellConsumable: (consumableIdx: number) => void;
@@ -528,13 +523,11 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.setOpenedPack(pack);
     s.setPackPicksRemaining(packPickLimit(pack.variant));
     s.setPickedPackOptionIndices(new Set());
-    const currentHandSize = Math.max(
-      1,
-      HAND_SIZE +
-        s.handSizeModifier +
-        extraHandSize(s.ownedVoucherIds) +
-        extraStartingHandSizeFromJokers(s.jokers),
-    );
+    const currentHandSize = handSizeFor({
+      handSizeModifier: s.handSizeModifier,
+      ownedVoucherIds: s.ownedVoucherIds,
+      jokers: s.jokers,
+    });
     if (pack.pool === "arcana" || pack.pool === "spectral") {
       const survivingBase = s.baseDeckCards.filter(
         (c) => !s.destroyedCardIds.has(c.id),
@@ -584,7 +577,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.openPackOffer(offer.pack);
     s.markOfferSold(idx);
     const tarotCapacity =
-      MAX_CONSUMABLE_SLOTS + extraConsumableSlots(s.ownedVoucherIds);
+      consumableCapacityFor(s.ownedVoucherIds);
     for (const joker of s.jokers.filter(isJokerActive)) {
       if (joker.effect.kind !== "pack-open-chance-creates-tarot") continue;
       if (!rollChance(joker.effect.chance, Math.random)) continue;
@@ -661,12 +654,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       if (
         offer.joker.edition !== "negative" &&
         effectiveJokerCount(s.jokers) >=
-          Math.max(
-            0,
-            MAX_JOKERS +
-              extraJokerSlots(s.ownedVoucherIds) +
-              deckJokerSlotsDelta(s.selectedDeck),
-          )
+          jokerCapacityFor(s.ownedVoucherIds, s.selectedDeck)
       ) {
         return false;
       }
@@ -686,7 +674,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       return true;
     }
     const consumableCapacity =
-      MAX_CONSUMABLE_SLOTS + extraConsumableSlots(s.ownedVoucherIds);
+      consumableCapacityFor(s.ownedVoucherIds);
     if (!hasFreeConsumableSlot(s.consumables, consumableCapacity)) return false;
     const next: Consumable =
       offer.kind === "planet"
@@ -860,12 +848,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "create-joker-by-rarity": {
-        const capacity = Math.max(
-          0,
-          MAX_JOKERS +
-            extraJokerSlots(s.ownedVoucherIds) +
-            deckJokerSlotsDelta(s.selectedDeck),
-        );
+        const capacity = jokerCapacityFor(s.ownedVoucherIds, s.selectedDeck);
         const created = createJokerByRarity(
           s.jokers,
           availableJokerCatalog(s),
@@ -901,12 +884,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
         return;
       }
       case "create-legendary": {
-        const capacity = Math.max(
-          0,
-          MAX_JOKERS +
-            extraJokerSlots(s.ownedVoucherIds) +
-            deckJokerSlotsDelta(s.selectedDeck),
-        );
+        const capacity = jokerCapacityFor(s.ownedVoucherIds, s.selectedDeck);
         const created = createJokerByRarity(
           s.jokers,
           createLegendaryJokerCatalog(),
