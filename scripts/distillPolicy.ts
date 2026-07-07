@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "./loadEnv";
 import { spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
