@@ -505,10 +505,11 @@ class ShopGoldenCrossLanguageTests(unittest.TestCase):
         with open(SHOP_GOLDEN) as handle:
             cases = json.load(handle)
         for case in cases:
-            candidates, _ = encode_shop_decision(case["record"])
+            candidates, _ = encode_shop_decision_v2(case["record"])
             expected = case["candidates"]
             self.assertEqual(len(candidates), len(expected))
             for got_row, want_row in zip(candidates, expected):
+                self.assertEqual(len(got_row), SHOP_INPUT_FEATURES_V2)
                 self.assertEqual(len(got_row), len(want_row))
                 for got, want in zip(got_row, want_row):
                     self.assertAlmostEqual(got, want, places=5)
