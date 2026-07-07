@@ -1,7 +1,9 @@
 // @vitest-environment node
 import { describe, expect, test, vi } from "vitest";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
+import type { HeadlessAgent } from "../src/ai/headlessRun";
 import {
+  buildRolloutConfig,
   generateShopTeacherDecisions,
   type ShopTeacherGeneratorStats,
 } from "./generateShopTeacherDataset";
@@ -54,6 +56,14 @@ describe("generateShopTeacherDecisions", () => {
     },
     TIMEOUT_MS,
   );
+
+  test("the candidate-value rollout scores with the resolved hand agent, not a hardcoded greedy agent", () => {
+    const customAgent: HeadlessAgent = {
+      name: "custom",
+      chooseAction: async () => ({ kind: "skip" }),
+    };
+    expect(buildRolloutConfig(customAgent).agent).toBe(customAgent);
+  });
 
   test(
     "reports progress once per completed game",
