@@ -22,18 +22,46 @@ function createMemoryStorage(): Storage {
   };
 }
 
-if (typeof globalThis.localStorage === "undefined") {
-  const storage = createMemoryStorage();
+function isFunctionalStorage(candidate: unknown): candidate is Storage {
+  try {
+    const storage = candidate as Storage | null | undefined;
+    if (!storage || typeof storage.setItem !== "function") return false;
+    const probe = "__memoryLocalStorage_probe__";
+    storage.setItem(probe, "1");
+    storage.removeItem(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const globalScope = globalThis as unknown as {
+  localStorage?: Storage;
+  window?: { localStorage?: Storage };
+};
+
+if (!isFunctionalStorage(globalScope.localStorage)) {
   Object.defineProperty(globalThis, "localStorage", {
-    value: storage,
+    value: createMemoryStorage(),
     configurable: true,
     writable: true,
   });
-  if (typeof (globalThis as { window?: unknown }).window === "undefined") {
-    Object.defineProperty(globalThis, "window", {
-      value: { localStorage: storage },
-      configurable: true,
-      writable: true,
-    });
-  }
+}
+
+const windowScope = globalScope.window;
+if (windowScope === undefined) {
+  Object.defineProperty(globalThis, "window", {
+    value: globalThis,
+    configurable: true,
+    writable: true,
+  });
+} else if (
+  windowScope !== (globalThis as unknown) &&
+  !isFunctionalStorage(windowScope.localStorage)
+) {
+  Object.defineProperty(windowScope, "localStorage", {
+    value: globalScope.localStorage,
+    configurable: true,
+    writable: true,
+  });
 }

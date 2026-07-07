@@ -4,11 +4,11 @@
 # Browslatro is a static React SPA built with Yarn 4 (Berry), so we install
 # with the bundled Yarn release and run the project's build script, which
 # emits static assets into ./build (see vite.config.ts outDir).
-FROM node:22-slim AS build
+FROM node:26-slim AS build
 
 WORKDIR /usr/src/app
 
-# Corepack ships with Node 22 and activates the Yarn version pinned in
+# Corepack ships with Node 26 and activates the Yarn version pinned in
 # .yarnrc.yml (yarnPath -> .yarn/releases/yarn-4.15.0.cjs).
 RUN corepack enable
 
