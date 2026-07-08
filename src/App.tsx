@@ -1,8 +1,7 @@
-import { Suspense, lazy, useEffect, useRef } from "react";
+import { Suspense, lazy, useEffect } from "react";
 import { useBodyClass } from "./hooks/useBodyClass";
 import { useTranslation } from "react-i18next";
 import { useAutopilotController } from "./hooks/useAutopilotController";
-import { recordHandFeedback } from "./ai/advisor/shownHandAdvice";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -16,6 +15,8 @@ import { availableBosses, createBossCatalog } from "./items/bosses";
 import { useChanceOverrides } from "./hooks/useChanceOverrides";
 import { devToolsEnabled } from "./dev/devTools";
 import Game from "./components/game/Game";
+import GameSessionProvider from "./components/game/GameSessionProvider";
+import { useGameSession } from "./components/game/gameSession";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
 import { didRestoreFromSnapshot } from "./save/restore";
@@ -30,13 +31,8 @@ import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
 import BossEffectToast from "./components/system/BossEffectToast";
 import { usePreferences } from "./components/system/preferences";
-import { useScoringStepMs } from "./hooks/useScoringStepMs";
 import { useDevAnimationSpeedStyle } from "./hooks/useDevAnimationSpeedStyle";
 import { useInitialDeal } from "./hooks/useInitialDeal";
-import { usePlayHand } from "./hooks/usePlayHand";
-import { useDiscardPipeline } from "./hooks/useDiscardPipeline";
-import { useTagDispatcher } from "./hooks/useTagDispatcher";
-import { useRoundLifecycle } from "./hooks/useRoundLifecycle";
 import { useGameModals } from "./hooks/useGameModals";
 import { useRunInitialization } from "./hooks/useRunInitialization";
 import { useAppViewModel } from "./hooks/useAppViewModel";
@@ -50,7 +46,7 @@ import {
 
 export { getScoringStepMs } from "./hooks/useScoringStepMs";
 
-function App() {
+function AppContent() {
   const { t } = useTranslation();
   const {
     blind,
@@ -85,49 +81,21 @@ function App() {
     if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
-  const {
-    pendingDiscardCountRef,
-    pendingHandPlayResetRef,
-    skipDrawAfterDiscardRef,
-    handleCardDiscardEnd,
-    discardSelected: discardSelectedRaw,
-    resetForNewRound: resetDiscardPipeline,
-  } = useDiscardPipeline();
 
-  const { applyGainedTag } = useTagDispatcher();
-
-  const scoringStepMs = useScoringStepMs(animationSpeed);
-  const loseGameRef = useRef<
-    (info: { roundScore: number; requiredScore: number }) => void
-  >(() => {});
   const {
-    submitHand: submitHandRaw,
+    submitHand,
+    discardSelected,
     isScoring,
     currentScoringId,
     currentGoldScoringId,
     currentSteelScoringId,
-    resetScoring,
-  } = usePlayHand({
-    stepMs: scoringStepMs,
-    loseGame: (info) => loseGameRef.current(info),
-    pendingDiscardCountRef,
-    pendingHandPlayResetRef,
-    skipDrawAfterDiscardRef,
-  });
-  const submitHand = () => {
-    recordHandFeedback(
-      { action: "play", cardIds: [...useGame.getState().selectedIds] },
-      useGame.getState(),
-    );
-    submitHandRaw();
-  };
-  const discardSelected = () => {
-    recordHandFeedback(
-      { action: "discard", cardIds: [...useGame.getState().selectedIds] },
-      useGame.getState(),
-    );
-    discardSelectedRaw();
-  };
+    handleCardDiscardEnd,
+    startNewGame,
+    confirmRunSelection,
+    skipBlind,
+    confirmBlindSelect,
+  } = useGameSession();
+
   const {
     enabled: autopilotEnabled,
     onToggle: toggleAutopilot,
@@ -142,13 +110,6 @@ function App() {
     play: submitHand,
     discard: discardSelected,
   });
-  const { startNewRound, startNewGame, confirmRunSelection, loseGame, skipBlind } =
-    useRoundLifecycle({
-      applyGainedTag,
-      resetScoring,
-      resetDiscardPipeline,
-    });
-  loseGameRef.current = loseGame;
 
   const {
     pendingWin,
@@ -162,20 +123,12 @@ function App() {
 
   useRunInitialization();
 
-  const setPendingBlindSelect = useGame(
-    (state) => state.setPendingBlindSelect,
-  );
   const setPendingJokerGrantIds = useGame(
     (state) => state.setPendingJokerGrantIds,
   );
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
 
   const shopProps = useShopController();
-
-  function confirmBlindSelect() {
-    setPendingBlindSelect(false);
-    startNewRound();
-  }
 
   const packOpenProps = usePackOpenController();
 
@@ -321,6 +274,14 @@ function App() {
       <AdminModeController />
       <BossEffectToast />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <GameSessionProvider>
+      <AppContent />
+    </GameSessionProvider>
   );
 }
 
