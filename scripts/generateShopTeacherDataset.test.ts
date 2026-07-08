@@ -1,10 +1,16 @@
 // @vitest-environment node
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, test, vi } from "vitest";
 import { RUN_EVENT_SCHEMA_VERSION } from "../src/ai/runEvents";
 import type { HeadlessAgent } from "../src/ai/headlessRun";
 import {
   buildRolloutConfig,
+  checkpointPath,
   generateShopTeacherDecisions,
+  readCheckpoint,
+  writeCheckpoint,
   type ShopTeacherGeneratorStats,
 } from "./generateShopTeacherDataset";
 import type { ShopTeacherLabeler } from "./shopTeacher";
@@ -80,4 +86,63 @@ describe("generateShopTeacherDecisions", () => {
     },
     TIMEOUT_MS,
   );
+
+  test(
+    "resumeFromGame skips already-completed games",
+    async () => {
+      const teacher = vi.fn<ShopTeacherLabeler>(async () => 0);
+      const progress: number[] = [];
+      await generateShopTeacherDecisions(
+        { games: 5, seedOffset: 0, margin: -1, resumeFromGame: 3 },
+        teacher,
+        undefined,
+        (n) => progress.push(n),
+      );
+      expect(progress).toEqual([4, 5]);
+    },
+    TIMEOUT_MS,
+  );
+
+  test(
+    "reports each completed game's records via onGameRecords as they happen, not just at the end",
+    async () => {
+      const teacher = vi.fn<ShopTeacherLabeler>(async () => 0);
+      const perGame: Array<{ gamesDone: number; count: number }> = [];
+      const content = await generateShopTeacherDecisions(
+        { games: 6, seedOffset: 0, margin: 10 },
+        teacher,
+        { teacherCalls: 0 },
+        undefined,
+        undefined,
+        (records, gamesDone) => perGame.push({ gamesDone, count: records.length }),
+      );
+      expect(perGame.map((g) => g.gamesDone)).toEqual([1, 2, 3, 4, 5, 6]);
+      const totalFromCallbacks = perGame.reduce((sum, g) => sum + g.count, 0);
+      expect(totalFromCallbacks).toBe(parseLines(content).length);
+    },
+    TIMEOUT_MS,
+  );
+});
+
+describe("shop teacher checkpoint", () => {
+  test("round-trips through writeCheckpoint/readCheckpoint", () => {
+    const dir = mkdtempSync(join(tmpdir(), "shop-teacher-checkpoint-"));
+    const outPath = join(dir, "out.jsonl");
+    expect(readCheckpoint(outPath)).toBeNull();
+
+    writeCheckpoint(outPath, {
+      schemaVersion: 1,
+      gamesDone: 4,
+      teacherCalls: 7,
+      recordsWritten: 9,
+    });
+
+    expect(readCheckpoint(outPath)).toEqual({
+      schemaVersion: 1,
+      gamesDone: 4,
+      teacherCalls: 7,
+      recordsWritten: 9,
+    });
+    expect(checkpointPath(outPath)).toBe(`${outPath}.progress.json`);
+  });
 });
