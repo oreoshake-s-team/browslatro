@@ -11,3 +11,5 @@ storybook-static
 ml/.venv
 ml/data
 !ml/data/human-play
+ml/*.jsonl
+ml/*.json

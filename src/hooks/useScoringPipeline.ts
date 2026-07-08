@@ -23,6 +23,7 @@ import {
 import { CARD_EDITION_INFO, applyCardEdition } from "../cards/editions";
 import { GOLD_HELD_BONUS_PER_CARD } from "../scoring/payout";
 import { STEEL_MULT_FACTOR } from "../cards/heldInHand";
+import { hookRngConfig } from "../items/bosses";
 
 type FinalizeRef = MutableRefObject<(() => void) | null>;
 
@@ -237,7 +238,7 @@ export function useScoringPipeline({
       const cardJokerResult = applyPerCardJokers(
         jokers,
         stepCard,
-        Math.random,
+        hookRngConfig.rng,
         {
           firstFaceAlreadyScored,
           smearedSuits,

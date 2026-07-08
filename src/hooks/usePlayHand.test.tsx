@@ -2,8 +2,8 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { usePlayHand, type UsePlayHandParams } from "./usePlayHand";
 import { useGame } from "../store/game";
-import { createBossCatalog } from "../items/bosses";
-import { createMrBonesJoker } from "../items/jokers";
+import { createBossCatalog, hookRngConfig } from "../items/bosses";
+import { createMisprintJoker, createMrBonesJoker } from "../items/jokers";
 import { applyPlanetUpgrade } from "../items/planets";
 import { createPlanetCatalog } from "../items/planets";
 import type { Card } from "../cards/types";
@@ -59,6 +59,46 @@ describe("usePlayHand — empty hand guard", () => {
     act(() => result.current.submitHand());
 
     expect(useGame.getState().roundScore).toBe(0);
+  });
+});
+
+describe("usePlayHand — Misprint uses the injected rng", () => {
+  beforeEach(() => {
+    hookRngConfig.reset();
+  });
+
+  function setupMisprintPair(): void {
+    useGame.getState().setBlind(1);
+    useGame.getState().setJokers([createMisprintJoker()]);
+    useGame.getState().setDealt({
+      hand: [card(1, "5", "clubs"), card(2, "5", "hearts")],
+      remaining: [card(3, "9", "spades")],
+    });
+    useGame.getState().setHandDisplayOrder([1, 2]);
+    useGame.getState().setSelectedIds(new Set([1, 2]));
+    useGame.getState().setRemainingHands(4);
+    useGame.getState().setRoundScore(0);
+  }
+
+  test("Misprint's random mult roll comes from the injected rng, not Math.random", async () => {
+    setupMisprintPair();
+    hookRngConfig.rng = () => 0;
+    const low = renderHook(() => usePlayHand(makeParams()));
+    act(() => low.result.current.submitHand());
+    await waitFor(() => expect(useGame.getState().roundScore).not.toBe(0));
+    const lowScore = useGame.getState().roundScore;
+    low.unmount();
+
+    useGame.getState().resetGame();
+    setupMisprintPair();
+    hookRngConfig.rng = () => 0.999999;
+    const high = renderHook(() => usePlayHand(makeParams()));
+    act(() => high.result.current.submitHand());
+    await waitFor(() => expect(useGame.getState().roundScore).not.toBe(0));
+    const highScore = useGame.getState().roundScore;
+    high.unmount();
+
+    expect(lowScore).not.toBe(highScore);
   });
 });
 

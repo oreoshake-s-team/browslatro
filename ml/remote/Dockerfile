@@ -6,7 +6,7 @@ RUN apt-get update \
 
 WORKDIR /app
 
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn ./.yarn

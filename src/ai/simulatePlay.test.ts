@@ -5,6 +5,7 @@ import { boss, card, joker, simulateInput as input } from "./test-helpers";
 import {
   createBaronJoker,
   createGreenJokerJoker,
+  createMisprintJoker,
   createRunnerJoker,
   createSpareTrousersJoker,
   FOIL_CHIPS,
@@ -244,6 +245,35 @@ describe("simulatePlay — purity", () => {
     const state = input(nines, { jokers: [joker()] });
     const first = simulatePlay(state, nines.map((c) => c.id));
     const second = simulatePlay(state, nines.map((c) => c.id));
+    expect(first).toEqual(second);
+  });
+});
+
+describe("simulatePlay — rng threading", () => {
+  test("a hand-level random effect (Misprint) draws from the injected rng, not Math.random", () => {
+    const nines = [card("9", "hearts"), card("9", "spades")];
+    const cardIds = nines.map((c) => c.id);
+    const low = simulatePlay(
+      input(nines, { jokers: [createMisprintJoker()], rng: () => 0 }),
+      cardIds,
+    );
+    const high = simulatePlay(
+      input(nines, { jokers: [createMisprintJoker()], rng: () => 0.999999 }),
+      cardIds,
+    );
+    if (!low.legal || !high.legal) throw new Error("expected a legal play");
+    expect(low.mult).not.toBe(high.mult);
+  });
+
+  test("returns the same score for repeated calls with the same injected rng (Misprint)", () => {
+    const nines = [card("9", "hearts"), card("9", "spades")];
+    const cardIds = nines.map((c) => c.id);
+    const state = input(nines, {
+      jokers: [createMisprintJoker()],
+      rng: () => 0.42,
+    });
+    const first = simulatePlay(state, cardIds);
+    const second = simulatePlay(state, cardIds);
     expect(first).toEqual(second);
   });
 });
