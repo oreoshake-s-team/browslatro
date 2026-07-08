@@ -2,7 +2,7 @@ import type { MockedFunction } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
-import { bossPickerRngConfig } from "./items/bosses";
+import { bossPickerRngConfig, hookRngConfig } from "./items/bosses";
 import {
   PERISHABLE_LIFE,
   createBusinessCardJoker,
@@ -53,6 +53,7 @@ function perishedBusinessCard(): Joker {
 
 beforeEach(() => {
   bossPickerRngConfig.rng = () => 0;
+  hookRngConfig.rng = () => 0;
   playMock.mockClear();
   vi.useFakeTimers({ shouldAdvanceTime: true });
 });
@@ -63,6 +64,7 @@ afterEach(() => {
   });
   vi.useRealTimers();
   bossPickerRngConfig.rng = Math.random;
+  hookRngConfig.reset();
   initialJokersConfig.factory = originalFactory;
 });
 
