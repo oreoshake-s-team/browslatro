@@ -1,6 +1,13 @@
 import "./loadEnv";
 import { spawn } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  appendFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve as resolvePath } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -111,10 +118,32 @@ export interface ShopTeacherGeneratorConfig {
   readonly seedOffset: number;
   readonly margin: number;
   readonly limit?: number;
+  readonly resumeFromGame?: number;
 }
 
 export interface ShopTeacherGeneratorStats {
   teacherCalls: number;
+}
+
+export interface ShopTeacherCheckpoint {
+  readonly schemaVersion: 1;
+  readonly gamesDone: number;
+  readonly teacherCalls: number;
+  readonly recordsWritten: number;
+}
+
+export function checkpointPath(outPath: string): string {
+  return `${outPath}.progress.json`;
+}
+
+export function readCheckpoint(outPath: string): ShopTeacherCheckpoint | null {
+  const path = checkpointPath(outPath);
+  if (!existsSync(path)) return null;
+  return JSON.parse(readFileSync(path, "utf8")) as ShopTeacherCheckpoint;
+}
+
+export function writeCheckpoint(outPath: string, checkpoint: ShopTeacherCheckpoint): void {
+  writeFileSync(checkpointPath(outPath), JSON.stringify(checkpoint));
 }
 
 export async function generateShopTeacherDecisions(
@@ -123,6 +152,7 @@ export async function generateShopTeacherDecisions(
   stats?: ShopTeacherGeneratorStats,
   onProgress?: (gamesDone: number) => void,
   handAgent?: HeadlessAgent,
+  onGameRecords?: (records: ReadonlyArray<string>, gamesDone: number) => void,
 ): Promise<string> {
   const jokerCatalog = createJokerCatalog().filter((j) => j.rarity !== "legendary");
   const planetCatalog = createPlanetCatalog();
@@ -139,7 +169,8 @@ export async function generateShopTeacherDecisions(
     return countingTeacher(view, candidates);
   };
 
-  for (let g = 0; g < config.games; g += 1) {
+  const startGame = config.resumeFromGame ?? 0;
+  for (let g = startGame; g < config.games; g += 1) {
     const seed = config.seedOffset + g;
     const recorder: string[] = [];
 
@@ -274,6 +305,7 @@ export async function generateShopTeacherDecisions(
 
     await playHeadlessRun(hand, { seed, shopAgent });
     lines.push(...recorder);
+    onGameRecords?.(recorder, g + 1);
     onProgress?.(g + 1);
   }
 
@@ -287,7 +319,8 @@ if (isMain) {
   const outPath = process.argv[2];
   if (outPath === undefined || outPath.startsWith("--")) {
     console.error(
-      "Usage: ANTHROPIC_API_KEY=… ADVISOR_MODEL=claude-sonnet-4-6 yarn dlx tsx scripts/generateShopTeacherDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--margin 0.15] [--parallel-jobs N]",
+      "Usage: ANTHROPIC_API_KEY=… ADVISOR_MODEL=claude-sonnet-4-6 yarn dlx tsx scripts/generateShopTeacherDataset.ts <out.jsonl> [--games N] [--seed-offset N] [--margin 0.15] [--limit N] [--parallel-jobs N]\n" +
+        "Re-running with the same <out.jsonl> resumes from <out.jsonl>.progress.json if present (single-job mode only).",
     );
     process.exit(1);
   }
@@ -376,22 +409,53 @@ if (isMain) {
     console.log(`wrote ${outPath}`);
   } else {
     const started = Date.now();
-    const stats = { teacherCalls: 0 };
+    const checkpoint = readCheckpoint(outPath);
+    if (checkpoint !== null && !existsSync(outPath)) {
+      console.error(
+        `${checkpointPath(outPath)} exists but ${outPath} is missing — inconsistent state, ` +
+          `delete both to start fresh`,
+      );
+      process.exit(1);
+    }
+    if (checkpoint === null) {
+      writeFileSync(outPath, "");
+    } else {
+      process.stderr.write(
+        `resuming from game ${checkpoint.gamesDone}/${config.games} ` +
+          `(${checkpoint.teacherCalls} teacher calls already spent)\n`,
+      );
+    }
+    const stats = { teacherCalls: checkpoint?.teacherCalls ?? 0 };
+    let recordsWritten = checkpoint?.recordsWritten ?? 0;
     const teacher = createShopTeacher(apiKey);
-    const progressEvery = 25;
     const onProgress = (gamesDone: number): void => {
-      if (gamesDone % progressEvery !== 0 && gamesDone !== config.games) return;
+      const elapsed = ((Date.now() - started) / 1000).toFixed(1);
       process.stderr.write(
         `  [seed ${config.seedOffset}] ${gamesDone}/${config.games} games, ` +
-          `${stats.teacherCalls} teacher calls\n`,
+          `${stats.teacherCalls} teacher calls, ${elapsed}s elapsed\n`,
       );
     };
+    const onGameRecords = (records: ReadonlyArray<string>, gamesDone: number): void => {
+      for (const line of records) appendFileSync(outPath, `${line}\n`);
+      recordsWritten += records.length;
+      writeCheckpoint(outPath, {
+        schemaVersion: 1,
+        gamesDone,
+        teacherCalls: stats.teacherCalls,
+        recordsWritten,
+      });
+    };
     const handAgent = await loadHandAgent();
-    const content = await generateShopTeacherDecisions(config, teacher, stats, onProgress, handAgent);
-    writeFileSync(outPath, content.length > 0 ? `${content}\n` : "");
-    const count = content.split("\n").filter(Boolean).length;
+    await generateShopTeacherDecisions(
+      { ...config, resumeFromGame: checkpoint?.gamesDone ?? 0 },
+      teacher,
+      stats,
+      onProgress,
+      handAgent,
+      onGameRecords,
+    );
     console.log(
-      `${count} records (${stats.teacherCalls} teacher-labeled) from ${config.games} games ` +
+      `${recordsWritten} records (${stats.teacherCalls} teacher-labeled) from ${config.games} games ` +
         `in ${((Date.now() - started) / 1000).toFixed(1)}s`,
     );
     console.log(`wrote ${outPath}`);
