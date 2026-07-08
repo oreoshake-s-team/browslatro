@@ -13,9 +13,7 @@ import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import { packShowsHandArea } from "../../items/packs";
 import ModifierPanel from "./ModifierPanel";
 import AutopilotControls from "./AutopilotControls";
-import type { HandOption } from "../../ai/getHandOptions";
-import type { MoveExplanationState } from "../../ai/advisor/useMoveExplanation";
-import type { DownloadProgress } from "../../ai/policy";
+import { useAutopilotSession } from "./autopilotSession";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
@@ -39,21 +37,6 @@ interface GameProps {
   onSubmitHand: () => void;
   onDiscard: () => void;
   canDiscard: boolean;
-  autopilotEnabled?: boolean;
-  onToggleAutopilot?: () => void;
-  autopilotProposal?: HandOption | null;
-  autopilotModelProgress?: DownloadProgress | null;
-  autopilotProposalUnavailable?: boolean;
-  autopilotAdvisorUnavailable?: boolean;
-  autopilotExplanation?: MoveExplanationState;
-  autopilotFeedbackCandidates?: ReadonlyArray<HandOption> | null;
-  autopilotFeedbackRecorded?: boolean;
-  onApproveAutopilot?: () => void;
-  onAskAiAutopilot?: () => void;
-  onRetryAutopilot?: () => void;
-  onAutopilotFeedback?: (correctedIndex: number | null) => void;
-  onAutopilotAgree?: () => void;
-  onAutopilotPreviewFeedback?: (option: HandOption) => void;
   isScoring?: boolean;
   scoringId?: number | null;
   goldScoringId?: number | null;
@@ -67,21 +50,6 @@ export default function Game({
   onSubmitHand,
   onDiscard,
   canDiscard,
-  autopilotEnabled = false,
-  onToggleAutopilot,
-  autopilotProposal = null,
-  autopilotModelProgress = null,
-  autopilotProposalUnavailable = false,
-  autopilotAdvisorUnavailable = false,
-  autopilotExplanation = { phase: "idle" },
-  autopilotFeedbackCandidates = null,
-  autopilotFeedbackRecorded = false,
-  onApproveAutopilot,
-  onAskAiAutopilot,
-  onRetryAutopilot,
-  onAutopilotFeedback,
-  onAutopilotAgree,
-  onAutopilotPreviewFeedback,
   isScoring = false,
   scoringId = null,
   goldScoringId = null,
@@ -90,6 +58,7 @@ export default function Game({
   packOpen,
   onCardDiscardEnd,
 }: GameProps) {
+  const autopilotSession = useAutopilotSession();
   const { t, i18n } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
@@ -348,37 +317,39 @@ export default function Game({
             >
               <span aria-hidden="true">🗑️ </span>Discard
             </button>
-            {onToggleAutopilot && (
+            {autopilotSession && (
               <button
                 className="btn btn--advisor autopilot-toggle-button"
-                onClick={onToggleAutopilot}
-                aria-pressed={autopilotEnabled}
+                onClick={autopilotSession.onToggle}
+                aria-pressed={autopilotSession.enabled}
               >
                 <span aria-hidden="true">🤖 </span>
                 {t("advisor.autopilot")}
               </button>
             )}
           </div>
-          {(autopilotProposal ||
-            autopilotModelProgress ||
-            autopilotProposalUnavailable ||
-            autopilotAdvisorUnavailable ||
-            autopilotFeedbackRecorded) &&
-            onApproveAutopilot && (
+          {autopilotSession &&
+            (autopilotSession.autopilot.pendingProposal ||
+              autopilotSession.autopilot.modelProgress ||
+              autopilotSession.autopilot.proposalUnavailable ||
+              autopilotSession.autopilot.advisorUnavailable ||
+              autopilotSession.feedbackRecorded) && (
               <AutopilotControls
-                proposal={autopilotProposal}
-                modelProgress={autopilotModelProgress}
-                proposalUnavailable={autopilotProposalUnavailable}
-                advisorUnavailable={autopilotAdvisorUnavailable}
-                explanation={autopilotExplanation}
-                feedbackCandidates={autopilotFeedbackCandidates}
-                feedbackRecorded={autopilotFeedbackRecorded}
-                onApprove={onApproveAutopilot}
-                onAskAi={onAskAiAutopilot ?? (() => {})}
-                onRetry={onRetryAutopilot ?? (() => {})}
-                onFeedback={onAutopilotFeedback}
-                onAgree={onAutopilotAgree}
-                onPreviewFeedback={onAutopilotPreviewFeedback}
+                proposal={autopilotSession.autopilot.pendingProposal}
+                modelProgress={autopilotSession.autopilot.modelProgress}
+                proposalUnavailable={autopilotSession.autopilot.proposalUnavailable}
+                advisorUnavailable={autopilotSession.autopilot.advisorUnavailable}
+                explanation={autopilotSession.explanation}
+                feedbackCandidates={
+                  autopilotSession.policyDecision?.candidates ?? null
+                }
+                feedbackRecorded={autopilotSession.feedbackRecorded}
+                onApprove={autopilotSession.autopilot.approve}
+                onAskAi={autopilotSession.onAskAi}
+                onRetry={autopilotSession.onAskAi}
+                onFeedback={autopilotSession.onFeedback}
+                onAgree={autopilotSession.onAgree}
+                onPreviewFeedback={autopilotSession.autopilot.previewOption}
               />
             )}
         </div>

@@ -1,7 +1,6 @@
 import { Suspense, lazy, useEffect } from "react";
 import { useBodyClass } from "./hooks/useBodyClass";
 import { useTranslation } from "react-i18next";
-import { useAutopilotController } from "./hooks/useAutopilotController";
 
 const BlindSelectScreenLazy = lazy(
   () => import("./components/game/BlindSelectScreen"),
@@ -16,6 +15,7 @@ import { useChanceOverrides } from "./hooks/useChanceOverrides";
 import { devToolsEnabled } from "./dev/devTools";
 import Game from "./components/game/Game";
 import GameSessionProvider from "./components/game/GameSessionProvider";
+import AutopilotSessionProvider from "./components/game/AutopilotSessionProvider";
 import { useGameSession } from "./components/game/gameSession";
 import LazyChunkErrorBoundary from "./components/system/LazyChunkErrorBoundary";
 import LazyChunkSpinner from "./components/system/LazyChunkSpinner";
@@ -97,21 +97,6 @@ function AppContent() {
   } = useGameSession();
 
   const {
-    enabled: autopilotEnabled,
-    onToggle: toggleAutopilot,
-    autopilot,
-    explanation: autopilotExplanation,
-    onAskAi: askAiForMove,
-    onFeedback: handleAutopilotFeedback,
-    onAgree: handleAutopilotAgree,
-    feedbackRecorded: autopilotFeedbackRecorded,
-    policyDecision,
-  } = useAutopilotController(isScoring, {
-    play: submitHand,
-    discard: discardSelected,
-  });
-
-  const {
     pendingWin,
     pendingLose,
     pendingGameWon,
@@ -151,21 +136,6 @@ function AppContent() {
       <Game
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
-        autopilotEnabled={autopilotEnabled}
-        onToggleAutopilot={toggleAutopilot}
-        autopilotProposal={autopilot.pendingProposal}
-        autopilotModelProgress={autopilot.modelProgress}
-        autopilotProposalUnavailable={autopilot.proposalUnavailable}
-        autopilotAdvisorUnavailable={autopilot.advisorUnavailable}
-        autopilotExplanation={autopilotExplanation}
-        autopilotFeedbackCandidates={policyDecision?.candidates ?? null}
-        autopilotFeedbackRecorded={autopilotFeedbackRecorded}
-        onApproveAutopilot={autopilot.approve}
-        onAskAiAutopilot={askAiForMove}
-        onRetryAutopilot={askAiForMove}
-        onAutopilotFeedback={handleAutopilotFeedback}
-        onAutopilotAgree={handleAutopilotAgree}
-        onAutopilotPreviewFeedback={autopilot.previewOption}
         canDiscard={
           selectedIds.size > 0 &&
           remainingDiscards > 0 &&
@@ -280,7 +250,9 @@ function AppContent() {
 function App() {
   return (
     <GameSessionProvider>
-      <AppContent />
+      <AutopilotSessionProvider>
+        <AppContent />
+      </AutopilotSessionProvider>
     </GameSessionProvider>
   );
 }
