@@ -8,25 +8,13 @@ import {
   type HandStats,
 } from "../../scoring/handStats";
 import { createBossCatalog, type BossBlind } from "../../items/bosses";
-import {
-  VOUCHER_CATALOG,
-  type Voucher,
-  type VoucherId,
-} from "../../items/vouchers";
+import type { VoucherId } from "../../items/vouchers";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 
 function findBoss(id: string): BossBlind {
   const boss = createBossCatalog().find((entry) => entry.id === id);
   if (!boss) throw new Error(`Unknown boss: ${id}`);
   return boss;
-}
-
-function pickVouchers(...ids: VoucherId[]): ReadonlyArray<Voucher> {
-  return ids.map((id) => {
-    const voucher = VOUCHER_CATALOG.find((entry) => entry.id === id);
-    if (!voucher) throw new Error(`Unknown voucher: ${id}`);
-    return voucher;
-  });
 }
 
 const playedCounts: HandPlayCounts = {
@@ -79,7 +67,6 @@ const meta = {
   title: "HUD/Sidebar",
   component: Sidebar,
   decorators: [
-    withGame(),
     (Story) => (
       <div
         style={{
@@ -95,23 +82,6 @@ const meta = {
   ],
   parameters: { layout: "fullscreen" },
   args: {
-    blind: 1,
-    ante: 1,
-    round: 1,
-    money: 4,
-    chips: 0,
-    multiplier: 0,
-    roundScore: 0,
-    requiredScore: 300,
-    selectedHand: null,
-    remainingHands: 4,
-    remainingDiscards: 3,
-    handPlayCounts: emptyHandCounts(),
-    handStats: createDefaultHandStats(),
-    ownedVouchers: [],
-    currentBoss: null,
-    firstPlayedHandLabel: null,
-    scoringEvents: [],
     onNewGame: fn(),
     onHighVisibilityChange: fn(),
     onAnimationSpeedChange: fn(),
@@ -121,63 +91,65 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  decorators: [withGame()],
+};
 
 export const HandSelected: Story = {
-  args: {
-    blind: 2,
-    round: 2,
-    money: 9,
-    chips: 35,
-    multiplier: 4,
-    roundScore: 180,
-    requiredScore: 450,
-    selectedHand: { label: "Flush", chips: 35, multiplier: 4 },
-    remainingHands: 3,
-    remainingDiscards: 2,
-    scoringEvents: FLUSH_TRACE,
-  },
+  decorators: [
+    withGame((s) => {
+      s.setBlind(2);
+      s.setRound(2);
+      s.setMoney(9);
+      s.setChips(35);
+      s.setMultiplier(4);
+      s.setRoundScore(180);
+      s.setSelectedHand({ label: "Flush", chips: 35, multiplier: 4 });
+      s.setRemainingHands(3);
+      s.setRemainingDiscards(2);
+      s.setScoringEvents(FLUSH_TRACE);
+    }),
+  ],
 };
 
 export const BossBlindLockedHand: Story = {
-  args: {
-    blind: 3,
-    ante: 2,
-    round: 6,
-    money: 18,
-    roundScore: 750,
-    requiredScore: 1600,
-    remainingHands: 2,
-    remainingDiscards: 1,
-    handPlayCounts: playedCounts,
-    currentBoss: findBoss("the-mouth"),
-    firstPlayedHandLabel: "Flush",
-    scoringEvents: FLUSH_TRACE,
-  },
+  decorators: [
+    withGame((s) => {
+      s.setBlind(3);
+      s.setAnte(2);
+      s.setRound(6);
+      s.setMoney(18);
+      s.setRoundScore(750);
+      s.setRemainingHands(2);
+      s.setRemainingDiscards(1);
+      s.setHandPlayCounts(playedCounts);
+      s.setCurrentBoss(findBoss("the-mouth"));
+      s.setHandHistoryThisRound(["Flush"]);
+      s.setScoringEvents(FLUSH_TRACE);
+    }),
+  ],
 };
 
 export const LateRunRichTrace: Story = {
-  args: {
-    blind: 3,
-    ante: 6,
-    round: 17,
-    money: 52,
-    chips: 50,
-    multiplier: 6,
-    roundScore: 21450,
-    requiredScore: 40000,
-    selectedHand: { label: "Flush", chips: 50, multiplier: 6 },
-    remainingHands: 1,
-    remainingDiscards: 0,
-    handPlayCounts: playedCounts,
-    handStats: upgradedStats,
-    ownedVouchers: pickVouchers(
-      "overstock",
-      "grabber",
-      "seed-money",
-      "telescope",
-    ),
-    currentBoss: findBoss("the-flint"),
-    scoringEvents: BOSS_ROUND_TRACE,
-  },
+  decorators: [
+    withGame((s) => {
+      s.setBlind(3);
+      s.setAnte(6);
+      s.setRound(17);
+      s.setMoney(52);
+      s.setChips(50);
+      s.setMultiplier(6);
+      s.setRoundScore(21450);
+      s.setSelectedHand({ label: "Flush", chips: 50, multiplier: 6 });
+      s.setRemainingHands(1);
+      s.setRemainingDiscards(0);
+      s.setHandPlayCounts(playedCounts);
+      s.setHandStats(upgradedStats);
+      s.setOwnedVoucherIds(
+        new Set<VoucherId>(["overstock", "grabber", "seed-money", "telescope"]),
+      );
+      s.setCurrentBoss(findBoss("the-flint"));
+      s.setScoringEvents(BOSS_ROUND_TRACE);
+    }),
+  ],
 };

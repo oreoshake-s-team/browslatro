@@ -1,9 +1,8 @@
 import { useTranslation } from "react-i18next";
-import type { Blind } from "../../cards/types";
 import "./Sidebar.css";
 import { BlindValues } from "../../constants";
 import Round from "./Round";
-import RunInfo, { type HandPlayCounts } from "./RunInfo";
+import RunInfo from "./RunInfo";
 import Options from "../options/Options";
 import Help from "./Help";
 import RoundProgress from "./RoundProgress";
@@ -13,60 +12,41 @@ import ScoringTraceButton from "./ScoringTraceButton";
 import HumanPlayLog from "./HumanPlayLog";
 import SidebarFooter from "./SidebarFooter";
 import HandScore from "../game/HandScore";
-import type { Hand } from "../../cards/types";
 import type { HandLabel } from "../../scoring/handEvaluator";
-import type { HandStats } from "../../scoring/handStats";
-import type { BossBlind } from "../../items/bosses";
-import type { Voucher } from "../../items/vouchers";
-import type { ScoringEvent } from "../../scoring/scoringTrace";
 import type { AnimationSpeed } from "../system/preferences";
+import { useSidebarViewModel } from "./useSidebarViewModel";
 
 interface SidebarProps {
-  blind: Blind;
-  ante: number;
-  round: number;
-  money: number;
-  chips: number;
-  multiplier: number;
-  roundScore: number;
-  requiredScore: number;
-  selectedHand: Hand | null;
-  remainingHands: number;
-  remainingDiscards: number;
-  handPlayCounts: HandPlayCounts;
-  handStats: HandStats;
-  ownedVouchers: ReadonlyArray<Voucher>;
-  currentBoss: BossBlind | null;
-  firstPlayedHandLabel?: HandLabel | null;
-  scoringEvents: ReadonlyArray<ScoringEvent>;
   onNewGame: () => void;
   onHighVisibilityChange?: (enabled: boolean) => void;
   onAnimationSpeedChange?: (value: AnimationSpeed) => void;
 }
 
 export default function Sidebar({
-  blind,
-  ante,
-  round,
-  money,
-  chips,
-  multiplier,
-  roundScore,
-  requiredScore,
-  selectedHand,
-  remainingHands,
-  remainingDiscards,
-  handPlayCounts,
-  handStats,
-  ownedVouchers,
-  currentBoss,
-  firstPlayedHandLabel = null,
-  scoringEvents,
   onNewGame,
   onHighVisibilityChange,
   onAnimationSpeedChange,
 }: SidebarProps) {
   const { t } = useTranslation();
+  const {
+    blind,
+    ante,
+    round,
+    money,
+    chips,
+    multiplier,
+    roundScore,
+    requiredScore,
+    selectedHand,
+    remainingHands,
+    remainingDiscards,
+    handPlayCounts,
+    handStats,
+    ownedVouchers,
+    currentBoss,
+    firstPlayedHandLabel,
+    scoringEvents,
+  } = useSidebarViewModel();
   return (
     <aside className="sidebar" aria-label={t("a11y.gameStatus")}>
       <Round
