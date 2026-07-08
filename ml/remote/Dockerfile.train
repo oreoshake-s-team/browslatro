@@ -9,7 +9,7 @@ RUN python3 -m venv /opt/venv
 
 WORKDIR /app
 
-RUN corepack enable
+RUN npm install -g corepack@latest && corepack enable
 
 COPY ml/requirements.txt ml/requirements.txt
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu \
