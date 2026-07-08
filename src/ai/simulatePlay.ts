@@ -72,6 +72,7 @@ export interface SimulatePlayInput {
   readonly idolTarget: { readonly rank: Rank; readonly suit: Suit } | null;
   readonly ancientSuit: Suit | null;
   readonly optimizeJokerOrder?: boolean;
+  readonly rng?: RandomSource;
 }
 
 export type IllegalPlayReason =
@@ -198,6 +199,7 @@ function scorePlay(
     ...input.handPlayCounts,
     [label]: input.handPlayCounts[label] + 1,
   };
+  const rng = input.rng ?? neverProc;
   const scoringJokers = advanceStackGainsForScoring(input.jokers, {
     playedHandLabel: label,
     playedCardCount: playedCards.length,
@@ -211,6 +213,7 @@ function scorePlay(
     remainingDiscards: input.remainingDiscards,
     remainingHands: input.remainingHands,
     money: input.money,
+    rng,
     heldInHandCards: getHeldInHand(input.dealt.hand, new Set(cardIds)),
     fullDeck:
       input.jokers.length === 0
@@ -267,7 +270,7 @@ function scorePlay(
   let firstFaceAlreadyScored = false;
   const smearedSuits = evalOptions.smearedSuits === true;
   for (const card of scoring) {
-    const perCard = applyPerCardJokers(input.jokers, card, neverProc, {
+    const perCard = applyPerCardJokers(input.jokers, card, rng, {
       firstFaceAlreadyScored,
       smearedSuits,
       idolTarget: input.idolTarget,

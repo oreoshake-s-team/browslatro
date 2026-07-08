@@ -30,6 +30,7 @@ import {
   bossVoidReason,
   bossVoidsHandLabel,
   debuffedHandIds,
+  hookRngConfig,
 } from "../items/bosses";
 import {
   clearJokerDisable,
@@ -638,6 +639,7 @@ export function usePlayHand({
           remainingDiscards,
           remainingHands,
           money,
+          rng: hookRngConfig.rng,
           heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
           fullDeck: fullDeckPile(
             baseDeckCards,
@@ -748,6 +750,7 @@ export function usePlayHand({
         remainingDiscards,
         remainingHands,
         money,
+        rng: hookRngConfig.rng,
         heldInHandCards: getHeldInHand(dealt.hand, submittedSelection),
         fullDeck: handLevelFullDeck,
         remainingDeck: dealt.remaining,

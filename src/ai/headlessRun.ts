@@ -327,6 +327,7 @@ export async function playHeadlessRun(
           scoreTarget,
           offeredTag: firstAction ? offeredTag : null,
           optimizeJokerOrder: true,
+          rng,
         };
         const action = await agent.chooseAction(view);
         if (action.kind === "skip") {

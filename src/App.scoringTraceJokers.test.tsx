@@ -2,7 +2,7 @@ import type { MockedFunction } from "vitest";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { play } from "./components/system/sounds";
-import { bossPickerRngConfig } from "./items/bosses";
+import { bossPickerRngConfig, hookRngConfig } from "./items/bosses";
 import {
   RESERVED_PARKING_PAYOUT,
   createGreedyJoker,
@@ -58,6 +58,7 @@ afterEach(() => {
   });
   vi.useRealTimers();
   bossPickerRngConfig.rng = Math.random;
+  hookRngConfig.reset();
   initialJokersConfig.factory = originalFactory;
 });
 
@@ -183,60 +184,52 @@ describe("Scoring trace — hand-level joker events", () => {
   });
 
   test("Reserved Parking emits +$1 in the scoring log per held face card that procs (regression for)", async () => {
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
-    try {
-      initialJokersConfig.factory = () => [createReservedParkingJoker()];
-      deckConfig.hand = [
-        makeCard("2", "clubs"),
-        makeCard("2", "spades"),
-        makeCard("J", "hearts"),
-        makeCard("Q", "diamonds"),
-        makeCard("K", "spades"),
-        makeCard("3", "hearts"),
-        makeCard("4", "hearts"),
-        makeCard("5", "hearts"),
-      ];
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-      render(<App />);
-      await dismissBlindSelect(user);
-      const cards = getHandCardButtons();
-      await user.click(cards[0]);
-      await user.click(cards[1]);
-      await user.click(screen.getByText(/Submit Hand/));
-      flushScoringSequence();
-      expect(logText()).toContain(
-        `+$${RESERVED_PARKING_PAYOUT} (Reserved Parking)`,
-      );
-    } finally {
-      randomSpy.mockRestore();
-    }
+    hookRngConfig.rng = () => 0;
+    initialJokersConfig.factory = () => [createReservedParkingJoker()];
+    deckConfig.hand = [
+      makeCard("2", "clubs"),
+      makeCard("2", "spades"),
+      makeCard("J", "hearts"),
+      makeCard("Q", "diamonds"),
+      makeCard("K", "spades"),
+      makeCard("3", "hearts"),
+      makeCard("4", "hearts"),
+      makeCard("5", "hearts"),
+    ];
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    await user.click(cards[0]);
+    await user.click(cards[1]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(logText()).toContain(
+      `+$${RESERVED_PARKING_PAYOUT} (Reserved Parking)`,
+    );
   });
 
   test("Reserved Parking emits no money event when no held card procs (negative, regression for)", async () => {
-    const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.99);
-    try {
-      initialJokersConfig.factory = () => [createReservedParkingJoker()];
-      deckConfig.hand = [
-        makeCard("2", "clubs"),
-        makeCard("2", "spades"),
-        makeCard("J", "hearts"),
-        makeCard("Q", "diamonds"),
-        makeCard("K", "spades"),
-        makeCard("3", "hearts"),
-        makeCard("4", "hearts"),
-        makeCard("5", "hearts"),
-      ];
-      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
-      render(<App />);
-      await dismissBlindSelect(user);
-      const cards = getHandCardButtons();
-      await user.click(cards[0]);
-      await user.click(cards[1]);
-      await user.click(screen.getByText(/Submit Hand/));
-      flushScoringSequence();
-      expect(logText()).not.toContain("Reserved Parking");
-    } finally {
-      randomSpy.mockRestore();
-    }
+    hookRngConfig.rng = () => 0.99;
+    initialJokersConfig.factory = () => [createReservedParkingJoker()];
+    deckConfig.hand = [
+      makeCard("2", "clubs"),
+      makeCard("2", "spades"),
+      makeCard("J", "hearts"),
+      makeCard("Q", "diamonds"),
+      makeCard("K", "spades"),
+      makeCard("3", "hearts"),
+      makeCard("4", "hearts"),
+      makeCard("5", "hearts"),
+    ];
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    render(<App />);
+    await dismissBlindSelect(user);
+    const cards = getHandCardButtons();
+    await user.click(cards[0]);
+    await user.click(cards[1]);
+    await user.click(screen.getByText(/Submit Hand/));
+    flushScoringSequence();
+    expect(logText()).not.toContain("Reserved Parking");
   });
 });
