@@ -12,7 +12,6 @@ const JokerGrantAcknowledge = lazy(
 );
 import "./App.css";
 import { useGame } from "./store/game";
-import { requiredChipsForBlind } from "./scoring/anteScaling";
 import { availableBosses, createBossCatalog } from "./items/bosses";
 import { useChanceOverrides } from "./hooks/useChanceOverrides";
 import { devToolsEnabled } from "./dev/devTools";
@@ -47,7 +46,6 @@ import {
 import {
   BOSS_REROLL_COST,
   bossRerollsRemaining,
-  VOUCHER_CATALOG,
 } from "./items/vouchers";
 
 export { getScoringStepMs } from "./hooks/useScoringStepMs";
@@ -56,25 +54,13 @@ function App() {
   const { t } = useTranslation();
   const {
     blind,
-    round,
     ante,
     money,
-    chips,
-    multiplier,
-    devChipsBonus,
-    devMultBonus,
-    devMultFactor,
-    roundScore,
-    selectedHand,
-    remainingHands,
     remainingDiscards,
     runStats,
     selectedIds,
     discardingIds,
     jokers,
-    handPlayCounts,
-    handStats,
-    scoringEvents,
     pendingRunSelect,
     openedPack,
     skipTagOffers,
@@ -86,7 +72,6 @@ function App() {
     ownedVoucherIds,
     currentBoss,
     bossRerollsUsedThisAnte,
-    handHistoryThisRound,
   } = useAppViewModel();
   useChanceOverrides();
   useInitialDeal();
@@ -184,13 +169,6 @@ function App() {
     (state) => state.setPendingJokerGrantIds,
   );
   const setCurrentBoss = useGame((state) => state.setCurrentBoss);
-  const firstPlayedHandLabel = handHistoryThisRound[0] ?? null;
-  const requiredScore = requiredChipsForBlind({
-    ante,
-    blind,
-    boss: currentBoss,
-    stake: selectedStake,
-  });
 
   const shopProps = useShopController();
 
@@ -216,26 +194,7 @@ function App() {
       <h1 className="sr-only">
         {pendingRunSelect ? t("app.titleMenu") : t("app.titleRun")}
       </h1>
-      <Sidebar
-        blind={blind}
-        ante={ante}
-        round={round}
-        money={money}
-        chips={chips + devChipsBonus}
-        multiplier={(multiplier + devMultBonus) * devMultFactor}
-        roundScore={roundScore}
-        requiredScore={requiredScore}
-        selectedHand={selectedHand}
-        remainingHands={remainingHands}
-        remainingDiscards={remainingDiscards}
-        handPlayCounts={handPlayCounts}
-        handStats={handStats}
-        ownedVouchers={VOUCHER_CATALOG.filter((v) => ownedVoucherIds.has(v.id))}
-        currentBoss={currentBoss}
-        firstPlayedHandLabel={firstPlayedHandLabel}
-        scoringEvents={scoringEvents}
-        onNewGame={startNewGame}
-      />
+      <Sidebar onNewGame={startNewGame} />
       <Game
         onSubmitHand={submitHand}
         onDiscard={discardSelected}
