@@ -50,6 +50,25 @@ if [ -n "$GAE" ]; then
   value_flag+=(--gae "$GAE")
 fi
 
+# Optional offline distillation channels folded into each on-policy train step:
+# the PPO update on fresh self-play plus an auxiliary cross-entropy toward an
+# LLM teacher's and/or a human's shop picks (see train_rl.py --teacher /
+# --corrections / --agreements). This keeps LLM and human shop signal *adding
+# to* the RL incumbent rather than training a standalone supervised competitor.
+distill_flag=()
+if [ -n "${TEACHER:-}" ]; then
+  distill_flag+=(--teacher "$TEACHER" --teacher-coef "${TEACHER_COEF:-1.0}")
+fi
+if [ -n "${HUMAN:-}" ]; then
+  distill_flag+=(--human "$HUMAN" --human-coef "${HUMAN_COEF:-1.0}")
+fi
+if [ -n "${CORRECTIONS:-}" ]; then
+  distill_flag+=(--corrections "$CORRECTIONS" --corrections-coef "${CORRECTIONS_COEF:-1.0}")
+fi
+if [ -n "${AGREEMENTS:-}" ]; then
+  distill_flag+=(--agreements "$AGREEMENTS" --agreements-coef "${AGREEMENTS_COEF:-1.0}")
+fi
+
 mkdir -p "$OUTDIR"
 current="$BASE"
 echo "iter 0 (base): $current"
@@ -57,12 +76,14 @@ echo "iter 0 (base): $current"
 for k in $(seq 1 "$ITERS"); do
   data="$OUTDIR/sp-$k.jsonl"
   next="$OUTDIR/iter-$k.onnx"
-  echo "=== iteration $k: sampling $GAMES games from $(basename "$current") ==="
+  sp_seed=$(( ${SP_SEED_BASE:-0} + (k - 1) * GAMES ))
+  echo "=== iteration $k: sampling $GAMES games from $(basename "$current") (seed $sp_seed) ==="
   $TSX_RUN scripts/collectSelfPlayShop.ts "$data" \
-    --games "$GAMES" --shop-model "$current" --hand-model "$HAND" --temperature "$TEMPERATURE" \
-    --parallel-jobs "$PARALLEL_JOBS" "${hold_flag[@]}"
+    --games "$GAMES" --seed-offset "$sp_seed" --shop-model "$current" --hand-model "$HAND" \
+    --temperature "$TEMPERATURE" --parallel-jobs "$PARALLEL_JOBS" "${hold_flag[@]}"
   $PYTHON ml/train_rl.py "$data" --device "$DEVICE" --init "$current" \
-    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next" "${v2_flag[@]}" "${value_flag[@]}"
+    --epochs "$EPOCHS" --lr "$LR" --ppo-clip "$PPO_CLIP" --out "$next" \
+    "${v2_flag[@]}" "${value_flag[@]}" "${distill_flag[@]}"
   echo "--- benchmark iter $k ($BENCH_GAMES games, seed $BENCH_SEED) ---"
   $TSX_RUN scripts/benchmarkPolicy.ts "$HAND" \
     --games "$BENCH_GAMES" --seed-offset "$BENCH_SEED" --shop-policy "$next" "${hold_flag[@]}" \
