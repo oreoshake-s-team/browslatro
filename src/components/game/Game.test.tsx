@@ -5,8 +5,6 @@ import { beforeEach } from "vitest";
 import Game from "./Game";
 import { useGame } from "../../store/game";
 import { usePreferences } from "../system/preferences";
-import type { ShopProps } from "../shop/Shop";
-import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import type { Card } from "../../cards/types";
 import type { PackOffer } from "../../items/packs";
 import type { Consumable } from "../../items/consumables";
@@ -27,22 +25,9 @@ function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
   );
 }
 
-function makeShopProps(): ShopProps {
-  return {
-    money: 0,
-    equippedJokerCount: 0,
-    jokerCapacity: 5,
-    consumableCount: 0,
-    consumableCapacity: 2,
-    offers: [],
-    vouchers: [],
-    soldVoucherIds: new Set(),
-    ownedVoucherIds: new Set(),
-    onBuy: vi.fn(),
-    onBuyVoucher: vi.fn(),
-    onReroll: vi.fn(),
-    onNext: vi.fn(),
-  };
+function seedShop(): void {
+  useGame.getState().setShopOffers([]);
+  useGame.getState().setCurrentAnteVouchers([]);
 }
 
 function makeCards(start: number, count: number): Card[] {
@@ -83,17 +68,10 @@ const arcanaPack: PackOffer = {
   options: [{ kind: "tarot", tarot: TAROTS[0] }],
 };
 
-function packOpenProps(
-  pack: PackOffer,
-  previewHand: Card[] = [],
-): PackOpenModalProps {
-  return {
-    pack,
-    picksRemaining: 1,
-    previewHand,
-    onPick: vi.fn(),
-    onClose: vi.fn(),
-  };
+function seedPackOpen(pack: PackOffer, previewHand: Card[] = []): void {
+  useGame.getState().setOpenedPack(pack);
+  useGame.getState().setPackPicksRemaining(1);
+  useGame.getState().setPackPreviewHand(previewHand);
 }
 
 function deckPileCount(): number {
@@ -152,56 +130,64 @@ describe("Game", () => {
   ] as const)(
     "hides the player hand during a %s pack pick when no usable consumable is held",
     async (_pool, pack) => {
-      renderGame({ packOpen: packOpenProps(pack) });
+      seedPackOpen(pack);
+      renderGame();
       await screen.findByTestId("pack-open-subtitle");
       expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
     },
   );
 
   test("hides the deck drop target during a standard pack pick when no usable consumable is held", async () => {
-    renderGame({ packOpen: packOpenProps(standardPack) });
+    seedPackOpen(standardPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.queryByTestId("deck-pile")).not.toBeInTheDocument();
   });
 
   test("hides the player hand during a standard pack pick when only a planet is held", async () => {
     useGame.getState().setConsumables([planetConsumable]);
-    renderGame({ packOpen: packOpenProps(standardPack) });
+    seedPackOpen(standardPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("hides the player hand during a standard pack pick even when a tarot is held", async () => {
     useGame.getState().setConsumables([tarotConsumable]);
-    renderGame({ packOpen: packOpenProps(standardPack) });
+    seedPackOpen(standardPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("hides the player hand during a buffoon pack pick even when a spectral is held", async () => {
     useGame.getState().setConsumables([spectralConsumable]);
-    renderGame({ packOpen: packOpenProps(buffoonPack) });
+    seedPackOpen(buffoonPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("hides the player hand during a celestial pack pick even when a tarot is held", async () => {
     useGame.getState().setConsumables([tarotConsumable]);
-    renderGame({ packOpen: packOpenProps(celestialPack) });
+    seedPackOpen(celestialPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
   test("keeps joker sell buttons visible during a buffoon pack pick", async () => {
     useGame.getState().setJokers([createJokerCatalog()[0]]);
-    renderGame({ packOpen: packOpenProps(buffoonPack) });
+    seedPackOpen(buffoonPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers--sell-visible");
   });
 
   test("does not force joker sell buttons visible during a celestial pack pick (negative)", async () => {
     useGame.getState().setJokers([createJokerCatalog()[0]]);
-    renderGame({ packOpen: packOpenProps(celestialPack) });
+    seedPackOpen(celestialPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.getByTestId("jokers-tray")).not.toHaveClass(
       "jokers--sell-visible",
@@ -216,20 +202,23 @@ describe("Game", () => {
     "hides the deck pile during a %s pack pick even when a tarot is held",
     async (_pool, pack) => {
       useGame.getState().setConsumables([tarotConsumable]);
-      renderGame({ packOpen: packOpenProps(pack) });
+      seedPackOpen(pack);
+      renderGame();
       await screen.findByTestId("pack-open-subtitle");
       expect(screen.queryByTestId("deck-pile")).not.toBeInTheDocument();
     },
   );
 
   test("shows the deck pile during an arcana pack pick when no usable consumable is held", async () => {
-    renderGame({ packOpen: packOpenProps(arcanaPack) });
+    seedPackOpen(arcanaPack);
+    renderGame();
     await screen.findByTestId("pack-open-subtitle");
     expect(screen.getByTestId("deck-pile")).toBeInTheDocument();
   });
 
   test("renders the preview hand during an arcana pack pick", async () => {
-    renderGame({ packOpen: packOpenProps(arcanaPack, makeCards(1, 3)) });
+    seedPackOpen(arcanaPack, makeCards(1, 3));
+    renderGame();
     expect(
       await screen.findByTestId("pack-open-preview-hand"),
     ).toBeInTheDocument();
@@ -237,7 +226,8 @@ describe("Game", () => {
 
   test("does not render the live player hand during an arcana pack pick even when a tarot is held", async () => {
     useGame.getState().setConsumables([tarotConsumable]);
-    renderGame({ packOpen: packOpenProps(arcanaPack, makeCards(1, 3)) });
+    seedPackOpen(arcanaPack, makeCards(1, 3));
+    renderGame();
     await screen.findByTestId("pack-open-preview-hand");
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
@@ -317,7 +307,8 @@ describe("Game", () => {
         baseDeckCards: base,
         dealt: { hand: [], remaining: makeCards(1000, 4) },
       });
-      renderGame({ shop: makeShopProps() });
+      seedShop();
+      renderGame();
       expect(deckPileCount()).toBe(40);
     });
 
@@ -327,28 +318,12 @@ describe("Game", () => {
         baseDeckCards: base,
         dealt: { hand: [], remaining: [] },
       });
-      const { rerender } = render(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-          shop={makeShopProps()}
-        />,
-      );
+      seedShop();
+      renderGame();
       expect(deckPileCount()).toBe(40);
       act(() => {
         useGame.setState({ destroyedCardIds: new Set([1, 2, 3]) });
       });
-      rerender(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-          shop={makeShopProps()}
-        />,
-      );
       expect(deckPileCount()).toBe(37);
     });
 
@@ -358,28 +333,12 @@ describe("Game", () => {
         baseDeckCards: base,
         dealt: { hand: [], remaining: [] },
       });
-      const { rerender } = render(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-          shop={makeShopProps()}
-        />,
-      );
+      seedShop();
+      renderGame();
       expect(deckPileCount()).toBe(40);
       act(() => {
         useGame.setState({ addedCards: makeCards(500, 2) });
       });
-      rerender(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-          shop={makeShopProps()}
-        />,
-      );
       expect(deckPileCount()).toBe(42);
     });
 
@@ -391,7 +350,8 @@ describe("Game", () => {
         dealt: { hand: [], remaining: [] },
         cardEnhancementsById: new Map([[1, "gold"]]),
       });
-      renderGame({ shop: makeShopProps() });
+      seedShop();
+      renderGame();
       await user.click(screen.getByLabelText(/^Deck \(1 cards remaining\)$/));
       expect(
         document.querySelector(".deck-modal .card--enhancement-gold"),
