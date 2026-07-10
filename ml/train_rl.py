@@ -385,7 +385,7 @@ def main():
         "(purchase/reroll/pack-pick/use) fold in as an auxiliary cross-entropy "
         "toward the human's actual pick",
     )
-    parser.add_argument("--human-coef", type=float, default=1.0)
+    parser.add_argument("--human-coef", type=float, default=0.5)
     parser.add_argument(
         "--corrections",
         action="append",
@@ -393,7 +393,7 @@ def main():
         help="JSONL of human-play exports; advice-feedback shop corrections fold in "
         "as an auxiliary cross-entropy toward the human's corrected pick",
     )
-    parser.add_argument("--corrections-coef", type=float, default=1.0)
+    parser.add_argument("--corrections-coef", type=float, default=0.5)
     parser.add_argument(
         "--agreements",
         action="append",
@@ -401,7 +401,7 @@ def main():
         help="JSONL of human-play exports; explicit shop thumbs-up agreements fold "
         "in as an auxiliary cross-entropy toward the confirmed pick",
     )
-    parser.add_argument("--agreements-coef", type=float, default=1.0)
+    parser.add_argument("--agreements-coef", type=float, default=0.5)
     parser.add_argument(
         "--value-baseline",
         action="store_true",
