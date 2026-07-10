@@ -50,23 +50,32 @@ if [ -n "$GAE" ]; then
   value_flag+=(--gae "$GAE")
 fi
 
-# Optional offline distillation channels folded into each on-policy train step:
-# the PPO update on fresh self-play plus an auxiliary cross-entropy toward an
-# LLM teacher's and/or a human's shop picks (see train_rl.py --teacher /
+# Offline distillation channels folded into each on-policy train step: the PPO
+# update on fresh self-play plus an auxiliary cross-entropy toward an LLM
+# teacher's and/or a human's shop picks (see train_rl.py --teacher /
 # --corrections / --agreements). This keeps LLM and human shop signal *adding
 # to* the RL incumbent rather than training a standalone supervised competitor.
+#
+# Human data is the default: the committed human-play exports fold in as raw
+# decisions + feedback corrections/agreements at the benchmark-validated
+# coefficient 0.5 (the only channel that measured positive vs a PPO-only
+# control; 1.0 overweights it and hurts). Set HUMAN_DATA=NONE to disable, or
+# point HUMAN_DATA at a different directory of human-play JSONL exports.
+HUMAN_DATA="${HUMAN_DATA:-ml/data/human-play}"
 distill_flag=()
 if [ -n "${TEACHER:-}" ]; then
   distill_flag+=(--teacher "$TEACHER" --teacher-coef "${TEACHER_COEF:-1.0}")
 fi
-if [ -n "${HUMAN:-}" ]; then
-  distill_flag+=(--human "$HUMAN" --human-coef "${HUMAN_COEF:-1.0}")
-fi
-if [ -n "${CORRECTIONS:-}" ]; then
-  distill_flag+=(--corrections "$CORRECTIONS" --corrections-coef "${CORRECTIONS_COEF:-1.0}")
-fi
-if [ -n "${AGREEMENTS:-}" ]; then
-  distill_flag+=(--agreements "$AGREEMENTS" --agreements-coef "${AGREEMENTS_COEF:-1.0}")
+if [ "$HUMAN_DATA" != "NONE" ] && [ -d "$HUMAN_DATA" ]; then
+  for f in "$HUMAN_DATA"/*.jsonl; do
+    [ -e "$f" ] || continue
+    distill_flag+=(--human "$f" --corrections "$f" --agreements "$f")
+  done
+  distill_flag+=(
+    --human-coef "${HUMAN_COEF:-0.5}"
+    --corrections-coef "${CORRECTIONS_COEF:-0.5}"
+    --agreements-coef "${AGREEMENTS_COEF:-0.5}"
+  )
 fi
 
 mkdir -p "$OUTDIR"
