@@ -220,6 +220,8 @@ class CollectAuxLabelsTest(unittest.TestCase):
         defaults = dict(
             teacher=[],
             teacher_coef=1.0,
+            human=[],
+            human_coef=1.0,
             corrections=[],
             corrections_coef=1.0,
             agreements=[],
@@ -262,6 +264,14 @@ class CollectAuxLabelsTest(unittest.TestCase):
         finally:
             os.unlink(corrections)
         self.assertEqual(len(labels), 1)
+
+    def test_raw_human_shop_decisions_load_at_the_human_coef(self):
+        human = _write_jsonl([_teacher_record(runSeed=9)])
+        try:
+            labels = collect_aux_labels(self._args(human=[human], human_coef=2.5))
+        finally:
+            os.unlink(human)
+        self.assertEqual([(len(labels), labels[0][2])], [(1, 2.5)])
 
 
 class GameRewardsTest(unittest.TestCase):

@@ -59,6 +59,9 @@ distill_flag=()
 if [ -n "${TEACHER:-}" ]; then
   distill_flag+=(--teacher "$TEACHER" --teacher-coef "${TEACHER_COEF:-1.0}")
 fi
+if [ -n "${HUMAN:-}" ]; then
+  distill_flag+=(--human "$HUMAN" --human-coef "${HUMAN_COEF:-1.0}")
+fi
 if [ -n "${CORRECTIONS:-}" ]; then
   distill_flag+=(--corrections "$CORRECTIONS" --corrections-coef "${CORRECTIONS_COEF:-1.0}")
 fi

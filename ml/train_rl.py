@@ -151,14 +151,22 @@ def collect_aux_labels(args):
     signal *adding to* the RL incumbent instead of trying to replace it (see
     docs/ai-advisor/ml-pipeline.md, "Enhance the incumbent, never replace it").
     Each source keeps its own coefficient so a noisier channel can be trusted
-    less. `load_feedback_corrections`/`_agreements` are the same shop-context
-    loaders the supervised trainer uses, so a label is encoded identically here.
+    less. `load_shop_decisions` (raw human shop decisions) and
+    `load_feedback_corrections`/`_agreements` are the same shop-context loaders
+    the supervised trainer uses, so a label is encoded identically here.
     """
-    from dataset import load_feedback_agreements, load_feedback_corrections
+    from dataset import (
+        load_feedback_agreements,
+        load_feedback_corrections,
+        load_shop_decisions,
+    )
 
     labels = []
     for inputs, chosen in load_teacher_labels(args.teacher, v2=args.v2):
         labels.append((inputs, chosen, args.teacher_coef))
+    for path in args.human:
+        for inputs, chosen, _seed, _weight in load_shop_decisions(path, v2=args.v2):
+            labels.append((inputs, chosen, args.human_coef))
     for inputs, chosen, _seed, _weight in load_feedback_corrections(
         args.corrections, "shop", v2=args.v2
     ):
@@ -370,6 +378,15 @@ def main():
     )
     parser.add_argument("--teacher-coef", type=float, default=1.0)
     parser.add_argument(
+        "--human",
+        action="append",
+        default=[],
+        help="JSONL of human-play exports; raw human shop decisions "
+        "(purchase/reroll/pack-pick/use) fold in as an auxiliary cross-entropy "
+        "toward the human's actual pick",
+    )
+    parser.add_argument("--human-coef", type=float, default=1.0)
+    parser.add_argument(
         "--corrections",
         action="append",
         default=[],
@@ -457,8 +474,8 @@ def main():
     if aux_labels:
         print(
             f"{len(aux_labels)} auxiliary distillation labels "
-            f"(teacher coef {args.teacher_coef}, corrections coef {args.corrections_coef}, "
-            f"agreements coef {args.agreements_coef})"
+            f"(teacher coef {args.teacher_coef}, human coef {args.human_coef}, "
+            f"corrections coef {args.corrections_coef}, agreements coef {args.agreements_coef})"
         )
 
     device = resolve_device(args.device)
