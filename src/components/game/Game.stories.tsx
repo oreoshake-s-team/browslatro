@@ -4,8 +4,6 @@ import Game from "./Game";
 import { withGame } from "../../stories/decorators";
 import { MIXED_HAND } from "../../stories/fixtures";
 import type { GameState } from "../../store/game";
-import type { ShopProps } from "../shop/Shop";
-import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import type { ShopItem } from "../../items/shop";
 import type { PackOffer } from "../../items/packs";
 import { createJokerCatalog } from "../../items/jokers";
@@ -51,34 +49,14 @@ const SHOP_OFFERS: ReadonlyArray<ShopItem> = [
   },
 ];
 
-function makeShopProps(): ShopProps {
-  return {
-    money: 24,
-    equippedJokerCount: 1,
-    jokerCapacity: 5,
-    consumableCount: 1,
-    consumableCapacity: 2,
-    offers: SHOP_OFFERS,
-    vouchers: [VOUCHER_CATALOG[0]],
-    soldVoucherIds: new Set(),
-    ownedVoucherIds: new Set(),
-    onBuy: fn(),
-    onBuyVoucher: fn(),
-    onReroll: fn(),
-    onNext: fn(),
-  };
+function seedShopOpen(s: GameState): void {
+  s.setShopOffers([...SHOP_OFFERS]);
+  s.setCurrentAnteVouchers([VOUCHER_CATALOG[0]]);
 }
 
-function makePackOpenProps(): PackOpenModalProps {
-  return {
-    pack: CELESTIAL_PACK,
-    picksRemaining: 1,
-    pickedIndices: new Set<number>(),
-    consumableSlotsFull: false,
-    jokerSlotsFull: false,
-    onPick: fn(),
-    onClose: fn(),
-  };
+function seedPackOpen(s: GameState): void {
+  s.setOpenedPack(CELESTIAL_PACK);
+  s.setPackPicksRemaining(1);
 }
 
 function seedShopkeeping(s: GameState): void {
@@ -123,15 +101,29 @@ export const InRoundWithSelection: Story = {
 };
 
 export const ShopOpen: Story = {
-  args: { shop: makeShopProps() },
-  decorators: [withGame(seedShopkeeping)],
+  decorators: [
+    withGame((s) => {
+      seedShopkeeping(s);
+      seedShopOpen(s);
+    }),
+  ],
 };
 
 export const PackOpen: Story = {
-  args: { packOpen: makePackOpenProps() },
+  decorators: [
+    withGame((s) => {
+      dealMixedHand(s);
+      seedPackOpen(s);
+    }),
+  ],
 };
 
 export const ShopWithPackOpen: Story = {
-  args: { shop: makeShopProps(), packOpen: makePackOpenProps() },
-  decorators: [withGame(seedShopkeeping)],
+  decorators: [
+    withGame((s) => {
+      seedShopkeeping(s);
+      seedShopOpen(s);
+      seedPackOpen(s);
+    }),
+  ],
 };

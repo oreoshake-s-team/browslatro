@@ -11,8 +11,6 @@ import AutopilotSessionProvider from "./components/game/AutopilotSessionProvider
 import AppOverlays from "./components/game/AppOverlays";
 import { useGameSession } from "./components/game/gameSession";
 import { didRestoreFromSnapshot } from "./save/restore";
-import { useShopController } from "./hooks/useShopController";
-import { usePackOpenController } from "./hooks/usePackOpenController";
 import Sidebar from "./components/hud/Sidebar";
 import LiveAnnouncer from "./components/system/LiveAnnouncer";
 import AdminModeController from "./components/system/AdminModeController";
@@ -64,10 +62,6 @@ function AppContent() {
 
   useRunInitialization();
 
-  const shopProps = useShopController();
-
-  const packOpenProps = usePackOpenController();
-
   const appStyle = useDevAnimationSpeedStyle(animationSpeed);
 
   return (
@@ -97,8 +91,6 @@ function AppContent() {
         scoringId={currentScoringId}
         goldScoringId={currentGoldScoringId}
         steelScoringId={currentSteelScoringId}
-        shop={shopProps}
-        packOpen={packOpenProps}
         onCardDiscardEnd={handleCardDiscardEnd}
       />
       <AppOverlays />

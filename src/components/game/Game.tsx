@@ -8,9 +8,9 @@ import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
 import { foolCopyTargetText } from "../../i18n/foolCopyTarget";
-import type { ShopProps } from "../shop/Shop";
-import type { PackOpenModalProps } from "../shop/PackOpenModal";
 import { packShowsHandArea } from "../../items/packs";
+import { useShopController } from "../../hooks/useShopController";
+import { usePackOpenController } from "../../hooks/usePackOpenController";
 import ModifierPanel from "./ModifierPanel";
 import AutopilotControls from "./AutopilotControls";
 import { useAutopilotSession } from "./autopilotSession";
@@ -41,8 +41,6 @@ interface GameProps {
   scoringId?: number | null;
   goldScoringId?: number | null;
   steelScoringId?: number | null;
-  shop?: ShopProps;
-  packOpen?: PackOpenModalProps;
   onCardDiscardEnd: (card: Card) => void;
 }
 
@@ -54,11 +52,11 @@ export default function Game({
   scoringId = null,
   goldScoringId = null,
   steelScoringId = null,
-  shop,
-  packOpen,
   onCardDiscardEnd,
 }: GameProps) {
   const autopilotSession = useAutopilotSession();
+  const shop = useShopController();
+  const packOpen = usePackOpenController();
   const { t, i18n } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
