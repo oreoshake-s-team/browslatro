@@ -41,6 +41,24 @@ headless self-play (search expert)            human play (UI capture)
 
 The production hand policy [`advisor-policy-v9`](../../public/models/advisor-policy-v9.onnx) was produced exactly this way: ~20k realistic shop-driven games + weighted human play + a distribution-matched LLM teacher. It benchmarks on par with the prior `advisor-policy-v8` (within noise on `avgBlinds`) while being trained on the correct distribution.
 
+### Enhance the incumbent, never replace it — every channel warm-starts, never competes
+
+**New training signal — human play or an LLM teacher — must always be folded *into* the current best model, never used to train a standalone model from scratch that is then benchmarked against it.** A fresh-init model trained only (or mostly) on one new channel throws away everything the incumbent already learned; against a matured RL lineage it loses by a wide margin, and that loss says nothing about whether the new signal was useful. The comparison "new-signal model vs incumbent" is the wrong experiment. The right one is **"incumbent vs incumbent-plus-new-signal."**
+
+The three sources are complementary channels of **one shared policy**, not rival policies that replace each other:
+
+- the **outcome / RL policy** (rollout labels + on-policy PPO self-play) — the backbone that actually knows how to win;
+- **human play & corrections** (`--human`, `--corrections`, `--agreements`) — real, in-distribution judgment;
+- the **LLM teacher** (`--teacher`) — strategic priors on the contested decisions the cheap student gets wrong.
+
+They reinforce the same weights. The mechanics that keep them additive:
+
+- **Warm-start, always.** Every fine-tune starts from the incumbent. Supervised `train.py` folds `--human` / `--teacher` / `--corrections` in at weights *on top of* the base rollout data; on-policy `train_rl.py --init <incumbent>` warm-starts the PPO fine-tune from the incumbent, so the policy improves the incumbent's weights **in place** rather than starting over.
+- **Additive, weighted losses — never a replacement objective.** A new channel contributes a weighted term (`--teacher-weight`, `--human-weight`) that *nudges* the shared model; it never becomes the whole objective of a separate model.
+- **Ship only on a win against the incumbent** ([evaluation gate](#evaluation--is-the-new-model-better)), and keep the incumbent for rollback.
+
+**Evidence — the shop LLM-teacher distillation (`#1338`).** A from-scratch supervised model trained on a rollout base + ~1,400 LLM-teacher labels scored ~3.0 `avgBlinds` against the RL-trained incumbent (`advisor-shop-policy-v16`) at ~5.1 — ~40% worse — purely because it discarded the incumbent's weights; the teacher labels even slightly underperformed the rollout-only baseline. Folding the same labels into a fine-tune warm-started from the incumbent (`train_rl.py --init`) instead kept the policy competitive (~4.9) and let the teacher's contribution be measured against a PPO-only control. Same data, same teacher — the only thing that changed was whether it **added to** the incumbent or tried to **replace** it.
+
 ### Encoding invariant — training data must never diverge from the runtime encoding
 
 **Every training input channel must always be able to train a model in the *current runtime* encoding — human-play imports especially. Human data must always be importable.** When the feature encoding advances (e.g. shop V1 → V2 "use-aware"), migrate **all** channels in the same change so none is stranded on a dead encoding:
@@ -269,7 +287,7 @@ Shop and pack decisions are a separate model with a separate [build-aware, use-a
 The idea is [knowledge distillation](https://en.wikipedia.org/wiki/Knowledge_distillation): spend expensive [LLM](./llm-advisor.md) calls **offline** to relabel exactly the states where the cheap student is weak, then bake that judgment into the student.
 
 - **`scripts/labelDisagreements.ts`** — finds states where the ONNX policy's top pick disagrees with the search expert, calls `requestAdvice` (a `createRequestAdviceTeacher(apiKey)` wrapping the [LLM advisor](./llm-advisor.md), model overridable via `ADVISOR_MODEL`) on those states, and writes the teacher's `recommendationIndex` as the new `chosen` — emitting the **same `schemaVersion: 1` JSONL** the trainer already ingests. A `--min-score-fraction` **quality gate** drops teacher labels whose chosen action can't be justified against the engine's own numbers, so noise isn't distilled.
-- **`ml/train.py --teacher`** — trains those labels at `--teacher-weight`, never held out.
+- **`ml/train.py --teacher`** — folds those labels into supervised training at `--teacher-weight`, never held out, **on top of** the base rollout data — never as a standalone objective (see [enhance the incumbent, never replace it](#enhance-the-incumbent-never-replace-it--every-channel-warm-starts-never-competes)).
 - **`scripts/distillPolicy.ts`** — orchestrates the full cycle (generate → label → train → benchmark) and a `shipVerdict` that ships only on a positive `avgBlinds` delta.
 
 The reason this is gated on outcome-benchmarking rather than validation accuracy is the [trap noted above](#mldatasetpy--ingestion--weighting): teacher labels are valuable *because* they diverge from the expert.
