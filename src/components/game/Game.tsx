@@ -14,6 +14,7 @@ import { usePackOpenController } from "../../hooks/usePackOpenController";
 import ModifierPanel from "./ModifierPanel";
 import AutopilotControls from "./AutopilotControls";
 import { useAutopilotSession } from "./autopilotSession";
+import { useGameSession } from "./gameSession";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 const Shop = lazy(() => import("../shop/Shop"));
 const PackOpenModal = lazy(() => import("../shop/PackOpenModal"));
@@ -33,33 +34,23 @@ import {
 } from "../../items/bosses";
 import { fullDeckPile } from "../../cards/deckBuild";
 
-interface GameProps {
-  onSubmitHand: () => void;
-  onDiscard: () => void;
-  canDiscard: boolean;
-  isScoring?: boolean;
-  scoringId?: number | null;
-  goldScoringId?: number | null;
-  steelScoringId?: number | null;
-  onCardDiscardEnd: (card: Card) => void;
-}
-
-export default function Game({
-  onSubmitHand,
-  onDiscard,
-  canDiscard,
-  isScoring = false,
-  scoringId = null,
-  goldScoringId = null,
-  steelScoringId = null,
-  onCardDiscardEnd,
-}: GameProps) {
+export default function Game() {
+  const {
+    submitHand: onSubmitHand,
+    discardSelected: onDiscard,
+    isScoring,
+    currentScoringId: scoringId,
+    currentGoldScoringId: goldScoringId,
+    currentSteelScoringId: steelScoringId,
+    handleCardDiscardEnd: onCardDiscardEnd,
+  } = useGameSession();
   const autopilotSession = useAutopilotSession();
   const shop = useShopController();
   const packOpen = usePackOpenController();
   const { t, i18n } = useTranslation();
   const hand = useGame((s) => s.dealt.hand);
   const remaining = useGame((s) => s.dealt.remaining);
+  const remainingDiscards = useGame((s) => s.remainingDiscards);
   const baseDeckCards = useGame((s) => s.baseDeckCards);
   const destroyedCardIds = useGame((s) => s.destroyedCardIds);
   const addedCards = useGame((s) => s.addedCards);
@@ -153,6 +144,12 @@ export default function Game({
     () => remaining.filter((c) => !destroyedCardIds.has(c.id)),
     [remaining, destroyedCardIds],
   );
+
+  const canDiscard =
+    selectedIds.size > 0 &&
+    remainingDiscards > 0 &&
+    discardingIds.size === 0 &&
+    !isScoring;
 
   const dragging = dragController.draggingConsumableIndex !== null;
   const draggingJoker = dragController.draggingJokerIndex !== null;

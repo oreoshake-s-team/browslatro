@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
 import Game from "./Game";
+import GameSessionProvider from "./GameSessionProvider";
 import { withGame } from "../../stories/decorators";
 import { MIXED_HAND } from "../../stories/fixtures";
 import type { GameState } from "../../store/game";
@@ -70,17 +70,14 @@ const meta = {
   title: "Game/Game",
   component: Game,
   parameters: { layout: "fullscreen" },
-  decorators: [withGame(dealMixedHand)],
-  args: {
-    onSubmitHand: fn(),
-    onDiscard: fn(),
-    canDiscard: true,
-    isScoring: false,
-    scoringId: null,
-    goldScoringId: null,
-    steelScoringId: null,
-    onCardDiscardEnd: fn(),
-  },
+  decorators: [
+    withGame(dealMixedHand),
+    (Story) => (
+      <GameSessionProvider>
+        <Story />
+      </GameSessionProvider>
+    ),
+  ],
 } satisfies Meta<typeof Game>;
 
 export default meta;
