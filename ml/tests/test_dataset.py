@@ -225,10 +225,36 @@ class LoadShopDecisionsTest(unittest.TestCase):
             self.assertEqual(len(load_shop_decisions(path)), 1)
 
     def test_skips_non_shop_run_events(self):
-        non_shop = dict(shop_record(), kind="consumable-use")
+        non_shop = dict(shop_record(), kind="joker-sell")
         with tempfile.TemporaryDirectory() as directory:
             path = write_jsonl(directory, "other.jsonl", [non_shop])
             self.assertEqual(load_shop_decisions(path), [])
+
+    def test_loads_an_enriched_consumable_use_record(self):
+        record = dict(
+            shop_record(),
+            kind="consumable-use",
+            item={"itemType": "tarot", "id": "the-hermit", "name": "The Hermit", "cost": 0},
+            offers=[],
+            candidates=[
+                {"itemType": "tarot", "category": "tarot-economy", "cost": 0, "isReroll": False, "isLeave": False, "isUse": True},
+                {"itemType": "", "category": "other", "cost": 0, "isReroll": False, "isLeave": True, "isUse": False},
+            ],
+            chosenIndex=0,
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "use.jsonl", [record])
+            self.assertEqual(len(load_shop_decisions(path, v2=True)), 1)
+
+    def test_skips_a_thin_legacy_consumable_use_record(self):
+        record = dict(
+            shop_record(),
+            kind="consumable-use",
+            consumable={"id": "the-hermit", "name": "The Hermit", "consumableKind": "tarot"},
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = write_jsonl(directory, "legacy.jsonl", [record])
+            self.assertEqual(load_shop_decisions(path, v2=True), [])
 
     def test_tolerates_shop_advice_feedback_records(self):
         with tempfile.TemporaryDirectory() as directory:

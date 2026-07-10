@@ -1,9 +1,9 @@
-import { categorizeShopItem } from "../src/ai/advisor/shopCategory";
-import { shopItemAttributes } from "../src/ai/advisor/shopCandidateAttributes";
-import { packFeatureVector } from "../src/ai/advisor/packFeatures";
-import { consumableUseCandidate } from "../src/ai/headlessShopAgent";
-import type { Consumable } from "../src/items/consumables";
-import type { ShopItem } from "../src/items/shop";
+import { categorizeShopItem } from "./advisor/shopCategory";
+import { shopItemAttributes } from "./advisor/shopCandidateAttributes";
+import { packFeatureVector } from "./advisor/packFeatures";
+import { consumableUseCandidate } from "./headlessShopAgent";
+import type { Consumable } from "../items/consumables";
+import type { ShopItem } from "../items/shop";
 
 export function shopItemSnapshot(item: ShopItem): { itemType: string; category: string; attributes: number[]; packFeatures?: ReadonlyArray<number>; advancesHands?: ReadonlyArray<string>; id: string; name: string; cost: number } {
   const category = categorizeShopItem(item);

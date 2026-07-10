@@ -33,7 +33,7 @@ import {
   shopCandidateRows,
   shopItemSnapshot,
   useItemSnapshot,
-} from "./shopCandidateRows";
+} from "../src/ai/shopCandidateRows";
 import { shopBuildSummary } from "../src/ai/advisor/shopEncoding";
 import type { Joker } from "../src/items/jokers/types";
 import type { HandStats } from "../src/scoring/handStats";
