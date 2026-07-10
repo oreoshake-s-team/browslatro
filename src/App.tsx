@@ -28,14 +28,7 @@ export { getScoringStepMs } from "./hooks/useScoringStepMs";
 
 function AppContent() {
   const { t } = useTranslation();
-  const {
-    remainingDiscards,
-    runStats,
-    selectedIds,
-    discardingIds,
-    pendingRunSelect,
-    selectedDeck,
-  } = useAppViewModel();
+  const { runStats, pendingRunSelect, selectedDeck } = useAppViewModel();
   useChanceOverrides();
   useInitialDeal();
   const highVisibility = usePreferences((state) => state.highVisibility);
@@ -49,16 +42,7 @@ function AppContent() {
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
 
-  const {
-    submitHand,
-    discardSelected,
-    isScoring,
-    currentScoringId,
-    currentGoldScoringId,
-    currentSteelScoringId,
-    handleCardDiscardEnd,
-    startNewGame,
-  } = useGameSession();
+  const { startNewGame } = useGameSession();
 
   useRunInitialization();
 
@@ -78,21 +62,7 @@ function AppContent() {
         {pendingRunSelect ? t("app.titleMenu") : t("app.titleRun")}
       </h1>
       <Sidebar onNewGame={startNewGame} />
-      <Game
-        onSubmitHand={submitHand}
-        onDiscard={discardSelected}
-        canDiscard={
-          selectedIds.size > 0 &&
-          remainingDiscards > 0 &&
-          discardingIds.size === 0 &&
-          !isScoring
-        }
-        isScoring={isScoring}
-        scoringId={currentScoringId}
-        goldScoringId={currentGoldScoringId}
-        steelScoringId={currentSteelScoringId}
-        onCardDiscardEnd={handleCardDiscardEnd}
-      />
+      <Game />
       <AppOverlays />
       <LiveAnnouncer />
       <AdminModeController />

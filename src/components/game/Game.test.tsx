@@ -1,8 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ComponentProps } from "react";
 import { beforeEach } from "vitest";
 import Game from "./Game";
+import GameSessionProvider from "./GameSessionProvider";
 import { useGame } from "../../store/game";
 import { usePreferences } from "../system/preferences";
 import type { Card } from "../../cards/types";
@@ -13,15 +13,11 @@ import { createPlanetCatalog } from "../../items/planets";
 import { createTarotCatalog } from "../../items/tarots";
 import { createSpectralCatalog } from "../../items/spectrals";
 
-function renderGame(overrides: Partial<ComponentProps<typeof Game>> = {}) {
+function renderGame() {
   return render(
-    <Game
-      onSubmitHand={vi.fn()}
-      onDiscard={vi.fn()}
-      canDiscard={true}
-      onCardDiscardEnd={vi.fn()}
-      {...overrides}
-    />,
+    <GameSessionProvider>
+      <Game />
+    </GameSessionProvider>,
   );
 }
 
@@ -85,13 +81,23 @@ describe("Game", () => {
     useGame.getState().resetGame();
   });
 
-  test("Submit Hand button calls onSubmitHand when a card is selected", async () => {
-    const user = userEvent.setup();
-    const onSubmitHand = vi.fn();
-    useGame.getState().setSelectedIds(new Set([1]));
-    renderGame({ onSubmitHand });
-    await user.click(screen.getByText(/Submit Hand/));
-    expect(onSubmitHand).toHaveBeenCalledTimes(1);
+  test("submitting a selected hand marks the game region busy", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+      useGame.getState().setDealt({ hand: makeCards(1, 8), remaining: [] });
+      useGame.getState().setSelectedIds(new Set([1, 2]));
+      renderGame();
+      await user.click(screen.getByText(/Submit Hand/));
+      expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
+      for (let i = 0; i < 60 && vi.getTimerCount() > 0; i += 1) {
+        act(() => {
+          vi.runOnlyPendingTimers();
+        });
+      }
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("Submit Hand button is disabled when no cards are selected", () => {
@@ -108,13 +114,8 @@ describe("Game", () => {
     ).not.toBeDisabled();
   });
 
-  test("marks the game region busy while a hand is scoring", () => {
-    renderGame({ isScoring: true });
-    expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "true");
-  });
-
-  test("the game region is not busy when no hand is scoring (negative)", () => {
-    renderGame({ isScoring: false });
+  test("the game region is not busy before a hand is submitted (negative)", () => {
+    renderGame();
     expect(screen.getByRole("main")).toHaveAttribute("aria-busy", "false");
   });
 
@@ -232,31 +233,41 @@ describe("Game", () => {
     expect(screen.queryByTestId("hand-cards")).not.toBeInTheDocument();
   });
 
-  test("Discard button calls onDiscard when enabled", async () => {
+  test("clicking Discard starts discarding the selected cards", async () => {
     const user = userEvent.setup();
-    const onDiscard = vi.fn();
-    renderGame({ onDiscard, canDiscard: true });
+    useGame.getState().setDealt({ hand: makeCards(1, 8), remaining: [] });
+    useGame.getState().setSelectedIds(new Set([1, 2]));
+    renderGame();
     await user.click(screen.getByText(/Discard/));
-    expect(onDiscard).toHaveBeenCalledTimes(1);
+    expect(useGame.getState().discardingIds).toEqual(new Set([1, 2]));
   });
 
-  test("Discard button is disabled when canDiscard is false", () => {
-    renderGame({ canDiscard: false });
+  test("Discard button is disabled when no cards are selected (negative)", () => {
+    useGame.getState().setSelectedIds(new Set());
+    renderGame();
     expect(screen.getByText(/Discard/)).toBeDisabled();
   });
 
-  test("Discard button is enabled when canDiscard is true", () => {
-    renderGame({ canDiscard: true });
+  test("Discard button is disabled when no discards remain (negative)", () => {
+    useGame.getState().setSelectedIds(new Set([1]));
+    useGame.getState().setRemainingDiscards(0);
+    renderGame();
+    expect(screen.getByText(/Discard/)).toBeDisabled();
+  });
+
+  test("Discard button is enabled when cards are selected and discards remain", () => {
+    useGame.getState().setSelectedIds(new Set([1]));
+    renderGame();
     expect(screen.getByText(/Discard/)).not.toBeDisabled();
   });
 
   test("Discard button uses the neutral secondary variant", () => {
-    renderGame({ canDiscard: true });
+    renderGame();
     expect(screen.getByText(/Discard/)).toHaveClass("btn--secondary");
   });
 
   test("Discard button does not use the destructive danger variant", () => {
-    renderGame({ canDiscard: true });
+    renderGame();
     expect(screen.getByText(/Discard/)).not.toHaveClass("btn--danger");
   });
 
@@ -386,26 +397,11 @@ describe("Game", () => {
         baseDeckCards: base,
         dealt: { hand: [], remaining: makeCards(1, 10) },
       });
-      const { rerender } = render(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-        />,
-      );
+      renderGame();
       expect(deckPileCount()).toBe(10);
       act(() => {
         useGame.setState({ destroyedCardIds: new Set([1, 2]) });
       });
-      rerender(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-        />,
-      );
       expect(deckPileCount()).toBe(8);
     });
 
@@ -438,26 +434,11 @@ describe("Game", () => {
         baseDeckCards: makeCards(1, 40),
         dealt: { hand: [], remaining: makeCards(1, 10) },
       });
-      const { rerender } = render(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-        />,
-      );
+      renderGame();
       const before = deckPileCount();
       act(() => {
         useGame.setState({ destroyedCardIds: new Set([3, 4, 5]) });
       });
-      rerender(
-        <Game
-          onSubmitHand={vi.fn()}
-          onDiscard={vi.fn()}
-          canDiscard={true}
-          onCardDiscardEnd={vi.fn()}
-        />,
-      );
       expect(deckPileCount()).toBe(before - 3);
     });
   });
