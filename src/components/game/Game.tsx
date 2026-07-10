@@ -1,9 +1,6 @@
-import { Suspense, lazy, useMemo } from "react";
+import { Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import "./Game.css";
-import type { Card } from "../../cards/types";
-import HandComponent from "../cards/Hand";
-import DeckPile from "../cards/DeckPile";
 import Jokers from "../jokers/Jokers";
 import Consumables from "../consumables/Consumables";
 import { foolCopyTargetText } from "../../i18n/foolCopyTarget";
@@ -12,6 +9,8 @@ import { useShopController } from "../../hooks/useShopController";
 import { usePackOpenController } from "../../hooks/usePackOpenController";
 import ModifierPanel from "./ModifierPanel";
 import PlayControls from "./PlayControls";
+import HandSection from "./HandSection";
+import GameOverlayDeck from "./GameOverlayDeck";
 import { useGameSession } from "./gameSession";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 const Shop = lazy(() => import("../shop/Shop"));
@@ -23,52 +22,23 @@ import { useDragController } from "../../hooks/useDragController";
 import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { useCeruleanForcedCard } from "../../hooks/useCeruleanForcedCard";
 import { play } from "../system/sounds";
-import { announce } from "../system/LiveAnnouncer";
 import { usePreferences } from "../system/preferences";
-import {
-  bossForcesCardSelection,
-  bossHidesJokers,
-  debuffedHandIds,
-} from "../../items/bosses";
-import { fullDeckPile } from "../../cards/deckBuild";
+import { bossHidesJokers } from "../../items/bosses";
 
 export default function Game() {
-  const {
-    isScoring,
-    currentScoringId: scoringId,
-    currentGoldScoringId: goldScoringId,
-    currentSteelScoringId: steelScoringId,
-    handleCardDiscardEnd: onCardDiscardEnd,
-  } = useGameSession();
+  const { isScoring } = useGameSession();
   const shop = useShopController();
   const packOpen = usePackOpenController();
   const { t, i18n } = useTranslation();
-  const hand = useGame((s) => s.dealt.hand);
-  const remaining = useGame((s) => s.dealt.remaining);
-  const baseDeckCards = useGame((s) => s.baseDeckCards);
-  const destroyedCardIds = useGame((s) => s.destroyedCardIds);
-  const addedCards = useGame((s) => s.addedCards);
-  const cardEnhancementsById = useGame((s) => s.cardEnhancementsById);
-  const cardSealsById = useGame((s) => s.cardSealsById);
   const selectedIds = useGame((s) => s.selectedIds);
-  const discardingIds = useGame((s) => s.discardingIds);
-  const newlyDrawnIds = useGame((s) => s.newlyDrawnIds);
   const jokers = useGame((s) => s.jokers);
   const jokerPulseCounters = useGame((s) => s.jokerPulseCounters);
   const consumables = useGame((s) => s.consumables);
   const lastUsedConsumable = useGame((s) => s.lastUsedConsumable);
-  const scoringPulseTick = useGame((s) => s.scoringIndex);
-  const luckyMultProcIds = useGame((s) => s.luckyMultProcIds);
-  const luckyMoneyProcIds = useGame((s) => s.luckyMoneyProcIds);
-  const handPlaySignal = useGame((s) => s.handPlaySignal);
-  const toggleCard = useGame((s) => s.toggleCard);
-  const forcedCardId = useGame((s) => s.forcedCardId);
-  const setHandDisplayOrder = useGame((s) => s.setHandDisplayOrder);
   const reorderJokers = useGame((s) => s.reorderJokers);
   const blind = useGame((s) => s.blind);
   const currentBoss = useGame((s) => s.currentBoss);
   const adminMode = usePreferences((s) => s.adminMode);
-  const playedCardKeysThisAnte = useGame((s) => s.playedCardKeysThisAnte);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const selectedDeck = useGame((s) => s.selectedDeck);
   const nopeTriggerKey = useGame((s) => s.nopeTriggerKey);
@@ -92,49 +62,13 @@ export default function Game() {
     sellJoker,
   });
 
-  const debuffedIds = debuffedHandIds(
-    hand,
-    currentBoss,
-    blind === 3,
-    playedCardKeysThisAnte,
-  );
   useCeruleanForcedCard();
-  const forcesCard = blind === 3 && bossForcesCardSelection(currentBoss);
-  const handleToggleCard = (card: Card) => {
-    if (forcesCard && forcedCardId === card.id) {
-      announce(t("a11y.cardLockedAttempt"));
-      return;
-    }
-    toggleCard(card);
-  };
   const consumableCapacity =
     consumableCapacityFor(ownedVoucherIds);
   const foolCopyTarget = foolCopyTargetText(t, i18n.language, lastUsedConsumable);
   const jokerCapacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
-  const overlayDeckRemaining = useMemo(
-    () =>
-      fullDeckPile(
-        baseDeckCards,
-        destroyedCardIds,
-        addedCards,
-        cardEnhancementsById,
-        cardSealsById,
-      ).remaining,
-    [
-      baseDeckCards,
-      destroyedCardIds,
-      addedCards,
-      cardEnhancementsById,
-      cardSealsById,
-    ],
-  );
-  const inHandRemaining = useMemo(
-    () => remaining.filter((c) => !destroyedCardIds.has(c.id)),
-    [remaining, destroyedCardIds],
-  );
 
   const dragging = dragController.draggingConsumableIndex !== null;
-  const draggingJoker = dragController.draggingJokerIndex !== null;
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
   const handVisible = !shop && !packOpen;
   const holdsHandConsumable = consumables.some(
@@ -180,49 +114,13 @@ export default function Game() {
       onDragEnd={dragController.onConsumableDragEnd}
     />
   );
-  const handNode = (
-    <HandComponent
-      hand={hand}
-      remaining={inHandRemaining}
-      selectedIds={selectedIds}
-      forcedCardId={forcesCard ? forcedCardId : null}
-      discardingIds={discardingIds}
-      newlyDrawnIds={newlyDrawnIds}
-      debuffedIds={debuffedIds}
-      scoringId={scoringId}
-      scoringPulseTick={scoringPulseTick}
-      goldScoringId={goldScoringId}
-      steelScoringId={steelScoringId}
-      luckyMultProcIds={luckyMultProcIds}
-      luckyMoneyProcIds={luckyMoneyProcIds}
-      handPlaySignal={handPlaySignal}
-      onToggleCard={handleToggleCard}
-      onCardDiscardEnd={onCardDiscardEnd}
-      onDisplayOrderChange={setHandDisplayOrder}
-      consumableDropEnabled={dragging}
-      onConsumableSellDrop={dragController.onConsumableDropOnDeck}
-      jokerDropEnabled={draggingJoker}
-      onJokerSellDrop={dragController.onJokerDropOnDeck}
-    />
-  );
-  const overlayDeckNode = (
-    <div className="game-overlay-deck">
-      <DeckPile
-        remaining={overlayDeckRemaining}
-        consumableDropEnabled={dragging}
-        onConsumableDrop={dragController.onConsumableDropOnDeck}
-        jokerDropEnabled={draggingJoker}
-        onJokerDrop={dragController.onJokerDropOnDeck}
-      />
-    </div>
-  );
 
   return (
     <main className="game" aria-label={t("a11y.game")} aria-busy={isScoring}>
       <div className="game-top-row">
         {!packOpen && jokersNode}
         {!packOpen && consumablesNode}
-        {shop && !packOpen && overlayDeckNode}
+        {shop && !packOpen && <GameOverlayDeck />}
       </div>
       {packOpen && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
@@ -234,9 +132,9 @@ export default function Game() {
                 <div className="game-top-row">
                   {jokersNode}
                   {consumablesNode}
-                  {packShowsHand && !showPackHand && overlayDeckNode}
+                  {packShowsHand && !showPackHand && <GameOverlayDeck />}
                 </div>
-                {showPackHand && handNode}
+                {showPackHand && <HandSection />}
               </>
             }
           />
@@ -247,7 +145,7 @@ export default function Game() {
           <Shop {...shop} disabled={!!packOpen} foolCopyTarget={foolCopyTarget} />
         </Suspense>
       )}
-      {handVisible && handNode}
+      {handVisible && <HandSection />}
       {!shop && !packOpen && <PlayControls />}
       {adminMode && <ModifierPanel />}
       <Suspense fallback={<LazyChunkSpinner />}>
