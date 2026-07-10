@@ -8,11 +8,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from train_rl import (
     clipped_surrogate,
     clipped_surrogate_torch,
+    collect_aux_labels,
     pearson,
     gae_advantages,
     game_rewards,
     load_selfplay,
     load_selfplay_games,
+    load_teacher_labels,
     masked_entropy,
     masked_log_probs,
     normalized_advantages,
@@ -128,6 +130,138 @@ class RewardToGoTest(unittest.TestCase):
         finally:
             os.unlink(path)
         self.assertEqual((plain[0][2], rtg[0][2]), (10.0, 4.0))
+
+
+def _write_jsonl(records):
+    import json
+
+    handle = tempfile.NamedTemporaryFile("w", suffix=".jsonl", delete=False)
+    for record in records:
+        handle.write(json.dumps(record) + "\n")
+    handle.close()
+    return handle.name
+
+
+def _teacher_record(**overrides):
+    record = {
+        "schemaVersion": 4,
+        "runSeed": 1,
+        "ante": 3,
+        "round": 6,
+        "blind": 0,
+        "money": 8,
+        "kind": "purchase",
+        "item": {"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 5},
+        "offers": [{"itemType": "joker", "id": "jolly", "name": "jolly", "cost": 5}],
+    }
+    record.update(overrides)
+    return record
+
+
+def _shop_feedback_record(**overrides):
+    record = {
+        "schemaVersion": 3,
+        "kind": "advice-feedback",
+        "runSeed": 7,
+        "ante": 1,
+        "round": 3,
+        "blind": 0,
+        "money": 8,
+        "advisorKind": "policy",
+        "model": "advisor-shop-policy-v2",
+        "recommendationIndex": 0,
+        "alternativeIndex": None,
+        "verdict": "bad",
+        "correctedIndex": 1,
+        "source": "explicit",
+        "decision": {
+            "context": "shop",
+            "state": {
+                "money": 8,
+                "ante": 1,
+                "jokers": [],
+                "jokerCapacity": 5,
+                "consumables": [],
+                "consumableCapacity": 2,
+                "ownedVoucherIds": [],
+            },
+            "candidates": [
+                {"action": "buy", "item": {"itemType": "joker", "id": "jolly", "name": "Jolly Joker", "cost": 5}},
+                {"action": "leave"},
+            ],
+        },
+    }
+    record.update(overrides)
+    return record
+
+
+class LoadTeacherLabelsTest(unittest.TestCase):
+    def test_skips_records_not_marked_teacher_labeled(self):
+        path = _write_jsonl([_teacher_record()])
+        try:
+            labels = load_teacher_labels([path])
+        finally:
+            os.unlink(path)
+        self.assertEqual(labels, [])
+
+    def test_loads_a_teacher_labeled_decision(self):
+        path = _write_jsonl([_teacher_record(teacherLabeled=True)])
+        try:
+            labels = load_teacher_labels([path])
+        finally:
+            os.unlink(path)
+        self.assertEqual(len(labels), 1)
+
+
+class CollectAuxLabelsTest(unittest.TestCase):
+    def _args(self, **overrides):
+        from argparse import Namespace
+
+        defaults = dict(
+            teacher=[],
+            teacher_coef=1.0,
+            corrections=[],
+            corrections_coef=1.0,
+            agreements=[],
+            agreements_coef=1.0,
+            v2=False,
+        )
+        defaults.update(overrides)
+        return Namespace(**defaults)
+
+    def test_no_sources_yields_no_labels(self):
+        labels = collect_aux_labels(self._args())
+        self.assertEqual(labels, [])
+
+    def test_unions_teacher_corrections_agreements_each_tagged_with_its_coef(self):
+        teacher = _write_jsonl([_teacher_record(teacherLabeled=True)])
+        corrections = _write_jsonl([_shop_feedback_record()])
+        agreements = _write_jsonl(
+            [_shop_feedback_record(verdict="good", recommendationIndex=0, correctedIndex=None)]
+        )
+        try:
+            labels = collect_aux_labels(
+                self._args(
+                    teacher=[teacher],
+                    teacher_coef=2.0,
+                    corrections=[corrections],
+                    corrections_coef=3.0,
+                    agreements=[agreements],
+                    agreements_coef=4.0,
+                )
+            )
+        finally:
+            for path in (teacher, corrections, agreements):
+                os.unlink(path)
+        self.assertEqual(sorted({coef for _inputs, _chosen, coef in labels}), [2.0, 3.0, 4.0])
+
+    def test_human_corrections_load_without_a_return_field(self):
+        corrections = _write_jsonl([_shop_feedback_record()])
+        try:
+            labels = collect_aux_labels(self._args(corrections=[corrections], corrections_coef=5.0))
+        finally:
+            os.unlink(corrections)
+        self.assertEqual(len(labels), 1)
 
 
 class GameRewardsTest(unittest.TestCase):

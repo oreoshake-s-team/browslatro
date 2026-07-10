@@ -112,6 +112,64 @@ def load_selfplay_games(paths, v2=False):
     return games
 
 
+def load_teacher_labels(paths, v2=False):
+    """Yields (candidate_vectors, chosen_index) for LLM-teacher-labeled shops.
+
+    Only records the shop-teacher generator marked ``teacherLabeled`` are used
+    (the LLM was consulted on a contested shop and its pick is the label). These
+    carry no ``return`` field, so ``load_selfplay`` ignores them — they train the
+    policy only through the auxiliary distillation cross-entropy term, pulling it
+    toward the teacher's choice on the states the teacher judged.
+    """
+    encode = encode_shop_decision_v2 if v2 else encode_shop_decision
+    labels = []
+    for path in paths:
+        with open(path, encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                record = json.loads(line)
+                if record.get("teacherLabeled") is not True:
+                    continue
+                inputs, chosen = encode(record)
+                if not inputs or chosen < 0 or chosen >= len(inputs):
+                    continue
+                labels.append((inputs, chosen))
+    return labels
+
+
+def collect_aux_labels(args):
+    """Gathers every offline distillation channel into one ``(inputs, chosen,
+    coef)`` pool.
+
+    The RL trainer's outcome signal is realized ``return``; these channels have
+    no return, so they can only enter the fine-tune as an auxiliary
+    cross-entropy that pulls the warm-started policy toward a human/LLM choice
+    on the states they cover. Folding them here — rather than training a
+    standalone supervised model on them — is what keeps human and LLM shop
+    signal *adding to* the RL incumbent instead of trying to replace it (see
+    docs/ai-advisor/ml-pipeline.md, "Enhance the incumbent, never replace it").
+    Each source keeps its own coefficient so a noisier channel can be trusted
+    less. `load_feedback_corrections`/`_agreements` are the same shop-context
+    loaders the supervised trainer uses, so a label is encoded identically here.
+    """
+    from dataset import load_feedback_agreements, load_feedback_corrections
+
+    labels = []
+    for inputs, chosen in load_teacher_labels(args.teacher, v2=args.v2):
+        labels.append((inputs, chosen, args.teacher_coef))
+    for inputs, chosen, _seed, _weight in load_feedback_corrections(
+        args.corrections, "shop", v2=args.v2
+    ):
+        labels.append((inputs, chosen, args.corrections_coef))
+    for inputs, chosen, _seed, _weight in load_feedback_agreements(
+        args.agreements, "shop", v2=args.v2
+    ):
+        labels.append((inputs, chosen, args.agreements_coef))
+    return labels
+
+
 def game_rewards(rounds, total_return):
     """Per-decision rewards from within-run blind counts.
 
@@ -304,6 +362,30 @@ def main():
         help="use the use-aware shop encoding (79 features) for a v11+ policy",
     )
     parser.add_argument(
+        "--teacher",
+        action="append",
+        default=[],
+        help="JSONL of LLM-teacher-labeled shop decisions (teacherLabeled). Folds "
+        "in as an auxiliary cross-entropy toward the teacher's contested-shop picks",
+    )
+    parser.add_argument("--teacher-coef", type=float, default=1.0)
+    parser.add_argument(
+        "--corrections",
+        action="append",
+        default=[],
+        help="JSONL of human-play exports; advice-feedback shop corrections fold in "
+        "as an auxiliary cross-entropy toward the human's corrected pick",
+    )
+    parser.add_argument("--corrections-coef", type=float, default=1.0)
+    parser.add_argument(
+        "--agreements",
+        action="append",
+        default=[],
+        help="JSONL of human-play exports; explicit shop thumbs-up agreements fold "
+        "in as an auxiliary cross-entropy toward the confirmed pick",
+    )
+    parser.add_argument("--agreements-coef", type=float, default=1.0)
+    parser.add_argument(
         "--value-baseline",
         action="store_true",
         help="learn a state-value baseline V(s) for per-decision advantage "
@@ -371,6 +453,14 @@ def main():
         raise SystemExit("no self-play decisions with a return field")
     const_adv = normalized_advantages([d[2] for d in samples], args.adv_clip)
 
+    aux_labels = collect_aux_labels(args)
+    if aux_labels:
+        print(
+            f"{len(aux_labels)} auxiliary distillation labels "
+            f"(teacher coef {args.teacher_coef}, corrections coef {args.corrections_coef}, "
+            f"agreements coef {args.agreements_coef})"
+        )
+
     device = resolve_device(args.device)
     model = CandidateScorer(features, args.hidden).to(device)
     if args.init:
@@ -422,6 +512,26 @@ def main():
 
     def chosen_log_probs(log_probs, chosen):
         return log_probs.gather(1, chosen.unsqueeze(1)).squeeze(1)
+
+    def pad_aux_batch(batch_idx):
+        rows = [aux_labels[j] for j in batch_idx]
+        max_n = max(len(inp) for inp, _, _ in rows)
+        feats = len(rows[0][0][0])
+        size = len(rows)
+        x = torch.zeros((size, max_n, feats), dtype=torch.float32, device=device)
+        mask = torch.zeros((size, max_n), dtype=torch.bool, device=device)
+        chosen = torch.empty(size, dtype=torch.long, device=device)
+        coef = torch.empty(size, dtype=torch.float32, device=device)
+        for b, (inp, ch, cf) in enumerate(rows):
+            n = len(inp)
+            x[b, :n] = torch.tensor(inp, dtype=torch.float32, device=device)
+            mask[b, :n] = True
+            chosen[b] = ch
+            coef[b] = cf
+        return x, mask, chosen, coef
+
+    aux_order = list(range(len(aux_labels)))
+    aux_cursor = 0
 
     old_logps = None
     if use_ppo:
@@ -485,6 +595,7 @@ def main():
         total = 0.0
         total_entropy = 0.0
         total_value = 0.0
+        total_distill = 0.0
         for i in range(0, len(indexed), args.batch_size):
             batch = indexed[i : i + args.batch_size]
             optimizer.zero_grad()
@@ -509,14 +620,30 @@ def main():
                 clamped = chosen_logp.clamp(min=-args.logp_floor)
                 per_decision = -adv * clamped - args.entropy_coef * entropy
             loss = per_decision.sum()
-            (loss / len(batch) + args.value_coef * value_loss).backward()
+            distill = torch.zeros((), device=device)
+            if aux_labels:
+                if aux_cursor >= len(aux_order):
+                    random.shuffle(aux_order)
+                    aux_cursor = 0
+                ab = aux_order[aux_cursor : aux_cursor + args.batch_size]
+                aux_cursor += len(ab)
+                ax, amask, achosen, acoef = pad_aux_batch(ab)
+                alp = chosen_log_probs(masked_log_probs(model(ax), amask), achosen)
+                distill = (-acoef * alp).mean()
+            (loss / len(batch) + args.value_coef * value_loss + distill).backward()
             optimizer.step()
             total += float(loss)
             total_entropy += float(entropy.sum())
             total_value += float(value_loss) * len(batch)
+            total_distill += float(distill)
         n = len(samples)
         value_msg = f" value_mse={total_value / n:.4f}" if value_net is not None else ""
-        print(f"epoch {epoch + 1}: loss={total / n:.4f} entropy={total_entropy / n:.4f}{value_msg}")
+        steps = (len(indexed) + args.batch_size - 1) // args.batch_size
+        distill_msg = f" distill={total_distill / steps:.4f}" if aux_labels else ""
+        print(
+            f"epoch {epoch + 1}: loss={total / n:.4f} entropy={total_entropy / n:.4f}"
+            f"{value_msg}{distill_msg}"
+        )
 
     model.eval()
     example = torch.zeros((2, features), dtype=torch.float32, device=device)
