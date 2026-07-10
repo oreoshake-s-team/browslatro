@@ -1,6 +1,7 @@
 import { useGame } from "../store/game";
 import { consumableCapacityFor, jokerCapacityFor } from "../items/capacities";
 import { captureRunEvent } from "../ai/humanPlayWiring";
+import { consumableUseDecision } from "../ai/consumableUseDecision";
 import { toModelState } from "../ai/modelState";
 import { toModelStateInput } from "../ai/advisor/snapshot";
 import { play } from "../components/system/sounds";
@@ -93,16 +94,20 @@ export function useConsumableActions(): UseConsumableActionsResult {
     const preUse = useGame.getState();
     function consume(): void {
       const idx = consumableIdx;
-      captureRunEvent(preUse, {
-        kind: "consumable-use",
-        consumable: {
-          id: entry.card.id,
-          name: entry.card.name,
-          consumableKind: entry.kind,
-        },
-        targetCardIds: [...preUse.selectedIds],
-        state: toModelState(toModelStateInput(preUse)),
-      });
+      const decision = consumableUseDecision(preUse, idx);
+      if (decision !== null) {
+        captureRunEvent(preUse, {
+          kind: "consumable-use",
+          consumable: {
+            id: entry.card.id,
+            name: entry.card.name,
+            consumableKind: entry.kind,
+          },
+          targetCardIds: [...preUse.selectedIds],
+          state: toModelState(toModelStateInput(preUse)),
+          ...decision,
+        });
+      }
       setConsumables((prev) => removeConsumableAt(prev, idx));
       useGame
         .getState()

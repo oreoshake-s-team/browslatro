@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
 import { chosenCandidateIndex, shopCandidateRows } from "./shopCandidateRows";
-import { joker } from "../src/ai/test-helpers";
-import type { Consumable } from "../src/items/consumables";
-import { createPlanetCatalog } from "../src/items/planets";
-import { createTarotCatalog } from "../src/items/tarots";
-import type { ShopItem } from "../src/items/shop";
+import { joker } from "./test-helpers";
+import type { Consumable } from "../items/consumables";
+import { createPlanetCatalog } from "../items/planets";
+import { createTarotCatalog } from "../items/tarots";
+import type { ShopItem } from "../items/shop";
 
 const PLANETS = createPlanetCatalog();
 const TAROTS = createTarotCatalog();

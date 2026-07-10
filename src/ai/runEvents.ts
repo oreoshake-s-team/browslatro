@@ -1,6 +1,7 @@
 import type { PackOption } from "../items/packs";
 import type { ShopItem } from "../items/shop";
 import type { GameState } from "../store/game";
+import type { ConsumableUseDecision } from "./consumableUseDecision";
 import type { HandOption } from "./getHandOptions";
 import type { ModelState } from "./modelState";
 import type {
@@ -75,6 +76,11 @@ export interface ConsumableUseEvent {
   };
   readonly targetCardIds: ReadonlyArray<number>;
   readonly state: ModelState;
+  readonly item: ConsumableUseDecision["item"];
+  readonly offers: ConsumableUseDecision["offers"];
+  readonly candidates: ConsumableUseDecision["candidates"];
+  readonly chosenIndex: number;
+  readonly consumablesHeld: number;
 }
 
 export interface JokerSellEvent {
