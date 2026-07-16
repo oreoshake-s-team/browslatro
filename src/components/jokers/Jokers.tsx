@@ -1,31 +1,19 @@
-import { Fragment, useId, useRef, useState } from "react";
+import { Fragment, useCallback, useId, useRef, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { localizedJokerName } from "../../i18n/jokerOverrides";
 import "./Jokers.css";
 import {
-  JOKER_EDITION_INFO,
   MAX_JOKERS,
-  canSellJoker,
   effectiveJokerCount,
-  isJokerActive,
   jokerSellValue,
-  jokerStickers,
   type Joker,
 } from "../../items/jokers";
-import {
-  dynamicJokerDescriptionNode,
-  dynamicJokerDescriptionText,
-} from "../../items/jokers/dynamicJokerDescription";
-import { tSuitName } from "../../i18n/strings";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
-import { useGame } from "../../store/game";
 import { announce } from "../system/LiveAnnouncer";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
-import JokerEditionBadge from "./JokerEditionBadge";
-import JokerStickerBadges from "./JokerStickerBadges";
-import JokerTooltip from "./JokerTooltip";
+import JokerTile from "./JokerTile";
 
 export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
@@ -57,12 +45,6 @@ export default function Jokers({
   onConsumableDrop,
 }: JokersProps) {
   const { t, i18n } = useTranslation();
-  const todoHand = useGame((s) => s.todoHand);
-  const castleSuit = useGame((s) => s.castleSuit);
-  const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
-  const idolTarget = useGame((s) => s.idolTarget);
-  const idolRankName = idolTarget?.rank ?? null;
-  const idolSuitName = idolTarget ? tSuitName(t, idolTarget.suit) : null;
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);
@@ -84,12 +66,12 @@ export default function Jokers({
     setTooltipRect(null);
   }, tooltipOpenId !== null);
 
-  function openTooltip(id: string, el: HTMLElement) {
+  const openTooltip = useCallback((id: string, el: HTMLElement) => {
     setTooltipOpenId(id);
     setTooltipRect(el.getBoundingClientRect());
-  }
+  }, []);
 
-  function closeTooltip(id: string) {
+  const closeTooltip = useCallback((id: string) => {
     setTooltipOpenId((prev) => {
       if (prev === id) {
         setTooltipRect(null);
@@ -97,51 +79,80 @@ export default function Jokers({
       }
       return prev;
     });
-  }
+  }, []);
 
-  function endDrag() {
+  const endDrag = useCallback(() => {
     setDraggingId(null);
     setActiveGapIndex(null);
     onDragEnd?.();
-  }
+  }, [onDragEnd]);
 
-  function applyDrop(sourceId: string, gapIdx: number) {
-    if (!onReorder) return;
-    const ids = jokers.map((j) => j.id);
-    const next = insertIdAtIndex(ids, sourceId, gapIdx);
-    if (next !== ids) onReorder(next);
-  }
+  const applyDrop = useCallback(
+    (sourceId: string, gapIdx: number) => {
+      if (!onReorder) return;
+      const ids = jokers.map((j) => j.id);
+      const next = insertIdAtIndex(ids, sourceId, gapIdx);
+      if (next !== ids) onReorder(next);
+    },
+    [jokers, onReorder],
+  );
 
-  function moveJoker(joker: Joker, idx: number, direction: -1 | 1) {
-    const name = localizedJokerName(i18n.language, joker.id, joker.name);
-    if (direction === -1 && idx === 0) {
-      announce(t("a11y.atStart", { item: name }));
-      return;
-    }
-    if (direction === 1 && idx === jokers.length - 1) {
-      announce(t("a11y.atEnd", { item: name }));
-      return;
-    }
-    applyDrop(joker.id, direction === -1 ? idx - 1 : idx + 2);
-    announce(
-      t("a11y.movedTo", {
-        item: name,
-        position: idx + direction + 1,
-        total: jokers.length,
-      }),
-    );
-  }
+  const moveJoker = useCallback(
+    (joker: Joker, idx: number, direction: -1 | 1) => {
+      const name = localizedJokerName(i18n.language, joker.id, joker.name);
+      if (direction === -1 && idx === 0) {
+        announce(t("a11y.atStart", { item: name }));
+        return;
+      }
+      if (direction === 1 && idx === jokers.length - 1) {
+        announce(t("a11y.atEnd", { item: name }));
+        return;
+      }
+      applyDrop(joker.id, direction === -1 ? idx - 1 : idx + 2);
+      announce(
+        t("a11y.movedTo", {
+          item: name,
+          position: idx + direction + 1,
+          total: jokers.length,
+        }),
+      );
+    },
+    [applyDrop, i18n.language, jokers.length, t],
+  );
 
-  function sellJokerAt(joker: Joker, idx: number) {
-    if (!onSell) return;
-    announce(
-      t("a11y.soldJoker", {
-        name: localizedJokerName(i18n.language, joker.id, joker.name),
-        value: jokerSellValue(joker),
-      }),
-    );
-    onSell(idx);
-  }
+  const sellJokerAt = useCallback(
+    (joker: Joker, idx: number) => {
+      if (!onSell) return;
+      announce(
+        t("a11y.soldJoker", {
+          name: localizedJokerName(i18n.language, joker.id, joker.name),
+          value: jokerSellValue(joker),
+        }),
+      );
+      onSell(idx);
+    },
+    [i18n.language, onSell, t],
+  );
+
+  const handleTileDragStart = useCallback(
+    (
+      e: React.DragEvent<HTMLLIElement>,
+      joker: Joker,
+      idx: number,
+      sellableNow: boolean,
+    ) => {
+      setDraggingId(joker.id);
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", joker.id);
+        if (sellableNow) {
+          e.dataTransfer.setData(JOKER_DRAG_MIME, String(idx));
+        }
+      }
+      onDragStart?.(idx);
+    },
+    [onDragStart],
+  );
 
   function handleListDragOver(e: React.DragEvent<HTMLUListElement>) {
     if (draggingId === null) return;
@@ -253,176 +264,27 @@ export default function Jokers({
               </li>
             );
           }
-          const pulse = pulseCounters?.[joker.id] ?? 0;
-          const isDragging = draggingId === joker.id;
-          const sellValue = jokerSellValue(joker);
-          const jokerSellable = sellable && canSellJoker(joker);
-          const debuffed = !isJokerActive(joker);
-          const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
-          const editionClass = joker.edition
-            ? ` joker-tile-edition joker-tile-edition-${joker.edition}`
-            : "";
-          const debuffedClass = debuffed ? " joker-tile-debuffed" : "";
-          const editionLabel = editionInfo
-            ? ` ${t("a11y.jokerEdition", {
-                name: editionInfo.name,
-                description: editionInfo.description,
-              })}`
-            : "";
-          const debuffedLabel = debuffed ? ` ${t("a11y.jokerDebuffed")}` : "";
-          const ariaLabel = jokerSellable
-            ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel} ${t("a11y.sellHint", { value: sellValue })}`
-            : editionInfo || sellable || debuffed
-              ? `${joker.name}.${debuffedLabel} ${joker.description}.${editionLabel}`
-              : undefined;
-          const tooltipId = `${tooltipIdBase}-${joker.id}`;
-          const tooltipOpen = tooltipOpenId === joker.id;
           return (
             <Fragment key={jokerKeys[idx]}>
               {reorderable && renderGap(idx)}
-              <li
-                className={`joker-tile${tileDraggable ? " joker-tile-draggable" : ""}${
-                  isDragging ? " joker-tile--dragging" : ""
-                }${editionClass}${debuffedClass}`}
-                title={dynamicJokerDescriptionText({
-                  language: i18n.language,
-                  jokerId: joker.id,
-                  description: joker.description,
-                  todoHand,
-                  castleSuit,
-                  castleSuitName,
-                  idolRankName,
-                  idolSuitName,
-                })}
-                aria-label={ariaLabel}
-                aria-describedby={tooltipOpen ? tooltipId : undefined}
-                tabIndex={0}
-                data-testid={`joker-tile-filled-${joker.id}`}
-                data-edition={joker.edition ?? undefined}
-                data-debuffed={debuffed || undefined}
-                draggable={tileDraggable || undefined}
-                aria-grabbed={isDragging || undefined}
-                onMouseEnter={(e) => openTooltip(joker.id, e.currentTarget)}
-                onMouseLeave={() => closeTooltip(joker.id)}
-                onFocus={(e) => openTooltip(joker.id, e.currentTarget)}
-                onBlur={() => closeTooltip(joker.id)}
-                onDragStart={
-                  tileDraggable
-                    ? (e) => {
-                        setDraggingId(joker.id);
-                        if (e.dataTransfer) {
-                          e.dataTransfer.effectAllowed = "move";
-                          e.dataTransfer.setData("text/plain", joker.id);
-                          if (jokerSellable) {
-                            e.dataTransfer.setData(JOKER_DRAG_MIME, String(idx));
-                          }
-                        }
-                        onDragStart?.(idx);
-                      }
-                    : undefined
-                }
-                onDragEnd={tileDraggable ? endDrag : undefined}
-                onClick={
-                  jokerSellable
-                    ? (e) => {
-                        if (e.shiftKey) sellJokerAt(joker, idx);
-                      }
-                    : undefined
-                }
-              >
-                <div
-                  key={`pulse-${pulse}`}
-                  className={
-                    pulse > 0 ? "joker-tile-inner joker-tile-pulse" : "joker-tile-inner"
-                  }
-                  data-testid={`joker-tile-inner-${joker.id}`}
-                  data-pulse={pulse}
-                >
-                  <span className="joker-tile-name">
-                    {localizedJokerName(i18n.language, joker.id, joker.name)}
-                  </span>
-                  <span
-                    className="joker-tile-description"
-                    data-testid={`joker-tile-description-${joker.id}`}
-                  >
-                    {dynamicJokerDescriptionNode({
-                      language: i18n.language,
-                      jokerId: joker.id,
-                      description: joker.description,
-                      todoHand,
-                      castleSuit,
-                      castleSuitName,
-                      idolRankName,
-                      idolSuitName,
-                    })}
-                  </span>
-                  {(joker.edition || jokerStickers(joker).length > 0) && (
-                    <div className="joker-tile-badges">
-                      {joker.edition && (
-                        <JokerEditionBadge edition={joker.edition} />
-                      )}
-                      <JokerStickerBadges joker={joker} />
-                    </div>
-                  )}
-                  {jokerSellable && isDragging && (
-                    <span className="joker-tile-sell" aria-hidden="true">
-                      Sell ${sellValue}
-                    </span>
-                  )}
-                </div>
-                {reorderable && (
-                  <div className="joker-move-controls">
-                    <button
-                      type="button"
-                      className="joker-move-button"
-                      aria-label={t("a11y.moveLeft", {
-                        item: localizedJokerName(i18n.language, joker.id, joker.name),
-                      })}
-                      data-testid={`joker-move-left-${joker.id}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveJoker(joker, idx, -1);
-                      }}
-                    >
-                      ◀
-                    </button>
-                    <button
-                      type="button"
-                      className="joker-move-button"
-                      aria-label={t("a11y.moveRight", {
-                        item: localizedJokerName(i18n.language, joker.id, joker.name),
-                      })}
-                      data-testid={`joker-move-right-${joker.id}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        moveJoker(joker, idx, 1);
-                      }}
-                    >
-                      ▶
-                    </button>
-                  </div>
-                )}
-                {jokerSellable && (
-                  <button
-                    type="button"
-                    className="joker-sell-button"
-                    aria-label={t("a11y.sellJoker", {
-                      name: localizedJokerName(i18n.language, joker.id, joker.name),
-                      value: sellValue,
-                    })}
-                    data-testid={`joker-sell-${joker.id}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      sellJokerAt(joker, idx);
-                    }}
-                  >
-                    Sell ${sellValue}
-                  </button>
-                )}
-                {tooltipOpen && tooltipRect && (
-                  <JokerTooltip id={tooltipId} joker={joker} jokers={jokers} jokerIndex={idx} anchorRect={tooltipRect} />
-                )}
-              </li>
+              <JokerTile
+                joker={joker}
+                idx={idx}
+                jokers={jokers}
+                pulse={pulseCounters?.[joker.id] ?? 0}
+                isDragging={draggingId === joker.id}
+                draggable={tileDraggable}
+                reorderable={reorderable}
+                sellable={sellable}
+                tooltipId={`${tooltipIdBase}-${joker.id}`}
+                tooltipAnchorRect={tooltipOpenId === joker.id ? tooltipRect : null}
+                onOpenTooltip={openTooltip}
+                onCloseTooltip={closeTooltip}
+                onMove={moveJoker}
+                onSellAt={sellJokerAt}
+                onTileDragStart={handleTileDragStart}
+                onTileDragEnd={endDrag}
+              />
             </Fragment>
           );
         })}
