@@ -161,4 +161,4 @@ async function main(): Promise<void> {
   console.log(`wrote ${lines.length} self-play decisions from ${games} games (avg return ${(returns / games).toFixed(2)}) to ${out}`);
 }
 
-main();
+void main();

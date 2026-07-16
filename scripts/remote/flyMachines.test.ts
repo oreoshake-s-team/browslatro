@@ -31,7 +31,7 @@ describe("FlyMachinesClient.run", () => {
   test("sends a no-restart auto-destroy config", async () => {
     const { client, calls } = clientWith({ id: "m1", state: "created" });
     await client.run({ image: "img", env: { A: "1" }, guest: { cpus: 2, memoryMb: 1024 } });
-    const body = JSON.parse(String(calls[0].init?.body));
+    const body = JSON.parse(calls[0].init?.body as string);
     expect(body.config).toMatchObject({
       auto_destroy: true,
       restart: { policy: "no" },
@@ -53,14 +53,14 @@ describe("FlyMachinesClient.run", () => {
       guest: { cpus: 1, memoryMb: 256 },
       exec: ["bash", "run.sh"],
     });
-    const body = JSON.parse(String(calls[0].init?.body));
+    const body = JSON.parse(calls[0].init?.body as string);
     expect(body.config.init).toEqual({ exec: ["bash", "run.sh"] });
   });
 
   test("omits init when no exec is supplied", async () => {
     const { client, calls } = clientWith({ id: "m1", state: "created" });
     await client.run({ image: "img", env: {}, guest: { cpus: 1, memoryMb: 256 } });
-    const body = JSON.parse(String(calls[0].init?.body));
+    const body = JSON.parse(calls[0].init?.body as string);
     expect(body.config.init).toBeUndefined();
   });
 

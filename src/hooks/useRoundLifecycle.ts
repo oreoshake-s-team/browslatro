@@ -44,7 +44,6 @@ import {
   resolveJokerEffect,
   sealedCardsOnRoundBeginFromJokers,
   stoneCardsOnBlindSelectFromJokers,
-  type Joker,
   applyCeremonialDaggerOnBlindSelect,
   applyMadnessOnBlindSelect,
 } from "../items/jokers";
@@ -307,7 +306,7 @@ export function useRoundLifecycle({
     if (commonJokerCreations > 0) {
       const jokerCapacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
       setJokers((prev) => {
-        let next = prev as ReadonlyArray<Joker>;
+        let next = prev;
         for (let i = 0; i < commonJokerCreations; i += 1) {
           const created = createJokerByRarity(
             next,

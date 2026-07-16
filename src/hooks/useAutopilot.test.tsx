@@ -20,16 +20,18 @@ function pairHand(): Card[] {
   ];
 }
 
+const playFirstRank: CandidateRanker["rank"] = async (_state, candidates) => {
+  const indices = candidates.map((_, index) => index);
+  return indices.sort((a, b) => {
+    const left = candidates[a].action === "play" ? 0 : 1;
+    const right = candidates[b].action === "play" ? 0 : 1;
+    return left - right;
+  });
+};
+
 const playFirstRanker: CandidateRanker = {
   load: async () => {},
-  rank: async (_state, candidates) => {
-    const indices = candidates.map((_, index) => index);
-    return indices.sort((a, b) => {
-      const left = candidates[a].action === "play" ? 0 : 1;
-      const right = candidates[b].action === "play" ? 0 : 1;
-      return left - right;
-    });
-  },
+  rank: playFirstRank,
 };
 
 const discardFirstRanker: CandidateRanker = {
@@ -343,7 +345,7 @@ describe("useAutopilot", () => {
         onProgress?.({ loaded: 64, total: 128 });
         return new Promise<void>(() => {});
       },
-      rank: playFirstRanker.rank,
+      rank: playFirstRank,
     };
     const { result } = renderAutopilot({ executor: makeExecutor(), ranker });
     await waitFor(() =>
@@ -354,7 +356,7 @@ describe("useAutopilot", () => {
   test("does not propose while the model is still downloading", async () => {
     const ranker: CandidateRanker = {
       load: () => new Promise<void>(() => {}),
-      rank: playFirstRanker.rank,
+      rank: playFirstRank,
     };
     const { result } = renderAutopilot({ executor: makeExecutor(), ranker });
     await new Promise((resolve) => setTimeout(resolve, 60));
@@ -473,7 +475,7 @@ describe("useAutopilot when the policy model is unavailable", () => {
     load: async () => {
       throw new Error("model 404");
     },
-    rank: playFirstRanker.rank,
+    rank: playFirstRank,
   };
 
   const failingRankRanker: CandidateRanker = {

@@ -68,7 +68,7 @@ describe("s3ConfigFromEnv", () => {
       BROWSLATRO_DATASET_BUCKET: "browslatro",
       AWS_ACCESS_KEY_ID: "AKID",
       AWS_SECRET_ACCESS_KEY: "SECRET",
-    } as NodeJS.ProcessEnv);
+    });
     expect(config.bucket).toBe("browslatro");
   });
 
@@ -78,11 +78,11 @@ describe("s3ConfigFromEnv", () => {
       BROWSLATRO_DATASET_BUCKET: "b",
       AWS_ACCESS_KEY_ID: "k",
       AWS_SECRET_ACCESS_KEY: "s",
-    } as NodeJS.ProcessEnv);
+    });
     expect(config.region).toBe("auto");
   });
 
   test("throws listing the missing variables", () => {
-    expect(() => s3ConfigFromEnv({} as NodeJS.ProcessEnv)).toThrow(/missing S3 configuration/);
+    expect(() => s3ConfigFromEnv({})).toThrow(/missing S3 configuration/);
   });
 });

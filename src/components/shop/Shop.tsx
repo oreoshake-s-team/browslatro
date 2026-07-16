@@ -428,7 +428,6 @@ export default function Shop({
   return (
     <section
       className="shop-panel"
-      role="region"
       aria-labelledby="shop-title"
     >
       <div className="shop-inner">

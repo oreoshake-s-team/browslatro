@@ -44,7 +44,7 @@ describe("serializeRun", () => {
   });
 
   test("throws when the encoded top-level value is not an object", () => {
-    expect(() => serializeRun(["just", "an", "array"] as unknown as object)).toThrow(
+    expect(() => serializeRun(["just", "an", "array"])).toThrow(
       /must serialize to an object/,
     );
   });

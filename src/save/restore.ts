@@ -14,7 +14,7 @@ function isCardLike(v: unknown): v is Card {
     typeof v === "object" &&
     v !== null &&
     "id" in v &&
-    typeof (v as { id: unknown }).id === "number"
+    typeof (v).id === "number"
   );
 }
 

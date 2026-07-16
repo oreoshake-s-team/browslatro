@@ -17,7 +17,7 @@ function connectTimeout(): Error {
 describe("fetchWithRetry", () => {
   test("returns a 2xx response without retrying", async () => {
     const impl = vi.fn().mockResolvedValue(response(200));
-    await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, { sleep: noSleep });
+    await fetchWithRetry(impl, "u", undefined, { sleep: noSleep });
     expect(impl).toHaveBeenCalledTimes(1);
   });
 
@@ -27,31 +27,31 @@ describe("fetchWithRetry", () => {
       .mockRejectedValueOnce(connectTimeout())
       .mockRejectedValueOnce(connectTimeout())
       .mockResolvedValue(response(200));
-    const res = await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, { sleep: noSleep });
+    const res = await fetchWithRetry(impl, "u", undefined, { sleep: noSleep });
     expect([impl.mock.calls.length, res.status]).toEqual([3, 200]);
   });
 
   test("retries a 500 response then returns the eventual 200", async () => {
     const impl = vi.fn().mockResolvedValueOnce(response(500)).mockResolvedValue(response(200));
-    const res = await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, { sleep: noSleep });
+    const res = await fetchWithRetry(impl, "u", undefined, { sleep: noSleep });
     expect(res.status).toBe(200);
   });
 
   test("retries a 429 response", async () => {
     const impl = vi.fn().mockResolvedValueOnce(response(429)).mockResolvedValue(response(200));
-    await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, { sleep: noSleep });
+    await fetchWithRetry(impl, "u", undefined, { sleep: noSleep });
     expect(impl).toHaveBeenCalledTimes(2);
   });
 
   test("does not retry a 404 (negative)", async () => {
     const impl = vi.fn().mockResolvedValue(response(404));
-    const res = await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, { sleep: noSleep });
+    const res = await fetchWithRetry(impl, "u", undefined, { sleep: noSleep });
     expect([impl.mock.calls.length, res.status]).toEqual([1, 404]);
   });
 
   test("returns the last retryable response after exhausting retries", async () => {
     const impl = vi.fn().mockResolvedValue(response(503));
-    const res = await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, {
+    const res = await fetchWithRetry(impl, "u", undefined, {
       retries: 2,
       sleep: noSleep,
     });
@@ -68,7 +68,7 @@ describe("fetchWithRetry", () => {
   test("reports the transient reason to onRetry", async () => {
     const reasons: string[] = [];
     const impl = vi.fn().mockRejectedValueOnce(connectTimeout()).mockResolvedValue(response(200));
-    await fetchWithRetry(impl as unknown as typeof fetch, "u", undefined, {
+    await fetchWithRetry(impl, "u", undefined, {
       sleep: noSleep,
       onRetry: (_attempt, reason) => reasons.push(reason),
     });

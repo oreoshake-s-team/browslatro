@@ -153,7 +153,7 @@ export function applyConsumableToState(
   };
 }
 
-export function useHeldConsumable(
+export function applyHeldConsumable(
   index: number,
   state: PostShopState,
   deps: ConsumableLabelDeps,
@@ -176,7 +176,7 @@ export function flushHeldConsumables(
   for (;;) {
     const held = current.consumables ?? [];
     if (held.length === 0) return current;
-    const next = useHeldConsumable(0, current, deps, rng);
+    const next = applyHeldConsumable(0, current, deps, rng);
     current = next ?? { ...current, consumables: held.slice(1) };
   }
 }
@@ -251,7 +251,7 @@ export async function bestShopChoiceHeld(
   }
   const held = state.consumables ?? [];
   for (let k = 0; k < held.length; k += 1) {
-    const post = useHeldConsumable(k, state, deps, seededRng(seedBase + (k + 1) * 15485863));
+    const post = applyHeldConsumable(k, state, deps, seededRng(seedBase + (k + 1) * 15485863));
     if (post === null) continue;
     const flushed = flushHeldConsumables(post, deps, seededRng(seedBase + (k + 1) * 15485863 + 1));
     const value = await rolloutValue(ante, flushed, opts, seedBase + (k + 1) * 24036583);
@@ -275,7 +275,7 @@ export async function bestHeldUse(
   let bestUse = 0;
   let bestValue = -Infinity;
   for (let k = 0; k < held.length; k += 1) {
-    const post = useHeldConsumable(k, state, deps, seededRng(seedBase + (k + 1) * 15485863));
+    const post = applyHeldConsumable(k, state, deps, seededRng(seedBase + (k + 1) * 15485863));
     if (post === null) continue;
     const flushed = flushHeldConsumables(post, deps, seededRng(seedBase + (k + 1) * 15485863 + 1));
     const value = await rolloutValue(ante, flushed, opts, seedBase + (k + 1) * 24036583);

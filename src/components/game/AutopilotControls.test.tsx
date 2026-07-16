@@ -26,7 +26,7 @@ function mockReducedMotion(reduce: boolean): void {
     addListener: vi.fn(),
     removeListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  }) as unknown as typeof window.matchMedia;
+  });
 }
 
 function playProposal(): HandOption {

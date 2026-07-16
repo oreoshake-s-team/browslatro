@@ -307,7 +307,7 @@ describe("Jokers drag-and-drop reordering", () => {
           x: i * 100,
           y: 0,
           toJSON: () => ({}),
-        }) as DOMRect;
+        });
     });
     fireEvent.dragStart(getTile("plus-four-mult"));
     fireEvent(

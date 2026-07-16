@@ -27,7 +27,7 @@ function recordKind(line: string): string {
   try {
     const parsed: unknown = JSON.parse(line);
     if (typeof parsed === "object" && parsed !== null && "kind" in parsed) {
-      const kind = (parsed as { kind: unknown }).kind;
+      const kind = (parsed).kind;
       if (typeof kind === "string") return kind;
     }
   } catch {

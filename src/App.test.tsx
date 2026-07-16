@@ -2836,7 +2836,7 @@ describe("Pack-pick is rendered inline (Phase 2)", () => {
   test("pack-pick renders as a modal overlay (aria-modal) and locks the rest of the shop while open", async () => {
     await openShopThenPack();
     const dialog = document
-      .querySelector("[aria-labelledby='pack-open-title']") as HTMLElement | null;
+      .querySelector("[aria-labelledby='pack-open-title']");
     expect(dialog).toHaveAttribute("aria-modal", "true");
     expect(screen.getByTestId("jokers-tray")).toBeInTheDocument();
     expect(screen.getByTestId("consumables-tray")).toBeInTheDocument();

@@ -998,7 +998,7 @@ export function createCreditCardJoker(): Joker {
     id: "credit-card",
     rarity: "common",
     name: "Credit Card",
-    description: `Your money can go as low as -\$${CREDIT_CARD_DEBT_FLOOR}`,
+    description: `Your money can go as low as -$${CREDIT_CARD_DEBT_FLOOR}`,
     effect: { kind: "passive-run-stats", debtFloor: CREDIT_CARD_DEBT_FLOOR },
   };
 }

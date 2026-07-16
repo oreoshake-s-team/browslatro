@@ -20,7 +20,7 @@ import {
   buyOfferToHold,
   flushHeldConsumables,
   rolloutValue,
-  useHeldConsumable,
+  applyHeldConsumable,
   type ConsumableLabelDeps,
   type RolloutOptions,
   type PostShopState,
@@ -32,7 +32,7 @@ import {
   chosenCandidateIndex,
   shopCandidateRows,
   shopItemSnapshot,
-  useItemSnapshot,
+  usedItemSnapshot,
 } from "../src/ai/shopCandidateRows";
 import { shopBuildSummary } from "../src/ai/advisor/shopEncoding";
 import type { Joker } from "../src/items/jokers/types";
@@ -233,11 +233,11 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
             const consumable = held[choice.bestUse];
             sink(JSON.stringify({
               ...baseFields(),
-              kind: "use", item: useItemSnapshot(consumable, choice.bestUse), offers: offers.map(shopItemSnapshot),
+              kind: "use", item: usedItemSnapshot(consumable, choice.bestUse), offers: offers.map(shopItemSnapshot),
               candidates, chosenIndex: chosenCandidateIndex(offers.length, held.length, rerollAvailable, { kind: "use", index: choice.bestUse }),
             }));
             records += 1;
-            const post = useHeldConsumable(choice.bestUse, state, consumableDeps, seededRng(rollBase + step * 991 + 41));
+            const post = applyHeldConsumable(choice.bestUse, state, consumableDeps, seededRng(rollBase + step * 991 + 41));
             if (post === null) break;
             adoptState(post);
             continue;
@@ -275,11 +275,11 @@ async function generate(config: GenConfig, sink: (line: string) => void): Promis
           const candidates = shopCandidateRows([], held, null);
           sink(JSON.stringify({
             ...baseFields(),
-            kind: "use", item: useItemSnapshot(held[bestUse], bestUse), offers: [],
+            kind: "use", item: usedItemSnapshot(held[bestUse], bestUse), offers: [],
             candidates, chosenIndex: chosenCandidateIndex(0, held.length, false, { kind: "use", index: bestUse }),
           }));
           records += 1;
-          const post = useHeldConsumable(bestUse, state, consumableDeps, seededRng(seedBase + 3));
+          const post = applyHeldConsumable(bestUse, state, consumableDeps, seededRng(seedBase + 3));
           if (post === null) {
             held = held.filter((_, i) => i !== bestUse);
             continue;
