@@ -112,14 +112,13 @@ export function createDeck(): Card[] {
  * Playwright tests can assert against a fixed dealt hand. Off by default in
  * production; any other value (or missing storage) preserves real shuffling.
  */
-const DETERMINISTIC_SHUFFLE_KEY = "browslatro:deterministicShuffle";
+import { STORAGE_KEYS } from "../system/storageKeys";
+import { getBool } from "../system/safeStorage";
 
 function readDeterministicShuffleFlag(): boolean {
-  try {
-    return window.localStorage.getItem(DETERMINISTIC_SHUFFLE_KEY) === "1";
-  } catch {
-    return false;
-  }
+  // This flag is read at shuffle time, not frozen at import time, so e2e
+  // tests can toggle it dynamically.
+  return getBool(STORAGE_KEYS.deterministicShuffle);
 }
 
 export function shuffle<T>(items: ReadonlyArray<T>, rng: () => number = Math.random): T[] {

@@ -1,4 +1,7 @@
-const DEV_TOOLS_KEY = "browslatro:devTools";
+import { STORAGE_KEYS } from "../system/storageKeys";
+import { getBool } from "../system/safeStorage";
+
+const DEV_TOOLS_KEY = STORAGE_KEYS.devTools;
 
 /**
  * Dev-only affordances (e.g. the boss-blind override <select>) render in dev
@@ -8,9 +11,5 @@ const DEV_TOOLS_KEY = "browslatro:devTools";
  */
 export function devToolsEnabled(): boolean {
   if (import.meta.env.DEV) return true;
-  try {
-    return window.localStorage.getItem(DEV_TOOLS_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return getBool(DEV_TOOLS_KEY);
 }

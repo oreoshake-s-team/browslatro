@@ -1,11 +1,13 @@
 import { isSerializedRun, type SerializedRun } from "./runSnapshot";
+import { STORAGE_KEYS } from "../system/storageKeys";
+import { getItem, setItem, removeItem } from "../system/safeStorage";
 
-export const STORAGE_KEY = "browslatro:run:v1";
+export const STORAGE_KEY = STORAGE_KEYS.runSnapshot;
 
 export function loadSnapshot(): SerializedRun | null {
+  const raw = getItem(STORAGE_KEY);
+  if (!raw) return null;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     return isSerializedRun(parsed) ? parsed : null;
   } catch {
@@ -14,17 +16,9 @@ export function loadSnapshot(): SerializedRun | null {
 }
 
 export function saveSnapshot(snapshot: SerializedRun): void {
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-  } catch {
-    // quota exceeded or storage disabled — drop the save silently
-  }
+  setItem(STORAGE_KEY, JSON.stringify(snapshot));
 }
 
 export function clearSnapshot(): void {
-  try {
-    window.localStorage.removeItem(STORAGE_KEY);
-  } catch {
-    // ignore
-  }
+  removeItem(STORAGE_KEY);
 }

@@ -11,14 +11,10 @@ import { DEFAULT_STAKE, type Stake } from "../items/stakes";
 import { DEFAULT_DECK, type Deck } from "../items/decks";
 import type { Rank, Suit } from "../cards/types";
 import type { HandLabel } from "../scoring/handEvaluator";
+import type { Updater } from "./update";
+import { resolve } from "./update";
 
-type Updater<T> = T | ((prev: T) => T);
-
-function resolve<T>(update: Updater<T>, prev: T): T {
-  return typeof update === "function"
-    ? (update as (prev: T) => T)(prev)
-    : update;
-}
+// Updater/resolve now centralized in src/store/update.ts
 
 function freshSkipOffers(): AnteSkipOffers {
   return rollAnteSkipOffers(tagOfferRngConfig.rng);

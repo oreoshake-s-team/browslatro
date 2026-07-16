@@ -1,4 +1,7 @@
-const FAKE_AUTOPILOT_POLICY_KEY = "browslatro:fakeAutopilotPolicy";
+import { STORAGE_KEYS } from "../system/storageKeys";
+import { getBool } from "../system/safeStorage";
+
+const FAKE_AUTOPILOT_POLICY_KEY = STORAGE_KEYS.fakeAutopilotPolicy;
 
 /**
  * Test-only seam: when `localStorage["browslatro:fakeAutopilotPolicy"]` is
@@ -7,9 +10,5 @@ const FAKE_AUTOPILOT_POLICY_KEY = "browslatro:fakeAutopilotPolicy";
  * propose/approve flow without racing the model download in CI.
  */
 export function fakeAutopilotPolicyEnabled(): boolean {
-  try {
-    return window.localStorage.getItem(FAKE_AUTOPILOT_POLICY_KEY) === "1";
-  } catch {
-    return false;
-  }
+  return getBool(FAKE_AUTOPILOT_POLICY_KEY);
 }

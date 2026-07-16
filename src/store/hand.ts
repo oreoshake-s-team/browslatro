@@ -1,17 +1,13 @@
 import type { StateCreator } from "zustand";
 import type { GameState } from "./game";
 import type { Hand } from "../cards/types";
+import type { Updater } from "./update";
+import { resolve } from "./update";
 
 export const STARTING_HANDS = 4;
 export const STARTING_DISCARDS = 3;
 
-type Updater<T> = T | ((prev: T) => T);
-
-function resolve<T>(update: Updater<T>, prev: T): T {
-  return typeof update === "function"
-    ? (update as (prev: T) => T)(prev)
-    : update;
-}
+// Updater/resolve now centralized in src/store/update.ts
 
 export interface HandState {
   selectedHand: Hand | null;

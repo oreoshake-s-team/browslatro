@@ -9,19 +9,20 @@ import "./index.css";
 import "./i18n";
 import App from "./App";
 import { Telemetry } from "./Telemetry";
+import AutoSave from "./components/system/AutoSave";
 import reportWebVitals from "./reportWebVitals";
-import { restoreSnapshotIfPresent, subscribeAndAutoSave } from "./save/restore";
+import { restoreSnapshotIfPresent } from "./save/restore";
 
 enableDragDropTouch();
 
 restoreSnapshotIfPresent();
-subscribeAndAutoSave();
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(
   <React.StrictMode>
     <App />
     <Telemetry />
+    <AutoSave />
   </React.StrictMode>
 );
 
