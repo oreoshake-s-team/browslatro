@@ -730,4 +730,32 @@ export const haw: LocaleMessages = {
     "wrathful-joker": "Loaʻa he {{mult}} hoʻonui ʻana ke helu ʻia nā kāleka Kalapu i pāʻani ʻia",
     "zany-joker": "He {{mult}} hoʻonui ʻana inā he Kāleka Pūkolu ma ka haʻawina pepa i pāʻani ʻia",
   },
+  planetNames: {
+    "ceres": "Ceres", // needs translation
+    "earth": "Honua",
+    "eris": "Eris", // needs translation
+    "jupiter": "Kaʻāwela",
+    "mars": "Hōkūʻula",
+    "mercury": "ʻUkali",
+    "neptune": "Neptune", // needs translation
+    "planet-x": "Planet X", // needs translation
+    "pluto": "Pluto", // needs translation
+    "saturn": "Makulu",
+    "uranus": "Uranus", // needs translation
+    "venus": "Hōkūloa",
+  },
+  planetDescriptions: {
+    "ceres": "Upgrades Flush House: +4 Mult, +40 Chips", // needs translation
+    "earth": "Upgrades Full House: +2 Mult, +25 Chips", // needs translation
+    "eris": "Upgrades Flush Five: +3 Mult, +50 Chips", // needs translation
+    "jupiter": "Upgrades Flush: +2 Mult, +15 Chips", // needs translation
+    "mars": "Upgrades Four of a Kind: +3 Mult, +30 Chips", // needs translation
+    "mercury": "Upgrades Pair: +1 Mult, +15 Chips", // needs translation
+    "neptune": "Upgrades Straight Flush / Royal Flush: +4 Mult, +40 Chips", // needs translation
+    "planet-x": "Upgrades Five of a Kind: +3 Mult, +35 Chips", // needs translation
+    "pluto": "Upgrades High Card: +1 Mult, +10 Chips", // needs translation
+    "saturn": "Upgrades Straight: +3 Mult, +30 Chips", // needs translation
+    "uranus": "Upgrades Two Pair: +1 Mult, +20 Chips", // needs translation
+    "venus": "Upgrades Three of a Kind: +2 Mult, +20 Chips", // needs translation
+  },
 };
