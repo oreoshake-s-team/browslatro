@@ -1,21 +1,20 @@
 import { useTranslation } from "react-i18next";
-import "./SidebarFooter.css";
 
 const REPO_URL = "https://github.com/oreoshake-s-team/browslatro";
 
 export default function SidebarFooter() {
   const { t } = useTranslation();
   return (
-    <footer className="sidebar-footer">
+    <footer className="mt-auto box-border flex w-full min-w-0 justify-center portrait-narrow:hidden">
       <a
         href={REPO_URL}
         target="_blank"
         rel="noopener noreferrer"
-        className="sidebar-footer__link"
+        className="focus-ring inline-flex items-center gap-[0.4rem] rounded-sm px-2 py-1 text-[0.75rem] text-text-muted no-underline transition-colors hover:bg-surface-hover hover:text-text-primary hover:outline-2 hover:outline-offset-2 hover:outline-focus-ring hover:outline-solid focus-visible:bg-surface-hover focus-visible:text-text-primary"
         aria-label={t("sidebar.githubAriaLabel")}
       >
         <svg
-          className="sidebar-footer__icon"
+          className="size-4 shrink-0 fill-current"
           viewBox="0 0 16 16"
           aria-hidden="true"
           focusable="false"

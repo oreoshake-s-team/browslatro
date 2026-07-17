@@ -65,6 +65,12 @@ describe("tailwind theme contract", () => {
     );
   });
 
+  test("the default transition timing function matches the legacy ease idiom", () => {
+    expect(tailwindCss).toContain(
+      "--default-transition-timing-function: ease;",
+    );
+  });
+
   test("the focus-ring utility reproduces the shared focus outline", () => {
     expect(tailwindCss).toMatch(
       /@utility focus-ring \{\s*&:focus-visible \{\s*outline: 2px solid var\(--focus-ring\);\s*outline-offset: 2px;/,
