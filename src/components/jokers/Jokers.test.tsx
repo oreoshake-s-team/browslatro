@@ -723,7 +723,9 @@ describe("Jokers edition rendering", () => {
     const { container } = render(<Jokers jokers={[j]} />);
     const row = container.querySelector(".joker-tile-badges");
     expect(row?.querySelector(".joker-edition-badge")).not.toBeNull();
-    expect(row?.querySelector(".joker-sticker-badge")).not.toBeNull();
+    expect(
+      row?.querySelector('[data-testid="joker-sticker-eternal"]'),
+    ).not.toBeNull();
   });
 
   test("a Foil joker tile carries the foil edition class", () => {
