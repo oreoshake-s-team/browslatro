@@ -70,7 +70,8 @@ export default function PlayControls() {
           onClick={discardSelected}
           disabled={!canDiscard}
         >
-          <span aria-hidden="true">🗑️ </span>Discard
+          <span aria-hidden="true">🗑️ </span>
+          {t("game.discard")}
         </button>
         {autopilotSession && (
           <button

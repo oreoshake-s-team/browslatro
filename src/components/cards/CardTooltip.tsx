@@ -32,7 +32,7 @@ export default function CardTooltip({ id, info, anchorRect }: CardTooltipProps) 
       </p>
       {!info.isStone && (
         <p className="card-tooltip-chips">
-          Base chips: <strong>{info.chips}</strong>
+          {t("cardLabels.baseChips")} <strong>{info.chips}</strong>
         </p>
       )}
       {info.bonusChips > 0 && (

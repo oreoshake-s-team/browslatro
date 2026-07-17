@@ -43,6 +43,7 @@ export const haw: LocaleMessages = {
     twoPair: "Kūpē",
   },
   cardLabels: {
+    baseChips: "Base chips:", // needs translation
     editionBadgeFoil: "Kini",
     editionBadgeHolographic: "Lamalama",
     editionBadgeNegative: "Aka",
@@ -257,6 +258,7 @@ export const haw: LocaleMessages = {
     bossArmLowered: "Hoʻohaʻahaʻa ʻia ka {{hand}} e ka Lima i ka pae {{level}}",
     bossVoidedEye: "{{hand}} he 0 ʻai — Pale ka Maka i nā ʻano haʻawina pīnaʻi",
     bossVoidedMouth: "{{hand}} he 0 ʻai — Hoʻopaʻa ka Waha iā ʻoe i ka {{locked}}",
+    discard: "Discard", // needs translation
     submitHand: "Waiho haʻawina",
   },
   admin: {

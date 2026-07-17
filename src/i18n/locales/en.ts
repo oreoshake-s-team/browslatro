@@ -35,6 +35,7 @@ export const en = {
     twoPair: "Two Pair",
   },
   cardLabels: {
+    baseChips: "Base chips:",
     editionBadgeFoil: "Foil",
     editionBadgeHolographic: "Holo",
     editionBadgeNegative: "Neg",
@@ -249,6 +250,7 @@ export const en = {
     bossArmLowered: "The Arm lowered {{hand}} to level {{level}}",
     bossVoidedEye: "{{hand}} scored 0 — The Eye blocks repeat hand types",
     bossVoidedMouth: "{{hand}} scored 0 — The Mouth locks you to {{locked}}",
+    discard: "Discard",
     submitHand: "Submit Hand",
   },
   admin: {
