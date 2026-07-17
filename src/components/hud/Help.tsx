@@ -1,5 +1,6 @@
 import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../ui/Button";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 
 const HelpDialog = lazy(() => import("./HelpDialog"));
@@ -10,9 +11,9 @@ function Help() {
 
   return (
     <>
-      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+      <Button variant="ghost" onClick={() => setOpen(true)}>
         {t("sidebar.help")}
-      </button>
+      </Button>
       {open && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <HelpDialog onClose={() => setOpen(false)} />

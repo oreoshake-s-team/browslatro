@@ -1,6 +1,5 @@
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import "./JokerTooltip.css";
 import { localizedJokerName } from "../../i18n/jokerOverrides";
 import { dynamicJokerDescriptionNode } from "../../items/jokers/dynamicJokerDescription";
 import { tSuitName } from "../../i18n/strings";
@@ -39,14 +38,24 @@ interface JokerTooltipProps {
   anchorRect: DOMRect;
 }
 
-export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, anchorRect }: JokerTooltipProps) {
+const RARITY_TEXT = {
+  common: "font-semibold text-chips uppercase",
+  uncommon: "font-semibold text-success uppercase",
+  rare: "font-semibold text-mult uppercase",
+  legendary: "font-semibold text-money uppercase",
+} as const;
+
+export default function JokerTooltip({
+  id,
+  joker,
+  jokers = [],
+  jokerIndex = 0,
+  anchorRect,
+}: JokerTooltipProps) {
   const { t, i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
   const copyTargetLabel = computeCopyTargetLabel(jokers, jokerIndex);
   const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
-  const editionClass = joker.edition
-    ? `joker-tooltip-edition-${joker.edition}`
-    : "";
   const todoHand = useGame((s) => s.todoHand);
   const castleSuit = useGame((s) => s.castleSuit);
   const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
@@ -58,22 +67,28 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
   const effectiveOdds = useEffectiveOdds(joker);
   const currentValue = useCurrentValue(joker);
   return createPortal(
-    <div id={id} ref={ref} role="tooltip" className="tooltip joker-tooltip" style={style}>
-      <p className="joker-tooltip-heading">
+    <div
+      id={id}
+      ref={ref}
+      role="tooltip"
+      className="pointer-events-none fixed z-50 flex w-64 flex-col gap-1 rounded-lg border border-border bg-raised p-3 text-xs text-ink shadow-lg shadow-black/40"
+      style={style}
+    >
+      <p className="text-sm font-bold">
         {localizedJokerName(i18n.language, joker.id, joker.name)}
       </p>
       {copyTargetLabel !== null && (
-        <p className="joker-tooltip-copy-target" data-testid="joker-tooltip-copy-target">
+        <p className="text-advisor" data-testid="joker-tooltip-copy-target">
           Copying: {copyTargetLabel}
         </p>
       )}
       <p
-        className={`joker-tooltip-rarity joker-tooltip-rarity-${joker.rarity}`}
+        className={RARITY_TEXT[joker.rarity]}
         data-testid="joker-tooltip-rarity"
       >
         {rarityLabel(joker.rarity)}
       </p>
-      <p className="joker-tooltip-description" data-testid="joker-tooltip-description">
+      <p className="text-muted" data-testid="joker-tooltip-description">
         {dynamicJokerDescriptionNode({
           language: i18n.language,
           jokerId: joker.id,
@@ -87,43 +102,40 @@ export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, a
       </p>
       {currentValue && (
         <p
-          className="joker-tooltip-current-value"
+          className="font-semibold text-chips"
           data-testid="joker-tooltip-current-value"
         >
           {jokerCurrentValueLabel(currentValue)}
         </p>
       )}
       {effectiveOdds && (
-        <p
-          className="joker-tooltip-effective-odds"
-          data-testid="joker-tooltip-effective-odds"
-        >
+        <p className="text-muted" data-testid="joker-tooltip-effective-odds">
           Effective odds: {effectiveOdds}
         </p>
       )}
       {progress && (
-        <p
-          className="joker-tooltip-progress"
-          data-testid="joker-tooltip-enhanced-progress"
-        >
+        <p className="text-muted" data-testid="joker-tooltip-enhanced-progress">
           Enhanced cards: {progress.count} / {progress.threshold}
         </p>
       )}
       {editionInfo && (
-        <p className={`joker-tooltip-edition ${editionClass}`}>
+        <p className="text-chips">
           <strong>{editionInfo.name}</strong> — {editionInfo.description}
         </p>
       )}
       {jokerStickers(joker).map((sticker, idx) => (
         <p
           key={`${sticker.kind}-${idx}`}
-          className={`joker-tooltip-sticker joker-tooltip-sticker-${sticker.kind}`}
+          className="text-money"
           data-testid={`joker-tooltip-sticker-${sticker.kind}`}
         >
-          <strong>{JOKER_STICKER_INFO[sticker.kind].name}</strong> — {stickerLine(sticker)}
+          <strong>{JOKER_STICKER_INFO[sticker.kind].name}</strong> —{" "}
+          {stickerLine(sticker)}
         </p>
       ))}
-      <p className="joker-tooltip-sell">Sell for ${sellValue}</p>
+      <p className="mt-1 border-t border-border pt-1 font-semibold text-money">
+        Sell for ${sellValue}
+      </p>
     </div>,
     document.body,
   );
@@ -134,7 +146,10 @@ function computeCopyTargetLabel(
   index: number,
 ): string | null {
   const effect = jokers[index]?.effect;
-  if (effect?.kind !== "copy-right-joker" && effect?.kind !== "copy-leftmost-joker") {
+  if (
+    effect?.kind !== "copy-right-joker" &&
+    effect?.kind !== "copy-leftmost-joker"
+  ) {
     return null;
   }
   if (resolveJokerEffect(jokers, index).kind === "noop") {

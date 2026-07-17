@@ -3,7 +3,10 @@ import userEvent from "@testing-library/user-event";
 import RunInfo, { emptyHandCounts, type HandPlayCounts } from "./RunInfo";
 import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
-import { createDefaultHandStats, type HandStats } from "../../scoring/handStats";
+import {
+  createDefaultHandStats,
+  type HandStats,
+} from "../../scoring/handStats";
 import { VOUCHER_CATALOG, type Voucher } from "../../items/vouchers";
 import type { Deck } from "../../items/decks";
 import { STAKE_ORDER, type Stake } from "../../items/stakes";
@@ -17,14 +20,18 @@ function findVoucher(id: Voucher["id"]): Voucher {
 
 const defaultStats: HandStats = createDefaultHandStats();
 
-function buildCounts(overrides: Partial<Record<HandLabel, number>> = {}): HandPlayCounts {
+function buildCounts(
+  overrides: Partial<Record<HandLabel, number>> = {},
+): HandPlayCounts {
   return { ...emptyHandCounts(), ...overrides };
 }
 
 describe("RunInfo trigger", () => {
   test("renders a button labeled Run info", () => {
     render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
-    expect(screen.getByRole("button", { name: "Run info" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Run info" }),
+    ).toBeInTheDocument();
   });
 
   test("does not render the dialog on initial render", () => {
@@ -50,7 +57,9 @@ describe("RunInfo trigger", () => {
 });
 
 describe("RunInfo dialog content", () => {
-  async function openDialog(counts: HandPlayCounts = buildCounts()): Promise<void> {
+  async function openDialog(
+    counts: HandPlayCounts = buildCounts(),
+  ): Promise<void> {
     const user = userEvent.setup();
     render(<RunInfo handPlayCounts={counts} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
@@ -266,9 +275,9 @@ describe("RunInfo tab control", () => {
   test("clicking the Vouchers tab hides the Hands panel content", async () => {
     const user = await openWithVouchers();
     await user.click(screen.getByRole("tab", { name: "Vouchers" }));
-    const handsPanel = screen.getByRole("tab", { name: "Hands" }).getAttribute(
-      "aria-controls",
-    );
+    const handsPanel = screen
+      .getByRole("tab", { name: "Hands" })
+      .getAttribute("aria-controls");
     expect(document.getElementById(handsPanel ?? "")).toHaveAttribute("hidden");
   });
 
@@ -307,9 +316,10 @@ describe("RunInfo tab control", () => {
     const user = await openWithVouchers();
     screen.getByRole("tab", { name: "Hands" }).focus();
     await user.keyboard("{End}");
-    expect(
-      screen.getByRole("tab", { name: "Deck & Stake" }),
-    ).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("tab", { name: "Deck & Stake" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   });
 
   test("reopening the modal resets the active tab to Hands", async () => {
@@ -427,9 +437,7 @@ describe("RunInfo dialog focus trap", () => {
     await user.tab();
     expect(dialog.contains(document.activeElement)).toBe(true);
     await user.click(closeButton);
-    expect(
-      screen.getByRole("button", { name: "Run info" }),
-    ).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Run info" })).toHaveFocus();
   });
 
   test("Escape still closes the dialog and restores focus to the trigger (no useEscapeToClose regression)", async () => {
@@ -451,9 +459,7 @@ describe("RunInfo deck tab", () => {
     useGame.getState().setSelectedDeck(deck);
     useGame.getState().setSelectedStake(stake);
     const user = userEvent.setup();
-    render(
-      <RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />,
-    );
+    render(<RunInfo handPlayCounts={buildCounts()} handStats={defaultStats} />);
     await user.click(screen.getByRole("button", { name: "Run info" }));
     await screen.findByRole("dialog");
     await user.click(screen.getByRole("tab", { name: "Deck & Stake" }));
@@ -498,8 +504,8 @@ describe("RunInfo deck tab", () => {
 
   test("does not mark a non-current stake row (negative)", async () => {
     await openDeckTab("red-deck", "gold");
-    expect(
-      screen.getByTestId("run-info-stake-row-white"),
-    ).not.toHaveAttribute("aria-current");
+    expect(screen.getByTestId("run-info-stake-row-white")).not.toHaveAttribute(
+      "aria-current",
+    );
   });
 });

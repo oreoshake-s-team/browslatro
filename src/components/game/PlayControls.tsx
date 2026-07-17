@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { tHandLabel } from "../../i18n/handLabels";
-import "./PlayControls.css";
 import { useGame } from "../../store/game";
 import AutopilotControls from "./AutopilotControls";
 import { useAutopilotSession } from "./autopilotSession";
 import { useGameSession } from "./gameSession";
+import { Button } from "../ui/Button";
 
 export default function PlayControls() {
   const { submitHand, discardSelected, isScoring } = useGameSession();
@@ -27,10 +27,12 @@ export default function PlayControls() {
     !isScoring;
 
   return (
-    <div className="submit-hand">
-      <div className="play-actions">
-        <button
-          className="btn btn--primary submit-hand-button"
+    <div className="flex w-full max-w-225 flex-col gap-3">
+      <div className="flex gap-3">
+        <Button
+          variant="primary"
+          size="lg"
+          className="flex-1"
           onClick={submitHand}
           disabled={isScoring || selectedIds.size === 0}
           aria-label={
@@ -47,40 +49,31 @@ export default function PlayControls() {
           {t("game.submitHand")}
           {selectedHand && (
             <span
-              className="submit-hand-button-detected"
+              className="ml-2 inline-flex items-center gap-2 rounded-md bg-black/20 px-2 py-0.5 text-sm font-semibold"
               data-testid="submit-hand-detected"
             >
-              <span className="submit-hand-button-detected-label">
-                {tHandLabel(t, selectedHand.label)}
-              </span>
-              <span className="submit-hand-button-detected-score">
-                <span className="submit-hand-button-chips">
-                  {chips + devChipsBonus}
-                </span>
+              <span>{tHandLabel(t, selectedHand.label)}</span>
+              <span>
+                <span>{chips + devChipsBonus}</span>
                 <span aria-hidden="true"> × </span>
-                <span className="submit-hand-button-mult">
-                  {(multiplier + devMultBonus) * devMultFactor}
-                </span>
+                <span>{(multiplier + devMultBonus) * devMultFactor}</span>
               </span>
             </span>
           )}
-        </button>
-        <button
-          className="btn btn--secondary discard-button"
-          onClick={discardSelected}
-          disabled={!canDiscard}
-        >
+        </Button>
+        <Button size="lg" onClick={discardSelected} disabled={!canDiscard}>
           <span aria-hidden="true">🗑️ </span>Discard
-        </button>
+        </Button>
         {autopilotSession && (
-          <button
-            className="btn btn--advisor autopilot-toggle-button"
+          <Button
+            variant="advisor"
+            size="lg"
             onClick={autopilotSession.onToggle}
             aria-pressed={autopilotSession.enabled}
           >
             <span aria-hidden="true">🤖 </span>
             {t("advisor.autopilot")}
-          </button>
+          </Button>
         )}
       </div>
       {autopilotSession &&

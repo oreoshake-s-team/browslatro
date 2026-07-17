@@ -1,6 +1,5 @@
 import { Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
-import "./Game.css";
 import { foolCopyTargetText } from "../../i18n/foolCopyTarget";
 import { packShowsHandArea } from "../../items/packs";
 import { useShopController } from "../../hooks/useShopController";
@@ -31,20 +30,30 @@ export default function Game() {
   const nopeTriggerKey = useGame((s) => s.nopeTriggerKey);
 
   useCeruleanForcedCard();
-  const foolCopyTarget = foolCopyTargetText(t, i18n.language, lastUsedConsumable);
+  const foolCopyTarget = foolCopyTargetText(
+    t,
+    i18n.language,
+    lastUsedConsumable,
+  );
 
   const previewActive = (packOpen?.previewHand?.length ?? 0) > 0;
   const handVisible = !shop && !packOpen;
   const holdsHandConsumable = consumables.some(
     (c) => c.kind === "tarot" || c.kind === "spectral",
   );
-  const packShowsHand = packOpen ? packShowsHandArea(packOpen.pack.pool) : false;
+  const packShowsHand = packOpen
+    ? packShowsHandArea(packOpen.pack.pool)
+    : false;
   const showPackHand =
     !!packOpen && packShowsHand && !previewActive && holdsHandConsumable;
 
   return (
-    <main className="game" aria-label={t("a11y.game")} aria-busy={isScoring}>
-      <div className="game-top-row">
+    <main
+      className="flex min-h-0 flex-1 flex-col items-start gap-5 overflow-y-auto p-5 landscape-narrow:gap-2.5"
+      aria-label={t("a11y.game")}
+      aria-busy={isScoring}
+    >
+      <div className="flex w-full max-w-225 flex-nowrap items-start gap-5">
         {!packOpen && <JokersSection />}
         {!packOpen && <ConsumablesSection />}
         {shop && !packOpen && <GameOverlayDeck />}
@@ -56,7 +65,7 @@ export default function Game() {
             foolCopyTarget={foolCopyTarget}
             playArea={
               <>
-                <div className="game-top-row">
+                <div className="flex w-full max-w-225 flex-nowrap items-start gap-5">
                   <JokersSection />
                   <ConsumablesSection />
                   {packShowsHand && !showPackHand && <GameOverlayDeck />}
@@ -69,7 +78,11 @@ export default function Game() {
       )}
       {shop && (
         <Suspense fallback={<LazyChunkSpinner />}>
-          <Shop {...shop} disabled={!!packOpen} foolCopyTarget={foolCopyTarget} />
+          <Shop
+            {...shop}
+            disabled={!!packOpen}
+            foolCopyTarget={foolCopyTarget}
+          />
         </Suspense>
       )}
       {handVisible && <HandSection />}

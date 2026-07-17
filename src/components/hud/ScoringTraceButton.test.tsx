@@ -62,7 +62,9 @@ describe("ScoringTraceButton", () => {
     );
     await user.click(screen.getByRole("button", { name: "Scoring Log" }));
     await screen.findByRole("dialog");
-    await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
+    await user.click(
+      screen.getByRole("button", { name: /close scoring trace/i }),
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

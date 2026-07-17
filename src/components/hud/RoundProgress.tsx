@@ -1,33 +1,32 @@
 import { useTranslation } from "react-i18next";
-import "./RoundProgress.css";
+import { Stat } from "../ui/Stat";
 
 interface RoundProgressProps {
   remainingHands: number;
   remainingDiscards: number;
 }
 
-function RoundProgress({ remainingHands, remainingDiscards }: RoundProgressProps) {
+function RoundProgress({
+  remainingHands,
+  remainingDiscards,
+}: RoundProgressProps) {
   const { t } = useTranslation();
   return (
-    <div className="round-progress">
-      <div
-        className="stat"
+    <div className="flex gap-2">
+      <Stat
+        label={t("sidebar.hands")}
+        value={remainingHands}
         aria-live="polite"
         aria-atomic="true"
         data-testid="hands-stat"
-      >
-        <span className="stat-value">{remainingHands}</span>
-        <span className="stat-label">{t("sidebar.hands")}</span>
-      </div>
-      <div
-        className="stat"
+      />
+      <Stat
+        label={t("sidebar.discards")}
+        value={remainingDiscards}
         aria-live="polite"
         aria-atomic="true"
         data-testid="discards-stat"
-      >
-        <span className="stat-value">{remainingDiscards}</span>
-        <span className="stat-label">{t("sidebar.discards")}</span>
-      </div>
+      />
     </div>
   );
 }

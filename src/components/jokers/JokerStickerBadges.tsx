@@ -1,4 +1,4 @@
-import "./JokerStickerBadges.css";
+import { Badge } from "../ui/Badge";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import {
@@ -13,6 +13,15 @@ interface JokerStickerBadgesProps {
   readonly joker: Joker;
 }
 
+const STICKER_TONE = {
+  eternal: "money",
+  perishable: "advisor",
+  rental: "success",
+} as const satisfies Record<
+  JokerSticker["kind"],
+  "money" | "advisor" | "success"
+>;
+
 const STICKER_LETTER: Readonly<Record<JokerSticker["kind"], string>> = {
   eternal: "E",
   perishable: "P",
@@ -25,22 +34,23 @@ export default function JokerStickerBadges({ joker }: JokerStickerBadgesProps) {
   if (stickers.length === 0) return null;
   return (
     <ul
-      className="joker-sticker-badges"
+      className="flex list-none flex-wrap gap-1"
       aria-label={t("a11y.jokerStickers")}
       data-testid={`joker-stickers-${joker.id}`}
     >
       {stickers.map((sticker, idx) => (
-        <li
-          key={`${sticker.kind}-${idx}`}
-          className={`joker-sticker-badge joker-sticker-badge-${sticker.kind}${
-            sticker.kind === "perishable" && sticker.roundsHeld >= PERISHABLE_LIFE
-              ? " joker-sticker-badge-debuffed"
-              : ""
-          }`}
-          aria-label={badgeAriaLabel(t, sticker)}
-          data-testid={`joker-sticker-${sticker.kind}`}
-        >
-          {badgeText(sticker)}
+        <li key={`${sticker.kind}-${idx}`}>
+          <Badge
+            tone={STICKER_TONE[sticker.kind]}
+            struck={
+              sticker.kind === "perishable" &&
+              sticker.roundsHeld >= PERISHABLE_LIFE
+            }
+            aria-label={badgeAriaLabel(t, sticker)}
+            data-testid={`joker-sticker-${sticker.kind}`}
+          >
+            {badgeText(sticker)}
+          </Badge>
         </li>
       ))}
     </ul>

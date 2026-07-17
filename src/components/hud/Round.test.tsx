@@ -70,7 +70,9 @@ describe("Round — Boss Blind name (phase 0)", () => {
         boss={wall}
       />,
     );
-    expect(screen.getByText("Extra large blind requirement.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Extra large blind requirement."),
+    ).toBeInTheDocument();
   });
 
   test("does not render the boss description on blind 1", () => {

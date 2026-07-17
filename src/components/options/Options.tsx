@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../ui/Button";
 import "./Options.css";
 import { createPortal } from "react-dom";
 import {
@@ -103,9 +104,9 @@ function Options({
 
   return (
     <>
-      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+      <Button variant="ghost" onClick={() => setOpen(true)}>
         {t("sidebar.options")}
-      </button>
+      </Button>
       {open &&
         createPortal(
           <div

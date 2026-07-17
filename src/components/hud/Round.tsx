@@ -4,7 +4,6 @@ import { tHandLabel } from "../../i18n/handLabels";
 import type { BossBlind } from "../../items/bosses";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import { formatNumber } from "../../utils/formatNumber";
-import "./Round.css";
 
 interface RoundProps {
   blind: Blind;
@@ -33,14 +32,14 @@ function Round({
 
   return (
     <>
-      <div className="round-info">
-        <h2 className="blind-label">{blindLabel}</h2>
+      <div className="flex flex-col items-center gap-1 text-center">
+        <h2 className="text-2xl font-bold">{blindLabel}</h2>
         {blind === 3 && boss && (
-          <p className="boss-effect">{boss.description}</p>
+          <p className="text-sm text-mult italic">{boss.description}</p>
         )}
         {showLockedHand && (
           <p
-            className="boss-locked-hand"
+            className="rounded-md bg-mult/15 px-2 py-1 text-sm text-mult"
             data-testid="boss-locked-hand"
             aria-label={t("a11y.lockedTo", {
               hand: firstPlayedHandLabel
@@ -49,15 +48,25 @@ function Round({
             })}
           >
             {t("sidebar.lockedTo")}{" "}
-            <strong>{firstPlayedHandLabel ? tHandLabel(t, firstPlayedHandLabel) : null}</strong>
+            <strong>
+              {firstPlayedHandLabel
+                ? tHandLabel(t, firstPlayedHandLabel)
+                : null}
+            </strong>
           </p>
         )}
-        <h3>{t("sidebar.scoreAtLeast", { score: formatNumber(requiredScore) })}</h3>
-        <h4>{t("sidebar.toEarn", { award })}</h4>
+        <h3 className="text-sm text-muted">
+          {t("sidebar.scoreAtLeast", { score: formatNumber(requiredScore) })}
+        </h3>
+        <h4 className="text-sm text-muted">{t("sidebar.toEarn", { award })}</h4>
       </div>
-      <div className="round-score">
-        <span className="round-score-label">{t("sidebar.roundScore")}</span>
-        <span className="round-score-value">{formatNumber(roundScore)}</span>
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-xs tracking-widest text-muted uppercase">
+          {t("sidebar.roundScore")}
+        </span>
+        <span className="text-2xl font-bold text-success tabular-nums">
+          {formatNumber(roundScore)}
+        </span>
       </div>
     </>
   );

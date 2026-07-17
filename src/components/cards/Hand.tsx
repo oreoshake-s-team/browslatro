@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useMemo, useReducer, useRef } from "react";
-import "./Hand.css";
+import { Panel } from "../ui/Panel";
+import { cn } from "../ui/cn";
 import Card from "./Card";
 import DeckPile from "./DeckPile";
 import type { Card as CardType } from "../../cards/types";
@@ -9,6 +10,12 @@ import { announce } from "../system/LiveAnnouncer";
 import { cardName } from "../../i18n/strings";
 
 export const MAX_SELECTED = 5;
+
+const SORT_BUTTON =
+  "cursor-pointer px-3 py-1 text-xs font-semibold text-muted transition-colors hover:text-ink focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-50";
+const SORT_ACTIVE = "bg-chips text-white hover:text-white";
+const MOVE_BUTTON =
+  "cursor-pointer rounded-md bg-hover px-1.5 text-xs text-ink hover:bg-chips focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 function applyManualOrder(
   hand: ReadonlyArray<CardType>,
@@ -151,7 +158,9 @@ export default function Hand({
 
   const displayedHand = useMemo(
     () =>
-      manualOrder ? applyManualOrder(hand, manualOrder) : sortCards(hand, sortMode),
+      manualOrder
+        ? applyManualOrder(hand, manualOrder)
+        : sortCards(hand, sortMode),
     [hand, sortMode, manualOrder],
   );
 
@@ -231,10 +240,7 @@ export default function Hand({
     dispatch({ type: "clearDragOverGap", gap: gapIdx });
   }
 
-  function handleGapDrop(
-    gapIdx: number,
-    e: React.DragEvent<HTMLDivElement>,
-  ) {
+  function handleGapDrop(gapIdx: number, e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
     e.stopPropagation();
     const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
@@ -254,7 +260,7 @@ export default function Hand({
   function gapNearestToClientX(clientX: number): number | null {
     const container = handCardsRef.current;
     if (!container) return null;
-    const gaps = container.querySelectorAll<HTMLElement>(".hand-card-gap");
+    const gaps = container.querySelectorAll<HTMLElement>("[data-hand-gap]");
     let bestIdx: number | null = null;
     let bestDist = Number.POSITIVE_INFINITY;
     gaps.forEach((gap, i) => {
@@ -280,7 +286,7 @@ export default function Hand({
     // we only need to compute the nearest gap when the cursor is over a
     // card slot or container background.
     const target = e.target as HTMLElement | null;
-    if (target?.classList?.contains("hand-card-gap")) return;
+    if (target?.dataset?.handGap !== undefined) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     const gap = gapNearestToClientX(e.clientX);
@@ -311,12 +317,14 @@ export default function Hand({
       fromIdx >= 0 && (gapIdx === fromIdx || gapIdx === fromIdx + 1);
     const isActive =
       draggingId !== null && dragOverGap === gapIdx && !isSelfAdjacent;
-    const gapClass = ["hand-card-gap", isActive ? "hand-card-gap--active" : ""]
-      .filter(Boolean)
-      .join(" ");
     return (
       <div
-        className={gapClass}
+        className={cn(
+          "w-1 shrink-0 self-stretch rounded transition-all",
+          draggingId !== null && "w-3",
+          isActive && "w-24 border-2 border-dashed border-focus",
+        )}
+        data-hand-gap=""
         data-testid={`hand-gap-${gapIdx}`}
         onDragOver={(e) => handleGapDragOver(gapIdx, e)}
         onDragLeave={() => handleGapDragLeave(gapIdx)}
@@ -327,21 +335,22 @@ export default function Hand({
   }
 
   return (
-    <div className="hand">
-      <div className="hand-toolbar">
-        <span className="hand-sort-label">Sort:</span>
+    <Panel className="flex w-full max-w-225 flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <span className="text-xs font-bold tracking-widest text-muted uppercase">
+          Sort:
+        </span>
         <div
-          className="hand-sort-group"
+          className="flex overflow-hidden rounded-lg border border-border"
           role="group"
           aria-label={t("a11y.sortHand")}
         >
           <button
             type="button"
-            className={`hand-sort-button ${
-              !manualOrder && sortMode === "rank"
-                ? "hand-sort-button--active"
-                : ""
-            }`.trim()}
+            className={cn(
+              SORT_BUTTON,
+              !manualOrder && sortMode === "rank" && SORT_ACTIVE,
+            )}
             aria-pressed={!manualOrder && sortMode === "rank"}
             onClick={() => selectSort("rank")}
           >
@@ -349,11 +358,10 @@ export default function Hand({
           </button>
           <button
             type="button"
-            className={`hand-sort-button ${
-              !manualOrder && sortMode === "suit"
-                ? "hand-sort-button--active"
-                : ""
-            }`.trim()}
+            className={cn(
+              SORT_BUTTON,
+              !manualOrder && sortMode === "suit" && SORT_ACTIVE,
+            )}
             aria-pressed={!manualOrder && sortMode === "suit"}
             onClick={() => selectSort("suit")}
           >
@@ -361,9 +369,7 @@ export default function Hand({
           </button>
           <button
             type="button"
-            className={`hand-sort-button ${
-              manualOrder ? "hand-sort-button--active" : ""
-            }`.trim()}
+            className={cn(SORT_BUTTON, manualOrder && SORT_ACTIVE)}
             aria-pressed={Boolean(manualOrder)}
             disabled={!manualOrder}
             aria-label={t("a11y.manualOrder")}
@@ -373,12 +379,10 @@ export default function Hand({
           </button>
         </div>
       </div>
-      <div className="hand-row">
+      <div className="grid grid-cols-[1fr_auto] items-start gap-3 portrait-narrow:grid-cols-1">
         <div
           ref={handCardsRef}
-          className={`hand-cards${
-            draggingId !== null ? " hand-cards--dragging" : ""
-          }`}
+          className="flex min-w-0 flex-nowrap items-end overflow-x-auto py-4"
           aria-label={t("a11y.yourHand")}
           data-testid="hand-cards"
           onDragOver={handleHandDragOver}
@@ -386,17 +390,14 @@ export default function Hand({
         >
           {displayedHand.map((card, idx) => {
             const isDragging = draggingId === card.id;
-            const slotClass = [
-              "hand-card-slot",
-              isDragging ? "hand-card-slot--dragging" : "",
-            ]
-              .filter(Boolean)
-              .join(" ");
             return (
               <Fragment key={card.id}>
                 {renderGap(idx)}
                 <div
-                  className={slotClass}
+                  className={cn(
+                    "group/slot relative shrink-0",
+                    isDragging && "opacity-40",
+                  )}
                   draggable
                   aria-grabbed={isDragging || undefined}
                   data-testid={`hand-slot-${card.id}`}
@@ -419,11 +420,13 @@ export default function Hand({
                     onToggle={onToggleCard}
                     onDiscardEnd={onCardDiscardEnd}
                   />
-                  <div className="hand-move-controls">
+                  <div className="absolute inset-x-0 -bottom-3 z-10 hidden justify-center gap-1 group-focus-within/slot:flex group-hover/slot:flex">
                     <button
                       type="button"
-                      className="hand-move-button"
-                      aria-label={t("a11y.moveLeft", { item: cardName(t, card) })}
+                      className={MOVE_BUTTON}
+                      aria-label={t("a11y.moveLeft", {
+                        item: cardName(t, card),
+                      })}
                       data-testid={`hand-move-left-${card.id}`}
                       onClick={() => moveCard(card, -1)}
                     >
@@ -431,8 +434,10 @@ export default function Hand({
                     </button>
                     <button
                       type="button"
-                      className="hand-move-button"
-                      aria-label={t("a11y.moveRight", { item: cardName(t, card) })}
+                      className={MOVE_BUTTON}
+                      aria-label={t("a11y.moveRight", {
+                        item: cardName(t, card),
+                      })}
                       data-testid={`hand-move-right-${card.id}`}
                       onClick={() => moveCard(card, 1)}
                     >
@@ -445,7 +450,7 @@ export default function Hand({
           })}
           {renderGap(displayedHand.length)}
         </div>
-        <div className="hand-deck">
+        <div className="shrink-0">
           <DeckPile
             remaining={remaining}
             consumableDropEnabled={consumableDropEnabled}
@@ -455,6 +460,6 @@ export default function Hand({
           />
         </div>
       </div>
-    </div>
+    </Panel>
   );
 }

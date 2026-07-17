@@ -45,7 +45,10 @@ describe("ScoringTrace", () => {
       { kind: "money-delta", amount: 1, source: "Interest" },
     );
     render(<ScoringTrace events={events} />);
-    const heading = screen.getByRole("heading", { name: "Money won", level: 4 });
+    const heading = screen.getByRole("heading", {
+      name: "Money won",
+      level: 4,
+    });
     const moneySection = heading.parentElement;
     if (!moneySection) throw new Error("Money sub-section root missing");
     expect(
@@ -105,7 +108,9 @@ describe("ScoringTrace", () => {
 
   test("does not render a total line for a base-less orphan group (negative)", () => {
     const { container } = render(
-      <ScoringTrace events={[{ kind: "chips-delta", amount: 5, source: "orphan" }]} />,
+      <ScoringTrace
+        events={[{ kind: "chips-delta", amount: 5, source: "orphan" }]}
+      />,
     );
     expect(container.querySelector(".scoring-trace__total")).toBeNull();
   });
@@ -121,8 +126,15 @@ describe("ScoringTrace auto-scroll", () => {
   test("scrolls to the bottom when events are added", () => {
     const { rerender } = render(<ScoringTrace events={[]} />);
     const log = screen.getByRole("log");
-    Object.defineProperty(log, "scrollHeight", { value: 500, configurable: true });
-    rerender(<ScoringTrace events={group({ chips: 10, mult: 2, handLabel: "Pair", level: 1 })} />);
+    Object.defineProperty(log, "scrollHeight", {
+      value: 500,
+      configurable: true,
+    });
+    rerender(
+      <ScoringTrace
+        events={group({ chips: 10, mult: 2, handLabel: "Pair", level: 1 })}
+      />,
+    );
     expect(log.scrollTop).toBe(500);
   });
 
@@ -137,9 +149,7 @@ describe("ScoringTrace auto-scroll", () => {
 describe("ScoringTrace expand affordance", () => {
   test("renders an Expand button", () => {
     render(<ScoringTrace events={[]} />);
-    expect(
-      screen.getByRole("button", { name: "Expand" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Expand" })).toBeInTheDocument();
   });
 
   test("does not render the dialog before the Expand button is pressed (negative)", () => {
@@ -173,7 +183,9 @@ describe("ScoringTrace expand affordance", () => {
     render(<ScoringTrace events={[]} />);
     await user.click(screen.getByRole("button", { name: "Expand" }));
     await screen.findByRole("dialog");
-    await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
+    await user.click(
+      screen.getByRole("button", { name: /close scoring trace/i }),
+    );
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

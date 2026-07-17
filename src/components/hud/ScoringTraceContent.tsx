@@ -21,7 +21,7 @@ export default function ScoringTraceContent({
   const { t } = useTranslation();
   const groups = groupEventsByHand(events);
   if (groups.length === 0) {
-    return <p className="scoring-trace__empty">No scoring yet.</p>;
+    return <p className="text-muted italic">No scoring yet.</p>;
   }
   return (
     <>
@@ -35,38 +35,37 @@ export default function ScoringTraceContent({
         return (
           <section
             key={key}
-            className="scoring-trace__group"
+            className="border-b border-border py-1 last:border-b-0"
             aria-labelledby={headingId}
           >
             {group.base ? (
-              <h3 id={headingId} className="scoring-trace__group-heading">
+              <h3 id={headingId} className="font-bold text-ink">
                 {t("scoringTrace.handHeading", {
                   number: group.base.handNumber,
                   hand: tHandLabel(t, group.base.handLabel),
                   level: group.base.level,
-                })}
-                {" "}
-                <span className="scoring-trace__group-base">
+                })}{" "}
+                <span className="font-normal text-muted">
                   +{formatNumber(group.base.chips)} Chips, +
                   {formatNumber(group.base.mult)} Mult
                 </span>
               </h3>
             ) : null}
             {scoring.length > 0 ? (
-              <ol className="scoring-trace__list">
+              <ol className="list-decimal pl-6 marker:text-muted">
                 {scoring.map((event, index) => (
-                  <li key={index} className="scoring-trace__item">
+                  <li key={index} className="text-muted">
                     {formatScoringEvent(event)}
                   </li>
                 ))}
               </ol>
             ) : null}
             {money.length > 0 ? (
-              <div className="scoring-trace__money">
-                <h4 className="scoring-trace__money-heading">Money won</h4>
-                <ol className="scoring-trace__list scoring-trace__list--money">
+              <div className="mt-1">
+                <h4 className="font-bold text-money">Money won</h4>
+                <ol className="list-decimal pl-6 marker:text-muted">
                   {money.map((event, index) => (
-                    <li key={index} className="scoring-trace__item">
+                    <li key={index} className="text-muted">
                       {formatScoringEvent(event)}
                     </li>
                   ))}
@@ -74,7 +73,7 @@ export default function ScoringTraceContent({
               </div>
             ) : null}
             {totals ? (
-              <p className="scoring-trace__total">
+              <p className="mt-1 font-bold text-success">
                 {t("scoringTrace.handTotal", {
                   chips: formatNumber(totals.chips),
                   mult: formatNumber(totals.mult),

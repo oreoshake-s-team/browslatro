@@ -1,11 +1,15 @@
-import "./Card.css";
-import "./CardCenterValue.css";
-import "./CardLuckyCenter.css";
-import "./CardEditions.css";
 import { useId, useRef, useState } from "react";
+import { cva } from "class-variance-authority";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
-import type { Card as CardType, CardEdition, Enhancement, Rank, Seal, Suit } from "../../cards/types";
+import type {
+  Card as CardType,
+  CardEdition,
+  Enhancement,
+  Rank,
+  Seal,
+  Suit,
+} from "../../cards/types";
 import { tSuitName } from "../../i18n/strings";
 import {
   enhancementDisplayValue,
@@ -22,6 +26,7 @@ import CardTooltip from "./CardTooltip";
 import { getCardInfo } from "./cardInfo";
 import { useGame } from "../../store/game";
 import { probabilityMultiplierFromJokers } from "../../items/jokers";
+import { cn } from "../ui/cn";
 
 const SUIT_GLYPHS: Record<Suit, string> = {
   spades: "♠",
@@ -32,15 +37,6 @@ const SUIT_GLYPHS: Record<Suit, string> = {
 
 type FaceRank = "J" | "Q" | "K";
 
-const FACE_RANK_CLASS: Record<FaceRank, string> = {
-  J: "card-face-jack",
-  Q: "card-face-queen",
-  K: "card-face-king",
-};
-
-// Decorative glyph paired with each face card. Jack gets a scepter (no crown),
-// Queen wears the white chess queen crown, King wears the heavier black chess
-// king crown — all standard Unicode so we stay dependency-free.
 const FACE_RANK_GLYPH: Record<FaceRank, string> = {
   J: "⚜",
   Q: "♛",
@@ -86,6 +82,71 @@ const CARD_EDITION_LABEL_KEY = {
   holographic: "cardLabels.editionHolographic",
   polychrome: "cardLabels.editionPolychrome",
 } as const satisfies Record<CardEdition, string>;
+
+const SEAL_DOT = {
+  gold: "bg-money",
+  red: "bg-mult",
+  blue: "bg-chips",
+  purple: "bg-advisor",
+} as const satisfies Record<Seal, string>;
+
+const VALUE_TEXT = {
+  chips: "text-chips",
+  mult: "text-mult",
+  money: "text-money",
+} as const satisfies Record<EnhancementValueColor, string>;
+
+const playingCard = cva(
+  "relative flex aspect-[5/7] w-16 shrink-0 flex-col rounded-lg border border-black/15 bg-card p-1.5 font-serif text-card-ink shadow-md shadow-black/30 transition-all",
+  {
+    variants: {
+      enhancement: {
+        none: "",
+        bonus: "bg-linear-to-b from-card to-chips/30",
+        mult: "bg-linear-to-b from-card to-mult/30",
+        wild: "bg-linear-to-b from-card to-advisor/30",
+        glass: "border-chips/60 bg-linear-to-b from-card/90 to-chips/40",
+        steel: "bg-linear-to-b from-card to-muted/50",
+        stone: "border-border bg-hover text-ink",
+        gold: "bg-linear-to-b from-card to-money/50",
+        lucky: "bg-linear-to-b from-card to-success/30",
+      },
+      edition: {
+        none: "",
+        foil: "ring-2 ring-chips",
+        holographic: "ring-2 ring-advisor",
+        polychrome: "ring-2 ring-success",
+      },
+      selected: {
+        true: "-translate-y-4 border-chips ring-2 ring-chips",
+      },
+      interactive: {
+        true: "cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+      },
+      debuffed: {
+        true: "opacity-50 saturate-50",
+      },
+      faceDown: {
+        true: "border-black/40 bg-(--deck-back,var(--color-chips))",
+      },
+    },
+    compoundVariants: [
+      {
+        interactive: true,
+        selected: false,
+        className: "hover:-translate-y-1 hover:shadow-lg",
+      },
+    ],
+    defaultVariants: {
+      enhancement: "none",
+      edition: "none",
+      selected: false,
+      interactive: false,
+      debuffed: false,
+      faceDown: false,
+    },
+  },
+);
 
 function isFaceRank(rank: Rank): rank is FaceRank {
   return rank === "J" || rank === "Q" || rank === "K";
@@ -140,33 +201,20 @@ export default function Card({
   const hideTooltip = () => setTooltipRect(null);
   useEscapeToClose(() => setTooltipRect(null), tooltipRect !== null);
   const isStone = card.enhancement === "stone";
-  const colorClass = isStone
-    ? "card-stone-text"
-    : card.suit === "hearts" || card.suit === "diamonds"
-      ? "card-red"
-      : "card-black";
-  const suitClass = `card-suit-${card.suit}`;
-  const selectedClass = selected ? "card--selected" : "";
-  const discardingClass = discarding ? "card--discarding" : "";
-  const newlyDrawnClass = newlyDrawn ? "card--newly-drawn" : "";
-  const scoringClass = scoring
-    ? `card--scoring card--scoring-tick-${scoringPulseTick % 2}`
-    : "";
-  const goldScoringClass = goldScoring ? "card--gold-scoring" : "";
-  const steelScoringClass = steelScoring ? "card--steel-scoring" : "";
-  const luckyMultScoringClass = luckyMultScoring ? "card--lucky-mult-scoring" : "";
-  const luckyMoneyScoringClass = luckyMoneyScoring
-    ? "card--lucky-money-scoring"
-    : "";
   const showBack = card.faceDown === true && !scoring;
-  const enhancementClass = !showBack && card.enhancement
-    ? `card--enhancement-${card.enhancement}`
-    : "";
-  const sealClass = !showBack && card.seal ? `card-seal-${card.seal}` : "";
-  const editionClass = !showBack && card.edition
-    ? `card--edition-${card.edition}`
-    : "";
-  const debuffedClass = debuffed ? "card--debuffed" : "";
+  const suitText = isStone
+    ? ""
+    : card.suit === "hearts" || card.suit === "diamonds"
+      ? "text-suit-red"
+      : "text-card-ink";
+  const anyScoring = scoring || goldScoring || steelScoring;
+  const scoringRing = goldScoring
+    ? "ring-2 ring-money"
+    : steelScoring
+      ? "ring-2 ring-muted"
+      : scoring
+        ? "ring-2 ring-money"
+        : "";
   const displayValue = card.enhancement
     ? enhancementDisplayValue(card.enhancement)
     : null;
@@ -230,45 +278,65 @@ export default function Card({
     : newlyDrawn
       ? t("a11y.cardNewlyDrawn", { name: withForced })
       : withForced;
-  const faceClass = !isStone && isFaceRank(card.rank)
-    ? `card-face ${FACE_RANK_CLASS[card.rank]}`
-    : "";
-  const faceDownClass = showBack ? "card--face-down" : "";
-  const forcedClass = forced ? "card--forced" : "";
 
-  const cardClassName =
-    `card ${colorClass} ${suitClass} ${selectedClass} ${discardingClass} ${newlyDrawnClass} ${scoringClass} ${goldScoringClass} ${steelScoringClass} ${luckyMultScoringClass} ${luckyMoneyScoringClass} ${faceClass} ${enhancementClass} ${sealClass} ${editionClass} ${debuffedClass} ${faceDownClass} ${forcedClass}`
-      .replace(/\s+/g, " ")
-      .trim();
+  const cardClassName = cn(
+    playingCard({
+      enhancement: showBack ? "none" : (card.enhancement ?? "none"),
+      edition: showBack ? "none" : (card.edition ?? "none"),
+      selected,
+      interactive: !decorative,
+      debuffed,
+      faceDown: showBack,
+    }),
+    suitText,
+    forced && !showBack && "ring-2 ring-money",
+    anyScoring && scoringRing,
+    newlyDrawn && !discarding && "animate-fade-in",
+    discarding && "animate-fly-out",
+  );
   const content = (
     <>
-      {showBack ? (
+      {anyScoring && (
         <span
-          className="card-back-face"
+          key={`pulse-${scoringPulseTick % 2}`}
+          className={cn(
+            "pointer-events-none absolute inset-0 animate-pulse-flash rounded-lg",
+            steelScoring ? "bg-muted/30" : "bg-money/30",
+          )}
           aria-hidden="true"
-          data-testid={`card-back-${card.id}`}
         />
+      )}
+      {showBack ? (
+        <span aria-hidden="true" data-testid={`card-back-${card.id}`} />
       ) : isStone ? (
-        <span className="card-stone-face" aria-hidden="true" />
+        <span
+          className="flex flex-1 items-center justify-center text-2xl"
+          aria-hidden="true"
+        >
+          🪨
+        </span>
       ) : (
         <>
-          <span className="card-corner card-corner-top" aria-hidden="true">
-            <span className="card-rank">{card.rank}</span>
-            <span className="card-suit">{SUIT_GLYPHS[card.suit]}</span>
+          <span
+            className="flex items-baseline gap-0.5 text-sm leading-none font-bold"
+            aria-hidden="true"
+          >
+            <span>{card.rank}</span>
+            <span>{SUIT_GLYPHS[card.suit]}</span>
           </span>
           {isLucky ? (
             <span
-              className="card-center-lucky"
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 text-center font-sans text-[0.55rem] leading-tight font-semibold"
               aria-hidden="true"
               data-testid={`card-center-lucky-${card.id}`}
             >
-              <span className="card-center-lucky-odds card-center-lucky-odds-mult">
+              <span className="text-mult">
                 {t("cardLabels.luckyOddsMult", {
                   n: luckyMultDenom,
                   amount: LUCKY_ENHANCEMENT_MULT_AMOUNT,
                 })}
               </span>
-              <span className="card-center-lucky-odds card-center-lucky-odds-money">
+              <span className="text-money">
                 {t("cardLabels.luckyOddsMoney", {
                   n: luckyMoneyDenom,
                   amount: LUCKY_ENHANCEMENT_MONEY_AMOUNT,
@@ -277,25 +345,33 @@ export default function Card({
             </span>
           ) : displayValue ? (
             <span
-              className={`card-center-value card-center-value-${displayValue.color}`}
+              className={cn(
+                "flex flex-1 flex-col items-center justify-center text-center font-sans text-xs leading-tight font-bold",
+                VALUE_TEXT[displayValue.color],
+              )}
               aria-hidden="true"
               data-testid={`card-center-value-${card.id}`}
             >
               {displayValue.text}
               {displayValue.timing !== "scored" && (
-                <span className="card-center-value-timing">
+                <span className="font-normal text-muted">
                   {t(ENHANCEMENT_VALUE_TIMING_CAPTION_KEY[displayValue.timing])}
                 </span>
               )}
             </span>
           ) : isFaceRank(card.rank) ? (
-            <span className="card-face-decoration" aria-hidden="true">
-              <span className="card-face-glyph">{FACE_RANK_GLYPH[card.rank]}</span>
-              <span className="card-face-monogram">{card.rank}</span>
-              <span className="card-face-suit">{SUIT_GLYPHS[card.suit]}</span>
+            <span
+              className="flex flex-1 flex-col items-center justify-center leading-none"
+              aria-hidden="true"
+            >
+              <span className="text-2xl">{FACE_RANK_GLYPH[card.rank]}</span>
+              <span className="text-xs font-bold">{card.rank}</span>
             </span>
           ) : (
-            <span className="card-center" aria-hidden="true">
+            <span
+              className="flex flex-1 items-center justify-center text-2xl"
+              aria-hidden="true"
+            >
               {SUIT_GLYPHS[card.suit]}
             </span>
           )}
@@ -303,14 +379,17 @@ export default function Card({
       )}
       {card.seal && !showBack && (
         <span
-          className={`card-seal card-seal-badge-${card.seal}`}
+          className={cn(
+            "absolute top-6 right-1 size-3 rounded-full ring-1 ring-black/30",
+            SEAL_DOT[card.seal],
+          )}
           aria-hidden="true"
           data-testid={`card-seal-${card.id}`}
         />
       )}
       {forced && !showBack && (
         <span
-          className="card-forced-badge"
+          className="absolute -top-2 -right-1 text-sm"
           aria-hidden="true"
           data-testid={`card-forced-${card.id}`}
         >
@@ -319,7 +398,7 @@ export default function Card({
       )}
       {luckyMultScoring && (
         <span
-          className="card-lucky-mult-badge"
+          className="absolute inset-x-0 top-0 z-10 animate-float-up text-center font-sans text-sm font-bold text-mult"
           aria-hidden="true"
           data-testid={`lucky-mult-scoring-${card.id}`}
         >
@@ -328,7 +407,7 @@ export default function Card({
       )}
       {luckyMoneyScoring && (
         <span
-          className="card-lucky-money-badge"
+          className="absolute inset-x-0 top-4 z-10 animate-float-up text-center font-sans text-sm font-bold text-money"
           aria-hidden="true"
           data-testid={`lucky-money-scoring-${card.id}`}
         >

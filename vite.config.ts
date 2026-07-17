@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { defineConfig, type PluginOption } from "vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { applySiteUrl } from "./src/seo/siteUrl";
@@ -53,6 +54,7 @@ export default defineConfig({
       : [],
   },
   plugins: [
+    tailwindcss(),
     react(),
     siteUrlPlugin,
     ...(analyzePlugin ? [analyzePlugin] : []),
