@@ -48,6 +48,7 @@
   --radius-pill: var(--radius-pill);
 
   --default-transition-duration: calc(150ms * var(--animation-speed, 1));
+  --default-transition-timing-function: ease;
 }
 
 @utility focus-ring {
