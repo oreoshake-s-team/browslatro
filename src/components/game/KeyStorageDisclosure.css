@@ -1,0 +1,29 @@
+.key-storage-disclosure {
+  border: 1px solid var(--accent-orange-light);
+  background: var(--accent-orange-pale);
+  border-radius: 6px;
+  padding: 0.5rem 0.7rem;
+}
+
+.key-storage-disclosure-title {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--shop-muted-on-light);
+}
+
+.key-storage-disclosure-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--text-on-light-muted);
+}
+
+.key-storage-disclosure-list li + li {
+  margin-top: 0.25rem;
+}
+
+.key-storage-disclosure-caution {
+  color: var(--accent-red-deep);
+}

@@ -64,7 +64,7 @@ describe("JokerStickerBadges", () => {
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
       .querySelector("li");
-    expect(badge?.classList.contains("bg-joker-sticker-rental")).toBe(true);
+    expect(badge?.classList.contains("joker-sticker-badge-rental")).toBe(true);
   });
 
   test("badge letters reflect kind", () => {
@@ -104,7 +104,7 @@ describe("JokerStickerBadges", () => {
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
       .querySelector("li");
-    expect(badge?.classList.contains("bg-joker-sticker-debuffed")).toBe(
+    expect(badge?.classList.contains("joker-sticker-badge-debuffed")).toBe(
       true,
     );
   });
@@ -117,7 +117,7 @@ describe("JokerStickerBadges", () => {
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
       .querySelector("li");
-    expect(badge?.classList.contains("bg-joker-sticker-debuffed")).toBe(
+    expect(badge?.classList.contains("joker-sticker-badge-debuffed")).toBe(
       false,
     );
   });

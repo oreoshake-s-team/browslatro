@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { enableDragDropTouch } from "@dragdroptouch/drag-drop-touch";
 import "./styles/tokens.css";
-import "./styles/tailwind.css";
 import "./styles/buttons.css";
 import "./styles/deckThemes.css";
 import "./components/system/Tooltip.css";
