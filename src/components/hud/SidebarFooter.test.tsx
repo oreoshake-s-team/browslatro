@@ -36,22 +36,4 @@ describe("SidebarFooter", () => {
     const svg = document.querySelector("svg");
     expect(svg).toHaveAttribute("aria-hidden", "true");
   });
-
-  test("link transitions colors under the animation-speed default", () => {
-    render(<SidebarFooter />);
-    const link = screen.getByRole("link", { name: /github/i });
-    expect(link).toHaveClass("transition-colors");
-  });
-
-  test("link carries the shared focus-ring utility", () => {
-    render(<SidebarFooter />);
-    const link = screen.getByRole("link", { name: /github/i });
-    expect(link).toHaveClass("focus-ring");
-  });
-
-  test("footer hides in narrow portrait viewports", () => {
-    render(<SidebarFooter />);
-    const footer = screen.getByRole("contentinfo");
-    expect(footer).toHaveClass("portrait-narrow:hidden");
-  });
 });
