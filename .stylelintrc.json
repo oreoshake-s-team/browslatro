@@ -33,6 +33,28 @@
   },
   "overrides": [
     {
+      "files": ["src/styles/tailwind.css"],
+      "rules": {
+        "at-rule-no-unknown": [
+          true,
+          {
+            "ignoreAtRules": [
+              "theme",
+              "utility",
+              "custom-variant",
+              "variant",
+              "source",
+              "reference",
+              "plugin"
+            ]
+          }
+        ],
+        "custom-property-pattern": null,
+        "import-notation": null,
+        "nesting-selector-no-missing-scoping-root": null
+      }
+    },
+    {
       "files": ["src/styles/tokens.css"],
       "rules": {
         "color-no-hex": null,

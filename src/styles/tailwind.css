@@ -1,0 +1,60 @@
+/* @theme inline is load-bearing: utilities must resolve var(--token) at the
+   consuming element so [data-deck], inline --animation-speed, and
+   reduced-motion/forced-colors overrides apply. Preflight is intentionally
+   not imported while legacy CSS coexists. Root font-size is 62.5%, so
+   spacing units are quarter-rems of a 10px rem (p-4 = 10px, not 16px). */
+@layer theme, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../**/*.tsx";
+
+@theme inline {
+  --color-*: initial;
+
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent-chips: var(--accent-chips);
+  --color-accent-mult: var(--accent-mult);
+  --color-accent-money: var(--accent-money);
+  --color-accent-success: var(--accent-success);
+  --color-accent-danger: var(--accent-danger);
+  --color-accent-red-deep: var(--accent-red-deep);
+  --color-accent-orange-light: var(--accent-orange-light);
+  --color-accent-orange-pale: var(--accent-orange-pale);
+  --color-shop-muted-on-light: var(--shop-muted-on-light);
+  --color-text-on-light-muted: var(--text-on-light-muted);
+  --color-focus-ring: var(--focus-ring);
+  --color-white: var(--white);
+  --color-black: var(--black);
+  --color-joker-sticker-eternal: var(--joker-sticker-eternal);
+  --color-joker-sticker-perishable: var(--joker-sticker-perishable);
+  --color-joker-sticker-debuffed: var(--joker-sticker-debuffed);
+  --color-joker-sticker-rental: var(--joker-sticker-rental);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-pill: var(--radius-pill);
+
+  --default-transition-duration: calc(150ms * var(--animation-speed, 1));
+}
+
+@utility focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+@custom-variant portrait-narrow (@media (orientation: portrait) and (width <= 768px));
