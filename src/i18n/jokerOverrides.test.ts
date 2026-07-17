@@ -20,6 +20,10 @@ describe("jokerOverrides", () => {
   });
 
   test("an untranslated haw joker name falls back to the English text", () => {
-    expect(localizedJokerName("haw", "plus-four-mult", "+4 Mult")).toBe("Joker");
+    expect(localizedJokerName("haw", "dna", "DNA")).toBe("DNA");
+  });
+
+  test("a translated haw joker name returns the native text", () => {
+    expect(localizedJokerName("haw", "plus-four-mult", "+4 Mult")).toBe("Iōka");
   });
 });

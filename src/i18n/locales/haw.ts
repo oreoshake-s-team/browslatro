@@ -23,9 +23,9 @@ export const haw: LocaleMessages = {
     roundScore: "Ka Heluʻai o ka Puni",
     scoreAtLeast: "E loaʻa ma ka liʻiliʻi loa ka heluʻai: {{score}}",
     toEarn: "Ka Loaʻa o ka {{award}}",
-    lockedTo: "Locked to:", // needs translation
-    viewOnGithub: "View on GitHub", // needs translation
-    githubAriaLabel: "View browslatro source code on GitHub (opens in new tab)", // needs translation
+    lockedTo: "Hoʻopaʻa ʻia i ka:",
+    viewOnGithub: "E nānā ma GitHub",
+    githubAriaLabel: "E nānā i ke kumu pāʻālua browslatro ma Github (wehe ʻia ma kekahi lepe hou)",
   },
   hands: {
     highCard: "Kāleka Kiʻekiʻe",
@@ -71,29 +71,29 @@ export const haw: LocaleMessages = {
     sealPurple: "Sila Poni",
   },
   scoringTrace: {
-    title: "Scoring Trace", // needs translation
-    open: "Moʻo Helu", // needs translation
-    expand: "Expand", // needs translation
-    close: "Pani", // needs translation
+    title: "Moʻohelu",
+    open: "Wehe Moʻo Helu",
+    expand: "Hoʻonui Nānaina",
+    close: "Pani",
     handHeading: "Haʻawina {{number}}: {{hand}} (Lv {{level}})",
     handTotal: "{{chips}} Hiu × {{mult}} Hoʻonui = {{total}}",
   },
   cardPiles: {
-    discardLabel: "Discard", // needs translation
-    discardedTitle: "Discarded Cards", // needs translation
-    remainingTitle: "Remaining Cards", // needs translation
-    sell: "Sell", // needs translation
-    bySuit: "By suit", // needs translation
-    byRank: "By rank", // needs translation
-    close: "Pani", // needs translation
+    discardLabel: "Kiola",
+    discardedTitle: "Nā kāleka i kiola ʻia",
+    remainingTitle: "Nā kāleka e koe nei",
+    sell: "Kūʻai aku",
+    bySuit: "Ma ka paʻa likelike",
+    byRank: "Ma ke kūlana",
+    close: "Pani",
   },
   newRun: {
-    title: "Start New Run", // needs translation
-    deck: "Deck", // needs translation
-    stake: "Stake", // needs translation
-    startingHands: "starting hands", // needs translation
-    startingDiscards: "starting discards", // needs translation
-    startRun: "Start Run →", // needs translation
+    title: "Hoʻomaka i puni hou",
+    deck: "Puʻu Pepa",
+    stake: "Pili",
+    startingHands: "nā haʻawina hoʻomaka",
+    startingDiscards: "nā kiola hoʻomaka",
+    startRun: "Hoʻomaka →",
   },
   handScore: {
     preview: "{{chips}} Hiu × {{mult}} Hoʻonui",
@@ -108,8 +108,8 @@ export const haw: LocaleMessages = {
     unmuteSounds: "Hoʻā Leo",
     enableHighVisibility: "Kūmaka akāka o nā paʻa likelike",
     disableHighVisibility: "Kūmaka maʻamau o nā paʻa likelike",
-    enableDyslexicFont: "Use OpenDyslexic font", // needs translation
-    disableDyslexicFont: "Use default font", // needs translation
+    enableDyslexicFont: "Hoʻohana i ke kinonahua OpenDyslexic",
+    disableDyslexicFont: "Hoʻohana i ke kinonahua paʻamau",
     animationSpeed: "Wikiwiki o ka ʻOnina",
     speedSlow: "Pupū",
     speedNormal: "Maʻamau",
@@ -128,7 +128,7 @@ export const haw: LocaleMessages = {
     bigBlind: "Pili Moʻowini",
     bossBlind: "Pili Makapō",
     anteHeading: "Pili {{ante}}",
-    scoreAtLeast: "Score at least", // needs translation
+    scoreAtLeast: "E loaʻa ma ka liʻiliʻi ka huina helu ʻai",
     payout: "Loaʻa",
     skipReward: "Kāpae makana",
     play: "Pāʻani aku i ka {{blind}} →",
@@ -138,13 +138,12 @@ export const haw: LocaleMessages = {
   roundEnd: {
     wonTitle: "Ua lanakila!",
     savedTitle: "Saved by Mr. Bones!", // needs translation
-    mrBonesConsumed:
-      "Mr. Bones self-destructed to keep the run alive — no reward for this Blind.", // needs translation
+    mrBonesConsumed: "Mr. Bones self-destructed to keep the run alive — no reward for this Blind.", // needs translation
     lostTitle: "Auē! Ua lilo ē, ua lilo aku nō!",
     roundScore: "Huina helu ʻai o kēia puni",
     requiredScore: "Koina helu ʻai",
-    beatBy: "Beat by", // needs translation
-    shortBy: "Short by", // needs translation
+    beatBy: "Ua lilo aku ma ka",
+    shortBy: "Ua pōkole mai ma ka",
     moneyWon: "Kālā i loaʻa",
     baseReward: "Kumu hoʻohui makana",
     interest: "Uku paneʻe ($1 o ka ${{per}}, huinanui loa ${{cap}}) ma ka ${{wallet}}",
@@ -169,10 +168,10 @@ export const haw: LocaleMessages = {
     title: "ʻIkepili o kēia puni",
     handsTab: "Nā haʻawina",
     vouchersTab: "Nā pila hōʻoiaʻiʻo",
-    deckTab: "Pā Kāleka & Pili", // needs translation
-    deckHeading: "Pā Kāleka", // needs translation
-    stakeLadderHeading: "Nā Pili", // needs translation
-    currentStakeMarker: "(kēia)", // needs translation
+    deckTab: "Pā Kāleka & Pili",
+    deckHeading: "Pā Kāleka",
+    stakeLadderHeading: "Nā Pili",
+    currentStakeMarker: "(kēia)",
     handHeader: "Nā haʻawina",
     levelHeader: "Pae",
     chipsTimesMult: "Hiu × Hoʻonui",
@@ -198,7 +197,7 @@ export const haw: LocaleMessages = {
     reroll: "Lū hou (${{cost}})",
     buy: "Kūʻai no (${{price}})",
     open: "Wehe (${{price}})",
-    sold: "Ua kūʻai ʻia", // needs translation
+    sold: "Ua kūʻai ʻia",
     slotsFull: "Piha nā Hakahaka",
     free: "MANUAHI",
     nextRound: "Kekahi Puni →",
@@ -240,7 +239,7 @@ export const haw: LocaleMessages = {
     noPicksRemaining: "ʻAʻohe kiʻina e koe ana",
     consumableSlotsFull: "Piha nā hakahaka no nā kemu",
     jokerSlotsFull: "Piha nā hakahaka no nā kiʻi pepa",
-    jokerSlotsFullSellHint: "Piha nā wahi pākiki — kūʻai aku i kahi pākiki no ka hoʻokaʻawale ʻana.", // needs translation
+    jokerSlotsFullSellHint: "Piha nā wahi pākiki — kūʻai aku i kahi pākiki no ka hoʻokaʻawale ʻana.",
     selectOneFirst: "E koho mua i 1 kāleka ma ka haʻawina nāmua",
     tooManySelectedMaxOne: "Nui hewa ka nui kāleka i koho ʻia (ʻo ka 1 ka nui loa)",
     selectRangeFirst: "E koho mua i 1–{{max}} ma ka haʻawina nāmua",
@@ -251,18 +250,18 @@ export const haw: LocaleMessages = {
     manualOrderHint: "Hoʻokaʻina hou (e kaualakō i ke kāleka e hoʻonohonoho ai",
   },
   consumables: {
-    foolWillCreate: "Will create {{name}} ({{kind}})", // needs translation
-    foolCopyNone: "No card used yet — creates nothing", // needs translation
+    foolWillCreate: "E haku ʻia ʻo {{name}} ({{kind}})",
+    foolCopyNone: "ʻAʻohe kāleka i hoʻohana ʻia – ʻaʻohe mea i haku ʻia",
   },
   game: {
     submitHand: "Waiho haʻawina",
-    bossVoidedMouth: "{{hand}} scored 0 — The Mouth locks you to {{locked}}", // needs translation
-    bossVoidedEye: "{{hand}} scored 0 — The Eye blocks repeat hand types", // needs translation
-    bossArmLowered: "The Arm lowered {{hand}} to level {{level}}", // needs translation
+    bossVoidedMouth: "{{hand}} he 0 ʻai — Hoʻopaʻa ka Waha iā ʻoe i ka {{locked}}",
+    bossVoidedEye: "{{hand}} he 0 ʻai — Pale ka Maka i nā ʻano haʻawina pīnaʻi",
+    bossArmLowered: "Hoʻohaʻahaʻa ʻia ka {{hand}} e ka Lima i ka pae {{level}}",
   },
   admin: {
-    enabled: "Hoʻohana luna", // needs translation
-    disabled: "Ua pau ka hoʻohana luna", // needs translation
+    enabled: "Hoʻohana luna",
+    disabled: "Ua pau ka hoʻohana luna",
   },
   devMenu: {
     humanPlayLog: "Palapala moʻolelo o ka nui pāʻani",
@@ -288,9 +287,9 @@ export const haw: LocaleMessages = {
     playCandidate: "Pāʻani {{hand}} ({{cards}}) — {{score}} helu ʻai",
     discardCandidate: "Nā Kiola {{cards}}",
     buyCandidate: "Kūʻai iā {{name}} no ${{cost}}",
-    sellCandidate: "Kūʻai aku iā {{name}} no ${{value}}", // needs translation
-    useCandidate: "Use {{name}}", // needs translation
-    useDuringBlind: "Use this during the blind — it needs card targets you can't pick in the shop.", // needs translation
+    sellCandidate: "Kūʻai aku iā {{name}} no ${{value}}",
+    useCandidate: "Hoʻohana iā {{name}}",
+    useDuringBlind: "Hoʻohana i kēia i ka pili ʻana – pono nā māka i hiki ʻole ke loaʻa ma ka hale kūʻai",
     rerollCandidate: "E lū hou i ka hale kūʻai no ${{cost}}",
     leaveCandidate: "E haʻalele i ka hale kūʻai a waiho ka ma panakō",
     pickCandidate: "Koho {{name}}",
@@ -299,39 +298,39 @@ export const haw: LocaleMessages = {
     suggestDismiss: "Kāpae",
     suggestRetry: "Hana hou",
     suggestError: "ʻAʻole i hiki i ke kaʻi ke aʻoaʻo maikaʻi aku i nā keiki",
-    coachLabel: "Coach · local · instant", // needs translation
-    coachTip: "Coach tip", // needs translation
-    coachComputing: "Coaching…", // needs translation
+    coachLabel: "Kaʻi · Kupa · Hikiwawe",
+    coachTip: "Aʻoaʻo o ke Kaʻi",
+    coachComputing: "Ke kaʻi nei…",
     coachUnavailable: "The coach is unavailable — the local model failed to load.", // needs translation
-    coachHide: "Hide coach", // needs translation
-    askAiButton: "Ask AI (rate-limited)", // needs translation
-    askAiButtonByok: "Ask AI", // needs translation
-    aiThinking: "Asking the AI…", // needs translation
-    aiAgrees: "AI agrees ✓", // needs translation
-    aiSuggestsInstead: "AI suggests {{move}} instead", // needs translation
+    coachHide: "Hoʻohuna i ke kaʻi ",
+    askAiButton: "Nīnau i ka AI (kaupalena ʻia ma nā ʻai nīnau)",
+    askAiButtonByok: "Nīnau i ka AI",
+    aiThinking: "Ke nīnau nei i ka AI…",
+    aiAgrees: "Kākoʻo ka AI ✓",
+    aiSuggestsInstead: "Aʻoaʻo maila hoʻi ka AI i kēia {{move}}",
     suggestShopButton: "E aʻoaʻo mai no ke kūʻai ʻana",
     suggestPackButton: "E aʻoaʻo mai no kēia pūʻolo",
     autopilotApprove: "ʻʻĀpono aʻe nei",
     autopilotStop: "Hoʻōki i ke kūkākūkā",
     autopilotAskAi: "Nīnau i ke kaʻi AI",
-    feedbackChoiceLabel: "Rate this suggestion", // needs translation
-    feedbackGoodPick: "Good pick", // needs translation
-    feedbackAgreeLabel: "Agree with this suggestion and apply it", // needs translation
-    feedbackBadPick: "Bad pick", // needs translation
-    feedbackOpenLabel: "Flag this suggestion as a bad pick", // needs translation
-    feedbackPrompt: "Which would you pick instead?", // needs translation
-    feedbackSubmit: "Submit", // needs translation
-    feedbackPlayInstead: "E pāʻani i kēia", // needs translation
-    feedbackDoInstead: "E hana i kēia", // needs translation
-    feedbackJustBad: "Just bad, skip", // needs translation
-    feedbackCancel: "Cancel", // needs translation
-    feedbackRecorded: "Thanks — your feedback was recorded.", // needs translation
+    feedbackChoiceLabel: "E hāpai manaʻo no kēia aʻoaʻo",
+    feedbackGoodPick: "He koho maikaʻi",
+    feedbackAgreeLabel: "ʻAe mai i ke aʻoaʻo a hoʻohana",
+    feedbackBadPick: "He koho maikaʻi ʻole",
+    feedbackOpenLabel: "E māka i kēia aʻoaʻo he koho maikaʻi ʻole",
+    feedbackPrompt: "He aha kāu e koho ai i pani?",
+    feedbackSubmit: "Hoʻoholo",
+    feedbackPlayInstead: "E pāʻani i kēia",
+    feedbackDoInstead: "E hana i kēia",
+    feedbackJustBad: "Maikaʻi ʻole nō! E kāpae!",
+    feedbackCancel: "Kāpae", // kāpae has multiple meanings: in this case, it is cancel. On line 331, it is skip.
+    feedbackRecorded: "Mahalo nui. Mālama ʻia kō manaʻo",
     autopilotExplainError: "ʻAʻole hiki i ke kaʻi AI ke wehewehe i kēia kaʻakālai i kēia manawa.",
     autopilotPlayProposal: "Pāʻani {{hand}}",
     autopilotDiscardProposal: "Kiola i nā kāleka i koho ʻia",
     downloadingModel: "Ke hoʻoili iho nei i ke kaʻi AI",
     noSuggestionAvailable: "ʻAʻohe aʻoaʻo o ke kaʻi AI. ʻAʻohe kāleka e alo nei e hiki ai i ke kaʻi ke ʻike",
-    advisorUnavailable: "Coach unavailable — the suggestion model failed to load. Try again later.", // needs translation
+    advisorUnavailable: "ʻAʻohe kaʻi – ua pīholo ka ʻōnaehana aʻoaʻo. E hoʻā'o hou.",
     thinking: "Ke noʻonoʻo nei ke kaʻi aʻoaʻo",
     keyLabel: "Kāu kī API Anthropic",
     keySave: "Mālama i ke kī",
@@ -369,9 +368,9 @@ export const haw: LocaleMessages = {
     cardWithDetail: "{{name}}, {{detail}}",
     cardDebuffed: "{{name}}, hoʻonāwaliwali ʻia",
     cardNewlyDrawn: "{{name}}, ʻakahi a unuhi ʻia",
-    cardForced: "{{name}}, koho paʻa — ʻaʻole hiki ke wehe", // needs translation
-    cardForcedAnnounce: "ʻO {{name}} kāu kāleka koho paʻa i kēia manawa.", // needs translation
-    cardLockedAttempt: "ʻAʻole hiki ke wehe i ka kāleka koho paʻa.", // needs translation
+    cardForced: "{{name}}, koho paʻa — ʻaʻole hiki ke wehe",
+    cardForcedAnnounce: "ʻO {{name}} kāu kāleka koho paʻa i kēia manawa.",
+    cardLockedAttempt: "ʻAʻole hiki ke wehe i ka kāleka koho paʻa.",
     itemsForSale: "Kūʻai emi Ikamu",
     vouchersForAnte: "Nā palapala hōʻoiaʻiʻo no kēia pili",
     boosterPacksForSale: "Kūʻai emi Pūʻolo hoʻokāʻoi",
@@ -413,9 +412,9 @@ export const haw: LocaleMessages = {
     atEnd: "Aia ka {{item}} ma ke kūlana hope",
     equippedJokers: "Nā Kiʻi Pepa i hoʻokomo ʻia",
     emptyJokerSlot: "Wahi Kiʻi Pepa hakahaka",
-    faceDownJoker: "Joker huli i lalo, wahi {{position}} o {{total}}", // needs translation
+    faceDownJoker: "Ke Kiʻi Pepa i huli i lalo, wahi {{position}} o {{total}}",
     jokerDebuffed: "Hoʻonāwaliwali ʻia — ʻaʻole helu ʻia.",
-    jokerDisabledByBoss: "Ua hoʻopau ʻia ʻo {{name}} i kēia lima.", // needs translation
+    jokerDisabledByBoss: "Ua hoʻopau ʻia ʻo {{name}} i kēia lima.",
     savedByMrBones: "Saved by Mr. Bones — the joker self-destructed.", // needs translation
     jokerEdition: "{{name}} mana: {{description}}.",
     sellHint: "Kake-kaomi a alakō paha i ka pūʻulu e kūʻai aku no ${{value}}.",
@@ -438,295 +437,295 @@ export const haw: LocaleMessages = {
     submitHandWith: "Hoʻoholo Haʻawina: {{hand}}, {{chips}} hiu hoʻonui ʻia ma ka {{mult}} mea hoʻonui",
   },
   jokerNames: {
-    "8-ball": "8 Ball", // needs translation
-    "abstract-joker": "Abstract Joker", // needs translation
-    "acrobat": "Acrobat", // needs translation
-    "ancient-joker": "Ancient Joker", // needs translation
-    "arrowhead": "Arrowhead", // needs translation
-    "astronomer": "Astronomer", // needs translation
-    "banner": "Banner", // needs translation
-    "baron": "Baron", // needs translation
-    "baseball-card": "Baseball Card", // needs translation
-    "blackboard": "Blackboard", // needs translation
-    "bloodstone": "Bloodstone", // needs translation
-    "blue-joker": "Blue Joker", // needs translation
-    "blueprint": "Blueprint", // needs translation
-    "bootstraps": "Bootstraps", // needs translation
-    "brainstorm": "Brainstorm", // needs translation
-    "bull": "Bull", // needs translation
-    "burglar": "Burglar", // needs translation
-    "burnt-joker": "Burnt Joker", // needs translation
-    "business-card": "Business Card", // needs translation
-    "campfire": "Campfire", // needs translation
-    "card-sharp": "Card Sharp", // needs translation
-    "cartomancer": "Cartomancer", // needs translation
-    "castle": "Castle", // needs translation
-    "cavendish": "Cavendish", // needs translation
-    "ceremonial-dagger": "Ceremonial Dagger", // needs translation
-    "certificate": "Certificate", // needs translation
-    "chaos-the-clown": "Chaos the Clown", // needs translation
-    "clever-joker": "Clever Joker", // needs translation
-    "cloud-9": "Cloud 9", // needs translation
-    "constellation": "Constellation", // needs translation
-    "crafty-joker": "Crafty Joker", // needs translation
-    "crazy-joker": "Crazy Joker", // needs translation
-    "credit-card": "Credit Card", // needs translation
-    "delayed-gratification": "Delayed Gratification", // needs translation
-    "devious-joker": "Devious Joker", // needs translation
-    "diet-cola": "Diet Cola", // needs translation
+    "8-ball": "Pōpō Walu",
+    "abstract-joker": "Iōka ʻĒ", // I am creating a word for "Joker" in this context; it is simply a loanword transliteration of the work Joker into the Hawaiian langauge."
+    "acrobat": "Kaʻalehia",
+    "ancient-joker": "Iōka Kahiko",
+    "arrowhead": "Nahau",
+    "astronomer": "Kilo Hōkū",
+    "banner": "Kīlepalepa",
+    "baron": "Pālona",
+    "baseball-card": "Kāleka Pōhili",
+    "blackboard": "Papa ʻEleʻele",
+    "bloodstone": "Pōhaku Koko",
+    "blue-joker": "Iōka Uliuli",
+    "blueprint": "Kiʻi Kūkulu",
+    "bootstraps": "Kāʻawe Puki",
+    "brainstorm": "Puaʻi Manaʻo",
+    "bull": "Pipi Laho",
+    "burglar": "Kaʻaihue",
+    "burnt-joker": "Iōka Pāpaʻa",
+    "business-card": "Kāleka Pāʻoihana",
+    "campfire": "Keahi Hoʻomoana",
+    "card-sharp": "Kāleka ʻOiʻoi",
+    "cartomancer": "Kilokilo Kāleka",
+    "castle": "Kākela",
+    "cavendish": "Maiʻa",
+    "ceremonial-dagger": "Pāhoa Kapu",
+    "certificate": "Palapala Hōʻoia",
+    "chaos-the-clown": "Neoneo, ke Kalaona",
+    "clever-joker": "Iōka Maʻalea",
+    "cloud-9": "Ao 9",
+    "constellation": "Huihui Hōkū",
+    "crafty-joker": "Iōka Noʻeau",
+    "crazy-joker": "Iōka Pupule",
+    "credit-card": "Kāleka Kāki ʻEa",
+    "delayed-gratification": "Leʻa Hoʻokolohe",
+    "devious-joker": "Iōka Kolohe",
+    "diet-cola": "Kola Kōpaʻa ʻOle",
     "dna": "DNA", // needs translation
-    "drivers-license": "Driver's License", // needs translation
-    "droll-joker": "Droll Joker", // needs translation
-    "drunkard": "Drunkard", // needs translation
-    "dusk": "Dusk", // needs translation
-    "egg": "Egg", // needs translation
-    "erosion": "Erosion", // needs translation
-    "even-steven": "Even Steven", // needs translation
-    "faceless-joker": "Faceless Joker", // needs translation
+    "drivers-license": "Laikini Kalaiwa",
+    "droll-joker": "Iōka Hoʻomākeʻaka",
+    "drunkard": "Kanaka ʻOna Mau",
+    "dusk": "Pōʻeleʻele",
+    "egg": "Hua Moa",
+    "erosion": "ʻAʻai",
+    "even-steven": "Kepano Pānaʻi",
+    "faceless-joker": "Iōka Maka ʻOle",
     "fibonacci": "Fibonacci", // needs translation
-    "flash-card": "Flash Card", // needs translation
-    "flower-pot": "Flower Pot", // needs translation
-    "fortune-teller": "Fortune Teller", // needs translation
-    "four-fingers": "Four Fingers", // needs translation
-    "gift-card": "Gift Card", // needs translation
-    "glass-joker": "Glass Joker", // needs translation
-    "gluttonous-joker": "Gluttonous Joker", // needs translation
-    "golden-joker": "Golden Joker", // needs translation
-    "golden-ticket": "Golden Ticket", // needs translation
-    "greedy-joker": "Greedy Joker", // needs translation
-    "green-joker": "Green Joker", // needs translation
-    "gros-michel": "Gros Michel", // needs translation
-    "hack": "Hack", // needs translation
-    "half-joker": "Half Joker", // needs translation
-    "hallucination": "Hallucination", // needs translation
-    "hanging-chad": "Hanging Chad", // needs translation
-    "hiker": "Hiker", // needs translation
-    "hit-the-road": "Hit the Road", // needs translation
-    "hologram": "Hologram", // needs translation
-    "ice-cream": "Ice Cream", // needs translation
-    "joker-stencil": "Joker Stencil", // needs translation
-    "jolly-joker": "Jolly Joker", // needs translation
-    "juggler": "Juggler", // needs translation
-    "loyalty-card": "Loyalty Card", // needs translation
-    "luchador": "Luchador", // needs translation
-    "lucky-cat": "Lucky Cat", // needs translation
-    "lusty-joker": "Lusty Joker", // needs translation
-    "mad-joker": "Mad Joker", // needs translation
-    "madness": "Madness", // needs translation
-    "mail-in-rebate": "Mail-In Rebate", // needs translation
-    "marble-joker": "Marble Joker", // needs translation
-    "matador": "Matador", // needs translation
-    "merry-andy": "Merry Andy", // needs translation
-    "midas-mask": "Midas Mask", // needs translation
-    "mime": "Mime", // needs translation
-    "misprint": "Misprint", // needs translation
-    "mr-bones": "Mr. Bones", // needs translation
-    "mystic-summit": "Mystic Summit", // needs translation
-    "obelisk": "Obelisk", // needs translation
-    "odd-todd": "Odd Todd", // needs translation
-    "onyx-agate": "Onyx Agate", // needs translation
-    "oops-all-6s": "Oops! All 6s", // needs translation
-    "pareidolia": "Pareidolia", // needs translation
-    "photograph": "Photograph", // needs translation
-    "plus-four-mult": "Joker", // needs translation
-    "popcorn": "Popcorn", // needs translation
-    "raised-fist": "Raised Fist", // needs translation
-    "ramen": "Ramen", // needs translation
-    "red-card": "Red Card", // needs translation
-    "reserved-parking": "Reserved Parking", // needs translation
-    "ride-the-bus": "Ride the Bus", // needs translation
-    "riff-raff": "Riff-Raff", // needs translation
-    "rocket": "Rocket", // needs translation
-    "rough-gem": "Rough Gem", // needs translation
-    "runner": "Runner", // needs translation
-    "satellite": "Satellite", // needs translation
-    "scary-face": "Scary Face", // needs translation
-    "scholar": "Scholar", // needs translation
-    "seance": "Séance", // needs translation
-    "seeing-double": "Seeing Double", // needs translation
-    "seltzer": "Seltzer", // needs translation
-    "shoot-the-moon": "Shoot the Moon", // needs translation
-    "shortcut": "Shortcut", // needs translation
-    "showman": "Showman", // needs translation
-    "sixth-sense": "Sixth Sense", // needs translation
-    "sly-joker": "Sly Joker", // needs translation
-    "smeared": "Smeared Joker", // needs translation
-    "smiley-face": "Smiley Face", // needs translation
-    "sock-and-buskin": "Sock and Buskin", // needs translation
-    "space-joker": "Space Joker", // needs translation
-    "spare-trousers": "Spare Trousers", // needs translation
-    "splash": "Splash", // needs translation
-    "square-joker": "Square Joker", // needs translation
-    "steel-joker": "Steel Joker", // needs translation
-    "stone-joker": "Stone Joker", // needs translation
-    "stuntman": "Stuntman", // needs translation
-    "supernova": "Supernova", // needs translation
-    "superposition": "Superposition", // needs translation
-    "swashbuckler": "Swashbuckler", // needs translation
-    "the-duo": "The Duo", // needs translation
-    "the-family": "The Family", // needs translation
-    "the-idol": "The Idol", // needs translation
-    "the-order": "The Order", // needs translation
-    "the-tribe": "The Tribe", // needs translation
-    "the-trio": "The Trio", // needs translation
-    "throwback": "Throwback", // needs translation
-    "to-do-list": "To Do List", // needs translation
-    "to-the-moon": "To the Moon", // needs translation
-    "trading-card": "Trading Card", // needs translation
-    "troubadour": "Troubadour", // needs translation
-    "turtle-bean": "Turtle Bean", // needs translation
-    "vagabond": "Vagabond", // needs translation
-    "vampire": "Vampire", // needs translation
-    "walkie-talkie": "Walkie Talkie", // needs translation
-    "wee-joker": "Wee Joker", // needs translation
-    "wily-joker": "Wily Joker", // needs translation
-    "wrathful-joker": "Wrathful Joker", // needs translation
-    "zany-joker": "Zany Joker", // needs translation
+    "flash-card": "Kāleka ʻOaka",
+    "flower-pot": "Ipu Pua",
+    "fortune-teller": "Kāula",
+    "four-fingers": "Manamanalima ʻEhā",
+    "gift-card": "Kāleka Makana",
+    "glass-joker": "Iōka Aniani",
+    "gluttonous-joker": "Iōka Puni ʻAi",
+    "golden-joker": "Iōka Gula",
+    "golden-ticket": "Kikiki Gula",
+    "greedy-joker": "Iōka ʻĀlunu",
+    "green-joker": "Iōka Maʻo",
+    "gros-michel": "Mīkela Nui",
+    "hack": "ʻAlapahi", // ʻAlapahi means "flasehood, deceit."
+    "half-joker": "Iōka Hapalua",
+    "hallucination": "Akakū",
+    "hanging-chad": "Kada Lewalewa",
+    "hiker": "Iōka Hekehi",
+    "hit-the-road": "Kalaiwa Pākī",
+    "hologram": "Kiʻi Lamalama",
+    "ice-cream": "ʻAikalima",
+    "joker-stencil": "Iōka Hoʻomeheu",
+    "jolly-joker": "Iōka ʻOliʻoli",
+    "juggler": "Kīolaola",
+    "loyalty-card": "Kāleka Kūpaʻa",
+    "luchador": "Mea Mokomoko",
+    "lucky-cat": "Pōpoki Laki",
+    "lusty-joker": "Iōka Piha Kuko",
+    "mad-joker": "Iōka Huhū",
+    "madness": "Hehena",
+    "mail-in-rebate": "Uku Pānaʻi Leka",
+    "marble-joker": "Iōka Māpala",
+    "matador": "Mokomoko Pipi",
+    "merry-andy": "Āniki Leʻaleʻa",
+    "midas-mask": "Makakiʻi Mikasa",
+    "mime": "Hoʻomeamea",
+    "misprint": "Palapala Hemahema",
+    "mr-bones": "Mika Iwi",
+    "mystic-summit": "Nuʻu Kalakupua",
+    "obelisk": "Oeoe Pūʻoʻa",
+    "odd-todd": "Toda ʻEʻepa",
+    "onyx-agate": "ʻOnika ʻUla",
+    "oops-all-6s": "Auē! He mau 6 wale nō",
+    "pareidolia": "'Ikena Lauana",
+    "photograph": "Kiʻi",
+    "plus-four-mult": "Iōka",
+    "popcorn": "Kūlina Pohāpohā",
+    "raised-fist": "Puʻulima Pai",
+    "ramen": "Nulu",
+    "red-card": "Kāleka ʻUlaʻula",
+    "reserved-parking": "Wahi Hoʻokū kaʻa kūikawā",
+    "ride-the-bus": "Kau Kaʻa ʻŌhua",
+    "riff-raff": "ʻŌpala",
+    "rocket": "Ahikao",
+    "rough-gem": "Pōhaku Makamae ʻŌkalakala",
+    "runner": "Kūkini",
+    "satellite": "Ukali",
+    "scary-face": "Maka Weliweli",
+    "scholar": "Akeakamai",
+    "seance": "ʻAha Hoʻomana",
+    "seeing-double": "ʻIke Lualua",
+    "seltzer": "Wai Koloaka",
+    "shoot-the-moon": "Kī i ka Mahina",
+    "shortcut": "ʻOki Pōkole",
+    "showman": "Mea Hōʻikeʻike",
+    "sixth-sense": "ʻIke Pāpālua",
+    "sly-joker": "Iōka Akamai",
+    "smeared": "Iōka Hāpala",
+    "smiley-face": "Maka Minoʻaka",
+    "sock-and-buskin": " Laupaʻapāʻani a Luʻuluʻu",
+    "space-joker": "Iōka Lewa",
+    "spare-trousers": "Lole Wāwae Keu",
+    "splash": "Pakī",
+    "square-joker": "Iōka Kuea",
+    "steel-joker": "Iōka Kila",
+    "stone-joker": "Iōka Pōhaku",
+    "stuntman": "Kanaka Pāhaʻoweli",
+    "supernova": "Hōkū Pūnohunohu Pahū",
+    "superposition": "Ola Lolelua", // superposition: refering to a physics concept that something can exist in multiple states until observed. "Ola Lolelua" means "double living" and fits this concept.
+    "swashbuckler": "Kuewa ʻAʻa", // Kuewa means vagabond, wanderer; adding ʻaʻa, ad a sense of daringness to it.
+    "the-duo": "Paʻa Kanaka",
+    "the-family": "Ka ʻOhana",
+    "the-idol": "Ke Kiʻi",
+    "the-order": "Ka Papa",
+    "the-tribe": "Ka ʻAlaea",
+    "the-trio": "Ka Pūkolu",
+    "throwback": "Hoʻihoʻi",
+    "to-do-list": "Papa ʻĀpana Hana",
+    "to-the-moon": "I ka Mahina",
+    "trading-card": "Kāleka Kālepa",
+    "troubadour": "Haku mele",
+    "turtle-bean": "Pāpapa Honu",
+    "vagabond": "Kuewa",
+    "vampire": "Wamapila",
+    "walkie-talkie": "Mīkini Kūkaʻi ʻŌlelo",
+    "wee-joker": "Iōka Liʻiliʻi",
+    "wily-joker": "Iōka Hoʻopunipuni",
+    "wrathful-joker": "Iōka Inaina",
+    "zany-joker": "Iōka ʻAno ʻĒ",
   },
   jokerDescriptions: {
-    "8-ball": "{{prob}} chance for each played {{rank}} to create a {{cardType}} card when scored{{room}}", // needs translation
-    "abstract-joker": "{{mult}} Mult for each {{card}} card", // needs translation
-    "acrobat": "{{xmult}} Mult on {{timing}} of round", // needs translation
-    "ancient-joker": "Each played card with {{suit}} gives {{xmult}} Mult when scored, suit changes at end of round", // needs translation
-    "arrowhead": "Played cards with Spade suit give {{chips}} Chips when scored", // needs translation
-    "astronomer": "All {{cardType}} cards and {{packType}} in the shop are {{cost}}", // needs translation
-    "banner": "{{chips}} Chips for each remaining {{resource}}", // needs translation
-    "baron": "Each {{rank}} held in hand gives {{xmult}} Mult", // needs translation
-    "baseball-card": "{{rarity}} Jokers each give {{xmult}} Mult", // needs translation
-    "blackboard": "{{xmult}} Mult if all cards held in hand are Spades or Clubs", // needs translation
-    "bloodstone": "{{prob}} chance for played cards with Heart suit to give {{xmult}} Mult when scored", // needs translation
-    "blue-joker": "{{chips}} Chips for each remaining card in {{deck}}", // needs translation
-    "blueprint": "Copies ability of {{target}} to the right", // needs translation
-    "bootstraps": "{{mult}} Mult for every {{money}} you have", // needs translation
-    "brainstorm": "Copies the ability of leftmost {{target}}", // needs translation
-    "bull": "{{chips}} Chips for each {{money}} you have", // needs translation
-    "burglar": "When {{blind}} is selected, gain {{hands}} Hands and {{discards}}", // needs translation
-    "burnt-joker": "Upgrade the level of the first {{action}} poker hand each round", // needs translation
-    "business-card": "Played {{cardType}} cards have a {{prob}} chance to give {{money}} when scored", // needs translation
-    "campfire": "This Joker gains {{xmult}} Mult for each card {{action}}, resets when {{blind}} is defeated", // needs translation
+    "8-ball": "Loaʻa ka {{prob}} papaha no kēlā me kēia {{rank}} i pāʻani ʻia e haku i {{cardType}} kāleka ke loaʻa ka {{room}}",
+    "abstract-joker": "{{mult}} hoʻonui ʻana no kēlā me kēia kāleka {{card}} ",
+    "acrobat": "{{xmult}} hoʻonui ʻana no ka {{timing}} o ka puni",
+    "ancient-joker": "ʻO kēlā me kēia kāleka i pāʻani ʻia me ka {{suit}}, loaʻa ka {{xmult}} hoʻonui ʻana  ma ka helu ʻai, loli ka paʻa likelike ma ka hopena o ka puni",
+    "arrowhead": "ʻO nā kāleka i pāʻani ʻia me ka paʻa likelike Peki, loaʻa maila he {{chips}} kipi ma ka helu ʻai",
+    "astronomer": "ʻO nā kāleka {{cardType}} a pau a me nā {{packType}} ma ka hale kūʻai, he {{cost}}",
+    "banner": "{{chips}} kipi no kēlā me kēia {{resource}} e koe ana",
+    "baron": "ʻO kēlā me kēia {{rank}} i paʻa ma ka haʻawina lima, loaʻa maila ka {{xmult}} hoʻonui ʻana",
+    "baseball-card": "Loaʻa maila he {{xmult}} hoʻonui ʻana i nā Iōka {{rarity}}",
+    "blackboard": "He {{xmult}} hoʻonui ʻana inā he Peki a Kalapu nā kāleka ma ka haʻawina pepa o ka lima",
+    "bloodstone": "Loaʻa ka ka papaha o ka {{prob}} no nā kāleka o ka paʻalikelike Haka i pāʻani ʻia e loaʻa ai he {{xmult}} hoʻonui ʻana ma ka helu ʻai",
+    "blue-joker": "He {{chips}} kipi no kēlā me kēia kāleka ma ka puʻu pepa {{deck}}",
+    "blueprint": "Kopena ʻia ka hiki o ka {{target}} i ka ʻākau",
+    "bootstraps": "He {{mult}} hoʻonui ʻana no ke kālā {{money}} i loaʻa",
+    "brainstorm": "Kopena ʻia ka hiki o ka {{target}} ma ka hema loa",
+    "bull": "He {{chips}} kipi no ke kālā {{money}} i loaʻa iā ʻoe",
+    "burglar": "Ke koho ʻia ka {{blind}}, loaʻa maila he {{hands}} haʻawina a {{discards}} kiola",
+    "burnt-joker": "Hoʻokāʻoi i ka pae o ka haʻawina konoki {{action}} mua i kēlā me kēia puni",
+    "business-card": "ʻO nā kāleka {{cardType}} i pāʻani ʻia, loaʻa ka {{prob}} papaha o ka eo he {{money}} kālā",
+    "campfire": "Loaʻa he {{xmult}} hoʻonui ʻana i kēia Iōka no kēlā me kēia kāleka {{action}}, hoʻomaka hou ke eo ka {{blind}}",
     "card-sharp": "{{xmult}} Mult if played {{hand}} has already been played this round", // needs translation
-    "cartomancer": "Create a {{cardType}} card when {{trigger}} is selected {{room}}", // needs translation
-    "castle": "This Joker gains {{chips}} Chips per discarded {{suit}} card, suit changes every round", // needs translation
-    "cavendish": "{{xmult}} Mult {{prob}} chance this card is destroyed at the end of round", // needs translation
-    "ceremonial-dagger": "When {{blind}} is selected, destroy Joker to the right and permanently add {{multiplier}} its sell value to this {{stat}}", // needs translation
-    "certificate": "When round begins, add a random {{card}} with a random {{seal}} to your hand", // needs translation
-    "chaos-the-clown": "{{rerolls}} free {{action}} per shop", // needs translation
-    "clever-joker": "{{chips}} Chips if played hand contains a Two Pair", // needs translation
-    "cloud-9": "Earn {{money}} for each {{rank}} in your {{deck}} at end of round", // needs translation
-    "constellation": "This Joker gains {{xmult}} Mult every time a {{cardType}} card is used", // needs translation
-    "crafty-joker": "{{chips}} Chips if played hand contains a Flush", // needs translation
-    "crazy-joker": "{{mult}} Mult if played hand contains a Straight", // needs translation
-    "credit-card": "Go up to {{money}} in debt", // needs translation
-    "delayed-gratification": "Earn {{money}} per {{discard}} if no discards are used by end of the round", // needs translation
-    "devious-joker": "{{chips}} Chips if played hand contains a Straight", // needs translation
-    "diet-cola": "Sell this card to create a free {{tag}}", // needs translation
+    "cartomancer": "Haku i {{cardType}} inā ʻo ka {{trigger}} ka {{room}} i koho ʻia",
+    "castle": "Loaʻa i kēia Iōka he {{chips}} kipi no kēlā me kēia kāleka o ka paʻa likelike {{suit}} i kiola ʻia; loli ka paʻa likelike ma nā puni",
+    "cavendish": "He {{xmult}} hoʻonui ʻia o ka papaha {{prob}} e pau ana kēia kāleka ma ka hopena o ka puni",
+    "ceremonial-dagger": "Ke koho ʻia ka pili {{blind}}, hoʻopau ʻia ka Iōka ma ka ʻākau a hoʻohui mau i kēia {{multiplier}} i kona waiwai kūʻai aku i kēia {{stat}}",
+    "certificate": "Ke hoʻomaka ka puni, pākuʻi i {{card}} koho wale me kekahi {{seal}} koho wale i kō haʻawina pepa",
+    "chaos-the-clown": "{{rerolls}} ka {{action}} manuahi ma nā kūʻaina",
+    "clever-joker": "He {{chips}} kipi inā loaʻa ke Kūpē ma ka haʻawina pepa i pāʻani ʻia",
+    "cloud-9": "Loaʻa he {{money}} kālā no kēlā me kēia {{rank}} ma kō {{deck}} i ka hopena o ka puni",
+    "constellation": "Loaʻa maila i kēia Iōka he {{xmult}} hoʻonui ʻana i kēlā me kēia manawa i hoʻohana ʻia ai he kāleka {{cardType}}",
+    "crafty-joker": "He {{chips}} kipi inā pāʻani ʻia he haʻawina pepa me ka Palaki",
+    "crazy-joker": "He {{mult}} ka hoʻonui ʻana inā pāʻani ʻia he haʻawina pepa me ka Holo Paʻa Likelike",
+    "credit-card": "ʻAe ʻia ka hoʻonui ʻaiʻē a i ka {{money}}",
+    "delayed-gratification": "Loaʻa he {{money}} kālā no kēlā me kēia {{discard}} inā ʻaʻole hoʻohana ʻia nā kiola ke pau ka puni",
+    "devious-joker": "He {{chips}} kipi inā loaʻa ka Holo Paʻa Likelike ma ka haʻawina pepa i pāʻani ʻia aku nei",
+    "diet-cola": "Kūʻai aku i kēia kāleka e haku i {{tag}} manuahi",
     "dna": "If {{when}} of round has only {{count}} card, add a permanent copy to deck and draw it to {{location}}", // needs translation
-    "drivers-license": "{{xmult}} Mult if you have at least {{count}} Enhanced cards in your full deck", // needs translation
-    "droll-joker": "{{mult}} Mult if played hand contains a Flush", // needs translation
-    "drunkard": "{{discards}} discard each round", // needs translation
-    "dusk": "Retrigger all played cards in {{hand}} of the round", // needs translation
-    "egg": "Gains {{money}} of {{sellValue}} at end of round", // needs translation
-    "erosion": "{{mult}} Mult for each card below {{threshold}} in your full deck", // needs translation
-    "even-steven": "Played cards with {{parity}} rank give {{mult}} Mult when scored {{ranks}}", // needs translation
-    "faceless-joker": "Earn {{money}} if {{count}} or more {{cards}} are discarded at the same time", // needs translation
-    "fibonacci": "Each played {{rank1}}, {{rank2}}, {{rank3}}, {{rank4}}, or {{rank5}} gives {{mult}} Mult when scored", // needs translation
+    "drivers-license": "He {{xmult}} hoʻonui ʻana inā, ma ka liʻiliʻi loa, he {{count}} o nā kāleka ʻai keu ma kō puʻu pepa piha",
+    "droll-joker": "He {{mult}} hoʻonui ʻana inā he Palaki ma kō haʻawina pepa i pāʻani ʻia",
+    "drunkard": "He {{discards}} kiola o kēlā me kēia puni",
+    "dusk": "Hoʻōla hou i nā kāleka a pau i pāʻani ʻia ma ka {{hand}} o ka puni",
+    "egg": "Loaʻa he {{money}} o ka {{sellValue}} ma ka hopena o kēlā me kēia puni",
+    "erosion": "He {{mult}} hoʻonui ʻia no kēlā me kēia kāleka ma lalo o ka {{threshold}} ma kō puʻu pepa piha",
+    "even-steven": "ʻO nā kāleka ma ke kūlana {{parity}} i pāʻani ʻia, he {{mult}} hoʻonui ʻana ke loaʻa ka {{ranks}} ma ka helu ʻai",
+    "faceless-joker": "Loaʻa he {{money}} kālā inā kiola ʻia he {{count}} a ʻoi {{cards}} ma ka wā hoʻokahi",
+    "fibonacci": "He {{mult}} hoʻonui ʻana no kēlā me kēia kāleka {{rank1}}, {{rank2}}, {{rank3}}, {{rank4}}, a {{rank5}} paha",
     "flash-card": "This Joker gains {{mult}} Mult per {{reroll}} in the shop", // needs translation
-    "flower-pot": "{{xmult}} Mult if poker hand contains a Diamond card, Club card, Heart card, and Spade card", // needs translation
-    "fortune-teller": "{{mult}} Mult per {{cardType}} card used this run", // needs translation
-    "four-fingers": "All Flushes and Straights can be made with 4 cards", // needs translation
-    "gift-card": "Add {{money}} of {{sellValue}} to every {{card1}} and {{card2}} card at end of round", // needs translation
-    "glass-joker": "This Joker gains {{xmult}} Mult for every {{cardType}} that is destroyed", // needs translation
-    "gluttonous-joker": "Played cards with Club suit give {{mult}} Mult when scored", // needs translation
-    "golden-joker": "Earn {{money}} at end of round", // needs translation
-    "golden-ticket": "Played {{cardType}} cards earn {{money}} when scored", // needs translation
-    "greedy-joker": "Played cards with Diamond suit give {{mult}} Mult when scored", // needs translation
+    "flower-pot": "He {{xmult}} hoʻonui ʻana inā he Kaimana, Kalapu, Haka, a Peki paha ma ka haʻawina pepa Konoiki",
+    "fortune-teller": "He {{mult}} hoʻonui ʻana no kēlā me kēia kāleka {{cardType}} i pāʻani ʻia ma kēia puni",
+    "four-fingers": "Hiki ke hana i nā Palaki a me nā Holo Paʻa Likelike a pau me 4 wale nō kāleka",
+    "gift-card": "Pākuʻi ʻia he {{money}} o ka {{sellValue}} i kēlā me kēia kāleka {{card1}} a kāleka {{card2}} ma ka hopena o ka puni",
+    "glass-joker": "Loaʻa i kēia Iōka he {{xmult}} hoʻonui ʻana no kēlā me kēia {{cardType}} i hoʻopau ʻia",
+    "gluttonous-joker": "Loaʻa he {{mult}} hoʻonui ʻana no nā kāleka Kalapu i pāʻani ʻia",
+    "golden-joker": "Loaʻa he {{money}} ma ka hopena o ka puni",
+    "golden-ticket": "Loaʻa he {{money}} no nā kāleka {{cardType}} i pāʻani ʻia",
+    "greedy-joker": "Loaʻa he {{mult}} no nā kāleka Kaimana i pāʻani ʻia",
     "green-joker": "{{handMult}} Mult per hand played {{discardMult}} Mult per discard", // needs translation
-    "gros-michel": "{{mult}} Mult{{prob}} chance this card is destroyed at end of round", // needs translation
-    "hack": "Retrigger each played {{rank1}}, {{rank2}}, {{rank3}}, or {{rank4}}", // needs translation
-    "half-joker": "{{mult}} Mult if played hand contains {{cards}} or fewer cards", // needs translation
-    "hallucination": "{{prob}} chance to create a {{cardType}} card when any {{pack}} is opened {{room}}", // needs translation
-    "hanging-chad": "Retrigger {{position}} played card used in scoring {{times}} additional times", // needs translation
-    "hiker": "Every played {{cardType}} permanently gains {{chips}} Chips when scored", // needs translation
+    "gros-michel": "He {{mult}} hoʻonui ʻana a he {{prob}} papaha e hoʻopau ʻia ana kēia kāleka ma ka hopena o kēia puni",
+    "hack": "Hoʻohana hou i nā kāleka {{rank1}}, {{rank2}}, {{rank3}}, a {{rank4}} paha i pāʻani ʻia",
+    "half-joker": "He {{mult}} hoʻonui ʻana inā he {{cards}} a emi mai kāleka ma ka haʻawina pepa",
+    "hallucination": "He {{prob}} ka papaha ʻo ka haku ʻana i kāleka {{cardType}} ke wehe ʻia kekahi {{pack}} ma ka {{room}}",
+    "hanging-chad": "Hoʻokī hou i ka {{position}} o ke kāleka i pāʻani ʻia ma ka helu hoʻonui ʻana he {{times}} ma kona ʻani he wā keu",
+    "hiker": "Loaʻa i kēlā me kēia kāleka {{cardType}} i {{chips}} kipi ke helu ʻia nā ʻai",
     "hit-the-road": "This Joker gains {{xmult}} Mult for every {{rank}} discarded this round", // needs translation
-    "hologram": "This Joker gains {{xmult}} Mult every time a {{card}} is added to your deck", // needs translation
-    "ice-cream": "{{chips}} Chips{{decay}} Chips for every hand played", // needs translation
-    "joker-stencil": "{{xmult}} Mult for each empty {{slotType}} slot Joker Stencil included", // needs translation
-    "jolly-joker": "{{mult}} Mult if played hand contains a Pair", // needs translation
-    "juggler": "{{handSize}} hand size", // needs translation
-    "loyalty-card": "{{xmult}} Mult every {{hands}} hands played{{remaining}}", // needs translation
-    "luchador": "Sell this card to disable the current {{boss}}", // needs translation
-    "lucky-cat": "This Joker gains {{xmult}} Mult every time a {{cardType}} card {{result}} triggers", // needs translation
-    "lusty-joker": "Played cards with Heart suit give {{mult}} Mult when scored", // needs translation
-    "mad-joker": "{{mult}} Mult if played hand contains a Two Pair", // needs translation
-    "madness": "When {{blind1}} or {{blind2}} is selected, gain {{xmult}} Mult and {{action}} a random Joker", // needs translation
-    "mail-in-rebate": "Earn {{money}} for each discarded {{rank}}, rank changes every round", // needs translation
+    "hologram": "Loaʻa i kēia Iōka he {{xmult}} hoʻonui ʻana i kēlā me kēia manawa i pākuʻi ʻia ai he {{card}} i kō puʻu pepa",
+    "ice-cream": "He {{chips}} kipi i {{decay}} ma nā kipi no kēlā me kēia haʻawina pepa i pāʻani ʻia",
+    "joker-stencil": "He {{xmult}} hoʻonui ʻana no kēlā me kēia haka {{slotType}} hakahaka—helu pū ʻia ka Iōka Mahaka",
+    "jolly-joker": "He {{mult}} hoʻonui ʻana inā he Kūpē ko ka haʻawina pepa i pāʻani ʻia",
+    "juggler": "He {{handSize}} ka nui haʻawina",
+    "loyalty-card": "He {{xmult}} hoʻonui ʻana no kēlā me kēia {{hands}} haʻawina pepa i pāʻani ʻia a koe he {{remaining}}",
+    "luchador": "Kūʻai aku i kēia kāleka e hoʻohemahema i ka {{boss}} e kū nei",
+    "lucky-cat": "Loaʻa i kēia Iōka he {{xmult}} hoʻonui ʻana  i kēlā me kēia manawa i hoʻohana ʻia ai he {{cardType}} a {{result}} maila",
+    "lusty-joker": "ʻO nā kāleka Haka i pāʻani ʻia, loaʻa maila he {{mult}} hoʻonui ma ka helu ʻai",
+    "mad-joker": "He {{mult}} hoʻonui ʻana inā pāʻani ʻia he Kūpē",
+    "madness": "Ke koho ʻia ka {{blind1}} a i ʻole ka {{blind2}}, loaʻa maila he {{xmult}} hoʻonui ʻana a {{action}} i Iōka i koho wale ʻia",
+    "mail-in-rebate": "Loaʻa mai he {{money}} kālā no kēlā me kēia {{rank}} i kiola ʻia—loli ke kūlana i kēlā me kēia puni",
     "marble-joker": "Adds one {{enhancement}} card to the deck when {{trigger}} is selected", // needs translation
-    "matador": "Earn {{money}} if played hand triggers the {{boss}} ability", // needs translation
-    "merry-andy": "{{discards}} discards each round, {{handSize}} hand size", // needs translation
+    "matador": "Loaʻa he {{money}} kālā inā hoʻā ʻia maila ka hana kalakupua o ka {{boss}} i ka haʻawina pepa i pāʻani ʻia",
+    "merry-andy": "Kiola ʻia nā {{discards}} i kēlā me kēia puni, ʻo ka {{handSize}} ka nui haʻawina lima",
     "midas-mask": "All played {{cardType}} cards become {{enhancement}} cards when scored", // needs translation
-    "mime": "Retrigger all card {{location}} abilities", // needs translation
-    "misprint": "{{mult}} Mult", // needs translation
-    "mr-bones": "Prevents Death if chips scored are at least {{threshold}} of required chips {{outcome}}", // needs translation
-    "mystic-summit": "{{mult}} Mult when {{discards}} discards remaining", // needs translation
-    "obelisk": "This Joker gains {{xmult}} Mult per {{streak}} hand played without playing your most played {{hand}}", // needs translation
+    "mime": "Hoʻohana hou i nā hana kalakupua {{location}} o nā kāleka a pau",
+    "misprint": "He {{mult}} hoʻonui ʻana",
+    "mr-bones": "Kūpale ʻia ka Make Loa inā loaʻa he {{threshold}} ma ka liʻiliʻi loa i nā kipi i koi ʻia ka {{outcome}}",
+    "mystic-summit": "He {{mult}} hoʻonui ʻana ke loaʻa he {{discards}} kiola ʻana e koe ana",
+    "obelisk": "Loaʻa i kēia Iōka he {{xmult}} hoʻonui ʻana no kēlā me kēia {{streak}} o ka haʻawina pepa i pāʻani ʻia me ka pāʻani ʻole pū i kō {{hand}} i pāʻani nui loa ʻia",
     "odd-todd": "Played cards with {{parity}} rank give {{chips}} Chips when scored {{ranks}}", // needs translation
-    "onyx-agate": "Played cards with Club suit give {{mult}} Mult when scored", // needs translation
-    "oops-all-6s": "Doubles all {{listed}} {{probabilities}} {{example}} -> {{result}}", // needs translation
-    "pareidolia": "All cards are considered {{cardType}} cards", // needs translation
-    "photograph": "First played {{cardType}} card gives {{xmult}} Mult when scored", // needs translation
-    "plus-four-mult": "{{mult}} Mult", // needs translation
-    "popcorn": "{{mult}} Mult {{decay}} Mult per round played", // needs translation
-    "raised-fist": "Adds {{factor}} the rank of {{rank}} ranked card held in hand to Mult", // needs translation
-    "ramen": "{{xmult}} Mult, loses {{decay}} Mult per {{card}} discarded", // needs translation
-    "red-card": "This Joker gains {{mult}} Mult when any {{pack}} is skipped", // needs translation
+    "onyx-agate": "ʻO nā kāleka Kalapu i pāʻani ʻia, loaʻa mai he {{mult}} hoʻonui ʻana ke helu ʻia nā ʻai",
+    "oops-all-6s": "Pālua ʻia nā {{probabilities}} {{listed}} a pau. {{example}} -> {{result}}",
+    "pareidolia": "Helu ʻia nā kāleka a pau he mau kāleka {{cardType}}",
+    "photograph": "ʻO ka {{cardType}} mua i pāʻani ʻia, loaʻa maila he {{xmult}} ke helu ʻia nā ʻai",
+    "plus-four-mult": "He {{mult}} hoʻonui ʻana",
+    "popcorn": "He {{mult}} hoʻonui ʻana. {{decay}} ka hoʻonui ʻana i kēlā me kēia puni i pāʻani ʻia",
+    "raised-fist": "Pākuʻi ʻia ka {{factor}} o ke kūlana o ka {{rank}} i paʻa ma ka haʻawina pepa i hoʻonui ʻana",
+    "ramen": "He {{xmult}} hoʻonui ʻana, nalo ihola ka {{decay}} o ka hoʻonui ʻana no kēlā me kēia {{card}} i kiola ʻia",
+    "red-card": "Loaʻa i kēia Iōka he {{mult}} hoʻonui ʻana ke kapae ʻia kekahi ʻano {{pack}}",
     "reserved-parking": "Each {{cardType}} card held in hand has a {{prob}} chance to give {{money}}", // needs translation
-    "ride-the-bus": "This Joker gains {{mult}} Mult per {{consecutive}} hand played without a scoring {{cardType}} card", // needs translation
+    "ride-the-bus": "Loaʻa i kēia Iōka he {{mult}} hoʻonui ʻana no kēlā me kēia haʻawina pepa {{consecutive}} i pāʻani ʻia me ka helu ʻole ʻana i kēia ʻano kāleka {{cardType}}",
     "riff-raff": "When {{trigger}} is selected, create {{count}} {{rarity}} {{cardType}} {{room}}", // needs translation
-    "rocket": "Earn {{money}} at end of round. Payout increases by {{increase}} when {{blind}} is defeated", // needs translation
-    "rough-gem": "Played cards with Diamond suit earn {{money}} when scored", // needs translation
-    "runner": "Gains {{chips}} Chips if played hand contains a Straight", // needs translation
-    "satellite": "Earn {{money}} at end of round per unique {{cardType}} card used this run", // needs translation
-    "scary-face": "Played {{cardType}} cards give {{chips}} Chips when scored", // needs translation
-    "scholar": "Played {{rank}} give {{chips}} Chips and {{mult}} Mult when scored", // needs translation
+    "rocket": "Loaʻa he {{money}} kālā ma ka hopena o ka puni. Nui aʻe ka loaʻa ma ka {{increase}} ke hāʻule ka {{blind}}",
+    "rough-gem": "ʻO nā kāleka Kaimana i pāʻani ʻia, loaʻa he {{money}} kālā ke helu ʻia nā ʻai",
+    "runner": "Loaʻa maila he {{chips}} kipi inā he Holo Paʻa Likelike ma ka haʻawina pepa",
+    "satellite": "Loaʻa mai he {{money}} kālā ma ka hopena o ka puni no kēlā me kēia kāleka {{cardType}} kūikawā i hoʻohana ʻia ma kēia puni",
+    "scary-face": "Loaʻa mai he {{chips}} kipi i nā kāleka {{cardType}} i pāʻani ʻia ke helu ʻia nā ʻai",
+    "scholar": "ʻO ka {{rank}} i pāʻani ʻia, loaʻa maila he {{chips}} kipi a {{mult}} hoʻonui ʻana ke helu ʻia",
     "seance": "If {{hand}} is a Straight Flush, create a random {{cardType}} card {{room}}", // needs translation
-    "seeing-double": "{{xmult}} Mult if played hand has a scoring Club card and a scoring card of any other suit", // needs translation
-    "seltzer": "Retrigger all cards played for the next {{hands}} hands", // needs translation
+    "seeing-double": "He {{xmult}} hoʻonui ʻana inā he kāleka Kalapu a he kāleka helu ʻai o kekahi ʻano ma ka haʻawina pepa i pā'ani ʻia",
+    "seltzer": "Hoʻohana hou i nā kāleka a pau i pāʻani ʻia no nā haʻawina pepa he {{hands}}",
     "shoot-the-moon": "Each {{rank}} held in hand gives {{mult}} Mult", // needs translation
-    "shortcut": "Allows Straights to be made with gaps of {{gap}} {{example}}", // needs translation
-    "showman": "{{card1}}, {{card2}}, {{card3}}, and {{card4}} cards may appear multiple times", // needs translation
-    "sixth-sense": "If {{hand}} of round is a single {{rank}}, destroy it and create a {{cardType}} card {{room}}", // needs translation
-    "sly-joker": "{{chips}} Chips if played hand contains a Pair", // needs translation
-    "smeared": "Hearts and Diamonds count as the same suit, Spades and Clubs count as the same suit", // needs translation
-    "smiley-face": "Played {{cardType}} cards give {{mult}} Mult when scored", // needs translation
-    "sock-and-buskin": "Retrigger all played {{cardType}} cards", // needs translation
-    "space-joker": "{{prob}} chance to upgrade level of played {{hand}}", // needs translation
-    "spare-trousers": "This Joker gains {{mult}} Mult if played hand contains a {{hand}}", // needs translation
-    "splash": "Every {{card}} counts in scoring", // needs translation
-    "square-joker": "This Joker gains {{chips}} Chips if played hand has exactly {{cards}} cards", // needs translation
+    "shortcut": "ʻAe ʻia nā Holo Paʻa Likelike me nā kōā he {{gap}}, {{example}}",
+    "showman": "Kupu aʻe paha ke {{card1}}, {{card2}}, {{card3}}, a {{card4}} he mau manawa",
+    "sixth-sense": "Inā he hoʻokahi kūlana {{rank}} ka haʻawina pepa {{hand}} o ka puni, hoʻopau ʻia a haku ʻia he kāleka {{cardType}} o ka {{room}}",
+    "sly-joker": "He {{chips}} kipi inā he Kūpē ko ka haʻawina pepa i pāʻani ʻia",
+    "smeared": "Helu ʻia nā kāleka Haka a Kaimana ʻo ia ka paʻa likelike like, pēlā pū nā kāleka Peki a Kalapu",
+    "smiley-face": "Loaʻa mai he {{mult}} hoʻonui ʻana i nā kāleka {{cardType}} i pā'ani ʻia ma ka helu ʻai",
+    "sock-and-buskin": "Hoʻohana hou i nā kāleka {{cardType}} a pau",
+    "space-joker": "He {{prob}} ka papaha o ka hoʻokāʻoi ʻana i ka pae o ka {{hand}} i pāʻani ʻia",
+    "spare-trousers": "Loaʻa i kēia Iōka he {{mult}} hoʻonui ʻana inā he {{hand}} ma ka haʻawina pepa",
+    "splash": "Helu ʻia nā {{card}} ma ka helu ʻai ʻana",
+    "square-joker": "Loaʻa i kēia Iōka he {{chips}} kipi inā he {{cards}} mau kāleka ma ka haʻawina pepa i pāʻani ʻia",
     "steel-joker": "Gives {{xmult}} Mult for each {{card}} in your {{deck}}", // needs translation
-    "stone-joker": "Gives {{chips}} Chips for each {{card}} in your {{deck}}", // needs translation
-    "stuntman": "{{chips}} Chips,{{handSize}} hand size", // needs translation
-    "supernova": "Adds the number of times {{hand}} has been played this run to Mult", // needs translation
-    "superposition": "Create a {{cardType}} card if poker hand contains an {{rank}} and a Straight {{room}}", // needs translation
-    "swashbuckler": "Adds the sell value of all other owned {{cards}} to Mult", // needs translation
-    "the-duo": "{{xmult}} Mult if played hand contains a Pair", // needs translation
-    "the-family": "{{xmult}} Mult if played hand contains a Four of a Kind", // needs translation
+    "stone-joker": "Loaʻa maila he {{chips}} kipi no kēlā me kēia kāleka {{card}} ma kō {{deck}}",
+    "stuntman": "He {{chips}} kipi,{{handSize}} ka nui haʻawina pepa",
+    "supernova": "Helu ʻia ka nui manawa i pāʻani ʻia ai kēia holo o ka {{hand}} i ka hoʻonui ʻana",
+    "superposition": "Haku ʻia he kāleka {{cardType}} inā he kāleka {{rank}} a he Holo Paʻa Likelike ma ka haʻawina pepa o ka {{room}}",
+    "swashbuckler": "Helu ʻia ka waiwai kūʻai o nā kāleka {{cards}} ʻē aʻe a pau i ka hoʻonui ʻana",
+    "the-duo": "He {{xmult}} hoʻonui ʻana inā he Kūpē ma ka haʻawina pepa i pāʻani ʻia",
+    "the-family": "He {{xmult}} hoʻonui ʻana inā he Kuahā Paʻa Likelike ma ka haʻawina pepa i pāʻani ʻia",
     "the-idol": "Each played {{rank}} of {{suit}} gives {{xmult}} Mult when scored", // needs translation
-    "the-order": "{{xmult}} Mult if played hand contains a Straight", // needs translation
-    "the-tribe": "{{xmult}} Mult if played hand contains a Flush", // needs translation
-    "the-trio": "{{xmult}} Mult if played hand contains a Three of a Kind", // needs translation
-    "throwback": "{{xmult}} Mult for each {{blind}} skipped this run", // needs translation
-    "to-do-list": "Earn {{money}} if {{hand}} is a {{handType}}, poker hand changes at end of round", // needs translation
-    "to-the-moon": "Earn an extra {{money}} of {{interest}} for every {{threshold}} you have at end of round", // needs translation
-    "trading-card": "If {{phase}} of round has only {{count}} card, destroy it and earn {{money}}", // needs translation
-    "troubadour": "{{handSize}} hand size, {{hands}} hand each round", // needs translation
-    "turtle-bean": "{{handSize}} hand size, reduces by {{reduction}} each round", // needs translation
-    "vagabond": "Create a {{cardType}} card if hand is played with {{money}} or less", // needs translation
-    "vampire": "This Joker gains {{xmult}} Mult per scoring {{cardType}} played, removes card {{enhancement}}", // needs translation
+    "the-order": "He {{xmult}} hoʻonui ʻana inā he Holo Paʻa Likelike ma ka haʻawina pepa i pāʻani ʻia",
+    "the-tribe": "He {{xmult}} hoʻonui ʻana inā he Palaki ma ka haʻawina pepa i pāʻani ʻia",
+    "the-trio": "He {{xmult}} hoʻonui ʻana inā he Pūkolu Kāleka ma ka haʻawina pepa i pāʻani ʻia",
+    "throwback": "He {{xmult}} hoʻonui ʻana no kēlā me kēia {{blind}} i kāpae ʻia ma kēia pāʻani ʻana",
+    "to-do-list": "Loaʻa maila he {{money}} kālā inā he {{handType}} ka {{hand}}; loli ka haʻawina pepa Konoki ma ka hopena o ka puni",
+    "to-the-moon": "Loaʻa maila he kālā {{money}} keu o ka {{interest}} no kēlā me kēia {{threshold}} i loaʻa iā ʻoe ma ka hopena o ka puni",
+    "trading-card": "Inā he {{count}} wale nō kāleka ma ka {{phase}} o ka puni, hoʻopau ʻia a loaʻa maila he {{money}} kālā",
+    "troubadour": "{{handSize}} ka nui haʻawina pepa, {{hands}} haʻawina pepa o kēlā me kēia puʻu pepa",
+    "turtle-bean": "{{handSize}} ka nui haʻawina pepa, hōʻemi ʻia ma ka {{reduction}} i kēlā me kēia puni",
+    "vagabond": "Haku ʻia he kāleka {{cardType}} inā pāʻani ʻia ka haʻawina pepa me ka nui kālā he {{money}} a emi mai paha",
+    "vampire": "Loaʻa i kēia Iōka he {{xmult}} hoʻonui ʻana no kēlā me kēia helu ʻai ʻana o ke kāleka {{cardType}}; wehe ʻia ka {{enhancement}} o ke kāleka",
     "walkie-talkie": "Each played {{rank1}} or {{rank2}} gives {{chips}} Chips and {{mult}} Mult when scored", // needs translation
-    "wee-joker": "This Joker gains {{chips}} Chips when each played {{rank}} is scored", // needs translation
-    "wily-joker": "{{chips}} Chips if played hand contains a Three of a Kind", // needs translation
-    "wrathful-joker": "Played cards with Spade suit give {{mult}} Mult when scored", // needs translation
-    "zany-joker": "{{mult}} Mult if played hand contains a Three of a Kind", // needs translation
+    "wee-joker": "Loaʻa i kēia Iōka he {{chips}} kipi ke helu ʻia kēlā me kēia kāleka {{rank}} i pāʻani ʻia",
+    "wily-joker": "He {{chips}} kipi inā he Kāleka Pūkolu ma ka haʻawina pepa i pāʻani ʻia",
+    "wrathful-joker": "Loaʻa he {{mult}} hoʻonui ʻana ke helu ʻia nā kāleka Kalapu i pāʻani ʻia",
+    "zany-joker": "He {{mult}} hoʻonui ʻana inā he Kāleka Pūkolu ma ka haʻawina pepa i pāʻani ʻia",
   },
 };
