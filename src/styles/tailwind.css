@@ -1,0 +1,97 @@
+/* Spike design system. Preflight is ON. Root font-size stays 62.5%
+   (legacy screens depend on it), so the theme redefines spacing and
+   type so utilities read in industry-standard pixel terms:
+   --spacing 0.4rem => p-4 = 16px, --text-sm => 14px, etc. All values
+   scale with the responsive root-font-size ramp in index.css. */
+@import "tailwindcss" source(none);
+
+@source "../**/*.tsx";
+
+@custom-variant portrait-narrow (@media (orientation: portrait) and (width <= 768px));
+@custom-variant landscape-narrow (@media (orientation: landscape) and (width <= 1024px));
+
+@theme {
+  --color-*: initial;
+
+  --color-bg: #0e1118;
+  --color-surface: #171c28;
+  --color-raised: #1f2634;
+  --color-hover: #2a3346;
+  --color-border: rgb(255 255 255 / 10%);
+  --color-ink: #eef1f5;
+  --color-muted: #97a1b0;
+
+  --color-chips: #46a4f5;
+  --color-mult: #ff5d5d;
+  --color-money: #ffce4f;
+  --color-success: #52d273;
+  --color-focus: #8cc8ff;
+  --color-advisor: #8f7df2;
+
+  --color-card: #f7f8fa;
+  --color-card-ink: #232936;
+  --color-suit-red: #d33636;
+
+  --color-white: #fff;
+  --color-black: #000;
+
+  --spacing: 0.4rem;
+
+  --text-xs: 1.2rem;
+  --text-xs--line-height: 1.6rem;
+  --text-sm: 1.4rem;
+  --text-sm--line-height: 2rem;
+  --text-base: 1.6rem;
+  --text-base--line-height: 2.4rem;
+  --text-lg: 1.8rem;
+  --text-lg--line-height: 2.6rem;
+  --text-xl: 2rem;
+  --text-xl--line-height: 2.8rem;
+  --text-2xl: 2.4rem;
+  --text-2xl--line-height: 3.2rem;
+}
+
+@theme inline {
+  --default-transition-duration: calc(150ms * var(--animation-speed, 1));
+  --default-transition-timing-function: ease;
+  --animate-pulse-flash: pulse-flash calc(400ms * var(--animation-speed, 1))
+    ease-in-out;
+  --animate-fade-in: fade-in calc(250ms * var(--animation-speed, 1)) ease-out;
+  --animate-float-up: float-up calc(900ms * var(--animation-speed, 1)) ease-out
+    forwards;
+  --animate-fly-out: fly-out calc(350ms * var(--animation-speed, 1)) ease-in
+    forwards;
+}
+
+@keyframes pulse-flash {
+  50% {
+    scale: 1.08;
+    filter: brightness(1.25);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
+@keyframes float-up {
+  from {
+    opacity: 1;
+    translate: 0 0;
+  }
+  to {
+    opacity: 0;
+    translate: 0 -28px;
+  }
+}
+
+@keyframes fly-out {
+  to {
+    opacity: 0;
+    translate: 0 -40px;
+    rotate: 6deg;
+  }
+}

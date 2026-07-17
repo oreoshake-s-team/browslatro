@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import "./RunProgress.css";
+import { Stat } from "../ui/Stat";
 
 interface RunProgressProps {
   ante: number;
@@ -15,28 +15,21 @@ function RunProgress({ ante, round, money }: RunProgressProps) {
     hasMountedRef.current = true;
   }, []);
   return (
-    <div className="run-progress">
-      <div className="stat" aria-live="polite" aria-atomic="true">
-        <span
-          key={money}
-          className={
-            hasMountedRef.current ? "stat-value money-bounce" : "stat-value"
-          }
-          data-testid="money-value"
-        >
-          ${money}
-        </span>
-        <span className="stat-label">{t("sidebar.money")}</span>
-      </div>
-      <div className="run-progress-row">
-        <div className="stat">
-          <span className="stat-value">{ante}</span>
-          <span className="stat-label">{t("sidebar.ante")}</span>
-        </div>
-        <div className="stat">
-          <span className="stat-value">{round}</span>
-          <span className="stat-label">{t("sidebar.round")}</span>
-        </div>
+    <div className="flex flex-col gap-2">
+      <Stat
+        key={money}
+        label={t("sidebar.money")}
+        value={`$${money}`}
+        tone="money"
+        size="lg"
+        valueTestId="money-value"
+        aria-live="polite"
+        aria-atomic="true"
+        className={hasMountedRef.current ? "animate-pulse-flash" : undefined}
+      />
+      <div className="flex gap-2">
+        <Stat label={t("sidebar.ante")} value={ante} />
+        <Stat label={t("sidebar.round")} value={round} />
       </div>
     </div>
   );

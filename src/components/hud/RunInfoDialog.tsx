@@ -213,7 +213,7 @@ export default function RunInfoDialog({
                   return (
                     <li
                       key={stakeId}
-                      className={`run-info-stake-row${current ? " run-info-stake-row-current" : ""}`}
+                      className={`run-info-stake-row${current ? "run-info-stake-row-current" : ""}`}
                       data-testid={`run-info-stake-row-${stakeId}`}
                       aria-current={current ? "true" : undefined}
                     >

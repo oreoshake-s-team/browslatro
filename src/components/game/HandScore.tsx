@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import type { Hand } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
 import { formatNumber } from "../../utils/formatNumber";
-import "./HandScore.css";
+import { ScorePill } from "../ui/Badge";
+import { cn } from "../ui/cn";
 
 interface HandScoreProps {
   chips: number;
@@ -124,9 +125,10 @@ function HandScore({
   const chipsAnim = useCountUp(chips, labelKey, levelTrigger);
   const multAnim = useCountUp(multiplier, labelKey, levelTrigger);
   return (
-    <div className="hand-score">
+    <div className="flex flex-col items-center gap-2">
       {selectedHand !== null && (
         <h3
+          className="flex items-center gap-2 text-base font-semibold"
           aria-label={
             hasLevel
               ? t("a11y.handLevel", {
@@ -138,31 +140,43 @@ function HandScore({
         >
           <span>{tHandLabel(t, selectedHand.label)}</span>
           {hasLevel && (
-            <span className="hand-score-level" aria-hidden="true">
+            <span
+              className="rounded-full bg-raised px-2 py-0.5 text-xs font-bold text-money"
+              aria-hidden="true"
+            >
               Lv {selectedHandLevel}
             </span>
           )}
         </h3>
       )}
-      <p aria-hidden="true">
-        <span
+      <p
+        className="flex items-center gap-2 text-sm text-muted"
+        aria-hidden="true"
+      >
+        <ScorePill
           key={`chips-${labelKey ?? "none"}`}
-          className={`chips${chipsAnim.leveling ? " hand-score-leveling" : ""}`}
+          tone="chips"
+          className={cn(
+            chipsAnim.leveling && "animate-pulse-flash ring-2 ring-money",
+          )}
           data-leveling={chipsAnim.leveling || undefined}
         >
           {formatNumber(chipsAnim.value)}
-        </span>
+        </ScorePill>
         <span>X</span>
-        <span
+        <ScorePill
           key={`mult-${labelKey ?? "none"}`}
-          className={`multiplier${multAnim.leveling ? " hand-score-leveling" : ""}`}
+          tone="mult"
+          className={cn(
+            multAnim.leveling && "animate-pulse-flash ring-2 ring-money",
+          )}
           data-leveling={multAnim.leveling || undefined}
         >
           {formatNumber(multAnim.value)}
-        </span>
+        </ScorePill>
       </p>
       <p
-        className="hand-score-announcement"
+        className="sr-only"
         role="status"
         aria-live="polite"
         aria-atomic="true"

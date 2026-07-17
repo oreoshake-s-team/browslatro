@@ -42,7 +42,9 @@ describe("ScoringTraceModal", () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<ScoringTraceModal events={[]} onClose={onClose} />);
-    await user.click(screen.getByRole("button", { name: /close scoring trace/i }));
+    await user.click(
+      screen.getByRole("button", { name: /close scoring trace/i }),
+    );
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -66,7 +68,9 @@ describe("ScoringTraceModal", () => {
     const onClose = vi.fn();
     render(<ScoringTraceModal events={[]} onClose={onClose} />);
     const dialog = screen.getByRole("dialog");
-    await user.click(within(dialog).getByRole("heading", { name: "Scoring Trace" }));
+    await user.click(
+      within(dialog).getByRole("heading", { name: "Scoring Trace" }),
+    );
     expect(onClose).not.toHaveBeenCalled();
   });
 
@@ -80,7 +84,9 @@ describe("ScoringTraceModal", () => {
   test("Escape does not invoke onClose after the modal is unmounted (negative)", async () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
-    const { unmount } = render(<ScoringTraceModal events={[]} onClose={onClose} />);
+    const { unmount } = render(
+      <ScoringTraceModal events={[]} onClose={onClose} />,
+    );
     unmount();
     await user.keyboard("{Escape}");
     expect(onClose).not.toHaveBeenCalled();

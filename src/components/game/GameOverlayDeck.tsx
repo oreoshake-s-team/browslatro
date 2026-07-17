@@ -48,7 +48,7 @@ export default function GameOverlayDeck() {
   );
 
   return (
-    <div className="game-overlay-deck">
+    <div className="ml-auto flex flex-none items-start">
       <DeckPile
         remaining={overlayDeckRemaining}
         consumableDropEnabled={dragController.draggingConsumableIndex !== null}

@@ -1,5 +1,6 @@
 import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "../ui/Button";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
 import type { HandPlayCounts } from "./handPlayCounts";
@@ -25,9 +26,9 @@ function RunInfo({
 
   return (
     <>
-      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+      <Button variant="ghost" onClick={() => setOpen(true)}>
         {t("sidebar.runInfo")}
-      </button>
+      </Button>
       {open && (
         <Suspense fallback={<LazyChunkSpinner variant="overlay" />}>
           <RunInfoDialog

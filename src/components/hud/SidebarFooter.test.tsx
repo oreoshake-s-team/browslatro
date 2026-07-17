@@ -11,7 +11,10 @@ describe("SidebarFooter", () => {
   test("link points to the browslatro GitHub repo", () => {
     render(<SidebarFooter />);
     const link = screen.getByRole("link", { name: /github/i });
-    expect(link).toHaveAttribute("href", "https://github.com/oreoshake-s-team/browslatro");
+    expect(link).toHaveAttribute(
+      "href",
+      "https://github.com/oreoshake-s-team/browslatro",
+    );
   });
 
   test("link opens in a new tab", () => {

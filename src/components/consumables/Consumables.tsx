@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import "./Consumables.css";
 import {
   localizedConsumableDescription,
   localizedConsumableName,
@@ -11,8 +10,16 @@ import {
   consumableUseBlock,
   type Consumable,
 } from "../../items/consumables";
+import { Tray } from "../ui/Panel";
+import { emptyTile, tile } from "../ui/Tile";
 
 export const CONSUMABLE_DRAG_MIME = "application/x-browslatro-consumable";
+
+const KIND_ACCENT = {
+  planet: "chips",
+  tarot: "advisor",
+  spectral: "success",
+} as const;
 
 interface ConsumablesProps {
   consumables: ReadonlyArray<Consumable>;
@@ -41,13 +48,12 @@ export default function Consumables({
   const emptyCount = Math.max(0, capacity - consumables.length);
 
   return (
-    <section
-      className={`consumables${consumables.length === 0 ? " consumables-tray-empty" : ""}`}
+    <Tray
+      heading={t("trays.consumables")}
       aria-label={t("a11y.consumableSlots")}
       data-testid="consumables-tray"
     >
-      <span className="consumables-label">{t("trays.consumables")}</span>
-      <ul className="consumables-list">
+      <ul className="flex list-none flex-wrap gap-2">
         {consumables.map((entry, idx) => {
           const block = consumableUseBlock(entry, selectedCount, previewMode);
           const sellValue = consumableSellValue(entry);
@@ -67,7 +73,11 @@ export default function Consumables({
             <li key={`${entry.kind}-${entry.card.id}-${idx}`}>
               <button
                 type="button"
-                className={`consumable-tile consumable-tile-${entry.kind}`}
+                className={tile({
+                  accent: KIND_ACCENT[entry.kind],
+                  interactive: !interactionDisabled,
+                  dimmed: useDisabled,
+                })}
                 data-testid={`consumable-tile-filled-${idx}`}
                 data-consumable-kind={entry.kind}
                 data-use-disabled={useDisabled || undefined}
@@ -98,18 +108,19 @@ export default function Consumables({
                   onUse(idx);
                 }}
               >
-                <span className="consumable-tile-name">
+                <span className="font-bold">
                   {localizedConsumableName(
                     i18n.language,
                     entry.card.id,
                     entry.card.name,
                   )}
                 </span>
-                <span className="consumable-tile-description">
-                  {description}
-                </span>
+                <span className="line-clamp-3 text-muted">{description}</span>
                 {canSell && (
-                  <span className="consumable-tile-sell" aria-hidden="true">
+                  <span
+                    className="mt-auto font-semibold text-money"
+                    aria-hidden="true"
+                  >
                     Sell ${sellValue}
                   </span>
                 )}
@@ -121,7 +132,7 @@ export default function Consumables({
           <li key={`empty-${slotIndex}`}>
             <button
               type="button"
-              className="consumable-tile consumable-tile-empty"
+              className={emptyTile}
               data-testid="consumable-tile-empty"
               aria-label={t("a11y.emptyConsumableSlot")}
               disabled
@@ -131,6 +142,6 @@ export default function Consumables({
           </li>
         ))}
       </ul>
-    </section>
+    </Tray>
   );
 }

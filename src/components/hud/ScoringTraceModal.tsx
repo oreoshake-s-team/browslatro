@@ -12,7 +12,10 @@ interface ScoringTraceModalProps {
   readonly onClose: () => void;
 }
 
-export default function ScoringTraceModal({ events, onClose }: ScoringTraceModalProps) {
+export default function ScoringTraceModal({
+  events,
+  onClose,
+}: ScoringTraceModalProps) {
   const { t } = useTranslation();
   const overlayRef = useRef<HTMLDivElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -33,7 +36,10 @@ export default function ScoringTraceModal({ events, onClose }: ScoringTraceModal
     >
       <div className="scoring-trace-modal" onClick={(e) => e.stopPropagation()}>
         <div className="scoring-trace-modal__header">
-          <h2 id="scoring-trace-modal-title" className="scoring-trace-modal__title">
+          <h2
+            id="scoring-trace-modal-title"
+            className="scoring-trace-modal__title"
+          >
             {t("scoringTrace.title")}
           </h2>
           <button
@@ -43,7 +49,8 @@ export default function ScoringTraceModal({ events, onClose }: ScoringTraceModal
             aria-label={t("a11y.closeScoringTrace")}
             autoFocus
           >
-<span aria-hidden="true">✕ </span>{t("scoringTrace.close")}
+            <span aria-hidden="true">✕ </span>
+            {t("scoringTrace.close")}
           </button>
         </div>
         <div
