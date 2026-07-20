@@ -16,14 +16,14 @@ import type { Voucher, VoucherId } from "../../items/vouchers";
 const OVERSTOCK_VOUCHER: Voucher = {
   id: "overstock",
   name: "Overstock",
-  description: "Adds an extra shop slot.",
+  description: "+1 shop offer slot.",
   cost: 10,
 };
 
 const OVERSTOCK_PLUS_VOUCHER: Voucher = {
   id: "overstock-plus",
   name: "Overstock Plus",
-  description: "Adds yet another shop slot.",
+  description: "+1 additional shop offer slot.",
   cost: 10,
   requires: "overstock",
 };
@@ -521,9 +521,7 @@ describe("Shop", () => {
 
     test("renders the voucher description when one is provided", () => {
       renderShop({ vouchers: [OVERSTOCK_VOUCHER] });
-      expect(
-        screen.getByText("Adds an extra shop slot."),
-      ).toBeInTheDocument();
+      expect(screen.getByText("+1 shop offer slot.")).toBeInTheDocument();
     });
 
     test("renders the voucher price when one is provided", () => {
@@ -598,6 +596,18 @@ describe("Shop", () => {
         ownedVoucherIds: new Set<VoucherId>(),
       });
       expect(screen.getByTestId("shop-voucher-buy-0")).toBeDisabled();
+    });
+
+    test("the locked buy button's title shows the prerequisite's display name, not its raw id", () => {
+      renderShop({
+        vouchers: [OVERSTOCK_PLUS_VOUCHER],
+        money: 50,
+        ownedVoucherIds: new Set<VoucherId>(),
+      });
+      expect(screen.getByTestId("shop-voucher-buy-0")).toHaveAttribute(
+        "title",
+        "Requires Overstock",
+      );
     });
 
     test("the buy button is enabled once the prerequisite is owned", () => {

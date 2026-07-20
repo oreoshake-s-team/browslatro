@@ -758,4 +758,72 @@ export const haw: LocaleMessages = {
     "uranus": "Upgrades Two Pair: +1 Mult, +20 Chips", // needs translation
     "venus": "Upgrades Three of a Kind: +2 Mult, +20 Chips", // needs translation
   },
+  voucherNames: {
+    "antimatter": "Antimatter", // needs translation
+    "blank": "Blank", // needs translation
+    "clearance-sale": "Clearance Sale", // needs translation
+    "crystal-ball": "Crystal Ball", // needs translation
+    "directors-cut": "Director's Cut", // needs translation
+    "glow-up": "Glow Up", // needs translation
+    "grabber": "Grabber", // needs translation
+    "hieroglyph": "Hieroglyph", // needs translation
+    "hone": "Hone", // needs translation
+    "illusion": "Illusion", // needs translation
+    "liquidation": "Liquidation", // needs translation
+    "magic-trick": "Magic Trick", // needs translation
+    "money-tree": "Money Tree", // needs translation
+    "nacho-tong": "Nacho Tong", // needs translation
+    "observatory": "Observatory", // needs translation
+    "omen-globe": "Omen Globe", // needs translation
+    "overstock": "Overstock", // needs translation
+    "overstock-plus": "Overstock Plus", // needs translation
+    "paint-brush": "Paint Brush", // needs translation
+    "palette": "Palette", // needs translation
+    "petroglyph": "Petroglyph", // needs translation
+    "planet-merchant": "Planet Merchant", // needs translation
+    "planet-tycoon": "Planet Tycoon", // needs translation
+    "recyclomancy": "Recyclomancy", // needs translation
+    "reroll-glut": "Reroll Glut", // needs translation
+    "reroll-surplus": "Reroll Surplus", // needs translation
+    "retcon": "Retcon", // needs translation
+    "seed-money": "Seed Money", // needs translation
+    "tarot-merchant": "Tarot Merchant", // needs translation
+    "tarot-tycoon": "Tarot Tycoon", // needs translation
+    "telescope": "Telescope", // needs translation
+    "wasteful": "Wasteful", // needs translation
+  },
+  voucherDescriptions: {
+    "antimatter": "+1 joker slot.", // needs translation
+    "blank": "Does nothing… for now.", // needs translation
+    "clearance-sale": "All shop items 25% off.", // needs translation
+    "crystal-ball": "+1 consumable slot.", // needs translation
+    "directors-cut": "Reroll the Boss Blind 1 time per ante. Costs $10 each.", // needs translation
+    "glow-up": "Foil, Holographic, and Polychrome Jokers appear 4× as often.", // needs translation
+    "grabber": "+1 hand per round.", // needs translation
+    "hieroglyph": "-1 Ante, -1 hand per round.", // needs translation
+    "hone": "Foil, Holographic, and Polychrome Jokers appear 2× as often.", // needs translation
+    "illusion": "Playing cards in shop may have an Enhancement, Edition, and/or a Seal.", // needs translation
+    "liquidation": "All shop items 50% off.", // needs translation
+    "magic-trick": "Playing cards can be purchased from the shop.", // needs translation
+    "money-tree": "Raise the interest cap to $20.", // needs translation
+    "nacho-tong": "+1 additional hand per round.", // needs translation
+    "observatory": "Each Planet card in your consumable area gives ×1.5 Mult to its specified hand.", // needs translation
+    "omen-globe": "1 in 5 Tarot card rolls in the shop become Spectral cards instead.", // needs translation
+    "overstock": "+1 shop offer slot.", // needs translation
+    "overstock-plus": "+1 additional shop offer slot.", // needs translation
+    "paint-brush": "+1 hand size.", // needs translation
+    "palette": "+1 additional hand size.", // needs translation
+    "petroglyph": "-1 Ante, -1 discard per round.", // needs translation
+    "planet-merchant": "Planet cards appear 2× as often in the shop.", // needs translation
+    "planet-tycoon": "Planet cards appear 4× as often in the shop.", // needs translation
+    "recyclomancy": "+1 additional discard per round.", // needs translation
+    "reroll-glut": "Rerolls cost an additional $2 less.", // needs translation
+    "reroll-surplus": "Rerolls cost $2 less.", // needs translation
+    "retcon": "Reroll the Boss Blind unlimited times. Costs $10 each.", // needs translation
+    "seed-money": "Raise the interest cap to $10.", // needs translation
+    "tarot-merchant": "Tarot cards appear 2× as often in the shop.", // needs translation
+    "tarot-tycoon": "Tarot cards appear 4× as often in the shop.", // needs translation
+    "telescope": "Celestial Packs always contain the Planet card for your most-played hand.", // needs translation
+    "wasteful": "+1 discard per round.", // needs translation
+  },
 };
