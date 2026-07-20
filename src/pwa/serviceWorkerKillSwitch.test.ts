@@ -97,7 +97,11 @@ async function runActivate(harness: SwHarness): Promise<void> {
   const handler = harness.listeners.get("activate");
   if (handler === undefined) throw new Error("no activate listener registered");
   let waited: Promise<unknown> = Promise.resolve();
-  handler({ waitUntil: (p: Promise<unknown>) => (waited = p) });
+  handler({
+    waitUntil: (p: Promise<unknown>) => {
+      waited = p;
+    },
+  });
   await waited;
 }
 

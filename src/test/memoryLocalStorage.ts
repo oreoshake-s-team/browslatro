@@ -24,7 +24,7 @@ function createMemoryStorage(): Storage {
 
 // Avoid triggering Node's experimental localStorage getter (which warns) by
 // inspecting property descriptors instead of reading globalThis.localStorage.
-function ensureMemoryLocalStorageOn(target: any): void {
+function ensureMemoryLocalStorageOn(target: object): void {
   const desc = Object.getOwnPropertyDescriptor(target, "localStorage");
   // If there's no own property or it's an accessor (getter/setter), override with a memory storage.
   if (!desc || typeof desc.get === "function" || typeof desc.set === "function") {
@@ -51,13 +51,13 @@ function ensureMemoryLocalStorageOn(target: any): void {
 }
 
 // Define a window alias if missing first, then ensure both global and window have memory-backed storage.
-if (!Object.getOwnPropertyDescriptor(globalThis as any, "window")) {
-  Object.defineProperty(globalThis as any, "window", {
+if (!Object.getOwnPropertyDescriptor(globalThis, "window")) {
+  Object.defineProperty(globalThis, "window", {
     value: globalThis,
     configurable: true,
     writable: true,
   });
 }
 
-ensureMemoryLocalStorageOn(globalThis as any);
-ensureMemoryLocalStorageOn((globalThis as any).window);
+ensureMemoryLocalStorageOn(globalThis);
+ensureMemoryLocalStorageOn(window);

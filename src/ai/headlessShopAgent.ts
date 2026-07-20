@@ -295,7 +295,7 @@ export async function createHeadlessShopAgent(
         activity = { ...activity, moneySpent: activity.moneySpent + amount };
       };
 
-      const useConsumable = (consumable: Consumable): void => {
+      const consume = (consumable: Consumable): void => {
         const result = applyConsumable(
           { deck, money, handStats, lastConsumable, createdJokers: [] },
           consumable,
@@ -319,7 +319,7 @@ export async function createHeadlessShopAgent(
       const inventory: Consumable[] = [];
       const acquireConsumable = (consumable: Consumable): void => {
         if (hold && inventory.length < MAX_CONSUMABLE_SLOTS) inventory.push(consumable);
-        else useConsumable(consumable);
+        else consume(consumable);
       };
       const buildFor = (): ShopBuild =>
         withBuildOverride(shopBuildSummary({ jokers, handStats, deck, consumablesHeld: consumablesHeldFeature(hold, inventory.length, lastConsumable) }));
@@ -378,7 +378,7 @@ export async function createHeadlessShopAgent(
           const consumable = inventory[inventoryIndex];
           if (consumable === undefined) break;
           inventory.splice(inventoryIndex, 1);
-          useConsumable(consumable);
+          consume(consumable);
           continue;
         }
 
@@ -437,7 +437,7 @@ export async function createHeadlessShopAgent(
         }
       }
 
-      for (const consumable of inventory) useConsumable(consumable);
+      for (const consumable of inventory) consume(consumable);
 
       return { jokers, money, handStats, ownedVoucherIds, deck, lastConsumable, activity };
     },

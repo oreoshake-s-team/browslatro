@@ -110,7 +110,7 @@ describe("encode — shape contracts", () => {
     const candidate: HandOption = {
       ...sample.candidates[0],
       cardIds: [987654],
-    } as HandOption;
+    };
     expect(() => encodeCandidate(candidate, sample.state)).toThrow(
       "not in hand",
     );
@@ -124,7 +124,7 @@ describe("encode — shape contracts", () => {
     const candidate: HandOption = {
       ...sample.candidates[0],
       cardIds: [7, sample.state.hand[0].id],
-    } as HandOption;
+    };
     expect(encodeCandidate(candidate, state).slice(2, 18)).toEqual([
       0,
       1,

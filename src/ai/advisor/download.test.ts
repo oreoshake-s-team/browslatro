@@ -18,7 +18,7 @@ function streamResponse(
 }
 
 function fetchReturning(response: Response): typeof fetch {
-  return vi.fn().mockResolvedValue(response) as unknown as typeof fetch;
+  return vi.fn().mockResolvedValue(response);
 }
 
 describe("fetchModelBytes", () => {

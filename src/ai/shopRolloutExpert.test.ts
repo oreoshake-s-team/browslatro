@@ -7,7 +7,7 @@ import {
   bestShopChoiceHeld,
   buyOfferToHold,
   flushHeldConsumables,
-  useHeldConsumable,
+  applyHeldConsumable,
   type ConsumableLabelDeps,
   type PostShopState,
   type RolloutOptions,
@@ -211,27 +211,27 @@ describe("buyOfferToHold", () => {
   });
 });
 
-describe("useHeldConsumable", () => {
+describe("applyHeldConsumable", () => {
   test("applies the held planet's hand upgrade", () => {
     const holding = baseState({ consumables: [planetConsumable()] });
-    const next = useHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
+    const next = applyHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
     expect(totalLevels(next?.handStats ?? createDefaultHandStats())).toBeGreaterThan(BASELINE_LEVELS);
   });
 
   test("removes the used consumable from the held list", () => {
     const holding = baseState({ consumables: [planetConsumable(), tarotConsumable("the-fool")] });
-    const next = useHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
+    const next = applyHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
     expect(next?.consumables).toEqual([tarotConsumable("the-fool")]);
   });
 
   test("The Magician held then used enhances the deck", () => {
     const holding = baseState({ consumables: [tarotConsumable("the-magician")] });
-    const next = useHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
+    const next = applyHeldConsumable(0, holding, CONSUMABLE_DEPS, () => 0);
     expect(next?.deck.some((c) => c.enhancement === "lucky")).toBe(true);
   });
 
   test("returns null for an out-of-range index (negative)", () => {
-    expect(useHeldConsumable(3, baseState({ consumables: [planetConsumable()] }), CONSUMABLE_DEPS, () => 0)).toBeNull();
+    expect(applyHeldConsumable(3, baseState({ consumables: [planetConsumable()] }), CONSUMABLE_DEPS, () => 0)).toBeNull();
   });
 });
 

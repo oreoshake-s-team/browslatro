@@ -65,7 +65,7 @@ export function serializeRun(state: object): SerializedRun {
 export function deserializeRun(snapshot: SerializedRun): Record<string, unknown> {
   if (snapshot.schemaVersion !== SCHEMA_VERSION) {
     throw new Error(
-      `Unsupported snapshot schemaVersion: ${snapshot.schemaVersion}`,
+      `Unsupported snapshot schemaVersion: ${String(snapshot.schemaVersion)}`,
     );
   }
   const decoded = decode(snapshot.state);

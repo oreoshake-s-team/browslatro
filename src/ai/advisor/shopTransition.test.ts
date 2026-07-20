@@ -22,7 +22,7 @@ function buyJoker(category = "joker-x-mult", cost = 6, rarityOrdinal = 0.5): Sho
   };
 }
 
-function usePlanet(advancesHands: ReadonlyArray<string>): ShopAdviceCandidate {
+function planetUseCandidate(advancesHands: ReadonlyArray<string>): ShopAdviceCandidate {
   return {
     action: "use",
     item: { itemType: "planet", category: "planet", advancesHands, id: "p", name: "P", description: "", cost: 0 },
@@ -67,7 +67,7 @@ describe("applyShopAction", () => {
   test("using a planet levels every hand it advances and frees the slot", () => {
     const next = applyShopAction(
       state({ handLevels: { Pair: 3 }, consumablesHeld: 1 }),
-      usePlanet(["Straight Flush", "Royal Flush"]),
+      planetUseCandidate(["Straight Flush", "Royal Flush"]),
     );
     expect(next?.build.handLevels).toEqual({ Pair: 3, "Straight Flush": 2, "Royal Flush": 2 });
     expect(next?.build.consumablesHeld).toBe(0);
@@ -77,11 +77,11 @@ describe("applyShopAction", () => {
     for (const planet of createPlanetCatalog()) {
       const searched = applyShopAction(
         state({ consumablesHeld: 1 }),
-        usePlanet(planet.hands),
+        planetUseCandidate(planet.hands),
       );
       const engine = applyPlanetUpgrade(createDefaultHandStats(), planet);
       for (const hand of planet.hands) {
-        expect(searched?.build.handLevels[hand]).toBe(engine[hand as keyof typeof engine].level);
+        expect(searched?.build.handLevels[hand]).toBe(engine[hand].level);
       }
     }
   });
@@ -123,7 +123,7 @@ describe("applyShopAction", () => {
 
   test("does not mutate the input state", () => {
     const start = state({ handLevels: { Pair: 2 }, consumablesHeld: 1 });
-    applyShopAction(start, usePlanet(["Pair"]));
+    applyShopAction(start, planetUseCandidate(["Pair"]));
     expect(start.build.handLevels).toEqual({ Pair: 2 });
   });
 });

@@ -31,6 +31,9 @@ jobs:
       - name: Lint CSS
         run: yarn lint:css
 
+      - name: Lint JS/TS
+        run: yarn lint
+
   test:
     runs-on: ubuntu-latest
     strategy:

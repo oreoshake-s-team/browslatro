@@ -16,7 +16,7 @@ export function shopItemSnapshot(item: ShopItem): { itemType: string; category: 
   return { itemType: "playing-card", category, attributes, id: "card", name: "Card", cost: item.price };
 }
 
-export function useItemSnapshot(
+export function usedItemSnapshot(
   consumable: Consumable,
   index: number,
 ): { itemType: string; category: string; attributes?: ReadonlyArray<number>; advancesHands?: ReadonlyArray<string>; id: string; name: string; cost: number } {
@@ -47,7 +47,7 @@ export function shopCandidateRows(
   return [
     ...offers.map((o) => ({ ...shopItemSnapshot(o), isReroll: false, isLeave: false, isUse: false })),
     ...held.map((c, i) => {
-      const item = useItemSnapshot(c, i);
+      const item = usedItemSnapshot(c, i);
       return {
         itemType: item.itemType,
         category: item.category,

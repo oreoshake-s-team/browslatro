@@ -111,7 +111,7 @@ function shopCorrection(
           }
         : {}),
     },
-  } as RunEventRecord;
+  };
 }
 
 describe("isShopCorrectionJustified", () => {

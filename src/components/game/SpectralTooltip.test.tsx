@@ -71,7 +71,7 @@ describe("SpectralTooltip", () => {
       />,
     );
 
-    const tooltip = screen.getByRole("tooltip") as HTMLElement;
+    const tooltip = screen.getByRole("tooltip");
     const style = tooltip.getAttribute("style");
     expect(style).toContain("top:");
     expect(style).toContain("left:");

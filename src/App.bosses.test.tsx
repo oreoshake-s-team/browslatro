@@ -144,7 +144,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
   });
 
@@ -181,7 +181,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    for (let i = 0; i < 4; i += 1) await user.click(cards[i] as HTMLElement);
+    for (let i = 0; i < 4; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const handsAfter = Number(
@@ -202,7 +202,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    for (let i = 0; i < 5; i += 1) await user.click(cards[i] as HTMLElement);
+    for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const value = document.querySelector(".round-score-value");
@@ -366,7 +366,7 @@ describe("Boss Blinds — Phase 3 round-state effects", () => {
     const cards = Array.from(
       screen.getByTestId("hand-cards").querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     expect(screen.getByText(/Submit Hand/)).not.toBeDisabled();
   });
 
@@ -384,7 +384,7 @@ describe("Boss Blinds — Phase 3 round-state effects", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     expect(document.querySelector(".chips")).toHaveTextContent("2");
   });
 });
@@ -532,7 +532,7 @@ describe("Boss Blinds — Phase 5 The Hook", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     flushDiscardAnimation();
@@ -551,7 +551,7 @@ describe("Boss Blinds — Phase 5 The Hook", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     flushDiscardAnimation();
@@ -578,7 +578,7 @@ describe("Boss Blinds — Phase 5 The Hook", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const remainingAfter = useGame.getState().dealt.remaining.length;
@@ -601,7 +601,7 @@ describe("Boss Blinds — Phase 5 The Hook", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    await user.click(cards[0] as HTMLElement);
+    await user.click(cards[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     flushDiscardAnimation();
@@ -649,7 +649,7 @@ describe("Boss Blinds — Phase 5 The Serpent", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    fireEvent.click(cards[0] as HTMLElement);
+    fireEvent.click(cards[0]);
     fireEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     flushDiscardAnimation();
@@ -673,7 +673,7 @@ describe("Boss Blinds — Phase 5 The Serpent", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    fireEvent.click(cards[0] as HTMLElement);
+    fireEvent.click(cards[0]);
     fireEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     expect(useGame.getState().dealt.hand.length).toBe(8);
@@ -718,7 +718,7 @@ describe("Boss Blinds — Phase 5 The Ox", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    fireEvent.click(cards[0] as HTMLElement);
+    fireEvent.click(cards[0]);
     fireEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     expect(useGame.getState().money).toBe(0);
@@ -746,7 +746,7 @@ describe("Boss Blinds — Phase 5 The Ox", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    fireEvent.click(cards[0] as HTMLElement);
+    fireEvent.click(cards[0]);
     fireEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     expect(useGame.getState().money).toBe(20);
@@ -767,7 +767,7 @@ describe("Boss Blinds — Phase 5 The Ox", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     );
-    fireEvent.click(cards[0] as HTMLElement);
+    fireEvent.click(cards[0]);
     fireEvent.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     expect(useGame.getState().money).toBe(20);

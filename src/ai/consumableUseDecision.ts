@@ -3,12 +3,12 @@ import {
   chosenCandidateIndex,
   shopCandidateRows,
   shopItemSnapshot,
-  useItemSnapshot,
+  usedItemSnapshot,
   type ShopCandidateRow,
 } from "./shopCandidateRows";
 
 export interface ConsumableUseDecision {
-  readonly item: ReturnType<typeof useItemSnapshot>;
+  readonly item: ReturnType<typeof usedItemSnapshot>;
   readonly offers: ReadonlyArray<ReturnType<typeof shopItemSnapshot>>;
   readonly candidates: ReadonlyArray<ShopCandidateRow>;
   readonly chosenIndex: number;
@@ -24,7 +24,7 @@ export function consumableUseDecision(
   if (!used) return null;
   const offers = state.shopOffers ?? [];
   return {
-    item: useItemSnapshot(used, usedIndex),
+    item: usedItemSnapshot(used, usedIndex),
     offers: offers.map(shopItemSnapshot),
     candidates: shopCandidateRows(offers, held, null),
     chosenIndex: chosenCandidateIndex(offers.length, held.length, false, {

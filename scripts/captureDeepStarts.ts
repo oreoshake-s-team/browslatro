@@ -120,5 +120,5 @@ async function main(): Promise<void> {
 }
 
 if (isMain) {
-  main();
+  void main();
 }

@@ -57,7 +57,7 @@ export default function ShopSuggestion(
   props: ShopSuggestionProps,
 ): React.JSX.Element {
   const { t } = useTranslation();
-  const { useConsumable } = useConsumableActions();
+  const { useConsumable: applyConsumable } = useConsumableActions();
   const ante = useGame((s) => s.ante);
   const round = useGame((s) => s.round);
   const jokers = useGame((s) => s.jokers);
@@ -157,7 +157,7 @@ export default function ShopSuggestion(
       if (action.kind === "buy") props.onBuy(action.offerIdx);
       else if (action.kind === "buy-voucher") props.onBuyVoucher(action.voucherIdx);
       else if (action.kind === "use-consumable") {
-        if (!action.requiresTargets) useConsumable(action.consumableIdx);
+        if (!action.requiresTargets) applyConsumable(action.consumableIdx);
       } else if (action.kind === "reroll") props.onApplyReroll();
       else props.onNext();
     } finally {
