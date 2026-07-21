@@ -826,4 +826,52 @@ export const haw: LocaleMessages = {
     "telescope": "Celestial Packs always contain the Planet card for your most-played hand.", // needs translation
     "wasteful": "+1 discard per round.", // needs translation
   },
+  tarotNames: {
+    "death": "Death", // needs translation
+    "judgement": "Judgement", // needs translation
+    "justice": "Justice", // needs translation
+    "strength": "Strength", // needs translation
+    "temperance": "Temperance", // needs translation
+    "the-chariot": "The Chariot", // needs translation
+    "the-devil": "The Devil", // needs translation
+    "the-emperor": "The Emperor", // needs translation
+    "the-empress": "The Empress", // needs translation
+    "the-fool": "The Fool", // needs translation
+    "the-hanged-man": "The Hanged Man", // needs translation
+    "the-hermit": "The Hermit", // needs translation
+    "the-hierophant": "The Hierophant", // needs translation
+    "the-high-priestess": "The High Priestess", // needs translation
+    "the-lovers": "The Lovers", // needs translation
+    "the-magician": "The Magician", // needs translation
+    "the-moon": "The Moon", // needs translation
+    "the-star": "The Star", // needs translation
+    "the-sun": "The Sun", // needs translation
+    "the-tower": "The Tower", // needs translation
+    "the-world": "The World", // needs translation
+    "wheel-of-fortune": "Wheel of Fortune", // needs translation
+  },
+  tarotDescriptions: {
+    "death": "Select 2 cards in hand: left card becomes a copy of the right", // needs translation
+    "judgement": "Create a random Joker", // needs translation
+    "justice": "Apply glass enhancement to 1 card in hand", // needs translation
+    "strength": "Increase rank of up to 2 cards in hand by 1", // needs translation
+    "temperance": "Earn the total sell value of equipped jokers (max +$50)", // needs translation
+    "the-chariot": "Apply steel enhancement to 1 card in hand", // needs translation
+    "the-devil": "Apply gold enhancement to 1 card in hand", // needs translation
+    "the-emperor": "Creates up to 2 random Tarots (must have room)", // needs translation
+    "the-empress": "Apply mult enhancement to up to 2 cards in hand", // needs translation
+    "the-fool": "Creates a copy of the last Tarot or Planet card used (must have room)", // needs translation
+    "the-hanged-man": "Destroy up to 2 cards in hand", // needs translation
+    "the-hermit": "Doubles current money (max +$20)", // needs translation
+    "the-hierophant": "Apply bonus enhancement to up to 2 cards in hand", // needs translation
+    "the-high-priestess": "Creates up to 2 random Planets (must have room)", // needs translation
+    "the-lovers": "Apply wild enhancement to 1 card in hand", // needs translation
+    "the-magician": "Apply lucky enhancement to up to 2 cards in hand", // needs translation
+    "the-moon": "Convert up to 3 cards in hand to ♣ Clubs", // needs translation
+    "the-star": "Convert up to 3 cards in hand to ♦ Diamonds", // needs translation
+    "the-sun": "Convert up to 3 cards in hand to ♥ Hearts", // needs translation
+    "the-tower": "Apply stone enhancement to 1 card in hand", // needs translation
+    "the-world": "Convert up to 3 cards in hand to ♠ Spades", // needs translation
+    "wheel-of-fortune": "25% chance to add a random edition to a random Joker", // needs translation
+  },
 };
