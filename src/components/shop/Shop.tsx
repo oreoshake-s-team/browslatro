@@ -11,6 +11,10 @@ import {
   localizedJokerDescription,
   localizedJokerName,
 } from "../../i18n/jokerOverrides";
+import {
+  localizedVoucherDescription,
+  localizedVoucherName,
+} from "../../i18n/voucherOverrides";
 import { packDisplayName, packOptionsCount, packPickLimit } from "../../items/packs";
 import { rerollCostFor, type ShopItem } from "../../items/shop";
 import {
@@ -56,6 +60,7 @@ interface VoucherButtonState {
 
 function resolveVoucherButton(
   t: TFunction,
+  locale: string,
   voucher: Voucher,
   sold: boolean,
   money: number,
@@ -73,7 +78,9 @@ function resolveVoucherButton(
     return {
       disabled: true,
       label: t("shop.buy", { price }),
-      title: t("shop.requiresVoucher", { voucher: voucher.requires }),
+      title: t("shop.requiresVoucher", {
+        voucher: localizedVoucherName(locale, voucher.requires, voucher.requires),
+      }),
     };
   }
   if (money < price) {
@@ -486,7 +493,7 @@ export default function Shop({
                 className="shop-voucher-current"
                 data-testid="shop-voucher-current"
               >
-                {vouchers[0].name}
+                {localizedVoucherName(i18n.language, vouchers[0].id, vouchers[0].name)}
               </span>
             )}
             {vouchers.length === 0 ? (
@@ -500,8 +507,14 @@ export default function Shop({
               <ul className="shop-voucher-list">
                 {vouchers.map((voucher, idx) => {
                   const sold = soldVoucherIds.has(voucher.id);
+                  const voucherName = localizedVoucherName(
+                    i18n.language,
+                    voucher.id,
+                    voucher.name,
+                  );
                   const btn = resolveVoucherButton(
                     t,
+                    i18n.language,
                     voucher,
                     sold,
                     money,
@@ -518,8 +531,14 @@ export default function Shop({
                       data-voucher-id={voucher.id}
                       data-testid={`shop-voucher-${idx}`}
                     >
-                      <span className="shop-voucher-name">{voucher.name}</span>
-                      <span className="shop-voucher-description">{voucher.description}</span>
+                      <span className="shop-voucher-name">{voucherName}</span>
+                      <span className="shop-voucher-description">
+                        {localizedVoucherDescription(
+                          i18n.language,
+                          voucher.id,
+                          voucher.description,
+                        )}
+                      </span>
                       <span className="shop-voucher-price">${displayPrice}</span>
                       <button
                         type="button"
@@ -527,7 +546,7 @@ export default function Shop({
                         data-testid={`shop-voucher-buy-${idx}`}
                         disabled={disabled || btn.disabled}
                         title={disabled ? lockTooltip : btn.title}
-                        aria-label={t("a11y.buyOffer", { label: btn.label, name: voucher.name })}
+                        aria-label={t("a11y.buyOffer", { label: btn.label, name: voucherName })}
                         onClick={() => onBuyVoucher(idx)}
                       >
                         {btn.label}
