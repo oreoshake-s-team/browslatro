@@ -826,4 +826,44 @@ export const haw: LocaleMessages = {
     "telescope": "Celestial Packs always contain the Planet card for your most-played hand.", // needs translation
     "wasteful": "+1 discard per round.", // needs translation
   },
+  spectralNames: {
+    "ankh": "Ankh", // needs translation
+    "aura": "Aura", // needs translation
+    "black-hole": "Black Hole", // needs translation
+    "cryptid": "Cryptid", // needs translation
+    "deja-vu": "Deja Vu", // needs translation
+    "ectoplasm": "Ectoplasm", // needs translation
+    "familiar": "Familiar", // needs translation
+    "grim": "Grim", // needs translation
+    "hex": "Hex", // needs translation
+    "immolate": "Immolate", // needs translation
+    "incantation": "Incantation", // needs translation
+    "medium": "Medium", // needs translation
+    "ouija": "Ouija", // needs translation
+    "sigil": "Sigil", // needs translation
+    "soul": "The Soul", // needs translation
+    "talisman": "Talisman", // needs translation
+    "trance": "Trance", // needs translation
+    "wraith": "Wraith", // needs translation
+  },
+  spectralDescriptions: {
+    "ankh": "Create a copy of a random Joker, destroy all other Jokers", // needs translation
+    "aura": "Add Foil, Holographic, or Polychrome effect to 1 selected card in your hand", // needs translation
+    "black-hole": "Upgrade every poker hand by 1 level", // needs translation
+    "cryptid": "Create 2 copies of 1 selected card in your hand", // needs translation
+    "deja-vu": "Add a Red Seal to 1 selected card in your hand", // needs translation
+    "ectoplasm": "Add Negative to a random Joker, -1 hand size", // needs translation
+    "familiar": "Destroy 1 random card in hand, add 3 random Enhanced face cards", // needs translation
+    "grim": "Destroy 1 random card in hand, add 2 random Enhanced Aces", // needs translation
+    "hex": "Add Polychrome to a random Joker, destroy all other Jokers", // needs translation
+    "immolate": "Destroys 5 random cards in hand, gain $20", // needs translation
+    "incantation": "Destroy 1 random card in hand, add 4 random Enhanced numbered cards", // needs translation
+    "medium": "Add a Purple Seal to 1 selected card in your hand", // needs translation
+    "ouija": "Convert all cards in hand to a single random rank, -1 hand size", // needs translation
+    "sigil": "Converts all cards in hand to a single random suit", // needs translation
+    "soul": "Create a Legendary Joker", // needs translation
+    "talisman": "Add a Gold Seal to 1 selected card in your hand", // needs translation
+    "trance": "Add a Blue Seal to 1 selected card in your hand", // needs translation
+    "wraith": "Create a random Rare Joker, set money to $0", // needs translation
+  },
 };
