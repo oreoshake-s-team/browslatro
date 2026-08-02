@@ -183,6 +183,7 @@ export function useRoundLifecycle({
     handSizeModifier,
     ownedVoucherIds,
     jokers: equippedJokers,
+    deck: selectedDeck,
   });
 
   function startNewRound(opts: {

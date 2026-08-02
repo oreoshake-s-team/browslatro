@@ -4,6 +4,7 @@ import {
   createDeckCatalog,
   deckCompositionTransforms,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckHandSizeDelta,
   deckJokerSlotsDelta,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
@@ -34,7 +35,7 @@ describe("getDeckSpec", () => {
 });
 
 describe("DeckSpec.implemented", () => {
-  test("Red, Yellow, Blue, Green, Black, Abandoned, and Checkered Decks are implemented", () => {
+  test("Red, Yellow, Blue, Green, Black, Abandoned, Checkered, and Painted Decks are implemented", () => {
     const implemented = createDeckCatalog()
       .filter((d) => d.implemented)
       .map((d) => d.id);
@@ -46,6 +47,7 @@ describe("DeckSpec.implemented", () => {
       "black-deck",
       "abandoned-deck",
       "checkered-deck",
+      "painted-deck",
     ]);
   });
 
@@ -53,7 +55,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(8);
+    expect(unimplementedCount).toBe(7);
   });
 });
 
@@ -212,9 +214,32 @@ describe("Checkered Deck initial deck materialization", () => {
   });
 });
 
+describe("Painted Deck spec", () => {
+  test("declares the +2 hand size and -1 joker slot modifiers", () => {
+    expect(getDeckSpec("painted-deck").modifiers).toEqual([
+      { kind: "hand-size-delta", amount: 2 },
+      { kind: "joker-slots-delta", amount: -1 },
+    ]);
+  });
+});
+
+describe("deckHandSizeDelta", () => {
+  test("Painted Deck adds 2 to hand size", () => {
+    expect(deckHandSizeDelta("painted-deck")).toBe(2);
+  });
+
+  test("Red Deck does not change hand size (negative)", () => {
+    expect(deckHandSizeDelta("red-deck")).toBe(0);
+  });
+});
+
 describe("deckJokerSlotsDelta", () => {
   test("Black Deck adds 1 joker slot", () => {
     expect(deckJokerSlotsDelta("black-deck")).toBe(1);
+  });
+
+  test("Painted Deck removes 1 joker slot", () => {
+    expect(deckJokerSlotsDelta("painted-deck")).toBe(-1);
   });
 
   test("Red Deck does not change joker slots (negative)", () => {

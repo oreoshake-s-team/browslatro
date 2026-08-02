@@ -32,6 +32,10 @@ describe("jokerCapacityFor", () => {
       jokerCapacityFor(new Set<VoucherId>(["antimatter"]), "black-deck"),
     ).toBe(MAX_JOKERS + 2);
   });
+
+  test("the Painted Deck removes a joker slot", () => {
+    expect(jokerCapacityFor(NO_VOUCHERS, "painted-deck")).toBe(MAX_JOKERS - 1);
+  });
 });
 
 describe("consumableCapacityFor", () => {
@@ -53,6 +57,7 @@ describe("handSizeFor", () => {
         handSizeModifier: 0,
         ownedVoucherIds: NO_VOUCHERS,
         jokers: [],
+        deck: "red-deck",
       }),
     ).toBe(HAND_SIZE);
   });
@@ -63,6 +68,7 @@ describe("handSizeFor", () => {
         handSizeModifier: -1,
         ownedVoucherIds: NO_VOUCHERS,
         jokers: [],
+        deck: "red-deck",
       }),
     ).toBe(HAND_SIZE - 1);
   });
@@ -73,6 +79,7 @@ describe("handSizeFor", () => {
         handSizeModifier: 0,
         ownedVoucherIds: new Set<VoucherId>(["paint-brush"]),
         jokers: [],
+        deck: "red-deck",
       }),
     ).toBe(HAND_SIZE + 1);
   });
@@ -83,8 +90,31 @@ describe("handSizeFor", () => {
         handSizeModifier: 0,
         ownedVoucherIds: NO_VOUCHERS,
         jokers: [createTroubadourJoker()],
+        deck: "red-deck",
       }),
     ).toBe(HAND_SIZE + 2);
+  });
+
+  test("the Painted Deck adds two cards", () => {
+    expect(
+      handSizeFor({
+        handSizeModifier: 0,
+        ownedVoucherIds: NO_VOUCHERS,
+        jokers: [],
+        deck: "painted-deck",
+      }),
+    ).toBe(HAND_SIZE + 2);
+  });
+
+  test("the Painted Deck bonus stacks with Paint Brush", () => {
+    expect(
+      handSizeFor({
+        handSizeModifier: 0,
+        ownedVoucherIds: new Set<VoucherId>(["paint-brush"]),
+        jokers: [],
+        deck: "painted-deck",
+      }),
+    ).toBe(HAND_SIZE + 3);
   });
 
   test("never drops below one card (negative)", () => {
@@ -93,6 +123,7 @@ describe("handSizeFor", () => {
         handSizeModifier: -99,
         ownedVoucherIds: NO_VOUCHERS,
         jokers: [],
+        deck: "red-deck",
       }),
     ).toBe(1);
   });
