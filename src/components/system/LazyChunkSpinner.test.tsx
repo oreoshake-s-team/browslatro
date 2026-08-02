@@ -49,23 +49,25 @@ describe("LazyChunkSpinner", () => {
     expect(screen.getByText("Loading…")).toBeInTheDocument();
   });
 
-  test("applies the overlay class when variant is overlay", () => {
+  test("applies the overlay variant hook when variant is overlay", () => {
     render(<LazyChunkSpinner variant="overlay" />);
     act(() => {
       vi.advanceTimersByTime(LAZY_CHUNK_SPINNER_DELAY_MS);
     });
-    expect(screen.getByTestId("lazy-chunk-spinner")).toHaveClass(
-      "lazy-chunk-spinner--overlay",
+    expect(screen.getByTestId("lazy-chunk-spinner")).toHaveAttribute(
+      "data-variant",
+      "overlay",
     );
   });
 
-  test("inline variant omits the overlay class", () => {
+  test("inline variant omits the overlay variant hook", () => {
     render(<LazyChunkSpinner variant="inline" />);
     act(() => {
       vi.advanceTimersByTime(LAZY_CHUNK_SPINNER_DELAY_MS);
     });
-    expect(screen.getByTestId("lazy-chunk-spinner")).not.toHaveClass(
-      "lazy-chunk-spinner--overlay",
+    expect(screen.getByTestId("lazy-chunk-spinner")).toHaveAttribute(
+      "data-variant",
+      "inline",
     );
   });
 

@@ -1,4 +1,3 @@
-import "./ModifierPackPicker.css";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import type { PackPool } from "../../items/packs";
@@ -15,6 +14,9 @@ const PACK_POOLS: ReadonlyArray<{ readonly id: PackPool; readonly label: string;
   (pool) => pool.label,
 );
 
+const TILE_CLASS =
+  "inline-flex cursor-pointer items-center gap-1 rounded-md border border-solid border-border bg-raised px-2 py-1 text-left text-xs font-semibold text-ink transition-colors enabled:hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-45";
+
 export default function ModifierPackPicker() {
   const setPendingForcedPacks = useGame((s) => s.setPendingForcedPacks);
 
@@ -24,16 +26,19 @@ export default function ModifierPackPicker() {
   }
 
   return (
-    <details className="modifier-pack-picker">
-      <summary className="modifier-pack-picker-summary">
+    <details
+      data-testid="modifier-pack-picker"
+      className="w-full rounded-lg border border-dashed border-muted/40 bg-white/5 px-3 pb-3 pt-2"
+    >
+      <summary className="cursor-pointer select-none py-1 text-xs font-bold uppercase tracking-wider text-muted hover:text-ink">
         Force a Pack pool in next shop
       </summary>
-      <div className="modifier-pack-picker-grid">
+      <div className="mt-2 grid grid-cols-5 gap-1">
         {PACK_POOLS.map((pool) => (
           <button
             key={pool.id}
             type="button"
-            className="add-pack-button"
+            className={TILE_CLASS}
             data-pack-pool={pool.id}
             data-testid={`force-pack-${pool.id}`}
             onClick={() => forcePool(pool.id)}

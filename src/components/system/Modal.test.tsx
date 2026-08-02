@@ -27,18 +27,19 @@ describe("Modal rendering", () => {
 
   test("applies the accent modifier class to the panel", () => {
     renderModal({ accent: "pack", testId: "m" });
-    expect(screen.getByTestId("m")).toHaveClass("modal-panel--pack");
+    expect(screen.getByTestId("m")).toHaveAttribute("data-accent", "pack");
   });
 
   test("applies the size modifier class to the panel", () => {
     renderModal({ size: "lg", testId: "m" });
-    expect(screen.getByTestId("m")).toHaveClass("modal-panel--lg");
+    expect(screen.getByTestId("m")).toHaveAttribute("data-size", "lg");
   });
 
   test("raises the overlay z-index for the elevated level", () => {
     renderModal({ level: "elevated" });
-    expect(screen.getByRole("dialog").parentElement).toHaveClass(
-      "modal-overlay--elevated",
+    expect(screen.getByRole("dialog").parentElement).toHaveAttribute(
+      "data-level",
+      "elevated",
     );
   });
 });

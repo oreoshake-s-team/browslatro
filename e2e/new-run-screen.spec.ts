@@ -10,8 +10,8 @@ test.beforeEach(async ({ page }) => {
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(`.stat-label`, { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator(`[data-stat-label]`, { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 test.describe("New-run screen — deck selection", () => {
@@ -38,7 +38,7 @@ test.describe("New-run screen — deck selection", () => {
 });
 
 test.describe("New-run screen — Green Deck", () => {
-  const HAND_CARDS = '[data-testid="hand-cards"] .card';
+  const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
   const SUBMIT_BUTTON = /^Submit Hand/;
   const CONTINUE_BUTTON = /Continue/;
 

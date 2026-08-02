@@ -8,8 +8,8 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
-const DECK_COUNT = ".deck-pile-count";
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
+const DECK_COUNT = '[data-testid="deck-pile-count"]';
 
 async function startRunAndDealHand(page: Page): Promise<void> {
   await page.goto("/");

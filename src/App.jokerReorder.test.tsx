@@ -94,7 +94,7 @@ describe("Joker drag-reorder during shop and pack-pick", () => {
       (el) => el.getAttribute("data-offer-kind") === "pack",
     );
     const openBtn = offers[packIdx].querySelector(
-      "button.shop-offer-buy",
+      "button[data-shop-buy]",
     ) as HTMLButtonElement;
     await user.click(openBtn);
     await screen.findByTestId("pack-open-close");

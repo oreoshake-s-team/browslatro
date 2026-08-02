@@ -13,14 +13,14 @@ describe("HandScore empty state", () => {
     const { container } = render(
       <HandScore chips={0} multiplier={0} selectedHand={null} />,
     );
-    expect(container.querySelector(".chips")).toHaveTextContent("0");
+    expect(container.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("0");
   });
 
   test("renders multiplier as 0 when empty", () => {
     const { container } = render(
       <HandScore chips={0} multiplier={0} selectedHand={null} />,
     );
-    expect(container.querySelector(".multiplier")).toHaveTextContent("0");
+    expect(container.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("0");
   });
 });
 
@@ -38,14 +38,14 @@ describe("HandScore populated state", () => {
     const { container } = render(
       <HandScore chips={42} multiplier={2} selectedHand={HANDS[0]} />,
     );
-    expect(container.querySelector(".chips")).toHaveTextContent("42");
+    expect(container.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("42");
   });
 
   test("renders the live multiplier value when selectedHand is provided", () => {
     const { container } = render(
       <HandScore chips={10} multiplier={7} selectedHand={HANDS[0]} />,
     );
-    expect(container.querySelector(".multiplier")).toHaveTextContent("7");
+    expect(container.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("7");
   });
 });
 
@@ -201,7 +201,7 @@ describe("HandScore live announcement", () => {
       <HandScore chips={10} multiplier={2} selectedHand={HANDS[1]} />,
     );
     expect(
-      container.querySelector(".chips")?.closest("p"),
+      container.querySelector('[data-testid="hand-chips"]')?.closest("p"),
     ).toHaveAttribute("aria-hidden", "true");
   });
 });
@@ -245,7 +245,7 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(50);
     });
-    expect(container.querySelector(".chips")).toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-chips"]')).toHaveAttribute(
       "data-leveling",
       "true",
     );
@@ -271,7 +271,7 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(50);
     });
-    expect(container.querySelector(".multiplier")).toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-mult"]')).toHaveAttribute(
       "data-leveling",
       "true",
     );
@@ -294,7 +294,7 @@ describe("HandScore level-up animation", () => {
         selectedHandLevel={1}
       />,
     );
-    expect(container.querySelector(".chips")).not.toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-chips"]')).not.toHaveAttribute(
       "data-leveling",
     );
   });
@@ -316,7 +316,7 @@ describe("HandScore level-up animation", () => {
         selectedHandLevel={1}
       />,
     );
-    expect(container.querySelector(".chips")).not.toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-chips"]')).not.toHaveAttribute(
       "data-leveling",
     );
   });
@@ -341,7 +341,7 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(2000);
     });
-    expect(container.querySelector(".chips")).not.toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-chips"]')).not.toHaveAttribute(
       "data-leveling",
     );
   });
@@ -366,7 +366,7 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(2000);
     });
-    expect(container.querySelector(".chips")).toHaveTextContent("40");
+    expect(container.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("40");
   });
 
   test("animates from 0 when anchor changes to a higher level hand (level > 1)", () => {
@@ -389,7 +389,7 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(50);
     });
-    expect(container.querySelector(".chips")).toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-chips"]')).toHaveAttribute(
       "data-leveling",
       "true",
     );
@@ -412,7 +412,7 @@ describe("HandScore level-up animation", () => {
         selectedHandLevel={1}
       />,
     );
-    expect(container.querySelector(".chips")).not.toHaveAttribute(
+    expect(container.querySelector('[data-testid="hand-chips"]')).not.toHaveAttribute(
       "data-leveling",
     );
   });
@@ -451,7 +451,7 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(50);
     });
-    expect(container.querySelector(".chips")).toHaveTextContent("25");
+    expect(container.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("25");
   });
 
   test("eventually reaches the new multiplier target after animating", () => {
@@ -474,6 +474,6 @@ describe("HandScore level-up animation", () => {
     act(() => {
       vi.advanceTimersByTime(2000);
     });
-    expect(container.querySelector(".multiplier")).toHaveTextContent("8");
+    expect(container.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("8");
   });
 });

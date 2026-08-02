@@ -32,7 +32,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
+      .querySelector("li > span");
     expect(badge?.getAttribute("aria-label")).toMatch(/Eternal/);
   });
 
@@ -41,7 +41,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
+      .querySelector("li > span");
     expect(badge?.getAttribute("aria-label")).toMatch(
       new RegExp(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`),
     );
@@ -54,7 +54,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
+      .querySelector("li > span");
     expect(badge?.getAttribute("aria-label")).toMatch(/debuffed/i);
   });
 
@@ -63,8 +63,8 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
-    expect(badge?.classList.contains("joker-sticker-badge-rental")).toBe(true);
+      .querySelector("li > span");
+    expect(badge).toHaveAttribute("data-testid", "joker-sticker-rental");
   });
 
   test("badge letters reflect kind", () => {
@@ -72,7 +72,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
+      .querySelector("li > span");
     expect(badge?.textContent).toBe("E");
   });
 
@@ -81,7 +81,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
+      .querySelector("li > span");
     expect(badge?.textContent).toBe(`P 3/${PERISHABLE_LIFE}`);
   });
 
@@ -92,7 +92,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
+      .querySelector("li > span");
     expect(badge?.textContent).toBe(`P 0/${PERISHABLE_LIFE}`);
   });
 
@@ -103,10 +103,8 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
-    expect(badge?.classList.contains("joker-sticker-badge-debuffed")).toBe(
-      true,
-    );
+      .querySelector("li > span");
+    expect(badge).toHaveClass("line-through");
   });
 
   test("a still-active perishable badge has no debuffed class (negative)", () => {
@@ -116,9 +114,7 @@ describe("JokerStickerBadges", () => {
     render(<JokerStickerBadges joker={j} />);
     const badge = screen
       .getByTestId(`joker-stickers-${j.id}`)
-      .querySelector("li");
-    expect(badge?.classList.contains("joker-sticker-badge-debuffed")).toBe(
-      false,
-    );
+      .querySelector("li > span");
+    expect(badge).not.toHaveClass("line-through");
   });
 });

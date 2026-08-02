@@ -13,7 +13,7 @@ async function startRound(page: Page): Promise<void> {
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
   await expect(
-    page.locator('[data-testid="hand-cards"] .card').first(),
+    page.locator('[data-testid="hand-cards"] button[aria-pressed]').first(),
   ).toBeVisible();
 }
 
@@ -21,10 +21,10 @@ test("selecting a hand card lifts it out of the row", async ({
   page,
 }) => {
   await startRound(page);
-  const card = page.locator('[data-testid="hand-cards"] .card').first();
+  const card = page.locator('[data-testid="hand-cards"] button[aria-pressed]').first();
   const before = await card.boundingBox();
   await card.click();
-  await expect(card).toHaveClass(/card--selected/);
+  await expect(card).toHaveAttribute("aria-pressed", "true");
   await page.mouse.move(0, 0);
   await expect
     .poll(async () => {
@@ -38,12 +38,12 @@ test("deselecting a card returns it to the row", async ({
   page,
 }) => {
   await startRound(page);
-  const card = page.locator('[data-testid="hand-cards"] .card').first();
+  const card = page.locator('[data-testid="hand-cards"] button[aria-pressed]').first();
   const before = await card.boundingBox();
   await card.click();
-  await expect(card).toHaveClass(/card--selected/);
+  await expect(card).toHaveAttribute("aria-pressed", "true");
   await card.click();
-  await expect(card).not.toHaveClass(/card--selected/);
+  await expect(card).not.toHaveAttribute("aria-pressed", "true");
   await page.mouse.move(0, 0);
   await expect
     .poll(async () => {
@@ -57,8 +57,13 @@ test("empty joker and consumable trays render with the muted empty treatment", a
   page,
 }) => {
   await startRound(page);
-  await expect(page.locator(".jokers")).toHaveClass(/jokers-tray-empty/);
-  await expect(page.locator(".consumables")).toHaveClass(
-    /consumables-tray-empty/,
-  );
+  await expect(
+    page.getByTestId("jokers-tray").getByTestId("joker-tile-empty").first(),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByTestId("consumables-tray")
+      .getByTestId("consumable-tile-empty")
+      .first(),
+  ).toBeVisible();
 });

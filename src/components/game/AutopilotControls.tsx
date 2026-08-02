@@ -11,7 +11,8 @@ import { useGame } from "../../store/game";
 import { useModelLoadProgress } from "./useModelLoadProgress";
 import PlayerKeyForm from "./PlayerKeyForm";
 import AdviceFeedbackControl from "../advisor/AdviceFeedbackControl";
-import "./AutopilotControls.css";
+import { Button } from "../ui/Button";
+import { cn } from "../ui/cn";
 
 export interface AutopilotControlsProps {
   readonly proposal: HandOption | null;
@@ -28,6 +29,11 @@ export interface AutopilotControlsProps {
   readonly onAgree?: () => void;
   readonly onPreviewFeedback?: (option: HandOption) => void;
 }
+
+const PROPOSAL = "text-base font-bold text-ink";
+const EXPLANATION = "flex flex-col gap-3 text-sm leading-relaxed text-muted";
+const ADVICE_LABEL = "text-xs font-bold tracking-wider text-muted uppercase";
+const ADVICE_MOVE = "font-bold text-ink";
 
 function describeProposal(t: TFunction, proposal: HandOption): string {
   if (proposal.action === "play") {
@@ -85,7 +91,7 @@ function renderExplanation(
       return null;
     case "loading":
       return (
-        <p className="autopilot-explanation" role="status">
+        <p className={EXPLANATION} role="status">
           {t("advisor.thinking")}
         </p>
       );
@@ -95,7 +101,7 @@ function renderExplanation(
         (explanation.code === "rate_limited" &&
           readStoredPlayerKey() === null);
       return (
-        <div className="autopilot-explanation">
+        <div className={EXPLANATION}>
           <p role="status">
             {explanationError(t, explanation.code, explanation.retryAfterSeconds)}
           </p>
@@ -116,28 +122,28 @@ function renderExplanation(
         advice.alternativeIndex !== advice.recommendationIndex &&
         alternative !== undefined;
       return (
-        <div className="autopilot-explanation">
-          <section className="autopilot-advice autopilot-advice--recommendation">
-            <p className="autopilot-advice-label">{t("advisor.recommendation")}</p>
+        <div className={EXPLANATION}>
+          <section className="space-y-1 border-l-2 border-success pl-3">
+            <p className={ADVICE_LABEL}>{t("advisor.recommendation")}</p>
             {recommended !== undefined && (
-              <p className="autopilot-advice-move">
+              <p className={ADVICE_MOVE}>
                 {describeCandidate(t, recommended, hand)}
               </p>
             )}
             <p>{advice.explanation}</p>
           </section>
           {showAlternative && (
-            <section className="autopilot-advice">
-              <p className="autopilot-advice-label">{t("advisor.alternative")}</p>
-              <p className="autopilot-advice-move">
+            <section className="space-y-1 border-l-2 border-border pl-3">
+              <p className={ADVICE_LABEL}>{t("advisor.alternative")}</p>
+              <p className={ADVICE_MOVE}>
                 {describeCandidate(t, alternative, hand)}
               </p>
               <p>{advice.whyAlternativeWorse}</p>
             </section>
           )}
-          <section className="autopilot-advice autopilot-advice--concept">
-            <p className="autopilot-advice-label">{t("advisor.concept")}</p>
-            <p className="autopilot-concept">{advice.concept}</p>
+          <section className="space-y-1 border-l-2 border-chips pl-3">
+            <p className={ADVICE_LABEL}>{t("advisor.concept")}</p>
+            <p className="text-chips italic">{advice.concept}</p>
           </section>
         </div>
       );
@@ -171,17 +177,17 @@ export default function AutopilotControls({
     feedbackCandidates.length > 0;
   return (
     <div
-      className="autopilot-controls"
+      className="flex w-full flex-col gap-3 rounded-xl border border-chips bg-chips/10 p-5"
       role="group"
       aria-label={t("advisor.autopilot")}
     >
-      <p className="autopilot-title">
+      <p className="text-xs font-bold tracking-wider text-chips uppercase">
         <span aria-hidden="true">💡 </span>
         {t("advisor.suggestTitle")}
       </p>
       {feedbackRecorded && proposal === null && (
         <p
-          className="autopilot-feedback-recorded"
+          className="font-bold text-success"
           role="status"
           data-testid="autopilot-feedback-recorded"
         >
@@ -189,14 +195,14 @@ export default function AutopilotControls({
         </p>
       )}
       {proposal !== null ? (
-        <p className="autopilot-proposal" role="status">
+        <p className={PROPOSAL} role="status">
           {describeProposal(t, proposal)}
         </p>
       ) : modelProgress !== null ? (
-        <div className="autopilot-loading" role="status">
-          <p className="autopilot-proposal">{t("advisor.downloadingModel")}</p>
+        <div className="flex w-full flex-col gap-1.5" role="status">
+          <p className={PROPOSAL}>{t("advisor.downloadingModel")}</p>
           <progress
-            className="autopilot-progress"
+            className="h-2 w-full accent-chips"
             aria-label={t("advisor.downloadingModel")}
             value={loadProgress}
             max={1}
@@ -204,7 +210,7 @@ export default function AutopilotControls({
         </div>
       ) : advisorUnavailable ? (
         <p
-          className="autopilot-proposal autopilot-error"
+          className={cn(PROPOSAL, "text-mult")}
           data-testid="autopilot-advisor-unavailable"
           role="alert"
         >
@@ -212,29 +218,29 @@ export default function AutopilotControls({
         </p>
       ) : proposalUnavailable ? (
         <p
-          className="autopilot-proposal"
+          className={PROPOSAL}
           data-testid="autopilot-no-suggestion"
           role="status"
         >
           {t("advisor.noSuggestionAvailable")}
         </p>
       ) : null}
-      <div className="autopilot-actions">
+      <div className="flex flex-wrap gap-3">
         {proposal !== null && !canGiveFeedback && (
-          <button className="btn autopilot-approve-button" onClick={onApprove}>
+          <Button variant="primary" onClick={onApprove}>
             <span aria-hidden="true">✅ </span>
             {t("advisor.autopilotApprove")}
-          </button>
+          </Button>
         )}
         {proposal !== null && (
-          <button
-            className="btn btn--advisor autopilot-askai-button"
+          <Button
+            variant="advisor"
             onClick={onAskAi}
             disabled={explanation.phase === "loading"}
           >
             <span aria-hidden="true">🤖 </span>
             {t("advisor.autopilotAskAi")}
-          </button>
+          </Button>
         )}
         {canGiveFeedback && onFeedback !== undefined && onAgree !== undefined && (
           <AdviceFeedbackControl

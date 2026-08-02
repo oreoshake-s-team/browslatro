@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
-const RED_SUIT_COLOR = "rgb(201, 42, 42)";
-const BLACK_SUIT_COLOR = "rgb(33, 37, 41)";
+const HAND_CARDS = '[aria-label="Your hand"] [data-suit]';
+const RED_SUIT_COLOR = "rgb(211, 54, 54)";
+const BLACK_SUIT_COLOR = "rgb(35, 41, 54)";
 
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
@@ -42,7 +42,7 @@ test.describe("reduced motion", () => {
 
   test("new run deck tile transition collapses to 0s", async ({ page }) => {
     await page.goto("/");
-    expect(await transitionSeconds(page, ".new-run-deck-tile")).toBe(0);
+    expect(await transitionSeconds(page, "[data-deck-tile]")).toBe(0);
     await page.screenshot({
       path: test.info().outputPath("reduced-motion-new-run.png"),
     });
@@ -53,17 +53,17 @@ test.describe("reduced motion", () => {
       window.localStorage.setItem("browslatro:bootShop", "1");
     });
     await page.goto("/");
-    expect(await transitionSeconds(page, ".shop-offer")).toBe(0);
+    expect(await transitionSeconds(page, "[data-shop-offer]")).toBe(0);
   });
 });
 
 test.describe("default motion", () => {
-  test("negative: deck tile keeps its 120ms transition without reduced motion", async ({
+  test("negative: deck tile keeps its 150ms transition without reduced motion", async ({
     page,
   }) => {
     await page.goto("/");
-    expect(await transitionSeconds(page, ".new-run-deck-tile")).toBeCloseTo(
-      0.12,
+    expect(await transitionSeconds(page, "[data-deck-tile]")).toBeCloseTo(
+      0.15,
     );
   });
 });
@@ -83,7 +83,9 @@ test.describe("forced colors", () => {
     ).toBe("none");
     const cards = await page.locator(HAND_CARDS).evaluateAll((els) =>
       els.map((el) => ({
-        isRed: el.className.includes("card-red"),
+        isRed:
+          el.getAttribute("data-suit") === "hearts" ||
+          el.getAttribute("data-suit") === "diamonds",
         color: getComputedStyle(el).color,
       })),
     );
@@ -92,15 +94,17 @@ test.describe("forced colors", () => {
     }
     await firstCard.click();
     await expect(firstCard).toHaveAttribute("aria-pressed", "true");
-    const outline = await firstCard.evaluate((el) => {
-      const style = getComputedStyle(el);
-      return { style: style.outlineStyle, width: style.outlineWidth };
-    });
-    expect(outline.style).toBe("solid");
-    expect(outline.width).toBe("2px");
+    await expect
+      .poll(() =>
+        firstCard.evaluate((el) => {
+          const style = getComputedStyle(el);
+          return `${style.outlineStyle} ${style.outlineWidth}`;
+        }),
+      )
+      .toBe("solid 2px");
     const focusRing = await page.evaluate(() =>
       getComputedStyle(document.documentElement)
-        .getPropertyValue("--focus-ring")
+        .getPropertyValue("--color-focus")
         .trim(),
     );
     expect(focusRing).toBe("Highlight");
@@ -116,9 +120,9 @@ test.describe("forced colors", () => {
     await page.goto("/");
     const focusRing = await page.evaluate(() =>
       getComputedStyle(document.documentElement)
-        .getPropertyValue("--focus-ring")
+        .getPropertyValue("--color-focus")
         .trim(),
     );
-    expect(focusRing).toBe("#74c0fc");
+    expect(focusRing).toBe("#8cc8ff");
   });
 });

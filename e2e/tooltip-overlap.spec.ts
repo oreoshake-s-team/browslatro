@@ -13,7 +13,7 @@ async function startRound(page: Page): Promise<void> {
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
   await expect(
-    page.locator('[data-testid="hand-cards"] .card').first(),
+    page.locator('[data-testid="hand-cards"] button[aria-pressed]').first(),
   ).toBeVisible();
 }
 
@@ -40,31 +40,31 @@ test("a hand-card tooltip does not cover any interactive element", async ({
   page,
 }) => {
   await startRound(page);
-  const cards = page.locator('[data-testid="hand-cards"] .card');
+  const cards = page.locator('[data-testid="hand-cards"] button[aria-pressed]');
   await cards.nth(3).hover();
-  await expect(page.locator(".card-tooltip")).toBeVisible();
-  expect(await interactiveOverlaps(page, ".card-tooltip")).toEqual([]);
+  await expect(page.locator('[data-testid="card-tooltip"]')).toBeVisible();
+  expect(await interactiveOverlaps(page, '[data-testid="card-tooltip"]')).toEqual([]);
 });
 
 test("a selected (lifted) card's tooltip does not cover neighboring cards", async ({
   page,
 }) => {
   await startRound(page);
-  const cards = page.locator('[data-testid="hand-cards"] .card');
+  const cards = page.locator('[data-testid="hand-cards"] button[aria-pressed]');
   await cards.nth(3).click();
   await page.mouse.move(0, 0);
   await cards.nth(3).hover();
-  await expect(page.locator(".card-tooltip")).toBeVisible();
-  expect(await interactiveOverlaps(page, ".card-tooltip")).toEqual([]);
+  await expect(page.locator('[data-testid="card-tooltip"]')).toBeVisible();
+  expect(await interactiveOverlaps(page, '[data-testid="card-tooltip"]')).toEqual([]);
 });
 
 test("clicking a card while a neighbor's tooltip is open always selects it", async ({
   page,
 }) => {
   await startRound(page);
-  const cards = page.locator('[data-testid="hand-cards"] .card');
+  const cards = page.locator('[data-testid="hand-cards"] button[aria-pressed]');
   await cards.nth(3).hover();
-  await expect(page.locator(".card-tooltip")).toBeVisible();
+  await expect(page.locator('[data-testid="card-tooltip"]')).toBeVisible();
   await cards.nth(2).click();
   await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
 });
@@ -94,6 +94,6 @@ test("a joker tooltip does not cover any interactive element", async ({
   const joker = page.getByTestId("joker-tile-filled-blueprint");
   await expect(joker).toBeVisible();
   await joker.hover();
-  await expect(page.locator(".joker-tooltip")).toBeVisible();
-  expect(await interactiveOverlaps(page, ".joker-tooltip")).toEqual([]);
+  await expect(page.locator('[data-testid="joker-tooltip"]')).toBeVisible();
+  expect(await interactiveOverlaps(page, '[data-testid="joker-tooltip"]')).toEqual([]);
 });

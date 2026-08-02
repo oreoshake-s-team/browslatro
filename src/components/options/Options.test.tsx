@@ -87,7 +87,7 @@ describe("Options", () => {
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
-    await user.click(document.querySelector(".modal-overlay") as HTMLElement);
+    await user.click(screen.getByTestId("modal-overlay"));
     expect(screen.queryByRole("heading", { name: "Options" })).not.toBeInTheDocument();
   });
 
@@ -521,34 +521,48 @@ describe("Options — coach API key", () => {
     );
   });
 
-  test("the modal panel carries the options-modal scope class", async () => {
+  test("the modal panel exposes the options-modal hook inside the dialog", async () => {
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
-    expect(screen.getByRole("dialog").querySelector(".modal")).toHaveClass(
-      "options-modal",
+    expect(screen.getByRole("dialog")).toContainElement(
+      screen.getByTestId("options-modal"),
     );
   });
 
-  test("toggle buttons use the shared game button style", async () => {
+  test("toggle buttons share the same toggle style", async () => {
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
-    expect(screen.getByText(/Mute sounds/)).toHaveClass("btn", "btn--toggle");
+    expect(screen.getByText(/Mute sounds/).className).toBe(
+      screen.getByText(/Enable high visibility suits/).className,
+    );
   });
 
-  test("New game button uses the shared danger button variant", async () => {
+  test("New game button shares the danger style with the key Remove button", async () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-api03-abcdefgh1234",
+    );
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
-    expect(screen.getByText("New game")).toHaveClass("btn", "btn--danger");
+    expect(screen.getByText("New game").className).toBe(
+      screen.getByRole("button", { name: "Remove" }).className,
+    );
   });
 
-  test("Close button uses the shared secondary button variant", async () => {
+  test("Close button shares the secondary style with the key Replace button", async () => {
+    window.localStorage.setItem(
+      "browslatro:advisor-player-key",
+      "sk-ant-api03-abcdefgh1234",
+    );
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
-    expect(screen.getByText("Close")).toHaveClass("btn", "btn--secondary");
+    expect(screen.getByText("Close").className).toBe(
+      screen.getByRole("button", { name: "Replace" }).className,
+    );
   });
 
   test("negative: no legacy options-button elements remain", async () => {
@@ -562,7 +576,9 @@ describe("Options — coach API key", () => {
     const user = userEvent.setup();
     render(<Options onNewGame={() => {}} />);
     await user.click(screen.getByText("Options"));
-    const footer = screen.getByText("New game").closest(".options-footer");
+    const footer = screen.getByText("New game").closest(
+      '[data-testid="options-footer"]',
+    );
     expect(footer).toContainElement(screen.getByText("Close"));
   });
 });

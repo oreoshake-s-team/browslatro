@@ -85,7 +85,7 @@ describe("HelpDialog", () => {
     const user = userEvent.setup();
     const onClose = vi.fn();
     render(<HelpDialog onClose={onClose} />);
-    await user.click(document.querySelector(".help-overlay") as HTMLElement);
+    await user.click(screen.getByTestId("help-overlay"));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 

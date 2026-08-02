@@ -1,7 +1,6 @@
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import { localizedJokerName } from "../../i18n/jokerOverrides";
-import "./Jokers.css";
 import {
   JOKER_EDITION_INFO,
   canSellJoker,
@@ -15,10 +14,22 @@ import {
   dynamicJokerDescriptionText,
 } from "../../items/jokers/dynamicJokerDescription";
 import { formatSellLabel } from "../system/sellLabel";
+import { cn, tile } from "../ui/Tile";
 import JokerEditionBadge from "./JokerEditionBadge";
 import JokerStickerBadges from "./JokerStickerBadges";
 import JokerTooltip from "./JokerTooltip";
 import { useJokerDescriptionContext } from "./useJokerDescriptionContext";
+
+const EDITION_RING = {
+  none: "",
+  foil: "ring-2 ring-chips ring-inset",
+  holographic: "ring-2 ring-advisor ring-inset",
+  polychrome: "ring-2 ring-success ring-inset",
+  negative: "bg-black ring-2 ring-white/60 ring-inset",
+} as const;
+
+const MOVE_BUTTON =
+  "cursor-pointer rounded-md bg-hover px-1.5 text-xs text-ink hover:bg-chips focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 interface JokerTileProps {
   joker: Joker;
@@ -29,6 +40,7 @@ interface JokerTileProps {
   draggable: boolean;
   reorderable: boolean;
   sellable: boolean;
+  sellAlwaysVisible?: boolean;
   tooltipId: string;
   tooltipAnchorRect: DOMRect | null;
   onOpenTooltip: (id: string, el: HTMLElement) => void;
@@ -53,6 +65,7 @@ function JokerTile({
   draggable,
   reorderable,
   sellable,
+  sellAlwaysVisible = false,
   tooltipId,
   tooltipAnchorRect,
   onOpenTooltip,
@@ -70,10 +83,6 @@ function JokerTile({
   const jokerSellable = sellable && canSellJoker(joker);
   const debuffed = !isJokerActive(joker);
   const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
-  const editionClass = joker.edition
-    ? ` joker-tile-edition joker-tile-edition-${joker.edition}`
-    : "";
-  const debuffedClass = debuffed ? " joker-tile-debuffed" : "";
   const editionLabel = editionInfo
     ? ` ${t("a11y.jokerEdition", {
         name: editionInfo.name,
@@ -90,9 +99,12 @@ function JokerTile({
 
   return (
     <li
-      className={`joker-tile${draggable ? " joker-tile-draggable" : ""}${
-        isDragging ? " joker-tile--dragging" : ""
-      }${editionClass}${debuffedClass}`}
+      className={cn(
+        tile({ accent: "mult", interactive: draggable, dimmed: debuffed }),
+        "group relative",
+        EDITION_RING[joker.edition ?? "none"],
+        isDragging && "opacity-40",
+      )}
       title={dynamicJokerDescriptionText({
         language: i18n.language,
         jokerId: joker.id,
@@ -131,17 +143,18 @@ function JokerTile({
     >
       <div
         key={`pulse-${pulse}`}
-        className={
-          pulse > 0 ? "joker-tile-inner joker-tile-pulse" : "joker-tile-inner"
-        }
+        className={cn(
+          "flex h-full min-w-0 flex-col gap-1",
+          pulse > 0 && "animate-pulse-flash",
+        )}
         data-testid={`joker-tile-inner-${joker.id}`}
         data-pulse={pulse}
       >
-        <span className="joker-tile-name">
+        <span className="truncate font-bold" data-joker-name="">
           {localizedJokerName(i18n.language, joker.id, joker.name)}
         </span>
         <span
-          className="joker-tile-description"
+          className="line-clamp-3 text-muted"
           data-testid={`joker-tile-description-${joker.id}`}
         >
           {dynamicJokerDescriptionNode({
@@ -156,22 +169,26 @@ function JokerTile({
           })}
         </span>
         {(joker.edition || jokerStickers(joker).length > 0) && (
-          <div className="joker-tile-badges">
+          <div className="mt-auto flex flex-wrap items-center gap-1" data-joker-badges="">
             {joker.edition && <JokerEditionBadge edition={joker.edition} />}
             <JokerStickerBadges joker={joker} />
           </div>
         )}
         {jokerSellable && isDragging && (
-          <span className="joker-tile-sell" aria-hidden="true">
+          <span
+            className="font-semibold text-money"
+            data-joker-sell-chip=""
+            aria-hidden="true"
+          >
             {formatSellLabel(sellValue)}
           </span>
         )}
       </div>
       {reorderable && (
-        <div className="joker-move-controls">
+        <div className="absolute inset-x-1 bottom-1 z-10 hidden justify-between group-focus-within:flex group-hover:flex">
           <button
             type="button"
-            className="joker-move-button"
+            className={MOVE_BUTTON}
             aria-label={t("a11y.moveLeft", {
               item: localizedJokerName(i18n.language, joker.id, joker.name),
             })}
@@ -185,7 +202,7 @@ function JokerTile({
           </button>
           <button
             type="button"
-            className="joker-move-button"
+            className={MOVE_BUTTON}
             aria-label={t("a11y.moveRight", {
               item: localizedJokerName(i18n.language, joker.id, joker.name),
             })}
@@ -202,7 +219,11 @@ function JokerTile({
       {jokerSellable && (
         <button
           type="button"
-          className="joker-sell-button"
+          className={cn(
+            "absolute top-1 right-1 z-10 cursor-pointer rounded-md bg-money px-1.5 py-0.5 text-xs font-bold text-black focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+            !sellAlwaysVisible &&
+              "hidden group-focus-within:inline-flex group-hover:inline-flex",
+          )}
           aria-label={t("a11y.sellJoker", {
             name: localizedJokerName(i18n.language, joker.id, joker.name),
             value: sellValue,

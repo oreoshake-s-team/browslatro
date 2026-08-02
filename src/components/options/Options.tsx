@@ -1,6 +1,6 @@
 import { memo, useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import "./Options.css";
+import { Button } from "../ui/Button";
 import { createPortal } from "react-dom";
 import {
   LOCALE_NAMES,
@@ -43,6 +43,12 @@ const ANIMATION_SPEED_LABEL_KEYS = {
   fast: "options.speedFast",
   instant: "options.speedInstant",
 } as const satisfies Record<AnimationSpeed, string>;
+
+const FIELD_CLASS = "flex flex-col gap-1";
+const FIELD_LABEL_CLASS =
+  "text-xs font-semibold tracking-wide text-muted uppercase";
+const CONTROL_CLASS =
+  "rounded-md border border-border bg-raised px-1.5 py-1 text-sm text-ink accent-chips focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 function Options({
   onNewGame,
@@ -103,63 +109,68 @@ function Options({
 
   return (
     <>
-      <button className="btn btn--ghost" onClick={() => setOpen(true)}>
+      <Button variant="ghost" onClick={() => setOpen(true)}>
         {t("sidebar.options")}
-      </button>
+      </Button>
       {open &&
         createPortal(
           <div
             ref={overlayRef}
-            className="modal-overlay"
+            className="fixed inset-0 z-40 flex items-center justify-center bg-black/60"
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            data-modal-overlay=""
+            data-testid="modal-overlay"
             onClick={handleClose}
           >
             <div
-              className="modal options-modal"
+              className="flex max-h-[85vh] w-[94vw] max-w-72 flex-col gap-3 overflow-y-auto rounded-xl border border-border bg-surface p-4 text-sm text-muted shadow-xl"
+              data-testid="options-modal"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 id={titleId}>{t("sidebar.options")}</h3>
-              <div className="options-toggle-row">
-                <button
-                  className="btn btn--toggle"
+              <h3 id={titleId} className="text-base font-bold text-ink">
+                {t("sidebar.options")}
+              </h3>
+              <div className="flex flex-wrap gap-1">
+                <Button
+                  variant="toggle"
+                  size="sm"
                   aria-pressed={muted}
                   onClick={handleToggleMute}
                 >
                   {muted
                     ? t("options.unmuteSounds")
                     : t("options.muteSounds")}
-                </button>
-                <button
-                  className="btn btn--toggle"
+                </Button>
+                <Button
+                  variant="toggle"
+                  size="sm"
                   aria-pressed={highVisibility}
                   onClick={handleToggleHighVisibility}
                 >
                   {highVisibility
                     ? t("options.disableHighVisibility")
                     : t("options.enableHighVisibility")}
-                </button>
-                <button
-                  className="btn btn--toggle"
+                </Button>
+                <Button
+                  variant="toggle"
+                  size="sm"
                   aria-pressed={dyslexicFont}
                   onClick={handleToggleDyslexicFont}
                 >
                   {dyslexicFont
                     ? t("options.disableDyslexicFont")
                     : t("options.enableDyslexicFont")}
-                </button>
+                </Button>
               </div>
-              <label
-                className="options-field"
-                htmlFor={animationSpeedSelectId}
-              >
-                <span className="options-field-label">
+              <label className={FIELD_CLASS} htmlFor={animationSpeedSelectId}>
+                <span className={FIELD_LABEL_CLASS}>
                   {t("options.animationSpeed")}
                 </span>
                 <select
                   id={animationSpeedSelectId}
-                  className="options-select"
+                  className={CONTROL_CLASS}
                   value={animationSpeed}
                   onChange={handleAnimationSpeedChange}
                 >
@@ -170,13 +181,13 @@ function Options({
                   ))}
                 </select>
               </label>
-              <label className="options-field" htmlFor={languageSelectId}>
-                <span className="options-field-label">
+              <label className={FIELD_CLASS} htmlFor={languageSelectId}>
+                <span className={FIELD_LABEL_CLASS}>
                   {t("options.language")}
                 </span>
                 <select
                   id={languageSelectId}
-                  className="options-select"
+                  className={CONTROL_CLASS}
                   data-testid="options-language"
                   value={isLocale(i18n.language) ? i18n.language : "en"}
                   onChange={handleLanguageChange}
@@ -188,23 +199,20 @@ function Options({
                   ))}
                 </select>
               </label>
-              <div className="options-field options-advisor-key">
-                <span className="options-field-label">
+              <div className={FIELD_CLASS}>
+                <span className={FIELD_LABEL_CLASS}>
                   {t("options.advisorKey")}
                 </span>
                 {storedKey !== null && !replacingKey ? (
-                  <div className="options-key-row">
+                  <div className="flex items-center gap-1">
                     <code data-testid="options-advisor-key-masked">
                       {maskPlayerKey(storedKey)}
                     </code>
-                    <button
-                      className="btn btn--secondary"
-                      onClick={() => setReplacingKey(true)}
-                    >
+                    <Button onClick={() => setReplacingKey(true)}>
                       {t("options.advisorKeyReplace")}
-                    </button>
-                    <button
-                      className="btn btn--danger"
+                    </Button>
+                    <Button
+                      variant="danger"
                       onClick={() => {
                         const confirmed = window.confirm(
                           t("options.advisorKeyRemoveConfirm"),
@@ -215,11 +223,11 @@ function Options({
                       }}
                     >
                       {t("options.advisorKeyRemove")}
-                    </button>
+                    </Button>
                   </div>
                 ) : (
                   <form
-                    className="options-key-row"
+                    className="flex items-center gap-1"
                     onSubmit={(event) => {
                       event.preventDefault();
                       const key = keyDraft.trim();
@@ -231,7 +239,7 @@ function Options({
                     }}
                   >
                     <input
-                      className="options-key-input"
+                      className={`min-w-0 flex-1 font-mono ${CONTROL_CLASS}`}
                       type="password"
                       value={keyDraft}
                       onChange={(event) => setKeyDraft(event.target.value)}
@@ -239,17 +247,13 @@ function Options({
                       aria-label={t("advisor.keyLabel")}
                       data-testid="options-advisor-key-input"
                     />
-                    <button
-                      className="btn btn--secondary"
-                      type="submit"
-                      disabled={keyDraft.trim() === ""}
-                    >
+                    <Button type="submit" disabled={keyDraft.trim() === ""}>
                       {t("advisor.keySave")}
-                    </button>
+                    </Button>
                   </form>
                 )}
                 <a
-                  className="options-key-link"
+                  className="text-xs text-chips hover:underline"
                   href={GET_KEY_URL}
                   target="_blank"
                   rel="noreferrer"
@@ -258,9 +262,12 @@ function Options({
                 </a>
                 <KeyStorageDisclosure />
               </div>
-              <div className="options-footer">
-                <button
-                  className="btn btn--danger"
+              <div
+                className="mt-1 flex justify-end gap-1"
+                data-testid="options-footer"
+              >
+                <Button
+                  variant="danger"
                   onClick={() => {
                     const confirmed = window.confirm(
                       t("options.newGameConfirm"),
@@ -271,10 +278,8 @@ function Options({
                   }}
                 >
                   {t("options.newGame")}
-                </button>
-                <button className="btn btn--secondary" onClick={handleClose}>
-                  {t("options.close")}
-                </button>
+                </Button>
+                <Button onClick={handleClose}>{t("options.close")}</Button>
               </div>
             </div>
           </div>,

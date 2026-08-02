@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const NEXT_ROUND_BUTTON = /Next Round/;
@@ -52,10 +52,10 @@ test("Cryptid copies persist into the shop deck and the next round", async ({
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
 
-  await expect(page.locator(".deck-pile-count")).toHaveText("54");
+  await expect(page.locator('[data-testid="deck-pile-count"]')).toHaveText("54");
 
   await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
   await dismissBlindSelect(page);
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  await expect(page.locator(".deck-pile-count")).toHaveText("46");
+  await expect(page.locator('[data-testid="deck-pile-count"]')).toHaveText("46");
 });

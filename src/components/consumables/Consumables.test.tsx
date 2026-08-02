@@ -226,14 +226,21 @@ describe("Consumables", () => {
 });
 
 describe("Empty tray treatment", () => {
-  test("the tray carries the consumables-tray-empty class when empty", () => {
+  test("an empty tray renders only empty slots", () => {
     renderConsumables();
-    expect(screen.getByTestId("consumables-tray")).toHaveClass("consumables-tray-empty");
+    expect(
+      screen.getAllByTestId("consumable-tile-empty").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByTestId(/^consumable-tile-filled-/),
+    ).toHaveLength(0);
   });
 
-  test("negative: the tray drops the empty class once a consumable is held", () => {
+  test("negative: a held consumable renders a filled tile", () => {
     renderConsumables({ consumables: [{ kind: "tarot", card: tarot }] as Consumable[] });
-    expect(screen.getByTestId("consumables-tray")).not.toHaveClass("consumables-tray-empty");
+    expect(
+      screen.getAllByTestId(/^consumable-tile-filled-/),
+    ).toHaveLength(1);
   });
 });
 

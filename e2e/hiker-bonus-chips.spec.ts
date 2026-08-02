@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 
 test.beforeEach(async ({ context }) => {
@@ -61,7 +61,7 @@ test("a card scored with Hiker shows its bonus chips in the tooltip next round",
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   const firstCard = page.locator(HAND_CARDS).first();
-  const playedRank = await firstCard.locator(".card-rank").first().textContent();
+  const playedRank = await firstCard.locator("[data-card-rank]").first().textContent();
   await firstCard.click();
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
 
@@ -71,7 +71,7 @@ test("a card scored with Hiker shows its bonus chips in the tooltip next round",
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   const upgraded = page.locator(HAND_CARDS).first();
-  await expect(upgraded.locator(".card-rank").first()).toHaveText(
+  await expect(upgraded.locator("[data-card-rank]").first()).toHaveText(
     playedRank ?? "",
   );
   await upgraded.hover();
@@ -100,7 +100,7 @@ test("a card scored without Hiker shows no bonus-chips tooltip row (negative)", 
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   await page.locator(HAND_CARDS).first().hover();
-  await expect(page.locator(".card-tooltip")).toBeVisible();
+  await expect(page.locator('[data-testid="card-tooltip"]')).toBeVisible();
   await expect(
     page.getByTestId("card-tooltip-bonus-chips"),
   ).not.toBeVisible();

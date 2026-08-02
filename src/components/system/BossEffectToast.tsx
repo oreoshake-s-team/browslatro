@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import "./BossEffectToast.css";
 
 type Listener = () => void;
 
@@ -40,7 +39,7 @@ export default function BossEffectToast(): React.JSX.Element | null {
   return (
     <div
       key={shown.nonce}
-      className="boss-effect-toast"
+      className="pointer-events-none fixed inset-x-0 top-24 z-30 mx-auto w-fit max-w-[90vw] rounded-xl border border-mult bg-raised px-5 py-3 text-center font-bold text-ink shadow-lg motion-safe:animate-fade-in"
       role="status"
       aria-live="assertive"
       data-testid="boss-effect-toast"

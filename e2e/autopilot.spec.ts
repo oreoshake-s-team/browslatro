@@ -21,7 +21,7 @@ test("autopilot proposes a move and plays it after agreeing", async ({
   page,
 }) => {
   await startRound(page);
-  const roundScore = page.locator(".round-score-value");
+  const roundScore = page.locator('[data-testid="round-score-value"]');
   await expect(roundScore).toHaveText("0");
 
   const toggle = page.getByRole("button", { name: "Suggest" });
@@ -43,7 +43,7 @@ test("agreeing with the autopilot proposal records no auto-disagreement", async 
   page,
 }) => {
   await startRound(page);
-  const roundScore = page.locator(".round-score-value");
+  const roundScore = page.locator('[data-testid="round-score-value"]');
 
   const toggle = page.getByRole("button", { name: "Suggest", exact: true });
   await toggle.click();
@@ -140,7 +140,7 @@ test("the feedback confirmation clears once the next hand is dealt", async ({
   page,
 }) => {
   await startRound(page);
-  const roundScore = page.locator(".round-score-value");
+  const roundScore = page.locator('[data-testid="round-score-value"]');
   const toggle = page.getByRole("button", { name: "Suggest" });
   await toggle.click();
   const agree = page.getByTestId("advice-feedback-agree");
@@ -173,6 +173,6 @@ test("a pending suggestion fills the Submit Hand preview and sidebar hand score"
   await expect(approve).toBeVisible({ timeout: 10_000 });
 
   await expect(page.getByTestId("submit-hand-detected")).toBeVisible();
-  await expect(page.locator(".hand-score .chips")).not.toHaveText("0");
-  await expect(page.locator(".hand-score .multiplier")).not.toHaveText("0");
+  await expect(page.locator('[data-testid="hand-chips"]')).not.toHaveText("0");
+  await expect(page.locator('[data-testid="hand-mult"]')).not.toHaveText("0");
 });

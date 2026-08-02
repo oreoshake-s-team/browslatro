@@ -1,6 +1,6 @@
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import "./AdviceFeedbackControl.css";
+import { Button } from "../ui/Button";
 
 export interface AdviceFeedbackControlProps {
   readonly candidateLabels: ReadonlyArray<string>;
@@ -56,7 +56,7 @@ export default function AdviceFeedbackControl({
   if (submitted) {
     return (
       <p
-        className="advice-feedback-recorded"
+        className="font-bold text-success"
         role="status"
         data-testid={`${testIdPrefix}-recorded`}
       >
@@ -66,16 +66,16 @@ export default function AdviceFeedbackControl({
   }
 
   return (
-    <div className="advice-feedback">
+    <div className="flex flex-col gap-1">
       {!open ? (
         <div
-          className="advice-feedback-choice"
+          className="flex flex-wrap gap-1"
           role="group"
           aria-label={t("advisor.feedbackChoiceLabel")}
         >
-          <button
-            type="button"
-            className="btn btn--secondary advice-feedback-agree"
+          <Button
+            variant="secondary"
+            className="flex-1 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
             data-testid={`${testIdPrefix}-agree`}
             aria-label={t("advisor.feedbackAgreeLabel")}
             aria-disabled={agreeDisabled || undefined}
@@ -88,10 +88,10 @@ export default function AdviceFeedbackControl({
           >
             <span aria-hidden="true">👍 </span>
             {t("advisor.feedbackGoodPick")}
-          </button>
-          <button
-            type="button"
-            className="btn btn--secondary advice-feedback-open"
+          </Button>
+          <Button
+            variant="secondary"
+            className="flex-1"
             data-testid={`${testIdPrefix}-open`}
             aria-expanded={false}
             aria-label={t("advisor.feedbackOpenLabel")}
@@ -99,11 +99,11 @@ export default function AdviceFeedbackControl({
           >
             <span aria-hidden="true">👎 </span>
             {t("advisor.feedbackBadPick")}
-          </button>
+          </Button>
           {agreeDisabled && agreeDisabledReason !== undefined && (
             <p
               id={blockedId}
-              className="advice-feedback-agree-blocked"
+              className="basis-full text-xs text-muted"
               role="note"
               data-testid={`${testIdPrefix}-agree-blocked`}
             >
@@ -113,24 +113,29 @@ export default function AdviceFeedbackControl({
         </div>
       ) : (
         <div
-          className="advice-feedback-picker"
+          className="flex flex-col gap-1.5 rounded-lg border border-advisor/50 bg-advisor/10 p-2"
           onKeyDown={(e) => {
             if (e.key === "Escape") cancel();
           }}
         >
-          <fieldset className="advice-feedback-fieldset">
-            <legend className="advice-feedback-legend">
+          <fieldset className="flex flex-col gap-1">
+            <legend className="mb-1 text-xs font-bold tracking-wider text-muted uppercase">
               {t("advisor.feedbackPrompt")}
             </legend>
             {candidateLabels.map((label, index) => {
               const id = `${groupName}-${index}`;
               return (
-                <label key={id} className="advice-feedback-option" htmlFor={id}>
+                <label
+                  key={id}
+                  className="flex cursor-pointer items-center gap-1"
+                  htmlFor={id}
+                >
                   <input
                     ref={index === 0 ? firstRadioRef : undefined}
                     type="radio"
                     id={id}
                     name={groupName}
+                    className="accent-advisor"
                     data-testid={`${testIdPrefix}-option-${index}`}
                     checked={selected === index}
                     onChange={() => {
@@ -143,10 +148,9 @@ export default function AdviceFeedbackControl({
               );
             })}
           </fieldset>
-          <div className="advice-feedback-actions">
-            <button
-              type="button"
-              className="btn advice-feedback-submit"
+          <div className="flex flex-wrap gap-1">
+            <Button
+              variant="advisor"
               data-testid={`${testIdPrefix}-submit`}
               disabled={selected === null}
               onClick={() => {
@@ -154,23 +158,21 @@ export default function AdviceFeedbackControl({
               }}
             >
               {submitLabel ?? t("advisor.feedbackSubmit")}
-            </button>
-            <button
-              type="button"
-              className="btn btn--secondary advice-feedback-just-bad"
+            </Button>
+            <Button
+              variant="secondary"
               data-testid={`${testIdPrefix}-just-bad`}
               onClick={() => record(null)}
             >
               {t("advisor.feedbackJustBad")}
-            </button>
-            <button
-              type="button"
-              className="btn btn--secondary advice-feedback-cancel"
+            </Button>
+            <Button
+              variant="secondary"
               data-testid={`${testIdPrefix}-cancel`}
               onClick={cancel}
             >
               {t("advisor.feedbackCancel")}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -11,7 +11,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const NEXT_ROUND_BUTTON = /Next Round/;
@@ -19,8 +19,8 @@ const SHOP_HEADING = /Shop/;
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(`.stat-label`, { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator(`[data-stat-label]`, { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
@@ -37,9 +37,9 @@ async function submitSingleLosingHand(
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
   await expect(statValue(page, "Hands")).toHaveText(String(expectedHandsAfter));
   await expect(
-    page.locator('[data-testid="hand-cards"] .card--discarding'),
+    page.locator('[data-testid="hand-cards"] [data-discarding]'),
   ).toHaveCount(0);
-  await expect(page.locator("main.game")).toHaveAttribute("aria-busy", "false");
+  await expect(page.locator("main")).toHaveAttribute("aria-busy", "false");
 }
 
 async function dismissBlindSelect(page: Page): Promise<void> {
@@ -97,7 +97,7 @@ test("post-round shop flow: round-won modal → Continue → shop with 2 items +
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   const equippedNames = await page
-    .locator('[data-testid^="joker-tile-filled-"] .joker-tile-name')
+    .locator('[data-testid^="joker-tile-filled-"] [data-joker-name]')
     .allTextContents();
 
   await selectAndSubmitStraightFlush(page);
@@ -116,7 +116,7 @@ test("post-round shop flow: round-won modal → Continue → shop with 2 items +
   ).toBeVisible();
 
   const offerNames = await page
-    .locator('.shop-offer:not([data-offer-kind="pack"]) .shop-offer-name')
+    .locator('[data-shop-offer]:not([data-offer-kind="pack"]) [data-shop-offer-name]')
     .allTextContents();
   expect(offerNames.filter((name) => equippedNames.includes(name))).toEqual([]);
   expect(new Set(offerNames).size).toBe(offerNames.length);
@@ -142,8 +142,8 @@ test("losing 3 games in a row leaves exactly one chips/multiplier span in the si
     await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
     await tryAgain.click();
     await dismissBlindSelect(page);
-    await expect(page.locator(".sidebar .chips")).toHaveCount(1);
-    await expect(page.locator(".sidebar .multiplier")).toHaveCount(1);
+    await expect(page.locator('[data-testid="sidebar"] [data-testid="hand-chips"]')).toHaveCount(1);
+    await expect(page.locator('[data-testid="sidebar"] [data-testid="hand-mult"]')).toHaveCount(1);
   }
 });
 

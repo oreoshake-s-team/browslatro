@@ -283,7 +283,7 @@ describe("Joker tooltip — rarity", () => {
     render(<Jokers jokers={[joker]} />);
     await user.hover(screen.getByTestId(`joker-tile-filled-${joker.id}`));
     expect(screen.getByTestId("joker-tooltip-rarity")).toHaveClass(
-      "joker-tooltip-rarity-rare",
+      "text-mult",
     );
   });
 });

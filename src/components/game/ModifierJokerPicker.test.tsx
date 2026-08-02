@@ -159,9 +159,9 @@ describe("ModifierJokerPicker", () => {
     await openPicker(user);
     const tile = tileFor(visibleTileIds()[0]);
     fireEvent.focus(tile);
-    expect(document.querySelector(".joker-tooltip")).not.toBeNull();
+    expect(document.querySelector('[data-testid="joker-tooltip"]')).not.toBeNull();
     fireEvent.blur(tile);
-    expect(document.querySelector(".joker-tooltip")).toBeNull();
+    expect(document.querySelector('[data-testid="joker-tooltip"]')).toBeNull();
   });
 
   test("reopening the disclosure resets to page 1", async () => {

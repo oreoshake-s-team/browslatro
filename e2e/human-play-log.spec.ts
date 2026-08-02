@@ -13,7 +13,7 @@ async function startRound(page: Page): Promise<void> {
   await page.getByTestId("blind-select-play").click();
 }
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[aria-label="Your hand"] [data-suit]';
 
 test("a discard records a decision the sidebar log can clear", async ({ page }) => {
   await startRound(page);

@@ -55,10 +55,10 @@ async function winRound1AndOpenShop(page: Page): Promise<void> {
 
 async function buyFirstPackOffer(page: Page): Promise<void> {
   const packOffer = page
-    .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
+    .locator('[data-testid="shop-packs"] [data-shop-offer][data-offer-kind="pack"]')
     .first();
   await expect(packOffer).toBeVisible();
-  await packOffer.locator("button.shop-offer-buy").click();
+  await packOffer.locator("button[data-shop-buy]").click();
   await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
@@ -101,11 +101,11 @@ test.describe("Pack-pick wiring", () => {
     await setupArcanaPackWith(page, ["the-sun", "the-hermit"], "mega");
     const heartCards = page
       .getByTestId("pack-open-preview-hand")
-      .locator(".card.card-suit-hearts");
+      .locator('button[data-suit="hearts"]');
     const before = await heartCards.count();
     const previewCard = page
       .getByTestId("pack-open-preview-hand")
-      .locator(".card")
+      .locator("button[data-suit]")
       .first();
     await previewCard.click();
     await pickButton(page, 0).click();
@@ -152,7 +152,7 @@ test.describe("Owned consumables stay usable during a preview pack", () => {
     await expect(tile).toBeVisible();
     await page
       .getByTestId("pack-open-preview-hand")
-      .locator(".card")
+      .locator("button[data-suit]")
       .first()
       .click();
     await tile.click();
@@ -160,7 +160,7 @@ test.describe("Owned consumables stay usable during a preview pack", () => {
     await expect(
       page
         .getByTestId("pack-open-preview-hand")
-        .locator(".card--enhancement-lucky"),
+        .locator('[data-enhancement="lucky"]'),
     ).toHaveCount(1);
   });
 });

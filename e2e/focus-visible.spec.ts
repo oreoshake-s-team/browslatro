@@ -1,7 +1,7 @@
 import { test, expect, type Page, type Locator } from "@playwright/test";
 
-const FOCUS_RING = "rgb(116, 192, 252)";
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const FOCUS_RING = "rgb(140, 200, 255)";
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
 const SHOP_HEADING = /Shop/;
 
 test.beforeEach(async ({ context }) => {
@@ -24,6 +24,11 @@ async function outlineOf(
     const computed = getComputedStyle(el);
     return { style: computed.outlineStyle, color: computed.outlineColor };
   });
+}
+
+async function expectFocusRing(target: Locator, color: string): Promise<void> {
+  await expect.poll(async () => (await outlineOf(target)).style).toBe("solid");
+  await expect.poll(async () => (await outlineOf(target)).color).toBe(color);
 }
 
 async function openBlindSelect(page: Page): Promise<void> {
@@ -56,9 +61,7 @@ test("boss-blind override keeps a visible focus ring on keyboard focus", async (
   await openBlindSelect(page);
   const override = page.getByTestId("blind-select-boss-override");
   await focusViaKeyboard(page, override);
-  const outline = await outlineOf(override);
-  expect(outline.style).toBe("solid");
-  expect(outline.color).toBe(FOCUS_RING);
+  await expectFocusRing(override, FOCUS_RING);
 });
 
 test("shop voucher override keeps a visible focus ring on keyboard focus", async ({
@@ -67,9 +70,7 @@ test("shop voucher override keeps a visible focus ring on keyboard focus", async
   await openShop(page);
   const override = page.getByTestId("shop-voucher-override");
   await focusViaKeyboard(page, override);
-  const outline = await outlineOf(override);
-  expect(outline.style).toBe("solid");
-  expect(outline.color).toBe("rgb(95, 61, 196)");
+  await expectFocusRing(override, FOCUS_RING);
 });
 
 test("hand-sort buttons show the focus ring on keyboard focus", async ({
@@ -78,11 +79,9 @@ test("hand-sort buttons show the focus ring on keyboard focus", async ({
   await openBlindSelect(page);
   await page.getByTestId("blind-select-play").click();
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
-  const sortButton = page.locator(".hand-sort-button").first();
+  const sortButton = page.getByRole("group", { name: /sort/i }).locator("button").first();
   await focusViaKeyboard(page, sortButton);
-  const outline = await outlineOf(sortButton);
-  expect(outline.style).toBe("solid");
-  expect(outline.color).toBe(FOCUS_RING);
+  await expectFocusRing(sortButton, FOCUS_RING);
 });
 
 test("pack preview sort buttons show the focus ring on keyboard focus", async ({
@@ -94,16 +93,14 @@ test("pack preview sort buttons show the focus ring on keyboard focus", async ({
   });
   await openShop(page);
   const packOffer = page
-    .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
+    .locator('[data-testid="shop-packs"] [data-shop-offer][data-offer-kind="pack"]')
     .first();
   await expect(packOffer).toBeVisible();
-  await packOffer.locator("button.shop-offer-buy").click();
+  await packOffer.locator("button[data-shop-buy]").click();
   await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
   const sortButton = page.getByTestId("pack-open-preview-sort-rank");
   await focusViaKeyboard(page, sortButton);
-  const outline = await outlineOf(sortButton);
-  expect(outline.style).toBe("solid");
-  expect(outline.color).toBe(FOCUS_RING);
+  await expectFocusRing(sortButton, FOCUS_RING);
 });
 
 async function startRound(page: Page): Promise<void> {
@@ -116,31 +113,27 @@ test("scoring trace scroll region shows the focus ring on keyboard focus", async
   page,
 }) => {
   await startRound(page);
-  const trace = page.locator(".scoring-trace__scroll");
+  const trace = page.locator('[data-testid="scoring-trace-scroll"]');
   await focusViaKeyboard(page, trace);
-  const outline = await outlineOf(trace);
-  expect(outline.style).toBe("solid");
-  expect(outline.color).toBe(FOCUS_RING);
+  await expectFocusRing(trace, FOCUS_RING);
 });
 
 test("scoring trace modal body shows the focus ring on keyboard focus", async ({
   page,
 }) => {
   await startRound(page);
-  await page.locator(".scoring-trace__expand").click();
-  const body = page.locator(".scoring-trace-modal__body");
+  await page.getByTestId("scoring-trace").getByTestId("scoring-trace-expand").click();
+  const body = page.locator('[data-testid="scoring-trace-modal-body"]');
   await expect(body).toBeVisible();
   await focusViaKeyboard(page, body);
-  const outline = await outlineOf(body);
-  expect(outline.style).toBe("solid");
-  expect(outline.color).toBe(FOCUS_RING);
+  await expectFocusRing(body, FOCUS_RING);
 });
 
 test("negative: clicking the scoring trace scroll region does not draw the focus outline", async ({
   page,
 }) => {
   await startRound(page);
-  const trace = page.locator(".scoring-trace__scroll");
+  const trace = page.locator('[data-testid="scoring-trace-scroll"]');
   await trace.click();
   const outline = await outlineOf(trace);
   expect(outline.style).toBe("none");

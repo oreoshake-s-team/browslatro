@@ -1,4 +1,4 @@
-import "./JokerEditionBadge.css";
+import { Badge } from "../ui/Badge";
 import { useTranslation } from "react-i18next";
 import { JOKER_EDITION_INFO } from "../../items/jokers";
 import type { JokerEdition } from "../../items/jokers";
@@ -14,12 +14,22 @@ const EDITION_BADGE_KEY = {
   negative: "cardLabels.editionBadgeNegative",
 } as const satisfies Record<JokerEdition, string>;
 
+const EDITION_TONE = {
+  foil: "chips",
+  holographic: "advisor",
+  polychrome: "success",
+  negative: "muted",
+} as const satisfies Record<
+  JokerEdition,
+  "chips" | "advisor" | "success" | "muted"
+>;
+
 export default function JokerEditionBadge({ edition }: JokerEditionBadgeProps) {
   const { t } = useTranslation();
   const info = JOKER_EDITION_INFO[edition];
   return (
-    <span
-      className={`joker-edition-badge joker-edition-badge-${edition}`}
+    <Badge
+      tone={EDITION_TONE[edition]}
       aria-label={t("a11y.jokerEdition", {
         name: info.name,
         description: info.description,
@@ -27,6 +37,6 @@ export default function JokerEditionBadge({ edition }: JokerEditionBadgeProps) {
       data-testid={`joker-edition-badge-${edition}`}
     >
       {t(EDITION_BADGE_KEY[edition])}
-    </span>
+    </Badge>
   );
 }

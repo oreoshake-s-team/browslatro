@@ -8,7 +8,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-const HAND_CARDS = '[aria-label="Your hand"] .card';
+const HAND_CARDS = '[aria-label="Your hand"] [data-suit]';
 
 test("HUD counters and score preview are polite live regions that update after a discard", async ({
   page,
@@ -20,7 +20,9 @@ test("HUD counters and score preview are polite live regions that update after a
 
   const handsStat = page.getByTestId("hands-stat");
   const discardsStat = page.getByTestId("discards-stat");
-  const preview = page.locator('[role="status"].hand-score-announcement');
+  const preview = page.locator(
+    '[role="status"][data-testid="hand-score-announcement"]',
+  );
   await expect(handsStat).toHaveAttribute("aria-live", "polite");
   await expect(handsStat).toHaveAttribute("aria-atomic", "true");
   await expect(discardsStat).toHaveAttribute("aria-live", "polite");

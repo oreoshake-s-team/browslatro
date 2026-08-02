@@ -22,15 +22,17 @@ describe("RunProgress", () => {
 describe("RunProgress money bounce", () => {
   test("does not apply the bounce class on initial mount", () => {
     render(<RunProgress ante={1} round={1} money={4} />);
-    expect(screen.getByTestId("money-value").className).not.toMatch(
-      /money-bounce/,
-    );
+    expect(
+      screen.getByTestId("money-value").parentElement?.className,
+    ).not.toMatch(/animate-pulse-flash/);
   });
 
   test("applies the bounce class after money changes", () => {
     const { rerender } = render(<RunProgress ante={1} round={1} money={4} />);
     rerender(<RunProgress ante={1} round={1} money={6} />);
-    expect(screen.getByTestId("money-value").className).toMatch(/money-bounce/);
+    expect(
+      screen.getByTestId("money-value").parentElement?.className,
+    ).toMatch(/animate-pulse-flash/);
   });
 
   test("remounts the value node when money changes (key swap, fresh animation)", () => {
@@ -52,7 +54,9 @@ describe("RunProgress money bounce", () => {
   test("bounces on money loss (4 → 2), not just gains", () => {
     const { rerender } = render(<RunProgress ante={1} round={1} money={4} />);
     rerender(<RunProgress ante={1} round={1} money={2} />);
-    expect(screen.getByTestId("money-value").className).toMatch(/money-bounce/);
+    expect(
+      screen.getByTestId("money-value").parentElement?.className,
+    ).toMatch(/animate-pulse-flash/);
   });
 
   test("the Money stat is an aria-live polite region so changes are announced", () => {

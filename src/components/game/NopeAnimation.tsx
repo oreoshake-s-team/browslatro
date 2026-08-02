@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import "./NopeAnimation.css";
 
 export const NOPE_ANIMATION_MS = 700;
 
@@ -26,11 +25,15 @@ function NopeAnimation({ triggerKey }: NopeAnimationProps) {
   }, [triggerKey]);
 
   return (
-    <div className="nope-animation" aria-live="assertive" aria-atomic="true">
+    <div
+      className="pointer-events-none fixed top-[38%] left-1/2 z-[200] -translate-x-1/2 -translate-y-1/2"
+      aria-live="assertive"
+      aria-atomic="true"
+    >
       {visible && (
         <span
           key={triggerKey}
-          className="nope-animation-pop"
+          className="animate-nope-pop inline-block rounded-lg border-4 border-mult bg-surface/90 px-5 py-2 text-[4rem] leading-none font-extrabold tracking-wider whitespace-nowrap text-mult uppercase motion-reduce:animate-none"
           data-testid="nope-animation"
         >
           Nope!

@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from "react";
-import "./LiveAnnouncer.css";
 
 type Listener = () => void;
 
@@ -24,7 +23,7 @@ export default function LiveAnnouncer() {
   const message = useSyncExternalStore(subscribe, getSnapshot);
   return (
     <div
-      className="live-announcer"
+      className="sr-only"
       role="status"
       aria-live="polite"
       aria-atomic="true"

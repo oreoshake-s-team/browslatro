@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { storePlayerKey } from "../../ai/advisor/playerKey";
 import KeyStorageDisclosure from "./KeyStorageDisclosure";
-import "./PlayerKeyForm.css";
+import { Button } from "../ui/Button";
 
 export const GET_KEY_URL = "https://console.anthropic.com/settings/keys";
 
@@ -25,7 +25,7 @@ export default function PlayerKeyForm({
 
   return (
     <form
-      className="player-key-form"
+      className="flex flex-col gap-2 border-t border-border pt-3"
       onSubmit={(event) => {
         event.preventDefault();
         const key = draft.trim();
@@ -35,36 +35,35 @@ export default function PlayerKeyForm({
         onSaved();
       }}
     >
-      <label className="player-key-label" htmlFor="player-key-input">
+      <label
+        className="text-sm font-bold text-ink"
+        htmlFor="player-key-input"
+      >
         {t("advisor.keyLabel")}
       </label>
-      <div className="player-key-row">
+      <div className="flex gap-1.5">
         <input
           id="player-key-input"
           ref={inputRef}
-          className="player-key-input"
+          className="min-w-0 flex-1 rounded-md border border-border bg-bg px-2 py-1 font-mono text-sm text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           type="password"
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={t("advisor.keyPlaceholder")}
           data-testid="player-key-input"
         />
-        <button
-          type="submit"
-          className="btn player-key-save"
-          disabled={draft.trim() === ""}
-        >
+        <Button type="submit" size="sm" disabled={draft.trim() === ""}>
           {t("advisor.keySave")}
-        </button>
+        </Button>
       </div>
-      <ol className="player-key-steps">
+      <ol className="list-decimal pl-5 text-xs text-muted">
         <li>{t("advisor.keyStep1")}</li>
         <li>{t("advisor.keyStep2")}</li>
         <li>{t("advisor.keyStep3")}</li>
       </ol>
       <KeyStorageDisclosure />
       <a
-        className="player-key-link"
+        className="text-sm text-chips hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         href={GET_KEY_URL}
         target="_blank"
         rel="noreferrer"

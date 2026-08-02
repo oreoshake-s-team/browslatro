@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const SHOP_HEADING = /Shop/;
@@ -103,7 +103,7 @@ test.describe("Joker tooltip current scaling value", () => {
       page.getByTestId("joker-tooltip-current-value"),
     ).toBeHidden();
 
-    await page.locator("button.shop-reroll").click();
+    await page.locator('[data-testid="shop-reroll"]').click();
     await expect(await hoveredCurrentValue(page, "flash-card")).toHaveText(
       "Currently: +2 Mult",
     );

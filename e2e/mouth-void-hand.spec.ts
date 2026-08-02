@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 test.describe.configure({ timeout: 90_000 });
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 
 test.beforeEach(async ({ context }) => {
@@ -43,9 +43,9 @@ test("The Mouth submits a non-matching hand, scores it 0, and shows a void toast
 
   await page.locator(HAND_CARDS).nth(7).click();
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
-  await expect(page.locator(".round-score-value")).toHaveText("7");
+  await expect(page.locator('[data-testid="round-score-value"]')).toHaveText("7");
   await expect(
-    page.locator('[data-testid="hand-cards"] .card--discarding'),
+    page.locator('[data-testid="hand-cards"] button[data-discarding]'),
   ).toHaveCount(0);
 
   for (let i = 0; i < 5; i += 1) await page.locator(HAND_CARDS).nth(i).click();
@@ -55,6 +55,6 @@ test("The Mouth submits a non-matching hand, scores it 0, and shows a void toast
   await expect(page.getByTestId("boss-effect-toast")).toContainText(
     "scored 0",
   );
-  await expect(page.locator(".scoring-trace__scroll")).toContainText("voided");
-  await expect(page.locator(".round-score-value")).toHaveText("7");
+  await expect(page.locator('[data-testid="scoring-trace-scroll"]')).toContainText("voided");
+  await expect(page.locator('[data-testid="round-score-value"]')).toHaveText("7");
 });

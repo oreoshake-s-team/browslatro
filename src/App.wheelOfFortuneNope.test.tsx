@@ -47,7 +47,7 @@ async function buyWheelOfFortuneConsumable(
   const idx = findShopOfferIdxOfKind("tarot");
   const buy = screen
     .getByTestId(`shop-offer-${idx}`)
-    .querySelector("button.shop-offer-buy");
+    .querySelector("button[data-shop-buy]");
   if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy button");
   await user.click(buy);
 }
@@ -94,7 +94,7 @@ describe("Wheel of Fortune nope animation — pack-opening path", () => {
     await screen.findByTestId("shop-money");
     const arcanaOffer = document.querySelector('[data-pack-pool="arcana"]');
     if (!arcanaOffer) throw new Error("no arcana pack offer");
-    const open = arcanaOffer.querySelector("button.shop-offer-buy");
+    const open = arcanaOffer.querySelector("button[data-shop-buy]");
     if (!(open instanceof HTMLButtonElement)) throw new Error("missing open");
     await user.click(open);
     await screen.findByTestId("pack-open-close");

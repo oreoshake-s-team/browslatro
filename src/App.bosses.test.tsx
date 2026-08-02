@@ -164,7 +164,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
-      .filter((btn) => btn.classList.contains("card--discarding"))
+      .filter((btn) => btn.hasAttribute("data-discarding"))
       .forEach((btn) => fireEvent.animationEnd(btn));
   }
 
@@ -188,7 +188,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
       getStatValue("Hands").textContent?.replace(/[^0-9]/g, "") ?? "0",
     );
     expect(handsAfter).toBe(handsBefore - 1);
-    const value = document.querySelector(".round-score-value");
+    const value = document.querySelector('[data-testid="round-score-value"]');
     expect(value?.textContent ?? "").toBe("0");
   });
 
@@ -205,7 +205,7 @@ describe("Boss Blinds — Phase 1 effects", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    const value = document.querySelector(".round-score-value");
+    const value = document.querySelector('[data-testid="round-score-value"]');
     expect(
       Number(value?.textContent?.replace(/,/g, "") ?? "0"),
     ).toBeGreaterThan(0);
@@ -302,7 +302,7 @@ describe("Boss Blinds — Phase 2 debuffs", () => {
     await advanceToBossBlindAfterStartingTheRound(user);
     expect(screen.getByText("The Club")).toBeInTheDocument();
     expect(
-      document.querySelectorAll(".card-suit-clubs.card--debuffed").length,
+      document.querySelectorAll('[data-suit="clubs"][data-debuffed]').length,
     ).toBeGreaterThan(0);
   });
 
@@ -313,15 +313,15 @@ describe("Boss Blinds — Phase 2 debuffs", () => {
     render(<App />);
     await advanceToBossBlindAfterStartingTheRound(user);
     const nonClubDebuffed = Array.from(
-      document.querySelectorAll(".card--debuffed"),
-    ).filter((el) => !el.classList.contains("card-suit-clubs"));
+      document.querySelectorAll("[data-debuffed]"),
+    ).filter((el) => !el.matches('[data-suit="clubs"]'));
     expect(nonClubDebuffed).toHaveLength(0);
   });
 
   test("debuffed cards are absent on blind 1 even when the round's boss is The Club", () => {
     bossPickerRngConfig.rng = mkBossRng(["the-club"]);
     render(<App />);
-    expect(document.querySelectorAll(".card--debuffed")).toHaveLength(0);
+    expect(document.querySelectorAll("[data-debuffed]")).toHaveLength(0);
   });
 
 });
@@ -385,7 +385,7 @@ describe("Boss Blinds — Phase 3 round-state effects", () => {
         .querySelectorAll("button[aria-pressed]"),
     );
     await user.click(cards[0]);
-    expect(document.querySelector(".chips")).toHaveTextContent("2");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("2");
   });
 });
 
@@ -432,7 +432,7 @@ describe("Boss Blinds — Phase 4 face-down effects", () => {
         .querySelectorAll("button[aria-pressed]"),
     );
     expect(
-      handCards.every((el) => el.classList.contains("card--face-down")),
+      handCards.every((el) => el.hasAttribute("data-face-down")),
     ).toBe(true);
   });
 
@@ -451,7 +451,7 @@ describe("Boss Blinds — Phase 4 face-down effects", () => {
         .querySelectorAll<HTMLElement>("button[aria-pressed]"),
     );
     for (const el of handCards) {
-      const facedown = el.classList.contains("card--face-down");
+      const facedown = el.hasAttribute("data-face-down");
       const label = el.getAttribute("aria-label") ?? "";
       if (facedown) {
         expect(label).toBe("Face-down card");
@@ -466,7 +466,7 @@ describe("Boss Blinds — Phase 4 face-down effects", () => {
     for (let i = 0; i < 5; i += 1) await advanceThroughBlind(user);
     await dismissBlindSelect(user);
     expect(
-      document.querySelectorAll('[data-testid="hand-cards"] .card--face-down'),
+      document.querySelectorAll('[data-testid="hand-cards"] [data-face-down]'),
     ).toHaveLength(0);
   });
 });
@@ -515,7 +515,7 @@ describe("Boss Blinds — Phase 5 The Hook", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
-      .filter((btn) => btn.classList.contains("card--discarding"))
+      .filter((btn) => btn.hasAttribute("data-discarding"))
       .forEach((btn) => fireEvent.animationEnd(btn));
   }
 
@@ -631,7 +631,7 @@ describe("Boss Blinds — Phase 5 The Serpent", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
-      .filter((btn) => btn.classList.contains("card--discarding"))
+      .filter((btn) => btn.hasAttribute("data-discarding"))
       .forEach((btn) => fireEvent.animationEnd(btn));
   }
 
@@ -693,7 +693,7 @@ describe("Boss Blinds — Phase 5 The Ox", () => {
         .getByTestId("hand-cards")
         .querySelectorAll("button[aria-pressed]"),
     )
-      .filter((btn) => btn.classList.contains("card--discarding"))
+      .filter((btn) => btn.hasAttribute("data-discarding"))
       .forEach((btn) => fireEvent.animationEnd(btn));
   }
 
@@ -785,14 +785,14 @@ describe("Boss Blinds — showdown Verdant Leaf", () => {
       useGame.getState().setJokers([createPlusFourMultJoker()]);
     });
     const debuffedBefore = document.querySelectorAll(
-      '[data-testid="hand-cards"] .card--debuffed',
+      '[data-testid="hand-cards"] [data-debuffed]',
     );
     expect(debuffedBefore.length).toBeGreaterThan(0);
     act(() => {
       useGame.getState().sellJoker(0);
     });
     expect(
-      document.querySelectorAll('[data-testid="hand-cards"] .card--debuffed'),
+      document.querySelectorAll('[data-testid="hand-cards"] [data-debuffed]'),
     ).toHaveLength(0);
   });
 
@@ -805,7 +805,7 @@ describe("Boss Blinds — showdown Verdant Leaf", () => {
       useGame.getState().setCurrentBoss(leaf);
     });
     expect(
-      document.querySelectorAll('[data-testid="hand-cards"] .card--debuffed'),
+      document.querySelectorAll('[data-testid="hand-cards"] [data-debuffed]'),
     ).toHaveLength(0);
   });
 });
@@ -880,7 +880,7 @@ describe("Boss Blinds — showdown Crimson Heart", () => {
     startCrimsonRound("crimson-heart");
     await user.click(screen.getByTestId("blind-select-play"));
     const disabled = document.querySelectorAll(
-      '[data-testid="jokers-tray"] .joker-tile-debuffed',
+      '[data-testid="jokers-tray"] [data-debuffed]',
     );
     expect(disabled).toHaveLength(1);
     expect(
@@ -899,7 +899,7 @@ describe("Boss Blinds — showdown Crimson Heart", () => {
     await user.click(screen.getByTestId("blind-select-play"));
     expect(
       document.querySelectorAll(
-        '[data-testid="jokers-tray"] .joker-tile-debuffed',
+        '[data-testid="jokers-tray"] [data-debuffed]',
       ),
     ).toHaveLength(0);
   });
@@ -912,7 +912,7 @@ describe("Boss Blinds — showdown Crimson Heart", () => {
     await user.click(screen.getByTestId("blind-select-play"));
     expect(
       document.querySelectorAll(
-        '[data-testid="jokers-tray"] .joker-tile-debuffed',
+        '[data-testid="jokers-tray"] [data-debuffed]',
       ),
     ).toHaveLength(1);
     act(() => {
@@ -922,7 +922,7 @@ describe("Boss Blinds — showdown Crimson Heart", () => {
     await user.click(screen.getByTestId("blind-select-play"));
     expect(
       document.querySelectorAll(
-        '[data-testid="jokers-tray"] .joker-tile-debuffed',
+        '[data-testid="jokers-tray"] [data-debuffed]',
       ),
     ).toHaveLength(0);
     random.mockRestore();
@@ -947,7 +947,7 @@ describe("Boss Blinds — showdown Cerulean Bell", () => {
     startBellRound("cerulean-bell");
     await user.click(screen.getByTestId("blind-select-play"));
     await waitFor(() => {
-      expect(document.querySelectorAll(".card--forced")).toHaveLength(1);
+      expect(document.querySelectorAll("[data-forced]")).toHaveLength(1);
     });
     expect(useGame.getState().forcedCardId).not.toBeNull();
     expect(
@@ -963,12 +963,12 @@ describe("Boss Blinds — showdown Cerulean Bell", () => {
     startBellRound("cerulean-bell");
     await user.click(screen.getByTestId("blind-select-play"));
     await waitFor(() => {
-      expect(document.querySelector(".card--forced")).not.toBeNull();
+      expect(document.querySelector("[data-forced]")).not.toBeNull();
     });
     const forcedId = useGame.getState().forcedCardId!;
-    await user.click(document.querySelector(".card--forced") as HTMLElement);
+    await user.click(document.querySelector("[data-forced]") as HTMLElement);
     expect(useGame.getState().selectedIds.has(forcedId)).toBe(true);
-    expect(document.querySelectorAll(".card--forced")).toHaveLength(1);
+    expect(document.querySelectorAll("[data-forced]")).toHaveLength(1);
     random.mockRestore();
   });
 
@@ -977,7 +977,7 @@ describe("Boss Blinds — showdown Cerulean Bell", () => {
     render(<App />);
     startBellRound("violet-vessel");
     await user.click(screen.getByTestId("blind-select-play"));
-    expect(document.querySelectorAll(".card--forced")).toHaveLength(0);
+    expect(document.querySelectorAll("[data-forced]")).toHaveLength(0);
     expect(useGame.getState().forcedCardId).toBeNull();
   });
 });

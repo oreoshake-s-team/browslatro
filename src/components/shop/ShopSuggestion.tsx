@@ -31,7 +31,7 @@ import type { ShopItem } from "../../items/shop";
 import type { Voucher, VoucherId } from "../../items/vouchers";
 import { useGame } from "../../store/game";
 import CoachAdvice from "../advisor/CoachAdvice";
-import "./ShopSuggestion.css";
+import { Button } from "../ui/Button";
 
 export interface ShopSuggestionProps {
   readonly money: number;
@@ -206,9 +206,8 @@ export default function ShopSuggestion(
       : undefined;
 
   const trigger = (
-    <button
-      type="button"
-      className="btn btn--advisor shop-action-button"
+    <Button
+      variant="advisor"
       data-testid="coach-trigger"
       disabled={props.disabled}
       onClick={() => {
@@ -219,14 +218,17 @@ export default function ShopSuggestion(
     >
       <span aria-hidden="true">⚡ </span>
       {t("advisor.coachTip")}
-    </button>
+    </Button>
   );
 
   return (
-    <div className="shop-suggestion">
+    <div
+      className="flex w-full flex-col gap-2"
+      data-testid="shop-suggestion"
+    >
       {!revealed && feedbackRecorded && (
         <p
-          className="shop-suggestion-recorded"
+          className="font-bold text-success"
           role="status"
           data-testid="coach-feedback-recorded"
         >

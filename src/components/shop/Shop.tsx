@@ -1,7 +1,7 @@
-import "./Shop.css";
 import { Suspense, lazy, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { cva } from "class-variance-authority";
 import {
   localizedConsumableDescription,
   localizedConsumableName,
@@ -27,6 +27,9 @@ import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import CardModifierBadges from "../cards/CardModifierBadges";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { usePreferences } from "../system/preferences";
+import { Button } from "../ui/Button";
+import { Panel } from "../ui/Panel";
+import { cn } from "../ui/cn";
 
 const ShopSuggestion = lazy(() => import("./ShopSuggestion"));
 
@@ -277,6 +280,37 @@ const OFFER_KIND_LABEL_KEY = {
   pack: "shop.kindPack",
 } as const satisfies Record<ShopItem["kind"], string>;
 
+const offerTile = cva(
+  "grid grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-1 rounded-lg border border-l-4 border-border bg-raised p-3 transition-opacity",
+  {
+    variants: {
+      kind: {
+        joker: "border-l-mult",
+        planet: "border-l-chips",
+        tarot: "border-l-advisor",
+        spectral: "border-l-focus",
+        "playing-card": "border-l-money",
+        pack: "border-l-money",
+      },
+      sold: {
+        true: "opacity-60 saturate-50",
+      },
+    },
+  },
+);
+
+const EDITION_RING: Record<
+  "foil" | "holographic" | "polychrome" | "negative",
+  string
+> = {
+  foil: "ring-2 ring-chips ring-inset",
+  holographic: "ring-2 ring-advisor ring-inset",
+  polychrome: "ring-2 ring-success ring-inset",
+  negative: "bg-black ring-2 ring-white/60 ring-inset",
+};
+
+const SECTION_HEADING = "text-xs font-bold tracking-wider uppercase";
+
 export default function Shop({
   money,
   equippedJokerCount,
@@ -351,23 +385,21 @@ export default function Shop({
       cardEnhancement || cardEdition || cardSeal,
     );
     const isFree = !offer.sold && effectivePrice === 0;
-    const modifierClasses = [
-      offer.sold && "shop-offer--sold",
-      edition && "shop-offer-editioned",
-      playingCardEnhanced && "shop-offer-playing-card-enhanced",
-      isFree && "shop-offer-free",
-    ]
-      .filter(Boolean)
-      .join(" ");
     return (
       <li
         key={`${offer.kind}-${subject.id}-${idx}`}
-        className={`shop-offer shop-offer-${offer.kind}${
-          modifierClasses ? ` ${modifierClasses}` : ""
-        }`}
+        className={cn(
+          offerTile({ kind: offer.kind, sold: offer.sold }),
+          edition && EDITION_RING[edition],
+          cardEdition && EDITION_RING[cardEdition],
+        )}
+        data-shop-offer=""
         data-testid={`shop-offer-${idx}`}
         data-offer-kind={offer.kind}
         data-edition={edition}
+        data-sold={offer.sold || undefined}
+        data-free={isFree || undefined}
+        data-enhanced={playingCardEnhanced || undefined}
         data-card-enhancement={cardEnhancement}
         data-card-edition={cardEdition}
         data-card-seal={cardSeal}
@@ -375,17 +407,21 @@ export default function Shop({
         data-pack-variant={offer.kind === "pack" ? offer.pack.variant : undefined}
       >
         <span
-          className={`shop-offer-kind shop-offer-kind-${offer.kind}`}
+          className={cn(
+            "col-span-3 row-start-1 inline-flex items-center gap-1 justify-self-start text-muted",
+            SECTION_HEADING,
+          )}
           data-testid={`shop-kind-${idx}`}
         >
-          <span aria-hidden="true" className="shop-offer-kind-icon">
+          <span aria-hidden="true" className="text-sm leading-none">
             {OFFER_KIND_ICON[offer.kind]}
           </span>
-          <span className="shop-offer-kind-label">
-            {t(OFFER_KIND_LABEL_KEY[offer.kind])}
-          </span>
+          <span>{t(OFFER_KIND_LABEL_KEY[offer.kind])}</span>
         </span>
-        <span className="shop-offer-name">
+        <span
+          className="col-start-1 row-start-2 font-semibold"
+          data-shop-offer-name=""
+        >
           {subject.name}
           <CardModifierBadges
             scope="shop"
@@ -396,27 +432,47 @@ export default function Shop({
             seal={cardSeal}
           />
         </span>
-        <span className="shop-offer-description">
+        <span
+          className="col-span-3 row-start-3 text-xs text-muted"
+          data-shop-offer-description=""
+        >
           {appendFoolHint(subject.description, subject.id, foolCopyTarget)}
         </span>
         {offer.kind === "joker" && (
           <JokerStickerBadges joker={offer.joker} />
         )}
-        <span className="shop-offer-price">
+        <span
+          className="col-start-2 row-start-2 flex items-center gap-1.5 font-bold text-money"
+          data-shop-offer-price=""
+        >
           {isFree ? (
-            <span className="shop-offer-price-free">{t("shop.free")}</span>
+            <span
+              className="font-extrabold tracking-wider text-success"
+              data-shop-offer-price-free=""
+            >
+              {t("shop.free")}
+            </span>
           ) : discounted ? (
             <>
-              <span className="shop-offer-price-original">${offer.price}</span>
-              <span className="shop-offer-price-discounted">${effectivePrice}</span>
+              <span
+                className="text-xs font-normal text-muted line-through"
+                data-shop-offer-price-original=""
+              >
+                ${offer.price}
+              </span>
+              <span data-shop-offer-price-discounted="" className="text-mult">
+                ${effectivePrice}
+              </span>
             </>
           ) : (
             `$${offer.price}`
           )}
         </span>
-        <button
-          type="button"
-          className="btn shop-offer-buy"
+        <Button
+          variant="primary"
+          size="sm"
+          className="col-start-3 row-start-2"
+          data-shop-buy=""
           disabled={disabled || state.kind !== "available"}
           title={
             disabled
@@ -427,55 +483,61 @@ export default function Shop({
           onClick={() => onBuy(idx)}
         >
           {label}
-        </button>
+        </Button>
       </li>
     );
   }
 
   return (
     <section
-      className="shop-panel"
+      className="flex w-full max-w-225 justify-start"
       aria-labelledby="shop-title"
     >
-      <div className="shop-inner">
-        <h2 id="shop-title" className="shop-title">
+      <Panel className="flex w-full flex-col gap-4">
+        <h2 id="shop-title" className="text-center text-xl font-bold">
           {t("shop.title")}
         </h2>
-        <p className="shop-money" data-testid="shop-money">
+        <p
+          className="text-center text-sm font-semibold text-muted"
+          data-testid="shop-money"
+        >
           {t("shop.money", { amount: money })}
         </p>
-        <div className="shop-cards-row">
-          <button
-            type="button"
-            className="btn shop-reroll"
+        <div className="flex items-stretch gap-3">
+          <Button
+            className="shrink-0 self-stretch text-money"
+            data-testid="shop-reroll"
             onClick={handleReroll}
             disabled={disabled || !canAffordReroll}
             title={rerollTooltip}
             aria-label={t("a11y.rerollShopOffers", { cost: currentRerollCost })}
           >
             {t("shop.reroll", { cost: currentRerollCost })}
-          </button>
-          <ul className="shop-offers shop-offers-cards" aria-label={t("a11y.itemsForSale")}>
+          </Button>
+          <ul
+            className="flex min-w-0 flex-1 flex-col gap-3"
+            aria-label={t("a11y.itemsForSale")}
+          >
             {offers.map((offer, idx) => {
               if (offer.kind === "pack") return null;
               return renderOffer(offer, idx);
             })}
           </ul>
         </div>
-        <div className="shop-extras-row">
+        <div className="grid items-stretch gap-3 md:grid-cols-2">
           <section
-            className="shop-voucher"
+            className="flex flex-col gap-2 rounded-lg border border-advisor/40 bg-advisor/10 p-3"
             data-testid="shop-voucher"
             aria-label={t("a11y.vouchersForAnte")}
           >
-            <h3 className="shop-voucher-heading">
+            <h3 className={cn(SECTION_HEADING, "text-advisor")}>
               {vouchers.length === 1
                 ? t("shop.voucherHeadingOne")
                 : t("shop.voucherHeadingOther")}
             </h3>
             {canOverrideVoucher && (
               <select
-                className="shop-voucher-override"
+                className="cursor-pointer self-start rounded-md border border-border bg-raised px-2 py-1 text-xs text-ink hover:border-advisor focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                 data-testid="shop-voucher-override"
                 aria-label={t("a11y.overrideVoucherDev")}
                 value={vouchers[0]?.id ?? voucherOptions[0].id}
@@ -490,7 +552,7 @@ export default function Shop({
             )}
             {!adminMode && vouchers.length > 0 && (
               <span
-                className="shop-voucher-current"
+                className="self-start text-xs font-semibold text-advisor"
                 data-testid="shop-voucher-current"
               >
                 {localizedVoucherName(i18n.language, vouchers[0].id, vouchers[0].name)}
@@ -498,13 +560,13 @@ export default function Shop({
             )}
             {vouchers.length === 0 ? (
               <p
-                className="shop-voucher-empty"
+                className="text-xs text-muted italic"
                 data-testid="shop-voucher-empty"
               >
                 {t("shop.noVoucherThisAnte")}
               </p>
             ) : (
-              <ul className="shop-voucher-list">
+              <ul className="flex flex-col gap-2">
                 {vouchers.map((voucher, idx) => {
                   const sold = soldVoucherIds.has(voucher.id);
                   const voucherName = localizedVoucherName(
@@ -527,22 +589,34 @@ export default function Shop({
                   return (
                     <li
                       key={voucher.id}
-                      className={`shop-voucher-card${sold ? " shop-voucher--sold" : ""}`}
+                      className={cn(
+                        "grid grid-cols-[1fr_auto_auto] items-center gap-x-3 gap-y-1 transition-opacity",
+                        sold && "opacity-45",
+                      )}
                       data-voucher-id={voucher.id}
+                      data-sold={sold || undefined}
                       data-testid={`shop-voucher-${idx}`}
                     >
-                      <span className="shop-voucher-name">{voucherName}</span>
-                      <span className="shop-voucher-description">
+                      <span
+                        className="col-start-1 row-start-1 font-semibold"
+                        data-shop-voucher-name=""
+                      >
+                        {voucherName}
+                      </span>
+                      <span className="col-span-3 row-start-2 text-xs text-muted">
                         {localizedVoucherDescription(
                           i18n.language,
                           voucher.id,
                           voucher.description,
                         )}
                       </span>
-                      <span className="shop-voucher-price">${displayPrice}</span>
-                      <button
-                        type="button"
-                        className="shop-voucher-buy"
+                      <span className="col-start-2 row-start-1 font-bold text-money">
+                        ${displayPrice}
+                      </span>
+                      <Button
+                        variant="advisor"
+                        size="sm"
+                        className="col-start-3 row-start-1"
                         data-testid={`shop-voucher-buy-${idx}`}
                         disabled={disabled || btn.disabled}
                         title={disabled ? lockTooltip : btn.title}
@@ -550,7 +624,7 @@ export default function Shop({
                         onClick={() => onBuyVoucher(idx)}
                       >
                         {btn.label}
-                      </button>
+                      </Button>
                     </li>
                   );
                 })}
@@ -558,12 +632,17 @@ export default function Shop({
             )}
           </section>
           <section
-            className="shop-packs"
+            className="flex flex-col gap-2 rounded-lg border border-money/40 bg-money/10 p-3"
             data-testid="shop-packs"
             aria-label={t("a11y.boosterPacksForSale")}
           >
-            <h3 className="shop-packs-heading">{t("shop.boosterPacks")}</h3>
-            <ul className="shop-offers shop-offers-packs" aria-label={t("a11y.packsForSale")}>
+            <h3 className={cn(SECTION_HEADING, "text-money")}>
+              {t("shop.boosterPacks")}
+            </h3>
+            <ul
+              className="flex flex-col gap-2"
+              aria-label={t("a11y.packsForSale")}
+            >
               {offers.map((offer, idx) => {
                 if (offer.kind !== "pack") return null;
                 return renderOffer(offer, idx);
@@ -591,20 +670,22 @@ export default function Shop({
             triggerContainer={suggestSlot}
           />
         </Suspense>
-        <div className="shop-actions">
-          <div className="shop-suggest-slot" ref={setSuggestSlot} />
-          <button
-            type="button"
-            className="btn btn--secondary shop-action-button"
+        <div
+          className="flex flex-wrap items-center justify-center gap-3"
+          data-testid="shop-actions"
+        >
+          <div className="contents" ref={setSuggestSlot} />
+          <Button
+            className="min-w-25"
             onClick={onNext}
             disabled={disabled}
             title={disabled ? lockTooltip : undefined}
             autoFocus
           >
             {t("shop.nextRound")}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Panel>
     </section>
   );
 }

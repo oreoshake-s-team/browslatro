@@ -10,7 +10,7 @@ async function firedRules(code: string, codeFilename: string): Promise<string[]>
 }
 
 const componentFile = resolve(process.cwd(), "src/components/probe/Probe.css");
-const tokensFile = resolve(process.cwd(), "src/styles/tokens.css");
+const tokensFile = resolve(process.cwd(), "src/styles/tailwind.css");
 
 describe("design-token enforcement", () => {
   it("rejects a raw hex color in component CSS", async () => {
@@ -50,9 +50,9 @@ describe("design-token enforcement", () => {
     expect(rules).toEqual([]);
   });
 
-  it("allows raw color literals inside tokens.css", async () => {
+  it("allows raw color literals inside the theme file", async () => {
     const rules = await firedRules(
-      ":root {\n  --accent-mult: #fa5252;\n  --shadow-sm: rgb(0 0 0 / 15%);\n}\n",
+      ":root {\n  --color-mult: #fa5252;\n  --color-border: rgb(0 0 0 / 15%);\n}\n",
       tokensFile,
     );
     expect(rules).toEqual([]);

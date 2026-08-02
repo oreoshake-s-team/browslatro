@@ -71,9 +71,9 @@ describe("Celestial pack open + pick integration", () => {
     const before = moneyOf();
     const idx = findPackOfferIdx();
     const offer = screen.getByTestId(`shop-offer-${idx}`);
-    const priceText = offer.querySelector(".shop-offer-price")?.textContent ?? "";
+    const priceText = offer.querySelector("[data-shop-offer-price]")?.textContent ?? "";
     const price = Number(priceText.replace(/[^0-9]/g, ""));
-    const open = offer.querySelector("button.shop-offer-buy") as HTMLButtonElement;
+    const open = offer.querySelector("button[data-shop-buy]") as HTMLButtonElement;
     await user.click(open);
     await screen.findByTestId("pack-open-close");
     expect(screen.getByTestId("pack-open-subtitle")).toBeInTheDocument();
@@ -82,7 +82,7 @@ describe("Celestial pack open + pick integration", () => {
     expect(
       screen
         .getByTestId(`shop-offer-${idx}`)
-        .querySelector("button.shop-offer-buy"),
+        .querySelector("button[data-shop-buy]"),
     ).toHaveTextContent("Sold");
   });
 
@@ -95,7 +95,7 @@ describe("Celestial pack open + pick integration", () => {
     const idx = findPackOfferIdx();
     const open = screen
       .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
+      .querySelector("button[data-shop-buy]") as HTMLButtonElement;
     await user.click(open);
     await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-pick-0"));
@@ -118,7 +118,7 @@ describe("Celestial pack open + pick integration", () => {
     const idx = findPackOfferIdx();
     const open = screen
       .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
+      .querySelector("button[data-shop-buy]") as HTMLButtonElement;
     await user.click(open);
     await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-pick-0"));
@@ -130,14 +130,14 @@ describe("Celestial pack open + pick integration", () => {
     const idx = findPackOfferIdx();
     const open = screen
       .getByTestId(`shop-offer-${idx}`)
-      .querySelector("button.shop-offer-buy") as HTMLButtonElement;
+      .querySelector("button[data-shop-buy]") as HTMLButtonElement;
     await user.click(open);
     await screen.findByTestId("pack-open-close");
     await user.click(screen.getByTestId("pack-open-close"));
     expect(
       screen
         .getByTestId(`shop-offer-${idx}`)
-        .querySelector("button.shop-offer-buy"),
+        .querySelector("button[data-shop-buy]"),
     ).toHaveTextContent("Sold");
   });
 });

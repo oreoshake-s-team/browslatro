@@ -165,7 +165,7 @@ describe("PackOpenModal", () => {
 
   test("does not render a play-area wrapper when no slot is provided (negative)", () => {
     renderModal();
-    expect(document.querySelector(".pack-open-play-area")).toBeNull();
+    expect(screen.queryByTestId("pack-open-play-area")).toBeNull();
   });
 
   test("an option at a picked index is removed from the list", () => {
@@ -1424,7 +1424,7 @@ describe("PackOpenModal — Buffoon pack sticker badges", () => {
     );
     const optionTile = screen
       .getByTestId("joker-sticker-perishable")
-      .closest(".pack-open-option");
+      .closest("[data-pack-option]");
     expect(optionTile?.getAttribute("title")).toMatch(
       new RegExp(`${PERISHABLE_LIFE - 2} of ${PERISHABLE_LIFE} rounds`),
     );
@@ -1475,7 +1475,7 @@ describe("PackOpenModal — coach suggestion placement", () => {
   test("the Coach tip trigger sits in the action row, with no panel until clicked", async () => {
     renderModal();
     const trigger = await screen.findByTestId("coach-trigger");
-    expect(trigger.closest(".pack-open-actions")).not.toBeNull();
+    expect(trigger.closest('[data-testid="pack-open-actions"]')).not.toBeNull();
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
   });
 
@@ -1483,8 +1483,8 @@ describe("PackOpenModal — coach suggestion placement", () => {
     renderModal();
     await userEvent.click(await screen.findByTestId("coach-trigger"));
     const panel = await screen.findByTestId("coach-advice");
-    expect(panel.closest(".pack-suggestion")).not.toBeNull();
-    expect(panel.closest(".pack-open-actions")).toBeNull();
+    expect(panel.closest('[data-testid="pack-suggestion"]')).not.toBeNull();
+    expect(panel.closest('[data-testid="pack-open-actions"]')).toBeNull();
   });
 });
 

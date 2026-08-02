@@ -14,16 +14,16 @@ async function startRound(page: Page): Promise<void> {
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   await page.getByTestId("blind-select-play").click();
-  await expect(page.locator('[data-testid="hand-cards"] .card').first()).toBeVisible();
+  await expect(page.locator('[data-testid="hand-cards"] [data-suit]').first()).toBeVisible();
 }
 
 test("portrait: blind, round score, and chips×mult stack in one column", async ({
   page,
 }) => {
   await startRound(page);
-  const roundInfo = await page.locator(".round-info").boundingBox();
-  const roundScore = await page.locator(".round-score").boundingBox();
-  const handScore = await page.locator(".hand-score").boundingBox();
+  const roundInfo = await page.locator('[data-testid="round-info"]').boundingBox();
+  const roundScore = await page.locator('[data-testid="round-score"]').boundingBox();
+  const handScore = await page.locator('[data-testid="hand-score"]').boundingBox();
   expect(roundInfo).not.toBeNull();
   expect(roundScore).not.toBeNull();
   expect(handScore).not.toBeNull();
@@ -49,8 +49,8 @@ test("portrait: the action buttons form a compact 2x2 grid above the stacked sta
   const scoringLog = await page
     .getByRole("button", { name: "Scoring Log" })
     .boundingBox();
-  const stats = await page.locator(".progress").boundingBox();
-  const handsStat = await page.locator(".round-progress > .stat").first().boundingBox();
+  const stats = await page.locator('[data-testid="progress"]').boundingBox();
+  const handsStat = await page.locator('[data-testid="round-progress"] > [data-stat]').first().boundingBox();
   expect(runInfo).not.toBeNull();
   expect(options).not.toBeNull();
   expect(help).not.toBeNull();
@@ -72,7 +72,7 @@ test("portrait: the scoring log lives behind a button that opens the full-screen
   page,
 }) => {
   await startRound(page);
-  await expect(page.locator(".scoring-trace")).toBeHidden();
+  await expect(page.locator('[data-testid="scoring-trace"]')).toBeHidden();
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Scoring Log" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -90,7 +90,7 @@ test("negative: landscape keeps the inline scoring trace and hides the scoring-l
   });
   const page = await context.newPage();
   await startRound(page);
-  await expect(page.locator(".scoring-trace")).toBeVisible();
+  await expect(page.locator('[data-testid="scoring-trace"]')).toBeVisible();
   await expect(page.getByRole("button", { name: "Scoring Log" })).toBeHidden();
   await context.close();
 });
@@ -100,7 +100,7 @@ test("portrait: the sidebar strip fits the viewport without a horizontal scrollb
 }) => {
   await startRound(page);
   const overflow = await page
-    .locator(".sidebar")
+    .locator('[data-testid="sidebar"]')
     .evaluate((el) => el.scrollWidth - el.clientWidth);
   expect(overflow).toBeLessThanOrEqual(1);
 });
@@ -133,7 +133,7 @@ test("negative: landscape keeps the vertical sidebar column", async ({
   const page = await context.newPage();
   await startRound(page);
   const display = await page
-    .locator(".sidebar")
+    .locator('[data-testid="sidebar"]')
     .evaluate((el) => getComputedStyle(el).display);
   expect(display).toBe("flex");
   await context.close();

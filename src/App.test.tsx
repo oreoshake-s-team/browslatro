@@ -138,19 +138,19 @@ describe("Fresh round empty HandScore", () => {
   test("does not render the High Card label in the sidebar on a fresh round", () => {
     render(<App />);
     const sidebarHeadings = Array.from(
-      document.querySelectorAll(".sidebar h3"),
+      document.querySelectorAll('[data-testid="sidebar"] h3'),
     ).map((el) => el.textContent);
     expect(sidebarHeadings).not.toContain("High Card");
   });
 
   test("renders chips as 0 in the sidebar on a fresh round", () => {
     render(<App />);
-    expect(document.querySelector(".chips")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("0");
   });
 
   test("renders multiplier as 0 in the sidebar on a fresh round", () => {
     render(<App />);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("0");
   });
 
   test("deselecting the last selected card returns chips to 0", async () => {
@@ -159,7 +159,7 @@ describe("Fresh round empty HandScore", () => {
     const card = getHandCardButtons()[0];
     await user.click(card);
     await user.click(card);
-    expect(document.querySelector(".chips")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("0");
   });
 
   test("deselecting the last selected card returns multiplier to 0", async () => {
@@ -168,7 +168,7 @@ describe("Fresh round empty HandScore", () => {
     const card = getHandCardButtons()[0];
     await user.click(card);
     await user.click(card);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("0");
   });
 
   test("deselecting the last selected card removes the hand label from the sidebar", async () => {
@@ -178,7 +178,7 @@ describe("Fresh round empty HandScore", () => {
     await user.click(card);
     await user.click(card);
     const sidebarHeadings = Array.from(
-      document.querySelectorAll(".sidebar h3"),
+      document.querySelectorAll('[data-testid="sidebar"] h3'),
     ).map((el) => el.textContent);
     expect(sidebarHeadings).not.toContain("High Card");
   });
@@ -189,14 +189,14 @@ describe("Card selection drives hand detection", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
-    expect(document.querySelector(".chips")).toHaveTextContent("5");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("5");
   });
 
   test("selecting a single card sets multiplier to High Card multiplier value", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await user.click(getHandCardButtons()[0]);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("1");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("1");
   });
 
   test("clicking a selected card deselects it", async () => {
@@ -321,7 +321,7 @@ describe("Discard button", () => {
     await user.click(screen.getByText(/^Discard$/));
     flushDiscardAnimation();
     const roundScoreEl = document.querySelector(
-      ".round-score-value"
+      '[data-testid="round-score-value"]'
     ) as HTMLElement;
     expect(roundScoreEl).toHaveTextContent("0");
   });
@@ -441,7 +441,7 @@ describe("Discard animation", () => {
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
     const discardingCount = getHandCardButtons().filter((btn) =>
-      btn.classList.contains("card--discarding")
+      btn.hasAttribute("data-discarding")
     ).length;
     expect(discardingCount).toBe(2);
   });
@@ -495,7 +495,7 @@ describe("Submit Hand button integration", () => {
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".chips")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("0");
   });
 
   test("dev Add Multiplier bump resets after Submit Hand (per-hand reset)", async () => {
@@ -505,7 +505,7 @@ describe("Submit Hand button integration", () => {
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("0");
   });
 
   test("the Submit Hand button is disabled when no cards are selected", async () => {
@@ -522,7 +522,7 @@ describe("Submit Hand button integration", () => {
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="round-score-value"]')).toHaveTextContent(
       "14",
     );
   });
@@ -664,7 +664,7 @@ describe("Losing integration", () => {
     render(<App />);
     await exhaustAllHands(user);
     await dismissRoundLostModal(user);
-    expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+    expect(document.querySelectorAll('[data-testid="sidebar"] [data-testid="hand-chips"]')).toHaveLength(1);
   });
 
   test("dismissing the round-lost modal leaves exactly one multiplier span in the sidebar HandScore", async () => {
@@ -672,7 +672,7 @@ describe("Losing integration", () => {
     render(<App />);
     await exhaustAllHands(user);
     await dismissRoundLostModal(user);
-    expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
+    expect(document.querySelectorAll('[data-testid="sidebar"] [data-testid="hand-mult"]')).toHaveLength(1);
   });
 
   test("losing after a real scoring sequence leaves exactly one chips span", async () => {
@@ -684,7 +684,7 @@ describe("Losing integration", () => {
     await submitOneHighCard(user);
     await submitOneHighCard(user);
     await dismissRoundLostModal(user);
-    expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+    expect(document.querySelectorAll('[data-testid="sidebar"] [data-testid="hand-chips"]')).toHaveLength(1);
   });
 
   test("losing after a real scoring sequence leaves exactly one multiplier span", async () => {
@@ -696,7 +696,7 @@ describe("Losing integration", () => {
     await submitOneHighCard(user);
     await submitOneHighCard(user);
     await dismissRoundLostModal(user);
-    expect(document.querySelectorAll(".sidebar .multiplier")).toHaveLength(1);
+    expect(document.querySelectorAll('[data-testid="sidebar"] [data-testid="hand-mult"]')).toHaveLength(1);
   });
 
   test("two consecutive loss → restart cycles do not duplicate the HandScore", async () => {
@@ -707,7 +707,7 @@ describe("Losing integration", () => {
       await exhaustAllHands(user);
       await dismissRoundLostModal(user);
     }
-    expect(document.querySelectorAll(".sidebar .chips")).toHaveLength(1);
+    expect(document.querySelectorAll('[data-testid="sidebar"] [data-testid="hand-chips"]')).toHaveLength(1);
   });
 });
 
@@ -805,7 +805,7 @@ describe("High visibility preference integration", () => {
     );
     const dialog = screen.getByRole("dialog", { name: "Remaining Cards" });
     expect(container.contains(dialog)).toBe(false);
-    const diamond = dialog.querySelector(".card-suit-diamonds");
+    const diamond = dialog.querySelector('[data-suit="diamonds"]');
     expect(diamond).not.toBeNull();
     expect(diamond?.closest(".high-visibility")).toBe(document.body);
   });
@@ -817,7 +817,7 @@ describe("High visibility preference integration", () => {
       screen.getByRole("button", { name: /Deck \(\d+ cards remaining\)/ }),
     );
     const dialog = screen.getByRole("dialog", { name: "Remaining Cards" });
-    const diamond = dialog.querySelector(".card-suit-diamonds");
+    const diamond = dialog.querySelector('[data-suit="diamonds"]');
     expect(diamond?.closest(".high-visibility")).toBeNull();
   });
 
@@ -921,7 +921,7 @@ describe("Sequential card scoring", () => {
     act(() => {
       vi.runOnlyPendingTimers();
     });
-    expect(document.querySelector(".chips")).toHaveTextContent("109");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("109");
   });
 
   test("reordering the hand changes which card is scored first (5♠ moved to leftmost is scored first)", async () => {
@@ -935,7 +935,7 @@ describe("Sequential card scoring", () => {
     act(() => {
       vi.runOnlyPendingTimers();
     });
-    expect(document.querySelector(".chips")).toHaveTextContent("105");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("105");
   });
 
   test("round score is unchanged mid-sequence", async () => {
@@ -944,7 +944,7 @@ describe("Sequential card scoring", () => {
       vi.runOnlyPendingTimers();
     });
     // After one step the sequence is in flight; round score should still be 0.
-    expect(document.querySelector(".round-score-value")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="round-score-value"]')).toHaveTextContent("0");
   });
 
   test("final round score equals (hand base chips + per-card rank chips) * multiplier", async () => {
@@ -995,25 +995,25 @@ describe("Hand-level joker ordering", () => {
   test("after all per-card steps the live multiplier does not yet include +4 Mult", async () => {
     await submitFirstFiveSpades();
     tickScoring(5);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("8");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("8");
   });
 
   test("one extra tick after per-card scoring applies the +4 Mult hand-level step", async () => {
     await submitFirstFiveSpades();
     tickScoring(6);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("12");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("12");
   });
 
   test("the live chips counter does not advance during the +4 Mult step", async () => {
     await submitFirstFiveSpades();
     tickScoring(6);
-    expect(document.querySelector(".chips")).toHaveTextContent("135");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("135");
   });
 
   test("post-hand Joker Stencil applies after the hand-level step (round score = 135 chips * 24 mult)", async () => {
     await submitFirstFiveSpades();
     tickScoring(7);
-    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="round-score-value"]')).toHaveTextContent(
       "3,240",
     );
   });
@@ -1058,25 +1058,25 @@ describe("Photograph joker per-card timing", () => {
   test("the live multiplier does not include Photograph after the Ace step (Ace is not a face)", async () => {
     await submitRoyalFlushOfClubs();
     tickScoring(1);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("8");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("8");
   });
 
   test("the live multiplier multiplies by x2 on the King step (first face card)", async () => {
     await submitRoyalFlushOfClubs();
     tickScoring(2);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("16");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("16");
   });
 
   test("the live multiplier does not multiply again on the Queen step", async () => {
     await submitRoyalFlushOfClubs();
     tickScoring(3);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("16");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("16");
   });
 
   test("the live multiplier does not multiply again on the Jack step", async () => {
     await submitRoyalFlushOfClubs();
     tickScoring(4);
-    expect(document.querySelector(".multiplier")).toHaveTextContent("16");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("16");
   });
 
   test("the Photograph tile pulses on the King step (first face card)", async () => {
@@ -1090,7 +1090,7 @@ describe("Photograph joker per-card timing", () => {
   test("the final round score is 151 chips * 16 mult = 2416", async () => {
     await submitRoyalFlushOfClubs();
     tickScoring(5);
-    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="round-score-value"]')).toHaveTextContent(
       "2,416",
     );
   });
@@ -1103,7 +1103,7 @@ describe("Photograph joker per-card timing", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     tickScoring(5);
-    expect(document.querySelector(".round-score-value")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="round-score-value"]')).toHaveTextContent(
       "1,080",
     );
   });
@@ -1288,14 +1288,14 @@ describe("App animation speed CSS variable", () => {
 
   test("does not set the inline --animation-speed style when preference is normal", () => {
     const { container } = render(<App />);
-    const style = container.querySelector(".app")?.getAttribute("style") ?? "";
+    const style = container.querySelector("[data-app-shell]")?.getAttribute("style") ?? "";
     expect(style).not.toContain("--animation-speed");
   });
 
   test("sets the inline --animation-speed style to 0 when preference is instant", () => {
     setAnimationSpeed("instant");
     const { container } = render(<App />);
-    expect(container.querySelector(".app")?.getAttribute("style")).toContain(
+    expect(container.querySelector("[data-app-shell]")?.getAttribute("style")).toContain(
       "--animation-speed: 0",
     );
   });
@@ -1303,7 +1303,7 @@ describe("App animation speed CSS variable", () => {
   test("sets the inline --animation-speed style to 0.5 when preference is fast", () => {
     setAnimationSpeed("fast");
     const { container } = render(<App />);
-    expect(container.querySelector(".app")?.getAttribute("style")).toContain(
+    expect(container.querySelector("[data-app-shell]")?.getAttribute("style")).toContain(
       "--animation-speed: 0.5",
     );
   });
@@ -1311,7 +1311,7 @@ describe("App animation speed CSS variable", () => {
   test("sets the inline --animation-speed style to 2 when preference is slow", () => {
     setAnimationSpeed("slow");
     const { container } = render(<App />);
-    expect(container.querySelector(".app")?.getAttribute("style")).toContain(
+    expect(container.querySelector("[data-app-shell]")?.getAttribute("style")).toContain(
       "--animation-speed: 2",
     );
   });
@@ -1322,7 +1322,7 @@ describe("App animation speed CSS variable", () => {
     const { container } = render(<App />);
     await user.click(screen.getByText("Options"));
     await user.selectOptions(screen.getByLabelText("Animation speed"), "normal");
-    const style = container.querySelector(".app")?.getAttribute("style") ?? "";
+    const style = container.querySelector("[data-app-shell]")?.getAttribute("style") ?? "";
     expect(style).not.toContain("--animation-speed");
   });
 });
@@ -1343,7 +1343,7 @@ describe("App scoring step honors animation speed preference", () => {
     act(() => {
       vi.advanceTimersByTime(500);
     });
-    expect(document.querySelector(".chips")).toHaveTextContent("100");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("100");
   });
 
   test("advances on the first slow tick after the 1000ms threshold", async () => {
@@ -1359,7 +1359,7 @@ describe("App scoring step honors animation speed preference", () => {
     act(() => {
       vi.advanceTimersByTime(1000);
     });
-    expect(document.querySelector(".chips")).toHaveTextContent("109");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("109");
   });
 });
 
@@ -1392,7 +1392,7 @@ describe("Post-round shop integration", () => {
       .filter((el) => el.getAttribute("data-offer-kind") === "pack");
     expect(packs).toHaveLength(2);
     const itemNames = items.map(
-      (el) => el.querySelector(".shop-offer-name")?.textContent ?? "",
+      (el) => el.querySelector("[data-shop-offer-name]")?.textContent ?? "",
     );
     expect(new Set(itemNames).size).toBe(itemNames.length);
   });
@@ -1421,7 +1421,7 @@ describe("Post-round shop integration", () => {
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buy = screen
       .getByTestId(jokerSlotId)
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     expect(screen.getAllByTestId(/^joker-tile-filled-/)).toHaveLength(
@@ -1444,15 +1444,15 @@ describe("Post-round shop integration", () => {
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const boughtName = screen
       .getByTestId(jokerSlotId)
-      .querySelector(".shop-offer-name")?.textContent;
+      .querySelector("[data-shop-offer-name]")?.textContent;
     const buy = screen
       .getByTestId(jokerSlotId)
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     const equippedNames = Array.from(
       document.querySelectorAll<HTMLElement>(
-        '[data-testid^="joker-tile-filled-"] .joker-tile-name',
+        '[data-testid^="joker-tile-filled-"] [data-joker-name]',
       ),
     ).map((el) => el.textContent);
     expect(equippedNames).toContain(boughtName);
@@ -1482,11 +1482,11 @@ describe("Post-round shop integration", () => {
     const user = await openShop();
     const before = screen
       .getAllByTestId(/^shop-offer-/)
-      .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
+      .map((el) => el.querySelector("[data-shop-offer-name]")?.textContent ?? "");
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const after = screen
       .getAllByTestId(/^shop-offer-/)
-      .map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
+      .map((el) => el.querySelector("[data-shop-offer-name]")?.textContent ?? "");
     randomSpy.mockRestore();
     expect(after).not.toEqual(before);
   });
@@ -1495,20 +1495,20 @@ describe("Post-round shop integration", () => {
     const user = await openShop();
     const buy = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const afterButton = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(afterButton?.textContent).not.toMatch(/Sold/);
   });
 
   function packNames(): ReadonlyArray<string> {
     return Array.from(
       document.querySelectorAll<HTMLElement>("[data-offer-kind='pack']"),
-    ).map((el) => el.querySelector(".shop-offer-name")?.textContent ?? "");
+    ).map((el) => el.querySelector("[data-shop-offer-name]")?.textContent ?? "");
   }
 
   test("Reroll preserves both the names and count of pack offers", async () => {
@@ -1525,7 +1525,7 @@ describe("Post-round shop integration", () => {
       "[data-offer-kind='pack']",
     );
     if (!packOffer) throw new Error("expected a pack offer");
-    const buy = packOffer.querySelector("button.shop-offer-buy");
+    const buy = packOffer.querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(await screen.findByTestId("pack-open-close"));
@@ -1534,7 +1534,7 @@ describe("Post-round shop integration", () => {
       "[data-offer-kind='pack']",
     );
     expect(
-      afterPack?.querySelector("button.shop-offer-buy")?.textContent,
+      afterPack?.querySelector("button[data-shop-buy]")?.textContent,
     ).toMatch(/Sold/);
   });
 
@@ -1655,7 +1655,7 @@ describe("Planet purchase integration", () => {
     const jokerCountBefore = screen.queryAllByTestId(/^joker-tile-filled-/).length;
     const planetBuy = screen
       .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(planetBuy instanceof HTMLButtonElement)) {
       throw new Error("Planet buy button not found");
     }
@@ -1673,7 +1673,7 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByRole("button", { name: "Close" }));
     const planetBuy = screen
       .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(planetBuy instanceof HTMLButtonElement)) {
       throw new Error("Planet buy button not found");
     }
@@ -1691,7 +1691,7 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByRole("button", { name: "Close" }));
     const planetBuy = screen
       .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(planetBuy instanceof HTMLButtonElement)) {
       throw new Error("Planet buy button not found");
     }
@@ -1715,7 +1715,7 @@ describe("Planet purchase integration", () => {
     await user.click(screen.getByRole("button", { name: "Close" }));
     const planetBuy = screen
       .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(planetBuy instanceof HTMLButtonElement)) {
       throw new Error("Planet buy button not found");
     }
@@ -1733,7 +1733,7 @@ describe("Planet purchase integration", () => {
     const user = await openShop();
     const planetBuy = screen
       .getByTestId(planetSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(planetBuy instanceof HTMLButtonElement)) {
       throw new Error("Planet buy button not found");
     }
@@ -1776,12 +1776,12 @@ describe("Tarot purchase integration", () => {
     const user = await openShop();
     const tarotName = screen
       .getByTestId(tarotSlotTestId())
-      .querySelector(".shop-offer-name")?.textContent;
+      .querySelector("[data-shop-offer-name]")?.textContent;
     if (tarotName !== "The Hermit") return;
     const before = moneyOf();
     const buy = screen
       .getByTestId(tarotSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     expect(moneyOf()).toBe(before - 3);
@@ -1792,11 +1792,11 @@ describe("Tarot purchase integration", () => {
     const slotId = tarotSlotTestId();
     const tarotName = screen
       .getByTestId(slotId)
-      .querySelector(".shop-offer-name")?.textContent;
+      .querySelector("[data-shop-offer-name]")?.textContent;
     if (tarotName === "The Hermit") return;
     const buy = screen
       .getByTestId(slotId)
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     expect(document.querySelector(".tarot-picker-modal")).toBeNull();
@@ -1846,14 +1846,14 @@ describe("Voucher integration", () => {
     expect(screen.getByTestId("shop-voucher")).toBeInTheDocument();
     const slot = screen.getByTestId("shop-voucher");
     const nameBefore =
-      slot.querySelector(".shop-voucher-name")?.textContent ?? "";
+      slot.querySelector("[data-shop-voucher-name]")?.textContent ?? "";
     const moneyBefore = moneyValue();
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     expect(moneyValue()).toBe(moneyBefore - 10);
     expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
     await user.click(screen.getByRole("button", { name: /Reroll shop offers/ }));
     const nameAfter =
-      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name")
+      screen.getByTestId("shop-voucher").querySelector("[data-shop-voucher-name]")
         ?.textContent ?? "";
     expect(nameAfter).toBe(nameBefore);
     expect(screen.getByTestId("shop-voucher-buy-0")).toHaveTextContent("Sold");
@@ -1898,11 +1898,11 @@ describe("Spectral purchase integration", () => {
     const user = await openShop();
     const name = screen
       .getByTestId(spectralSlotTestId())
-      .querySelector(".shop-offer-name")?.textContent;
+      .querySelector("[data-shop-offer-name]")?.textContent;
     if (name !== "Black Hole") return;
     const buy = screen
       .getByTestId(spectralSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
@@ -1916,7 +1916,7 @@ describe("Spectral purchase integration", () => {
     const user = await openShop();
     const buy = screen
       .getByTestId(spectralSlotTestId())
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     expect(screen.queryByRole("dialog", { name: /Apply/ })).not.toBeInTheDocument();
@@ -1963,7 +1963,7 @@ describe("Voucher effects integration", () => {
   test("ante 1 voucher is deterministic when the first Math.random is forced to 0", async () => {
     await openShopWithVoucher(0);
     expect(
-      screen.getByTestId("shop-voucher").querySelector(".shop-voucher-name"),
+      screen.getByTestId("shop-voucher").querySelector("[data-shop-voucher-name]"),
     ).toHaveTextContent("Overstock");
   });
 
@@ -1986,26 +1986,26 @@ describe("Voucher effects integration", () => {
   test("buying Overstock expands the current shop from 2 to 3 items and the new offer is not a duplicate", async () => {
     const user = await openShopWithVoucher(0);
     const beforeNames = itemOfferTiles().map(
-      (tile) => tile.querySelector(".shop-offer-name")?.textContent ?? "",
+      (tile) => tile.querySelector("[data-shop-offer-name]")?.textContent ?? "",
     );
     expect(itemOfferTiles()).toHaveLength(2);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     const afterTiles = itemOfferTiles();
     expect(afterTiles).toHaveLength(3);
     const newOffer = afterTiles[afterTiles.length - 1]
-      .querySelector(".shop-offer-name")?.textContent ?? "";
+      .querySelector("[data-shop-offer-name]")?.textContent ?? "";
     expect(beforeNames).not.toContain(newOffer);
   });
 
   test("Sold items survive an Overstock-driven expansion", async () => {
     const user = await openShopWithVoucher(0);
     const firstTile = itemOfferTiles()[0];
-    const buyButton = firstTile.querySelector("button.shop-offer-buy");
+    const buyButton = firstTile.querySelector("button[data-shop-buy]");
     if (!(buyButton instanceof HTMLButtonElement)) throw new Error("missing buy");
-    const soldName = firstTile.querySelector(".shop-offer-name")?.textContent;
+    const soldName = firstTile.querySelector("[data-shop-offer-name]")?.textContent;
     await user.click(buyButton);
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
-    const stillSoldName = itemOfferTiles()[0].querySelector(".shop-offer-name")
+    const stillSoldName = itemOfferTiles()[0].querySelector("[data-shop-offer-name]")
       ?.textContent;
     expect(stillSoldName).toBe(soldName);
   });
@@ -2015,14 +2015,14 @@ describe("Voucher effects integration", () => {
     const jokerSlotId = `shop-offer-${findShopOfferIdxOfKind("joker")}`;
     const buyButton = screen
       .getByTestId(jokerSlotId)
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buyButton instanceof HTMLButtonElement)) throw new Error("missing joker buy");
     expect(buyButton).not.toBeDisabled();
     await user.click(screen.getByTestId("shop-voucher-buy-0"));
     expect(buyButton).not.toBeDisabled();
     const discounted = screen
       .getByTestId(jokerSlotId)
-      .querySelector(".shop-offer-price-discounted");
+      .querySelector("[data-shop-offer-price-discounted]");
     expect(discounted).toHaveTextContent("$4");
   });
 
@@ -2125,7 +2125,7 @@ describe("Observatory voucher applies ×1.5 Mult per matching held Planet", () =
 
   function readRoundScore(): number {
     return Number(
-      document.querySelector(".round-score-value")?.textContent?.replace(
+      document.querySelector('[data-testid="round-score-value"]')?.textContent?.replace(
         /,/g,
         "",
       ) ?? "0",
@@ -2143,7 +2143,7 @@ describe("Observatory voucher applies ×1.5 Mult per matching held Planet", () =
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="scoring-trace"]')).toHaveTextContent(
       /×1\.5 Mult \(Observatory: 1 matching Planet\)/,
     );
     expect(readRoundScore()).toBe(Math.floor(14 * 1.5));
@@ -2163,7 +2163,7 @@ describe("Observatory voucher applies ×1.5 Mult per matching held Planet", () =
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="scoring-trace"]')).toHaveTextContent(
       /×2\.25 Mult \(Observatory: 2 matching Planets\)/,
     );
   });
@@ -2182,7 +2182,7 @@ describe("Observatory voucher applies ×1.5 Mult per matching held Planet", () =
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".scoring-trace")).not.toHaveTextContent(
+    expect(document.querySelector('[data-testid="scoring-trace"]')).not.toHaveTextContent(
       /Observatory/,
     );
   });
@@ -2196,7 +2196,7 @@ describe("Observatory voucher applies ×1.5 Mult per matching held Planet", () =
     await user.click(getHandCardButtons()[0]);
     await user.click(screen.getByText(/Submit Hand/));
     flushScoringSequence();
-    expect(document.querySelector(".scoring-trace")).not.toHaveTextContent(
+    expect(document.querySelector('[data-testid="scoring-trace"]')).not.toHaveTextContent(
       /Observatory/,
     );
   });
@@ -2219,7 +2219,7 @@ describe("Consumable drag and sell integration", () => {
     const planetIdx = findShopOfferIdxOfKind("planet");
     const buy = screen
       .getByTestId(`shop-offer-${planetIdx}`)
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
@@ -2314,11 +2314,11 @@ describe("Consumable drag and sell integration", () => {
     const tarotIdx = findShopOfferIdxOfKind("tarot");
     const tarotName = screen
       .getByTestId(`shop-offer-${tarotIdx}`)
-      .querySelector(".shop-offer-name")?.textContent;
+      .querySelector("[data-shop-offer-name]")?.textContent;
     if (tarotName === "The Hermit") return;
     const buy = screen
       .getByTestId(`shop-offer-${tarotIdx}`)
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(buy instanceof HTMLButtonElement)) throw new Error("missing buy");
     await user.click(buy);
     await user.click(screen.getByRole("button", { name: /Next Round/ }));
@@ -2613,8 +2613,8 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     render(<App />);
     await user.click(screen.getByText(/Add Chips/));
     await user.click(getHandCardButtons()[0]);
-    expect(document.querySelector(".chips")).toHaveTextContent(/^\d+$/);
-    const chips = Number(document.querySelector(".chips")?.textContent ?? "0");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent(/^\d+$/);
+    const chips = Number(document.querySelector('[data-testid="hand-chips"]')?.textContent ?? "0");
     expect(chips).toBeGreaterThanOrEqual(10);
   });
 
@@ -2623,7 +2623,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     render(<App />);
     await user.click(screen.getByText(/Add Multiplier/));
     await user.click(getHandCardButtons()[0]);
-    const mult = Number(document.querySelector(".multiplier")?.textContent ?? "0");
+    const mult = Number(document.querySelector('[data-testid="hand-mult"]')?.textContent ?? "0");
     // Base High Card mult is 1; +1 dev bump means at least 2.
     expect(mult).toBeGreaterThanOrEqual(2);
   });
@@ -2633,7 +2633,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     render(<App />);
     await user.click(screen.getByText(/Multiply Multiplier/));
     await user.click(getHandCardButtons()[0]);
-    const mult = Number(document.querySelector(".multiplier")?.textContent ?? "0");
+    const mult = Number(document.querySelector('[data-testid="hand-mult"]')?.textContent ?? "0");
     // Base High Card mult is 1; ×2 dev factor means at least 2.
     expect(mult).toBeGreaterThanOrEqual(2);
   });
@@ -2646,8 +2646,8 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     await user.click(screen.getByText(/Multiply Multiplier/));
     await user.click(screen.getByRole("button", { name: /Options/ }));
     await user.click(screen.getByRole("button", { name: /New game/ }));
-    expect(document.querySelector(".chips")).toHaveTextContent("0");
-    expect(document.querySelector(".multiplier")).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-chips"]')).toHaveTextContent("0");
+    expect(document.querySelector('[data-testid="hand-mult"]')).toHaveTextContent("0");
   });
 
   test("Add Chips bump appears as a +N Chips entry in the scoring trace", async () => {
@@ -2659,7 +2659,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="scoring-trace"]')).toHaveTextContent(
       /\+10 Chips \(Apply Modifiers \(dev\)\)/,
     );
   });
@@ -2673,7 +2673,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     for (let i = 0; i < 5; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
-    expect(document.querySelector(".scoring-trace")).toHaveTextContent(
+    expect(document.querySelector('[data-testid="scoring-trace"]')).toHaveTextContent(
       /×2 Mult \(Apply Modifiers \(dev\)\)/,
     );
   });
@@ -2687,7 +2687,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     await userA.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const baseline = Number(
-      document.querySelector(".round-score-value")?.textContent?.replace(
+      document.querySelector('[data-testid="round-score-value"]')?.textContent?.replace(
         /,/g,
         "",
       ) ?? "0",
@@ -2704,7 +2704,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     await userB.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const withDev = Number(
-      document.querySelector(".round-score-value")?.textContent?.replace(
+      document.querySelector('[data-testid="round-score-value"]')?.textContent?.replace(
         /,/g,
         "",
       ) ?? "0",
@@ -2721,7 +2721,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     await userA.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const baseline = Number(
-      document.querySelector(".round-score-value")?.textContent?.replace(
+      document.querySelector('[data-testid="round-score-value"]')?.textContent?.replace(
         /,/g,
         "",
       ) ?? "0",
@@ -2738,7 +2738,7 @@ describe("Apply Modifiers — dev chips/mult offsets are sticky", () => {
     await userB.click(screen.getByText(/Submit Hand/));
     flushDiscardAnimation();
     const withDev = Number(
-      document.querySelector(".round-score-value")?.textContent?.replace(
+      document.querySelector('[data-testid="round-score-value"]')?.textContent?.replace(
         /,/g,
         "",
       ) ?? "0",
@@ -2814,7 +2814,7 @@ describe("Pack-pick is rendered inline (Phase 2)", () => {
       (el) => el.getAttribute("data-offer-kind") === "pack",
     );
     const openBtn = offers[packIdx].querySelector(
-      "button.shop-offer-buy",
+      "button[data-shop-buy]",
     ) as HTMLButtonElement;
     await user.click(openBtn);
     return user;
@@ -2828,7 +2828,7 @@ describe("Pack-pick is rendered inline (Phase 2)", () => {
 
   function nonPackBuyButtons(): HTMLButtonElement[] {
     const all = document.querySelectorAll<HTMLButtonElement>(
-      "button.shop-offer-buy",
+      "button[data-shop-buy]",
     );
     return Array.from(all).filter((b) => !/Open/i.test(b.textContent ?? ""));
   }
@@ -2919,7 +2919,7 @@ describe("Apply Modifiers — Force Probabilities toggle", () => {
 
 describe("Per-run stat counters", () => {
   const appRoot = (container: HTMLElement): HTMLElement =>
-    container.querySelector(".app") as HTMLElement;
+    container.querySelector("[data-app-shell]") as HTMLElement;
 
   test("the hands-played counter starts at zero before any hand is played (negative)", () => {
     const { container } = render(<App />);
@@ -2947,7 +2947,7 @@ describe("Per-run stat counters", () => {
   test("winning a blind accumulates the leftover discards into the per-run counter", async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     const { container } = render(<App />);
-    const leftover = getStatValue("Discards").querySelector(".stat-value")?.textContent;
+    const leftover = getStatValue("Discards").querySelector("[data-stat-value]")?.textContent;
     await user.click(screen.getByText(/^Win$/));
     expect(appRoot(container)).toHaveAttribute("data-unused-discards", leftover ?? "");
   });

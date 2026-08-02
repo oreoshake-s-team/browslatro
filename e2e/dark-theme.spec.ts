@@ -13,7 +13,7 @@ test("the app shell renders with the dark background token", async ({
   const bodyBg = await page.evaluate(
     () => getComputedStyle(document.body).backgroundColor,
   );
-  expect(bodyBg).toBe("rgb(18, 22, 31)");
+  expect(bodyBg).toBe("rgb(14, 17, 24)");
 });
 
 test("the sidebar renders on the dark surface token", async ({
@@ -21,7 +21,7 @@ test("the sidebar renders on the dark surface token", async ({
 }) => {
   await page.goto("/");
   const sidebarBg = await page
-    .locator(".sidebar")
+    .locator('[data-testid="sidebar"]')
     .evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(sidebarBg).toBe("rgb(26, 31, 46)");
+  expect(sidebarBg).toBe("rgb(23, 28, 40)");
 });

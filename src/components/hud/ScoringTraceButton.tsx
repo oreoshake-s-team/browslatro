@@ -30,6 +30,7 @@ function ScoringTraceButton({
   return (
     <>
       <button
+      data-testid="scoring-trace-expand"
         type="button"
         className={className}
         onClick={open}

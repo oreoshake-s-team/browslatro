@@ -2,7 +2,6 @@ import { useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { tHandLabel } from "../../i18n/handLabels";
-import "./RunInfo.css";
 import { HANDS } from "../../constants";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import type { HandStats } from "../../scoring/handStats";
@@ -12,11 +11,17 @@ import { getStakeSpec, STAKE_ORDER } from "../../items/stakes";
 import { useGame } from "../../store/game";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
+import { Button } from "../ui/Button";
+import { cn } from "../ui/cn";
 import type { HandPlayCounts } from "./handPlayCounts";
 
 type TabId = "hands" | "vouchers" | "deck";
 
 const TAB_ORDER: ReadonlyArray<TabId> = ["hands", "vouchers", "deck"];
+
+const headerCellClass =
+  "border-b border-border px-1.5 py-1 text-left text-xs font-bold tracking-wider text-muted uppercase";
+const bodyCellClass = "px-1.5 py-1 text-muted";
 
 interface RunInfoDialogProps {
   handPlayCounts: HandPlayCounts;
@@ -82,7 +87,12 @@ export default function RunInfoDialog({
       "aria-selected": selected,
       "aria-controls": `${tabIdPrefix}-panel-${tab}`,
       tabIndex: selected ? 0 : -1,
-      className: `run-info-tab ${selected ? "run-info-tab-active" : ""}`.trim(),
+      className: cn(
+        "-mb-px cursor-pointer border-b-2 px-2.5 py-1.5 text-sm font-semibold focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+        selected
+          ? "border-chips text-chips"
+          : "border-transparent text-muted hover:text-chips",
+      ),
       onClick: () => selectTab(tab),
       onKeyDown: handleTabKeyDown,
       ref: (el: HTMLButtonElement | null) => {
@@ -103,18 +113,21 @@ export default function RunInfoDialog({
   return createPortal(
     <div
       ref={overlayRef}
-      className="run-info-overlay"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={handleClose}
     >
-      <div className="run-info-modal" onClick={(e) => e.stopPropagation()}>
-        <h2 id={titleId} className="run-info-title">
+      <div
+        className="flex max-h-[80vh] min-w-[22rem] max-w-[36rem] flex-col gap-3 overflow-y-auto rounded-xl border-2 border-border bg-surface p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id={titleId} className="text-center text-lg font-bold text-ink">
           {t("runInfo.title")}
         </h2>
         <div
-          className="run-info-tablist"
+          className="flex gap-1 border-b border-border"
           role="tablist"
           aria-label={t("a11y.runInfoSections")}
         >
@@ -124,17 +137,30 @@ export default function RunInfoDialog({
           </button>
           <button {...tabButtonProps("deck")}>{t("runInfo.deckTab")}</button>
         </div>
-        <div className="run-info-panels">
+        <div>
           <div {...panelProps("hands")}>
-            <table className="run-info-table">
+            <table
+              className="w-full border-collapse text-sm"
+              data-testid="run-info-table"
+            >
               <thead>
                 <tr>
-                  <th scope="col">{t("runInfo.handHeader")}</th>
-                  <th scope="col" aria-label={t("a11y.level")}>
+                  <th scope="col" className={headerCellClass}>
+                    {t("runInfo.handHeader")}
+                  </th>
+                  <th
+                    scope="col"
+                    className={headerCellClass}
+                    aria-label={t("a11y.level")}
+                  >
                     {t("runInfo.levelHeader")}
                   </th>
-                  <th scope="col">{t("runInfo.chipsTimesMult")}</th>
-                  <th scope="col">{t("runInfo.playedHeader")}</th>
+                  <th scope="col" className={headerCellClass}>
+                    {t("runInfo.chipsTimesMult")}
+                  </th>
+                  <th scope="col" className={cn(headerCellClass, "text-right")}>
+                    {t("runInfo.playedHeader")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -142,18 +168,36 @@ export default function RunInfoDialog({
                   const label = hand.label as HandLabel;
                   const stats = handStats[label];
                   return (
-                    <tr key={label} data-testid={`run-info-row-${label}`}>
-                      <th scope="row">{tHandLabel(t, label)}</th>
+                    <tr
+                      key={label}
+                      className="border-t border-border"
+                      data-testid={`run-info-row-${label}`}
+                    >
+                      <th
+                        scope="row"
+                        className="px-1.5 py-1 text-left font-semibold text-ink"
+                      >
+                        {tHandLabel(t, label)}
+                      </th>
                       <td
-                        className="run-info-level"
+                        className={cn(
+                          bodyCellClass,
+                          "text-center font-semibold text-chips tabular-nums",
+                        )}
                         data-testid={`run-info-level-${label}`}
                       >
                         {stats.level}
                       </td>
-                      <td data-testid={`run-info-stats-${label}`}>
+                      <td
+                        className={bodyCellClass}
+                        data-testid={`run-info-stats-${label}`}
+                      >
                         {stats.chips} × {stats.multiplier}
                       </td>
-                      <td data-testid={`run-info-count-${label}`}>
+                      <td
+                        className={cn(bodyCellClass, "text-right")}
+                        data-testid={`run-info-count-${label}`}
+                      >
                         {handPlayCounts[label]}
                       </td>
                     </tr>
@@ -165,23 +209,23 @@ export default function RunInfoDialog({
           <div {...panelProps("vouchers")}>
             {ownedVouchers.length === 0 ? (
               <p
-                className="run-info-voucher-empty"
+                className="p-2 text-center text-muted italic"
                 data-testid="run-info-voucher-empty"
               >
                 {t("runInfo.noVouchers")}
               </p>
             ) : (
-              <ul className="run-info-voucher-list">
+              <ul className="flex flex-col gap-1.5">
                 {ownedVouchers.map((voucher) => (
                   <li
                     key={voucher.id}
-                    className="run-info-voucher-row"
+                    className="flex flex-col gap-0.5 rounded-md border border-border bg-raised px-2 py-1"
                     data-testid={`run-info-voucher-row-${voucher.id}`}
                   >
-                    <span className="run-info-voucher-name">
+                    <span className="font-semibold text-ink">
                       {voucher.name}
                     </span>
-                    <span className="run-info-voucher-description">
+                    <span className="text-sm text-muted">
                       {voucher.description}
                     </span>
                   </li>
@@ -189,44 +233,47 @@ export default function RunInfoDialog({
               </ul>
             )}
           </div>
-          <div {...panelProps("deck")} className="run-info-deck-panel">
-            <section className="run-info-deck-section">
-              <h3 className="run-info-subhead">{t("runInfo.deckHeading")}</h3>
+          <div {...panelProps("deck")} className="flex flex-col gap-3">
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold tracking-wider text-muted uppercase">
+                {t("runInfo.deckHeading")}
+              </h3>
               <p
-                className="run-info-deck-name"
+                className="font-bold text-ink"
                 data-testid="run-info-deck-name"
               >
                 {deckSpec.name}
               </p>
-              <p className="run-info-deck-description">
-                {deckSpec.description}
-              </p>
+              <p className="text-sm text-muted">{deckSpec.description}</p>
             </section>
-            <section className="run-info-deck-section">
-              <h3 className="run-info-subhead">
+            <section className="flex flex-col gap-1">
+              <h3 className="text-xs font-bold tracking-wider text-muted uppercase">
                 {t("runInfo.stakeLadderHeading")}
               </h3>
-              <ul className="run-info-stake-list">
+              <ul className="flex flex-col gap-1">
                 {STAKE_ORDER.map((stakeId) => {
                   const spec = getStakeSpec(stakeId);
                   const current = stakeId === selectedStake;
                   return (
                     <li
                       key={stakeId}
-                      className={`run-info-stake-row${current ? " run-info-stake-row-current" : ""}`}
+                      className={cn(
+                        "flex flex-col gap-0.5 rounded-md bg-raised px-2 py-1",
+                        current && "outline-2 outline-chips",
+                      )}
                       data-testid={`run-info-stake-row-${stakeId}`}
                       aria-current={current ? "true" : undefined}
                     >
-                      <span className="run-info-stake-name">
+                      <span className="font-semibold text-ink">
                         {spec.name}
                         {current && (
-                          <span className="run-info-stake-current">
+                          <span className="font-semibold text-chips">
                             {" "}
                             {t("runInfo.currentStakeMarker")}
                           </span>
                         )}
                       </span>
-                      <span className="run-info-stake-description">
+                      <span className="text-sm text-muted">
                         {spec.description}
                       </span>
                     </li>
@@ -236,14 +283,15 @@ export default function RunInfoDialog({
             </section>
           </div>
         </div>
-        <button
-          type="button"
-          className="btn btn--primary run-info-close"
+        <Button
+          variant="primary"
+          size="lg"
+          className="self-center"
           onClick={handleClose}
           autoFocus
         >
           {t("runInfo.close")}
-        </button>
+        </Button>
       </div>
     </div>,
     document.body,

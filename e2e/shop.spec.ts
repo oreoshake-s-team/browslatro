@@ -1,14 +1,14 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const SHOP_HEADING = /Shop/;
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(`.stat-label`, { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator(`[data-stat-label]`, { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 async function moneyOf(page: Page): Promise<number> {
@@ -49,7 +49,7 @@ async function openShopViaBootSeam(page: Page): Promise<void> {
 }
 
 function offerOfKind(page: Page, kind: string) {
-  return page.locator(`.shop-offer[data-offer-kind="${kind}"]`).first();
+  return page.locator(`[data-shop-offer][data-offer-kind="${kind}"]`).first();
 }
 
 test.describe("Shop purchases", () => {
@@ -60,19 +60,19 @@ test.describe("Shop purchases", () => {
     await openShopAfterRound1Win(page);
     const moneyBefore = await moneyOf(page);
     const offer = offerOfKind(page, "joker");
-    const priceText = (await offer.locator(".shop-offer-price").textContent()) ?? "";
+    const priceText = (await offer.locator("[data-shop-offer-price]").textContent()) ?? "";
     const price = Number(priceText.replace(/[^0-9]/g, ""));
     const equippedBefore = await page
       .locator('[data-testid^="joker-tile-filled-"]')
       .count();
-    await offer.locator("button.shop-offer-buy").click();
+    await offer.locator("button[data-shop-buy]").click();
     expect(await moneyOf(page)).toBe(moneyBefore - price);
     await expect(
       page.locator('[data-testid^="joker-tile-filled-"]'),
     ).toHaveCount(equippedBefore + 1);
-    await expect(offer.locator("button.shop-offer-buy")).toHaveText(/Sold/);
+    await expect(offer.locator("button[data-shop-buy]")).toHaveText(/Sold/);
     const moneyAfterBuy = await moneyOf(page);
-    await page.locator("button.shop-reroll").click();
+    await page.locator('[data-testid="shop-reroll"]').click();
     expect(await moneyOf(page)).toBe(moneyAfterBuy - 5);
   });
 
@@ -81,7 +81,7 @@ test.describe("Shop purchases", () => {
   }) => {
     await setForcedShopKinds(page, ["planet", "joker"]);
     await openShopViaBootSeam(page);
-    await offerOfKind(page, "planet").locator("button.shop-offer-buy").click();
+    await offerOfKind(page, "planet").locator("button[data-shop-buy]").click();
     await expect(
       page.locator('[data-consumable-kind="planet"]'),
     ).toHaveCount(1);
@@ -92,7 +92,7 @@ test.describe("Shop purchases", () => {
   }) => {
     await setForcedShopKinds(page, ["tarot", "joker"]);
     await openShopViaBootSeam(page);
-    await offerOfKind(page, "tarot").locator("button.shop-offer-buy").click();
+    await offerOfKind(page, "tarot").locator("button[data-shop-buy]").click();
     await expect(
       page.locator('[data-consumable-kind="tarot"]'),
     ).toHaveCount(1);
@@ -103,7 +103,7 @@ test.describe("Shop purchases", () => {
   }) => {
     await setForcedShopKinds(page, ["spectral", "joker"]);
     await openShopViaBootSeam(page);
-    await offerOfKind(page, "spectral").locator("button.shop-offer-buy").click();
+    await offerOfKind(page, "spectral").locator("button[data-shop-buy]").click();
     await expect(
       page.locator('[data-consumable-kind="spectral"]'),
     ).toHaveCount(1);
@@ -114,11 +114,11 @@ test.describe("Shop purchases", () => {
   }) => {
     await setForcedShopKinds(page, ["joker", "joker"]);
     await openShopViaBootSeam(page);
-    await page.locator("button.shop-reroll").click();
-    const offers = page.locator('.shop-offer[data-offer-kind="joker"]');
-    await offers.first().locator("button.shop-offer-buy").click();
+    await page.locator('[data-testid="shop-reroll"]').click();
+    const offers = page.locator('[data-shop-offer][data-offer-kind="joker"]');
+    await offers.first().locator("button[data-shop-buy]").click();
     await expect(
-      offers.nth(1).locator("button.shop-offer-buy"),
+      offers.nth(1).locator("button[data-shop-buy]"),
     ).toBeDisabled();
   });
 
@@ -130,20 +130,20 @@ test.describe("Reroll refreshes sold offers", () => {
   }) => {
     await setForcedShopKinds(page, ["joker", "joker"]);
     await openShopViaBootSeam(page);
-    const firstOffer = page.locator(".shop-offer").first();
+    const firstOffer = page.locator("[data-shop-offer]").first();
     const buyName =
-      (await firstOffer.locator(".shop-offer-name").textContent()) ?? "";
-    await firstOffer.locator("button.shop-offer-buy").click();
+      (await firstOffer.locator("[data-shop-offer-name]").textContent()) ?? "";
+    await firstOffer.locator("button[data-shop-buy]").click();
     await expect(
-      firstOffer.locator("button.shop-offer-buy"),
+      firstOffer.locator("button[data-shop-buy]"),
     ).toHaveText(/Sold/);
-    await page.locator("button.shop-reroll").click();
-    const offerButtons = page.locator(".shop-offer button.shop-offer-buy");
+    await page.locator('[data-testid="shop-reroll"]').click();
+    const offerButtons = page.locator("[data-shop-offer] button[data-shop-buy]");
     const count = await offerButtons.count();
     for (let i = 0; i < count; i += 1) {
       await expect(offerButtons.nth(i)).not.toHaveText(/Sold/);
     }
-    const offerNames = page.locator(".shop-offer .shop-offer-name");
+    const offerNames = page.locator("[data-shop-offer] [data-shop-offer-name]");
     const namesCount = await offerNames.count();
     for (let i = 0; i < namesCount; i += 1) {
       const text = (await offerNames.nth(i).textContent()) ?? "";

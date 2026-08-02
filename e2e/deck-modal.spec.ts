@@ -16,10 +16,10 @@ async function dismissBlindSelect(page: Page): Promise<void> {
 
 async function openDeckModal(page: Page): Promise<void> {
   await page.goto("/");
-  await page.waitForSelector(".deck-pile");
+  await page.waitForSelector('[data-testid="deck-pile"]');
   await dismissBlindSelect(page);
-  await page.locator(".deck-pile").click();
-  await page.waitForSelector(".deck-modal");
+  await page.getByTestId("deck-pile").click();
+  await page.waitForSelector('[data-testid="deck-modal"]');
 }
 
 async function heightOf(page: Page, selector: string): Promise<number> {
@@ -33,28 +33,28 @@ test("Remaining Cards summary rows are readable on the dark theme", async ({
 }) => {
   await openDeckModal(page);
   const oddRowBg = await page
-    .locator(".deck-summary-row:nth-child(odd)")
+    .locator('[data-testid^="deck-summary-suit-"], [data-testid^="deck-summary-rank-"]')
     .first()
     .evaluate((el) => getComputedStyle(el).backgroundColor);
   const countColor = await page
-    .locator(".deck-summary-count")
+    .locator('[data-testid="deck-summary-count"]')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
   const headingColor = await page
-    .locator(".deck-summary-heading")
+    .locator('[data-testid="deck-summary-heading"]')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
-  expect(oddRowBg).toBe("rgb(35, 43, 63)");
-  expect(countColor).toBe("rgb(248, 249, 250)");
-  expect(headingColor).toBe("rgb(173, 181, 189)");
+  expect(oddRowBg).toBe("rgb(31, 38, 52)");
+  expect(countColor).toBe("rgb(238, 241, 245)");
+  expect(headingColor).toBe("rgb(151, 161, 176)");
 });
 
 test("Remaining Cards summary column matches the card grid height", async ({
   page,
 }) => {
   await openDeckModal(page);
-  const summary = await heightOf(page, ".deck-summary");
-  const groups = await heightOf(page, ".deck-modal-groups");
+  const summary = await heightOf(page, '[data-testid="deck-summary"]');
+  const groups = await heightOf(page, '[data-testid="deck-modal-groups"]');
   expect(Math.abs(summary - groups)).toBeLessThan(2);
 });
 
@@ -62,9 +62,9 @@ test("Remaining Cards summary sections fill the column height", async ({
   page,
 }) => {
   await openDeckModal(page);
-  const summary = await heightOf(page, ".deck-summary");
-  const suits = await heightOf(page, ".deck-summary-section-suits");
-  const ranks = await heightOf(page, ".deck-summary-section-ranks");
+  const summary = await heightOf(page, '[data-testid="deck-summary"]');
+  const suits = await heightOf(page, '[data-testid="deck-summary-suits"]');
+  const ranks = await heightOf(page, '[data-testid="deck-summary-ranks"]');
   expect(suits + ranks).toBeGreaterThan(summary * 0.9);
 });
 
@@ -75,7 +75,7 @@ test("deck modal cards use the high-visibility palette when enabled in Options",
     window.localStorage.setItem("browslatro:highVisibility", "false");
   });
   await page.goto("/");
-  await page.waitForSelector(".deck-pile");
+  await page.waitForSelector('[data-testid="deck-pile"]');
   await dismissBlindSelect(page);
   await page.getByRole("button", { name: "Options" }).click();
   const optionsDialog = page.getByRole("dialog", { name: "Options" });
@@ -83,14 +83,14 @@ test("deck modal cards use the high-visibility palette when enabled in Options",
     .getByRole("button", { name: "Enable high visibility suits" })
     .click();
   await optionsDialog.getByRole("button", { name: "Close" }).click();
-  await page.locator(".deck-pile").click();
-  await page.waitForSelector(".deck-modal");
+  await page.getByTestId("deck-pile").click();
+  await page.waitForSelector('[data-testid="deck-modal"]');
   const diamondColor = await page
-    .locator(".deck-modal .card-suit-diamonds")
+    .locator('[data-testid="deck-modal"] [data-suit="diamonds"]')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
   const clubColor = await page
-    .locator(".deck-modal .card-suit-clubs")
+    .locator('[data-testid="deck-modal"] [data-suit="clubs"]')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
   expect(diamondColor).toBe("rgb(25, 113, 194)");
@@ -105,8 +105,8 @@ test("deck modal cards keep the classic palette when high visibility is off", as
   });
   await openDeckModal(page);
   const diamondColor = await page
-    .locator(".deck-modal .card-suit-diamonds")
+    .locator('[data-testid="deck-modal"] [data-suit="diamonds"]')
     .first()
     .evaluate((el) => getComputedStyle(el).color);
-  expect(diamondColor).toBe("rgb(201, 42, 42)");
+  expect(diamondColor).toBe("rgb(211, 54, 54)");
 });

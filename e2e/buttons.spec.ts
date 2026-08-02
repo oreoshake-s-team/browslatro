@@ -19,23 +19,23 @@ test("Submit Hand renders as the primary (green) variant", async ({
   await startRound(page);
   await page.mouse.move(0, 0);
   const submit = page.getByRole("button", { name: /^Submit Hand/ });
-  await expect(submit).toHaveClass(/btn--primary/);
+  await expect(submit).toHaveClass(/bg-success/);
   const bg = await submit.evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).toBe("rgb(81, 207, 102)");
+  expect(bg).toBe("rgb(82, 210, 115)");
 });
 
 test("Discard renders as the neutral secondary variant", async ({
   page,
 }) => {
   await startRound(page);
-  const card = page.locator('[data-testid="hand-cards"] .card').first();
+  const card = page.locator('[data-testid="hand-cards"] [data-suit]').first();
   await card.click();
   await page.mouse.move(0, 0);
   const discard = page.getByRole("button", { name: /Discard/ });
   await expect(discard).toBeEnabled();
-  await expect(discard).toHaveClass(/btn--secondary/);
+  await expect(discard).toHaveClass(/bg-raised/);
   const bg = await discard.evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).toBe("rgb(35, 43, 63)");
+  expect(bg).toBe("rgb(31, 38, 52)");
 });
 
 test("the blind-select Play button uses the shared focus ring token", async ({
@@ -45,9 +45,10 @@ test("the blind-select Play button uses the shared focus ring token", async ({
   const newRun = page.getByTestId("new-run-confirm");
   if (await newRun.isVisible().catch(() => false)) await newRun.click();
   const play = page.getByTestId("blind-select-play");
-  await play.focus();
-  const outlineColor = await play.evaluate(
-    (el) => getComputedStyle(el).outlineColor,
-  );
-  expect(outlineColor).toBe("rgb(116, 192, 252)");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(play).toBeFocused();
+  await expect
+    .poll(() => play.evaluate((el) => getComputedStyle(el).outlineColor))
+    .toBe("rgb(140, 200, 255)");
 });

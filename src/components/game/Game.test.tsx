@@ -182,7 +182,9 @@ describe("Game", () => {
     seedPackOpen(buffoonPack);
     renderGame();
     await screen.findByTestId("pack-open-subtitle");
-    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers--sell-visible");
+    expect(
+      document.querySelector('[data-testid^="joker-sell-"]'),
+    ).not.toHaveClass("hidden");
   });
 
   test("does not force joker sell buttons visible during a celestial pack pick (negative)", async () => {
@@ -190,9 +192,9 @@ describe("Game", () => {
     seedPackOpen(celestialPack);
     renderGame();
     await screen.findByTestId("pack-open-subtitle");
-    expect(screen.getByTestId("jokers-tray")).not.toHaveClass(
-      "jokers--sell-visible",
-    );
+    expect(
+      document.querySelector('[data-testid^="joker-sell-"]'),
+    ).toHaveClass("hidden");
   });
 
   test.each([
@@ -263,12 +265,12 @@ describe("Game", () => {
 
   test("Discard button uses the neutral secondary variant", () => {
     renderGame();
-    expect(screen.getByText(/Discard/)).toHaveClass("btn--secondary");
+    expect(screen.getByText(/Discard/)).toHaveClass("bg-raised");
   });
 
   test("Discard button does not use the destructive danger variant", () => {
     renderGame();
-    expect(screen.getByText(/Discard/)).not.toHaveClass("btn--danger");
+    expect(screen.getByText(/Discard/)).not.toHaveClass("bg-mult");
   });
 
   test("the modifier disclosure is closed on first render", () => {
@@ -365,7 +367,7 @@ describe("Game", () => {
       renderGame();
       await user.click(screen.getByLabelText(/^Deck \(1 cards remaining\)$/));
       expect(
-        document.querySelector(".deck-modal .card--enhancement-gold"),
+        document.querySelector('[data-testid="deck-modal"] [data-enhancement="gold"]'),
       ).not.toBeNull();
     });
 
@@ -415,7 +417,7 @@ describe("Game", () => {
       renderGame();
       await user.click(screen.getByLabelText(/^Deck \(4 cards remaining\)$/));
       expect(
-        document.querySelector('.deck-modal [data-card-id="2"]'),
+        document.querySelector('[data-testid="deck-modal"] [data-card-id="2"]'),
       ).toBeNull();
     });
 

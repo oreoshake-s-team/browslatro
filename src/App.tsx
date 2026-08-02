@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useBodyClass } from "./hooks/useBodyClass";
 import { useTranslation } from "react-i18next";
 
-import "./App.css";
 import { useGame } from "./store/game";
 import { useChanceOverrides } from "./hooks/useChanceOverrides";
 import Game from "./components/game/Game";
@@ -22,9 +21,7 @@ import { useRunInitialization } from "./hooks/useRunInitialization";
 import { usePrefetchLazyChunks } from "./hooks/usePrefetchLazyChunks";
 import { useAppViewModel } from "./hooks/useAppViewModel";
 import { dismissSeoShell } from "./seo/loadingShell";
-import {
-  initialJokersConfig,
-} from "./items/jokers";
+import { initialJokersConfig } from "./items/jokers";
 
 export { getScoringStepMs } from "./hooks/useScoringStepMs";
 
@@ -56,7 +53,7 @@ function AppContent() {
 
   return (
     <div
-      className="app"
+      className="flex h-dvh w-full flex-row bg-bg text-ink portrait-narrow:flex-col"
       data-app-shell=""
       data-deck={selectedDeck}
       style={appStyle}

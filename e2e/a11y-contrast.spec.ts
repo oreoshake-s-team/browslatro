@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 const SHOP_HEADING = /Shop/;
@@ -93,24 +93,21 @@ test.describe("color contrast", () => {
     await startRound(page);
     expect(await contrastViolations(page)).toEqual([]);
     const palette = await page.evaluate(() => {
-      const probe = document.createElement("div");
-      probe.className = "high-visibility";
-      document.body.appendChild(probe);
-      const styles = getComputedStyle(probe);
-      const cardFace = document.createElement("div");
-      cardFace.className = "card";
-      document.body.appendChild(cardFace);
+      const styles = getComputedStyle(document.documentElement);
       const suits = [
-        "--card-suit-spades-color",
-        "--card-suit-hearts-color",
-        "--card-suit-diamonds-color",
-        "--card-suit-clubs-color",
+        "--color-card-ink",
+        "--color-suit-red",
+        "--color-suit-blue",
+        "--color-suit-green",
       ].map((token) => {
         const swatch = document.createElement("div");
         swatch.style.color = styles.getPropertyValue(token);
         document.body.appendChild(swatch);
         return [token, getComputedStyle(swatch).color] as const;
       });
+      const cardFace = document.createElement("div");
+      cardFace.style.backgroundColor = styles.getPropertyValue("--color-card");
+      document.body.appendChild(cardFace);
       return {
         suits,
         cardBackground: getComputedStyle(cardFace).backgroundColor,
@@ -131,7 +128,7 @@ test.describe("color contrast", () => {
   }) => {
     await seedPreferences(page);
     await startRound(page);
-    const expand = page.locator(".scoring-trace__expand");
+    const expand = page.getByTestId("scoring-trace").getByTestId("scoring-trace-expand");
     await expect(expand).toBeVisible();
     const fontSize = await expand.evaluate((el) =>
       parseFloat(getComputedStyle(el).fontSize),

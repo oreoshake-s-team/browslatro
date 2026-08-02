@@ -102,7 +102,7 @@ describe("DeckPile", () => {
     const modal = screen.getByRole("heading", { name: "Remaining Cards" })
       .parentElement as HTMLElement;
     const cardButtons = within(modal).getAllByRole("button").filter(
-      (btn) => btn.classList.contains("card")
+      (btn) => btn.hasAttribute("data-suit")
     );
     expect(cardButtons).toHaveLength(deck.length);
   });
@@ -121,7 +121,7 @@ describe("DeckPile", () => {
     const user = userEvent.setup();
     render(<DeckPile remaining={createDeck()} />);
     await user.click(screen.getByRole("button", { name: /Deck/ }));
-    await user.click(document.querySelector(".modal-overlay") as HTMLElement);
+    await user.click(screen.getByTestId("modal-overlay"));
     expect(
       screen.queryByRole("heading", { name: "Remaining Cards" })
     ).not.toBeInTheDocument();

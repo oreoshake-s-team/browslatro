@@ -1,10 +1,10 @@
 import { useCallback, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
-import "./Help.css";
 import { HELP_TUTORIALS, type HelpTutorialKind } from "./helpTutorials";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useFocusTrap } from "../system/useFocusTrap";
+import { Button } from "../ui/Button";
 
 interface HelpDialogProps {
   onClose: () => void;
@@ -28,27 +28,31 @@ export default function HelpDialog({ onClose }: HelpDialogProps) {
   return createPortal(
     <div
       ref={overlayRef}
-      className="help-overlay"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
+      data-testid="help-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby={titleId}
       onClick={handleClose}
     >
-      <div className="help-modal" onClick={(e) => e.stopPropagation()}>
-        <h2 id={titleId} className="help-title">
+      <div
+        className="flex max-h-[80vh] w-[min(90vw,32rem)] flex-col gap-3 overflow-y-auto rounded-xl border-2 border-border bg-surface p-5 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id={titleId} className="text-center text-lg font-bold text-ink">
           {t("help.title")}
         </h2>
         {SECTION_ORDER.map((kind) => (
-          <section key={kind} className="help-section">
-            <h3 className="help-section-title">
+          <section key={kind} className="flex flex-col gap-1.5">
+            <h3 className="text-xs font-bold tracking-wider text-muted uppercase">
               {t(SECTION_HEADING_KEYS[kind])}
             </h3>
-            <ul className="help-link-list">
+            <ul className="flex flex-col gap-1">
               {HELP_TUTORIALS.filter((tutorial) => tutorial.kind === kind).map(
                 (tutorial) => (
-                  <li key={tutorial.url} className="help-link-row">
+                  <li key={tutorial.url}>
                     <a
-                      className="help-link"
+                      className="block rounded-md border border-border bg-raised px-2 py-1.5 font-semibold text-ink hover:border-chips hover:text-chips focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                       href={tutorial.url}
                       target="_blank"
                       rel="noreferrer"
@@ -65,14 +69,15 @@ export default function HelpDialog({ onClose }: HelpDialogProps) {
             </ul>
           </section>
         ))}
-        <button
-          type="button"
-          className="btn btn--primary help-close"
+        <Button
+          variant="primary"
+          size="lg"
+          className="self-center"
           onClick={handleClose}
           autoFocus
         >
           {t("help.close")}
-        </button>
+        </Button>
       </div>
     </div>,
     document.body,
