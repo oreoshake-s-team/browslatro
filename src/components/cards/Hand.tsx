@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useReducer, useRef } from "react";
+import { Fragment, memo, useEffect, useMemo, useReducer, useRef } from "react";
 import { Panel } from "../ui/Panel";
 import { cn } from "../ui/cn";
 import Card from "./Card";
@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { announce } from "../system/LiveAnnouncer";
 import { cardName } from "../../i18n/strings";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export const MAX_SELECTED = 5;
 
@@ -116,7 +117,7 @@ interface HandProps {
   onJokerSellDrop?: () => void;
 }
 
-export default function Hand({
+function Hand({
   hand,
   remaining,
   selectedIds,
@@ -310,6 +311,7 @@ export default function Hand({
   }
 
   return (
+    <RenderProfiler id="Hand">
     <Panel className="flex w-full max-w-225 flex-col gap-3">
       <div className="flex items-center gap-2">
         <span className="text-xs font-bold tracking-widest text-muted uppercase">
@@ -438,5 +440,8 @@ export default function Hand({
         </div>
       </div>
     </Panel>
+    </RenderProfiler>
   );
 }
+
+export default memo(Hand);

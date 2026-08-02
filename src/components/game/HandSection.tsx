@@ -64,11 +64,9 @@ export default function HandSection() {
     needsConsumableDropZone: false,
   });
 
-  const debuffedIds = debuffedHandIds(
-    hand,
-    currentBoss,
-    blind === 3,
-    playedCardKeysThisAnte,
+  const debuffedIds = useMemo(
+    () => debuffedHandIds(hand, currentBoss, blind === 3, playedCardKeysThisAnte),
+    [hand, currentBoss, blind, playedCardKeysThisAnte],
   );
   const forcesCard = blind === 3 && bossForcesCardSelection(currentBoss);
   const handleToggleCard = useCallback(
