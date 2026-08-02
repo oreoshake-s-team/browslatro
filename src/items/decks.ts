@@ -21,7 +21,8 @@ import type { VoucherId } from "./vouchers";
 
 export type DeckCompositionTransform =
   | "drop-face-cards"
-  | "spades-and-hearts-only";
+  | "spades-and-hearts-only"
+  | "randomize-ranks-and-suits";
 
 export type DeckModifier =
   | { readonly kind: "starting-money-delta"; readonly amount: number }
@@ -192,7 +193,15 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
       { kind: "blind-size-multiplier", factor: 2 },
     ],
   },
-  { id: "erratic-deck", name: "Erratic Deck", description: "Starting deck has random ranks and suits.", implemented: false, modifiers: [] },
+  {
+    id: "erratic-deck",
+    name: "Erratic Deck",
+    description: "Starting deck has random ranks and suits.",
+    implemented: true,
+    modifiers: [
+      { kind: "deck-composition", transform: "randomize-ranks-and-suits" },
+    ],
+  },
 ];
 
 export function createDeckCatalog(): ReadonlyArray<DeckSpec> {

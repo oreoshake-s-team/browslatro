@@ -197,13 +197,6 @@ describe("NewRunScreen", () => {
     });
   });
 
-  test("does not render unimplemented decks like Erratic (negative)", () => {
-    render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(
-      screen.queryByTestId("new-run-deck-erratic-deck"),
-    ).not.toBeInTheDocument();
-  });
-
   test("does not render the dialog content twice (negative)", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(screen.getAllByRole("dialog")).toHaveLength(1);

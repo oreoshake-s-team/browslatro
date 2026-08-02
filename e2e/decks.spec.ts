@@ -124,3 +124,13 @@ test.describe("Plasma Deck", () => {
     ).toBeVisible();
   });
 });
+
+test.describe("Erratic Deck", () => {
+  test("deals a full 8-card hand from the 52-card randomized deck", async ({
+    page,
+  }) => {
+    await startRunWithDeck(page, "erratic-deck");
+    await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+    await expect(page.getByTestId("deck-pile-count").first()).toHaveText("44");
+  });
+});

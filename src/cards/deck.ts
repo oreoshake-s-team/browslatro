@@ -1,6 +1,9 @@
 import type { Card, Enhancement, Rank, Suit } from "./types";
 import { FACE_RANKS } from "./faceCard";
 import type { DeckCompositionTransform } from "../items/decks";
+import { createRngConfig } from "../dev/rngConfig";
+
+export const deckBuildRngConfig = createRngConfig();
 
 const SPADES_AND_HEARTS_SUIT_MAP: Readonly<Record<Suit, Suit>> = {
   spades: "spades",
@@ -12,6 +15,7 @@ const SPADES_AND_HEARTS_SUIT_MAP: Readonly<Record<Suit, Suit>> = {
 export function applyDeckCompositionTransform(
   cards: ReadonlyArray<Card>,
   transform: DeckCompositionTransform,
+  rng: () => number = deckBuildRngConfig.rng,
 ): Card[] {
   switch (transform) {
     case "drop-face-cards":
@@ -21,15 +25,22 @@ export function applyDeckCompositionTransform(
         ...c,
         suit: SPADES_AND_HEARTS_SUIT_MAP[c.suit],
       }));
+    case "randomize-ranks-and-suits":
+      return cards.map((c) => ({
+        ...c,
+        rank: RANKS[Math.floor(rng() * RANKS.length)],
+        suit: SUITS[Math.floor(rng() * SUITS.length)],
+      }));
   }
 }
 
 export function applyDeckCompositionTransforms(
   cards: ReadonlyArray<Card>,
   transforms: ReadonlyArray<DeckCompositionTransform>,
+  rng: () => number = deckBuildRngConfig.rng,
 ): Card[] {
   return transforms.reduce<Card[]>(
-    (acc, transform) => applyDeckCompositionTransform(acc, transform),
+    (acc, transform) => applyDeckCompositionTransform(acc, transform, rng),
     cards.slice(),
   );
 }
