@@ -1,7 +1,5 @@
-import { applyCardEnhancement } from "../cards/enhancements";
-import { applyCardEdition } from "../cards/editions";
 import { fullDeckPile } from "../cards/deckBuild";
-import { getHeldInHand, steelHeldMultiplier } from "../cards/heldInHand";
+import { getHeldInHand } from "../cards/heldInHand";
 import type {
   Blind,
   Card,
@@ -21,26 +19,18 @@ import {
 import {
   advanceStackGainsForScoring,
   allCardsScoreFromJokers,
-  applyHandLevelJokers,
-  sequentialMult,
-  applyPerCardJokers,
   applyScoredCardMutations,
   applyScoredMutationsToCards,
   expandScoringRetriggers,
   handEvalOptionsFromJokers,
-  heldRetriggerCountFromJokers,
-  isFaceCard,
 } from "../items/jokers";
+import { composeHandScore } from "../items/jokers/scoring/composeHandScore";
 import type { Joker, RandomSource } from "../items/jokers/types";
 import { chooseOptimalJokerOrder } from "../items/jokers/jokerOrdering";
-import { observatoryMultFor, type VoucherId } from "../items/vouchers";
+import type { VoucherId } from "../items/vouchers";
 import type { HandPlayCounts } from "../components/hud/handPlayCounts";
 import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
-import {
-  getCardChips,
-  getCardMultDelta,
-  getScoringCards,
-} from "../scoring/scoring";
+import { getScoringCards } from "../scoring/scoring";
 import type { HandStats } from "../scoring/handStats";
 
 export const MAX_PLAYED_CARDS = 5;
@@ -195,10 +185,6 @@ function scorePlay(
         )
       : preMutationScoring;
 
-  const handPlayCountsWithThisHand: HandPlayCounts = {
-    ...input.handPlayCounts,
-    [label]: input.handPlayCounts[label] + 1,
-  };
   const rng = input.rng ?? neverProc;
   const scoringJokers = advanceStackGainsForScoring(input.jokers, {
     playedHandLabel: label,
@@ -206,15 +192,21 @@ function scorePlay(
     scoredCards: scoring,
     handPlayCounts: input.handPlayCounts,
   });
-  const handJokerResult = applyHandLevelJokers(scoringJokers, {
-    playedHandLabel: label,
+  const selection: ReadonlySet<number> = new Set(cardIds);
+  const result = composeHandScore({
+    jokers: scoringJokers,
+    scoring,
     playedCardCount: playedCards.length,
-    scoredCards: scoring,
+    label,
+    handEntry,
+    smearedSuits: evalOptions.smearedSuits === true,
+    rng,
+    dealtHand: input.dealt.hand,
+    heldSelection: selection,
+    heldInHandCards: getHeldInHand(input.dealt.hand, selection),
     remainingDiscards: input.remainingDiscards,
     remainingHands: input.remainingHands,
     money: input.money,
-    rng,
-    heldInHandCards: getHeldInHand(input.dealt.hand, new Set(cardIds)),
     fullDeck:
       input.jokers.length === 0
         ? []
@@ -227,98 +219,24 @@ function scorePlay(
           ).remaining,
     remainingDeck: input.dealt.remaining,
     baseDeckSize: input.baseDeckCards.length,
-    handPlayCounts: handPlayCountsWithThisHand,
+    handPlayCounts: input.handPlayCounts,
     handLabelsThisRound: input.handHistoryThisRound,
     blindsSkipped: input.runStats.blindsSkipped,
     addedCardsCount: input.addedCards.length,
     todoHand: input.todoHand,
     bossTriggered,
+    ownedVoucherIds: input.ownedVoucherIds,
+    consumables: input.consumables,
+    idolTarget: input.idolTarget,
+    ancientSuit: input.ancientSuit,
   });
 
-  const matchingObservatoryPlanets = input.consumables.filter(
-    (c) => c.kind === "planet" && c.card.hands.includes(label),
-  ).length;
-  const observatoryMult = observatoryMultFor(
-    input.ownedVoucherIds,
-    matchingObservatoryPlanets,
-  );
-
-  if (scoring.length === 0) {
-    const chips = handEntry.chips + handJokerResult.additiveChips;
-    const heldSteps = handJokerResult.steps.filter((s) => s.phase === "held");
-    const jokerSteps = handJokerResult.steps.filter((s) => s.phase !== "held");
-    const heldMult = sequentialMult(handEntry.multiplier, heldSteps);
-    const mult = sequentialMult(heldMult, jokerSteps) * observatoryMult;
-    return {
-      legal: true,
-      handLabel: label,
-      score: Math.floor(chips * mult),
-      chips,
-      mult,
-      scoringCardIds: [],
-      bossTriggered,
-    };
-  }
-
-  const cardChipsTotal = scoring.reduce(
-    (sum, card) => sum + getCardChips(card),
-    0,
-  );
-  let perCardAdditiveMult = 0;
-  let perCardAdditiveChips = 0;
-  let perCardXMult = 1;
-  let firstFaceAlreadyScored = false;
-  const smearedSuits = evalOptions.smearedSuits === true;
-  for (const card of scoring) {
-    const perCard = applyPerCardJokers(input.jokers, card, rng, {
-      firstFaceAlreadyScored,
-      smearedSuits,
-      idolTarget: input.idolTarget,
-      ancientSuit: input.ancientSuit,
-    });
-    perCardAdditiveMult += perCard.additiveMult;
-    perCardAdditiveChips += perCard.additiveChips;
-    perCardAdditiveMult += getCardMultDelta(card);
-    perCardXMult *= perCard.xMult;
-    const edition = applyCardEdition(card);
-    if (edition !== null) {
-      perCardAdditiveChips += edition.additiveChips;
-      perCardAdditiveMult += edition.additiveMult;
-      perCardXMult *= edition.xMult;
-    }
-    if (isFaceCard(card)) firstFaceAlreadyScored = true;
-  }
-
-  const selection: ReadonlySet<number> = new Set(cardIds);
-  const steelMult = steelHeldMultiplier(
-    input.dealt.hand,
-    selection,
-    heldRetriggerCountFromJokers(input.jokers),
-  );
-  const enhancementXMult = scoring.reduce(
-    (m, card) => m * applyCardEnhancement(card).multTimes,
-    1,
-  );
-  const cardMult =
-    (handEntry.multiplier + perCardAdditiveMult) *
-    enhancementXMult *
-    perCardXMult;
-  const heldSteps = handJokerResult.steps.filter((s) => s.phase === "held");
-  const jokerSteps = handJokerResult.steps.filter((s) => s.phase !== "held");
-  const heldMult = sequentialMult(cardMult * steelMult, heldSteps);
-
-  const chips =
-    handEntry.chips +
-    cardChipsTotal +
-    handJokerResult.additiveChips +
-    perCardAdditiveChips;
-  const mult = sequentialMult(heldMult, jokerSteps) * observatoryMult;
   return {
     legal: true,
     handLabel: label,
-    score: Math.floor(chips * mult),
-    chips,
-    mult,
+    score: result.score,
+    chips: result.chips,
+    mult: result.mult,
     scoringCardIds: scoring.map((c) => c.id),
     bossTriggered,
   };
