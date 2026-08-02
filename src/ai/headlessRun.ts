@@ -14,6 +14,7 @@ import {
   DEFAULT_DECK,
   deckHandSizeDelta,
   deckStartingMoneyDelta,
+  deckStartingVoucherIds,
   type Deck,
 } from "../items/decks";
 import type { Consumable } from "../items/consumables";
@@ -249,7 +250,8 @@ export async function playHeadlessRun(
     bonusChips: config.startCardBonusChips,
   });
   let handStats = config.startHandStats ?? createDefaultHandStats();
-  let ownedVoucherIds: ReadonlySet<VoucherId> = config.ownedVoucherIds ?? new Set();
+  let ownedVoucherIds: ReadonlySet<VoucherId> =
+    config.ownedVoucherIds ?? deckStartingVoucherIds(deckId);
   let lastConsumable: Consumable | null = null;
   const recentBossIds = new Set<string>();
 

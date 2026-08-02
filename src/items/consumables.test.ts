@@ -1,6 +1,7 @@
 import {
   addConsumable,
   consumableSellValue,
+  createStartingConsumable,
   consumableUseBlock,
   hasFreeConsumableSlot,
   removeConsumableAt,
@@ -337,5 +338,45 @@ describe("consumables", () => {
     if (!strength) throw new Error("no strength in catalog");
     const c: Consumable = { kind: "tarot", card: strength };
     expect(consumableUseBlock(c, 0, true)).toMatch(/preview/);
+  });
+});
+
+describe("createStartingConsumable", () => {
+  test("resolves a tarot reference to the catalog card", () => {
+    const c = createStartingConsumable({
+      kind: "starting-consumable",
+      consumable: "tarot",
+      itemId: "the-fool",
+    });
+    expect(c.kind === "tarot" && c.card.id).toBe("the-fool");
+  });
+
+  test("resolves a spectral reference to the catalog card", () => {
+    const c = createStartingConsumable({
+      kind: "starting-consumable",
+      consumable: "spectral",
+      itemId: "hex",
+    });
+    expect(c.kind === "spectral" && c.card.id).toBe("hex");
+  });
+
+  test("throws on an unknown tarot id (negative)", () => {
+    expect(() =>
+      createStartingConsumable({
+        kind: "starting-consumable",
+        consumable: "tarot",
+        itemId: "nonexistent",
+      }),
+    ).toThrow("unknown starting tarot");
+  });
+
+  test("throws on an unknown spectral id (negative)", () => {
+    expect(() =>
+      createStartingConsumable({
+        kind: "starting-consumable",
+        consumable: "spectral",
+        itemId: "nonexistent",
+      }),
+    ).toThrow("unknown starting spectral");
   });
 });

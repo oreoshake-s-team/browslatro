@@ -1,6 +1,7 @@
+import type { StartingConsumableModifier } from "./decks";
 import { PLANET_BASE_PRICE, type PlanetCard } from "./planets";
-import { SPECTRAL_BASE_PRICE, type SpectralCard } from "./spectrals";
-import { TAROT_BASE_PRICE, type TarotCard } from "./tarots";
+import { createSpectralCatalog, SPECTRAL_BASE_PRICE, type SpectralCard } from "./spectrals";
+import { createTarotCatalog, TAROT_BASE_PRICE, type TarotCard } from "./tarots";
 
 export const MAX_CONSUMABLE_SLOTS = 2;
 
@@ -20,6 +21,19 @@ export type Consumable =
       readonly card: SpectralCard;
       readonly sellBonus?: number;
     };
+
+export function createStartingConsumable(
+  ref: StartingConsumableModifier,
+): Consumable {
+  if (ref.consumable === "tarot") {
+    const card = createTarotCatalog().find((t) => t.id === ref.itemId);
+    if (!card) throw new Error(`unknown starting tarot: ${ref.itemId}`);
+    return { kind: "tarot", card };
+  }
+  const card = createSpectralCatalog().find((sp) => sp.id === ref.itemId);
+  if (!card) throw new Error(`unknown starting spectral: ${ref.itemId}`);
+  return { kind: "spectral", card };
+}
 
 export function consumableSellValue(c: Consumable): number {
   const base =

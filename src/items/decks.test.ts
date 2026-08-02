@@ -6,6 +6,8 @@ import {
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
   deckHandSizeDelta,
   deckJokerSlotsDelta,
+  deckStartingConsumables,
+  deckStartingVoucherIds,
   deckStartingDiscardsDelta,
   deckStartingHandsDelta,
   deckStartingMoneyDelta,
@@ -45,6 +47,7 @@ describe("DeckSpec.implemented", () => {
       "blue-deck",
       "green-deck",
       "black-deck",
+      "magic-deck",
       "abandoned-deck",
       "checkered-deck",
       "painted-deck",
@@ -55,7 +58,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(7);
+    expect(unimplementedCount).toBe(6);
   });
 });
 
@@ -211,6 +214,41 @@ describe("Checkered Deck initial deck materialization", () => {
     const clubs = built.filter((c) => c.suit === "clubs").length;
     const diamonds = built.filter((c) => c.suit === "diamonds").length;
     expect(clubs + diamonds).toBe(26);
+  });
+});
+
+describe("Magic Deck spec", () => {
+  test("declares the Crystal Ball voucher and two Fool tarots", () => {
+    expect(getDeckSpec("magic-deck").modifiers).toEqual([
+      { kind: "starting-voucher", voucherId: "crystal-ball" },
+      { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
+      { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
+    ]);
+  });
+});
+
+describe("deckStartingVoucherIds", () => {
+  test("Magic Deck starts with Crystal Ball", () => {
+    expect(deckStartingVoucherIds("magic-deck")).toEqual(
+      new Set(["crystal-ball"]),
+    );
+  });
+
+  test("Red Deck starts with no vouchers (negative)", () => {
+    expect(deckStartingVoucherIds("red-deck").size).toBe(0);
+  });
+});
+
+describe("deckStartingConsumables", () => {
+  test("Magic Deck starts with two Fool tarots", () => {
+    expect(deckStartingConsumables("magic-deck")).toEqual([
+      { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
+      { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
+    ]);
+  });
+
+  test("Red Deck starts with no consumables (negative)", () => {
+    expect(deckStartingConsumables("red-deck")).toHaveLength(0);
   });
 });
 
