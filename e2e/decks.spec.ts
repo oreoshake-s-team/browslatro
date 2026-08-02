@@ -75,3 +75,26 @@ test.describe("Zodiac Deck", () => {
     ).toHaveCount(3);
   });
 });
+
+test.describe("Anaglyph Deck", () => {
+  test("defeating the ante-1 boss shows a Double Tag on the next blind select", async ({
+    page,
+  }) => {
+    await startRunWithDeck(page, "anaglyph-deck");
+    for (const blind of ["Small Blind", "Big Blind", "The Manacle"]) {
+      await expect(page.getByRole("heading", { name: blind })).toBeVisible();
+      const cards = page.locator(HAND_CARDS);
+      await expect(cards.first()).toBeVisible();
+      for (let i = 0; i < 5; i += 1) await cards.nth(i).click();
+      await page.getByRole("button", { name: /^Submit Hand/ }).click();
+      await page.getByRole("button", { name: /Continue/ }).click();
+      await page.getByRole("button", { name: /Next Round/ }).click();
+      if (blind !== "The Manacle") {
+        await page.getByTestId("blind-select-play").click();
+      }
+    }
+    await expect(page.getByTestId("blind-select-tags")).toContainText(
+      "Double Tag",
+    );
+  });
+});

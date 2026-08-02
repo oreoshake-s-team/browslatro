@@ -40,6 +40,7 @@ export type DeckModifier =
       readonly transform: DeckCompositionTransform;
     }
   | { readonly kind: "starting-voucher"; readonly voucherId: VoucherId }
+  | { readonly kind: "boss-defeat-tag"; readonly tagId: "double" }
   | {
       readonly kind: "starting-consumable";
       readonly consumable: "tarot" | "spectral";
@@ -162,7 +163,13 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
       { kind: "joker-slots-delta", amount: -1 },
     ],
   },
-  { id: "anaglyph-deck", name: "Anaglyph Deck", description: "Gain a Double Tag after each Boss Blind defeat.", implemented: false, modifiers: [] },
+  {
+    id: "anaglyph-deck",
+    name: "Anaglyph Deck",
+    description: "Gain a Double Tag after each Boss Blind defeat.",
+    implemented: true,
+    modifiers: [{ kind: "boss-defeat-tag", tagId: "double" }],
+  },
   { id: "plasma-deck", name: "Plasma Deck", description: "Balance Chips and Mult before scoring; 2x Big Blind size.", implemented: false, modifiers: [] },
   { id: "erratic-deck", name: "Erratic Deck", description: "Starting deck has random ranks and suits.", implemented: false, modifiers: [] },
 ];
@@ -229,6 +236,15 @@ export function deckStartingVoucherIds(deck: Deck): ReadonlySet<VoucherId> {
       )
       .map((m) => m.voucherId),
   );
+}
+
+export function deckBossDefeatTagIds(deck: Deck): ReadonlyArray<"double"> {
+  return getActiveDeckModifiers(deck)
+    .filter(
+      (m): m is Extract<DeckModifier, { kind: "boss-defeat-tag" }> =>
+        m.kind === "boss-defeat-tag",
+    )
+    .map((m) => m.tagId);
 }
 
 export function deckStartingConsumables(
