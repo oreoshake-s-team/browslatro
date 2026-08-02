@@ -1,9 +1,11 @@
 import {
   HAW_SPECTRAL_OVERRIDES,
+  HAW_TAROT_OVERRIDES,
   localizedConsumableDescription,
   localizedConsumableName,
 } from "./contentOverrides";
 import { createSpectralCatalog } from "../items/spectrals";
+import { createTarotCatalog } from "../items/tarots";
 
 describe("contentOverrides", () => {
   test("localizedConsumableName routes a planet id through the en.planetNames/haw.planetNames pair", () => {
@@ -12,6 +14,12 @@ describe("contentOverrides", () => {
 
   test("localizedConsumableName routes a tarot id through the en.tarotNames/haw.tarotNames pair", () => {
     expect(localizedConsumableName("en", "the-fool", "The Fool")).toBe("The Fool");
+  });
+
+  test("localizedConsumableName routes a spectral id through the en.spectralNames/haw.spectralNames pair", () => {
+    expect(localizedConsumableName("en", "black-hole", "Black Hole")).toBe(
+      "Black Hole",
+    );
   });
 
   test("localizedConsumableName returns the fallback under en (negative)", () => {
@@ -33,6 +41,14 @@ describe("contentOverrides", () => {
   test("every haw spectral override id exists in the spectral catalog", () => {
     const known = new Set(createSpectralCatalog().map((item) => item.id));
     const unknown = Object.keys(HAW_SPECTRAL_OVERRIDES).filter(
+      (id) => !known.has(id),
+    );
+    expect(unknown).toEqual([]);
+  });
+
+  test("every haw tarot override id exists in the tarot catalog", () => {
+    const known = new Set(createTarotCatalog().map((item) => item.id));
+    const unknown = Object.keys(HAW_TAROT_OVERRIDES).filter(
       (id) => !known.has(id),
     );
     expect(unknown).toEqual([]);
