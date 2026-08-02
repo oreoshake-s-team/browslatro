@@ -1,6 +1,6 @@
 /// <reference types="vitest/config" />
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { defineConfig, type PluginOption } from "vite";
 import react from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -40,19 +40,42 @@ const siteUrlPlugin: PluginOption = {
 
 const isProfilingBuild = process.env.PROFILE === "true";
 
+// react-dom/profiling internally does require("react-dom") to grab the
+// shared internals object (ReactDOMSharedInternals) that the base react-dom
+// package owns. A blanket resolve.alias rewrites that internal require too,
+// turning it into a circular self-import (see #1832). This plugin redirects
+// react-dom/react-dom/client to react-dom/profiling for every importer
+// except react-dom's own files, so app code (including createPortal, used
+// throughout src/components/**) consistently shares the same
+// profiling-enabled module as createRoot.
+const profilingReactDomAliasPlugin = (): PluginOption => {
+  let reactDomDir: string | undefined;
+  return {
+    name: "browslatro:profiling-react-dom-alias",
+    enforce: "pre",
+    async resolveId(source, importer) {
+      if (source !== "react-dom" && source !== "react-dom/client") return null;
+      if (reactDomDir === undefined) {
+        const pkgJson = await this.resolve("react-dom/package.json", importer, {
+          skipSelf: true,
+        });
+        reactDomDir = pkgJson ? dirname(pkgJson.id) : "";
+      }
+      if (importer && reactDomDir && importer.startsWith(reactDomDir)) return null;
+      return this.resolve("react-dom/profiling", importer, { skipSelf: true });
+    },
+  };
+};
+
 export default defineConfig({
   define: {
     "import.meta.env.VITE_ON_VERCEL": JSON.stringify(process.env.VERCEL ?? "0"),
-  },
-  resolve: {
-    alias: isProfilingBuild
-      ? [{ find: "react-dom/client", replacement: "react-dom/profiling" }]
-      : [],
   },
   plugins: [
     react(),
     siteUrlPlugin,
     ...(analyzePlugin ? [analyzePlugin] : []),
+    ...(isProfilingBuild ? [profilingReactDomAliasPlugin()] : []),
   ],
   build: {
     outDir: "build",
