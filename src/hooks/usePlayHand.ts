@@ -144,7 +144,7 @@ export function usePlayHand({
     stake: selectedStake,
   });
   const consumableCapacity =
-    consumableCapacityFor(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds, selectedDeck);
 
   const setHandPlayCounts = useGame((s) => s.setHandPlayCounts);
   const runStats = useGame((s) => s.runStats);

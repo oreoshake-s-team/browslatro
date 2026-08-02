@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test, vi } from "vitest";
 import NewRunScreen from "./NewRunScreen";
+import { createDeckCatalog } from "../../items/decks";
 
 describe("NewRunScreen", () => {
   test("renders one button per implemented stake", () => {
@@ -168,7 +169,12 @@ describe("NewRunScreen", () => {
 
   test("renders one button per implemented deck", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
-    expect(screen.getAllByRole("radio", { name: /Deck/i })).toHaveLength(9);
+    const implementedCount = createDeckCatalog().filter(
+      (d) => d.implemented,
+    ).length;
+    expect(screen.getAllByRole("radio", { name: /Deck/i })).toHaveLength(
+      implementedCount,
+    );
   });
 
   test("initial deck defaults to Red Deck", () => {

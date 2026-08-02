@@ -40,13 +40,27 @@ describe("jokerCapacityFor", () => {
 
 describe("consumableCapacityFor", () => {
   test("defaults to MAX_CONSUMABLE_SLOTS with no vouchers", () => {
-    expect(consumableCapacityFor(NO_VOUCHERS)).toBe(MAX_CONSUMABLE_SLOTS);
+    expect(consumableCapacityFor(NO_VOUCHERS, "red-deck")).toBe(
+      MAX_CONSUMABLE_SLOTS,
+    );
   });
 
   test("Crystal Ball adds a consumable slot", () => {
-    expect(consumableCapacityFor(new Set<VoucherId>(["crystal-ball"]))).toBe(
-      MAX_CONSUMABLE_SLOTS + 1,
+    expect(
+      consumableCapacityFor(new Set<VoucherId>(["crystal-ball"]), "red-deck"),
+    ).toBe(MAX_CONSUMABLE_SLOTS + 1);
+  });
+
+  test("the Nebula Deck removes a consumable slot", () => {
+    expect(consumableCapacityFor(NO_VOUCHERS, "nebula-deck")).toBe(
+      MAX_CONSUMABLE_SLOTS - 1,
     );
+  });
+
+  test("the Nebula Deck penalty stacks with Crystal Ball", () => {
+    expect(
+      consumableCapacityFor(new Set<VoucherId>(["crystal-ball"]), "nebula-deck"),
+    ).toBe(MAX_CONSUMABLE_SLOTS);
   });
 });
 

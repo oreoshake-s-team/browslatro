@@ -286,7 +286,10 @@ export function useConsumableActions(): UseConsumableActionsResult {
       if (!last) return;
       if (last.kind === "tarot" && last.card.id === "the-fool") return;
       const ownedVoucherIds = useGame.getState().ownedVoucherIds;
-      const capacity = consumableCapacityFor(ownedVoucherIds);
+      const capacity = consumableCapacityFor(
+        ownedVoucherIds,
+        useGame.getState().selectedDeck,
+      );
       setConsumables((prev) => addConsumable(prev, last, capacity));
       return;
     }
@@ -294,7 +297,10 @@ export function useConsumableActions(): UseConsumableActionsResult {
       play("pop");
       consume();
       const ownedVoucherIds = useGame.getState().ownedVoucherIds;
-      const capacity = consumableCapacityFor(ownedVoucherIds);
+      const capacity = consumableCapacityFor(
+        ownedVoucherIds,
+        useGame.getState().selectedDeck,
+      );
       const rng = tarotRngConfig.rng;
       const tarotPool: ReadonlyArray<TarotCard> =
         effect.consumableKind === "tarot"

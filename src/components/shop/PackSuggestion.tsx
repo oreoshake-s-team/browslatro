@@ -85,7 +85,7 @@ export default function PackSuggestion(
         consumables,
         jokerCapacity: jokerCapacityFor(ownedVoucherIds, selectedDeck),
         consumableCapacity:
-          consumableCapacityFor(ownedVoucherIds),
+          consumableCapacityFor(ownedVoucherIds, selectedDeck),
       }),
     props.suggestionDeps,
     preRank,

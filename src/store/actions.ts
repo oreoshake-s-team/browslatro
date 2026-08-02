@@ -579,7 +579,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
     s.openPackOffer(offer.pack);
     s.markOfferSold(idx);
     const tarotCapacity =
-      consumableCapacityFor(s.ownedVoucherIds);
+      consumableCapacityFor(s.ownedVoucherIds, s.selectedDeck);
     for (const joker of s.jokers.filter(isJokerActive)) {
       if (joker.effect.kind !== "pack-open-chance-creates-tarot") continue;
       if (!rollChance(joker.effect.chance, Math.random)) continue;
@@ -678,7 +678,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       return true;
     }
     const consumableCapacity =
-      consumableCapacityFor(s.ownedVoucherIds);
+      consumableCapacityFor(s.ownedVoucherIds, s.selectedDeck);
     if (!hasFreeConsumableSlot(s.consumables, consumableCapacity)) return false;
     const next: Consumable =
       offer.kind === "planet"

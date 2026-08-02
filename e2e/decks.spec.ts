@@ -47,3 +47,13 @@ test.describe("Magic Deck", () => {
     ).toHaveCount(1);
   });
 });
+
+test.describe("Nebula Deck", () => {
+  test("starts with a single consumable slot", async ({ page }) => {
+    await startRunWithDeck(page, "nebula-deck");
+    await expect(page.locator('[data-testid="hand-cards"] [data-suit]')).toHaveCount(8);
+    await expect(
+      page.getByRole("button", { name: "Empty consumable slot" }),
+    ).toHaveCount(1);
+  });
+});
