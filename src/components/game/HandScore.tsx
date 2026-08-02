@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Hand } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
@@ -173,4 +173,4 @@ function HandScore({
   );
 }
 
-export default HandScore;
+export default memo(HandScore);
