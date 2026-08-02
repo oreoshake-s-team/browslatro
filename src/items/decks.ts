@@ -42,6 +42,8 @@ export type DeckModifier =
   | { readonly kind: "starting-voucher"; readonly voucherId: VoucherId }
   | { readonly kind: "boss-defeat-tag"; readonly tagId: "double" }
   | { readonly kind: "shop-spectral-offers" }
+  | { readonly kind: "balance-chips-mult" }
+  | { readonly kind: "blind-size-multiplier"; readonly factor: number }
   | {
       readonly kind: "starting-consumable";
       readonly consumable: "tarot" | "spectral";
@@ -180,7 +182,16 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
     implemented: true,
     modifiers: [{ kind: "boss-defeat-tag", tagId: "double" }],
   },
-  { id: "plasma-deck", name: "Plasma Deck", description: "Balance Chips and Mult before scoring; 2x Big Blind size.", implemented: false, modifiers: [] },
+  {
+    id: "plasma-deck",
+    name: "Plasma Deck",
+    description: "Balance Chips and Mult when scoring; 2x base Blind size.",
+    implemented: true,
+    modifiers: [
+      { kind: "balance-chips-mult" },
+      { kind: "blind-size-multiplier", factor: 2 },
+    ],
+  },
   { id: "erratic-deck", name: "Erratic Deck", description: "Starting deck has random ranks and suits.", implemented: false, modifiers: [] },
 ];
 
@@ -246,6 +257,18 @@ export function deckStartingVoucherIds(deck: Deck): ReadonlySet<VoucherId> {
       )
       .map((m) => m.voucherId),
   );
+}
+
+export const deckBalancesScore = (deck: Deck): boolean =>
+  getActiveDeckModifiers(deck).some((m) => m.kind === "balance-chips-mult");
+
+export function deckBlindSizeMultiplier(deck: Deck): number {
+  return getActiveDeckModifiers(deck)
+    .filter(
+      (m): m is Extract<DeckModifier, { kind: "blind-size-multiplier" }> =>
+        m.kind === "blind-size-multiplier",
+    )
+    .reduce((product, m) => product * m.factor, 1);
 }
 
 export const deckAllowsShopSpectrals = (deck: Deck): boolean =>

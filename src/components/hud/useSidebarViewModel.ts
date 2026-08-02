@@ -53,6 +53,7 @@ export function useSidebarViewModel(): SidebarViewModel {
       handHistoryThisRound: s.handHistoryThisRound,
       scoringEvents: s.scoringEvents,
       selectedStake: s.selectedStake,
+      selectedDeck: s.selectedDeck,
     })),
   );
   const ownedVouchers = useMemo(
@@ -72,6 +73,7 @@ export function useSidebarViewModel(): SidebarViewModel {
       blind: state.blind,
       boss: state.currentBoss,
       stake: state.selectedStake,
+      deck: state.selectedDeck,
     }),
     selectedHand: state.selectedHand,
     remainingHands: state.remainingHands,

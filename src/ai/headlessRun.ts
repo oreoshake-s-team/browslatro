@@ -292,7 +292,13 @@ export async function playHeadlessRun(
       };
       let remainingHands = computeStartingHands(startCtx);
       let remainingDiscards = computeStartingDiscards(startCtx);
-      const scoreTarget = requiredChipsForBlind({ ante, blind, boss, stake });
+      const scoreTarget = requiredChipsForBlind({
+        ante,
+        blind,
+        boss,
+        stake,
+        deck: deckId,
+      });
       let pile: Pile = deal(
         shuffle(deck, rng),
         Math.max(

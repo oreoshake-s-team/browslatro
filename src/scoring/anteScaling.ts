@@ -6,6 +6,7 @@ import {
   PURPLE_STAKE_CHIPS,
 } from "../constants";
 import type { BossBlind } from "../items/bosses";
+import { deckBlindSizeMultiplier, type Deck } from "../items/decks";
 import { hasStakeModifier, type Stake } from "../items/stakes";
 
 // Balatro's endless-mode formula for antes past the base table:
@@ -40,6 +41,7 @@ export interface RequiredChipsForBlindArgs {
   readonly blind: Blind;
   readonly boss: BossBlind;
   readonly stake?: Stake;
+  readonly deck?: Deck;
 }
 
 export function requiredChipsForBlind({
@@ -47,8 +49,10 @@ export function requiredChipsForBlind({
   blind,
   boss,
   stake,
+  deck,
 }: RequiredChipsForBlindArgs): number {
-  const base = baseChipsForAnte(ante, stake);
+  const base =
+    baseChipsForAnte(ante, stake) * (deck ? deckBlindSizeMultiplier(deck) : 1);
   if (blind === 3) return base * boss.scoreMultiplier;
   return base * BLIND_MULTIPLIERS[blind - 1];
 }

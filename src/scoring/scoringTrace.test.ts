@@ -298,3 +298,32 @@ describe("partitionByCategory", () => {
     ]);
   });
 });
+
+describe("score-balanced events", () => {
+  test("resolveHandTotals lands on the balanced product", () => {
+    const totals = resolveHandTotals({
+      base: {
+        kind: "hand-base",
+        chips: 85,
+        mult: 4,
+        handLabel: "Flush",
+        level: 1,
+        handNumber: 1,
+      },
+      events: [
+        { kind: "score-balanced", balanced: 44.5, source: "Plasma Deck" },
+      ],
+    });
+    expect(totals).toEqual({ chips: 44.5, mult: 44.5, total: 1980 });
+  });
+
+  test("formatScoringEvent describes the balance", () => {
+    expect(
+      formatScoringEvent({
+        kind: "score-balanced",
+        balanced: 44.5,
+        source: "Plasma Deck",
+      }),
+    ).toBe("Chips and Mult balanced to 44.5 (Plasma Deck)");
+  });
+});

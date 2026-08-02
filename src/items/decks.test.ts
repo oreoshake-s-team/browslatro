@@ -5,6 +5,8 @@ import {
   deckCompositionTransforms,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
   deckAllowsShopSpectrals,
+  deckBalancesScore,
+  deckBlindSizeMultiplier,
   deckBossDefeatTagIds,
   deckConsumableSlotsDelta,
   deckHandSizeDelta,
@@ -58,6 +60,7 @@ describe("DeckSpec.implemented", () => {
       "zodiac-deck",
       "painted-deck",
       "anaglyph-deck",
+      "plasma-deck",
     ]);
   });
 
@@ -65,7 +68,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(2);
+    expect(unimplementedCount).toBe(1);
   });
 });
 
@@ -287,6 +290,35 @@ describe("deckConsumableSlotsDelta", () => {
 
   test("Red Deck does not change consumable slots (negative)", () => {
     expect(deckConsumableSlotsDelta("red-deck")).toBe(0);
+  });
+});
+
+describe("Plasma Deck spec", () => {
+  test("declares the balance and blind-size modifiers", () => {
+    expect(getDeckSpec("plasma-deck").modifiers).toEqual([
+      { kind: "balance-chips-mult" },
+      { kind: "blind-size-multiplier", factor: 2 },
+    ]);
+  });
+});
+
+describe("deckBalancesScore", () => {
+  test("Plasma Deck balances chips and mult", () => {
+    expect(deckBalancesScore("plasma-deck")).toBe(true);
+  });
+
+  test("Red Deck does not balance (negative)", () => {
+    expect(deckBalancesScore("red-deck")).toBe(false);
+  });
+});
+
+describe("deckBlindSizeMultiplier", () => {
+  test("Plasma Deck doubles blind sizes", () => {
+    expect(deckBlindSizeMultiplier("plasma-deck")).toBe(2);
+  });
+
+  test("Red Deck leaves blind sizes unchanged (negative)", () => {
+    expect(deckBlindSizeMultiplier("red-deck")).toBe(1);
   });
 });
 

@@ -31,7 +31,8 @@ export type ScoringEvent =
       readonly level: number;
       readonly source: string;
     }
-  | { readonly kind: "boss-adjustment"; readonly description: string; readonly source: string };
+  | { readonly kind: "boss-adjustment"; readonly description: string; readonly source: string }
+  | { readonly kind: "score-balanced"; readonly balanced: number; readonly source: string };
 
 function formatSigned(amount: number): string {
   return amount >= 0 ? `+${formatNumber(amount)}` : formatNumber(amount);
@@ -93,6 +94,10 @@ export function resolveHandTotals(
       case "mult-times":
         mult *= event.factor;
         break;
+      case "score-balanced":
+        chips = event.balanced;
+        mult = event.balanced;
+        break;
       default:
         break;
     }
@@ -138,5 +143,7 @@ export function formatScoringEvent(event: ScoringEvent): string {
       return `${event.handLabel} upgraded to Lv ${event.level} (${event.source})`;
     case "boss-adjustment":
       return `${event.description} (${event.source})`;
+    case "score-balanced":
+      return `Chips and Mult balanced to ${formatNumber(event.balanced)} (${event.source})`;
   }
 }

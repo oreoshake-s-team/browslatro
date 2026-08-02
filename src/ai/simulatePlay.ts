@@ -1,4 +1,6 @@
 import { fullDeckPile } from "../cards/deckBuild";
+import { balanceChipsAndMult } from "../scoring/balance";
+import { deckBalancesScore, type Deck } from "../items/decks";
 import { getHeldInHand } from "../cards/heldInHand";
 import type {
   Blind,
@@ -36,6 +38,7 @@ import type { HandStats } from "../scoring/handStats";
 export const MAX_PLAYED_CARDS = 5;
 
 export interface SimulatePlayInput {
+  readonly selectedDeck?: Deck;
   readonly dealt: {
     readonly hand: ReadonlyArray<Card>;
     readonly remaining: ReadonlyArray<Card>;
@@ -231,12 +234,16 @@ function scorePlay(
     ancientSuit: input.ancientSuit,
   });
 
+  const balanced =
+    input.selectedDeck !== undefined && deckBalancesScore(input.selectedDeck)
+      ? balanceChipsAndMult(result.chips, result.mult)
+      : null;
   return {
     legal: true,
     handLabel: label,
-    score: result.score,
-    chips: result.chips,
-    mult: result.mult,
+    score: balanced ? balanced.score : result.score,
+    chips: balanced ? balanced.chips : result.chips,
+    mult: balanced ? balanced.mult : result.mult,
     scoringCardIds: scoring.map((c) => c.id),
     bossTriggered,
   };

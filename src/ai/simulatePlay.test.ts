@@ -2,6 +2,7 @@
 import { describe, expect, test } from "vitest";
 import { simulatePlay } from "./simulatePlay";
 import { boss, card, joker, simulateInput as input } from "./test-helpers";
+import { balanceChipsAndMult } from "../scoring/balance";
 import {
   createBaronJoker,
   createGreenJokerJoker,
@@ -401,5 +402,44 @@ describe("simulatePlay — optimizeJokerOrder picks the best copy-joker placemen
 
   test("scores the optimal copy placement when optimization is on", () => {
     expect(mult([xMult3, plus4, blueprint], true)).toBe(54);
+  });
+});
+
+describe("simulatePlay — Plasma Deck balance", () => {
+  test("balances chips and mult before the final product", () => {
+    const nines = [card("9", "hearts"), card("9", "spades")];
+    const result = simulatePlay(
+      input(nines, { selectedDeck: "plasma-deck" }),
+      nines.map((c) => c.id),
+    );
+    expect(result.legal && result.score).toBe(225);
+  });
+
+  test("balanced chips and mult are equal", () => {
+    const nines = [card("9", "hearts"), card("9", "spades")];
+    const result = simulatePlay(
+      input(nines, { selectedDeck: "plasma-deck" }),
+      nines.map((c) => c.id),
+    );
+    expect(result.legal && result.chips).toBe(result.legal && result.mult);
+  });
+
+  test("matches balanceChipsAndMult applied to the unbalanced result (parity)", () => {
+    const nines = [card("9", "hearts"), card("9", "spades")];
+    const ids = nines.map((c) => c.id);
+    const plain = simulatePlay(input(nines), ids);
+    const plasma = simulatePlay(input(nines, { selectedDeck: "plasma-deck" }), ids);
+    expect(plasma.legal && plasma.score).toBe(
+      plain.legal ? balanceChipsAndMult(plain.chips, plain.mult).score : NaN,
+    );
+  });
+
+  test("the Red Deck result stays unbalanced (negative)", () => {
+    const nines = [card("9", "hearts"), card("9", "spades")];
+    const result = simulatePlay(
+      input(nines, { selectedDeck: "red-deck" }),
+      nines.map((c) => c.id),
+    );
+    expect(result.legal && result.score).toBe(56);
   });
 });
