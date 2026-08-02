@@ -79,33 +79,54 @@ describe("crawler files", () => {
   });
 });
 
-function rootShell(html: string): string {
-  const match = html.match(/<div id="root">([\s\S]*?)<\/div>\s*<script/);
-  if (!match) throw new Error("no #root shell found");
+function seoShell(html: string): string {
+  const match = html.match(/<main data-seo-shell[^>]*>([\s\S]*?)<\/main>/);
+  if (!match) throw new Error("no SEO shell found");
   return match[1];
 }
 
-describe("crawler shell inside #root", () => {
+describe("crawler loading shell", () => {
   test("ships a static SEO shell for non-JS crawlers", () => {
-    expect(rootShell(indexHtml)).toContain("data-seo-shell");
+    expect(indexHtml).toContain("data-seo-shell");
+  });
+
+  test("the shell lives outside #root so hydration cannot clobber it", () => {
+    expect(indexHtml).toMatch(/<\/main>\s*<div id="root"><\/div>/);
+  });
+
+  test("the shell is marked busy while the app loads", () => {
+    expect(indexHtml).toMatch(/<main data-seo-shell aria-busy="true">/);
+  });
+
+  test("the shell announces loading via a status live region", () => {
+    expect(seoShell(indexHtml)).toMatch(
+      /<p role="status" data-seo-shell-status>Loading…<\/p>/,
+    );
   });
 
   test("the shell exposes an h1 naming the game", () => {
-    expect(rootShell(indexHtml)).toMatch(/<h1>Browslatro[^<]*<\/h1>/);
+    expect(seoShell(indexHtml)).toMatch(/<h1>Browslatro[^<]*<\/h1>/);
   });
 
   test("the shell lists gameplay features", () => {
-    expect(rootShell(indexHtml)).toContain("<li>");
+    expect(seoShell(indexHtml)).toContain("<li>");
   });
 
   test("the shell links to the source repository", () => {
-    expect(rootShell(indexHtml)).toContain(
+    expect(seoShell(indexHtml)).toContain(
       'href="https://github.com/oreoshake-s-team/browslatro"',
     );
   });
 
   test("the shell links to a how-to-play guide", () => {
-    expect(rootShell(indexHtml)).toContain("balatrowiki.org");
+    expect(seoShell(indexHtml)).toContain("balatrowiki.org");
+  });
+
+  test("the pulse animation is disabled under reduced motion", () => {
+    const reducedMotion = indexHtml.match(
+      /@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\n {6}\}/,
+    );
+    expect(reducedMotion?.[0]).toContain("animation: none");
   });
 });
 

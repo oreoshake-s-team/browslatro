@@ -21,6 +21,7 @@ import { useInitialDeal } from "./hooks/useInitialDeal";
 import { useRunInitialization } from "./hooks/useRunInitialization";
 import { usePrefetchLazyChunks } from "./hooks/usePrefetchLazyChunks";
 import { useAppViewModel } from "./hooks/useAppViewModel";
+import { dismissSeoShell } from "./seo/loadingShell";
 import {
   initialJokersConfig,
 } from "./items/jokers";
@@ -43,6 +44,9 @@ function AppContent() {
     if (didRestoreFromSnapshot()) return;
     setJokers(initialJokersConfig.factory());
   }, [setJokers]);
+  useEffect(() => {
+    dismissSeoShell();
+  }, []);
 
   const { startNewGame } = useGameSession();
 
