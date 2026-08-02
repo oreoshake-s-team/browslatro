@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Card } from "../../cards/types";
 import HandComponent from "../cards/Hand";
@@ -58,13 +58,16 @@ export default function HandSection() {
     playedCardKeysThisAnte,
   );
   const forcesCard = blind === 3 && bossForcesCardSelection(currentBoss);
-  const handleToggleCard = (card: Card) => {
-    if (forcesCard && forcedCardId === card.id) {
-      announce(t("a11y.cardLockedAttempt"));
-      return;
-    }
-    toggleCard(card);
-  };
+  const handleToggleCard = useCallback(
+    (card: Card) => {
+      if (forcesCard && forcedCardId === card.id) {
+        announce(t("a11y.cardLockedAttempt"));
+        return;
+      }
+      toggleCard(card);
+    },
+    [forcesCard, forcedCardId, t, toggleCard],
+  );
 
   const inHandRemaining = useMemo(
     () => remaining.filter((c) => !destroyedCardIds.has(c.id)),
