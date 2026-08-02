@@ -12,9 +12,7 @@ test("mounting the app dismisses the SEO loading shell", async () => {
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     writable: true,
-    value: vi
-      .fn()
-      .mockReturnValue({ matches: true } as unknown as MediaQueryList),
+    value: vi.fn().mockReturnValue({ matches: true }),
   });
   const shell = document.createElement("main");
   shell.setAttribute("data-seo-shell", "");

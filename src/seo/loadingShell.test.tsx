@@ -13,7 +13,7 @@ function stubMatchMedia(matches: boolean): void {
   Object.defineProperty(window, "matchMedia", {
     configurable: true,
     writable: true,
-    value: vi.fn().mockReturnValue({ matches } as unknown as MediaQueryList),
+    value: vi.fn().mockReturnValue({ matches }),
   });
 }
 
