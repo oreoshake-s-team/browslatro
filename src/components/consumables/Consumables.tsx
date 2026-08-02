@@ -54,7 +54,7 @@ export default function Consumables({
       aria-label={t("a11y.consumableSlots")}
       data-testid="consumables-tray"
     >
-      <ul className="flex list-none flex-wrap gap-2">
+      <ul className="flex min-w-0 list-none flex-nowrap gap-2">
         {consumables.map((entry, idx) => {
           const block = consumableUseBlock(entry, selectedCount, previewMode);
           const sellValue = consumableSellValue(entry);
@@ -71,7 +71,10 @@ export default function Consumables({
             foolCopyTarget,
           );
           return (
-            <li key={`${entry.kind}-${entry.card.id}-${idx}`}>
+            <li
+              key={`${entry.kind}-${entry.card.id}-${idx}`}
+              className="flex min-w-0 shrink"
+            >
               <button
                 type="button"
                 className={tile({
@@ -109,7 +112,7 @@ export default function Consumables({
                   onUse(idx);
                 }}
               >
-                <span className="font-bold">
+                <span className="line-clamp-2 shrink-0 font-bold">
                   {localizedConsumableName(
                     i18n.language,
                     entry.card.id,
@@ -119,7 +122,7 @@ export default function Consumables({
                 <span className="line-clamp-3 text-muted">{description}</span>
                 {canSell && (
                   <span
-                    className="mt-auto font-semibold text-money"
+                    className="mt-auto shrink-0 font-semibold text-money"
                     aria-hidden="true"
                   >
                     {formatSellLabel(sellValue)}
@@ -130,7 +133,7 @@ export default function Consumables({
           );
         })}
         {Array.from({ length: emptyCount }, (_, slotIndex) => (
-          <li key={`empty-${slotIndex}`}>
+          <li key={`empty-${slotIndex}`} className="flex min-w-0 shrink">
             <button
               type="button"
               className={emptyTile}

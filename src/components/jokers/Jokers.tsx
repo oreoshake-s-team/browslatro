@@ -189,7 +189,7 @@ export default function Jokers({
       <div
         className={cn(
           "w-1 shrink-0 self-stretch rounded transition-all",
-          active && "w-40 border-2 border-dashed border-focus",
+          active && "w-tile-w border-2 border-dashed border-focus",
         )}
         data-joker-gap=""
         data-active={active || undefined}
@@ -254,7 +254,7 @@ export default function Jokers({
       )}
       <ul
         ref={listRef}
-        className="flex min-w-0 list-none flex-wrap items-stretch gap-1"
+        className="flex min-w-0 list-none flex-nowrap items-stretch gap-1"
         data-testid="jokers-list"
         onDragOver={reorderable ? handleListDragOver : undefined}
         onDrop={reorderable ? handleListDrop : undefined}
@@ -264,7 +264,7 @@ export default function Jokers({
             return (
               <li
                 key={jokerKeys[idx]}
-                className="h-28 w-40 shrink-0 rounded-lg border border-border bg-(--deck-back,var(--color-raised))"
+                className="h-tile-h w-tile-w min-w-0 shrink rounded-lg border border-border bg-(--deck-back,var(--color-raised))"
                 aria-label={t("a11y.faceDownJoker", {
                   position: idx + 1,
                   total: jokers.length,
