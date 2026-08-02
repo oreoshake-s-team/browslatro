@@ -1,7 +1,7 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
-const EMPTY_JOKER_SLOT = ".joker-tile-empty";
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
+const EMPTY_JOKER_SLOT = '[data-testid="joker-tile-empty"]';
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
