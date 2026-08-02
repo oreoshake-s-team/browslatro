@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState } from "react";
+import { memo, useCallback, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import "./Options.css";
 import { createPortal } from "react-dom";
@@ -284,4 +284,4 @@ function Options({
   );
 }
 
-export default Options;
+export default memo(Options);

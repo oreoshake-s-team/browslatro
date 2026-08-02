@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Options from "./Options";
@@ -11,6 +12,31 @@ import {
   toggleHighVisibility,
   toggleMute,
 } from "../system/preferences";
+
+const useTranslationCalls = { count: 0 };
+
+vi.mock("react-i18next", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-i18next")>();
+  return {
+    ...actual,
+    useTranslation: (...args: Parameters<typeof actual.useTranslation>) => {
+      useTranslationCalls.count++;
+      return actual.useTranslation(...args);
+    },
+  };
+});
+
+function noop(): void {}
+
+function OptionsMemoHarness() {
+  const [, setTick] = useState(0);
+  return (
+    <div>
+      <button onClick={() => setTick((t) => t + 1)}>bump</button>
+      <Options onNewGame={noop} />
+    </div>
+  );
+}
 
 const STORAGE_KEY = "browslatro:highVisibility";
 const DYSLEXIC_KEY = "browslatro:dyslexicFont";
@@ -538,5 +564,16 @@ describe("Options — coach API key", () => {
     await user.click(screen.getByText("Options"));
     const footer = screen.getByText("New game").closest(".options-footer");
     expect(footer).toContainElement(screen.getByText("Close"));
+  });
+});
+
+describe("Options memoization", () => {
+  test("skips re-render when props are unchanged and an unrelated ancestor re-renders", async () => {
+    render(<OptionsMemoHarness />);
+    const rendersAfterMount = useTranslationCalls.count;
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "bump" }));
+    await user.click(screen.getByRole("button", { name: "bump" }));
+    expect(useTranslationCalls.count).toBe(rendersAfterMount);
   });
 });

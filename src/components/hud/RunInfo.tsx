@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { HandStats } from "../../scoring/handStats";
 import type { Voucher } from "../../items/vouchers";
@@ -42,4 +42,4 @@ function RunInfo({
   );
 }
 
-export default RunInfo;
+export default memo(RunInfo);
