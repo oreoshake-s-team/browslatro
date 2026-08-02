@@ -34,6 +34,7 @@ import { emptyHandCounts } from "../components/hud/handPlayCounts";
 import type { HandLabel } from "../scoring/handEvaluator";
 import {
   addConsumable,
+  createStartingConsumable,
 } from "../items/consumables";
 import {
   createJokerByRarity,
@@ -64,7 +65,9 @@ import {
 } from "../items/tags";
 import {
   deckCompositionTransforms,
+  deckStartingConsumables,
   deckStartingMoneyDelta,
+  deckStartingVoucherIds,
   type Deck,
 } from "../items/decks";
 import type { Stake } from "../items/stakes";
@@ -403,8 +406,15 @@ export function useRoundLifecycle({
     setCardEditionsById(new Map());
     setDealt(fullDeckPile(freshBaseDeck));
     useGame.getState().resetVouchers();
+    const startingVoucherIds = deckStartingVoucherIds(deck);
+    if (startingVoucherIds.size > 0) {
+      useGame.getState().setOwnedVoucherIds(new Set(startingVoucherIds));
+    }
     setCurrentAnteVouchers(
-      pickVouchersForAnte({ ante: 1, ownedIds: new Set() }, BASE_VOUCHER_SLOTS),
+      pickVouchersForAnte(
+        { ante: 1, ownedIds: startingVoucherIds },
+        BASE_VOUCHER_SLOTS,
+      ),
     );
     setRecentBossIds(new Set());
     const freshBoss = pickBossForAnte({
@@ -420,6 +430,10 @@ export function useRoundLifecycle({
     setHandHistoryThisRound([]);
     const store = useGame.getState();
     store.resetConsumables();
+    const startingConsumables = deckStartingConsumables(deck);
+    if (startingConsumables.length > 0) {
+      store.setConsumables(startingConsumables.map(createStartingConsumable));
+    }
     store.resetHand();
     store.resetShop();
     store.resetPacks();

@@ -17,6 +17,8 @@ export type Deck =
 
 export const DEFAULT_DECK: Deck = "red-deck";
 
+import type { VoucherId } from "./vouchers";
+
 export type DeckCompositionTransform =
   | "drop-face-cards"
   | "spades-and-hearts-only";
@@ -35,7 +37,18 @@ export type DeckModifier =
   | {
       readonly kind: "deck-composition";
       readonly transform: DeckCompositionTransform;
+    }
+  | { readonly kind: "starting-voucher"; readonly voucherId: VoucherId }
+  | {
+      readonly kind: "starting-consumable";
+      readonly consumable: "tarot" | "spectral";
+      readonly itemId: string;
     };
+
+export type StartingConsumableModifier = Extract<
+  DeckModifier,
+  { kind: "starting-consumable" }
+>;
 
 export interface DeckSpec {
   readonly id: Deck;
@@ -88,7 +101,17 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
       { kind: "starting-hands-delta", amount: -1 },
     ],
   },
-  { id: "magic-deck", name: "Magic Deck", description: "Start with Crystal Ball voucher and 2 copies of The Fool.", implemented: false, modifiers: [] },
+  {
+    id: "magic-deck",
+    name: "Magic Deck",
+    description: "Start with Crystal Ball voucher and 2 copies of The Fool.",
+    implemented: true,
+    modifiers: [
+      { kind: "starting-voucher", voucherId: "crystal-ball" },
+      { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
+      { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
+    ],
+  },
   { id: "nebula-deck", name: "Nebula Deck", description: "Start with Telescope voucher; -1 consumable slot.", implemented: false, modifiers: [] },
   { id: "ghost-deck", name: "Ghost Deck", description: "Spectral cards may appear in shop; start with Hex spectral.", implemented: false, modifiers: [] },
   {
@@ -172,6 +195,25 @@ export const deckEndOfRoundBonusPerRemainingHandAndDiscard = (
 
 export const deckSuppressesInterest = (deck: Deck): boolean =>
   getActiveDeckModifiers(deck).some((m) => m.kind === "no-interest");
+
+export function deckStartingVoucherIds(deck: Deck): ReadonlySet<VoucherId> {
+  return new Set(
+    getActiveDeckModifiers(deck)
+      .filter(
+        (m): m is Extract<DeckModifier, { kind: "starting-voucher" }> =>
+          m.kind === "starting-voucher",
+      )
+      .map((m) => m.voucherId),
+  );
+}
+
+export function deckStartingConsumables(
+  deck: Deck,
+): ReadonlyArray<StartingConsumableModifier> {
+  return getActiveDeckModifiers(deck).filter(
+    (m): m is StartingConsumableModifier => m.kind === "starting-consumable",
+  );
+}
 
 export function deckCompositionTransforms(
   deck: Deck,
