@@ -1,3 +1,4 @@
+import { memo } from "react";
 import Jokers from "../jokers/Jokers";
 import { useGame } from "../../store/game";
 import { jokerCapacityFor } from "../../items/capacities";
@@ -6,7 +7,7 @@ import { useConsumableActions } from "../../hooks/useConsumableActions";
 import { play } from "../system/sounds";
 import { bossHidesJokers } from "../../items/bosses";
 
-export default function JokersSection() {
+function JokersSection() {
   const jokers = useGame((s) => s.jokers);
   const jokerPulseCounters = useGame((s) => s.jokerPulseCounters);
   const reorderJokers = useGame((s) => s.reorderJokers);
@@ -32,6 +33,9 @@ export default function JokersSection() {
       sellConsumableAction(consumableIdx);
     },
     sellJoker,
+    needsConsumableDragIndex: true,
+    needsJokerDragIndex: false,
+    needsConsumableDropZone: true,
   });
 
   const dragging = dragController.draggingConsumableIndex !== null;
@@ -56,3 +60,5 @@ export default function JokersSection() {
     />
   );
 }
+
+export default memo(JokersSection);

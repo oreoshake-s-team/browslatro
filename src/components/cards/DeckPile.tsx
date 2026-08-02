@@ -1,4 +1,4 @@
-import { useCallback, useId, useRef, useState, type DragEvent } from "react";
+import { memo, useCallback, useId, useRef, useState, type DragEvent } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import "./DeckPile.css";
@@ -21,7 +21,7 @@ interface DeckPileProps {
   onJokerDrop?: () => void;
 }
 
-export default function DeckPile({
+function DeckPile({
   remaining,
   consumableDropEnabled = false,
   onConsumableDrop,
@@ -129,3 +129,5 @@ export default function DeckPile({
     </>
   );
 }
+
+export default memo(DeckPile);

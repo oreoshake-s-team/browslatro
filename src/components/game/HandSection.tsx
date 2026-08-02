@@ -39,16 +39,28 @@ export default function HandSection() {
 
   const { useConsumable } = useConsumableActions();
 
-  const dragController = useDragController({
-    useConsumable,
-    sellConsumable: (consumableIdx: number) => {
+  const sellConsumable = useCallback(
+    (consumableIdx: number) => {
       play("pop");
       sellConsumableAction(consumableIdx);
     },
-    sellJoker: (jokerIdx: number) => {
+    [sellConsumableAction],
+  );
+  const sellJoker = useCallback(
+    (jokerIdx: number) => {
       play("pop");
       sellJokerAction(jokerIdx);
     },
+    [sellJokerAction],
+  );
+
+  const dragController = useDragController({
+    useConsumable,
+    sellConsumable,
+    sellJoker,
+    needsConsumableDragIndex: true,
+    needsJokerDragIndex: true,
+    needsConsumableDropZone: false,
   });
 
   const debuffedIds = debuffedHandIds(

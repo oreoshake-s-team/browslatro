@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DeckPile from "./DeckPile";
@@ -5,6 +6,39 @@ import { createDeck as createGoldDeck } from "../../cards/deck";
 
 function createDeck() {
   return createGoldDeck().map(({ rank, suit, id }) => ({ rank, suit, id }));
+}
+
+const useTranslationCalls = { count: 0 };
+
+vi.mock("react-i18next", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react-i18next")>();
+  return {
+    ...actual,
+    useTranslation: (...args: Parameters<typeof actual.useTranslation>) => {
+      useTranslationCalls.count++;
+      return actual.useTranslation(...args);
+    },
+  };
+});
+
+function noop(): void {}
+
+const stableRemaining = createDeck();
+
+function DeckPileMemoHarness() {
+  const [, setTick] = useState(0);
+  return (
+    <div>
+      <button onClick={() => setTick((t) => t + 1)}>bump</button>
+      <DeckPile
+        remaining={stableRemaining}
+        consumableDropEnabled={false}
+        onConsumableDrop={noop}
+        jokerDropEnabled={false}
+        onJokerDrop={noop}
+      />
+    </div>
+  );
 }
 
 describe("DeckPile", () => {
@@ -369,5 +403,20 @@ describe("DeckPile dialog semantics", () => {
     await user.keyboard("{Escape}");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(trigger).toHaveFocus();
+  });
+});
+
+describe("DeckPile memoization", () => {
+  beforeEach(() => {
+    useTranslationCalls.count = 0;
+  });
+
+  test("skips re-render when props are unchanged and an unrelated ancestor re-renders", async () => {
+    render(<DeckPileMemoHarness />);
+    const rendersAfterMount = useTranslationCalls.count;
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "bump" }));
+    await user.click(screen.getByRole("button", { name: "bump" }));
+    expect(useTranslationCalls.count).toBe(rendersAfterMount);
   });
 });
