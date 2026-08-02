@@ -10,7 +10,12 @@ import type {
 } from "../cards/types";
 import { FINAL_ANTE } from "../constants";
 import { pickBossForAnte } from "../items/bosses";
-import { DEFAULT_DECK, deckStartingMoneyDelta, type Deck } from "../items/decks";
+import {
+  DEFAULT_DECK,
+  deckHandSizeDelta,
+  deckStartingMoneyDelta,
+  type Deck,
+} from "../items/decks";
 import type { Consumable } from "../items/consumables";
 import { interestMultiplierFromJokers } from "../items/jokers/collection";
 import {
@@ -288,7 +293,10 @@ export async function playHeadlessRun(
       const scoreTarget = requiredChipsForBlind({ ante, blind, boss, stake });
       let pile: Pile = deal(
         shuffle(deck, rng),
-        HAND_SIZE + extraHandSize(ownedVoucherIds),
+        Math.max(
+          1,
+          HAND_SIZE + extraHandSize(ownedVoucherIds) + deckHandSizeDelta(deckId),
+        ),
       );
       let roundScore = 0;
       let firstAction = true;

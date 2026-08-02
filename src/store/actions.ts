@@ -528,6 +528,7 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       handSizeModifier: s.handSizeModifier,
       ownedVoucherIds: s.ownedVoucherIds,
       jokers: s.jokers,
+      deck: s.selectedDeck,
     });
     if (pack.pool === "arcana" || pack.pool === "spectral") {
       const survivingBase = s.baseDeckCards.filter(

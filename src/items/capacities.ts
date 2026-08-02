@@ -1,6 +1,6 @@
 import { HAND_SIZE } from "../cards/deck";
 import { MAX_CONSUMABLE_SLOTS } from "./consumables";
-import { deckJokerSlotsDelta, type Deck } from "./decks";
+import { deckHandSizeDelta, deckJokerSlotsDelta, type Deck } from "./decks";
 import {
   extraStartingHandSizeFromJokers,
   MAX_JOKERS,
@@ -33,12 +33,14 @@ export function handSizeFor(input: {
   readonly handSizeModifier: number;
   readonly ownedVoucherIds: ReadonlySet<VoucherId>;
   readonly jokers: ReadonlyArray<Joker>;
+  readonly deck: Deck;
 }): number {
   return Math.max(
     1,
     HAND_SIZE +
       input.handSizeModifier +
       extraHandSize(input.ownedVoucherIds) +
-      extraStartingHandSizeFromJokers(input.jokers),
+      extraStartingHandSizeFromJokers(input.jokers) +
+      deckHandSizeDelta(input.deck),
   );
 }

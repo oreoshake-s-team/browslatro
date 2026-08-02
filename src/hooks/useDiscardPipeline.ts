@@ -54,6 +54,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
   const handSizeModifier = useGame((s) => s.handSizeModifier);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
   const jokers = useGame((s) => s.jokers);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const discardsUsedThisRound = useGame((s) => s.discardsUsedThisRound);
   const setScoringEvents = useGame((s) => s.setScoringEvents);
 
@@ -73,6 +74,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     handSizeModifier,
     ownedVoucherIds,
     jokers,
+    deck: selectedDeck,
   });
   const consumableCapacity =
     consumableCapacityFor(ownedVoucherIds);
