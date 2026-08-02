@@ -2,6 +2,7 @@ import type { Consumable } from "../../items/consumables";
 import type { Joker } from "../../items/jokers";
 import { packPickLimit, type PackOption } from "../../items/packs";
 import type { ShopItem } from "../../items/shop";
+import { consumableAdviceFields } from "./consumableAdvice";
 import { packFeatureVector } from "./packFeatures";
 import { categorizePackOption, categorizeShopItem } from "./shopCategory";
 import {
@@ -21,24 +22,12 @@ interface Described {
   readonly description: string;
 }
 
-function consumableToPackOption(consumable: Consumable): PackOption {
-  if (consumable.kind === "planet") return { kind: "planet", planet: consumable.card };
-  if (consumable.kind === "tarot") return { kind: "tarot", tarot: consumable.card };
-  return { kind: "spectral", spectral: consumable.card };
-}
-
 export function consumableAdviceItem(
   consumable: Consumable,
   index: number,
 ): ShopAdviceItem {
-  const option = consumableToPackOption(consumable);
   return {
-    itemType: consumable.kind,
-    category: categorizePackOption(option),
-    attributes: packOptionAttributes(option),
-    ...(consumable.kind === "planet" ? { advancesHands: consumable.card.hands } : {}),
-    id: `use:${consumable.card.id}:${index}`,
-    name: consumable.card.name,
+    ...consumableAdviceFields(consumable, index),
     description: consumable.card.description,
     cost: 0,
   };
