@@ -56,6 +56,9 @@ export default defineConfig({
   ],
   build: {
     outDir: "build",
+    // Minification mangles component names, making React DevTools Profiler
+    // exports unreadable (fiber names collapse to 1-3 letter identifiers).
+    minify: isProfilingBuild ? false : true,
     rolldownOptions: {
       output: {
         advancedChunks: {
