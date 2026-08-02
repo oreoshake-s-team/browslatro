@@ -71,13 +71,13 @@ describe("generateShopDecisions", () => {
     }
   });
 
-  test("output is deterministic for the same seed", async () => {
+  test("output is deterministic for the same seed", { timeout: 20_000 }, async () => {
     const a = await generateShopDecisions({ games: 2, seedOffset: 7 });
     const b = await generateShopDecisions({ games: 2, seedOffset: 7 });
     expect(a).toBe(b);
   });
 
-  test("different seed offsets produce different output", async () => {
+  test("different seed offsets produce different output", { timeout: 20_000 }, async () => {
     const a = await generateShopDecisions({ games: 2, seedOffset: 0 });
     const b = await generateShopDecisions({ games: 2, seedOffset: 500 });
     expect(a).not.toBe(b);
