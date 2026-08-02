@@ -17,6 +17,7 @@ function ConsumablesSection() {
   const packPreviewHand = useGame((s) => s.packPreviewHand);
   const packPreviewSelectedIds = useGame((s) => s.packPreviewSelectedIds);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const sellConsumableAction = useGame((s) => s.sellConsumable);
   const sellJokerAction = useGame((s) => s.sellJoker);
 
@@ -49,7 +50,7 @@ function ConsumablesSection() {
         previewActive ? packPreviewSelectedIds.size : selectedIds.size
       }
       previewMode={previewActive}
-      capacity={consumableCapacityFor(ownedVoucherIds)}
+      capacity={consumableCapacityFor(ownedVoucherIds, selectedDeck)}
       onUse={useConsumable}
       onSell={sellConsumable}
       onDragStart={dragController.onConsumableDragStart}

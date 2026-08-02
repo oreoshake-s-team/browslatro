@@ -25,8 +25,8 @@ export function usePackOpenController(): PackOpenModalProps | undefined {
   const { pickFromOpenedPack } = useOpenedPackPicker();
 
   const consumableCapacity = useMemo(() => (
-    consumableCapacityFor(ownedVoucherIds)
-  ), [ownedVoucherIds]);
+    consumableCapacityFor(ownedVoucherIds, selectedDeck)
+  ), [ownedVoucherIds, selectedDeck]);
 
   const jokerCapacity = useMemo(
     () => jokerCapacityFor(ownedVoucherIds, selectedDeck),

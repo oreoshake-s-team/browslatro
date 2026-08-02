@@ -77,7 +77,7 @@ export function useDiscardPipeline(): UseDiscardPipelineResult {
     deck: selectedDeck,
   });
   const consumableCapacity =
-    consumableCapacityFor(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds, selectedDeck);
 
   const runDiscard = useCallback(
     (ids: ReadonlySet<number>): void => {

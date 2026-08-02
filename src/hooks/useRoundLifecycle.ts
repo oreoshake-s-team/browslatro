@@ -287,7 +287,7 @@ export function useRoundLifecycle({
     }
     if (blindTarots > 0) {
       const tarotCapacity =
-        consumableCapacityFor(ownedVoucherIds);
+        consumableCapacityFor(ownedVoucherIds, selectedDeck);
       setConsumables((prev) => {
         let next = prev;
         for (let i = 0; i < blindTarots; i += 1) {

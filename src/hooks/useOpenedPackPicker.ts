@@ -48,6 +48,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   const setJokers = useGame((s) => s.setJokers);
   const setAddedCards = useGame((s) => s.setAddedCards);
   const ownedVoucherIds = useGame((s) => s.ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
   const applyEnhancementToSelectedPreviewCards = useGame(
     (s) => s.applyEnhancementToSelectedPreviewCards,
   );
@@ -76,7 +77,7 @@ export function useOpenedPackPicker(): UseOpenedPackPickerResult {
   );
 
   const consumableCapacity =
-    consumableCapacityFor(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds, selectedDeck);
 
   function pickFromOpenedPack(optionIdx: number): void {
     if (!openedPack || packPicksRemaining <= 0) return;

@@ -29,6 +29,7 @@ export type DeckModifier =
   | { readonly kind: "starting-hands-delta"; readonly amount: number }
   | { readonly kind: "joker-slots-delta"; readonly amount: number }
   | { readonly kind: "hand-size-delta"; readonly amount: number }
+  | { readonly kind: "consumable-slots-delta"; readonly amount: number }
   | {
       readonly kind: "end-of-round-bonus-per-remaining-hand-and-discard";
       readonly amount: number;
@@ -112,7 +113,16 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
       { kind: "starting-consumable", consumable: "tarot", itemId: "the-fool" },
     ],
   },
-  { id: "nebula-deck", name: "Nebula Deck", description: "Start with Telescope voucher; -1 consumable slot.", implemented: false, modifiers: [] },
+  {
+    id: "nebula-deck",
+    name: "Nebula Deck",
+    description: "Start with Telescope voucher; -1 consumable slot.",
+    implemented: true,
+    modifiers: [
+      { kind: "starting-voucher", voucherId: "telescope" },
+      { kind: "consumable-slots-delta", amount: -1 },
+    ],
+  },
   { id: "ghost-deck", name: "Ghost Deck", description: "Spectral cards may appear in shop; start with Hex spectral.", implemented: false, modifiers: [] },
   {
     id: "abandoned-deck",
@@ -187,6 +197,9 @@ export const deckJokerSlotsDelta = (deck: Deck): number =>
 
 export const deckHandSizeDelta = (deck: Deck): number =>
   sumDeckModifier(deck, "hand-size-delta");
+
+export const deckConsumableSlotsDelta = (deck: Deck): number =>
+  sumDeckModifier(deck, "consumable-slots-delta");
 
 export const deckEndOfRoundBonusPerRemainingHandAndDiscard = (
   deck: Deck,

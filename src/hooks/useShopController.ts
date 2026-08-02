@@ -42,7 +42,7 @@ export function useShopController(): ShopProps | undefined {
   const consumableCount = consumables.length;
   const selectedDeck = useGame((s) => s.selectedDeck);
   const consumableCapacity =
-    consumableCapacityFor(ownedVoucherIds);
+    consumableCapacityFor(ownedVoucherIds, selectedDeck);
   const jokerCapacity = jokerCapacityFor(ownedVoucherIds, selectedDeck);
   const extraRerollReduction = useMemo(
     () => applyNextShopModifiers(pendingShopMods).rerollReduction,

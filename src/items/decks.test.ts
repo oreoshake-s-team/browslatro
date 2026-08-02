@@ -4,6 +4,7 @@ import {
   createDeckCatalog,
   deckCompositionTransforms,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckConsumableSlotsDelta,
   deckHandSizeDelta,
   deckJokerSlotsDelta,
   deckStartingConsumables,
@@ -48,6 +49,7 @@ describe("DeckSpec.implemented", () => {
       "green-deck",
       "black-deck",
       "magic-deck",
+      "nebula-deck",
       "abandoned-deck",
       "checkered-deck",
       "painted-deck",
@@ -58,7 +60,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(6);
+    expect(unimplementedCount).toBe(5);
   });
 });
 
@@ -234,6 +236,12 @@ describe("deckStartingVoucherIds", () => {
     );
   });
 
+  test("Nebula Deck starts with Telescope", () => {
+    expect(deckStartingVoucherIds("nebula-deck")).toEqual(
+      new Set(["telescope"]),
+    );
+  });
+
   test("Red Deck starts with no vouchers (negative)", () => {
     expect(deckStartingVoucherIds("red-deck").size).toBe(0);
   });
@@ -249,6 +257,25 @@ describe("deckStartingConsumables", () => {
 
   test("Red Deck starts with no consumables (negative)", () => {
     expect(deckStartingConsumables("red-deck")).toHaveLength(0);
+  });
+});
+
+describe("Nebula Deck spec", () => {
+  test("declares the Telescope voucher and -1 consumable slot", () => {
+    expect(getDeckSpec("nebula-deck").modifiers).toEqual([
+      { kind: "starting-voucher", voucherId: "telescope" },
+      { kind: "consumable-slots-delta", amount: -1 },
+    ]);
+  });
+});
+
+describe("deckConsumableSlotsDelta", () => {
+  test("Nebula Deck removes 1 consumable slot", () => {
+    expect(deckConsumableSlotsDelta("nebula-deck")).toBe(-1);
+  });
+
+  test("Red Deck does not change consumable slots (negative)", () => {
+    expect(deckConsumableSlotsDelta("red-deck")).toBe(0);
   });
 });
 

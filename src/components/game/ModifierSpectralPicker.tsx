@@ -20,7 +20,8 @@ export default function ModifierSpectralPicker() {
     () => sortByDisplayName(createSpectralCatalog(), (c) => c.name),
     [],
   );
-  const capacity = consumableCapacityFor(ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
+  const capacity = consumableCapacityFor(ownedVoucherIds, selectedDeck);
   const isFull = consumables.length >= capacity;
 
   const tooltip = useAnchoredTooltip<string>();

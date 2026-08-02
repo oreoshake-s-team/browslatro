@@ -20,7 +20,8 @@ export default function ModifierPlanetPicker() {
     () => sortByDisplayName(createPlanetCatalog(), (c) => c.name),
     [],
   );
-  const capacity = consumableCapacityFor(ownedVoucherIds);
+  const selectedDeck = useGame((s) => s.selectedDeck);
+  const capacity = consumableCapacityFor(ownedVoucherIds, selectedDeck);
   const isFull = consumables.length >= capacity;
 
   const tooltip = useAnchoredTooltip<string>();
