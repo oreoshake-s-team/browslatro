@@ -197,10 +197,10 @@ describe("NewRunScreen", () => {
     });
   });
 
-  test("does not render unimplemented decks like Plasma (negative)", () => {
+  test("does not render unimplemented decks like Erratic (negative)", () => {
     render(<NewRunScreen onConfirm={vi.fn()} />);
     expect(
-      screen.queryByTestId("new-run-deck-plasma-deck"),
+      screen.queryByTestId("new-run-deck-erratic-deck"),
     ).not.toBeInTheDocument();
   });
 

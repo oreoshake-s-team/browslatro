@@ -29,6 +29,8 @@ export interface ScoringState {
   luckyRollsByScoringIndex: ReadonlyArray<LuckyRollResult>;
   handLevelSteps: ReadonlyArray<JokerHandLevelStep>;
   handLevelIndex: number;
+  balanceSteps: ReadonlyArray<{ readonly chips: number; readonly mult: number }>;
+  balanceIndex: number;
   setChips: (update: Updater<number>) => void;
   setMultiplier: (update: Updater<number>) => void;
   setRoundScore: (update: Updater<number>) => void;
@@ -46,6 +48,10 @@ export interface ScoringState {
   ) => void;
   setHandLevelSteps: (update: Updater<ReadonlyArray<JokerHandLevelStep>>) => void;
   setHandLevelIndex: (update: Updater<number>) => void;
+  setBalanceSteps: (
+    update: Updater<ReadonlyArray<{ readonly chips: number; readonly mult: number }>>,
+  ) => void;
+  setBalanceIndex: (update: Updater<number>) => void;
   resetScoring: () => void;
 }
 
@@ -62,6 +68,11 @@ function createInitialAnimation() {
     luckyRollsByScoringIndex: [] as ReadonlyArray<LuckyRollResult>,
     handLevelSteps: [] as ReadonlyArray<JokerHandLevelStep>,
     handLevelIndex: 0,
+    balanceSteps: [] as ReadonlyArray<{
+      readonly chips: number;
+      readonly mult: number;
+    }>,
+    balanceIndex: 0,
   };
 }
 
@@ -113,6 +124,10 @@ export const createScoringSlice: StateCreator<GameState, [], [], ScoringState> =
     set((state) => ({ handLevelSteps: resolve(update, state.handLevelSteps) })),
   setHandLevelIndex: (update) =>
     set((state) => ({ handLevelIndex: resolve(update, state.handLevelIndex) })),
+  setBalanceSteps: (update) =>
+    set((state) => ({ balanceSteps: resolve(update, state.balanceSteps) })),
+  setBalanceIndex: (update) =>
+    set((state) => ({ balanceIndex: resolve(update, state.balanceIndex) })),
   resetScoring: () =>
     set({
       chips: 0,

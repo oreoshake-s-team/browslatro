@@ -58,9 +58,11 @@ import { composeHandScore } from "../items/jokers/scoring/composeHandScore";
 import { applyPlanetUpgrade } from "../items/planets";
 import { interestCapFor } from "../items/vouchers";
 import {
+  deckBalancesScore,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
   deckSuppressesInterest,
 } from "../items/decks";
+import { balanceChipsAndMult } from "../scoring/balance";
 import { fullDeckPile } from "../cards/deckBuild";
 import { hasStakeModifier } from "../items/stakes";
 import {
@@ -142,6 +144,7 @@ export function usePlayHand({
     blind,
     boss: currentBoss,
     stake: selectedStake,
+    deck: selectedDeck,
   });
   const consumableCapacity =
     consumableCapacityFor(ownedVoucherIds, selectedDeck);
@@ -174,6 +177,8 @@ export function usePlayHand({
   const setSteelScoringIndex = useGame((s) => s.setSteelScoringIndex);
   const setHandLevelSteps = useGame((s) => s.setHandLevelSteps);
   const setHandLevelIndex = useGame((s) => s.setHandLevelIndex);
+  const setBalanceSteps = useGame((s) => s.setBalanceSteps);
+  const setBalanceIndex = useGame((s) => s.setBalanceIndex);
   const setRemainingHands = useGame((s) => s.setRemainingHands);
   const setPendingWin = useGame((s) => s.setPendingWin);
   const setJokers = useGame((s) => s.setJokers);
@@ -651,7 +656,13 @@ export function usePlayHand({
       computeLuckyRolls: true,
     });
     if (scoring.length === 0) {
-      finalizeHandSubmission(composed.score, submittedSelection, label);
+      finalizeHandSubmission(
+        deckBalancesScore(selectedDeck)
+          ? balanceChipsAndMult(composed.chips, composed.mult).score
+          : composed.score,
+        submittedSelection,
+        label,
+      );
       return;
     }
     setLuckyRollsByScoringIndex(composed.luckyRollsByScoringIndex);
@@ -678,7 +689,10 @@ export function usePlayHand({
 
     const adjustedChips = composed.chips + devChipsBonus;
     const adjustedMult = (composed.mult + devMultBonus) * devMultFactor;
-    const finalScore = Math.floor(adjustedChips * adjustedMult);
+    const balancesScore = deckBalancesScore(selectedDeck);
+    const finalScore = balancesScore
+      ? balanceChipsAndMult(adjustedChips, adjustedMult).score
+      : Math.floor(adjustedChips * adjustedMult);
 
     const liveMultiplier = handEntry.multiplier * composed.enhancementXMult;
     setChips(handEntry.chips);
@@ -686,6 +700,29 @@ export function usePlayHand({
 
     const finalize = () => {
       finalizeHandSubmission(finalScore, submittedSelection, label);
+    };
+    const runBalance = () => {
+      if (!balancesScore) {
+        finalize();
+        return;
+      }
+      const live = useGame.getState();
+      const target = (live.chips + live.multiplier) / 2;
+      setScoringEvents((prev) => [
+        ...prev,
+        { kind: "score-balanced", balanced: target, source: "Plasma Deck" },
+      ]);
+      const tickCount = 6;
+      const ticks = Array.from({ length: tickCount }, (_, i) => {
+        const t = (i + 1) / tickCount;
+        return {
+          chips: live.chips + (target - live.chips) * t,
+          mult: live.multiplier + (target - live.multiplier) * t,
+        };
+      });
+      pipeline.balanceFinalizeRef.current = finalize;
+      setBalanceSteps(ticks);
+      setBalanceIndex(0);
     };
     const runObservatory = () => {
       if (observatoryMult !== 1) {
@@ -698,7 +735,7 @@ export function usePlayHand({
           },
         ]);
       }
-      finalize();
+      runBalance();
     };
     const runHandLevel = () => {
       if (heldSteps.length + jokerSteps.length === 0) {

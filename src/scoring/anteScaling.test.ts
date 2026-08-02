@@ -316,3 +316,53 @@ describe("requiredChipsForBlind — Purple stake", () => {
     expect(baseChipsForAnte(8, "purple")).toBe(PURPLE_STAKE_CHIPS[7]);
   });
 });
+
+describe("requiredChipsForBlind — Plasma Deck", () => {
+  test("Small Blind ante 1 is doubled", () => {
+    expect(
+      requiredChipsForBlind({
+        ante: 1,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "white",
+        deck: "plasma-deck",
+      }),
+    ).toBe(BASE_CHIPS[0] * 2);
+  });
+
+  test("Big Blind ante 2 is doubled on top of the blind multiplier", () => {
+    expect(
+      requiredChipsForBlind({
+        ante: 2,
+        blind: 2,
+        boss: TEST_BOSS,
+        stake: "white",
+        deck: "plasma-deck",
+      }),
+    ).toBe(BASE_CHIPS[1] * 2 * 1.5);
+  });
+
+  test("Boss Blind is doubled on top of the boss multiplier", () => {
+    expect(
+      requiredChipsForBlind({
+        ante: 1,
+        blind: 3,
+        boss: TEST_BOSS,
+        stake: "white",
+        deck: "plasma-deck",
+      }),
+    ).toBe(BASE_CHIPS[0] * TEST_BOSS.scoreMultiplier * 2);
+  });
+
+  test("the Red Deck leaves the requirement unchanged (negative)", () => {
+    expect(
+      requiredChipsForBlind({
+        ante: 1,
+        blind: 1,
+        boss: TEST_BOSS,
+        stake: "white",
+        deck: "red-deck",
+      }),
+    ).toBe(BASE_CHIPS[0]);
+  });
+});

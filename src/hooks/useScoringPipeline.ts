@@ -40,6 +40,7 @@ export interface UseScoringPipelineResult {
   readonly goldFinalizeRef: FinalizeRef;
   readonly steelFinalizeRef: FinalizeRef;
   readonly handLevelFinalizeRef: FinalizeRef;
+  readonly balanceFinalizeRef: FinalizeRef;
   readonly resetScoring: () => void;
 }
 
@@ -50,6 +51,7 @@ export function useScoringPipeline({
   const goldFinalizeRef = useRef<(() => void) | null>(null);
   const steelFinalizeRef = useRef<(() => void) | null>(null);
   const handLevelFinalizeRef = useRef<(() => void) | null>(null);
+  const balanceFinalizeRef = useRef<(() => void) | null>(null);
 
   const scoringCards = useGame((s) => s.scoringCards);
   const setScoringCards = useGame((s) => s.setScoringCards);
@@ -71,6 +73,11 @@ export function useScoringPipeline({
   const handLevelIndex = useGame((s) => s.handLevelIndex);
   const setHandLevelIndex = useGame((s) => s.setHandLevelIndex);
 
+  const balanceSteps = useGame((s) => s.balanceSteps);
+  const setBalanceSteps = useGame((s) => s.setBalanceSteps);
+  const balanceIndex = useGame((s) => s.balanceIndex);
+  const setBalanceIndex = useGame((s) => s.setBalanceIndex);
+
   const setChips = useGame((s) => s.setChips);
   const setMultiplier = useGame((s) => s.setMultiplier);
   const setScoringEvents = useGame((s) => s.setScoringEvents);
@@ -89,8 +96,10 @@ export function useScoringPipeline({
     steelScoringIds.length > 0 && steelScoringIndex < steelScoringIds.length;
   const goldPhase =
     goldScoringIds.length > 0 && goldScoringIndex < goldScoringIds.length;
+  const balanceScoring =
+    balanceSteps.length > 0 && balanceIndex < balanceSteps.length;
   const isScoring =
-    perCardScoring || handLevelScoring || steelScoring || goldPhase;
+    perCardScoring || handLevelScoring || steelScoring || goldPhase || balanceScoring;
   const currentScoringId = perCardScoring
     ? scoringCards[scoringIndex].id
     : null;
@@ -414,6 +423,25 @@ export function useScoringPipeline({
     },
   });
 
+  useScoringStepSequence({
+    items: balanceSteps,
+    index: balanceIndex,
+    setIndex: setBalanceIndex,
+    stepMs,
+    onStep: (step) => {
+      setChips(step.chips);
+      setMultiplier(step.mult);
+      play("pop");
+    },
+    onFinish: () => {
+      const finalize = balanceFinalizeRef.current;
+      balanceFinalizeRef.current = null;
+      setBalanceSteps([]);
+      setBalanceIndex(0);
+      if (finalize) finalize();
+    },
+  });
+
   function resetScoring(): void {
     setScoringCards([]);
     setScoringIndex(0);
@@ -427,6 +455,9 @@ export function useScoringPipeline({
     setHandLevelSteps([]);
     setHandLevelIndex(0);
     handLevelFinalizeRef.current = null;
+    setBalanceSteps([]);
+    setBalanceIndex(0);
+    balanceFinalizeRef.current = null;
   }
 
   return {
@@ -438,6 +469,7 @@ export function useScoringPipeline({
     goldFinalizeRef,
     steelFinalizeRef,
     handLevelFinalizeRef,
+    balanceFinalizeRef,
     resetScoring,
   };
 }

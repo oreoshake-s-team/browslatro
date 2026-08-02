@@ -109,3 +109,18 @@ test.describe("Ghost Deck", () => {
     ).toHaveCount(1);
   });
 });
+
+test.describe("Plasma Deck", () => {
+  test("doubles the blind target and balances chips and mult in the trace", async ({
+    page,
+  }) => {
+    await startRunWithDeck(page, "plasma-deck");
+    await expect(page.getByText("Score at least: 600")).toBeVisible();
+    const cards = page.locator(HAND_CARDS);
+    for (let i = 0; i < 5; i += 1) await cards.nth(i).click();
+    await page.getByRole("button", { name: /^Submit Hand/ }).click();
+    await expect(
+      page.getByText(/Chips and Mult balanced to/).first(),
+    ).toBeVisible();
+  });
+});

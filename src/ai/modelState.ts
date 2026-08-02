@@ -147,6 +147,7 @@ function toModelBlind(input: ModelStateInput): ModelBlind {
       blind: input.blind,
       boss: input.currentBoss,
       stake: input.selectedStake,
+      deck: input.selectedDeck,
     }),
     boss: isBossRound
       ? {
