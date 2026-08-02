@@ -143,3 +143,10 @@ distribution-matched teacher). Full rationale:
 ```sh
 python3 -m unittest discover -s ml/tests   # from the repo root; stdlib only
 ```
+
+`tests/fixtures/sample-encoded.json` pins the Python encoder's output for the
+TS-side cross-language check (`src/ai/encode.test.ts`). After any change to
+`encoding.py`'s `encode_state`/`encode_candidate`, regenerate it with
+`python3 generate_sample_encoded.py` — see
+[running-locally.md](../docs/ai-advisor/running-locally.md#changing-the-encoding-the-ritual)
+for the full encoding-change ritual.
