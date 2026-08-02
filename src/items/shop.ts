@@ -106,6 +106,7 @@ function isForceableKind(value: string): value is ForceableShopOfferKind {
 }
 
 function readForcedKindsFromStorage(): ReadonlyArray<ForceableShopOfferKind> | null {
+  if (typeof window === "undefined") return null;
   try {
     const raw = window.localStorage.getItem(FORCE_OFFER_KINDS_KEY);
     if (!raw) return null;
