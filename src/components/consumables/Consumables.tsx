@@ -11,6 +11,7 @@ import {
   consumableUseBlock,
   type Consumable,
 } from "../../items/consumables";
+import { formatSellLabel } from "../system/sellLabel";
 
 export const CONSUMABLE_DRAG_MIME = "application/x-browslatro-consumable";
 
@@ -110,7 +111,7 @@ export default function Consumables({
                 </span>
                 {canSell && (
                   <span className="consumable-tile-sell" aria-hidden="true">
-                    Sell ${sellValue}
+                    {formatSellLabel(sellValue)}
                   </span>
                 )}
               </button>

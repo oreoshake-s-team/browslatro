@@ -19,6 +19,7 @@ import {
 } from "../../items/jokers/dynamicJokerDescription";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 import { announce } from "../system/LiveAnnouncer";
+import { formatSellLabel } from "../system/sellLabel";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
 import JokerEditionBadge from "./JokerEditionBadge";
@@ -361,7 +362,7 @@ export default function Jokers({
                   )}
                   {jokerSellable && isDragging && (
                     <span className="joker-tile-sell" aria-hidden="true">
-                      Sell ${sellValue}
+                      {formatSellLabel(sellValue)}
                     </span>
                   )}
                 </div>
@@ -411,7 +412,7 @@ export default function Jokers({
                       sellJokerAt(joker, idx);
                     }}
                   >
-                    Sell ${sellValue}
+                    {formatSellLabel(sellValue)}
                   </button>
                 )}
                 {tooltipOpen && tooltipRect && (
