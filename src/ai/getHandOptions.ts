@@ -1,3 +1,4 @@
+import { applyCardEdition } from "../cards/editions";
 import { STEEL_MULT_FACTOR } from "../cards/heldInHand";
 import type { Card, Rank, Suit } from "../cards/types";
 import { detectHandLabel, type HandLabel } from "../scoring/handEvaluator";
@@ -76,6 +77,12 @@ function fastScore(
     multDelta += weight * getCardMultDelta(card);
     const times = getCardMultTimes(card);
     multTimes *= weight === 2 ? times * times : times;
+    const edition = applyCardEdition(card);
+    if (edition !== null) {
+      chips += weight * edition.additiveChips;
+      multDelta += weight * edition.additiveMult;
+      multTimes *= weight === 2 ? edition.xMult * edition.xMult : edition.xMult;
+    }
   }
   const steelMult = STEEL_MULT_FACTOR ** heldSteelWeight;
   return {

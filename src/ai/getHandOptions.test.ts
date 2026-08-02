@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, test } from "vitest";
-import type { Card, Enhancement, Rank, Seal, Suit } from "../cards/types";
+import type { Card, CardEdition, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import type { HandLabel } from "../scoring/handEvaluator";
 import {
   excludeFaceDownCandidates,
@@ -197,6 +197,9 @@ function randomHand(seed: number): Card[] {
     undefined, undefined, undefined, "bonus", "mult", "glass", "steel", "stone", "gold", "lucky",
   ];
   const seals: (Seal | undefined)[] = [undefined, undefined, undefined, "red", "gold"];
+  const editions: (CardEdition | undefined)[] = [
+    undefined, undefined, undefined, "foil", "holographic", "polychrome",
+  ];
   return Array.from({ length: 8 }, () =>
     card(
       ranks[Math.floor(rng() * ranks.length)],
@@ -204,6 +207,7 @@ function randomHand(seed: number): Card[] {
       {
         enhancement: enhancements[Math.floor(rng() * enhancements.length)],
         seal: seals[Math.floor(rng() * seals.length)],
+        edition: editions[Math.floor(rng() * editions.length)],
         bonusChips: rng() < 0.2 ? 30 : 0,
       },
     ),
