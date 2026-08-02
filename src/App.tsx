@@ -19,6 +19,7 @@ import { usePreferences } from "./components/system/preferences";
 import { useDevAnimationSpeedStyle } from "./hooks/useDevAnimationSpeedStyle";
 import { useInitialDeal } from "./hooks/useInitialDeal";
 import { useRunInitialization } from "./hooks/useRunInitialization";
+import { usePrefetchLazyChunks } from "./hooks/usePrefetchLazyChunks";
 import { useAppViewModel } from "./hooks/useAppViewModel";
 import {
   initialJokersConfig,
@@ -31,6 +32,7 @@ function AppContent() {
   const { runStats, pendingRunSelect, selectedDeck } = useAppViewModel();
   useChanceOverrides();
   useInitialDeal();
+  usePrefetchLazyChunks();
   const highVisibility = usePreferences((state) => state.highVisibility);
   useBodyClass(highVisibility, "high-visibility");
   const dyslexicFont = usePreferences((state) => state.dyslexicFont);
