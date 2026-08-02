@@ -61,14 +61,15 @@ describe("DeckSpec.implemented", () => {
       "painted-deck",
       "anaglyph-deck",
       "plasma-deck",
+      "erratic-deck",
     ]);
   });
 
-  test("other decks are not yet implemented (negative)", () => {
+  test("every deck in the catalog is implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(1);
+    expect(unimplementedCount).toBe(0);
   });
 });
 
@@ -140,6 +141,68 @@ describe("deckCompositionTransforms", () => {
 
   test("Black Deck returns no composition transforms (negative)", () => {
     expect(deckCompositionTransforms("black-deck")).toEqual([]);
+  });
+});
+
+describe("Erratic Deck spec", () => {
+  test("declares the randomize-ranks-and-suits transform", () => {
+    expect(deckCompositionTransforms("erratic-deck")).toEqual([
+      "randomize-ranks-and-suits",
+    ]);
+  });
+});
+
+describe("Erratic Deck initial deck materialization", () => {
+  function seeded(seedValues: ReadonlyArray<number>): () => number {
+    let i = 0;
+    return () => seedValues[i++ % seedValues.length];
+  }
+
+  test("keeps 52 cards", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("erratic-deck"),
+      seeded([0.1, 0.5, 0.9]),
+    );
+    expect(built).toHaveLength(52);
+  });
+
+  test("re-rolls every card to the rng-chosen rank and suit", () => {
+    const built = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("erratic-deck"),
+      seeded([0]),
+    );
+    expect(
+      built.every((c) => c.rank === "2" && c.suit === "spades"),
+    ).toBe(true);
+  });
+
+  test("preserves card ids for downstream modifier maps", () => {
+    const base = createDeck();
+    const built = applyDeckCompositionTransforms(
+      base,
+      deckCompositionTransforms("erratic-deck"),
+      seeded([0.3, 0.7]),
+    );
+    expect(built.map((c) => c.id)).toEqual(base.map((c) => c.id));
+  });
+
+  test("is deterministic under the same rng sequence", () => {
+    const roll = [0.13, 0.87, 0.42, 0.66, 0.05];
+    const a = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("erratic-deck"),
+      seeded(roll),
+    );
+    const b = applyDeckCompositionTransforms(
+      createDeck(),
+      deckCompositionTransforms("erratic-deck"),
+      seeded(roll),
+    );
+    expect(a.map((c) => `${c.rank}-${c.suit}`)).toEqual(
+      b.map((c) => `${c.rank}-${c.suit}`),
+    );
   });
 });
 
