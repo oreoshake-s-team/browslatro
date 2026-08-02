@@ -28,9 +28,7 @@ import {
   applyEditionToRandomJoker,
   applyEndOfRoundJokers,
   applyHandLevelJokers,
-  applyJokersToScoring,
   applyPerCardJokers,
-  computeFinalScoreWithJokers,
   createBusinessCardJoker,
   createCleverJoker,
   createCraftyJoker,
@@ -60,6 +58,7 @@ import {
   isFaceCard,
   type Joker,
 } from "./jokers";
+import { applyJokersToScoring } from "./jokers/scoring/scoring.test-helpers";
 import { chanceOverrideConfig } from "../dev/chanceOverride";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { Card, Rank, Suit } from "../cards/types";
@@ -343,38 +342,6 @@ describe("Joker firing order respects input array order", () => {
   });
 });
 
-describe("computeFinalScoreWithJokers", () => {
-  test("applies additive mult and xMult to base score", () => {
-    const jokerResult = {
-      additiveMult: 4,
-      additiveChips: 0,
-      xMult: 2,
-      moneyEarned: 0,
-    };
-    expect(computeFinalScoreWithJokers(10, 1, 5, jokerResult)).toBe(150);
-  });
-
-  test("returns the floored integer score", () => {
-    const jokerResult = {
-      additiveMult: 0,
-      additiveChips: 0,
-      xMult: 1.5,
-      moneyEarned: 0,
-    };
-    expect(computeFinalScoreWithJokers(10, 1, 0, jokerResult)).toBe(15);
-  });
-
-  test("matches the legacy formula when no joker effects are present", () => {
-    const jokerResult = {
-      additiveMult: 0,
-      additiveChips: 0,
-      xMult: 1,
-      moneyEarned: 0,
-    };
-    expect(computeFinalScoreWithJokers(35, 4, 33, jokerResult)).toBe(272);
-  });
-});
-
 describe("Hand-type Mult joker factories", () => {
   test.each<{ name: string; requires: HandLabel; amount: number; factory: () => Joker }>([
     { name: "Jolly", requires: "Pair", amount: JOLLY_JOKER_MULT, factory: createJollyJoker },
@@ -435,17 +402,6 @@ describe("Stencil composition with prior mult", () => {
     const emptySlots = MAX_JOKERS - 2;
     expect(result.additiveMult).toBe(4);
     expect(result.xMult).toBe(emptySlots);
-  });
-
-  test("computeFinalScoreWithJokers folds (additive) before (xMult)", () => {
-    const emptySlots = MAX_JOKERS - 2;
-    const finalScore = computeFinalScoreWithJokers(5, 1, 0, {
-      additiveMult: 4,
-      additiveChips: 0,
-      xMult: emptySlots,
-      moneyEarned: 0,
-    });
-    expect(finalScore).toBe(5 * (1 + 4) * emptySlots);
   });
 
   test("per-card additive mult from a suit joker also counts before Stencil multiplies", () => {
@@ -554,18 +510,6 @@ describe("applyJokersToScoring — hand-type X-Mult threading", () => {
   test("does not multiply xMult when context is omitted", () => {
     const result = applyJokersToScoring([createTheTribeJoker()], []);
     expect(result.xMult).toBe(1);
-  });
-});
-
-describe("computeFinalScoreWithJokers — additive chips applied before mult", () => {
-  test("folds jokerResult.additiveChips into chips total before multiplying", () => {
-    const finalScore = computeFinalScoreWithJokers(10, 2, 5, {
-      additiveMult: 3,
-      additiveChips: 50,
-      xMult: 2,
-      moneyEarned: 0,
-    });
-    expect(finalScore).toBe((10 + 5 + 50) * (2 + 3) * 2);
   });
 });
 

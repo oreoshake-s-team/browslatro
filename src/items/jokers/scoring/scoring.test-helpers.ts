@@ -37,14 +37,3 @@ export function applyJokersToScoring(
     moneyEarned,
   };
 }
-
-export function computeFinalScoreWithJokers(
-  baseHandChips: number,
-  baseHandMultiplier: number,
-  cardChipsTotal: number,
-  jokerResult: JokerScoringResult,
-): number {
-  const chipsTotal = baseHandChips + cardChipsTotal + jokerResult.additiveChips;
-  const mult = (baseHandMultiplier + jokerResult.additiveMult) * jokerResult.xMult;
-  return Math.floor(chipsTotal * mult);
-}

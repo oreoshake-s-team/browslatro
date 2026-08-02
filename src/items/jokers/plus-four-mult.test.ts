@@ -1,8 +1,8 @@
 // @vitest-environment node
 import {
-  applyJokersToScoring,
   createPlusFourMultJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 
 describe("applyJokersToScoring — +4 Mult joker", () => {
   test("adds 4 to the additive mult", () => {

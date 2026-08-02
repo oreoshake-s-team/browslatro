@@ -2,10 +2,10 @@
 import {
   SCHOLAR_CHIPS,
   SCHOLAR_MULT,
-  applyJokersToScoring,
   applyPerCardJokers,
   createScholarJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
 let nextId = 0;

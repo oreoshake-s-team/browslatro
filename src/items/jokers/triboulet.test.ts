@@ -2,11 +2,11 @@
 import {
   TRIBOULET_X_MULT,
   applyHandLevelJokers,
-  applyJokersToScoring,
   applyPerCardJokers,
   createLegendaryJokerCatalog,
   createTribouletJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { JokerRarity } from "../jokers";
 import type { Card, Rank, Suit } from "../../cards/types";
 

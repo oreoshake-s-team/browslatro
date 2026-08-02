@@ -2,10 +2,10 @@
 import {
   WALKIE_TALKIE_CHIPS,
   WALKIE_TALKIE_MULT,
-  applyJokersToScoring,
   applyPerCardJokers,
   createWalkieTalkieJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
 let nextId = 0;

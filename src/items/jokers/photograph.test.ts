@@ -2,10 +2,10 @@
 import {
   PHOTOGRAPH_X_MULT,
   applyHandLevelJokers,
-  applyJokersToScoring,
   applyPerCardJokers,
   createPhotographJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
 let nextId = 0;
