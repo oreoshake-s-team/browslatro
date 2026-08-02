@@ -35,6 +35,7 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "e2e": "playwright test",
+    "perf:profile": "yarn build:profile && PERF_CAPTURE=1 playwright test e2e/perf-session.spec.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },

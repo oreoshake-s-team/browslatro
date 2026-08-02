@@ -15,6 +15,7 @@ import { announce } from "../system/LiveAnnouncer";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
 import JokerTile from "./JokerTile";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
@@ -228,6 +229,7 @@ export default function Jokers({
 
   const showDropZone = Boolean(dropZone.onDrop);
   return (
+    <RenderProfiler id="Jokers">
     <Tray
       heading={t("trays.jokers")}
       className="relative min-w-0 flex-1"
@@ -318,5 +320,6 @@ export default function Jokers({
         ))}
       </ul>
     </Tray>
+    </RenderProfiler>
   );
 }

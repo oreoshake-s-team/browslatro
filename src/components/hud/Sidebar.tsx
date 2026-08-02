@@ -14,6 +14,7 @@ import HandScore from "../game/HandScore";
 import type { HandLabel } from "../../scoring/handEvaluator";
 import type { AnimationSpeed } from "../system/preferences";
 import { useSidebarViewModel } from "./useSidebarViewModel";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 interface SidebarProps {
   onNewGame: () => void;
@@ -47,6 +48,7 @@ export default function Sidebar({
     scoringEvents,
   } = useSidebarViewModel();
   return (
+    <RenderProfiler id="Sidebar">
     <aside
       className="flex w-75 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-surface p-4 portrait-narrow:h-auto portrait-narrow:w-full portrait-narrow:flex-row portrait-narrow:flex-wrap portrait-narrow:items-start portrait-narrow:border-r-0 portrait-narrow:border-b portrait-narrow:p-2 landscape-narrow:w-50 landscape-narrow:gap-2 landscape-narrow:p-2"
       aria-label={t("a11y.gameStatus")}
@@ -104,5 +106,6 @@ export default function Sidebar({
       <HumanPlayLog />
       <SidebarFooter />
     </aside>
+    </RenderProfiler>
   );
 }

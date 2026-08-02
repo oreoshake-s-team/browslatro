@@ -19,6 +19,7 @@ import { useGame } from "../../store/game";
 import { consumableCapacityFor, jokerCapacityFor } from "../../items/capacities";
 import CoachAdvice from "../advisor/CoachAdvice";
 import { Button } from "../ui/Button";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export interface PackSuggestionProps {
   readonly pack: PackOffer;
@@ -120,6 +121,7 @@ export default function PackSuggestion(
   );
 
   return (
+    <RenderProfiler id="PackSuggestion">
     <div
       className="flex w-full flex-col gap-2"
       data-testid="pack-suggestion"
@@ -141,5 +143,6 @@ export default function PackSuggestion(
         />
       )}
     </div>
+    </RenderProfiler>
   );
 }

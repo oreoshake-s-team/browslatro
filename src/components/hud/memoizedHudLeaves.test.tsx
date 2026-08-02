@@ -6,6 +6,8 @@ import RunProgress from "./RunProgress";
 import RoundProgress from "./RoundProgress";
 import RunInfo, { emptyHandCounts } from "./RunInfo";
 import ScoringTraceButton from "./ScoringTraceButton";
+import SidebarFooter from "./SidebarFooter";
+import ScoringTrace from "./ScoringTrace";
 import { createDefaultHandStats } from "../../scoring/handStats";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 
@@ -95,6 +97,20 @@ describe("HUD leaf memoization", () => {
         )}
       </Harness>,
     );
+    const rendersAfterMount = useTranslationCalls.count;
+    await bumpTwice();
+    expect(useTranslationCalls.count).toBe(rendersAfterMount);
+  });
+
+  test("SidebarFooter skips re-render when an unrelated ancestor state changes", async () => {
+    render(<Harness>{() => <SidebarFooter />}</Harness>);
+    const rendersAfterMount = useTranslationCalls.count;
+    await bumpTwice();
+    expect(useTranslationCalls.count).toBe(rendersAfterMount);
+  });
+
+  test("ScoringTrace skips re-render when props are unchanged and an unrelated ancestor re-renders", async () => {
+    render(<Harness>{() => <ScoringTrace events={stableScoringEvents} />}</Harness>);
     const rendersAfterMount = useTranslationCalls.count;
     await bumpTwice();
     expect(useTranslationCalls.count).toBe(rendersAfterMount);

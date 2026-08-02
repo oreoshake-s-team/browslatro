@@ -7,6 +7,7 @@ import { useModelLoadProgress } from "../game/useModelLoadProgress";
 import { Button } from "../ui/Button";
 import AdviceFeedbackControl from "./AdviceFeedbackControl";
 import { describeContextCandidate, errorMessage } from "./SuggestionAdvice";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export interface CoachAdviceProps<TAction> {
   readonly state: SuggestionState<TAction>;
@@ -44,6 +45,7 @@ export default function CoachAdvice<TAction>({
   const downloading = modelProgress !== null;
 
   return (
+    <RenderProfiler id="CoachAdvice">
     <div
       className="flex flex-col gap-2 rounded-xl border border-advisor/50 bg-advisor/10 p-3"
       data-testid="coach-advice"
@@ -137,6 +139,7 @@ export default function CoachAdvice<TAction>({
 
       <AiSection state={state} onAskAi={onAskAi} />
     </div>
+    </RenderProfiler>
   );
 }
 

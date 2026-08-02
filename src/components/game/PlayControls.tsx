@@ -5,6 +5,7 @@ import AutopilotControls from "./AutopilotControls";
 import { useAutopilotSession } from "./autopilotSession";
 import { useGameSession } from "./gameSession";
 import { Button } from "../ui/Button";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export default function PlayControls() {
   const { submitHand, discardSelected, isScoring } = useGameSession();
@@ -27,6 +28,7 @@ export default function PlayControls() {
     !isScoring;
 
   return (
+    <RenderProfiler id="PlayControls">
     <div className="flex w-full max-w-225 flex-col gap-3">
       <div className="flex gap-3">
         <Button
@@ -102,5 +104,6 @@ export default function PlayControls() {
           />
         )}
     </div>
+    </RenderProfiler>
   );
 }

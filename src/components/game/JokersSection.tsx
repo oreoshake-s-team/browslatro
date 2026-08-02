@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import Jokers from "../jokers/Jokers";
 import { useGame } from "../../store/game";
 import { jokerCapacityFor } from "../../items/capacities";
@@ -21,17 +21,25 @@ function JokersSection() {
 
   const { useConsumable } = useConsumableActions();
 
-  function sellJoker(jokerIdx: number): void {
-    play("pop");
-    sellJokerAction(jokerIdx);
-  }
+  const sellJoker = useCallback(
+    (jokerIdx: number): void => {
+      play("pop");
+      sellJokerAction(jokerIdx);
+    },
+    [sellJokerAction],
+  );
 
-  const dragController = useDragController({
-    useConsumable,
-    sellConsumable: (consumableIdx: number) => {
+  const sellConsumable = useCallback(
+    (consumableIdx: number) => {
       play("pop");
       sellConsumableAction(consumableIdx);
     },
+    [sellConsumableAction],
+  );
+
+  const dragController = useDragController({
+    useConsumable,
+    sellConsumable,
     sellJoker,
     needsConsumableDragIndex: true,
     needsJokerDragIndex: false,

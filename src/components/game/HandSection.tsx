@@ -9,6 +9,7 @@ import { play } from "../system/sounds";
 import { announce } from "../system/LiveAnnouncer";
 import { bossForcesCardSelection, debuffedHandIds } from "../../items/bosses";
 import { useGameSession } from "./gameSession";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export default function HandSection() {
   const {
@@ -63,11 +64,9 @@ export default function HandSection() {
     needsConsumableDropZone: false,
   });
 
-  const debuffedIds = debuffedHandIds(
-    hand,
-    currentBoss,
-    blind === 3,
-    playedCardKeysThisAnte,
+  const debuffedIds = useMemo(
+    () => debuffedHandIds(hand, currentBoss, blind === 3, playedCardKeysThisAnte),
+    [hand, currentBoss, blind, playedCardKeysThisAnte],
   );
   const forcesCard = blind === 3 && bossForcesCardSelection(currentBoss);
   const handleToggleCard = useCallback(
@@ -87,6 +86,7 @@ export default function HandSection() {
   );
 
   return (
+    <RenderProfiler id="HandSection">
     <HandComponent
       hand={hand}
       remaining={inHandRemaining}
@@ -110,5 +110,6 @@ export default function HandSection() {
       jokerDropEnabled={dragController.draggingJokerIndex !== null}
       onJokerSellDrop={dragController.onJokerDropOnDeck}
     />
+    </RenderProfiler>
   );
 }

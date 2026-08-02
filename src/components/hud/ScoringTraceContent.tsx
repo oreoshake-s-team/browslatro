@@ -8,6 +8,7 @@ import {
   type ScoringEvent,
 } from "../../scoring/scoringTrace";
 import { formatNumber } from "../../utils/formatNumber";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 interface ScoringTraceContentProps {
   readonly events: ReadonlyArray<ScoringEvent>;
@@ -24,6 +25,7 @@ export default function ScoringTraceContent({
     return <p className="text-muted italic">No scoring yet.</p>;
   }
   return (
+    <RenderProfiler id="ScoringTraceContent">
     <>
       {groups.map((group) => {
         const key = group.base ? `hand-${group.base.handNumber}` : "pre-hand";
@@ -94,5 +96,6 @@ export default function ScoringTraceContent({
         );
       })}
     </>
+    </RenderProfiler>
   );
 }
