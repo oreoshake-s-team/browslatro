@@ -25,6 +25,13 @@ Two consequences worth internalizing: the store may already contain a **restored
 before `App` mounts (the bootstrap effects in `App.tsx` check `didRestoreFromSnapshot()`
 to avoid clobbering it), and i18n is ready before any component asks for a string.
 
+Before any of this runs, the page is already showing content: `index.html` ships a
+static `<main data-seo-shell>` splash — a sibling of `#root`, styled by an inline
+`<style>` block so it depends on no bundle CSS — with the game description, feature
+list, and a `role="status"` "Loading…" line. It doubles as the crawlable SEO surface
+for non-JS user agents. `App` fades it out and removes it on first mount (see
+[App composition](#app-composition-srcapptsx)).
+
 ## Layers
 
 ```
@@ -162,6 +169,9 @@ by one hook calling another's internals.
   results into `<Game>` and `<Sidebar>`,
 - runs first-mount bootstrap effects (build the deck, deal, pick ante-1 vouchers/boss),
   each guarded by `if (didRestoreFromSnapshot()) return;`,
+- dismisses the pre-hydration SEO/loading splash from `index.html` on first mount via
+  `dismissSeoShell()` (`src/seo/loadingShell.ts`), which fades the shell out and removes
+  it from the DOM,
 - computes the animation step duration (`getScoringStepMs`) from the user's speed
   preference and `prefers-reduced-motion`, and sets the `--animation-speed` CSS custom
   property so CSS animations scale with the same knob,
