@@ -82,6 +82,7 @@ afterEach(() => {
     vi.runOnlyPendingTimers();
   });
   vi.useRealTimers();
+  window.localStorage.removeItem("browslatro:forceShopOfferKinds");
   shopPickerRngConfig.rng = Math.random;
   bossPickerRngConfig.rng = Math.random;
 });
@@ -113,6 +114,7 @@ function flushDiscardAnimation(): void {
 async function getImmolateInConsumables(
   user: ReturnType<typeof userEvent.setup>,
 ): Promise<void> {
+  window.localStorage.setItem("browslatro:forceShopOfferKinds", "spectral");
   shopPickerRngConfig.rng = forceShopLayout(["spectral"]);
   await user.click(screen.getByText(/Add \$10/));
   await user.click(screen.getByText(/^Win$/));

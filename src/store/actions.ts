@@ -43,6 +43,7 @@ import {
   pickShopOffers,
   pickSingleShopOffer,
   shopPickerRngConfig,
+  SPECTRAL_OFFER_CHANCE,
 } from "../items/shop";
 import {
   applyPlanetUpgrade,
@@ -88,7 +89,7 @@ import {
   fullDeckPile,
   initialDeal,
 } from "../cards/deckBuild";
-import { deckBossDefeatTagIds, deckSuppressesInterest } from "../items/decks";
+import { deckAllowsShopSpectrals, deckBossDefeatTagIds, deckSuppressesInterest } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -211,6 +212,9 @@ function openPostRoundShop(s: GameState, get: () => GameState): void {
     forcedPackPools: s.pendingForcedPacks,
     editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
     tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
+    spectralOfferChance: deckAllowsShopSpectrals(s.selectedDeck)
+      ? SPECTRAL_OFFER_CHANCE
+      : 0,
     guaranteedPlanetId: telescopePlanetId,
     kindWeights: offerKindWeights(s.ownedVoucherIds),
     illusionEnabled: illusionEnabled(s.ownedVoucherIds),
@@ -403,6 +407,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       extraSlots: extraShopOfferSlots(s.ownedVoucherIds),
       editionRateMultiplier: editionRateMultiplier(s.ownedVoucherIds),
       tarotToSpectralSwapChance: tarotToSpectralSwapChance(s.ownedVoucherIds),
+    spectralOfferChance: deckAllowsShopSpectrals(s.selectedDeck)
+      ? SPECTRAL_OFFER_CHANCE
+      : 0,
       kindWeights: offerKindWeights(s.ownedVoucherIds),
       illusionEnabled: illusionEnabled(s.ownedVoucherIds),
       rng: shopPickerRngConfig.rng,
@@ -492,6 +499,9 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
             editionRateMultiplier: editionRateMultiplier(nextOwnedVoucherIds),
             tarotToSpectralSwapChance:
               tarotToSpectralSwapChance(nextOwnedVoucherIds),
+            spectralOfferChance: deckAllowsShopSpectrals(s.selectedDeck)
+              ? SPECTRAL_OFFER_CHANCE
+              : 0,
             kindWeights: offerKindWeights(nextOwnedVoucherIds),
             illusionEnabled: illusionEnabled(nextOwnedVoucherIds),
             rng: shopPickerRngConfig.rng,

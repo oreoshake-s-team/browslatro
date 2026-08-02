@@ -412,6 +412,7 @@ export interface PickShopOffersArgs {
   readonly forcedPackPools?: ReadonlyArray<PackPool>;
   readonly editionRateMultiplier?: number;
   readonly tarotToSpectralSwapChance?: number;
+  readonly spectralOfferChance?: number;
   readonly guaranteedPlanetId?: string;
   readonly kindWeights?: OfferKindWeights;
   readonly illusionEnabled?: boolean;
@@ -565,9 +566,23 @@ function pickRandomKindOffer(
   rng: RandomSource,
   picked: PickedOfferIds,
 ): ShopItem | null {
-  if (rollChance(SPECTRAL_OFFER_CHANCE, rng)) {
-    const spectral = pickOfferByKind("spectral", args, rng, picked);
-    if (spectral) return spectral;
+  const seamSpectralChance = (readForcedKindsFromStorage() ?? []).includes(
+    "spectral",
+  )
+    ? SPECTRAL_OFFER_CHANCE
+    : 0;
+  const spectralChance = Math.max(
+    args.spectralOfferChance ?? 0,
+    seamSpectralChance,
+  );
+  if (spectralChance > 0) {
+    if (rollChance(spectralChance, rng)) {
+      const spectral = pickOfferByKind("spectral", args, rng, picked);
+      if (spectral) return spectral;
+    }
+  } else {
+    // burn the slot's spectral draw so seeded shops stay aligned across decks
+    rng();
   }
   const order = pickWeightedKindOrder(args, rng);
   for (const kind of order) {

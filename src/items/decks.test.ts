@@ -4,6 +4,7 @@ import {
   createDeckCatalog,
   deckCompositionTransforms,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckAllowsShopSpectrals,
   deckBossDefeatTagIds,
   deckConsumableSlotsDelta,
   deckHandSizeDelta,
@@ -51,6 +52,7 @@ describe("DeckSpec.implemented", () => {
       "black-deck",
       "magic-deck",
       "nebula-deck",
+      "ghost-deck",
       "abandoned-deck",
       "checkered-deck",
       "zodiac-deck",
@@ -63,7 +65,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(3);
+    expect(unimplementedCount).toBe(2);
   });
 });
 
@@ -285,6 +287,25 @@ describe("deckConsumableSlotsDelta", () => {
 
   test("Red Deck does not change consumable slots (negative)", () => {
     expect(deckConsumableSlotsDelta("red-deck")).toBe(0);
+  });
+});
+
+describe("Ghost Deck spec", () => {
+  test("declares shop spectral offers and a starting Hex", () => {
+    expect(getDeckSpec("ghost-deck").modifiers).toEqual([
+      { kind: "shop-spectral-offers" },
+      { kind: "starting-consumable", consumable: "spectral", itemId: "hex" },
+    ]);
+  });
+});
+
+describe("deckAllowsShopSpectrals", () => {
+  test("Ghost Deck enables spectral shop offers", () => {
+    expect(deckAllowsShopSpectrals("ghost-deck")).toBe(true);
+  });
+
+  test("Red Deck does not enable spectral shop offers (negative)", () => {
+    expect(deckAllowsShopSpectrals("red-deck")).toBe(false);
   });
 });
 

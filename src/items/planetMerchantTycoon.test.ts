@@ -9,6 +9,7 @@ import {
   pickSingleShopOffer,
   SHOP_OFFER_SLOTS,
   type ShopItem,
+  SPECTRAL_OFFER_CHANCE,
 } from "./shop";
 import {
   offerKindWeights,
@@ -157,6 +158,7 @@ describe("pickShopItemOffers — weighted planet distribution", () => {
         kindWeights: offerKindWeights(
           ownedSet(["planet-merchant", "planet-tycoon"]),
         ),
+        spectralOfferChance: SPECTRAL_OFFER_CHANCE,
       });
       const items = offers.filter(
         (o) => o.kind !== "pack" && o.kind !== "spectral",
