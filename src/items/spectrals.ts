@@ -1,6 +1,7 @@
 import type { Card, CardEdition, Enhancement, Rank, Seal, Suit } from "../cards/types";
 import { SUITS, nextCardId } from "../cards/deck";
 import { rollCardEdition } from "../cards/editions";
+import { FACE_RANKS as FACE_RANKS_SET } from "../cards/faceCard";
 import { pickRandomNonEmpty } from "./random";
 import type { JokerRarity } from "./jokers";
 
@@ -69,7 +70,7 @@ const SEAL_DISPLAY: Record<Seal, string> = {
   purple: "Purple",
 };
 
-const FACE_RANKS: ReadonlyArray<Rank> = ["J", "Q", "K"];
+const FACE_RANKS: ReadonlyArray<Rank> = [...FACE_RANKS_SET];
 const ACE_RANKS: ReadonlyArray<Rank> = ["A"];
 const NUMBERED_RANKS: ReadonlyArray<Rank> = [
   "2", "3", "4", "5", "6", "7", "8", "9", "10",

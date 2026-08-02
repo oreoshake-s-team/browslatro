@@ -1,13 +1,10 @@
-import type { Card, Rank } from "../../../cards/types";
+import type { Card } from "../../../cards/types";
+import { isFaceCard } from "../../../cards/faceCard";
 import { JOKER_SELL_VALUE } from "../constants";
 import { RENTAL_BASE_PRICE, hasSticker } from "../stickers";
 import type { Joker } from "../types";
 
-const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
-
-export function isFaceCard(card: Card): boolean {
-  return FACE_RANKS.has(card.rank);
-}
+export { isFaceCard };
 
 export function allCardsAreFaceFromJokers(
   jokers: ReadonlyArray<Joker>,

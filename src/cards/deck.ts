@@ -1,7 +1,6 @@
 import type { Card, Enhancement, Rank, Suit } from "./types";
+import { FACE_RANKS } from "./faceCard";
 import type { DeckCompositionTransform } from "../items/decks";
-
-const FACE_RANKS: ReadonlySet<Rank> = new Set<Rank>(["J", "Q", "K"]);
 
 const SPADES_AND_HEARTS_SUIT_MAP: Readonly<Record<Suit, Suit>> = {
   spades: "spades",
