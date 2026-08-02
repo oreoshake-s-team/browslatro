@@ -1,7 +1,7 @@
 import { categorizeShopItem } from "./advisor/shopCategory";
 import { shopItemAttributes } from "./advisor/shopCandidateAttributes";
 import { packFeatureVector } from "./advisor/packFeatures";
-import { consumableUseCandidate } from "./headlessShopAgent";
+import { consumableUseCandidate } from "./consumableUseCandidate";
 import type { Consumable } from "../items/consumables";
 import type { ShopItem } from "../items/shop";
 

@@ -43,6 +43,9 @@ import { voucherFeatureVector } from "./advisor/voucherFeatures";
 import { packFeatureVector } from "./advisor/packFeatures";
 import { applyConsumable } from "./headlessConsumables";
 import { emptyShopActivity, type ShopActivity } from "./shopActivity";
+import { consumableUseCandidate } from "./consumableUseCandidate";
+
+export { consumableUseCandidate } from "./consumableUseCandidate";
 
 const MAX_REROLLS = 2;
 
@@ -130,29 +133,6 @@ function jokerSellCandidate(joker: Joker, index: number): ShopAdviceCandidate {
   return {
     action: "sell",
     item: { itemType: "joker", category: categorizeShopItem(item), attributes: shopItemAttributes(item), id: `sell:${joker.id}:${index}`, name: joker.name, description: "", cost: -jokerSellValue(joker) },
-  };
-}
-
-function consumableToPackOption(consumable: Consumable): PackOption {
-  if (consumable.kind === "planet") return { kind: "planet", planet: consumable.card };
-  if (consumable.kind === "tarot") return { kind: "tarot", tarot: consumable.card };
-  return { kind: "spectral", spectral: consumable.card };
-}
-
-export function consumableUseCandidate(consumable: Consumable, index: number): ShopAdviceCandidate {
-  const option = consumableToPackOption(consumable);
-  return {
-    action: "use",
-    item: {
-      itemType: consumable.kind,
-      category: categorizePackOption(option),
-      attributes: packOptionAttributes(option),
-      ...(consumable.kind === "planet" ? { advancesHands: consumable.card.hands } : {}),
-      id: `use:${consumable.card.id}:${index}`,
-      name: consumable.card.name,
-      description: "",
-      cost: 0,
-    },
   };
 }
 
