@@ -2,13 +2,13 @@
 import {
   SMILEY_FACE_MULT,
   applyHandLevelJokers,
-  applyJokersToScoring,
   applyPerCardJokers,
   createBusinessCardJoker,
   createFacelessJoker,
   createPareidoliaJoker,
   createSmileyFaceJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import { applyOnDiscardJokers } from "../jokers";
 import type { JokerRarity } from "../jokers";
 import { allCardsAreFaceFromJokers, isFaceCardWith } from "./scoring/utils";

@@ -2,10 +2,10 @@
 import {
   ROUGH_GEM_MONEY,
   applyHandLevelJokers,
-  applyJokersToScoring,
   applyPerCardJokers,
   createRoughGemJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { JokerRarity } from "../jokers";
 import type { Card, Rank, Suit } from "../../cards/types";
 

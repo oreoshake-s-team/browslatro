@@ -1,10 +1,10 @@
 // @vitest-environment node
 import {
   SMILEY_FACE_MULT,
-  applyJokersToScoring,
   applyPerCardJokers,
   createSmileyFaceJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
 let nextId = 0;

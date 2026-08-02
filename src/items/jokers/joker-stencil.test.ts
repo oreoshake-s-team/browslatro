@@ -2,13 +2,13 @@
 import {
   MAX_JOKERS,
   applyHandLevelJokers,
-  applyJokersToScoring,
   createBusinessCardJoker,
   createGreedyJoker,
   createJokerStencilJoker,
   createJollyJoker,
   createPlusFourMultJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 
 describe("applyJokersToScoring — Joker Stencil", () => {
   test("contributes xMult equal to empty slot count when only Stencil is equipped", () => {

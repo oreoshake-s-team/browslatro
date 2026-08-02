@@ -1,8 +1,8 @@
 // @vitest-environment node
 import {
-  applyJokersToScoring,
   createBusinessCardJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
 let nextId = 0;

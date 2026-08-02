@@ -1,10 +1,10 @@
 // @vitest-environment node
 import {
   FIBONACCI_MULT,
-  applyJokersToScoring,
   applyPerCardJokers,
   createFibonacciJoker,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import type { Card, Rank, Suit } from "../../cards/types";
 
 let nextId = 0;

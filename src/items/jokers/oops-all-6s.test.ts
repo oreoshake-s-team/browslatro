@@ -1,12 +1,12 @@
 // @vitest-environment node
 import { afterEach } from "vitest";
 import {
-  applyJokersToScoring,
   createBusinessCardJoker,
   createOopsAllSixesJoker,
   createPlusFourMultJoker,
   probabilityMultiplierFromJokers,
 } from "../jokers";
+import { applyJokersToScoring } from "./scoring/scoring.test-helpers";
 import { OOPS_ALL_SIXES_PROBABILITY_MULTIPLIER } from "./factories";
 import type { JokerRarity } from "../jokers";
 import { chanceOverrideConfig } from "../../dev/chanceOverride";
