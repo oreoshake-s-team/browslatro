@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useGame } from "../store/game";
 import { consumableCapacityFor, jokerCapacityFor } from "../items/capacities";
 import { captureRunEvent } from "../ai/humanPlayWiring";
@@ -38,60 +39,50 @@ export interface UseConsumableActionsResult {
 }
 
 export function useConsumableActions(): UseConsumableActionsResult {
-  const consumables = useGame((s) => s.consumables);
-  const triggerNope = useGame((s) => s.triggerNope);
-  const setConsumables = useGame((s) => s.setConsumables);
-  const openedPack = useGame((s) => s.openedPack);
-  const packPreviewHand = useGame((s) => s.packPreviewHand);
-  const packPreviewSelectedIds = useGame((s) => s.packPreviewSelectedIds);
-  const setHandStats = useGame((s) => s.setHandStats);
-  const selectedIds = useGame((s) => s.selectedIds);
-  const setSelectedIds = useGame((s) => s.setSelectedIds);
-  const setSelectedHand = useGame((s) => s.setSelectedHand);
-  const setChips = useGame((s) => s.setChips);
-  const setMultiplier = useGame((s) => s.setMultiplier);
-  const setDealt = useGame((s) => s.setDealt);
-  const jokers = useGame((s) => s.jokers);
-  const setJokers = useGame((s) => s.setJokers);
-  const applyEnhancementToSelectedPreviewCards = useGame(
-    (s) => s.applyEnhancementToSelectedPreviewCards,
-  );
-  const applySealToSelectedPreviewCards = useGame(
-    (s) => s.applySealToSelectedPreviewCards,
-  );
-  const applySuitToSelectedPreviewCards = useGame(
-    (s) => s.applySuitToSelectedPreviewCards,
-  );
-  const applyDeathCopyToSelectedPreviewCards = useGame(
-    (s) => s.applyDeathCopyToSelectedPreviewCards,
-  );
-  const destroySelectedPreviewCards = useGame(
-    (s) => s.destroySelectedPreviewCards,
-  );
-  const rankUpSelectedPreviewCards = useGame(
-    (s) => s.rankUpSelectedPreviewCards,
-  );
-  const applyAuraSelectedPreviewCards = useGame(
-    (s) => s.applyAuraSelectedPreviewCards,
-  );
-  const duplicateSelectedPreviewCards = useGame(
-    (s) => s.duplicateSelectedPreviewCards,
-  );
-  const applySpectralEffect = useGame((s) => s.applySpectralEffect);
-  const setDestroyedCardIds = useGame((s) => s.setDestroyedCardIds);
-  const setAddedCards = useGame((s) => s.setAddedCards);
-  const setCardSealsById = useGame((s) => s.setCardSealsById);
-  const setCardEnhancementsById = useGame((s) => s.setCardEnhancementsById);
-  const setCardEditionsById = useGame((s) => s.setCardEditionsById);
-  const setLastUsedConsumable = useGame((s) => s.setLastUsedConsumable);
-  const handDisplayOrder = useGame((s) => s.handDisplayOrder);
-  const refreshCelestialPricing = useGame((s) => s.refreshCelestialPricing);
-
-  function useConsumable(consumableIdx: number): void {
+  // useConsumable is a pure event handler (nothing here feeds JSX), so every
+  // field it needs is read fresh at call time from a single getState()
+  // snapshot instead of subscribing JokersSection/ConsumablesSection to 28
+  // Zustand fields — most unrelated to what those components render — which
+  // forced them to re-render on nearly every gameplay action.
+  const useConsumable = useCallback((consumableIdx: number): void => {
+    const preUse = useGame.getState();
+    const {
+      consumables,
+      triggerNope,
+      setConsumables,
+      openedPack,
+      packPreviewHand,
+      packPreviewSelectedIds,
+      setHandStats,
+      selectedIds,
+      setSelectedIds,
+      setSelectedHand,
+      setChips,
+      setMultiplier,
+      setDealt,
+      jokers,
+      setJokers,
+      applyEnhancementToSelectedPreviewCards,
+      applySealToSelectedPreviewCards,
+      applySuitToSelectedPreviewCards,
+      applyDeathCopyToSelectedPreviewCards,
+      destroySelectedPreviewCards,
+      rankUpSelectedPreviewCards,
+      applyAuraSelectedPreviewCards,
+      duplicateSelectedPreviewCards,
+      applySpectralEffect,
+      setDestroyedCardIds,
+      setAddedCards,
+      setCardSealsById,
+      setCardEnhancementsById,
+      setCardEditionsById,
+      setLastUsedConsumable,
+      handDisplayOrder,
+      refreshCelestialPricing,
+    } = preUse;
     const entry = consumables[consumableIdx];
     if (!entry) return;
     const previewActive = openedPack !== null && packPreviewHand.length > 0;
-    const preUse = useGame.getState();
     function consume(): void {
       const idx = consumableIdx;
       const decision = consumableUseDecision(preUse, idx);
@@ -530,7 +521,7 @@ export function useConsumableActions(): UseConsumableActionsResult {
     setChips(0);
     setMultiplier(0);
     consume();
-  }
+  }, []);
 
   return { useConsumable };
 }

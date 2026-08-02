@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import type { Blind, BlindValuesMap } from "../../cards/types";
 import { tHandLabel } from "../../i18n/handLabels";
@@ -63,4 +64,4 @@ function Round({
   );
 }
 
-export default Round;
+export default memo(Round);
