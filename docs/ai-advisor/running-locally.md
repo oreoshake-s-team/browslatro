@@ -136,7 +136,9 @@ Because [two encoders must agree](./engine-plumbing.md#encoding-syncing-two-enco
 
 1. Edit [`src/ai/encode.ts`](../../src/ai/encode.ts) **and** [`ml/encoding.py`](../../ml/encoding.py) identically.
 2. Bump `ENCODING_VERSION` in **both** (currently `4`).
-3. Regenerate golden fixtures and run **both** `yarn test src/ai/encode.test.ts` and `python3 -m unittest discover -s ml/tests`.
+3. Regenerate golden fixtures, then run **both** `yarn test src/ai/encode.test.ts` and `python3 -m unittest discover -s ml/tests`:
+   - Hand encoding: `python3 ml/generate_sample_encoded.py` rewrites `ml/tests/fixtures/sample-encoded.json` from `ml/encoding.py`'s current output; `src/ai/encode.test.ts` checks the TS encoder against it.
+   - Shop encoding: `yarn dlx tsx scripts/generateShopGolden.ts` rewrites `ml/tests/fixtures/shop-golden.json` from `src/ai/advisor/shopEncoding.ts`'s current output; `ml/tests/test_encoding.py`'s `ShopGoldenCrossLanguageTests` checks the Python encoder against it.
 4. Retrain and export a new `advisor-policy-v{N+1}.onnx`, benchmark it, and only then repoint the model URL.
 
 Skipping any step ships a model that sees different inputs than it was trained on — the failure is silent (no crash, just degraded suggestions), which is exactly why the version + golden-vector guards exist.
