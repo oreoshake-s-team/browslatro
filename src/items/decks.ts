@@ -140,7 +140,18 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
       { kind: "deck-composition", transform: "spades-and-hearts-only" },
     ],
   },
-  { id: "zodiac-deck", name: "Zodiac Deck", description: "Start with Tarot Merchant, Planet Merchant, and Overstock vouchers.", implemented: false, modifiers: [] },
+  {
+    id: "zodiac-deck",
+    name: "Zodiac Deck",
+    description:
+      "Start with Tarot Merchant, Planet Merchant, and Overstock vouchers.",
+    implemented: true,
+    modifiers: [
+      { kind: "starting-voucher", voucherId: "tarot-merchant" },
+      { kind: "starting-voucher", voucherId: "planet-merchant" },
+      { kind: "starting-voucher", voucherId: "overstock" },
+    ],
+  },
   {
     id: "painted-deck",
     name: "Painted Deck",

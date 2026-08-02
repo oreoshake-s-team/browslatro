@@ -57,3 +57,21 @@ test.describe("Nebula Deck", () => {
     ).toHaveCount(1);
   });
 });
+
+test.describe("Zodiac Deck", () => {
+  test("Overstock adds a third shop offer slot from the first shop", async ({
+    page,
+  }) => {
+    await startRunWithDeck(page, "zodiac-deck");
+    await expect(page.locator(HAND_CARDS)).toHaveCount(8);
+    for (let i = 0; i < 5; i += 1) {
+      await page.locator(HAND_CARDS).nth(i).click();
+    }
+    await page.getByRole("button", { name: /^Submit Hand/ }).click();
+    await page.getByRole("button", { name: /Continue/ }).click();
+    await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
+    await expect(
+      page.locator('[data-shop-offer]:not([data-offer-kind="pack"])'),
+    ).toHaveCount(3);
+  });
+});
