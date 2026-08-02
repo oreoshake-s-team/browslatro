@@ -38,7 +38,11 @@
   --color-black: #000;
 
   --spacing: 0.4rem;
+  --spacing-tile-w: 6.5rem;
+  --spacing-tile-h: 9.1rem;
 
+  --text-2xs: 0.85rem;
+  --text-2xs--line-height: 1.15rem;
   --text-xs: 1.2rem;
   --text-xs--line-height: 1.6rem;
   --text-sm: 1.4rem;

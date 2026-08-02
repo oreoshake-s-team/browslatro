@@ -15,6 +15,7 @@ beforeEach(() => {
 
 afterEach(() => {
   setConnection(undefined);
+  vi.unstubAllGlobals();
   vi.useRealTimers();
 });
 
@@ -77,6 +78,23 @@ test("does not start the next chunk until the previous one settles", async () =>
   resolveFirst?.();
   await vi.advanceTimersByTimeAsync(1000);
   expect(second).toHaveBeenCalledTimes(1);
+});
+
+test("stops pumping the queue when the window global is gone", async () => {
+  let resolveFirst: (() => void) | undefined;
+  const first = vi.fn(
+    () =>
+      new Promise<void>((resolve) => {
+        resolveFirst = resolve;
+      }),
+  );
+  const second = vi.fn(() => Promise.resolve());
+  scheduleIdleChunkPrefetch([first, second]);
+  await vi.advanceTimersByTimeAsync(1000);
+  vi.stubGlobal("window", undefined);
+  resolveFirst?.();
+  await vi.advanceTimersByTimeAsync(1000);
+  expect(second).not.toHaveBeenCalled();
 });
 
 test("continues to the next chunk even when an earlier import rejects", async () => {

@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "./cn";
 
 export const tile = cva(
-  "flex h-28 w-40 shrink-0 flex-col gap-1 overflow-hidden rounded-lg border border-t-2 border-border bg-raised p-2 text-left text-xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+  "flex h-tile-h w-tile-w min-w-0 shrink flex-col gap-1 overflow-hidden rounded-lg border border-t-2 border-border bg-raised p-2 text-left text-2xs transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
   {
     variants: {
       accent: {
@@ -28,6 +28,6 @@ export const tile = cva(
 export type TileVariants = VariantProps<typeof tile>;
 
 export const emptyTile =
-  "flex h-28 w-20 shrink-0 items-center justify-center rounded-lg border-2 border-dashed border-border text-xs text-muted italic";
+  "flex h-tile-h w-tile-w min-w-0 shrink items-center justify-center rounded-lg border-2 border-dashed border-border text-2xs text-muted italic";
 
 export { cn };

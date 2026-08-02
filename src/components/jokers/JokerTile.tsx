@@ -152,7 +152,7 @@ function JokerTile({
         data-testid={`joker-tile-inner-${joker.id}`}
         data-pulse={pulse}
       >
-        <span className="truncate font-bold" data-joker-name="">
+        <span className="line-clamp-2 shrink-0 font-bold" data-joker-name="">
           {localizedJokerName(i18n.language, joker.id, joker.name)}
         </span>
         <span
@@ -171,7 +171,7 @@ function JokerTile({
           })}
         </span>
         {(joker.edition || jokerStickers(joker).length > 0) && (
-          <div className="mt-auto flex flex-wrap items-center gap-1" data-joker-badges="">
+          <div className="mt-auto flex shrink-0 flex-wrap items-center gap-1" data-joker-badges="">
             {joker.edition && <JokerEditionBadge edition={joker.edition} />}
             <JokerStickerBadges joker={joker} />
           </div>
