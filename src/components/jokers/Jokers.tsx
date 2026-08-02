@@ -17,15 +17,14 @@ import {
   dynamicJokerDescriptionNode,
   dynamicJokerDescriptionText,
 } from "../../items/jokers/dynamicJokerDescription";
-import { tSuitName } from "../../i18n/strings";
 import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
-import { useGame } from "../../store/game";
 import { announce } from "../system/LiveAnnouncer";
 import { useMimeDropZone } from "../system/useMimeDropZone";
 import { CONSUMABLE_DRAG_MIME } from "../consumables/Consumables";
 import JokerEditionBadge from "./JokerEditionBadge";
 import JokerStickerBadges from "./JokerStickerBadges";
 import JokerTooltip from "./JokerTooltip";
+import { useJokerDescriptionContext } from "./useJokerDescriptionContext";
 
 export const JOKER_DRAG_MIME = "application/x-browslatro-joker";
 
@@ -57,12 +56,8 @@ export default function Jokers({
   onConsumableDrop,
 }: JokersProps) {
   const { t, i18n } = useTranslation();
-  const todoHand = useGame((s) => s.todoHand);
-  const castleSuit = useGame((s) => s.castleSuit);
-  const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
-  const idolTarget = useGame((s) => s.idolTarget);
-  const idolRankName = idolTarget?.rank ?? null;
-  const idolSuitName = idolTarget ? tSuitName(t, idolTarget.suit) : null;
+  const { todoHand, castleSuit, castleSuitName, idolRankName, idolSuitName } =
+    useJokerDescriptionContext();
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [activeGapIndex, setActiveGapIndex] = useState<number | null>(null);
   const [tooltipOpenId, setTooltipOpenId] = useState<string | null>(null);

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import "./JokerTooltip.css";
 import { localizedJokerName } from "../../i18n/jokerOverrides";
 import { dynamicJokerDescriptionNode } from "../../items/jokers/dynamicJokerDescription";
-import { tSuitName } from "../../i18n/strings";
 import {
   JOKER_EDITION_INFO,
   JOKER_STICKER_INFO,
@@ -30,6 +29,7 @@ import {
 } from "../../cards/deckBuild";
 import { formatChanceRatio } from "../cards/cardInfo";
 import { useTooltipPosition } from "../system/useTooltipPosition";
+import { useJokerDescriptionContext } from "./useJokerDescriptionContext";
 
 interface JokerTooltipProps {
   id: string;
@@ -40,19 +40,15 @@ interface JokerTooltipProps {
 }
 
 export default function JokerTooltip({ id, joker, jokers = [], jokerIndex = 0, anchorRect }: JokerTooltipProps) {
-  const { t, i18n } = useTranslation();
+  const { i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
   const copyTargetLabel = computeCopyTargetLabel(jokers, jokerIndex);
   const editionInfo = joker.edition ? JOKER_EDITION_INFO[joker.edition] : null;
   const editionClass = joker.edition
     ? `joker-tooltip-edition-${joker.edition}`
     : "";
-  const todoHand = useGame((s) => s.todoHand);
-  const castleSuit = useGame((s) => s.castleSuit);
-  const castleSuitName = castleSuit ? tSuitName(t, castleSuit) : null;
-  const idolTarget = useGame((s) => s.idolTarget);
-  const idolRankName = idolTarget?.rank ?? null;
-  const idolSuitName = idolTarget ? tSuitName(t, idolTarget.suit) : null;
+  const { todoHand, castleSuit, castleSuitName, idolRankName, idolSuitName } =
+    useJokerDescriptionContext();
   const sellValue = jokerSellValue(joker);
   const progress = useEnhancedThresholdProgress(joker);
   const effectiveOdds = useEffectiveOdds(joker);
