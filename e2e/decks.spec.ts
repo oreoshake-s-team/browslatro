@@ -98,3 +98,14 @@ test.describe("Anaglyph Deck", () => {
     );
   });
 });
+
+test.describe("Ghost Deck", () => {
+  test("starts with a Hex spectral in the consumable tray", async ({
+    page,
+  }) => {
+    await startRunWithDeck(page, "ghost-deck");
+    await expect(
+      page.locator('[data-consumable-kind="spectral"]'),
+    ).toHaveCount(1);
+  });
+});

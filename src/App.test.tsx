@@ -1877,6 +1877,7 @@ describe("Voucher integration", () => {
 describe("Spectral purchase integration", () => {
   async function openShop(): Promise<ReturnType<typeof userEvent.setup>> {
     mockShuffleConfig.useIdentity = true;
+    window.localStorage.setItem("browslatro:forceShopOfferKinds", "spectral");
     shopPickerRngConfig.rng = forceShopLayout(["spectral", "joker"]);
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);

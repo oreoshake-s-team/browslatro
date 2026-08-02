@@ -435,20 +435,37 @@ describe("pickShopOffers — spectral offer rate", () => {
     expect(SPECTRAL_OFFER_CHANCE).toBeLessThanOrEqual(0.25);
   });
 
-  test("spectral offers appear at least once across many seeds", () => {
+  test("spectral offers appear at least once across many seeds when enabled", () => {
+    let saw = false;
+    for (let seed = 1; seed <= 200 && !saw; seed += 1) {
+      const offers = pickShopOffers({
+        ...baseArgs(mulberry32(seed)),
+        spectralOfferChance: SPECTRAL_OFFER_CHANCE,
+      });
+      if (offers.some((o) => o.kind === "spectral")) saw = true;
+    }
+    expect(saw).toBe(true);
+  });
+
+  test("never offers a spectral without spectralOfferChance (negative)", () => {
     let saw = false;
     for (let seed = 1; seed <= 200 && !saw; seed += 1) {
       const offers = pickShopOffers(baseArgs(mulberry32(seed)));
       if (offers.some((o) => o.kind === "spectral")) saw = true;
     }
-    expect(saw).toBe(true);
+    expect(saw).toBe(false);
   });
 
   test("spectral offers are rarer than the combined common kinds across many seeds", () => {
     let spectralCount = 0;
     let commonCount = 0;
     for (let seed = 1; seed <= 500; seed += 1) {
-      const offers = itemOffers(pickShopOffers(baseArgs(mulberry32(seed))));
+      const offers = itemOffers(
+        pickShopOffers({
+          ...baseArgs(mulberry32(seed)),
+          spectralOfferChance: SPECTRAL_OFFER_CHANCE,
+        }),
+      );
       for (const offer of offers) {
         if (offer.kind === "spectral") spectralCount += 1;
         else commonCount += 1;
@@ -463,6 +480,7 @@ describe("pickShopOffers — spectral offer rate", () => {
       const offers = pickShopOffers({
         ...baseArgs(mulberry32(seed)),
         spectralCatalog: [],
+        spectralOfferChance: SPECTRAL_OFFER_CHANCE,
       });
       if (offers.some((o) => o.kind === "spectral")) spectralSeen = true;
     }
@@ -475,6 +493,7 @@ describe("pickShopOffers — spectral offer rate", () => {
       const offers = pickShopOffers({
         ...baseArgs(mulberry32(7)),
         extraSlots: 1,
+        spectralOfferChance: SPECTRAL_OFFER_CHANCE,
       });
       expect(offers.some((o) => o.kind === "spectral")).toBe(true);
     } finally {
@@ -496,7 +515,7 @@ describe("pickSingleShopOffer — Omen Globe tarot→spectral swap", () => {
   }
 
   test("a tarot kind is swapped for a spectral when the swap chance fires", () => {
-    const rng = sequenceRng([0.99, 0.99, 0.0, 0]);
+    const rng = sequenceRng([0.99, 0.0, 0]);
     const offer = pickSingleShopOffer(
       { ...tarotOnlyArgs(rng), tarotToSpectralSwapChance: 0.2 },
       [],

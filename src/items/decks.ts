@@ -41,6 +41,7 @@ export type DeckModifier =
     }
   | { readonly kind: "starting-voucher"; readonly voucherId: VoucherId }
   | { readonly kind: "boss-defeat-tag"; readonly tagId: "double" }
+  | { readonly kind: "shop-spectral-offers" }
   | {
       readonly kind: "starting-consumable";
       readonly consumable: "tarot" | "spectral";
@@ -124,7 +125,16 @@ const DECK_SPECS: ReadonlyArray<DeckSpec> = [
       { kind: "consumable-slots-delta", amount: -1 },
     ],
   },
-  { id: "ghost-deck", name: "Ghost Deck", description: "Spectral cards may appear in shop; start with Hex spectral.", implemented: false, modifiers: [] },
+  {
+    id: "ghost-deck",
+    name: "Ghost Deck",
+    description: "Spectral cards may appear in shop; start with Hex spectral.",
+    implemented: true,
+    modifiers: [
+      { kind: "shop-spectral-offers" },
+      { kind: "starting-consumable", consumable: "spectral", itemId: "hex" },
+    ],
+  },
   {
     id: "abandoned-deck",
     name: "Abandoned Deck",
@@ -237,6 +247,9 @@ export function deckStartingVoucherIds(deck: Deck): ReadonlySet<VoucherId> {
       .map((m) => m.voucherId),
   );
 }
+
+export const deckAllowsShopSpectrals = (deck: Deck): boolean =>
+  getActiveDeckModifiers(deck).some((m) => m.kind === "shop-spectral-offers");
 
 export function deckBossDefeatTagIds(deck: Deck): ReadonlyArray<"double"> {
   return getActiveDeckModifiers(deck)
