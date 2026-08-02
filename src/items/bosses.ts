@@ -1,12 +1,11 @@
-import type { Card, Rank, Suit } from "../cards/types";
+import type { Card, Suit } from "../cards/types";
 import { cardKey } from "../cards/deck";
+import { FACE_RANKS } from "../cards/faceCard";
 import { createRngConfig } from "../dev/rngConfig";
 import type { HandLabel } from "../scoring/handEvaluator";
 import type { HandStatsEntry } from "../scoring/handStats";
 import { createPlanetCatalog, mostPlayedHand } from "./planets";
 import { pickRandomNonEmpty } from "./random";
-
-const FACE_RANKS: ReadonlySet<Rank> = new Set(["J", "Q", "K"]);
 
 export type BossEffect =
   | { readonly kind: "none" }
