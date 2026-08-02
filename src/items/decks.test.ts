@@ -4,6 +4,7 @@ import {
   createDeckCatalog,
   deckCompositionTransforms,
   deckEndOfRoundBonusPerRemainingHandAndDiscard,
+  deckBossDefeatTagIds,
   deckConsumableSlotsDelta,
   deckHandSizeDelta,
   deckJokerSlotsDelta,
@@ -54,6 +55,7 @@ describe("DeckSpec.implemented", () => {
       "checkered-deck",
       "zodiac-deck",
       "painted-deck",
+      "anaglyph-deck",
     ]);
   });
 
@@ -61,7 +63,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(4);
+    expect(unimplementedCount).toBe(3);
   });
 });
 
@@ -283,6 +285,24 @@ describe("deckConsumableSlotsDelta", () => {
 
   test("Red Deck does not change consumable slots (negative)", () => {
     expect(deckConsumableSlotsDelta("red-deck")).toBe(0);
+  });
+});
+
+describe("Anaglyph Deck spec", () => {
+  test("declares the boss-defeat Double Tag modifier", () => {
+    expect(getDeckSpec("anaglyph-deck").modifiers).toEqual([
+      { kind: "boss-defeat-tag", tagId: "double" },
+    ]);
+  });
+});
+
+describe("deckBossDefeatTagIds", () => {
+  test("Anaglyph Deck grants a double tag on boss defeat", () => {
+    expect(deckBossDefeatTagIds("anaglyph-deck")).toEqual(["double"]);
+  });
+
+  test("Red Deck grants nothing on boss defeat (negative)", () => {
+    expect(deckBossDefeatTagIds("red-deck")).toHaveLength(0);
   });
 });
 

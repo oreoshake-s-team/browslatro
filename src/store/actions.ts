@@ -88,7 +88,7 @@ import {
   fullDeckPile,
   initialDeal,
 } from "../cards/deckBuild";
-import { deckSuppressesInterest } from "../items/decks";
+import { deckBossDefeatTagIds, deckSuppressesInterest } from "../items/decks";
 import { recordUnusedDiscards } from "../run/runStats";
 import { applyNextShopModifiers } from "../run/nextShopMods";
 import {
@@ -769,6 +769,10 @@ export const createActionsSlice: StateCreator<GameState, [], [], ActionsState> =
       if (tagPayout > 0) {
         s.earn(tagPayout);
         s.setPendingTags([]);
+      }
+      const bossDefeatTags = deckBossDefeatTagIds(s.selectedDeck);
+      if (bossDefeatTags.length > 0) {
+        s.setPendingTags((prev) => [...prev, ...bossDefeatTags]);
       }
       if (s.ante === FINAL_ANTE && !s.endlessMode) {
         const post = get();
