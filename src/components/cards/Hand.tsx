@@ -7,6 +7,7 @@ import { sortCards, type SortMode } from "../../cards/deck";
 import { useTranslation } from "react-i18next";
 import { announce } from "../system/LiveAnnouncer";
 import { cardName } from "../../i18n/strings";
+import { insertIdAtIndex, nearestGapIndex } from "../../scoring/reordering";
 
 export const MAX_SELECTED = 5;
 
@@ -164,23 +165,10 @@ export default function Hand({
     dispatch({ type: "selectSort", mode });
   }
 
-  // Gap indices run 0..N where N = hand size; gap K is "before card K"
-  // (and gap N is "after the last card"). Inserting source at gap K means
-  // the source ends up at index K after removal — except when K is to the
-  // right of source's old position, in which case the removal shifts the
-  // target index left by one. Gaps adjacent to the source (K === fromIdx
-  // or K === fromIdx + 1) are no-ops since the card would land where it
-  // already is.
   function insertAtGap(sourceId: number, gapIdx: number) {
     const currentOrder = displayedHand.map((c) => c.id);
-    const fromIdx = currentOrder.indexOf(sourceId);
-    if (fromIdx < 0) return;
-    if (gapIdx === fromIdx || gapIdx === fromIdx + 1) return;
-    const next = currentOrder.slice();
-    next.splice(fromIdx, 1);
-    const insertIdx = gapIdx > fromIdx ? gapIdx - 1 : gapIdx;
-    next.splice(insertIdx, 0, sourceId);
-    dispatch({ type: "reorder", order: next });
+    const next = insertIdAtIndex(currentOrder, sourceId, gapIdx);
+    if (next !== currentOrder) dispatch({ type: "reorder", order: next });
   }
 
   function endDrag() {
@@ -255,22 +243,8 @@ export default function Hand({
     const container = handCardsRef.current;
     if (!container) return null;
     const gaps = container.querySelectorAll<HTMLElement>(".hand-card-gap");
-    let bestIdx: number | null = null;
-    let bestDist = Number.POSITIVE_INFINITY;
-    gaps.forEach((gap, i) => {
-      const rect = gap.getBoundingClientRect();
-      // jsdom returns zeroed rects for everything; skip resolving in that
-      // case so unit tests can drive the per-gap handlers directly without
-      // the container handler clobbering their setDragOverGap call.
-      if (rect.width === 0 && rect.left === 0) return;
-      const center = rect.left + rect.width / 2;
-      const dist = Math.abs(clientX - center);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = i;
-      }
-    });
-    return bestIdx;
+    const rects = Array.from(gaps, (gap) => gap.getBoundingClientRect());
+    return nearestGapIndex(rects, clientX);
   }
 
   function handleHandDragOver(e: React.DragEvent<HTMLDivElement>) {
