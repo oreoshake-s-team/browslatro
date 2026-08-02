@@ -30,8 +30,8 @@ async function reachShop(page: Page): Promise<void> {
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(".stat-label", { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator("[data-stat-label]", { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 async function moneyOf(page: Page): Promise<number> {
@@ -132,11 +132,11 @@ test.describe("Telescope + Observatory vouchers", () => {
     await page.getByText(/Add a specific Planet/).click();
     await page.locator('button[data-planet-id="pluto"]').first().click();
 
-    const cards = page.locator('[data-testid="hand-cards"] .card');
+    const cards = page.locator('[data-testid="hand-cards"] [data-suit]');
     await cards.first().click();
     await page.getByRole("button", { name: /^Submit Hand/ }).click();
 
-    await expect(page.locator(".scoring-trace")).toContainText(
+    await expect(page.locator('[data-testid="scoring-trace"]')).toContainText(
       /×1\.5 Mult \(Observatory: 1 matching Planet\)/,
     );
   });

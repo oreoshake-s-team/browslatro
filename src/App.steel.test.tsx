@@ -101,7 +101,7 @@ describe("Steel held-card animation", () => {
     for (let i = 0; i < 3; i += 1) await user.click(cards[i]);
     await user.click(screen.getByText(/Submit Hand/));
     flushAllTimers();
-    expect(document.querySelector(".card-steel-scoring")).toBeNull();
+    expect(document.querySelector('[data-testid^="steel-scoring-"]')).toBeNull();
   });
 });
 
@@ -135,7 +135,7 @@ describe("Steel highlight prop", () => {
     const seenButNonSteel = Array.from(seenIds).filter((id) => {
       const cardIdStr = id.replace("steel-scoring-", "");
       const cardEl = document.querySelector(`[data-testid="hand-slot-${cardIdStr}"]`);
-      return cardEl && !cardEl.querySelector(".card--enhancement-steel");
+      return cardEl && !cardEl.querySelector('[data-enhancement="steel"]');
     });
     expect(seenButNonSteel).toEqual([]);
   });
@@ -143,7 +143,7 @@ describe("Steel highlight prop", () => {
 
 describe("Steel multiplier ticks", () => {
   function multiplierValue(): number {
-    const el = document.querySelector(".multiplier");
+    const el = document.querySelector('[data-testid="hand-mult"]');
     return Number(el?.textContent ?? "0");
   }
 

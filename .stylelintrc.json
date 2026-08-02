@@ -15,29 +15,50 @@
     "color-no-hex": [
       true,
       {
-        "message": "Raw hex colors are not allowed. Use a design token (var(--token)) from src/styles/tokens.css, or color-mix() over a token."
+        "message": "Raw hex colors are not allowed. Use a theme color (var(--color-*)) from src/styles/tailwind.css, or color-mix() over one."
       }
     ],
     "function-disallowed-list": [
-      ["rgb", "rgba", "hsl", "hsla"],
+      [
+        "rgb",
+        "rgba",
+        "hsl",
+        "hsla"
+      ],
       {
-        "message": "Raw color functions are not allowed. Use a design token (var(--token)) from src/styles/tokens.css, or color-mix() over a token."
+        "message": "Raw color functions are not allowed. Use a theme color (var(--color-*)) from src/styles/tailwind.css, or color-mix() over one."
       }
     ],
     "color-named": [
       "never",
       {
-        "message": "Named colors are not allowed. Use a design token (var(--token)) from src/styles/tokens.css."
+        "message": "Named colors are not allowed. Use a theme color (var(--color-*)) from src/styles/tailwind.css."
       }
     ]
   },
   "overrides": [
     {
-      "files": ["src/styles/tokens.css"],
+      "files": [
+        "src/styles/tailwind.css"
+      ],
       "rules": {
         "color-no-hex": null,
         "function-disallowed-list": null,
-        "color-named": null
+        "color-named": null,
+        "custom-property-pattern": null,
+        "import-notation": null,
+        "rule-empty-line-before": null,
+        "at-rule-no-unknown": [
+          true,
+          {
+            "ignoreAtRules": [
+              "theme",
+              "source",
+              "custom-variant",
+              "keyframes"
+            ]
+          }
+        ]
       }
     }
   ]

@@ -123,9 +123,12 @@ describe("Shop", () => {
     { kind: "joker", idx: 0 },
     { kind: "planet", idx: 1 },
     { kind: "tarot", idx: 0, overrides: { offers: [tarotOffer()] } },
-  ])("the $kind offer carries the shop-offer-$kind modifier class", ({ kind, idx, overrides }) => {
+  ])("the $kind offer is tagged with data-offer-kind $kind", ({ kind, idx, overrides }) => {
     renderShop(overrides);
-    expect(screen.getByTestId(`shop-offer-${idx}`)).toHaveClass(`shop-offer-${kind}`);
+    expect(screen.getByTestId(`shop-offer-${idx}`)).toHaveAttribute(
+      "data-offer-kind",
+      kind,
+    );
   });
 
   test.each<{ kind: "joker" | "planet" | "tarot"; label: "Joker" | "Planet" | "Tarot"; idx: 0 | 1; overrides?: Partial<Parameters<typeof Shop>[0]> }>([
@@ -144,15 +147,15 @@ describe("Shop", () => {
     );
   });
 
-  test("a sold offer still carries its kind modifier class", () => {
+  test("a sold offer still carries its data-offer-kind tag", () => {
     renderShop({ offers: [jokerOffer("plus", true)] });
     const offer = screen.getByTestId("shop-offer-0");
-    expect(offer).toHaveClass("shop-offer-joker");
+    expect(offer).toHaveAttribute("data-offer-kind", "joker");
   });
 
-  test("a sold offer still carries the shop-offer--sold modifier", () => {
+  test("a sold offer is flagged via data-sold", () => {
     renderShop({ offers: [jokerOffer("plus", true)] });
-    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer--sold");
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute("data-sold");
   });
 
   test("an editioned joker offer exposes the edition via data-edition", () => {
@@ -191,7 +194,7 @@ describe("Shop", () => {
     expect(screen.getByText("FREE")).toBeInTheDocument();
   });
 
-  test("a free offer carries the shop-offer-free modifier class", () => {
+  test("a free offer is flagged via data-free", () => {
     const offer: ShopItem = {
       kind: "joker",
       joker: createPlusFourMultJoker(),
@@ -199,7 +202,7 @@ describe("Shop", () => {
       sold: false,
     };
     renderShop({ offers: [offer] });
-    expect(screen.getByTestId("shop-offer-0")).toHaveClass("shop-offer-free");
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute("data-free");
   });
 
   test("a base-edition joker offer has no edition badge (negative)", () => {
@@ -238,7 +241,7 @@ describe("Shop", () => {
     renderShop({ equippedJokerCount: MAX_JOKERS });
     const planetBuy = screen
       .getByTestId("shop-offer-1")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(planetBuy).not.toBeDisabled();
   });
 
@@ -253,7 +256,7 @@ describe("Shop", () => {
     renderShop({ equippedJokerCount: MAX_JOKERS });
     const jokerBuy = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(jokerBuy).toHaveAttribute(
       "title",
       `Joker slots are full (max ${MAX_JOKERS})`,
@@ -264,7 +267,7 @@ describe("Shop", () => {
     renderShop({ equippedJokerCount: MAX_JOKERS, jokerCapacity: MAX_JOKERS + 1 });
     const jokerBuy = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(jokerBuy).not.toBeDisabled();
   });
 
@@ -278,7 +281,7 @@ describe("Shop", () => {
     renderShop({ offers: [offer], equippedJokerCount: MAX_JOKERS });
     const jokerBuy = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(jokerBuy).not.toBeDisabled();
   });
 
@@ -292,7 +295,7 @@ describe("Shop", () => {
     renderShop({ offers: [offer], equippedJokerCount: MAX_JOKERS });
     const jokerBuy = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(jokerBuy).toHaveTextContent("$5");
   });
 
@@ -300,7 +303,7 @@ describe("Shop", () => {
     renderShop({ money: 2 });
     const planetBuy = screen
       .getByTestId("shop-offer-1")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(planetBuy).toBeDisabled();
   });
 
@@ -308,7 +311,7 @@ describe("Shop", () => {
     renderShop({ consumableCount: 2 });
     const planetBuy = screen
       .getByTestId("shop-offer-1")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(planetBuy).toBeDisabled();
   });
 
@@ -316,7 +319,7 @@ describe("Shop", () => {
     renderShop({ consumableCount: 2 });
     const planetBuy = screen
       .getByTestId("shop-offer-1")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(planetBuy).toHaveAttribute(
       "title",
       "Consumable slots are full (max 2)",
@@ -327,7 +330,7 @@ describe("Shop", () => {
     renderShop({ consumableCount: 2 });
     const jokerBuy = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(jokerBuy).not.toBeDisabled();
   });
 
@@ -633,7 +636,7 @@ describe("Shop", () => {
       renderShop({ ownedVoucherIds: new Set<VoucherId>() });
       const planet = screen
         .getByTestId("shop-offer-1")
-        .querySelector(".shop-offer-price");
+        .querySelector("[data-shop-offer-price]");
       expect(planet).toHaveTextContent("$3");
     });
 
@@ -641,7 +644,7 @@ describe("Shop", () => {
       renderShop({ ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]) });
       const joker = screen
         .getByTestId("shop-offer-0")
-        .querySelector(".shop-offer-price-discounted");
+        .querySelector("[data-shop-offer-price-discounted]");
       expect(joker).toHaveTextContent("$4");
     });
 
@@ -649,7 +652,7 @@ describe("Shop", () => {
       renderShop({ ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]) });
       const original = screen
         .getByTestId("shop-offer-0")
-        .querySelector(".shop-offer-price-original");
+        .querySelector("[data-shop-offer-price-original]");
       expect(original).toHaveTextContent("$5");
     });
 
@@ -662,7 +665,7 @@ describe("Shop", () => {
       });
       const joker = screen
         .getByTestId("shop-offer-0")
-        .querySelector(".shop-offer-price-discounted");
+        .querySelector("[data-shop-offer-price-discounted]");
       expect(joker).toHaveTextContent("$3");
     });
 
@@ -670,7 +673,7 @@ describe("Shop", () => {
       renderShop({ ownedVoucherIds: new Set<VoucherId>(["clearance-sale"]) });
       const buy = screen
         .getByTestId("shop-offer-0")
-        .querySelector("button.shop-offer-buy");
+        .querySelector("button[data-shop-buy]");
       expect(buy).toHaveTextContent("Buy ($4)");
     });
 
@@ -681,7 +684,7 @@ describe("Shop", () => {
       });
       const buy = screen
         .getByTestId("shop-offer-0")
-        .querySelector("button.shop-offer-buy");
+        .querySelector("button[data-shop-buy]");
       expect(buy).not.toBeDisabled();
     });
   });
@@ -691,7 +694,7 @@ describe("Shop", () => {
       renderShop({ consumableCount: 2, consumableCapacity: 3 });
       const planetBuy = screen
         .getByTestId("shop-offer-1")
-        .querySelector("button.shop-offer-buy");
+        .querySelector("button[data-shop-buy]");
       expect(planetBuy).not.toBeDisabled();
     });
 
@@ -699,7 +702,7 @@ describe("Shop", () => {
       renderShop({ consumableCount: 3, consumableCapacity: 3 });
       const planetBuy = screen
         .getByTestId("shop-offer-1")
-        .querySelector("button.shop-offer-buy");
+        .querySelector("button[data-shop-buy]");
       expect(planetBuy).toHaveAttribute(
         "title",
         "Consumable slots are full (max 3)",
@@ -728,28 +731,28 @@ describe("Shop pack offers", () => {
   test("renders a Celestial pack offer with its display name", () => {
     renderShop({ offers: [celestialPackOffer("normal")] });
     expect(
-      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-name"),
+      screen.getByTestId("shop-offer-0").querySelector("[data-shop-offer-name]"),
     ).toHaveTextContent("Celestial Pack");
   });
 
   test("renders the Jumbo prefix on a Jumbo Celestial pack offer", () => {
     renderShop({ offers: [celestialPackOffer("jumbo")] });
     expect(
-      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-name"),
+      screen.getByTestId("shop-offer-0").querySelector("[data-shop-offer-name]"),
     ).toHaveTextContent("Jumbo Celestial Pack");
   });
 
   test("describes the pick semantics for a Normal pack (pick 1 from 3)", () => {
     renderShop({ offers: [celestialPackOffer("normal")] });
     expect(
-      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-description"),
+      screen.getByTestId("shop-offer-0").querySelector("[data-shop-offer-description]"),
     ).toHaveTextContent("Open to pick 1 card from 3 options");
   });
 
   test("describes the pick semantics for a Mega pack (pick 2 from 5)", () => {
     renderShop({ offers: [celestialPackOffer("mega")] });
     expect(
-      screen.getByTestId("shop-offer-0").querySelector(".shop-offer-description"),
+      screen.getByTestId("shop-offer-0").querySelector("[data-shop-offer-description]"),
     ).toHaveTextContent("Open to pick 2 cards from 5 options");
   });
 
@@ -765,7 +768,7 @@ describe("Shop pack offers", () => {
     renderShop({ offers: [celestialPackOffer("normal")] });
     const open = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(open).toHaveTextContent("Open ($4)");
   });
 
@@ -773,7 +776,7 @@ describe("Shop pack offers", () => {
     renderShop({ offers: [celestialPackOffer("normal")], money: 10 });
     const open = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(open).toBeEnabled();
   });
 
@@ -781,7 +784,7 @@ describe("Shop pack offers", () => {
     renderShop({ offers: [celestialPackOffer("normal")], money: 0 });
     const open = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     expect(open).toBeDisabled();
   });
 
@@ -791,7 +794,7 @@ describe("Shop pack offers", () => {
     renderShop({ offers: [celestialPackOffer("normal")], money: 10, onBuy });
     const open = screen
       .getByTestId("shop-offer-0")
-      .querySelector("button.shop-offer-buy");
+      .querySelector("button[data-shop-buy]");
     if (!(open instanceof HTMLButtonElement)) throw new Error("missing button");
     await user.click(open);
     expect(onBuy).toHaveBeenCalledWith(0);
@@ -936,10 +939,10 @@ describe("Shop playing-card offer visual modifiers", () => {
     };
   }
 
-  test("a plain playing-card offer has no enhanced modifier class (negative)", () => {
+  test("a plain playing-card offer has no data-enhanced flag (negative)", () => {
     renderShop({ offers: [playingCardOffer()] });
-    expect(screen.getByTestId("shop-offer-0")).not.toHaveClass(
-      "shop-offer-playing-card-enhanced",
+    expect(screen.getByTestId("shop-offer-0")).not.toHaveAttribute(
+      "data-enhanced",
     );
   });
 
@@ -957,10 +960,10 @@ describe("Shop playing-card offer visual modifiers", () => {
     ).not.toBeInTheDocument();
   });
 
-  test("an enhanced playing-card offer carries the shop-offer-playing-card-enhanced class", () => {
+  test("an enhanced playing-card offer is flagged via data-enhanced", () => {
     renderShop({ offers: [playingCardOffer({ enhancement: "gold" })] });
-    expect(screen.getByTestId("shop-offer-0")).toHaveClass(
-      "shop-offer-playing-card-enhanced",
+    expect(screen.getByTestId("shop-offer-0")).toHaveAttribute(
+      "data-enhanced",
     );
   });
 
@@ -1093,7 +1096,7 @@ describe("Shop — coach suggestion placement", () => {
   test("the Coach tip trigger sits in the action row, with no panel until clicked", async () => {
     renderShop();
     const trigger = await screen.findByTestId("coach-trigger");
-    expect(trigger.closest(".shop-actions")).not.toBeNull();
+    expect(trigger.closest('[data-testid="shop-actions"]')).not.toBeNull();
     expect(screen.queryByTestId("coach-advice")).not.toBeInTheDocument();
   });
 
@@ -1101,8 +1104,8 @@ describe("Shop — coach suggestion placement", () => {
     renderShop();
     await userEvent.click(await screen.findByTestId("coach-trigger"));
     const panel = await screen.findByTestId("coach-advice");
-    expect(panel.closest(".shop-suggestion")).not.toBeNull();
-    expect(panel.closest(".shop-actions")).toBeNull();
+    expect(panel.closest('[data-testid="shop-suggestion"]')).not.toBeNull();
+    expect(panel.closest('[data-testid="shop-actions"]')).toBeNull();
   });
 });
 

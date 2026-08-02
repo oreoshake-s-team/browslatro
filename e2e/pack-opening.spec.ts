@@ -55,10 +55,10 @@ async function forceStandardEnhancement(
 
 async function buyFirstPackOffer(page: Page): Promise<void> {
   const packOffer = page
-    .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
+    .locator('[data-testid="shop-packs"] [data-shop-offer][data-offer-kind="pack"]')
     .first();
   await expect(packOffer).toBeVisible();
-  await packOffer.locator("button.shop-offer-buy").click();
+  await packOffer.locator("button[data-shop-buy]").click();
   await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
@@ -97,7 +97,7 @@ test.describe("Pack opening flow", () => {
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
     await expect(page.getByTestId("hand-cards")).toHaveCount(0);
-    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+    await expect(page.locator('[data-testid="game-overlay-deck"] [data-testid="deck-pile"]')).toHaveCount(0);
   });
 
   test("Celestial pack: the deck pile stays hidden during the pick", async ({
@@ -107,7 +107,7 @@ test.describe("Pack opening flow", () => {
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
-    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+    await expect(page.locator('[data-testid="game-overlay-deck"] [data-testid="deck-pile"]')).toHaveCount(0);
   });
 
   test("Standard pack: the hand and deck pile stay hidden even when a tarot is held", async ({
@@ -119,7 +119,7 @@ test.describe("Pack opening flow", () => {
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
     await expect(page.getByTestId("hand-cards")).toHaveCount(0);
-    await expect(page.locator(".game-overlay-deck .deck-pile")).toHaveCount(0);
+    await expect(page.locator('[data-testid="game-overlay-deck"] [data-testid="deck-pile"]')).toHaveCount(0);
   });
 
   test("Arcana pack: the deck pile remains visible during the pick (contrast)", async ({
@@ -129,7 +129,7 @@ test.describe("Pack opening flow", () => {
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
-    await expect(page.locator(".game-overlay-deck .deck-pile")).toBeVisible();
+    await expect(page.locator('[data-testid="game-overlay-deck"] [data-testid="deck-pile"]')).toBeVisible();
   });
 
   test("Standard pack: an enhanced card surfaces a modifier badge on its pick tile", async ({
@@ -170,8 +170,8 @@ test.describe("Pack opening flow", () => {
     await forcePackPool(page, "arcana");
     await winRound1AndOpenShop(page);
     await buyFirstPackOffer(page);
-    const list = page.locator(".pack-open-options");
-    const options = list.locator(".pack-open-option");
+    const list = page.locator('[data-testid="pack-open-options"]');
+    const options = list.locator("[data-pack-option]");
     await expect(options.first()).toBeVisible();
     const count = await options.count();
     expect(count).toBeGreaterThan(1);
@@ -201,10 +201,10 @@ test.describe("Pack opening flow", () => {
   }) => {
     await forcePackPool(page, "standard");
     await winRound1AndOpenShop(page);
-    const deckPile = page.locator(".game-overlay-deck .deck-pile");
+    const deckPile = page.locator('[data-testid="game-overlay-deck"] [data-testid="deck-pile"]');
     await expect(deckPile).toBeVisible();
     const before = Number(
-      (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+      (await deckPile.locator('[data-testid="deck-pile-count"]').textContent()) ?? "0",
     );
     await buyFirstPackOffer(page);
     await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
@@ -213,7 +213,7 @@ test.describe("Pack opening flow", () => {
     await expect
       .poll(async () =>
         Number(
-          (await deckPile.locator(".deck-pile-count").textContent()) ?? "0",
+          (await deckPile.locator('[data-testid="deck-pile-count"]').textContent()) ?? "0",
         ),
       )
       .toBe(before + 1);

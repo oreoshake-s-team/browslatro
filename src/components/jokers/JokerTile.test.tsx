@@ -125,7 +125,7 @@ describe("JokerTile", () => {
     const joker = createPlusFourMultJoker();
     renderTile({ joker, pulse: 3 });
     expect(screen.getByTestId(`joker-tile-inner-${joker.id}`)).toHaveClass(
-      "joker-tile-pulse",
+      "animate-pulse-flash",
     );
   });
 

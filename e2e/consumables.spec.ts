@@ -8,8 +8,8 @@ const SHOP_HEADING = /Shop/;
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(`.stat-label`, { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator(`[data-stat-label]`, { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 async function moneyOf(page: Page): Promise<number> {
@@ -38,9 +38,9 @@ async function buyForcedKindThenLeaveShop(
   await page.goto("/");
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
   await page
-    .locator(`.shop-offer[data-offer-kind="${kind}"]`)
+    .locator(`[data-shop-offer][data-offer-kind="${kind}"]`)
     .first()
-    .locator("button.shop-offer-buy")
+    .locator("button[data-shop-buy]")
     .click();
   await page.getByRole("button", { name: NEXT_ROUND_BUTTON }).click();
   await page.getByTestId("blind-select-play").click();

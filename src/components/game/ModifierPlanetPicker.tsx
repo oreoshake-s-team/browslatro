@@ -1,16 +1,16 @@
-import "./ModifierPlanetPicker.css";
 import { useMemo } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useAnchoredTooltip } from "../system/useAnchoredTooltip";
 import { consumableCapacityFor } from "../../items/capacities";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
-import {
-  addConsumable,
-} from "../../items/consumables";
+import { addConsumable } from "../../items/consumables";
 import { createPlanetCatalog } from "../../items/planets";
 import { sortByDisplayName } from "./displayNameSort";
 import PlanetTooltip from "./PlanetTooltip";
+
+const TILE_CLASS =
+  "inline-flex cursor-pointer items-center gap-1 rounded-md border border-solid border-chips/40 bg-chips/10 px-2 py-1 text-left text-xs font-semibold text-chips transition-colors enabled:hover:bg-chips/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-45";
 
 export default function ModifierPlanetPicker() {
   const consumables = useGame((s) => s.consumables);
@@ -20,8 +20,7 @@ export default function ModifierPlanetPicker() {
     () => sortByDisplayName(createPlanetCatalog(), (c) => c.name),
     [],
   );
-  const capacity =
-    consumableCapacityFor(ownedVoucherIds);
+  const capacity = consumableCapacityFor(ownedVoucherIds);
   const isFull = consumables.length >= capacity;
 
   const tooltip = useAnchoredTooltip<string>();
@@ -41,23 +40,26 @@ export default function ModifierPlanetPicker() {
   }
 
   return (
-    <details className="modifier-planet-picker">
-      <summary className="modifier-planet-picker-summary">
+    <details
+      data-testid="modifier-planet-picker"
+      className="w-full rounded-lg border border-dashed border-muted/40 bg-white/5 px-3 pb-3 pt-2"
+    >
+      <summary className="cursor-pointer select-none py-1 text-xs font-bold uppercase tracking-wider text-muted hover:text-chips">
         Add a specific Planet
       </summary>
-      <div className="modifier-planet-picker-grid">
+      <div className="mt-2 grid grid-cols-6 gap-1">
         {planets.map((card) => {
-           const tooltipId = tooltip.describedBy(card.id);
-           const open = tooltip.isOpen(card.id);
+          const tooltipId = tooltip.describedBy(card.id);
+          const open = tooltip.isOpen(card.id);
           return (
             <button
               key={card.id}
               type="button"
-              className="add-planet-button"
+              className={TILE_CLASS}
               data-planet-id={card.id}
               disabled={isFull}
               aria-disabled={isFull}
-               aria-describedby={tooltipId}
+              aria-describedby={tooltipId}
               onMouseEnter={(e) => openTooltip(card.id, e.currentTarget)}
               onMouseLeave={() => closeTooltip(card.id)}
               onFocus={(e) => openTooltip(card.id, e.currentTarget)}
@@ -66,11 +68,11 @@ export default function ModifierPlanetPicker() {
             >
               <span aria-hidden="true">🌌 </span>
               {card.name}
-               {open && tooltip.anchorRect && (
+              {open && tooltip.anchorRect && (
                 <PlanetTooltip
-                   id={tooltipId!}
+                  id={tooltipId!}
                   card={card}
-                   anchorRect={tooltip.anchorRect}
+                  anchorRect={tooltip.anchorRect}
                 />
               )}
             </button>

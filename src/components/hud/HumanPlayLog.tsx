@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import "./HumanPlayLog.css";
 import { humanPlayLog } from "../../ai/humanPlayWiring";
+import { Button } from "../ui/Button";
 
 export default function HumanPlayLog() {
   const { t } = useTranslation();
@@ -27,34 +27,30 @@ export default function HumanPlayLog() {
   const humanPlayCount = humanPlayLog().count();
 
   return (
-    <details className="human-play-log">
-      <summary className="human-play-log__summary">
+    <details className="text-sm">
+      <summary className="cursor-pointer rounded-md text-xs font-semibold tracking-wider text-muted uppercase select-none hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
         {t("devMenu.humanPlayLog")}
       </summary>
-      <div className="human-play-log__body">
-        <span
-          className="human-play-log__count"
-          data-testid="human-play-log-count"
-        >
+      <div className="mt-2 flex flex-col gap-2">
+        <span className="text-muted" data-testid="human-play-log-count">
           {t("devMenu.recordedDecisions", { count: humanPlayCount })}
         </span>
-        <div className="human-play-log__actions">
-          <button
-            type="button"
-            className="btn btn--secondary human-play-log__export"
+        <div className="flex gap-2">
+          <Button
+            size="sm"
             onClick={exportHumanPlayLog}
             disabled={humanPlayCount === 0}
           >
             {t("devMenu.exportLog")}
-          </button>
-          <button
-            type="button"
-            className="btn btn--ghost human-play-log__clear"
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clearHumanPlayLog}
             disabled={humanPlayCount === 0}
           >
             {t("devMenu.clearLog")}
-          </button>
+          </Button>
         </div>
       </div>
     </details>

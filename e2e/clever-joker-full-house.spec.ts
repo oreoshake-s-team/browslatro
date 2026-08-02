@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 
 test.beforeEach(async ({ context }) => {
@@ -74,8 +74,8 @@ test("Clever Joker fires when a Full House is played", async ({
     await page.locator(HAND_CARDS).nth(i).click();
   }
   await page.getByRole("button", { name: SUBMIT_BUTTON }).click();
-  await expect(page.locator(".scoring-trace")).toContainText("Full House");
+  await expect(page.locator('[data-testid="scoring-trace"]')).toContainText("Full House");
   await expect(
-    page.locator(".scoring-trace__item", { hasText: "Clever Joker" }).first(),
+    page.locator("[data-trace-item]", { hasText: "Clever Joker" }).first(),
   ).toBeVisible();
 });

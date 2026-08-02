@@ -40,14 +40,14 @@ test.describe("Dialog focus trap + inert background", () => {
     for (let i = 0; i < 6; i += 1) {
       await page.keyboard.press("Tab");
       const insideDialog = await page.evaluate(() =>
-        Boolean(document.activeElement?.closest(".modal-overlay")),
+        Boolean(document.activeElement?.closest("[data-modal-overlay]")),
       );
       expect(insideDialog).toBe(true);
     }
     for (let i = 0; i < 6; i += 1) {
       await page.keyboard.press("Shift+Tab");
       const insideDialog = await page.evaluate(() =>
-        Boolean(document.activeElement?.closest(".modal-overlay")),
+        Boolean(document.activeElement?.closest("[data-modal-overlay]")),
       );
       expect(insideDialog).toBe(true);
     }
@@ -60,7 +60,7 @@ test.describe("Dialog focus trap + inert background", () => {
     await expect(page.getByTestId("blind-select-play")).toBeFocused();
     const skipped = await page.evaluate(() => {
       const button = document.querySelector<HTMLButtonElement>(
-        ".sidebar button",
+        '[data-testid="sidebar"] button',
       );
       if (!button) return "missing";
       button.focus();

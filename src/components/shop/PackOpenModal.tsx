@@ -1,4 +1,3 @@
-import "./PackOpenModal.css";
 import {
   Suspense,
   lazy,
@@ -44,6 +43,11 @@ import JokerStickerBadges from "../jokers/JokerStickerBadges";
 import { announce } from "../system/LiveAnnouncer";
 import Modal from "../system/Modal";
 import { cardName } from "../../i18n/strings";
+import { Button } from "../ui/Button";
+import { cn } from "../ui/cn";
+
+const MOVE_BUTTON =
+  "cursor-pointer rounded-md bg-hover px-1.5 py-1 text-xs leading-none text-ink hover:bg-chips focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 const PackSuggestion = lazy(() => import("./PackSuggestion"));
 
@@ -313,19 +317,27 @@ export default function PackOpenModal({
       labelledBy="pack-open-title"
       accent="pack"
       size="lg"
-      className="pack-open-modal"
+      className="max-w-225!"
+      testId="pack-open-modal"
     >
-        {playArea && <div className="pack-open-play-area">{playArea}</div>}
-        <h2 id="pack-open-title" className="pack-open-title">
+        {playArea && (
+          <div
+            className="flex flex-col gap-4 border-b border-border pb-4"
+            data-testid="pack-open-play-area"
+          >
+            {playArea}
+          </div>
+        )}
+        <h2 id="pack-open-title" className="text-xl font-bold">
           <span aria-hidden="true">🎁 </span>
           {title}
         </h2>
-        <p className="pack-open-subtitle" data-testid="pack-open-subtitle">
+        <p className="text-muted" data-testid="pack-open-subtitle">
           {subtitle}
         </p>
         {jokerSlotsFull && packOffersJoker && (
           <p
-            className="pack-open-sell-hint"
+            className="self-start rounded-lg border border-money/40 bg-money/10 px-3 py-1 text-xs font-semibold text-money"
             role="status"
             data-testid="pack-open-sell-hint"
           >
@@ -333,7 +345,11 @@ export default function PackOpenModal({
             {t("pack.jokerSlotsFullSellHint")}
           </p>
         )}
-        <ul className="pack-open-options" aria-label={t("a11y.packOptions")}>
+        <ul
+          className="flex flex-wrap justify-evenly gap-3"
+          data-testid="pack-open-options"
+          aria-label={t("a11y.packOptions")}
+        >
           {pack.options.map((option, idx) => {
             if (pickedIndices?.has(idx)) return null;
             const view = describeOption(t, i18n.language, option);
@@ -394,16 +410,17 @@ export default function PackOpenModal({
             return (
               <li
                 key={`${view.id}-${idx}`}
-                className="pack-open-option"
+                className="grid w-32 grid-rows-[auto_auto_1fr_auto] gap-1 rounded-lg border border-money/40 bg-money/10 p-3"
+                data-pack-option=""
                 title={stickerHover}
               >
-                <span className="pack-open-option-icon" aria-hidden="true">{view.icon}</span>
-                <span className="pack-open-option-name">{view.name}</span>
-                <span className="pack-open-option-description">
+                <span className="self-start text-xl" aria-hidden="true">{view.icon}</span>
+                <span className="text-sm font-bold" data-pack-option-name="">{view.name}</span>
+                <span className="text-xs text-muted" data-pack-option-description="">
                   {appendFoolHint(view.description, view.id, foolCopyTarget)}
                 </span>
                 {modifierLabels.length > 0 && (
-                  <span className="pack-open-option-badges">
+                  <span className="flex flex-wrap justify-center gap-1">
                     <CardModifierBadges
                       scope="pack"
                       suffix={idx}
@@ -415,9 +432,9 @@ export default function PackOpenModal({
                   </span>
                 )}
                 {view.joker && <JokerStickerBadges joker={view.joker} />}
-                <button
-                  type="button"
-                  className="btn btn--primary pack-open-option-pick"
+                <Button
+                  variant="primary"
+                  size="sm"
                   data-testid={`pack-open-pick-${idx}`}
                   disabled={disabled}
                   title={tooltip}
@@ -425,7 +442,7 @@ export default function PackOpenModal({
                   onClick={() => onPick(idx)}
                 >
                   {t("pack.pick")}
-                </button>
+                </Button>
               </li>
             );
           })}
@@ -433,44 +450,46 @@ export default function PackOpenModal({
         {previewHand.length > 0 && (
           <>
             <div
-              className="pack-open-preview-sort"
+              className="flex items-center justify-center gap-1"
               role="group"
               aria-label={t("a11y.sortPreviewHand")}
             >
-              <span className="pack-open-preview-sort-label">
+              <span className="text-xs tracking-wider text-muted uppercase">
                 {t("pack.sortLabel")}
               </span>
-              <button
-                type="button"
-                className="btn btn--toggle pack-open-preview-sort-button"
+              <Button
+                variant="toggle"
+                size="sm"
                 data-testid="pack-open-preview-sort-rank"
                 aria-pressed={previewSortMode === "rank"}
                 onClick={() => selectPreviewSort("rank")}
               >
                 {t("pack.sortRank")}
-              </button>
-              <button
-                type="button"
-                className="btn btn--toggle pack-open-preview-sort-button"
+              </Button>
+              <Button
+                variant="toggle"
+                size="sm"
                 data-testid="pack-open-preview-sort-suit"
                 aria-pressed={previewSortMode === "suit"}
                 onClick={() => selectPreviewSort("suit")}
               >
                 {t("pack.sortSuit")}
-              </button>
+              </Button>
             </div>
             <div
-              className="pack-open-preview-hand"
+              className="flex shrink-0 items-end justify-center-safe gap-1 overflow-x-auto rounded-lg border-2 border-dashed border-border bg-bg px-2 pt-6 pb-2"
               data-testid="pack-open-preview-hand"
               aria-label={t("a11y.previewHand")}
             >
               {displayedPreviewHand.map((card) => (
                 <div
                   key={card.id}
-                  className={`pack-open-preview-card${
-                    draggingId === card.id ? " pack-open-preview-card-dragging" : ""
-                  }`}
+                  className={cn(
+                    "group/preview relative flex min-w-0 shrink-0 cursor-grab active:cursor-grabbing",
+                    draggingId === card.id && "opacity-50",
+                  )}
                   data-testid={`pack-open-preview-card-${card.id}`}
+                  data-dragging={draggingId === card.id || undefined}
                   draggable
                   onDragStart={(e) => {
                     setDraggingId(card.id);
@@ -505,10 +524,10 @@ export default function PackOpenModal({
                         : undefined
                     }
                   />
-                  <div className="pack-open-preview-move-controls">
+                  <div className="pointer-events-none absolute -top-6 left-1/2 z-10 flex -translate-x-1/2 gap-0.5 opacity-0 group-focus-within/preview:pointer-events-auto group-focus-within/preview:opacity-100">
                     <button
                       type="button"
-                      className="pack-open-preview-move-button"
+                      className={MOVE_BUTTON}
                       aria-label={t("a11y.moveLeft", { item: cardName(t, card) })}
                       data-testid={`pack-open-preview-move-left-${card.id}`}
                       onClick={() => movePreviewCard(card, -1)}
@@ -517,7 +536,7 @@ export default function PackOpenModal({
                     </button>
                     <button
                       type="button"
-                      className="pack-open-preview-move-button"
+                      className={MOVE_BUTTON}
                       aria-label={t("a11y.moveRight", { item: cardName(t, card) })}
                       data-testid={`pack-open-preview-move-right-${card.id}`}
                       onClick={() => movePreviewCard(card, 1)}
@@ -542,16 +561,14 @@ export default function PackOpenModal({
             triggerContainer={suggestSlot}
           />
         </Suspense>
-        <div className="pack-open-actions">
-          <div className="pack-suggest-slot" ref={setSuggestSlot} />
-          <button
-            type="button"
-            className="btn btn--secondary pack-open-close"
-            data-testid="pack-open-close"
-            onClick={onClose}
-          >
+        <div
+          className="flex flex-wrap items-center justify-end gap-3 self-end"
+          data-testid="pack-open-actions"
+        >
+          <div className="contents" ref={setSuggestSlot} />
+          <Button data-testid="pack-open-close" onClick={onClose}>
             {closeLabel}
-          </button>
+          </Button>
         </div>
     </Modal>
   );

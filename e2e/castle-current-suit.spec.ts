@@ -58,7 +58,7 @@ test("Castle tile and tooltip show the current rotating suit after entering a bl
   await addJokerById(page, "castle");
   await page.getByTestId("blind-select-play").click();
 
-  const HAND_CARDS = '[data-testid="hand-cards"] .card';
+  const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   const castleSuit = await readCastleSuit(page);

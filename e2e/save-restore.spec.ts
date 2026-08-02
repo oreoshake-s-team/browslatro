@@ -8,7 +8,7 @@ test.beforeEach(async ({ context }) => {
   });
 });
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 const CONTINUE_BUTTON = /Continue/;
 
@@ -26,8 +26,8 @@ async function selectAndSubmitStraightFlush(page: Page): Promise<void> {
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(`.stat-label`, { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator(`[data-stat-label]`, { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 test("refreshing mid-round preserves the hand, money, and ante from localStorage", async ({
@@ -136,7 +136,7 @@ test("Start Run over a restored stale run fully resets ante, round, and scoring 
   await expect(page.getByTestId("blind-select-play")).toBeVisible();
   await expect(statValue(page, "Ante")).toHaveText("1");
   await expect(statValue(page, "Round")).toHaveText("1");
-  await expect(page.locator(".scoring-trace")).not.toContainText("stale");
+  await expect(page.locator('[data-testid="scoring-trace"]')).not.toContainText("stale");
 });
 
 test("refreshing in the shop preserves the offered voucher", async ({
@@ -148,7 +148,7 @@ test("refreshing in the shop preserves the offered voucher", async ({
   await page.getByRole("button", { name: CONTINUE_BUTTON }).click();
   await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
   const voucherBefore = await page
-    .locator(".shop-voucher-name")
+    .locator("[data-shop-voucher-name]")
     .first()
     .textContent();
 
@@ -156,7 +156,7 @@ test("refreshing in the shop preserves the offered voucher", async ({
 
   await expect(page.getByRole("heading", { name: /Shop/ })).toBeVisible();
   const voucherAfter = await page
-    .locator(".shop-voucher-name")
+    .locator("[data-shop-voucher-name]")
     .first()
     .textContent();
   expect(voucherAfter).toBe(voucherBefore);

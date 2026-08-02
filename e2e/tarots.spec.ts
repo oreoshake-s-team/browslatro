@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 
 async function setDeterministic(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -30,7 +30,7 @@ test("The Sun: selecting a hand card and clicking the tarot converts it to heart
   await page.locator(HAND_CARDS).first().click();
   await page.locator('[data-consumable-kind="tarot"]').first().click();
   await expect(
-    page.locator(`${HAND_CARDS}.card-suit-hearts`).first(),
+    page.locator(`${HAND_CARDS}[data-suit="hearts"]`).first(),
   ).toBeVisible();
   await expect(page.locator('[data-consumable-kind="tarot"]')).toHaveCount(0);
 });

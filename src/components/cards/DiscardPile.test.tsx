@@ -35,7 +35,7 @@ describe("DiscardPile", () => {
     expect(
       screen
         .getByRole("button", { name: /Discard pile/ })
-        .querySelector(".card-suit-diamonds")
+        .querySelector('[data-suit="diamonds"]')
     ).not.toBeNull();
   });
 

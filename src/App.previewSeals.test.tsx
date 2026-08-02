@@ -77,7 +77,7 @@ async function ownTalismanWithPreview(): Promise<
   await screen.findByTestId("shop-money");
   const packOffer = document.querySelector('[data-offer-kind="pack"]');
   const open = packOffer?.querySelector(
-    "button.shop-offer-buy",
+    "button[data-shop-buy]",
   ) as HTMLButtonElement;
   await user.click(open);
   await screen.findByTestId("pack-open-close");
@@ -128,7 +128,7 @@ describe("Applying owned apply-seal spectrals to the preview hand", () => {
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     const sealed = screen
       .getByTestId("pack-open-preview-hand")
-      .querySelector(".card-seal-gold");
+      .querySelector('[data-seal="gold"]');
     expect(sealed).not.toBeNull();
   });
 
@@ -147,7 +147,7 @@ describe("Applying owned apply-seal spectrals to the preview hand", () => {
     await dismissBlindSelect(user);
     const sealed = screen
       .getByTestId("hand-cards")
-      .querySelector(".card-seal-gold");
+      .querySelector('[data-seal="gold"]');
     expect(sealed).not.toBeNull();
   });
 });

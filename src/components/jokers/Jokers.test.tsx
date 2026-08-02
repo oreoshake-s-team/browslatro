@@ -123,7 +123,7 @@ describe("Jokers UI", () => {
     );
     expect(
       screen.getByTestId("joker-tile-inner-plus-four-mult"),
-    ).toHaveClass("joker-tile-pulse");
+    ).toHaveClass("animate-pulse-flash");
   });
 
   test("reflects the current pulse count on the inner element", () => {
@@ -265,21 +265,21 @@ describe("Jokers drag-and-drop reordering", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
     const source = getTile("plus-four-mult");
     fireEvent.dragStart(source);
-    expect(source).toHaveClass("joker-tile--dragging");
+    expect(source).toHaveClass("opacity-40");
   });
 
   test("the hovered gap is marked active while dragging over it", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
     fireEvent.dragStart(getTile("plus-four-mult"));
     fireEvent.dragOver(getGap(3));
-    expect(getGap(3)).toHaveClass("joker-gap--active");
+    expect(getGap(3)).toHaveAttribute("data-active");
   });
 
   test("the source's self-adjacent gap does not become active during drag", () => {
     render(<Jokers jokers={three} onReorder={() => {}} />);
     fireEvent.dragStart(getTile("business-card"));
     fireEvent.dragOver(getGap(1));
-    expect(getGap(1)).not.toHaveClass("joker-gap--active");
+    expect(getGap(1)).not.toHaveAttribute("data-active");
   });
 
   test("the active gap is cleared after the drop completes", () => {
@@ -287,13 +287,13 @@ describe("Jokers drag-and-drop reordering", () => {
     dragTileToGap("plus-four-mult", 3);
     const actives = screen
       .getAllByTestId(/^joker-gap-/)
-      .filter((g) => g.classList.contains("joker-gap--active"));
+      .filter((g) => g.hasAttribute("data-active"));
     expect(actives).toHaveLength(0);
   });
 
   test("dragging over the list activates the gap nearest the cursor", () => {
     const { container } = render(<Jokers jokers={three} onReorder={() => {}} />);
-    const list = container.querySelector(".jokers-list");
+    const list = container.querySelector('[data-testid="jokers-list"]');
     if (!list) throw new Error("expected jokers list to render");
     screen.getAllByTestId(/^joker-gap-\d+$/).forEach((gap, i) => {
       gap.getBoundingClientRect = () =>
@@ -318,7 +318,7 @@ describe("Jokers drag-and-drop reordering", () => {
         clientX: 205,
       }),
     );
-    expect(getGap(2)).toHaveClass("joker-gap--active");
+    expect(getGap(2)).toHaveAttribute("data-active");
   });
 
 });
@@ -417,7 +417,7 @@ describe("Jokers sell", () => {
   ];
 
   function sellChips(): Element[] {
-    return Array.from(document.querySelectorAll(".joker-tile-sell"));
+    return Array.from(document.querySelectorAll("[data-joker-sell-chip]"));
   }
 
   test("does not render a Sell drag chip at rest, even when onSell is provided", () => {
@@ -445,15 +445,17 @@ describe("Jokers sell", () => {
     expect(sellChips()).toHaveLength(0);
   });
 
-  test("adds the sell-visible modifier when sellAlwaysVisible is set", () => {
+  test("keeps the sell button visible when sellAlwaysVisible is set", () => {
     render(<Jokers jokers={filled} onSell={() => {}} sellAlwaysVisible />);
-    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers--sell-visible");
+    expect(
+      screen.getByTestId("joker-sell-plus-four-mult"),
+    ).not.toHaveClass("hidden");
   });
 
-  test("omits the sell-visible modifier without sellAlwaysVisible (negative)", () => {
+  test("reveals the sell button only on hover/focus without sellAlwaysVisible (negative)", () => {
     render(<Jokers jokers={filled} onSell={() => {}} />);
-    expect(screen.getByTestId("jokers-tray")).not.toHaveClass(
-      "jokers--sell-visible",
+    expect(screen.getByTestId("joker-sell-plus-four-mult")).toHaveClass(
+      "hidden",
     );
   });
 
@@ -721,48 +723,48 @@ describe("Jokers edition rendering", () => {
       stickers: [{ kind: "eternal" }],
     } satisfies Joker;
     const { container } = render(<Jokers jokers={[j]} />);
-    const row = container.querySelector(".joker-tile-badges");
-    expect(row?.querySelector(".joker-edition-badge")).not.toBeNull();
-    expect(row?.querySelector(".joker-sticker-badge")).not.toBeNull();
+    const row = container.querySelector("[data-joker-badges]");
+    expect(row?.querySelector('[data-testid^="joker-edition-badge-"]')).not.toBeNull();
+    expect(row?.querySelector('[data-testid^="joker-sticker-"]')).not.toBeNull();
   });
 
-  test("a Foil joker tile carries the foil edition class", () => {
+  test("a Foil joker tile carries the foil edition ring", () => {
     const j = withEdition(createPlusFourMultJoker(), "foil");
     render(<Jokers jokers={[j]} />);
     expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
-      "joker-tile-edition-foil",
+      "ring-chips",
     );
   });
 
-  test("a Holographic joker tile carries the holographic edition class", () => {
+  test("a Holographic joker tile carries the holographic edition ring", () => {
     const j = withEdition(createPlusFourMultJoker(), "holographic");
     render(<Jokers jokers={[j]} />);
     expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
-      "joker-tile-edition-holographic",
+      "ring-advisor",
     );
   });
 
-  test("a Polychrome joker tile carries the polychrome edition class", () => {
+  test("a Polychrome joker tile carries the polychrome edition ring", () => {
     const j = withEdition(createPlusFourMultJoker(), "polychrome");
     render(<Jokers jokers={[j]} />);
     expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
-      "joker-tile-edition-polychrome",
+      "ring-success",
     );
   });
 
-  test("a Negative joker tile carries the negative edition class", () => {
+  test("a Negative joker tile carries the negative edition treatment", () => {
     const j = withEdition(createPlusFourMultJoker(), "negative");
     render(<Jokers jokers={[j]} />);
     expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
-      "joker-tile-edition-negative",
+      "bg-black",
     );
   });
 
-  test("an un-editioned joker tile does not carry the generic edition class", () => {
+  test("an un-editioned joker tile does not carry an edition ring", () => {
     const j = createPlusFourMultJoker();
     render(<Jokers jokers={[j]} />);
     expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).not.toHaveClass(
-      "joker-tile-edition",
+      "ring-2",
     );
   });
 
@@ -819,11 +821,11 @@ describe("Jokers UI — Perishable debuffed visual", () => {
     };
   }
 
-  test("a perishable joker past its life is rendered with the joker-tile-debuffed class", () => {
+  test("a perishable joker past its life is rendered dimmed", () => {
     const j = withPerishable(PERISHABLE_LIFE);
     render(<Jokers jokers={[j]} />);
     expect(screen.getByTestId(`joker-tile-filled-${j.id}`)).toHaveClass(
-      "joker-tile-debuffed",
+      "opacity-50",
     );
   });
 
@@ -864,14 +866,17 @@ describe("Jokers UI — Perishable debuffed visual", () => {
 });
 
 describe("Empty tray treatment", () => {
-  test("the tray carries the jokers-tray-empty class when no jokers are equipped", () => {
+  test("an empty tray renders only empty slots", () => {
     render(<Jokers jokers={[]} />);
-    expect(screen.getByTestId("jokers-tray")).toHaveClass("jokers-tray-empty");
+    expect(screen.getAllByTestId("joker-tile-empty").length).toBeGreaterThan(0);
+    expect(screen.queryAllByTestId(/^joker-tile-filled-/)).toHaveLength(0);
   });
 
-  test("negative: the tray drops the empty class once a joker is equipped", () => {
+  test("negative: an equipped joker renders a filled tile alongside the empty slots", () => {
     render(<Jokers jokers={[createGreedyJoker()]} />);
-    expect(screen.getByTestId("jokers-tray")).not.toHaveClass("jokers-tray-empty");
+    expect(
+      screen.getAllByTestId(/^joker-tile-filled-/),
+    ).toHaveLength(1);
   });
 });
 

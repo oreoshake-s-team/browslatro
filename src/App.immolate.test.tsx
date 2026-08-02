@@ -100,7 +100,7 @@ function flushDiscardAnimation(): void {
     });
   }
   getHandCardButtons()
-    .filter((btn) => btn.classList.contains("card--discarding"))
+    .filter((btn) => btn.hasAttribute("data-discarding"))
     .forEach((btn) => fireEvent.animationEnd(btn));
   for (let i = 0; i < 5; i += 1) {
     if (vi.getTimerCount() === 0) break;
@@ -119,7 +119,7 @@ async function getImmolateInConsumables(
   await screen.findByTestId("shop-money");
   const buy = document
     .querySelector('[data-offer-kind="spectral"]')
-    ?.querySelector("button.shop-offer-buy");
+    ?.querySelector("button[data-shop-buy]");
   if (!(buy instanceof HTMLButtonElement)) throw new Error("missing Immolate buy");
   await user.click(buy);
   await user.click(screen.getByRole("button", { name: /Next Round/ }));

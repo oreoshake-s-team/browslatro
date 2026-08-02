@@ -83,7 +83,7 @@ function flushAllTimers(): void {
     });
   }
   getHandCardButtons()
-    .filter((btn) => btn.classList.contains("card--discarding"))
+    .filter((btn) => btn.hasAttribute("data-discarding"))
     .forEach((btn) => {
       act(() => {
         btn.dispatchEvent(new Event("animationend", { bubbles: true }));
@@ -94,12 +94,12 @@ function flushAllTimers(): void {
 function moneyValue(): number {
   const el = screen
     .getByText("Money")
-    .parentElement?.querySelector(".stat-value");
+    .parentElement?.querySelector("[data-stat-value]");
   return Number((el?.textContent ?? "$0").replace("$", ""));
 }
 
 function roundScoreValue(): number {
-  const el = document.querySelector(".round-score-value");
+  const el = document.querySelector('[data-testid="round-score-value"]');
   return Number(el?.textContent?.replace(/,/g, "") ?? "0");
 }
 

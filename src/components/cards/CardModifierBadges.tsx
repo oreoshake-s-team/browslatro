@@ -1,7 +1,16 @@
 import { useTranslation } from "react-i18next";
 import type { CardEdition, Enhancement, Seal } from "../../cards/types";
 import type { JokerEdition } from "../../items/jokers";
-import "./CardModifierBadges.css";
+import { Badge } from "../ui/Badge";
+
+type BadgeTone =
+  | "neutral"
+  | "money"
+  | "chips"
+  | "mult"
+  | "success"
+  | "advisor"
+  | "muted";
 
 export const ENHANCEMENT_LABEL_KEY = {
   bonus: "cardLabels.enhancementBonus",
@@ -34,6 +43,37 @@ export const JOKER_EDITION_LABEL_KEY = {
   negative: "cardLabels.editionNegative",
 } as const satisfies Record<JokerEdition, string>;
 
+const ENHANCEMENT_TONE = {
+  bonus: "chips",
+  mult: "mult",
+  wild: "advisor",
+  glass: "neutral",
+  steel: "muted",
+  stone: "neutral",
+  gold: "money",
+  lucky: "success",
+} as const satisfies Record<Enhancement, BadgeTone>;
+
+const CARD_EDITION_TONE = {
+  foil: "chips",
+  holographic: "advisor",
+  polychrome: "success",
+} as const satisfies Record<CardEdition, BadgeTone>;
+
+const JOKER_EDITION_TONE = {
+  foil: "chips",
+  holographic: "advisor",
+  polychrome: "success",
+  negative: "neutral",
+} as const satisfies Record<JokerEdition, BadgeTone>;
+
+const SEAL_TONE = {
+  gold: "money",
+  red: "mult",
+  blue: "chips",
+  purple: "advisor",
+} as const satisfies Record<Seal, BadgeTone>;
+
 export interface CardModifierBadgesProps {
   readonly scope: string;
   readonly suffix: string | number;
@@ -56,36 +96,40 @@ export default function CardModifierBadges({
   return (
     <>
       {jokerEdition && (
-        <span
-          className={`card-mod-badge card-mod-joker-edition card-mod-joker-edition-${jokerEdition}`}
+        <Badge
+          tone={JOKER_EDITION_TONE[jokerEdition]}
+          className="ml-1 align-middle"
           data-testid={`${scope}-edition-${suffix}`}
         >
           {t(JOKER_EDITION_LABEL_KEY[jokerEdition])}
-        </span>
+        </Badge>
       )}
       {enhancement && (
-        <span
-          className={`card-mod-badge card-mod-enhancement-${enhancement}`}
+        <Badge
+          tone={ENHANCEMENT_TONE[enhancement]}
+          className="ml-1 align-middle"
           data-testid={`${scope}-card-enhancement-${suffix}`}
         >
           {t(ENHANCEMENT_LABEL_KEY[enhancement])}
-        </span>
+        </Badge>
       )}
       {cardEdition && (
-        <span
-          className={`card-mod-badge card-mod-edition-${cardEdition}`}
+        <Badge
+          tone={CARD_EDITION_TONE[cardEdition]}
+          className="ml-1 align-middle"
           data-testid={`${scope}-card-edition-${suffix}`}
         >
           {t(CARD_EDITION_LABEL_KEY[cardEdition])}
-        </span>
+        </Badge>
       )}
       {seal && (
-        <span
-          className={`card-mod-badge card-mod-seal-${seal}`}
+        <Badge
+          tone={SEAL_TONE[seal]}
+          className="ml-1 align-middle"
           data-testid={`${scope}-card-seal-${suffix}`}
         >
           {t(SEAL_LABEL_KEY[seal])}
-        </span>
+        </Badge>
       )}
     </>
   );

@@ -26,7 +26,7 @@ async function fulfillWithFirstPick(route: Route): Promise<void> {
 }
 
 function packModal(page: Page): Locator {
-  return page.locator(".pack-open-modal");
+  return page.locator('[data-testid="pack-open-modal"]');
 }
 
 async function openPackFromShop(page: Page): Promise<Locator> {
@@ -37,7 +37,7 @@ async function openPackFromShop(page: Page): Promise<Locator> {
   await page.getByText("Apply modifiers").click();
   await page.getByText(/Win/).click();
   await page
-    .locator('[data-pack-pool="celestial"] .shop-offer-buy:not([disabled])')
+    .locator('[data-pack-pool="celestial"] [data-shop-buy]:not([disabled])')
     .first()
     .click();
   const modal = packModal(page);

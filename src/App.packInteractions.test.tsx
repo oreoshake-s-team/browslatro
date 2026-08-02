@@ -74,7 +74,7 @@ async function openPackOffer(
     (el) => el.getAttribute("data-offer-kind") === "pack",
   );
   const openBtn = offers[packIdx].querySelector(
-    "button.shop-offer-buy",
+    "button[data-shop-buy]",
   ) as HTMLButtonElement;
   await user.click(openBtn);
   await screen.findByTestId("pack-open-close");
@@ -129,7 +129,7 @@ describe("Selling and using during a pack-pick", () => {
       (el) => el.getAttribute("data-offer-kind") === kind,
     );
     const buy = offers[idx].querySelector(
-      "button.shop-offer-buy",
+      "button[data-shop-buy]",
     ) as HTMLButtonElement;
     await user.click(buy);
   }
@@ -292,7 +292,7 @@ describe("No overlay deck target during normal play", () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
     render(<App />);
     await dismissBlindSelect(user);
-    expect(document.querySelector(".game-overlay-deck")).toBeNull();
+    expect(document.querySelector('[data-testid="game-overlay-deck"]')).toBeNull();
   });
 });
 

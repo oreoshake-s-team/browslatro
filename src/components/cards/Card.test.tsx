@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import Card from "./Card";
 import type { Card as CardType } from "../../cards/types";
+import { usePreferences } from "../system/preferences";
 
 const useTranslationCalls = { count: 0 };
 
@@ -42,19 +43,22 @@ const kingOfDiamonds: CardType = { id: 4, rank: "K", suit: "diamonds" };
 const sevenOfHearts: CardType = { id: 5, rank: "7", suit: "hearts" };
 
 describe("Card", () => {
-  test("applies the foil edition class when the card has the foil edition", () => {
+  test("exposes the foil edition via data-edition", () => {
     render(<Card card={{ ...aceOfSpades, edition: "foil" }} />);
-    expect(screen.getByRole("button")).toHaveClass("card--edition-foil");
+    expect(screen.getByRole("button")).toHaveAttribute("data-edition", "foil");
   });
 
-  test("applies the polychrome edition class when the card has the polychrome edition", () => {
+  test("exposes the polychrome edition via data-edition", () => {
     render(<Card card={{ ...aceOfSpades, edition: "polychrome" }} />);
-    expect(screen.getByRole("button")).toHaveClass("card--edition-polychrome");
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "data-edition",
+      "polychrome",
+    );
   });
 
-  test("does not apply any edition class when the card has no edition (negative)", () => {
+  test("carries no data-edition when the card has no edition (negative)", () => {
     const button = render(<Card card={aceOfSpades} />).getByRole("button");
-    expect(button.className).not.toMatch(/card--edition-/);
+    expect(button).not.toHaveAttribute("data-edition");
   });
 
   test("exposes the edition via the data-edition attribute when present", () => {
@@ -81,14 +85,33 @@ describe("Card", () => {
     ).toBeInTheDocument();
   });
 
-  test("applies the red color class for heart suits", () => {
+  test("applies the red suit text color for heart suits", () => {
     render(<Card card={queenOfHearts} />);
-    expect(screen.getByRole("button")).toHaveClass("card-red");
+    expect(screen.getByRole("button")).toHaveClass("text-suit-red");
   });
 
-  test("applies the black color class for spade suits", () => {
+  test("applies the dark suit text color for spade suits", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).toHaveClass("card-black");
+    expect(screen.getByRole("button")).toHaveClass("text-card-ink");
+  });
+
+  test("high visibility colors diamonds blue", () => {
+    usePreferences.setState({ highVisibility: true });
+    render(<Card card={{ id: 91, rank: "5", suit: "diamonds" }} />);
+    expect(screen.getByRole("button")).toHaveClass("text-suit-blue");
+  });
+
+  test("high visibility colors clubs green", () => {
+    usePreferences.setState({ highVisibility: true });
+    render(<Card card={{ id: 92, rank: "5", suit: "clubs" }} />);
+    expect(screen.getByRole("button")).toHaveClass("text-suit-green");
+  });
+
+  test("classic palette colors diamonds red when high visibility is off", () => {
+    usePreferences.setState({ highVisibility: false });
+    render(<Card card={{ id: 93, rank: "5", suit: "diamonds" }} />);
+    expect(screen.getByRole("button")).toHaveClass("text-suit-red");
+    usePreferences.setState({ highVisibility: true });
   });
 
   test.each<{ suit: "spades" | "hearts" | "diamonds" | "clubs"; card: CardType }>([
@@ -96,14 +119,17 @@ describe("Card", () => {
     { suit: "hearts", card: queenOfHearts },
     { suit: "diamonds", card: { id: 3, rank: "5", suit: "diamonds" } },
     { suit: "clubs", card: { id: 4, rank: "7", suit: "clubs" } },
-  ])("applies the per-suit class for $suit", ({ suit, card }) => {
+  ])("exposes data-suit for $suit", ({ suit, card }) => {
     render(<Card card={card} />);
-    expect(screen.getByRole("button")).toHaveClass(`card-suit-${suit}`);
+    expect(screen.getByRole("button")).toHaveAttribute("data-suit", suit);
   });
 
-  test("does not apply an unrelated suit class", () => {
+  test("does not expose an unrelated suit", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-suit-hearts");
+    expect(screen.getByRole("button")).not.toHaveAttribute(
+      "data-suit",
+      "hearts",
+    );
   });
 
   test("is not selected by default", () => {
@@ -116,9 +142,9 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveAttribute("aria-pressed", "true");
   });
 
-  test("applies the selected class when raised", () => {
+  test("lifts the card when selected", () => {
     render(<Card card={aceOfSpades} selected />);
-    expect(screen.getByRole("button")).toHaveClass("card--selected");
+    expect(screen.getByRole("button")).toHaveClass("-translate-y-4");
   });
 
   test("invokes onToggle with the card when clicked", async () => {
@@ -137,14 +163,14 @@ describe("Card", () => {
     ).resolves.toBeUndefined();
   });
 
-  test("applies the discarding class when the discarding prop is set", () => {
+  test("marks the card with data-discarding when the discarding prop is set", () => {
     render(<Card card={aceOfSpades} discarding />);
-    expect(screen.getByRole("button")).toHaveClass("card--discarding");
+    expect(screen.getByRole("button")).toHaveAttribute("data-discarding");
   });
 
-  test("applies the newly-drawn class when the newlyDrawn prop is set", () => {
+  test("plays the fade-in animation when the newlyDrawn prop is set", () => {
     render(<Card card={aceOfSpades} newlyDrawn />);
-    expect(screen.getByRole("button")).toHaveClass("card--newly-drawn");
+    expect(screen.getByRole("button")).toHaveClass("animate-fade-in");
   });
 
   test("marks the aria-label as newly drawn when the newlyDrawn prop is set", () => {
@@ -154,9 +180,9 @@ describe("Card", () => {
     ).toBeInTheDocument();
   });
 
-  test("does not apply the newly-drawn class by default (negative)", () => {
+  test("does not play the fade-in animation by default (negative)", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card--newly-drawn");
+    expect(screen.getByRole("button")).not.toHaveClass("animate-fade-in");
   });
 
   test("invokes onDiscardEnd with the card when the discard animation ends", () => {
@@ -175,45 +201,43 @@ describe("Card", () => {
     expect(onDiscardEnd).not.toHaveBeenCalled();
   });
 
-  test("applies the shared face-card class to a Jack", () => {
+  test("renders the face glyph for a Jack", () => {
     render(<Card card={jackOfClubs} />);
-    expect(screen.getByRole("button")).toHaveClass("card-face");
+    expect(screen.getByText("⚜")).toBeInTheDocument();
   });
 
-  test("applies the jack-specific class to a Jack", () => {
-    render(<Card card={jackOfClubs} />);
-    expect(screen.getByRole("button")).toHaveClass("card-face-jack");
-  });
-
-  test("applies the queen-specific class to a Queen", () => {
+  test("renders the queen glyph for a Queen", () => {
     render(<Card card={queenOfHearts} />);
-    expect(screen.getByRole("button")).toHaveClass("card-face-queen");
+    expect(screen.getByText("♛")).toBeInTheDocument();
   });
 
-  test("applies the king-specific class to a King", () => {
+  test("renders the king glyph for a King", () => {
     render(<Card card={kingOfDiamonds} />);
-    expect(screen.getByRole("button")).toHaveClass("card-face-king");
+    expect(screen.getByText("♚")).toBeInTheDocument();
   });
 
-  test("does not apply the face-card class to a number card", () => {
+  test("does not render a face glyph on a number card", () => {
     render(<Card card={sevenOfHearts} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-face");
+    expect(screen.queryByText(/[⚜♛♚]/)).not.toBeInTheDocument();
   });
 
-  test("does not apply the face-card class to an Ace", () => {
+  test("does not render a face glyph on an Ace", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-face");
+    expect(screen.queryByText(/[⚜♛♚]/)).not.toBeInTheDocument();
   });
 
-  test("applies the gold enhancement class when the card is gold", () => {
+  test("exposes the gold enhancement via data-enhancement", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).toHaveClass("card--enhancement-gold");
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "data-enhancement",
+      "gold",
+    );
   });
 
-  test("does not apply any enhancement class to a vanilla card", () => {
+  test("carries no data-enhancement on a vanilla card", () => {
     render(<Card card={aceOfSpades} />);
-    expect(screen.getByRole("button").className).not.toMatch(/card--enhancement-/);
+    expect(screen.getByRole("button")).not.toHaveAttribute("data-enhancement");
   });
 
   test("appends the enhancement to the accessible label when gold", () => {
@@ -227,28 +251,28 @@ describe("Card", () => {
     expect(screen.getByRole("button")).toHaveAccessibleName("A of Spades");
   });
 
-  test("applies the gold scoring class when goldScoring is true", () => {
+  test("shows the gold scoring ring when goldScoring is true", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} goldScoring />);
-    expect(screen.getByRole("button")).toHaveClass("card--gold-scoring");
+    expect(screen.getByRole("button")).toHaveClass("ring-money");
   });
 
-  test("does not apply the gold scoring class when goldScoring is omitted", () => {
+  test("does not show the gold scoring ring when goldScoring is omitted", () => {
     const gold: CardType = { id: 9, rank: "5", suit: "spades", enhancement: "gold" };
     render(<Card card={gold} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card--gold-scoring");
+    expect(screen.getByRole("button")).not.toHaveClass("ring-money");
   });
 
-  test("applies the steel scoring class when steelScoring is true", () => {
+  test("shows the steel scoring ring when steelScoring is true", () => {
     const steel: CardType = { id: 20, rank: "A", suit: "spades", enhancement: "steel" };
     render(<Card card={steel} steelScoring />);
-    expect(screen.getByRole("button")).toHaveClass("card--steel-scoring");
+    expect(screen.getByRole("button")).toHaveClass("ring-muted");
   });
 
-  test("does not apply the steel scoring class when steelScoring is omitted", () => {
+  test("does not show the steel scoring ring when steelScoring is omitted", () => {
     const steel: CardType = { id: 21, rank: "A", suit: "spades", enhancement: "steel" };
     render(<Card card={steel} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card--steel-scoring");
+    expect(screen.getByRole("button")).not.toHaveClass("ring-muted");
   });
 
   test("exposes a steel-scoring-<id> testid while steelScoring is true", () => {
@@ -270,9 +294,12 @@ describe("Card", () => {
     { enhancement: "wild", card: { id: 13, rank: "K", suit: "hearts", enhancement: "wild" } },
     { enhancement: "glass", card: { id: 14, rank: "4", suit: "spades", enhancement: "glass" } },
     { enhancement: "lucky", card: { id: 16, rank: "3", suit: "hearts", enhancement: "lucky" } },
-  ])("applies the $enhancement enhancement class when the card is $enhancement", ({ enhancement, card }) => {
+  ])("exposes data-enhancement for $enhancement", ({ enhancement, card }) => {
     render(<Card card={card} />);
-    expect(screen.getByRole("button")).toHaveClass(`card--enhancement-${enhancement}`);
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "data-enhancement",
+      enhancement,
+    );
   });
 
   test.each<{ enhancement: string; accessibleName: string; card: CardType }>([
@@ -294,8 +321,8 @@ describe("Card", () => {
 
   test("keeps the corner suit pip on a card with a center value", () => {
     const bonus: CardType = { id: 62, rank: "5", suit: "spades", enhancement: "bonus" };
-    const { container } = render(<Card card={bonus} />);
-    expect(container.querySelector(".card-corner-top .card-suit")).toHaveTextContent("\u2660");
+    render(<Card card={bonus} />);
+    expect(screen.getByText("♠")).toBeInTheDocument();
   });
 
   test("does not render a center value on a non-enhanced card", () => {
@@ -304,8 +331,8 @@ describe("Card", () => {
   });
 
   test("keeps the center suit pip on a non-enhanced card", () => {
-    const { container } = render(<Card card={aceOfSpades} />);
-    expect(container.querySelector(".card-center")).toHaveTextContent("\u2660");
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getAllByText("♠")).toHaveLength(2);
   });
 
   test("hides the center value on a face-down enhanced card", () => {
@@ -346,21 +373,21 @@ describe("Card", () => {
 
   test("keeps the face decoration on a wild face card with no display value", () => {
     const wild: CardType = { id: 66, rank: "K", suit: "hearts", enhancement: "wild" };
-    const { container } = render(<Card card={wild} />);
-    expect(container.querySelector(".card-face-monogram")).toHaveTextContent("K");
+    render(<Card card={wild} />);
+    expect(screen.getByText("♚")).toBeInTheDocument();
   });
 
   test("keeps the center suit pip on a wild card with no display value", () => {
     const wild: CardType = { id: 65, rank: "3", suit: "hearts", enhancement: "wild" };
-    const { container } = render(<Card card={wild} />);
-    expect(container.querySelector(".card-center")).toHaveTextContent("\u2665");
+    render(<Card card={wild} />);
+    expect(screen.getAllByText("♥")).toHaveLength(2);
   });
 
   test("renders both odds as text in the center of a lucky number card", () => {
     const lucky: CardType = { id: 71, rank: "9", suit: "hearts", enhancement: "lucky" };
     render(<Card card={lucky} />);
     const center = screen.getByTestId("card-center-lucky-71");
-    expect(center).not.toHaveTextContent("\u2618");
+    expect(center).not.toHaveTextContent("☘");
     expect(center).toHaveTextContent("1/5 +20");
     expect(center).toHaveTextContent("1/15 +$20");
   });
@@ -389,10 +416,13 @@ describe("Card", () => {
     expect(screen.getByTestId("card-center-lucky-74")).toHaveTextContent("1/5 +20");
   });
 
-  test("applies the stone enhancement class when the card is stone", () => {
+  test("exposes the stone enhancement via data-enhancement", () => {
     const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
     render(<Card card={stone} />);
-    expect(screen.getByRole("button")).toHaveClass("card--enhancement-stone");
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "data-enhancement",
+      "stone",
+    );
   });
 
   test("uses 'Stone card' as the accessible name (rank/suit are invisible)", () => {
@@ -409,8 +439,8 @@ describe("Card", () => {
 
   test("does not render the suit pip for a Stone card", () => {
     const stone: CardType = { id: 15, rank: "2", suit: "spades", enhancement: "stone" };
-    const { container } = render(<Card card={stone} />);
-    expect(container.querySelector(".card-suit")).toBeNull();
+    render(<Card card={stone} />);
+    expect(screen.queryByText("♠")).not.toBeInTheDocument();
   });
 
   test("renders a seal badge when the card has a Gold Seal", () => {
@@ -424,11 +454,9 @@ describe("Card", () => {
     { seal: "red", card: { id: 32, rank: "6", suit: "hearts", seal: "red" } },
     { seal: "blue", card: { id: 33, rank: "7", suit: "clubs", seal: "blue" } },
     { seal: "purple", card: { id: 34, rank: "8", suit: "diamonds", seal: "purple" } },
-  ])("applies the $seal seal class to the badge", ({ seal, card }) => {
+  ])("exposes data-seal for the $seal seal", ({ seal, card }) => {
     render(<Card card={card} />);
-    expect(screen.getByTestId(`card-seal-${card.id}`)).toHaveClass(
-      `card-seal-badge-${seal}`,
-    );
+    expect(screen.getByRole("button")).toHaveAttribute("data-seal", seal);
   });
 
   test("does not render a seal badge for a card without a seal", () => {
@@ -460,44 +488,36 @@ describe("Card", () => {
 });
 
 describe("Card scoring pulse animation", () => {
-  test("does not apply card--scoring when scoring is false", () => {
-    render(<Card card={aceOfSpades} scoring={false} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card--scoring");
+  test("does not render the scoring pulse overlay when scoring is false", () => {
+    const { container } = render(<Card card={aceOfSpades} scoring={false} />);
+    expect(container.querySelector(".animate-pulse-flash")).toBeNull();
   });
 
-  test("applies card--scoring when scoring is true", () => {
-    render(<Card card={aceOfSpades} scoring />);
-    expect(screen.getByRole("button")).toHaveClass("card--scoring");
+  test("renders the scoring pulse overlay when scoring is true", () => {
+    const { container } = render(<Card card={aceOfSpades} scoring />);
+    expect(container.querySelector(".animate-pulse-flash")).not.toBeNull();
   });
 
-  test("applies card--scoring-tick-0 when the pulse tick is even", () => {
-    render(<Card card={aceOfSpades} scoring scoringPulseTick={0} />);
-    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-0");
-  });
-
-  test("applies card--scoring-tick-1 when the pulse tick is odd", () => {
-    render(<Card card={aceOfSpades} scoring scoringPulseTick={1} />);
-    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-1");
-  });
-
-  test("alternates tick classes across consecutive ticks (so a Red Seal retrigger restarts the animation)", () => {
-    const { rerender } = render(
+  test("remounts the pulse overlay on consecutive ticks (so a Red Seal retrigger restarts the animation)", () => {
+    const { container, rerender } = render(
       <Card card={aceOfSpades} scoring scoringPulseTick={3} />,
     );
-    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-1");
+    const before = container.querySelector(".animate-pulse-flash");
     rerender(<Card card={aceOfSpades} scoring scoringPulseTick={4} />);
-    expect(screen.getByRole("button")).toHaveClass("card--scoring-tick-0");
+    const after = container.querySelector(".animate-pulse-flash");
+    expect(after).not.toBe(before);
   });
 
-  test("a non-scoring card does not carry either tick class", () => {
-    render(<Card card={aceOfSpades} scoring={false} scoringPulseTick={5} />);
-    const button = screen.getByRole("button");
-    expect(button).not.toHaveClass("card--scoring-tick-0");
+  test("a non-scoring card renders no pulse overlay regardless of tick", () => {
+    const { container } = render(
+      <Card card={aceOfSpades} scoring={false} scoringPulseTick={5} />,
+    );
+    expect(container.querySelector(".animate-pulse-flash")).toBeNull();
   });
 });
 
 describe("Card face-down hides seal/enhancement/edition", () => {
-  test("a face-down lucky card does not apply the enhancement class", () => {
+  test("a face-down lucky card does not expose its enhancement", () => {
     const lucky: CardType = {
       id: 40,
       rank: "3",
@@ -506,10 +526,10 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={lucky} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card--enhancement-lucky");
+    expect(screen.getByRole("button")).not.toHaveAttribute("data-enhancement");
   });
 
-  test("a face-down blue-seal card does not apply the seal class", () => {
+  test("a face-down blue-seal card does not expose its seal", () => {
     const sealed: CardType = {
       id: 41,
       rank: "7",
@@ -518,7 +538,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={sealed} />);
-    expect(screen.getByRole("button")).not.toHaveClass("card-seal-blue");
+    expect(screen.getByRole("button")).not.toHaveAttribute("data-seal");
   });
 
   test("a face-down card with a seal does not render the seal badge", () => {
@@ -533,7 +553,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
     expect(screen.queryByTestId("card-seal-42")).not.toBeInTheDocument();
   });
 
-  test("a face-down foil card does not apply the edition class", () => {
+  test("a face-down foil card does not expose its edition", () => {
     const editioned: CardType = {
       id: 43,
       rank: "8",
@@ -542,10 +562,10 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={editioned} />);
-    expect(screen.getByRole("button").className).not.toMatch(/card--edition-/);
+    expect(screen.getByRole("button")).not.toHaveAttribute("data-edition");
   });
 
-  test("a face-down card flipped face-up restores its enhancement class (regression)", () => {
+  test("a face-down card flipped face-up restores its enhancement (regression)", () => {
     const lucky: CardType = {
       id: 44,
       rank: "3",
@@ -554,7 +574,10 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: false,
     };
     render(<Card card={lucky} />);
-    expect(screen.getByRole("button")).toHaveClass("card--enhancement-lucky");
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "data-enhancement",
+      "lucky",
+    );
   });
 
   test("a face-down card flipped face-up restores its seal badge (regression)", () => {
@@ -569,7 +592,7 @@ describe("Card face-down hides seal/enhancement/edition", () => {
     expect(screen.getByTestId("card-seal-45")).toBeInTheDocument();
   });
 
-  test("a face-down card scoring renders its enhancement class (showBack flips off during scoring)", () => {
+  test("a face-down card scoring exposes its enhancement (showBack flips off during scoring)", () => {
     const lucky: CardType = {
       id: 46,
       rank: "3",
@@ -578,15 +601,20 @@ describe("Card face-down hides seal/enhancement/edition", () => {
       faceDown: true,
     };
     render(<Card card={lucky} scoring />);
-    expect(screen.getByRole("button")).toHaveClass("card--enhancement-lucky");
+    expect(screen.getByRole("button")).toHaveAttribute(
+      "data-enhancement",
+      "lucky",
+    );
   });
 });
 
 describe("Card accessible-name vs visible-text", () => {
   test("top corner visible glyphs are aria-hidden so they do not duplicate the aria-label", () => {
-    const { container } = render(<Card card={aceOfSpades} />);
-    const corner = container.querySelector(".card-corner-top");
-    expect(corner).toHaveAttribute("aria-hidden", "true");
+    render(<Card card={aceOfSpades} />);
+    expect(screen.getByText("A").parentElement).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
   });
 
   test("the button's accessible name still comes from the aria-label", () => {
@@ -596,9 +624,9 @@ describe("Card accessible-name vs visible-text", () => {
 });
 
 describe("Card — forced (Cerulean Bell)", () => {
-  test("applies the forced class when forced", () => {
+  test("marks the card with data-forced when forced", () => {
     render(<Card card={aceOfSpades} forced />);
-    expect(screen.getByRole("button")).toHaveClass("card--forced");
+    expect(screen.getByRole("button")).toHaveAttribute("data-forced");
   });
 
   test("renders the forced lock badge when forced", () => {

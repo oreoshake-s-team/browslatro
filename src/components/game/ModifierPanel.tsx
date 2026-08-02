@@ -1,7 +1,7 @@
-import "./ModifierPanel.css";
 import { useGame } from "../../store/game";
 import { play } from "../system/sounds";
 import { FINAL_ANTE } from "../../constants";
+import { Button } from "../ui/Button";
 import ModifierSpectralPicker from "./ModifierSpectralPicker";
 import ModifierTarotPicker from "./ModifierTarotPicker";
 import ModifierPlanetPicker from "./ModifierPlanetPicker";
@@ -37,74 +37,80 @@ export default function ModifierPanel() {
     setMoney(money + delta);
   }
   return (
-    <details className="modifier-selection">
-      <summary className="modifier-disclosure">Apply modifiers</summary>
-      <div className="modifier-grid">
-        <button className="add-chips-button" onClick={() => addChips(10)}>
+    <details className="w-full rounded-xl border border-border bg-surface px-4 pb-4 pt-2">
+      <summary
+        data-testid="modifier-disclosure"
+        className="cursor-pointer select-none py-1 text-xs font-bold uppercase tracking-widest text-muted hover:text-chips"
+      >
+        Apply modifiers
+      </summary>
+      <div className="mt-2 flex flex-wrap items-stretch gap-1">
+        <Button size="sm" className="text-chips" onClick={() => addChips(10)}>
           <span aria-hidden="true">🪙 </span>Add Chips
-        </button>
-        <button
-          className="add-multiplier-button"
-          onClick={() => addMultiplier(1)}
-        >
+        </Button>
+        <Button size="sm" className="text-mult" onClick={() => addMultiplier(1)}>
           <span aria-hidden="true">➕ </span>Add Multiplier
-        </button>
-        <button
-          className="multiply-multiplier-button"
+        </Button>
+        <Button
+          size="sm"
+          className="text-mult"
           onClick={() => multiplyMultiplier(2)}
         >
           <span aria-hidden="true">✖️ </span>Multiply Multiplier
-        </button>
-        <button className="btn btn--secondary" onClick={() => handleWin()}>
+        </Button>
+        <Button size="sm" onClick={() => handleWin()}>
           <span aria-hidden="true">🏆 </span>Win
-        </button>
-        <button className="add-money-button" onClick={() => adjustMoney(10)}>
+        </Button>
+        <Button
+          size="sm"
+          data-testid="add-money-button"
+          className="text-money"
+          onClick={() => adjustMoney(10)}
+        >
           <span aria-hidden="true">💵 </span>Add $10
-        </button>
-        <button
-          className="subtract-money-button"
+        </Button>
+        <Button
+          size="sm"
+          className="text-mult"
           onClick={() => adjustMoney(-10)}
         >
           <span aria-hidden="true">💸 </span>Subtract $10
-        </button>
-        <button
-          type="button"
-          className="shrink-hand-button"
+        </Button>
+        <Button
+          size="sm"
           onClick={() => setHandSizeModifier((prev) => prev - 1)}
         >
           <span aria-hidden="true">🤏 </span>Hand −1
-        </button>
-        <button
-          type="button"
-          className="grow-hand-button"
+        </Button>
+        <Button
+          size="sm"
           onClick={() => setHandSizeModifier((prev) => prev + 1)}
         >
           <span aria-hidden="true">✋ </span>Hand +1
-        </button>
-        <button
-          type="button"
-          className="shrink-ante-button"
+        </Button>
+        <Button
+          size="sm"
           onClick={() => setAnte((prev) => Math.max(1, prev - 1))}
           disabled={ante <= 1}
         >
           <span aria-hidden="true">⏪ </span>Ante −1
-        </button>
-        <button
-          type="button"
-          className="grow-ante-button"
+        </Button>
+        <Button
+          size="sm"
           onClick={() => setAnte((prev) => Math.min(FINAL_ANTE, prev + 1))}
           disabled={ante >= FINAL_ANTE}
         >
           <span aria-hidden="true">⏩ </span>Ante +1
-        </button>
-        <button
-          type="button"
-          className="force-probabilities-button"
+        </Button>
+        <Button
+          size="sm"
+          variant="toggle"
           onClick={() => setForceProbabilities((p) => !p)}
           aria-pressed={forceProbabilities}
         >
-          <span aria-hidden="true">🎲 </span>Force Probabilities {forceProbabilities ? "Off" : "On"}
-        </button>
+          <span aria-hidden="true">🎲 </span>Force Probabilities{" "}
+          {forceProbabilities ? "Off" : "On"}
+        </Button>
         <ModifierTarotPicker />
         <ModifierPlanetPicker />
         <ModifierSpectralPicker />

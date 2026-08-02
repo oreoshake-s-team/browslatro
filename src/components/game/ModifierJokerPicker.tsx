@@ -1,4 +1,3 @@
-import "./ModifierJokerPicker.css";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
@@ -10,11 +9,26 @@ import {
   createLegendaryJokerCatalog,
   effectiveJokerCount,
   type Joker,
+  type JokerRarity,
 } from "../../items/jokers";
 import { sortByDisplayName } from "./displayNameSort";
+import { Button } from "../ui/Button";
+import { cn } from "../ui/cn";
 import JokerTooltip from "../jokers/JokerTooltip";
 
 const PAGE_SIZE = 12;
+
+const TILE_BASE =
+  "relative inline-flex cursor-pointer items-center gap-1 rounded-md border border-solid px-2 py-1 text-left text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-not-allowed disabled:opacity-45";
+
+const TILE_RARITY: Record<JokerRarity, string> = {
+  common: "border-chips/40 bg-chips/10 text-chips enabled:hover:bg-chips/20",
+  uncommon:
+    "border-success/40 bg-success/10 text-success enabled:hover:bg-success/20",
+  rare: "border-mult/40 bg-mult/10 text-mult enabled:hover:bg-mult/20",
+  legendary:
+    "border-money/40 bg-money/10 text-money enabled:hover:bg-money/20",
+};
 
 export default function ModifierJokerPicker() {
   const { t } = useTranslation();
@@ -67,12 +81,16 @@ export default function ModifierJokerPicker() {
   }
 
   return (
-    <details className="modifier-joker-picker" ref={detailsRef}>
-      <summary className="modifier-joker-picker-summary">
+    <details
+      data-testid="modifier-joker-picker"
+      className="w-full rounded-lg border border-dashed border-muted/40 bg-white/5 px-3 pb-3 pt-2"
+      ref={detailsRef}
+    >
+      <summary className="cursor-pointer select-none py-1 text-xs font-bold uppercase tracking-wider text-muted hover:text-ink">
         Add a specific Joker
       </summary>
-      <div className="modifier-joker-picker-body">
-        <div className="modifier-joker-picker-grid">
+      <div className="mt-2 flex flex-col gap-2">
+        <div className="grid grid-cols-4 gap-1">
           {sortedCatalog
             .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
             .map((joker) => {
@@ -82,7 +100,7 @@ export default function ModifierJokerPicker() {
                 <button
                   key={joker.id}
                   type="button"
-                  className={`add-joker-button add-joker-button-${joker.rarity}`}
+                  className={cn(TILE_BASE, TILE_RARITY[joker.rarity])}
                   data-joker-id={joker.id}
                   disabled={isFull}
                   aria-disabled={isFull}
@@ -107,36 +125,34 @@ export default function ModifierJokerPicker() {
             })}
         </div>
         <nav
-          className="modifier-joker-picker-nav"
+          className="flex items-center justify-center gap-2"
           aria-label={t("a11y.jokerPickerPagination")}
         >
-          <button
-            type="button"
-            className="modifier-joker-picker-prev"
+          <Button
+            size="sm"
             data-testid="modifier-joker-picker-prev"
             aria-label={t("a11y.prevJokerPage")}
             disabled={page <= 1}
             onClick={() => setPage((p) => Math.max(1, p - 1))}
           >
             ← Prev
-          </button>
+          </Button>
           <span
-            className="modifier-joker-picker-page-label"
+            className="min-w-14 text-center text-xs font-semibold text-muted"
             data-testid="modifier-joker-picker-page-label"
             aria-live="polite"
           >
             Page {page} / {totalPages}
           </span>
-          <button
-            type="button"
-            className="modifier-joker-picker-next"
+          <Button
+            size="sm"
             data-testid="modifier-joker-picker-next"
             aria-label={t("a11y.nextJokerPage")}
             disabled={page >= totalPages}
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           >
             Next →
-          </button>
+          </Button>
         </nav>
       </div>
     </details>

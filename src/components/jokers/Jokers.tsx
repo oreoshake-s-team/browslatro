@@ -2,7 +2,8 @@ import { Fragment, useCallback, useId, useRef, useState } from "react";
 import { useEscapeToClose } from "../system/useEscapeToClose";
 import { useTranslation } from "react-i18next";
 import { localizedJokerName } from "../../i18n/jokerOverrides";
-import "./Jokers.css";
+import { Tray } from "../ui/Panel";
+import { cn, emptyTile } from "../ui/Tile";
 import {
   MAX_JOKERS,
   effectiveJokerCount,
@@ -157,10 +158,11 @@ export default function Jokers({
   function handleListDragOver(e: React.DragEvent<HTMLUListElement>) {
     if (draggingId === null) return;
     const target = e.target as HTMLElement | null;
-    if (target?.classList?.contains("joker-gap")) return;
+    if (target?.dataset?.jokerGap !== undefined) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    const gaps = listRef.current?.querySelectorAll<HTMLElement>(".joker-gap");
+    const gaps =
+      listRef.current?.querySelectorAll<HTMLElement>("[data-joker-gap]");
     const rects = gaps
       ? Array.from(gaps, (gap) => gap.getBoundingClientRect())
       : [];
@@ -179,11 +181,17 @@ export default function Jokers({
   function renderGap(gapIdx: number) {
     const fromIdx =
       draggingId !== null ? jokers.findIndex((j) => j.id === draggingId) : -1;
-    const selfAdj = fromIdx >= 0 && (gapIdx === fromIdx || gapIdx === fromIdx + 1);
+    const selfAdj =
+      fromIdx >= 0 && (gapIdx === fromIdx || gapIdx === fromIdx + 1);
     const active = draggingId !== null && activeGapIndex === gapIdx && !selfAdj;
     return (
       <div
-        className={`joker-gap${active ? " joker-gap--active" : ""}`}
+        className={cn(
+          "w-1 shrink-0 self-stretch rounded transition-all",
+          active && "w-40 border-2 border-dashed border-focus",
+        )}
+        data-joker-gap=""
+        data-active={active || undefined}
         data-testid={`joker-gap-${gapIdx}`}
         onDragOver={(e) => {
           if (draggingId === null) return;
@@ -197,7 +205,9 @@ export default function Jokers({
         onDrop={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          const raw = e.dataTransfer ? e.dataTransfer.getData("text/plain") : "";
+          const raw = e.dataTransfer
+            ? e.dataTransfer.getData("text/plain")
+            : "";
           const id = raw || draggingId;
           if (id) applyDrop(id, gapIdx);
           endDrag();
@@ -218,13 +228,9 @@ export default function Jokers({
 
   const showDropZone = Boolean(dropZone.onDrop);
   return (
-    <section
-      className={`jokers${jokers.length === 0 ? " jokers-tray-empty" : ""}${
-        showDropZone ? " jokers-consumable-target" : ""
-      }${dropZone.hover ? " jokers-consumable-hover" : ""}${
-        sellAlwaysVisible && sellable ? " jokers--sell-visible" : ""
-      }`}
-      style={{ "--joker-capacity": capacity } as React.CSSProperties}
+    <Tray
+      heading={t("trays.jokers")}
+      className="relative min-w-0 flex-1"
       aria-label={t("a11y.equippedJokers")}
       data-testid="jokers-tray"
       data-consumable-drop-active={showDropZone || undefined}
@@ -234,17 +240,20 @@ export default function Jokers({
     >
       {showDropZone && (
         <div
-          className="consumable-drop-overlay consumable-drop-overlay-use"
+          className={cn(
+            "pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-success/20 text-lg font-bold text-success",
+            dropZone.hover && "bg-success/30 ring-2 ring-success",
+          )}
           data-testid="consumable-drop-overlay-use"
           aria-hidden="true"
         >
-          <span className="consumable-drop-overlay-label">Use</span>
+          <span>Use</span>
         </div>
       )}
-      <span className="jokers-label">{t("trays.jokers")}</span>
       <ul
         ref={listRef}
-        className={`jokers-list${draggingId !== null ? " jokers-list--dragging" : ""}`}
+        className="flex min-w-0 list-none flex-wrap items-stretch gap-1"
+        data-testid="jokers-list"
         onDragOver={reorderable ? handleListDragOver : undefined}
         onDrop={reorderable ? handleListDrop : undefined}
       >
@@ -253,15 +262,13 @@ export default function Jokers({
             return (
               <li
                 key={jokerKeys[idx]}
-                className="joker-tile joker-tile-face-down"
+                className="h-28 w-40 shrink-0 rounded-lg border border-border bg-(--deck-back,var(--color-raised))"
                 aria-label={t("a11y.faceDownJoker", {
                   position: idx + 1,
                   total: jokers.length,
                 })}
                 data-testid="joker-tile-face-down"
-              >
-                <div className="joker-tile-inner joker-tile-back" aria-hidden="true" />
-              </li>
+              />
             );
           }
           return (
@@ -284,6 +291,7 @@ export default function Jokers({
                 onSellAt={sellJokerAt}
                 onTileDragStart={handleTileDragStart}
                 onTileDragEnd={endDrag}
+                sellAlwaysVisible={sellAlwaysVisible}
               />
             </Fragment>
           );
@@ -293,13 +301,14 @@ export default function Jokers({
           <Fragment key={`empty-${slotIndex}`}>
             {slotIndex > 0 && (
               <div
-                className="joker-gap joker-gap-empty"
+                className="w-1 shrink-0"
+                data-joker-gap=""
                 data-testid={`joker-gap-empty-${slotIndex}`}
                 aria-hidden="true"
               />
             )}
             <li
-              className="joker-tile joker-tile-empty"
+              className={emptyTile}
               aria-label={t("a11y.emptyJokerSlot")}
               data-testid="joker-tile-empty"
             >
@@ -308,6 +317,6 @@ export default function Jokers({
           </Fragment>
         ))}
       </ul>
-    </section>
+    </Tray>
   );
 }

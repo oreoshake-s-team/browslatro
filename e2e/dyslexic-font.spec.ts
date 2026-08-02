@@ -8,7 +8,7 @@ async function dismissBlindSelect(page: Page): Promise<void> {
 
 async function openOptions(page: Page) {
   await page.goto("/");
-  await page.waitForSelector(".deck-pile");
+  await page.waitForSelector('[data-testid="deck-pile"]');
   await dismissBlindSelect(page);
   await page.getByRole("button", { name: "Options" }).click();
   return page.getByRole("dialog", { name: "Options" });
@@ -27,7 +27,9 @@ test("enabling OpenDyslexic switches UI text but leaves card glyphs in the defau
   await expect(page.locator("body")).toHaveClass(/dyslexic-font/);
   expect(await fontFamilyOf(page, "body")).toContain("OpenDyslexic");
   await options.getByRole("button", { name: "Close" }).click();
-  expect(await fontFamilyOf(page, ".card")).not.toContain("OpenDyslexic");
+  expect(await fontFamilyOf(page, "button[data-suit]")).not.toContain("OpenDyslexic");
+  expect(await fontFamilyOf(page, "[data-stat-value]")).not.toContain("OpenDyslexic");
+  expect(await fontFamilyOf(page, '[data-testid="round-score-value"]')).not.toContain("OpenDyslexic");
 });
 
 test("the OpenDyslexic choice persists across reloads (negative: off by default)", async ({

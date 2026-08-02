@@ -20,8 +20,8 @@ async function startRound(page: Page): Promise<void> {
 
 function statValue(page: Page, label: string) {
   return page
-    .locator(".stat", { has: page.locator(".stat-label", { hasText: label }) })
-    .locator(".stat-value");
+    .locator("[data-stat]", { has: page.locator("[data-stat-label]", { hasText: label }) })
+    .locator("[data-stat-value]");
 }
 
 async function moneyOf(page: Page): Promise<number> {

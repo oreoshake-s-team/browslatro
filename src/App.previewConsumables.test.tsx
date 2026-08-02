@@ -43,7 +43,7 @@ async function openPoolPack(
     `[data-offer-kind="pack"][data-pack-pool="${pool}"]`,
   );
   if (!offer) throw new Error(`no ${pool} pack offer in shop`);
-  const open = offer.querySelector("button.shop-offer-buy") as HTMLButtonElement;
+  const open = offer.querySelector("button[data-shop-buy]") as HTMLButtonElement;
   await user.click(open);
   await screen.findByTestId("pack-open-close");
 }
@@ -86,9 +86,9 @@ describe("Applying owned enhancement tarots to the preview hand", () => {
     const tarotOffer = document.querySelector('[data-offer-kind="tarot"]');
     if (!tarotOffer) throw new Error("no tarot offer in shop");
     const tarotName =
-      tarotOffer.querySelector(".shop-offer-name")?.textContent ?? null;
+      tarotOffer.querySelector("[data-shop-offer-name]")?.textContent ?? null;
     const buy = tarotOffer.querySelector(
-      "button.shop-offer-buy",
+      "button[data-shop-buy]",
     ) as HTMLButtonElement;
     await user.click(buy);
     await openPoolPack(user, "arcana");
@@ -146,7 +146,7 @@ describe("Applying owned enhancement tarots to the preview hand", () => {
     await user.click(screen.getByTestId("consumable-tile-filled-0"));
     const enhanced = screen
       .getByTestId("pack-open-preview-hand")
-      .querySelector(".card--enhancement-lucky");
+      .querySelector('[data-enhancement="lucky"]');
     expect(enhanced).not.toBeNull();
   });
 

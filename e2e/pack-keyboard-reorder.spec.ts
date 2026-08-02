@@ -23,16 +23,16 @@ async function setupArcanaPack(page: Page): Promise<void> {
   await page.goto("/");
   await expect(page.getByRole("heading", { name: SHOP_HEADING })).toBeVisible();
   const packOffer = page
-    .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
+    .locator('[data-testid="shop-packs"] [data-shop-offer][data-offer-kind="pack"]')
     .first();
   await expect(packOffer).toBeVisible();
-  await packOffer.locator("button.shop-offer-buy").click();
+  await packOffer.locator("button[data-shop-buy]").click();
   await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
 }
 
 async function previewLabels(page: Page): Promise<string[]> {
   return page
-    .locator('[data-testid="pack-open-preview-hand"] .card')
+    .locator('[data-testid="pack-open-preview-hand"] button[aria-pressed]')
     .evaluateAll((els) => els.map((el) => el.getAttribute("aria-label") ?? ""));
 }
 
@@ -43,7 +43,7 @@ test("keyboard-only reorder of pack-preview picks announces the move", async ({
   const before = await previewLabels(page);
   expect(before.length).toBeGreaterThan(1);
   await page
-    .locator('[data-testid="pack-open-preview-hand"] .card')
+    .locator('[data-testid="pack-open-preview-hand"] button[aria-pressed]')
     .nth(1)
     .focus();
   await page.keyboard.press("Tab");
@@ -65,7 +65,7 @@ test("mouse drag reordering of pack-preview picks still works", async ({
   await setupArcanaPack(page);
   const before = await previewLabels(page);
   const cards = page.locator(
-    '[data-testid="pack-open-preview-hand"] .pack-open-preview-card',
+    '[data-testid="pack-open-preview-hand"] [data-testid^="pack-open-preview-card-"]',
   );
   await cards.first().dragTo(cards.last());
   await expect

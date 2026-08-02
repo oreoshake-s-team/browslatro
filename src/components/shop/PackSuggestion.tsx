@@ -18,7 +18,7 @@ import type { PackOffer } from "../../items/packs";
 import { useGame } from "../../store/game";
 import { consumableCapacityFor, jokerCapacityFor } from "../../items/capacities";
 import CoachAdvice from "../advisor/CoachAdvice";
-import "./PackSuggestion.css";
+import { Button } from "../ui/Button";
 
 export interface PackSuggestionProps {
   readonly pack: PackOffer;
@@ -106,9 +106,8 @@ export default function PackSuggestion(
   }
 
   const trigger = (
-    <button
-      type="button"
-      className="btn btn--advisor pack-suggest-button"
+    <Button
+      variant="advisor"
       data-testid="coach-trigger"
       onClick={() => {
         setRevealed(true);
@@ -117,11 +116,14 @@ export default function PackSuggestion(
     >
       <span aria-hidden="true">⚡ </span>
       {t("advisor.coachTip")}
-    </button>
+    </Button>
   );
 
   return (
-    <div className="pack-suggestion">
+    <div
+      className="flex w-full flex-col gap-2"
+      data-testid="pack-suggestion"
+    >
       {!revealed &&
         (props.triggerContainer
           ? createPortal(trigger, props.triggerContainer)

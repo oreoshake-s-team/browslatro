@@ -99,7 +99,7 @@ async function useWraith(
   await screen.findByTestId("shop-money");
   const buy = document
     .querySelector('[data-offer-kind="spectral"]')
-    ?.querySelector("button.shop-offer-buy");
+    ?.querySelector("button[data-shop-buy]");
   if (!(buy instanceof HTMLButtonElement)) throw new Error("missing Wraith buy");
   await user.click(buy);
   await user.click(screen.getByRole("button", { name: /Next Round/ }));

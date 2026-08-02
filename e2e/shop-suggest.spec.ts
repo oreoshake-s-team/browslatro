@@ -120,13 +120,13 @@ test("committing a different shop action than the coach records auto-disagreemen
   page,
 }) => {
   await openShop(page);
-  const addMoney = page.locator(".add-money-button");
+  const addMoney = page.locator('[data-testid="add-money-button"]');
   for (let i = 0; i < 4; i += 1) await addMoney.click();
   await revealCoachPick(page);
 
   const rec = (await page.getByTestId("coach-recommendation").textContent()) ?? "";
   if (rec.includes("Leave")) {
-    await page.locator(".shop-reroll").click();
+    await page.locator('[data-testid="shop-reroll"]').click();
   } else {
     await page.getByRole("button", { name: /Next Round/ }).click();
   }

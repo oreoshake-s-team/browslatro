@@ -91,7 +91,7 @@ async function openSpectralPack(
   await screen.findByTestId("shop-money");
   const packOffer = document.querySelector('[data-offer-kind="pack"]');
   const open = packOffer?.querySelector(
-    "button.shop-offer-buy",
+    "button[data-shop-buy]",
   ) as HTMLButtonElement;
   await user.click(open);
   await screen.findByTestId("pack-open-close");

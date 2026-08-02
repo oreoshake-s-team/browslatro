@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 
 async function setDeterministic(page: Page): Promise<void> {
   await page.addInitScript(() => {
@@ -92,7 +92,10 @@ test("keyboard-only sell of a joker announces the sale", async ({
 }) => {
   await startRoundWithJokers(page, ["blueprint", "plus-four-mult"]);
   const sellButton = page.getByTestId("joker-sell-plus-four-mult");
-  await sellButton.focus();
+  await page.getByTestId("joker-tile-filled-plus-four-mult").focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
   await expect(sellButton).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(

@@ -42,7 +42,7 @@ test("To Do List tile and tooltip show the current target hand after entering a 
   await addJokerById(page, "to-do-list");
   await page.getByTestId("blind-select-play").click();
 
-  const HAND_CARDS = '[data-testid="hand-cards"] .card';
+  const HAND_CARDS = '[data-testid="hand-cards"] [data-suit]';
   await expect(page.locator(HAND_CARDS)).toHaveCount(8);
 
   const todoHand = await page.evaluate(() => {

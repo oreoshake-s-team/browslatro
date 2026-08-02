@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import "./AdminModeController.css";
 import { useKonamiCode } from "./useKonamiCode";
 import { toggleAdminMode } from "./preferences";
 import { play } from "./sounds";
@@ -28,7 +27,11 @@ export default function AdminModeController() {
 
   if (toast === null) return null;
   return (
-    <div className="admin-toast" aria-hidden="true" data-testid="admin-toast">
+    <div
+      className="pointer-events-none fixed inset-x-0 bottom-6 z-60 mx-auto w-fit rounded-xl border border-border bg-surface px-4 py-2 text-sm font-bold tracking-wide text-ink shadow-lg motion-safe:animate-fade-in"
+      aria-hidden="true"
+      data-testid="admin-toast"
+    >
       {toast}
     </div>
   );

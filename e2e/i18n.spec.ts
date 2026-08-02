@@ -16,7 +16,7 @@ async function startRound(page: Page): Promise<void> {
 async function switchLanguage(page: Page, locale: string): Promise<void> {
   await page.getByRole("button", { name: /Options|Nā Koho/ }).click();
   await page.getByTestId("options-language").selectOption(locale);
-  await page.locator(".options-footer .btn--secondary").click();
+  await page.locator('[data-testid="options-footer"] button').last().click();
 }
 
 test("switching to Hawaiian translates the sidebar", async ({
@@ -66,7 +66,7 @@ test("the shop renders Hawaiian strings under the haw locale", async ({
     page.getByRole("heading", { name: /Hale kūʻai/ }),
   ).toBeVisible();
   await expect(
-    page.locator(".shop-offer-buy").first(),
+    page.locator("[data-shop-buy]").first(),
   ).toHaveText(/Kūʻai no|Wehe|Ua kūʻai ʻia|Slots full/);
   await expect(page.getByRole("heading", { name: /^Shop$/ })).toHaveCount(0);
 });
@@ -83,13 +83,13 @@ test("a Celestial pack under the haw locale shows Hawaiian planet names", async 
   });
   await page.goto("/");
   const packOffer = page
-    .locator(".shop-packs .shop-offer[data-offer-kind='pack']")
+    .locator('[data-testid="shop-packs"] [data-shop-offer][data-offer-kind="pack"]')
     .first();
-  await packOffer.locator("button.shop-offer-buy").click();
+  await packOffer.locator("button[data-shop-buy]").click();
   await expect(page.getByTestId("pack-open-subtitle")).toBeVisible();
   await expect(
     page
-      .locator(".pack-open-option-name")
+      .locator("[data-pack-option-name]")
       .filter({ hasText: /ʻUkali/ })
       .first(),
   ).toBeVisible();
@@ -105,7 +105,7 @@ test("winning round 1 under the haw locale shows Hawaiian Round Won strings", as
   await page.goto("/");
   await page.getByTestId("new-run-confirm").click();
   await page.getByTestId("blind-select-play").click();
-  const handCards = page.locator('[data-testid="hand-cards"] .card');
+  const handCards = page.locator('[data-testid="hand-cards"] [data-suit]');
   await expect(handCards).toHaveCount(8);
   for (let i = 0; i < 5; i += 1) {
     await handCards.nth(i).click();

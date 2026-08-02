@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const HAND_CARDS = '[data-testid="hand-cards"] .card';
+const HAND_CARDS = '[data-testid="hand-cards"] button[aria-pressed]';
 const SUBMIT_BUTTON = /^Submit Hand/;
 
 async function setDeterministic(page: Page): Promise<void> {
@@ -59,7 +59,7 @@ test.describe("Copy jokers fire in scoring", () => {
     await addJokerById(page, "plus-four-mult");
     await playFiveCardHand(page);
     await expect(
-      page.locator(".scoring-trace__item", { hasText: "Blueprint" }).first(),
+      page.locator("[data-trace-item]", { hasText: "Blueprint" }).first(),
     ).toBeVisible();
   });
 
@@ -70,7 +70,7 @@ test.describe("Copy jokers fire in scoring", () => {
     await addJokerById(page, "brainstorm");
     await playFiveCardHand(page);
     await expect(
-      page.locator(".scoring-trace__item", { hasText: "Brainstorm" }).first(),
+      page.locator("[data-trace-item]", { hasText: "Brainstorm" }).first(),
     ).toBeVisible();
   });
 });

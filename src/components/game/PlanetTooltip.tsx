@@ -1,6 +1,5 @@
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
-import "./PlanetTooltip.css";
 import { useTooltipPosition } from "../system/useTooltipPosition";
 import {
   localizedConsumableDescription,
@@ -22,11 +21,17 @@ export default function PlanetTooltip({
   const { i18n } = useTranslation();
   const { ref, style } = useTooltipPosition(anchorRect);
   return createPortal(
-    <div id={id} ref={ref} role="tooltip" className="tooltip planet-tooltip" style={style}>
-      <p className="planet-tooltip-heading">
+    <div
+      id={id}
+      ref={ref}
+      role="tooltip"
+      className="pointer-events-none fixed z-50 flex -translate-x-1/2 w-56 flex-col gap-1 rounded-lg border border-border bg-raised p-3 text-xs text-ink shadow-lg shadow-black/40"
+      style={style}
+    >
+      <p className="text-sm font-bold text-chips">
         {localizedConsumableName(i18n.language, card.id, card.name)}
       </p>
-      <p className="planet-tooltip-description">
+      <p className="text-muted">
         {localizedConsumableDescription(i18n.language, card.id, card.description)}
       </p>
     </div>,

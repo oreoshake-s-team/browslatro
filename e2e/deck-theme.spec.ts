@@ -26,5 +26,5 @@ test("the app shell exposes the chosen deck and tints the deck pile with its col
   const background = await deckPile.evaluate(
     (el) => getComputedStyle(el).backgroundColor,
   );
-  expect(background).toBe("rgb(224, 49, 49)");
+  expect(background).toBe("rgb(255, 93, 93)");
 });
