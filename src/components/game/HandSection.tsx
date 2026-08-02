@@ -9,6 +9,7 @@ import { play } from "../system/sounds";
 import { announce } from "../system/LiveAnnouncer";
 import { bossForcesCardSelection, debuffedHandIds } from "../../items/bosses";
 import { useGameSession } from "./gameSession";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export default function HandSection() {
   const {
@@ -87,6 +88,7 @@ export default function HandSection() {
   );
 
   return (
+    <RenderProfiler id="HandSection">
     <HandComponent
       hand={hand}
       remaining={inHandRemaining}
@@ -110,5 +112,6 @@ export default function HandSection() {
       jokerDropEnabled={dragController.draggingJokerIndex !== null}
       onJokerSellDrop={dragController.onJokerDropOnDeck}
     />
+    </RenderProfiler>
   );
 }

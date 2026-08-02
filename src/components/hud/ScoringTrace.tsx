@@ -1,15 +1,16 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import ScoringTraceContent from "./ScoringTraceContent";
 import ScoringTraceButton from "./ScoringTraceButton";
 import { Panel } from "../ui/Panel";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 interface ScoringTraceProps {
   readonly events: ReadonlyArray<ScoringEvent>;
 }
 
-export default function ScoringTrace({ events }: ScoringTraceProps) {
+function ScoringTrace({ events }: ScoringTraceProps) {
   const { t } = useTranslation();
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -17,6 +18,7 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
     if (el) el.scrollTop = el.scrollHeight;
   }, [events]);
   return (
+    <RenderProfiler id="ScoringTrace">
     <Panel
       tone="sunken"
       pad="sm"
@@ -47,5 +49,8 @@ export default function ScoringTrace({ events }: ScoringTraceProps) {
         <ScoringTraceContent events={events} />
       </div>
     </Panel>
+    </RenderProfiler>
   );
 }
+
+export default memo(ScoringTrace);

@@ -8,6 +8,7 @@ import {
   type Joker,
   type JokerSticker,
 } from "../../items/jokers";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 interface JokerStickerBadgesProps {
   readonly joker: Joker;
@@ -33,6 +34,7 @@ export default function JokerStickerBadges({ joker }: JokerStickerBadgesProps) {
   const stickers = jokerStickers(joker);
   if (stickers.length === 0) return null;
   return (
+    <RenderProfiler id="JokerStickerBadges">
     <ul
       className="flex list-none flex-wrap gap-1"
       aria-label={t("a11y.jokerStickers")}
@@ -54,6 +56,7 @@ export default function JokerStickerBadges({ joker }: JokerStickerBadgesProps) {
         </li>
       ))}
     </ul>
+    </RenderProfiler>
   );
 }
 

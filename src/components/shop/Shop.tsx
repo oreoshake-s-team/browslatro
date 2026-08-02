@@ -30,6 +30,7 @@ import { usePreferences } from "../system/preferences";
 import { Button } from "../ui/Button";
 import { Panel } from "../ui/Panel";
 import { cn } from "../ui/cn";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 const ShopSuggestion = lazy(() => import("./ShopSuggestion"));
 
@@ -489,6 +490,7 @@ export default function Shop({
   }
 
   return (
+    <RenderProfiler id="Shop">
     <section
       className="flex w-full max-w-225 justify-start"
       aria-labelledby="shop-title"
@@ -687,5 +689,6 @@ export default function Shop({
         </div>
       </Panel>
     </section>
+    </RenderProfiler>
   );
 }

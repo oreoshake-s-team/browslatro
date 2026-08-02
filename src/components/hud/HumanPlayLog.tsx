@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { humanPlayLog } from "../../ai/humanPlayWiring";
 import { Button } from "../ui/Button";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export default function HumanPlayLog() {
   const { t } = useTranslation();
@@ -27,6 +28,7 @@ export default function HumanPlayLog() {
   const humanPlayCount = humanPlayLog().count();
 
   return (
+    <RenderProfiler id="HumanPlayLog">
     <details className="text-sm">
       <summary className="cursor-pointer rounded-md text-xs font-semibold tracking-wider text-muted uppercase select-none hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
         {t("devMenu.humanPlayLog")}
@@ -54,5 +56,6 @@ export default function HumanPlayLog() {
         </div>
       </div>
     </details>
+    </RenderProfiler>
   );
 }

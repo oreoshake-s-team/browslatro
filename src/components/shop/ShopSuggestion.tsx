@@ -32,6 +32,7 @@ import type { Voucher, VoucherId } from "../../items/vouchers";
 import { useGame } from "../../store/game";
 import CoachAdvice from "../advisor/CoachAdvice";
 import { Button } from "../ui/Button";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 export interface ShopSuggestionProps {
   readonly money: number;
@@ -222,6 +223,7 @@ export default function ShopSuggestion(
   );
 
   return (
+    <RenderProfiler id="ShopSuggestion">
     <div
       className="flex w-full flex-col gap-2"
       data-testid="shop-suggestion"
@@ -257,5 +259,6 @@ export default function ShopSuggestion(
         />
       )}
     </div>
+    </RenderProfiler>
   );
 }

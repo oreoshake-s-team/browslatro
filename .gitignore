@@ -68,3 +68,6 @@ __pycache__/
 /ml/gen/
 /ml/outcome/
 /e2e/.admin-state.json
+
+# render-profiling harness output (regenerated per run)
+/perf/profiling-runs

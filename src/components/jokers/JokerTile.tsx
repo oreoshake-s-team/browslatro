@@ -19,6 +19,7 @@ import JokerEditionBadge from "./JokerEditionBadge";
 import JokerStickerBadges from "./JokerStickerBadges";
 import JokerTooltip from "./JokerTooltip";
 import { useJokerDescriptionContext } from "./useJokerDescriptionContext";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 const EDITION_RING = {
   none: "",
@@ -98,6 +99,7 @@ function JokerTile({
   const tooltipOpen = tooltipAnchorRect !== null;
 
   return (
+    <RenderProfiler id="JokerTile">
     <li
       className={cn(
         tile({ accent: "mult", interactive: draggable, dimmed: debuffed }),
@@ -247,6 +249,7 @@ function JokerTile({
         />
       )}
     </li>
+    </RenderProfiler>
   );
 }
 

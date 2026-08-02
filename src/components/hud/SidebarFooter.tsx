@@ -1,10 +1,13 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
+import RenderProfiler from "../../dev/RenderProfiler";
 
 const REPO_URL = "https://github.com/oreoshake-s-team/browslatro";
 
-export default function SidebarFooter() {
+function SidebarFooter() {
   const { t } = useTranslation();
   return (
+    <RenderProfiler id="SidebarFooter">
     <footer className="mt-auto flex w-full justify-center portrait-narrow:hidden">
       <a
         href={REPO_URL}
@@ -25,5 +28,8 @@ export default function SidebarFooter() {
         <span>{t("sidebar.viewOnGithub")}</span>
       </a>
     </footer>
+    </RenderProfiler>
   );
 }
+
+export default memo(SidebarFooter);
