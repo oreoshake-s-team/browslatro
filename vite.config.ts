@@ -46,10 +46,7 @@ export default defineConfig({
   },
   resolve: {
     alias: isProfilingBuild
-      ? [
-          { find: "react-dom/client", replacement: "react-dom/profiling" },
-          { find: "react-dom", replacement: "react-dom/profiling" },
-        ]
+      ? [{ find: "react-dom/client", replacement: "react-dom/profiling" }]
       : [],
   },
   plugins: [
