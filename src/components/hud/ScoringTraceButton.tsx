@@ -1,4 +1,11 @@
-import { Suspense, lazy, useCallback, useState, type ReactNode } from "react";
+import {
+  Suspense,
+  lazy,
+  memo,
+  useCallback,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import type { ScoringEvent } from "../../scoring/scoringTrace";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
@@ -11,7 +18,7 @@ interface ScoringTraceButtonProps {
   readonly children: ReactNode;
 }
 
-export default function ScoringTraceButton({
+function ScoringTraceButton({
   events,
   className,
   children,
@@ -39,3 +46,5 @@ export default function ScoringTraceButton({
     </>
   );
 }
+
+export default memo(ScoringTraceButton);

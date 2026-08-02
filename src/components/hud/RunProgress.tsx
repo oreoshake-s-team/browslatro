@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { memo, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import "./RunProgress.css";
 
@@ -42,4 +42,4 @@ function RunProgress({ ante, round, money }: RunProgressProps) {
   );
 }
 
-export default RunProgress;
+export default memo(RunProgress);

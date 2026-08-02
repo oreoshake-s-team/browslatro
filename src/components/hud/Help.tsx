@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import LazyChunkSpinner from "../system/LazyChunkSpinner";
 
@@ -22,4 +22,4 @@ function Help() {
   );
 }
 
-export default Help;
+export default memo(Help);

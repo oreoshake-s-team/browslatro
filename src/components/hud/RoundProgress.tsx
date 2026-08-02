@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 import "./RoundProgress.css";
 
@@ -32,4 +33,4 @@ function RoundProgress({ remainingHands, remainingDiscards }: RoundProgressProps
   );
 }
 
-export default RoundProgress;
+export default memo(RoundProgress);
