@@ -52,6 +52,7 @@ describe("DeckSpec.implemented", () => {
       "nebula-deck",
       "abandoned-deck",
       "checkered-deck",
+      "zodiac-deck",
       "painted-deck",
     ]);
   });
@@ -60,7 +61,7 @@ describe("DeckSpec.implemented", () => {
     const unimplementedCount = createDeckCatalog().filter(
       (d) => !d.implemented,
     ).length;
-    expect(unimplementedCount).toBe(5);
+    expect(unimplementedCount).toBe(4);
   });
 });
 
@@ -239,6 +240,12 @@ describe("deckStartingVoucherIds", () => {
   test("Nebula Deck starts with Telescope", () => {
     expect(deckStartingVoucherIds("nebula-deck")).toEqual(
       new Set(["telescope"]),
+    );
+  });
+
+  test("Zodiac Deck starts with Tarot Merchant, Planet Merchant, and Overstock", () => {
+    expect(deckStartingVoucherIds("zodiac-deck")).toEqual(
+      new Set(["tarot-merchant", "planet-merchant", "overstock"]),
     );
   });
 
