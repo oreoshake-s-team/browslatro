@@ -49,12 +49,12 @@ export default function Game() {
 
   return (
     <main
-      className="flex min-h-0 flex-1 flex-col items-start gap-5 overflow-y-auto p-5 landscape-narrow:gap-2.5"
+      className="flex min-h-0 flex-1 flex-col items-start gap-5 overflow-hidden px-5 pb-5 landscape-narrow:gap-2.5"
       aria-label={t("a11y.game")}
       aria-busy={isScoring}
     >
       <div
-          className="flex w-full max-w-225 flex-nowrap items-start gap-5"
+          className="flex w-full max-w-225 shrink-0 flex-nowrap items-start gap-5 [&>section]:rounded-t-none [&>section]:border-t-0"
           data-testid="game-top-row"
         >
         {!packOpen && <JokersSection />}

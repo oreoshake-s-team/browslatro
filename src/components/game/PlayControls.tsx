@@ -29,7 +29,7 @@ export default function PlayControls() {
 
   return (
     <RenderProfiler id="PlayControls">
-    <div className="flex w-full max-w-225 flex-col gap-3">
+    <div className="flex w-full max-w-225 shrink-0 flex-col gap-3">
       <div className="flex gap-3">
         <Button
           variant="primary"

@@ -37,7 +37,7 @@ export default function ModifierPanel() {
     setMoney(money + delta);
   }
   return (
-    <details className="w-full rounded-xl border border-border bg-surface px-4 pb-4 pt-2">
+    <details className="min-h-0 w-full overflow-y-auto rounded-xl border border-border bg-surface px-4 pb-4 pt-2">
       <summary
         data-testid="modifier-disclosure"
         className="cursor-pointer select-none py-1 text-xs font-bold uppercase tracking-widest text-muted hover:text-chips"
