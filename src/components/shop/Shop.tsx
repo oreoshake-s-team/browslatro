@@ -492,10 +492,13 @@ export default function Shop({
   return (
     <RenderProfiler id="Shop">
     <section
-      className="flex w-full max-w-225 justify-start"
+      className="flex min-h-0 w-full max-w-225 justify-start"
       aria-labelledby="shop-title"
     >
-      <Panel className="flex w-full flex-col gap-4">
+      <Panel
+        className="flex min-h-0 w-full flex-col gap-4 overflow-y-auto"
+        data-testid="shop-panel"
+      >
         <h2 id="shop-title" className="text-center text-xl font-bold">
           {t("shop.title")}
         </h2>
