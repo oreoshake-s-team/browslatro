@@ -156,7 +156,7 @@ function JokerTile({
           {localizedJokerName(i18n.language, joker.id, joker.name)}
         </span>
         <span
-          className="line-clamp-3 text-muted"
+          className="line-clamp-5 text-muted"
           data-testid={`joker-tile-description-${joker.id}`}
         >
           {dynamicJokerDescriptionNode({

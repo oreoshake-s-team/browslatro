@@ -73,7 +73,7 @@ export default function Consumables({
           return (
             <li
               key={`${entry.kind}-${entry.card.id}-${idx}`}
-              className="flex min-w-0 shrink"
+              className="flex min-w-0 grow shrink basis-tile-w"
             >
               <button
                 type="button"
@@ -119,7 +119,7 @@ export default function Consumables({
                     entry.card.name,
                   )}
                 </span>
-                <span className="line-clamp-3 text-muted">{description}</span>
+                <span className="line-clamp-5 text-muted">{description}</span>
                 {canSell && (
                   <span
                     className="mt-auto shrink-0 font-semibold text-money"
@@ -133,7 +133,7 @@ export default function Consumables({
           );
         })}
         {Array.from({ length: emptyCount }, (_, slotIndex) => (
-          <li key={`empty-${slotIndex}`} className="flex min-w-0 shrink">
+          <li key={`empty-${slotIndex}`} className="flex min-w-0 grow shrink basis-tile-w">
             <button
               type="button"
               className={emptyTile}

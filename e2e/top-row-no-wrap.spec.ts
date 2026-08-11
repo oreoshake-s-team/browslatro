@@ -61,15 +61,22 @@ test("jokers, consumables, and deck stay on one row in the shop at a 600px viewp
   expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
 });
 
-test("joker and consumable tiles keep the full tile footprint when there is room", async ({
+test("joker and consumable tiles grow to fill their trays when there is room", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await page.waitForSelector("button[data-suit]");
+  const card = await page.locator("button[data-suit]").first().boundingBox();
   const joker = await page.locator('[data-testid^="joker-tile-"]').first().boundingBox();
   const consumable = await page.locator('[data-testid^="consumable-tile-"]').first().boundingBox();
+  const jokerList = await page.locator('[data-testid="jokers-list"]').boundingBox();
+  const lastJoker = await page.locator('[data-testid^="joker-tile-"]').last().boundingBox();
   expect(joker?.width).toBeDefined();
-  expect(Math.abs((joker?.width ?? 0) - (consumable?.width ?? 0))).toBeLessThan(2);
+  expect(joker?.width ?? 0).toBeGreaterThanOrEqual(card?.width ?? Infinity);
+  expect(consumable?.width ?? 0).toBeGreaterThanOrEqual(card?.width ?? Infinity);
   expect(Math.abs((joker?.height ?? 0) - (consumable?.height ?? 0))).toBeLessThan(2);
+  const listRight = (jokerList?.x ?? 0) + (jokerList?.width ?? 0);
+  const lastTileRight = (lastJoker?.x ?? 0) + (lastJoker?.width ?? 0);
+  expect(Math.abs(listRight - lastTileRight)).toBeLessThan(2);
 });
