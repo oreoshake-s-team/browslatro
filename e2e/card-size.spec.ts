@@ -20,7 +20,7 @@ async function boxOf(page: Page, selector: string) {
   return box;
 }
 
-test("hand card and deck pile share dimensions; joker and consumable tiles share the tile footprint", async ({
+test("hand card and deck pile share dimensions; joker and consumable tiles share the tile height", async ({
   page,
 }) => {
   await page.goto("/");
@@ -32,8 +32,9 @@ test("hand card and deck pile share dimensions; joker and consumable tiles share
 
   expect(card.width).toBeCloseTo(deck.width, 0);
   expect(card.height).toBeCloseTo(deck.height, 0);
-  expect(joker.width).toBeCloseTo(consumable.width, 0);
   expect(joker.height).toBeCloseTo(consumable.height, 0);
+  expect(joker.width).toBeGreaterThanOrEqual(card.width);
+  expect(consumable.width).toBeGreaterThanOrEqual(card.width);
   expect(card.height).toBeLessThanOrEqual(joker.height);
 });
 

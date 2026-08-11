@@ -264,7 +264,7 @@ export default function Jokers({
             return (
               <li
                 key={jokerKeys[idx]}
-                className="h-tile-h w-tile-w min-w-0 shrink rounded-lg border border-border bg-(--deck-back,var(--color-raised))"
+                className="h-tile-h w-tile-w min-w-0 grow shrink basis-tile-w rounded-lg border border-border bg-(--deck-back,var(--color-raised))"
                 aria-label={t("a11y.faceDownJoker", {
                   position: idx + 1,
                   total: jokers.length,
