@@ -20,6 +20,10 @@ export interface TooltipPlacement {
 const VIEWPORT_MARGIN = 4;
 const MAX_SCAN_STEPS = 20;
 
+// Far enough to hop a toolbar or badge row, near enough that the tooltip
+// stays visually attached to its anchor.
+const MAX_DISPLACEMENT_PX = 160;
+
 /** Overlap smaller than this is treated as touching, not covering. */
 const OVERLAP_SLACK_PX = 2;
 
@@ -71,17 +75,18 @@ function scanUp(
 }
 
 /**
- * Choose a tooltip position that does not cover any interactive element
- *. Candidate spots are searched in three columns — the anchor's
- * horizontal center, then one tooltip-width right and left of it (all
- * clamped into the viewport) — by scanning downward from just below the
- * anchor (hopping past each obstacle the tooltip would cover) and upward
- * from just above it. Among the clear spots, the one displaced least from
- * the natural below-the-anchor position wins, so a tooltip whose own column
- * is fully occupied (e.g. a joker tile above toolbar → cards → submit) can
- * slide sideways instead of being pushed across the screen. When nothing
- * fits anywhere, it falls back to the legacy "just below the anchor"
- * position — never worse than the old behavior.
+ * Choose a tooltip position near the anchor, avoiding interactive elements
+ * when possible. Candidate spots are searched in three columns — the
+ * anchor's horizontal center, then one tooltip-width right and left of it
+ * (all clamped into the viewport) — by scanning downward from just below
+ * the anchor (hopping past each obstacle the tooltip would cover) and
+ * upward from just above it. Among the clear spots, the one displaced
+ * least from the natural below-the-anchor position wins, and spots
+ * displaced beyond MAX_DISPLACEMENT_PX are rejected outright: the tooltip
+ * is pointer-events-none, so briefly covering other UI beats visually
+ * detaching from its anchor. When no clear spot exists within the cap, it
+ * sits directly below the anchor, flipping above when below would leave
+ * the viewport and clamping into the viewport as a last resort.
  */
 export function placeTooltip(options: {
   readonly anchor: PlacementRect;
@@ -107,17 +112,38 @@ export function placeTooltip(options: {
   for (const centerX of columns) {
     const left = centerX - size.width / 2;
     const down = scanDown(belowAnchor, left, size, obstacles, viewport, offset);
-    if (down !== null && (best === null || down - belowAnchor < best.displacement)) {
+    if (
+      down !== null &&
+      down - belowAnchor <= MAX_DISPLACEMENT_PX &&
+      (best === null || down - belowAnchor < best.displacement)
+    ) {
       best = { top: down, centerX, displacement: down - belowAnchor };
     }
     const up = scanUp(aboveAnchor, left, size, obstacles, offset);
-    if (up !== null && (best === null || aboveAnchor - up < best.displacement)) {
+    if (
+      up !== null &&
+      aboveAnchor - up <= MAX_DISPLACEMENT_PX &&
+      (best === null || aboveAnchor - up < best.displacement)
+    ) {
       best = { top: up, centerX, displacement: aboveAnchor - up };
     }
   }
   if (best !== null) return { top: best.top, centerX: best.centerX };
 
-  return { top: belowAnchor, centerX: anchorCenterX };
+  if (belowAnchor + size.height <= viewport.height - VIEWPORT_MARGIN) {
+    return { top: belowAnchor, centerX: anchorCenterX };
+  }
+  if (aboveAnchor >= VIEWPORT_MARGIN) {
+    return { top: aboveAnchor, centerX: anchorCenterX };
+  }
+  return {
+    top: clamp(
+      belowAnchor,
+      VIEWPORT_MARGIN,
+      viewport.height - size.height - VIEWPORT_MARGIN,
+    ),
+    centerX: anchorCenterX,
+  };
 }
 
 // Disabled controls count too: they are visible UI the tooltip would hide,

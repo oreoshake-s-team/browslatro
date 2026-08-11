@@ -9,10 +9,7 @@ import {
   jokerStickers,
   type Joker,
 } from "../../items/jokers";
-import {
-  dynamicJokerDescriptionNode,
-  dynamicJokerDescriptionText,
-} from "../../items/jokers/dynamicJokerDescription";
+import { dynamicJokerDescriptionNode } from "../../items/jokers/dynamicJokerDescription";
 import { formatSellLabel } from "../system/sellLabel";
 import { cn, tile } from "../ui/Tile";
 import JokerEditionBadge from "./JokerEditionBadge";
@@ -107,16 +104,6 @@ function JokerTile({
         EDITION_RING[joker.edition ?? "none"],
         isDragging && "opacity-40",
       )}
-      title={dynamicJokerDescriptionText({
-        language: i18n.language,
-        jokerId: joker.id,
-        description: joker.description,
-        todoHand,
-        castleSuit,
-        castleSuitName,
-        idolRankName,
-        idolSuitName,
-      })}
       aria-label={ariaLabel}
       aria-describedby={tooltipOpen ? tooltipId : undefined}
       tabIndex={0}

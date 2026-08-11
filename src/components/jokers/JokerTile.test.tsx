@@ -57,6 +57,14 @@ describe("JokerTile", () => {
     );
   });
 
+  test("renders no native title attribute on the tile", () => {
+    const joker = createPlusFourMultJoker();
+    renderTile({ joker });
+    expect(
+      screen.getByTestId(`joker-tile-filled-${joker.id}`),
+    ).not.toHaveAttribute("title");
+  });
+
   test("shows a sell button with the sell value when sellable", () => {
     const joker = createPlusFourMultJoker();
     renderTile({ joker, sellable: true });
