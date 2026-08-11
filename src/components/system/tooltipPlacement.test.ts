@@ -81,10 +81,55 @@ describe("placeTooltip", () => {
     expect(p).toEqual({ top: 30 + 101 + 8, centerX: 472 + size.width });
   });
 
-  test("falls back to the legacy below-anchor position when nothing fits", () => {
+  test("falls back to directly below the anchor when nothing fits", () => {
     const wall = rect(0, 0, viewport.width, viewport.height);
     const p = placeTooltip({ anchor, size, obstacles: [wall], viewport });
     expect(p).toEqual({ top: 408, centerX: 636 });
+  });
+
+  test("rejects clear spots farther than the displacement cap and falls back below the anchor", () => {
+    const obstacles = [
+      rect(0, 0, viewport.width, 396),
+      rect(0, 400, viewport.width, 180),
+    ];
+    const p = placeTooltip({ anchor, size, obstacles, viewport });
+    expect(p).toEqual({ top: 408, centerX: 636 });
+  });
+
+  test("accepts a clear spot exactly at the displacement cap", () => {
+    const obstacles = [
+      rect(0, 0, viewport.width, 396),
+      rect(0, 400, viewport.width, 160),
+    ];
+    const p = placeTooltip({ anchor, size, obstacles, viewport });
+    expect(p.top).toBe(560 + 8);
+  });
+
+  test("the displacement cap also rejects distant upward spots", () => {
+    const lowAnchor = rect(600, 600, 72, 100);
+    const tallBlock = rect(0, 380, viewport.width, 270);
+    const p = placeTooltip({ anchor: lowAnchor, size, obstacles: [tallBlock], viewport });
+    expect(p.top).toBe(600 - 8 - 48);
+  });
+
+  test("fallback flips above the anchor when below would leave the viewport", () => {
+    const lowAnchor = rect(600, 620, 72, 60);
+    const wall = rect(0, 0, viewport.width, viewport.height);
+    const p = placeTooltip({ anchor: lowAnchor, size, obstacles: [wall], viewport });
+    expect(p.top).toBe(620 - 8 - 48);
+  });
+
+  test("fallback clamps into the viewport when neither below nor above fits", () => {
+    const tallSize = { width: 150, height: 300 };
+    const midAnchor = rect(600, 300, 72, 120);
+    const wall = rect(0, 0, viewport.width, viewport.height);
+    const p = placeTooltip({
+      anchor: midAnchor,
+      size: tallSize,
+      obstacles: [wall],
+      viewport,
+    });
+    expect(p.top).toBe(viewport.height - tallSize.height - 4);
   });
 
   test("clamps the horizontal center so the tooltip stays inside the viewport", () => {

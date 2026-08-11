@@ -9,8 +9,8 @@ export interface TooltipPositionStyle {
 const TOOLTIP_OFFSET_PX = 8;
 
 /**
- * Position a hover tooltip relative to its anchor without covering any
- * interactive element. Returns the legacy "below the anchor"
+ * Position a hover tooltip near its anchor, avoiding interactive elements
+ * when a clear spot exists close by. Returns the legacy "below the anchor"
  * position until the tooltip has been measured; in environments without
  * layout (jsdom returns zero-size rects) the legacy position is kept.
  *

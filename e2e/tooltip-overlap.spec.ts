@@ -1,4 +1,6 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
+
+const PROXIMITY_PX = 200;
 
 test.beforeEach(async ({ context }) => {
   await context.addInitScript(() => {
@@ -17,36 +19,40 @@ async function startRound(page: Page): Promise<void> {
   ).toBeVisible();
 }
 
-async function interactiveOverlaps(page: Page, tooltipSelector: string) {
-  return page.evaluate((selector) => {
-    const tip = document.querySelector(selector);
-    if (!tip) return null;
-    const t = tip.getBoundingClientRect();
-    return Array.from(
-      document.querySelectorAll<HTMLElement>("button, [tabindex='0']"),
-    )
-      .filter((el) => {
-        const r = el.getBoundingClientRect();
-        if (r.width === 0 || r.height === 0) return false;
-        const x = Math.min(r.right, t.right) - Math.max(r.left, t.left);
-        const y = Math.min(r.bottom, t.bottom) - Math.max(r.top, t.top);
-        return x > 2 && y > 2;
-      })
-      .map((el) => el.getAttribute("aria-label") ?? el.textContent ?? "");
-  }, tooltipSelector);
+interface Box {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
 }
 
-test("a hand-card tooltip does not cover any interactive element", async ({
+function rectGap(a: Box, b: Box): number {
+  const dx = Math.max(a.x - (b.x + b.width), b.x - (a.x + a.width), 0);
+  const dy = Math.max(a.y - (b.y + b.height), b.y - (a.y + a.height), 0);
+  return Math.max(dx, dy);
+}
+
+async function anchorGap(tooltip: Locator, anchor: Locator): Promise<number> {
+  const tipBox = await tooltip.boundingBox();
+  const anchorBox = await anchor.boundingBox();
+  if (!tipBox || !anchorBox) return Number.POSITIVE_INFINITY;
+  return rectGap(tipBox, anchorBox);
+}
+
+test("a hand-card tooltip stays within the proximity cap of its card", async ({
   page,
 }) => {
   await startRound(page);
   const cards = page.locator('[data-testid="hand-cards"] button[aria-pressed]');
   await cards.nth(3).hover();
-  await expect(page.locator('[data-testid="card-tooltip"]')).toBeVisible();
-  expect(await interactiveOverlaps(page, '[data-testid="card-tooltip"]')).toEqual([]);
+  const tooltip = page.locator('[data-testid="card-tooltip"]');
+  await expect(tooltip).toBeVisible();
+  await expect
+    .poll(() => anchorGap(tooltip, cards.nth(3)))
+    .toBeLessThanOrEqual(PROXIMITY_PX);
 });
 
-test("a selected (lifted) card's tooltip does not cover neighboring cards", async ({
+test("a selected (lifted) card's tooltip stays near the card", async ({
   page,
 }) => {
   await startRound(page);
@@ -54,8 +60,11 @@ test("a selected (lifted) card's tooltip does not cover neighboring cards", asyn
   await cards.nth(3).click();
   await page.mouse.move(0, 0);
   await cards.nth(3).hover();
-  await expect(page.locator('[data-testid="card-tooltip"]')).toBeVisible();
-  expect(await interactiveOverlaps(page, '[data-testid="card-tooltip"]')).toEqual([]);
+  const tooltip = page.locator('[data-testid="card-tooltip"]');
+  await expect(tooltip).toBeVisible();
+  await expect
+    .poll(() => anchorGap(tooltip, cards.nth(3)))
+    .toBeLessThanOrEqual(PROXIMITY_PX);
 });
 
 test("clicking a card while a neighbor's tooltip is open always selects it", async ({
@@ -69,7 +78,7 @@ test("clicking a card while a neighbor's tooltip is open always selects it", asy
   await expect(cards.nth(2)).toHaveAttribute("aria-pressed", "true");
 });
 
-test("a joker tooltip does not cover any interactive element", async ({
+test("a joker tooltip stays within the proximity cap of its tile", async ({
   page,
 }) => {
   await page.goto("/");
@@ -94,6 +103,9 @@ test("a joker tooltip does not cover any interactive element", async ({
   const joker = page.getByTestId("joker-tile-filled-blueprint");
   await expect(joker).toBeVisible();
   await joker.hover();
-  await expect(page.locator('[data-testid="joker-tooltip"]')).toBeVisible();
-  expect(await interactiveOverlaps(page, '[data-testid="joker-tooltip"]')).toEqual([]);
+  const tooltip = page.locator('[data-testid="joker-tooltip"]');
+  await expect(tooltip).toBeVisible();
+  await expect
+    .poll(() => anchorGap(tooltip, joker))
+    .toBeLessThanOrEqual(PROXIMITY_PX);
 });
