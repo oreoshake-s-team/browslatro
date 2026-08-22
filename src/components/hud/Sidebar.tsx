@@ -50,7 +50,7 @@ export default function Sidebar({
   return (
     <RenderProfiler id="Sidebar">
     <aside
-      className="flex w-75 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-surface p-4 portrait-narrow:h-auto portrait-narrow:w-full portrait-narrow:flex-row portrait-narrow:flex-wrap portrait-narrow:items-start portrait-narrow:border-r-0 portrait-narrow:border-b portrait-narrow:p-2 landscape-narrow:w-50 landscape-narrow:gap-2 landscape-narrow:p-2"
+      className="flex w-75 shrink-0 flex-col gap-4 overflow-y-auto border-r border-border bg-surface p-4 portrait-narrow:h-auto portrait-narrow:w-full portrait-narrow:flex-row portrait-narrow:flex-wrap portrait-narrow:items-start portrait-narrow:border-r-0 portrait-narrow:border-b portrait-narrow:p-2 portrait-tablet:w-60 landscape-narrow:w-50 landscape-narrow:gap-1.5 landscape-narrow:p-1.5"
       aria-label={t("a11y.gameStatus")}
       data-testid="sidebar"
     >
@@ -74,7 +74,7 @@ export default function Sidebar({
           }
         />
       </div>
-      <div className="flex flex-col gap-3 portrait-narrow:min-w-40 portrait-narrow:flex-1">
+      <div className="flex flex-col gap-3 portrait-narrow:min-w-40 portrait-narrow:flex-1 landscape-narrow:gap-2">
         <div className="grid grid-cols-2 gap-2">
           <RunInfo
             handPlayCounts={handPlayCounts}

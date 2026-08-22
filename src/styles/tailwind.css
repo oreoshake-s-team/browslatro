@@ -8,6 +8,7 @@
 @source "../**/*.tsx";
 
 @custom-variant portrait-narrow (@media (orientation: portrait) and (width <= 768px));
+@custom-variant portrait-tablet (@media (orientation: portrait) and (768px < width <= 1024px));
 @custom-variant landscape-narrow (@media (orientation: landscape) and (width <= 1024px));
 
 @theme {

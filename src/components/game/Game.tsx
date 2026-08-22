@@ -49,7 +49,7 @@ export default function Game() {
 
   return (
     <main
-      className="flex min-h-0 flex-1 flex-col items-start gap-5 overflow-y-auto p-5 landscape-narrow:gap-2.5"
+      className="flex min-h-0 flex-1 flex-col items-start gap-5 overflow-y-auto p-5 portrait-tablet:gap-3 portrait-tablet:p-3 landscape-narrow:gap-2.5"
       aria-label={t("a11y.game")}
       aria-busy={isScoring}
     >

@@ -79,7 +79,7 @@ body.dyslexic-font [data-stat-value] {
 }
 
 body {
-  height: 100vh;
+  height: 100dvh;
   background-color: var(--color-bg);
   color: var(--color-ink);
   display: flex;
