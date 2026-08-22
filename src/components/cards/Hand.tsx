@@ -374,6 +374,7 @@ function Hand({
                 <div
                   className={cn(
                     "group/slot relative shrink-0",
+                    idx > 0 && draggingId === null && "portrait-tablet:-ml-4",
                     isDragging && "opacity-40",
                   )}
                   draggable
