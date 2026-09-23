@@ -4,10 +4,16 @@ import {
   localizedConsumableDescription,
   localizedConsumableName,
 } from "./contentOverrides";
+import { registerLocaleContent } from "./localeContent";
+import { haw } from "./locales/haw";
 import { createSpectralCatalog } from "../items/spectrals";
 import { createTarotCatalog } from "../items/tarots";
 
 describe("contentOverrides", () => {
+  beforeAll(() => {
+    registerLocaleContent("haw", haw);
+  });
+
   test("localizedConsumableName routes a planet id through the en.planetNames/haw.planetNames pair", () => {
     expect(localizedConsumableName("haw", "mercury", "Mercury")).toBe("ʻUkali");
   });

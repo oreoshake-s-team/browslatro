@@ -1,6 +1,12 @@
 import { localizedSpectralDescription, localizedSpectralName } from "./spectralOverrides";
+import { registerLocaleContent } from "./localeContent";
+import { haw } from "./locales/haw";
 
 describe("spectralOverrides", () => {
+  beforeAll(() => {
+    registerLocaleContent("haw", haw);
+  });
+
   test("localizedSpectralName returns the canonical i18n name, not the code fallback", () => {
     expect(localizedSpectralName("en", "hex", "Hex (fallback)")).toBe("Hex");
   });

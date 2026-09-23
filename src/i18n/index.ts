@@ -1,5 +1,6 @@
 import i18n, { type BackendModule, type ResourceLanguage } from "i18next";
 import { initReactI18next } from "react-i18next";
+import { registerLocaleContent } from "./localeContent";
 import { en } from "./locales/en";
 
 export const SUPPORTED_LOCALES = ["en", "haw"] as const;
@@ -32,7 +33,11 @@ const lazyLocaleLoaders: Record<
   Exclude<Locale, "en">,
   () => Promise<ResourceLanguage>
 > = {
-  haw: async () => (await import("./locales/haw")).haw,
+  haw: async () => {
+    const { haw } = await import("./locales/haw");
+    registerLocaleContent("haw", haw);
+    return haw;
+  },
 };
 
 const lazyLocaleBackend: BackendModule = {

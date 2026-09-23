@@ -1,4 +1,5 @@
 import i18n from "./index";
+import { localizedJokerName } from "./jokerOverrides";
 import { haw } from "./locales/haw";
 
 describe("lazy locale loading", () => {
@@ -14,6 +15,11 @@ describe("lazy locale loading", () => {
   test("translates with the haw bundle after the lazy load", async () => {
     await i18n.changeLanguage("haw");
     expect(i18n.t("app.titleMenu")).toBe(haw.app.titleMenu);
+  });
+
+  test("registers the locale content for the override helpers on demand", async () => {
+    await i18n.changeLanguage("haw");
+    expect(localizedJokerName("haw", "plus-four-mult", "+4 Mult")).toBe("Iōka");
   });
 
   test("keeps serving en after switching back", async () => {

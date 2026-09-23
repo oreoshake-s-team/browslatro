@@ -1,6 +1,12 @@
 import { localizedVoucherDescription, localizedVoucherName } from "./voucherOverrides";
+import { registerLocaleContent } from "./localeContent";
+import { haw } from "./locales/haw";
 
 describe("voucherOverrides", () => {
+  beforeAll(() => {
+    registerLocaleContent("haw", haw);
+  });
+
   test("localizedVoucherName returns the canonical i18n name, not the code fallback", () => {
     expect(localizedVoucherName("en", "clearance-sale", "Clearance Sale (fallback)")).toBe(
       "Clearance Sale",
