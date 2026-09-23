@@ -1,6 +1,12 @@
 import { localizedTarotDescription, localizedTarotName } from "./tarotOverrides";
+import { registerLocaleContent } from "./localeContent";
+import { haw } from "./locales/haw";
 
 describe("tarotOverrides", () => {
+  beforeAll(() => {
+    registerLocaleContent("haw", haw);
+  });
+
   test("localizedTarotName returns the canonical i18n name, not the code fallback", () => {
     expect(localizedTarotName("en", "the-hermit", "The Hermit (fallback)")).toBe(
       "The Hermit",

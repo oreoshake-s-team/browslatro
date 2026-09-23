@@ -1,6 +1,12 @@
 import { localizedJokerDescription, localizedJokerName } from "./jokerOverrides";
+import { registerLocaleContent } from "./localeContent";
+import { haw } from "./locales/haw";
 
 describe("jokerOverrides", () => {
+  beforeAll(() => {
+    registerLocaleContent("haw", haw);
+  });
+
   test("localizedJokerName returns the canonical i18n name, not the code fallback", () => {
     expect(localizedJokerName("en", "plus-four-mult", "+4 Mult")).toBe("Joker");
   });

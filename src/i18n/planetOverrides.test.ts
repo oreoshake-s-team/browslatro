@@ -1,6 +1,12 @@
 import { localizedPlanetDescription, localizedPlanetName } from "./planetOverrides";
+import { registerLocaleContent } from "./localeContent";
+import { haw } from "./locales/haw";
 
 describe("planetOverrides", () => {
+  beforeAll(() => {
+    registerLocaleContent("haw", haw);
+  });
+
   test("localizedPlanetName returns the canonical i18n name, not the code fallback", () => {
     expect(localizedPlanetName("en", "venus", "Venus (fallback)")).toBe("Venus");
   });
