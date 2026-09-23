@@ -188,7 +188,7 @@ export default function Jokers({
     return (
       <div
         className={cn(
-          "w-1 shrink-0 self-stretch rounded transition-all",
+          "w-1 shrink-0 self-stretch rounded transition-[width]",
           active && "w-tile-w border-2 border-dashed border-focus",
         )}
         data-joker-gap=""
