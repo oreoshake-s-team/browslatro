@@ -9,6 +9,11 @@ describe("HandScore empty state", () => {
     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
   });
 
+  test("still renders the label row container to reserve its space", () => {
+    render(<HandScore chips={0} multiplier={0} selectedHand={null} />);
+    expect(screen.getByTestId("hand-label-row")).toBeInTheDocument();
+  });
+
   test("renders chips as 0 when empty", () => {
     const { container } = render(
       <HandScore chips={0} multiplier={0} selectedHand={null} />,

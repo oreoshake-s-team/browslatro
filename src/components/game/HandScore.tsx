@@ -126,29 +126,34 @@ function HandScore({
   const multAnim = useCountUp(multiplier, labelKey, levelTrigger);
   return (
     <div className="flex flex-col items-center gap-2" data-testid="hand-score">
-      {selectedHand !== null && (
-        <h3
-          className="flex items-center gap-2 text-base font-semibold"
-          aria-label={
-            hasLevel
-              ? t("a11y.handLevel", {
-                  hand: tHandLabel(t, selectedHand.label),
-                  level: selectedHandLevel,
-                })
-              : undefined
-          }
-        >
-          <span>{tHandLabel(t, selectedHand.label)}</span>
-          {hasLevel && (
-            <span
-              className="rounded-full bg-raised px-2 py-0.5 text-xs font-bold text-money"
-              aria-hidden="true"
-            >
-              Lv {selectedHandLevel}
-            </span>
-          )}
-        </h3>
-      )}
+      <div
+        className="flex min-h-6 items-center justify-center landscape-narrow:min-h-0"
+        data-testid="hand-label-row"
+      >
+        {selectedHand !== null && (
+          <h3
+            className="flex items-center gap-2 text-base font-semibold"
+            aria-label={
+              hasLevel
+                ? t("a11y.handLevel", {
+                    hand: tHandLabel(t, selectedHand.label),
+                    level: selectedHandLevel,
+                  })
+                : undefined
+            }
+          >
+            <span>{tHandLabel(t, selectedHand.label)}</span>
+            {hasLevel && (
+              <span
+                className="rounded-full bg-raised px-2 py-0.5 text-xs font-bold text-money"
+                aria-hidden="true"
+              >
+                Lv {selectedHandLevel}
+              </span>
+            )}
+          </h3>
+        )}
+      </div>
       <p
         className="flex items-center gap-2 text-sm text-muted"
         aria-hidden="true"
