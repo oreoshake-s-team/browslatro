@@ -105,7 +105,7 @@ const VALUE_TEXT = {
 } as const satisfies Record<EnhancementValueColor, string>;
 
 const playingCard = cva(
-  "relative flex aspect-[5/7] w-16 shrink-0 flex-col rounded-lg border border-black/15 bg-card p-1.5 font-serif text-card-ink shadow-md shadow-black/30 transition-all forced-color-adjust-none",
+  "relative flex aspect-[5/7] w-16 shrink-0 flex-col rounded-lg border border-black/15 bg-card p-1.5 font-serif text-card-ink shadow-md shadow-black/30 transition-transform forced-color-adjust-none after:pointer-events-none after:absolute after:inset-0 after:rounded-lg after:opacity-0 after:shadow-lg after:shadow-black/30 after:transition-opacity after:content-['']",
   {
     variants: {
       enhancement: {
@@ -142,7 +142,7 @@ const playingCard = cva(
       {
         interactive: true,
         selected: false,
-        className: "hover:-translate-y-1 hover:shadow-lg",
+        className: "hover:-translate-y-1 hover:after:opacity-100",
       },
     ],
     defaultVariants: {

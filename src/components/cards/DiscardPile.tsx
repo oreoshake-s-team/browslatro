@@ -27,7 +27,7 @@ export default function DiscardPile({ discarded }: DiscardPileProps) {
     <>
       <button
         type="button"
-        className="relative flex aspect-[5/7] w-16 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted bg-raised p-0 transition-all hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        className="relative flex aspect-[5/7] w-16 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted bg-raised p-0 transition-transform hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         aria-label={t("a11y.discardPile", { total: discarded.length })}
         data-testid="discard-pile"
         onClick={() => setOpen(true)}

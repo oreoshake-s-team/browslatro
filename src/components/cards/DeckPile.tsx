@@ -66,7 +66,7 @@ function DeckPile({
       <button
         type="button"
         className={cn(
-          "relative flex aspect-[5/7] w-16 cursor-pointer items-center justify-center rounded-lg border border-black/40 bg-(--deck-back,var(--color-chips)) shadow-md shadow-black/30 transition-all hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
+          "relative flex aspect-[5/7] w-16 cursor-pointer items-center justify-center rounded-lg border border-black/40 bg-(--deck-back,var(--color-chips)) shadow-md shadow-black/30 transition-transform hover:-translate-y-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus",
           showDropZone && "ring-2 ring-money",
           hover && "ring-4 ring-money",
         )}
